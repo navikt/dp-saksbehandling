@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
-import no.nav.dagpenger.saksbehandling.lagTilfeldigIdent
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
@@ -111,7 +110,7 @@ internal fun arkiverbartDokumentBehovLøsning(
 internal fun lagreOppgave(
     dataSource: DataSource,
     behandlingId: UUID = UUIDv7.ny(),
-    personIdent: String = lagTilfeldigIdent(),
+    personIdent: String = "12345678910",
 ): Oppgave {
     val oppgave =
         lagOppgave(

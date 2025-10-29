@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import PersonMediator
-import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
@@ -11,9 +10,11 @@ import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
-import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -21,12 +22,12 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import java.time.LocalDate
 
 internal object OppgaveApiTestHelper {
-    const val TEST_IDENT = "12345612345"
-    val TEST_UUID = UUIDv7.ny()
-    const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
-    val defaultSaksbehandlerADGruppe = listOf("SaksbehandlerADGruppe")
-    const val BESLUTTER_IDENT = "BeslutterIdent"
-    val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
+//    const val TEST_IDENT = "12345612345"
+//    val TEST_UUID = UUIDv7.ny()
+// //    const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
+// //    val defaultSaksbehandlerADGruppe = listOf("SaksbehandlerADGruppe")
+// //    const val BESLUTTER_IDENT = "BeslutterIdent"
+//    val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
     private val mockAzure = mockAzure()
     private val fødselsdato = LocalDate.of(2000, 1, 1)
 
@@ -104,7 +105,7 @@ internal object OppgaveApiTestHelper {
 
     fun gyldigMaskinToken(): String = mockAzure.lagTokenMedClaims(mapOf("idtyp" to "app"))
 
-    val testPerson =
+    val pdlTestPerson =
         PDLPersonIntern(
             ident = TEST_IDENT,
             fornavn = "PETTER",

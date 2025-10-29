@@ -535,7 +535,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     FROM      oppgave_v1    oppg
                     JOIN      behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN      person_v1     pers ON pers.id = beha.person_id
-                    LEFT JOIN HENDELSE      hend ON hend.behandling_id = beha.id
+                    LEFT JOIN hendelse_v1      hend ON hend.behandling_id = beha.id
                     WHERE     oppg.opprettet >= :fom
                     AND       oppg.opprettet <  :tom_pluss_1_dag
                     """.trimIndent(),

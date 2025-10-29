@@ -4,14 +4,12 @@ import io.kotest.assertions.json.shouldEqualJson
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_UUID
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -20,10 +18,13 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDT
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagPerson
+import no.nav.dagpenger.saksbehandling.lagTilstandLogg
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,7 +32,7 @@ import java.time.LocalDateTime
 class OppgaveDTOMapperTest {
     private val pdlKlient =
         mockk<PDLKlient>().also {
-            coEvery { it.person(TEST_IDENT) } returns Result.success(OppgaveApiTestHelper.testPerson)
+            coEvery { it.person(OppgaveApiTestHelper.pdlTestPerson.ident) } returns Result.success(OppgaveApiTestHelper.pdlTestPerson)
         }
     private val relevanteJournalpostIdOppslag =
         mockk<RelevanteJournalpostIdOppslag>().also {
@@ -43,7 +44,14 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
 
         runBlocking {
-            val oppgave = lagOppgave(tilstand = Oppgave.UnderKontroll(), opprettet = etTidspunkt)
+            val oppgave =
+                lagOppgave(
+                    tilstand = Oppgave.UnderKontroll(),
+                    opprettet = etTidspunkt,
+                    person = lagPerson(ident = OppgaveApiTestHelper.pdlTestPerson.ident),
+                    tilstandslogg = lagTilstandLogg(),
+                )
+
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -109,7 +117,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
-                        "id": "$TEST_UUID",
+                        "id": "${testPerson.id}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -250,7 +258,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
-                        "id": "$TEST_UUID",
+                        "id": "${testPerson.id}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -261,7 +269,7 @@ class OppgaveDTOMapperTest {
                         "sikkerhetstiltak": [
                           {
                             "beskrivelse": "To ansatte i samtale",
-                            "gyldigTom": "${OppgaveApiTestHelper.testPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "gyldigTom": "${OppgaveApiTestHelper.pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "statsborgerskap": "NOR"
@@ -338,7 +346,11 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                lagOppgave(tilstand = UnderBehandling, opprettet = etTidspunkt, behandling = lagBehandling(utløstAvType = MANUELL))
+                lagOppgave(
+                    tilstand = UnderBehandling,
+                    opprettet = etTidspunkt,
+                    behandling = lagBehandling(utløstAvType = MANUELL),
+                )
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -405,7 +417,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
-                        "id": "$TEST_UUID",
+                        "id": "${testPerson.id}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -416,7 +428,7 @@ class OppgaveDTOMapperTest {
                         "sikkerhetstiltak": [
                           {
                             "beskrivelse": "To ansatte i samtale",
-                            "gyldigTom": "${OppgaveApiTestHelper.testPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "gyldigTom": "${OppgaveApiTestHelper.pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "statsborgerskap": "NOR"
@@ -493,7 +505,11 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                lagOppgave(tilstand = UnderBehandling, opprettet = etTidspunkt, behandling = lagBehandling(utløstAvType = MELDEKORT))
+                lagOppgave(
+                    tilstand = UnderBehandling,
+                    opprettet = etTidspunkt,
+                    behandling = lagBehandling(utløstAvType = MELDEKORT),
+                )
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -560,7 +576,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
-                        "id": "$TEST_UUID",
+                        "id": "${testPerson.id}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -571,7 +587,7 @@ class OppgaveDTOMapperTest {
                         "sikkerhetstiltak": [
                           {
                             "beskrivelse": "To ansatte i samtale",
-                            "gyldigTom": "${OppgaveApiTestHelper.testPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "gyldigTom": "${OppgaveApiTestHelper.pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "statsborgerskap": "NOR"

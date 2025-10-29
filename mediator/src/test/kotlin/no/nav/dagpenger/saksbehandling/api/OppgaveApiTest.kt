@@ -28,6 +28,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
@@ -38,17 +39,16 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
+import no.nav.dagpenger.saksbehandling.SOKNAD_ID
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SOKNAD_ID
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.pdlTestPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
@@ -170,8 +170,8 @@ class OppgaveApiTest {
                 utsattTil = iMorgen,
                 person =
                     lagPerson(
-                        ident = testPerson.ident,
-                        addresseBeskyttelseGradering = testPerson.adresseBeskyttelseGradering,
+                        ident = pdlTestPerson.ident,
+                        addresseBeskyttelseGradering = pdlTestPerson.adresseBeskyttelseGradering,
                     ),
             )
         val oppgave2 =
@@ -179,8 +179,8 @@ class OppgaveApiTest {
                 tilstand = Oppgave.KlarTilBehandling,
                 person =
                     lagPerson(
-                        ident = testPerson.ident,
-                        addresseBeskyttelseGradering = testPerson.adresseBeskyttelseGradering,
+                        ident = pdlTestPerson.ident,
+                        addresseBeskyttelseGradering = pdlTestPerson.adresseBeskyttelseGradering,
                         skjermesSomEgneAnsatte = true,
                     ),
             )
@@ -545,7 +545,7 @@ class OppgaveApiTest {
                 every { it.tildelOgHentNesteOppgave(any(), any()) } returns oppgave
             }
         val pdlMock = mockk<PDLKlient>()
-        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+        coEvery { pdlMock.person(any()) } returns Result.success(pdlTestPerson)
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
             client.put("/oppgave/neste") {
@@ -567,7 +567,7 @@ class OppgaveApiTest {
                     {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "$TEST_IDENT",
+                        "ident": "${oppgave.personIdent()}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -856,8 +856,8 @@ class OppgaveApiTest {
                 saksbehandlerIdent = beslutter.navIdent,
                 person =
                     lagPerson(
-                        ident = testPerson.ident,
-                        addresseBeskyttelseGradering = testPerson.adresseBeskyttelseGradering,
+                        ident = pdlTestPerson.ident,
+                        addresseBeskyttelseGradering = pdlTestPerson.adresseBeskyttelseGradering,
                     ),
             )
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
@@ -870,22 +870,22 @@ class OppgaveApiTest {
                         behandlingId = testOppgave.behandling.behandlingId,
                         person =
                             PersonDTO(
-                                ident = testPerson.ident,
+                                ident = pdlTestPerson.ident,
                                 id = testOppgave.person.id,
-                                fornavn = testPerson.fornavn,
-                                etternavn = testPerson.etternavn,
-                                fodselsdato = testPerson.fødselsdato,
-                                alder = testPerson.alder,
+                                fornavn = pdlTestPerson.fornavn,
+                                etternavn = pdlTestPerson.etternavn,
+                                fodselsdato = pdlTestPerson.fødselsdato,
+                                alder = pdlTestPerson.alder,
                                 kjonn = KjonnDTO.UKJENT,
                                 skjermesSomEgneAnsatte = testOppgave.person.skjermesSomEgneAnsatte,
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                                mellomnavn = testPerson.mellomnavn,
-                                statsborgerskap = testPerson.statsborgerskap,
+                                mellomnavn = pdlTestPerson.mellomnavn,
+                                statsborgerskap = pdlTestPerson.statsborgerskap,
                                 sikkerhetstiltak =
                                     listOf(
                                         SikkerhetstiltakDTO(
-                                            beskrivelse = testPerson.sikkerhetstiltak.first().beskrivelse,
-                                            gyldigTom = testPerson.sikkerhetstiltak.first().gyldigTom,
+                                            beskrivelse = pdlTestPerson.sikkerhetstiltak.first().beskrivelse,
+                                            gyldigTom = pdlTestPerson.sikkerhetstiltak.first().gyldigTom,
                                         ),
                                     ),
                             ),
@@ -975,8 +975,8 @@ class OppgaveApiTest {
                         "statsborgerskap": "NOR",
                         "sikkerhetstiltak": [
                           {
-                            "beskrivelse": "${testPerson.sikkerhetstiltak.first().beskrivelse}",
-                            "gyldigTom": "${testPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "beskrivelse": "${pdlTestPerson.sikkerhetstiltak.first().beskrivelse}",
+                            "gyldigTom": "${pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "skjermesSomEgneAnsatte": ${testOppgave.person.skjermesSomEgneAnsatte}
@@ -1010,9 +1010,10 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent oppgave for person uten sikkerhetstiltak`() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
         val oppgave =
             lagOppgave(
+                person = lagPerson(ident = pdlTestPerson.ident),
                 tilstand = Oppgave.UnderBehandling,
                 saksbehandlerIdent = SAKSBEHANDLER_IDENT,
             )
@@ -1026,17 +1027,17 @@ class OppgaveApiTest {
                         behandlingId = oppgave.behandling.behandlingId,
                         person =
                             PersonDTO(
-                                ident = testPerson.ident,
+                                ident = pdlTestPerson.ident,
                                 id = UUIDv7.ny(),
-                                fornavn = testPerson.fornavn,
-                                etternavn = testPerson.etternavn,
-                                fodselsdato = testPerson.fødselsdato,
-                                alder = testPerson.alder,
+                                fornavn = pdlTestPerson.fornavn,
+                                etternavn = pdlTestPerson.etternavn,
+                                fodselsdato = pdlTestPerson.fødselsdato,
+                                alder = pdlTestPerson.alder,
                                 kjonn = KjonnDTO.UKJENT,
                                 skjermesSomEgneAnsatte = oppgave.person.skjermesSomEgneAnsatte,
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                                mellomnavn = testPerson.mellomnavn,
-                                statsborgerskap = testPerson.statsborgerskap,
+                                mellomnavn = pdlTestPerson.mellomnavn,
+                                statsborgerskap = pdlTestPerson.statsborgerskap,
                                 sikkerhetstiltak = emptyList(),
                             ),
                         tidspunktOpprettet = oppgave.opprettet,
@@ -1224,7 +1225,7 @@ class OppgaveApiTest {
         val person =
             Person(
                 id = UUIDv7.ny(),
-                ident = testPerson.ident,
+                ident = pdlTestPerson.ident,
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
             )
@@ -1280,13 +1281,13 @@ class OppgaveApiTest {
         val person =
             Person(
                 id = UUIDv7.ny(),
-                ident = testPerson.ident,
+                ident = pdlTestPerson.ident,
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
             )
         val personMediator =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(testPerson.ident) } returns person
+                every { it.hentPerson(pdlTestPerson.ident) } returns person
             }
         val forventetPersonIdDTO =
             PersonIdDTO(
@@ -1301,7 +1302,7 @@ class OppgaveApiTest {
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
-                    """{"ident": "${testPerson.ident}"}""",
+                    """{"ident": "${pdlTestPerson.ident}"}""",
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
@@ -1337,7 +1338,7 @@ class OppgaveApiTest {
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
-                    """{"ident": "${testPerson.ident}"}""",
+                    """{"ident": "${pdlTestPerson.ident}"}""",
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
