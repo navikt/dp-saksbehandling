@@ -129,7 +129,7 @@ class OppgaveTilstandTest {
             val resultat =
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -161,7 +161,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -182,7 +182,7 @@ class OppgaveTilstandTest {
             val resultat =
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -204,7 +204,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -227,7 +227,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     avbruttHendelse =
                         AvbruttHendelse(
-                            behandlingId = oppgave.behandlingId,
+                            behandlingId = oppgave.behandling.behandlingId,
                             utførtAv = saksbehandler,
                         ),
                 )
@@ -241,7 +241,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     avbruttHendelse =
                         AvbruttHendelse(
-                            behandlingId = oppgave.behandlingId,
+                            behandlingId = oppgave.behandling.behandlingId,
                             utførtAv = saksbehandler,
                         ),
                 )
@@ -267,7 +267,7 @@ class OppgaveTilstandTest {
             shouldNotThrowAny {
                 oppgave.avbryt(
                     BehandlingAvbruttHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -282,7 +282,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.avbryt(
                     BehandlingAvbruttHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -343,7 +343,7 @@ class OppgaveTilstandTest {
             shouldNotThrowAny {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -370,7 +370,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
@@ -399,7 +399,7 @@ class OppgaveTilstandTest {
         shouldNotThrowAny {
             oppgave.avbryt(
                 BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     ident = testIdent,
@@ -492,7 +492,7 @@ class OppgaveTilstandTest {
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
                 ),
@@ -512,7 +512,7 @@ class OppgaveTilstandTest {
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
                 ),
@@ -532,7 +532,7 @@ class OppgaveTilstandTest {
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
                 ),
@@ -751,7 +751,7 @@ class OppgaveTilstandTest {
         shouldNotThrowAny {
             oppgave.avbryt(
                 BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     ident = testIdent,

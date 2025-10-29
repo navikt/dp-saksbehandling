@@ -33,8 +33,7 @@ fun lagOppgave(
     skjermesSomEgneAnsatte: Boolean = false,
     adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     person: Person = lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
-    behandlingId: UUID = UUIDv7.ny(),
-    utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+    behandling: Behandling = lagBehandling(opprettet = opprettet),
     emneknagger: Set<String> = emptySet(),
     utsattTil: LocalDate? = null,
     tilstandslogg: Tilstandslogg = Tilstandslogg(),
@@ -48,9 +47,8 @@ fun lagOppgave(
         tilstand = tilstand,
         utsattTil = utsattTil,
         tilstandslogg = tilstandslogg,
-        behandlingId = behandlingId,
-        utløstAv = utløstAvType,
         person = person,
+        behandling = behandling,
         meldingOmVedtak =
             Oppgave.MeldingOmVedtak(
                 kilde = DP_SAK,
@@ -63,13 +61,13 @@ fun lagBehandling(
     behandlingId: UUID = UUIDv7.ny(),
     opprettet: LocalDateTime = opprettetNå,
     hendelse: Hendelse = TomHendelse,
-    type: UtløstAvType = UtløstAvType.SØKNAD,
+    utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
 ): Behandling {
     return Behandling(
         behandlingId = behandlingId,
         opprettet = opprettet,
         hendelse = hendelse,
-        utløstAv = type,
+        utløstAv = utløstAvType,
     )
 }
 

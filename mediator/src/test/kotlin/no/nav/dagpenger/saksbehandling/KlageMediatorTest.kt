@@ -165,7 +165,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandlingId
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -275,7 +275,7 @@ class KlageMediatorTest {
                         journalpostId = "journalpostId",
                         utførtAv = saksbehandler,
                     ),
-                ).behandlingId
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -367,7 +367,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandlingId
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -427,7 +427,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandlingId
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
@@ -477,7 +477,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandlingId
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
@@ -529,7 +529,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandlingId
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,

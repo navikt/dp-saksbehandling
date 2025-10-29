@@ -210,7 +210,7 @@ class KlageMediator(
                         person = personDeferred.await(),
                         saksbehandler = saksbehandlerDeferred.await(),
                         beslutter = null,
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
                         utløstAvType = UtløstAvType.KLAGE,
                     )
@@ -239,7 +239,7 @@ class KlageMediator(
 
             val html = htmlDeferred.await().getOrThrow()
             utsendingMediator.opprettUtsending(
-                behandlingId = oppgave.behandlingId,
+                behandlingId = oppgave.behandling.behandlingId,
                 brev = html,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,

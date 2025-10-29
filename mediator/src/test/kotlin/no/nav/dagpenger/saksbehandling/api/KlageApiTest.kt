@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -108,7 +109,7 @@ class KlageApiTest {
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
         val sakId = UUIDv7.ny()
-        val oppgave = lagOppgave(utløstAvType = KLAGE, opprettet = dato)
+        val oppgave = lagOppgave(behandling = lagBehandling(utløstAvType = KLAGE), opprettet = dato)
         val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
@@ -148,7 +149,7 @@ class KlageApiTest {
                     """
                     {
                        "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandlingId}",
+                       "behandlingId": "${oppgave.behandling.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
                        "utlostAv": "KLAGE"
@@ -173,7 +174,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
-        val oppgave = lagOppgave(utløstAvType = KLAGE, opprettet = dato)
+        val oppgave = lagOppgave(behandling = lagBehandling(utløstAvType = KLAGE), opprettet = dato)
         val ident = oppgave.personIdent()
         val sakId = UUIDv7.ny()
         val mediator =
@@ -215,7 +216,7 @@ class KlageApiTest {
                     """
                     {
                        "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandlingId}",
+                       "behandlingId": "${oppgave.behandling.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
                        "utlostAv": "KLAGE"

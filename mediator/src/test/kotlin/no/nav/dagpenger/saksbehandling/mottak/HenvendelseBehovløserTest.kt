@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
@@ -22,7 +23,7 @@ class HenvendelseBehovløserTest {
     private val sakId = UUIDv7.ny()
     private val søknadIdSomSkalVarsles = UUIDv7.ny()
     private val søknadIdSomIkkeSkalVarsles = UUIDv7.ny()
-    private val klageOppgave = lagOppgave(utløstAvType = KLAGE)
+    private val klageOppgave = lagOppgave(behandling = lagBehandling(utløstAvType = KLAGE))
     private val testRapid = TestRapid()
     private val sakMediatorMock =
         mockk<SakMediator>().also {

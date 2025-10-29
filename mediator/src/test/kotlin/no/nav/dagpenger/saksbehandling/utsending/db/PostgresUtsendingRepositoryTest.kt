@@ -41,7 +41,7 @@ class PostgresUtsendingRepositoryTest {
             val distribusjonId = "distribusjonId"
             val utsending =
                 Utsending(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     brev = brev,
                     utsendingSak = utsendingSak,
                     ident = oppgave.personIdent(),
@@ -50,7 +50,7 @@ class PostgresUtsendingRepositoryTest {
                 )
             repository.lagre(utsending)
 
-            repository.hentUtsendingForBehandlingId(oppgave.behandlingId) shouldBe utsending
+            repository.hentUtsendingForBehandlingId(oppgave.behandling.behandlingId) shouldBe utsending
 
             repository.finnUtsendingForBehandlingId(UUID.randomUUID()) shouldBe null
             shouldThrow<UtsendingIkkeFunnet> {
@@ -68,7 +68,7 @@ class PostgresUtsendingRepositoryTest {
             val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val utsending =
                 Utsending(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     brev = null,
                     ident = testPerson.ident,
                 )
@@ -89,7 +89,7 @@ class PostgresUtsendingRepositoryTest {
             val repository = PostgresUtsendingRepository(ds)
             val utsending =
                 Utsending(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     brev = "brev",
                     utsendingSak = UtsendingSak("id", "fagsystem"),
                     ident = oppgave.personIdent(),
@@ -97,7 +97,7 @@ class PostgresUtsendingRepositoryTest {
                 )
             repository.lagre(utsending)
 
-            repository.utsendingFinnesForBehandling(oppgave.behandlingId) shouldBe true
+            repository.utsendingFinnesForBehandling(oppgave.behandling.behandlingId) shouldBe true
 
             repository.utsendingFinnesForBehandling(UUIDv7.ny()) shouldBe false
         }
@@ -108,9 +108,9 @@ class PostgresUtsendingRepositoryTest {
         withBehandling(behandling = behandling) { ds ->
             val oppgave = lagreOppgave(ds, behandling.behandlingId)
             val repository = PostgresUtsendingRepository(ds)
-            repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = oppgave.behandlingId))
+            repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = oppgave.behandling.behandlingId))
             shouldThrow<PSQLException> {
-                repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = oppgave.behandlingId))
+                repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = oppgave.behandling.behandlingId))
             }.message shouldStartWith """ERROR: duplicate key value violates unique constraint "behandling_id_unique""""
         }
     }

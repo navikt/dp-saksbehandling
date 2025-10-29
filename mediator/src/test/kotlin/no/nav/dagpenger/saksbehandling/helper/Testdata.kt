@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.helper
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.lagTilfeldigIdent
@@ -114,7 +115,7 @@ internal fun lagreOppgave(
 ): Oppgave {
     val oppgave =
         lagOppgave(
-            behandlingId = behandlingId,
+            behandling = lagBehandling(behandlingId = behandlingId),
             person = lagPerson(ident = personIdent),
         )
 

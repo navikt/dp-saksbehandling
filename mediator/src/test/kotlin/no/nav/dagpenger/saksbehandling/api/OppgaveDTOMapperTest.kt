@@ -5,8 +5,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
+import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
@@ -17,6 +18,8 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
+import no.nav.dagpenger.saksbehandling.lagBehandling
+import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -34,19 +37,13 @@ class OppgaveDTOMapperTest {
         mockk<RelevanteJournalpostIdOppslag>().also {
             coEvery { it.hentJournalpostIder(any()) } returns setOf("søknadJournalpostId", "vedtakJournalpostId")
         }
-    private val behandlingId = UUIDv7.ny()
 
     @Test
     fun `Skal mappe og berike oppgaveDTO for tilstand Under kontroll`() {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
 
         runBlocking {
-            val oppgave =
-                OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
-                    tilstand = Oppgave.Tilstand.Type.UNDER_KONTROLL,
-                    oprettet = etTidspunkt,
-                    behandlingId = behandlingId,
-                )
+            val oppgave = lagOppgave(tilstand = Oppgave.UnderKontroll(), opprettet = etTidspunkt)
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -109,7 +106,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandlingId}",
+                      "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",
@@ -186,12 +183,7 @@ class OppgaveDTOMapperTest {
     fun `Skal mappe og berike oppgaveDTO for tilstand Under behandling`() {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
-            val oppgave =
-                OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
-                    tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    oprettet = etTidspunkt,
-                    behandlingId = behandlingId,
-                )
+            val oppgave = lagOppgave(tilstand = UnderBehandling, opprettet = etTidspunkt)
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -255,7 +247,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandlingId}",
+                      "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",
@@ -346,12 +338,7 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
-                    tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    oprettet = etTidspunkt,
-                    behandlingId = behandlingId,
-                    utløstAvType = UtløstAvType.MANUELL,
-                )
+                lagOppgave(tilstand = UnderBehandling, opprettet = etTidspunkt, behandling = lagBehandling(utløstAvType = MANUELL))
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -415,7 +402,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandlingId}",
+                      "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",
@@ -506,12 +493,7 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
-                    tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    oprettet = etTidspunkt,
-                    behandlingId = behandlingId,
-                    utløstAvType = UtløstAvType.MELDEKORT,
-                )
+                lagOppgave(tilstand = UnderBehandling, opprettet = etTidspunkt, behandling = lagBehandling(utløstAvType = MELDEKORT))
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -575,7 +557,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandlingId}",
+                      "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",

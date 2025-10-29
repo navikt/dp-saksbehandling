@@ -61,11 +61,8 @@ class RelevanteJournalpostIdOppslagTest {
 
     @Test
     fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
-        val klageBehandling = lagBehandling(type = UtløstAvType.KLAGE)
-        val oppgave =
-            lagOppgave(
-                utløstAvType = UtløstAvType.KLAGE,
-            )
+        val klageBehandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val oppgave = lagOppgave(behandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE))
         val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(

@@ -78,7 +78,7 @@ class PostgresOppgaveRepositoryTest {
                     navIdent = "NAVIdent2",
                     grupper = emptySet(),
                 )
-            val oppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet, behandlingId = behandling.behandlingId)
+            val oppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet, behandling = behandling)
             repo.lagre(oppgave)
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
@@ -101,9 +101,9 @@ class PostgresOppgaveRepositoryTest {
     fun `Tildel neste ledige kontroll-oppgave ved søk på tilstand KLAR_TIL_KONTROLL`() {
         val oppgaveIdKlarTilKontroll = UUIDv7.ny()
         val søknadBehandlingKlarTilBehandling =
-            lagBehandling(type = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(2))
+            lagBehandling(utløstAvType = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(2))
         val søknadBehandlingKlarTilKontroll =
-            lagBehandling(type = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(1))
+            lagBehandling(utløstAvType = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(1))
         DBTestHelper.Companion.withBehandlinger(
             person = testPerson,
             behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
@@ -113,7 +113,7 @@ class PostgresOppgaveRepositoryTest {
             lagOppgave(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = søknadBehandlingKlarTilBehandling.opprettet,
-                behandlingId = søknadBehandlingKlarTilBehandling.behandlingId,
+                behandling = søknadBehandlingKlarTilBehandling,
                 person = testPerson,
             ).also { repo.lagre(it) }
 
@@ -121,7 +121,7 @@ class PostgresOppgaveRepositoryTest {
                 oppgaveId = oppgaveIdKlarTilKontroll,
                 tilstand = Oppgave.KlarTilKontroll,
                 opprettet = søknadBehandlingKlarTilKontroll.opprettet,
-                behandlingId = søknadBehandlingKlarTilKontroll.behandlingId,
+                behandling = søknadBehandlingKlarTilKontroll,
                 person = testPerson,
                 tilstandslogg =
                     Tilstandslogg(
@@ -169,7 +169,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )!!
 
-            nesteOppgave.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
+            nesteOppgave.behandling.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
             nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
             nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
         }
@@ -177,8 +177,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Tildel neste ledige klage-oppgave`() {
-        val klageBehandling = lagBehandling(type = UtløstAvType.KLAGE)
-        val søknadBehandling = lagBehandling(type = UtløstAvType.SØKNAD)
+        val klageBehandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val søknadBehandling = lagBehandling(utløstAvType = UtløstAvType.SØKNAD)
         DBTestHelper.Companion.withBehandlinger(
             person = testPerson,
             behandlinger = listOf(klageBehandling, søknadBehandling),
@@ -188,7 +188,7 @@ class PostgresOppgaveRepositoryTest {
             lagOppgave(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = opprettetNå.minusDays(1),
-                behandlingId = søknadBehandling.behandlingId,
+                behandling = søknadBehandling,
                 person = testPerson,
             ).also { repo.lagre(it) }
 
@@ -196,9 +196,8 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå,
-                    behandlingId = klageBehandling.behandlingId,
+                    behandling = klageBehandling,
                     person = testPerson,
-                    utløstAvType = UtløstAvType.KLAGE,
                 ).also { repo.lagre(it) }
 
             val nesteOppgave =
@@ -1071,7 +1070,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val behandling = lagBehandling()
-        val testOppgave = lagOppgave(behandlingId = behandling.behandlingId, person = testPerson)
+        val testOppgave = lagOppgave(behandling = behandling, person = testPerson)
 
         DBTestHelper.Companion.withBehandling(behandling = behandling, person = testPerson) { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1303,14 +1302,14 @@ class PostgresOppgaveRepositoryTest {
                     behandlinger = mutableSetOf(behandling),
                 ),
         ) { ds ->
-            val oppgve =
+            val oppgave =
                 lagOppgave(
                     oppgaveId = UUIDv7.ny(),
-                    behandlingId = hendelse.behandlingId,
+                    behandling = behandling,
                     person = person,
                 )
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(oppgave = oppgve)
+            repo.lagre(oppgave = oppgave)
 
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
@@ -1326,14 +1325,13 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal hente oppgaveId fra behandlingId`() {
-        val behandlingId = UUIDv7.ny()
-        val behandling = lagBehandling(behandlingId = behandlingId)
-        val oppgave = lagOppgave(behandlingId = behandlingId, utløstAvType = UtløstAvType.SØKNAD)
+        val behandling = lagBehandling(utløstAvType = UtløstAvType.SØKNAD)
+        val oppgave = lagOppgave(behandling = behandling)
 
         DBTestHelper.Companion.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgave)
-            repo.hentOppgaveIdFor(behandlingId = behandlingId) shouldBe oppgave.oppgaveId
+            repo.hentOppgaveIdFor(behandlingId = behandling.behandlingId) shouldBe oppgave.oppgaveId
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
@@ -1657,7 +1655,7 @@ class PostgresOppgaveRepositoryTest {
         val oppgave = lagOppgave()
         DBTestHelper.Companion.withOppgave(oppgave = oppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.hentOppgaveFor(oppgave.behandling.behandlingId) shouldBe oppgave
 
             shouldThrow<DataNotFoundException> {
                 repo.hentOppgaveFor(behandlingId = UUIDv7.ny())
@@ -1670,7 +1668,7 @@ class PostgresOppgaveRepositoryTest {
         val oppgave = lagOppgave()
         DBTestHelper.Companion.withOppgave(oppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.finnOppgaveFor(oppgave.behandling.behandlingId) shouldBe oppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
@@ -1702,7 +1700,7 @@ class PostgresOppgaveRepositoryTest {
             )
         val testOppgave =
             lagOppgave(
-                behandlingId = behandling.behandlingId,
+                behandling = behandling,
                 tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)),
             )
         DBTestHelper.Companion.withBehandling(behandling = behandling) { ds ->

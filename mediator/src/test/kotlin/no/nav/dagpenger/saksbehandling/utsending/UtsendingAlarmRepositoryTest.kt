@@ -27,12 +27,12 @@ class UtsendingAlarmRepositoryTest {
         val nå = LocalDateTime.now()
         val tjueFireTimerSiden = nå.minusHours(24)
         val person = lagPerson()
-        val behandling1 = lagBehandling(type = SØKNAD)
-        val behandling2 = lagBehandling(type = SØKNAD)
-        val behandling3 = lagBehandling(type = KLAGE)
-        val behandling4 = lagBehandling(type = KLAGE)
-        val behandling5 = lagBehandling(type = SØKNAD)
-        val behandling6 = lagBehandling(type = SØKNAD)
+        val behandling1 = lagBehandling(utløstAvType = SØKNAD)
+        val behandling2 = lagBehandling(utløstAvType = SØKNAD)
+        val behandling3 = lagBehandling(utløstAvType = KLAGE)
+        val behandling4 = lagBehandling(utløstAvType = KLAGE)
+        val behandling5 = lagBehandling(utløstAvType = SØKNAD)
+        val behandling6 = lagBehandling(utløstAvType = SØKNAD)
 
         DBTestHelper.withBehandlinger(
             person = person,
@@ -89,14 +89,14 @@ class UtsendingAlarmRepositoryTest {
     private fun DataSource.lagreUtsending(
         tilstand: Utsending.Tilstand.Type,
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-        behandling: Behandling = lagBehandling(type = SØKNAD),
+        behandling: Behandling = lagBehandling(utløstAvType = SØKNAD),
         person: Person = lagPerson(),
     ): Utsending {
         val oppgave =
             lagreOppgave(dataSource = this, behandlingId = behandling.behandlingId, personIdent = person.ident)
         val utsending =
             Utsending(
-                behandlingId = oppgave.behandlingId,
+                behandlingId = oppgave.behandling.behandlingId,
                 brev = "brev",
                 ident = oppgave.personIdent(),
             )

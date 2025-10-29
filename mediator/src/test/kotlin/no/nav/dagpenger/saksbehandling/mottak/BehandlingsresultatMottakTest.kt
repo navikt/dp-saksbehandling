@@ -5,13 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.lagBehandling
+import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -30,18 +29,7 @@ class BehandlingsresultatMottakTest {
             adressebeskyttelseGradering = UGRADERT,
         )
     private val oppgave =
-        Oppgave(
-            oppgaveId = UUIDv7.ny(),
-            opprettet = opprettet,
-            behandlingId = behandlingId,
-            utløstAv = SØKNAD,
-            person = person,
-            meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
-                    kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                ),
-        )
+        lagOppgave(opprettet = opprettet, person = person, behandling = lagBehandling(behandlingId = behandlingId))
 
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock =

@@ -26,10 +26,10 @@ import java.time.LocalDate
 class OppgaveFristUtgåttJobTest {
     @Test
     fun `Sett utgåtte oppgaver klare igjen`() {
-        val behandling1 = lagBehandling(type = SØKNAD)
-        val behandling2 = lagBehandling(type = SØKNAD)
-        val behandling3 = lagBehandling(type = KLAGE)
-        val behandling4 = lagBehandling(type = KLAGE)
+        val behandling1 = lagBehandling(utløstAvType = SØKNAD)
+        val behandling2 = lagBehandling(utløstAvType = SØKNAD)
+        val behandling3 = lagBehandling(utløstAvType = KLAGE)
+        val behandling4 = lagBehandling(utløstAvType = KLAGE)
         DBTestHelper.withBehandlinger(
             person = lagPerson(),
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4),
@@ -51,14 +51,14 @@ class OppgaveFristUtgåttJobTest {
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iDag,
-                    behandlingId = behandling1.behandlingId,
+                    behandling = behandling1,
                     saksbehandlerIdent = null,
                 )
             val oppgave2 =
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iDag,
-                    behandlingId = behandling2.behandlingId,
+                    behandling = behandling2,
                     saksbehandlerIdent = saksbehandlerIdent1,
                     emneknagger = setOf(TIDLIGERE_UTSATT.visningsnavn),
                 )
@@ -66,14 +66,14 @@ class OppgaveFristUtgåttJobTest {
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iDag,
-                    behandlingId = behandling3.behandlingId,
+                    behandling = behandling3,
                     saksbehandlerIdent = saksbehandlerIdent2,
                 )
             val oppgave4 =
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iMorgen,
-                    behandlingId = behandling4.behandlingId,
+                    behandling = behandling4,
                     saksbehandlerIdent = saksbehandlerIdent1,
                 )
 

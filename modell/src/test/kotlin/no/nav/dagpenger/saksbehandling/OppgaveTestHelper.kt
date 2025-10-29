@@ -55,6 +55,7 @@ object OppgaveTestHelper {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
+                utløstAv = UtløstAvType.SØKNAD,
                 hendelse = hendelse,
             )
         return Oppgave.rehydrer(
@@ -65,9 +66,8 @@ object OppgaveTestHelper {
             tilstand = tilstand,
             utsattTil = null,
             tilstandslogg = tilstandslogg,
-            behandlingId = behandling.behandlingId,
-            utløstAv = behandling.utløstAv,
             person = person,
+            behandling = behandling,
             meldingOmVedtak = meldingOmVedtakKilde,
         )
     }

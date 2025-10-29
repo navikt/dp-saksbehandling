@@ -25,14 +25,14 @@ import org.junit.jupiter.api.Test
 
 class MetrikkJobTest {
     val person = lagPerson()
-    val behandling1 = lagBehandling(type = SØKNAD)
-    val behandling2 = lagBehandling(type = SØKNAD)
-    val behandling3 = lagBehandling(type = KLAGE)
-    val behandling4 = lagBehandling(type = KLAGE)
-    val behandling5 = lagBehandling(type = SØKNAD)
-    val behandling6 = lagBehandling(type = SØKNAD)
-    val behandling7 = lagBehandling(type = SØKNAD)
-    val behandling8 = lagBehandling(type = SØKNAD)
+    val behandling1 = lagBehandling(utløstAvType = SØKNAD)
+    val behandling2 = lagBehandling(utløstAvType = SØKNAD)
+    val behandling3 = lagBehandling(utløstAvType = KLAGE)
+    val behandling4 = lagBehandling(utløstAvType = KLAGE)
+    val behandling5 = lagBehandling(utløstAvType = SØKNAD)
+    val behandling6 = lagBehandling(utløstAvType = SØKNAD)
+    val behandling7 = lagBehandling(utløstAvType = SØKNAD)
+    val behandling8 = lagBehandling(utløstAvType = SØKNAD)
 
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {
@@ -51,14 +51,14 @@ class MetrikkJobTest {
                 ),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(lagOppgave(tilstand = PåVent, behandlingId = behandling1.behandlingId))
-            repo.lagre(lagOppgave(tilstand = PåVent, behandlingId = behandling2.behandlingId))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling3.behandlingId))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling4.behandlingId))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling5.behandlingId))
-            repo.lagre(lagOppgave(tilstand = KlarTilKontroll, behandlingId = behandling6.behandlingId))
-            repo.lagre(lagOppgave(tilstand = AvventerLåsAvBehandling, behandlingId = behandling7.behandlingId))
-            repo.lagre(lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandlingId = behandling8.behandlingId))
+            repo.lagre(lagOppgave(tilstand = PåVent, behandling = behandling1))
+            repo.lagre(lagOppgave(tilstand = PåVent, behandling = behandling2))
+            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandling = behandling3))
+            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandling = behandling4))
+            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandling = behandling5))
+            repo.lagre(lagOppgave(tilstand = KlarTilKontroll, behandling = behandling6))
+            repo.lagre(lagOppgave(tilstand = AvventerLåsAvBehandling, behandling = behandling7))
+            repo.lagre(lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandling = behandling8))
 
             val oppgaveTilstandDistribusjon = hentOppgaveTilstandDistribusjon(ds)
 
@@ -101,75 +101,75 @@ class MetrikkJobTest {
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val utsendingRepository = PostgresUtsendingRepository(ds)
-            lagOppgave(tilstand = PåVent, behandlingId = behandling1.behandlingId).also {
+            lagOppgave(tilstand = PåVent, behandling = behandling1).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.VenterPåVedtak,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = PåVent, behandlingId = behandling2.behandlingId).also {
+            lagOppgave(tilstand = PåVent, behandling = behandling2).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.VenterPåVedtak,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling3.behandlingId).also {
+            lagOppgave(tilstand = KlarTilBehandling, behandling = behandling3).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.AvventerArkiverbarVersjonAvBrev,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling4.behandlingId).also {
+            lagOppgave(tilstand = KlarTilBehandling, behandling = behandling4).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.AvventerArkiverbarVersjonAvBrev,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling5.behandlingId).also {
+            lagOppgave(tilstand = KlarTilBehandling, behandling = behandling5).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.AvventerJournalføring,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilKontroll, behandlingId = behandling6.behandlingId).also {
+            lagOppgave(tilstand = KlarTilKontroll, behandling = behandling6).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.Distribuert,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = AvventerLåsAvBehandling, behandlingId = behandling7.behandlingId).also {
+            lagOppgave(tilstand = AvventerLåsAvBehandling, behandling = behandling7).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.Distribuert,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }
-            lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandlingId = behandling8.behandlingId).also {
+            lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandling = behandling8).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.Distribuert,
-                        behandlingId = it.behandlingId,
+                        behandlingId = it.behandling.behandlingId,
                     ),
                 )
             }

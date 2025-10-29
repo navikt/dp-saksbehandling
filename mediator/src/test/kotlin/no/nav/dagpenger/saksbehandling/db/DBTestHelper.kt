@@ -141,8 +141,8 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             ) {
                 val behandling =
                     Behandling(
-                        behandlingId = oppgave.behandlingId,
-                        utløstAv = oppgave.utløstAv,
+                        behandlingId = oppgave.behandling.behandlingId,
+                        utløstAv = oppgave.behandling.utløstAv,
                         opprettet = oppgave.opprettet,
                         hendelse = TomHendelse,
                     )
@@ -196,8 +196,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 emneknagger = emneknagger,
                 tilstandslogg = tilstandslogg,
                 behandlerIdent = saksbehandlerIdent,
-                behandlingId = behandling.behandlingId,
-                utløstAv = type,
+                behandling = behandling,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
@@ -213,13 +212,19 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             utløstAvType: UtløstAvType = SØKNAD,
             person: Person = testPerson,
         ) {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingId,
+                    utløstAv = utløstAvType,
+                    opprettet = LocalDateTime.now(),
+                    hendelse = TomHendelse,
+                )
             Oppgave(
                 oppgaveId = oppgaveId,
                 emneknagger = setOf(),
-                opprettet = LocalDateTime.now(),
+                opprettet = behandling.opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
-                behandlingId = behandlingId,
-                utløstAv = utløstAvType,
+                behandling = behandling,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(

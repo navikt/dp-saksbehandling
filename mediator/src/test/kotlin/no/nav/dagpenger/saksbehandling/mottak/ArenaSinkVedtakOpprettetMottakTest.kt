@@ -24,14 +24,14 @@ class ArenaSinkVedtakOpprettetMottakTest {
     private val testOppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet)
     private val mockPersonRepository =
         mockk<PersonRepository>(relaxed = true).apply {
-            every { hentPersonForBehandlingId(testOppgave.behandlingId) } returns testOppgave.person
+            every { hentPersonForBehandlingId(testOppgave.behandling.behandlingId) } returns testOppgave.person
         }
 
     @Test
     fun `Skal ta imot arenasink_vedtak_opprettet hendelser`() {
         val forventetVedtakFattetNendelse =
             VedtakFattetHendelse(
-                behandlingId = testOppgave.behandlingId,
+                behandlingId = testOppgave.behandling.behandlingId,
                 behandletHendelseId = søknadId.toString(),
                 behandletHendelseType = "Søknad",
                 ident = testOppgave.person.ident,
@@ -60,7 +60,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {
-            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandlingId)
+            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandling.behandlingId)
             mockUtsendingMediator.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse)
         }
     }
@@ -78,7 +78,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
             arenaSinkVedtakOpprettetHendelse.replace(VEDTAKSTATUS_IVERKSATT, "Muse Mikk")
         testRapid.sendTestMessage(vedtakOpprettetMenIkkeIverksattMelding)
         verify(exactly = 1) {
-            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandlingId)
+            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandling.behandlingId)
         }
 
         testRapid.inspektør.size shouldBe 0
@@ -96,7 +96,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
           "rettighet": "PERM",
           "utfall": false,
           "kilde": {
-            "id": "${testOppgave.behandlingId}",
+            "id": "${testOppgave.behandling.behandlingId}",
             "system": "dp-behandling"
           },
           "@id": "b525ed15-e041-4d80-a20c-2a26885eae75",
