@@ -26,11 +26,11 @@ internal object OppgaveApiTestHelper {
         testApplication {
             application {
                 installerApis(
-                    oppgaveMediator,
-                    oppgaveDTOMapper,
-                    mockk(relaxed = true),
-                    mockk(relaxed = true),
-                    mockk(relaxed = true),
+                    oppgaveMediator = oppgaveMediator,
+                    oppgaveDTOMapper = oppgaveDTOMapper,
+                    statistikkTjeneste = mockk(relaxed = true),
+                    klageMediator = mockk(relaxed = true),
+                    klageDTOMapper = mockk(relaxed = true),
                     personMediator = personMediator,
                     sakMediator = mockk(relaxed = true),
                 )
@@ -51,20 +51,20 @@ internal object OppgaveApiTestHelper {
         testApplication {
             application {
                 installerApis(
-                    oppgaveMediator,
-                    OppgaveDTOMapper(
+                    oppgaveMediator = oppgaveMediator,
+                    oppgaveDTOMapper = OppgaveDTOMapper(
                         Oppslag(
-                            pdlKlient,
-                            relevanteJournalpostIdOppslag,
-                            saksbehandlerOppslag,
+                            pdlKlient = pdlKlient,
+                            relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
+                            saksbehandlerOppslag = saksbehandlerOppslag,
                             skjermingKlient = mockk(relaxed = true),
                         ),
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                         mockk<SakMediator>(relaxed = true),
                     ),
-                    mockk(relaxed = true),
-                    mockk(relaxed = true),
-                    mockk(relaxed = true),
+                    statistikkTjeneste = mockk(relaxed = true),
+                    klageMediator = mockk(relaxed = true),
+                    klageDTOMapper = mockk(relaxed = true),
                     personMediator = personMediator,
                     sakMediator = mockk(relaxed = true),
                 )
