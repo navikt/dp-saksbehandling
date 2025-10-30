@@ -935,7 +935,7 @@ private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
 
 private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
-        "TomHendelse" -> return TomHendelse
+        "TomHendelse" -> TomHendelse
         "SøknadsbehandlingOpprettetHendelse" ->
             this.string("hendelse_data")
                 .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
