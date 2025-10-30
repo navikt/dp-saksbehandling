@@ -324,8 +324,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
-        // TODO: Fix skrivefeil i auditlogg
-        auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
+        auditlogg.oppdater("Avbrøt en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
