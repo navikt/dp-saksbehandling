@@ -45,9 +45,7 @@ object ModellTestHelper {
                 AVBRUTT -> Oppgave.Avbrutt
             }
         val person =
-            Person(
-                id = UUIDv7.ny(),
-                ident = "12345678910",
+            lagPerson(
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
@@ -78,4 +76,14 @@ object ModellTestHelper {
             grupper = setOf(),
             tilganger = setOf(saksbehandlerTilgang),
         )
+
+    internal fun lagPerson(
+        skjermesSomEgneAnsatte: Boolean = false,
+        adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+    ) = Person(
+        id = UUIDv7.ny(),
+        ident = "12345678910",
+        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+        adressebeskyttelseGradering = adressebeskyttelseGradering,
+    )
 }

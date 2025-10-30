@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -30,6 +31,10 @@ data class Henvendelse(
 
     fun leggTilbake(fjernAnsvarHendelse: FjernAnsvarHendelse) {
         tilstand.fjernAnsvar(this, fjernAnsvarHendelse)
+    }
+
+    fun ferdigstill(opprettManuellBehandlingHendelse: OpprettManuellBehandlingHendelse) {
+        tilstand.ferdigstill(this, opprettManuellBehandlingHendelse)
     }
 
     fun tilstand(): Tilstand = tilstand
@@ -67,14 +72,14 @@ data class Henvendelse(
             }
         }
 
-//        fun ferdigstill(
-//            henvendelse: Henvendelse,
-//            hendelse: Hendelse,
-//        ) {
-//            ulovligTilstandsendring(henvendelse.henvendelseId) {
-//                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
-//            }
-//        }
+        fun ferdigstill(
+            henvendelse: Henvendelse,
+            hendelse: OpprettManuellBehandlingHendelse,
+        ) {
+            ulovligTilstandsendring(henvendelse.henvendelseId) {
+                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            }
+        }
 
         object KlarTilBehandling : Tilstand {
             override fun tildel(
@@ -99,6 +104,16 @@ data class Henvendelse(
                     hendelse = fjernAnsvarHendelse,
                 )
                 henvendelse.behandlerIdent = null
+            }
+
+            override fun ferdigstill(
+                henvendelse: Henvendelse,
+                hendelse: OpprettManuellBehandlingHendelse,
+            ) {
+                henvendelse.endreTilstand(
+                    nyTilstand = Ferdigbehandlet,
+                    hendelse = hendelse,
+                )
             }
         }
 
