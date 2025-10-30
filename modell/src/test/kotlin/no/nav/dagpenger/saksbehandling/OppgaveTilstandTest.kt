@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.RETUR_FRA_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
@@ -22,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse

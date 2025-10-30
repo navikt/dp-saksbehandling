@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
 
-object OppgaveTestHelper {
+object ModellTestHelper {
     internal fun lagOppgave(
         tilstandType: Type = KLAR_TIL_BEHANDLING,
         behandler: Saksbehandler? = null,
@@ -72,7 +72,7 @@ object OppgaveTestHelper {
         )
     }
 
-    internal fun lagSaksbehandler(saksbehandlerTilgang: TilgangType) =
+    internal fun lagSaksbehandler(saksbehandlerTilgang: TilgangType = TilgangType.SAKSBEHANDLER) =
         Saksbehandler(
             navIdent = "saksbehandler",
             grupper = setOf(),

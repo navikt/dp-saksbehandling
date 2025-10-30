@@ -4,28 +4,49 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-class Henvendelse(
+data class Henvendelse(
     val henvendelseId: UUID = UUIDv7.ny(),
     val person: Person,
     val journalpostId: String,
     val registrert: LocalDateTime,
     private var behandlerIdent: String? = null,
     private var tilstand: Tilstand = Tilstand.KlarTilBehandling,
-    private val tilstandslogg: HenvendelseTilstandslogg = HenvendelseTilstandslogg(),
+    private val _tilstandslogg: HenvendelseTilstandslogg = HenvendelseTilstandslogg(),
 ) {
+    val tilstandslogg: HenvendelseTilstandslogg
+        get() = _tilstandslogg
+
     fun tildel(tildelHendelse: TildelHendelse) {
         tilstand.tildel(this, tildelHendelse)
+    }
+
+    fun leggTilbake(fjernAnsvarHendelse: FjernAnsvarHendelse) {
+        tilstand.fjernAnsvar(this, fjernAnsvarHendelse)
     }
 
     fun tilstand(): Tilstand = tilstand
 
     fun behandlerIdent(): String? = behandlerIdent
+
+    private fun endreTilstand(
+        nyTilstand: Tilstand,
+        hendelse: Hendelse,
+    ) {
+        logger.info {
+            "Endrer tilstand fra ${this.tilstand.javaClass.simpleName} til ${nyTilstand.javaClass.simpleName} " +
+                "for henvendelseId: ${this.henvendelseId} basert på hendelse: ${hendelse.javaClass.simpleName}"
+        }
+        this.tilstand = nyTilstand
+        this._tilstandslogg.leggTil(nyTilstand, hendelse)
+    }
 
     sealed interface Tilstand {
         fun tildel(
@@ -37,32 +58,62 @@ class Henvendelse(
             }
         }
 
+        fun fjernAnsvar(
+            henvendelse: Henvendelse,
+            fjernAnsvarHendelse: FjernAnsvarHendelse,
+        ) {
+            ulovligTilstandsendring(henvendelse.henvendelseId) {
+                "Kan ikke fjerne ansvar for henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            }
+        }
+
+//        fun ferdigstill(
+//            henvendelse: Henvendelse,
+//            hendelse: Hendelse,
+//        ) {
+//            ulovligTilstandsendring(henvendelse.henvendelseId) {
+//                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+//            }
+//        }
+
         object KlarTilBehandling : Tilstand {
             override fun tildel(
                 henvendelse: Henvendelse,
                 tildelHendelse: TildelHendelse,
             ) {
+                henvendelse.endreTilstand(
+                    nyTilstand = UnderBehandling,
+                    hendelse = tildelHendelse,
+                )
                 henvendelse.behandlerIdent = tildelHendelse.ansvarligIdent
-                henvendelse.tilstand = UnderBehandling
             }
         }
 
-        data object UnderBehandling : Tilstand
+        data object UnderBehandling : Tilstand {
+            override fun fjernAnsvar(
+                henvendelse: Henvendelse,
+                fjernAnsvarHendelse: FjernAnsvarHendelse,
+            ) {
+                henvendelse.endreTilstand(
+                    nyTilstand = KlarTilBehandling,
+                    hendelse = fjernAnsvarHendelse,
+                )
+                henvendelse.behandlerIdent = null
+            }
+        }
 
-        data class Ferdigbehandlet(val behandlerIdent: String, val ferdigstiltTidspunkt: LocalDateTime) : Tilstand
+        data object Ferdigbehandlet : Tilstand
 
         private fun ulovligTilstandsendring(
             henvendelseId: UUID,
             message: () -> String?,
         ): Nothing {
-            withLoggingContext("henndelseId" to henvendelseId.toString()) {
+            withLoggingContext("henvendelseId" to henvendelseId.toString()) {
                 logger.error(message)
             }
-            // todo gjøre noe med excaptions  skal vi gjenbruke noe eller blir det igjen trippel opp med klasser
+            // TODO gjøre noe med excaptions. Skal vi gjenbruke noe eller blir det igjen trippel opp med klasser
             // avhengig av om det er oppgave eller henvendelse eller kalge
             throw RuntimeException(message.invoke())
         }
     }
-
-    class HenvendelseTilstandslogg()
 }
