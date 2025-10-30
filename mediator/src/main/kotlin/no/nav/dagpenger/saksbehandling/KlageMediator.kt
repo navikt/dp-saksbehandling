@@ -101,7 +101,7 @@ class KlageMediator(
             )
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                loggOppgaveOpprettelsesfeil(klageBehandling)
                 throw e
             }
             .getOrThrow()
@@ -155,7 +155,7 @@ class KlageMediator(
             }
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                loggOppgaveOpprettelsesfeil(klageBehandling)
                 throw e
             }
             .getOrThrow()
@@ -324,8 +324,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
-        // TODO: Fix skrivefeil i auditlogg
-        auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
+        auditlogg.oppdater("Avbrøt en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
@@ -355,6 +354,10 @@ class KlageMediator(
         ).also {
             requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
         }
+    }
+
+    private fun loggOppgaveOpprettelsesfeil(klageBehandling: KlageBehandling) {
+        logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
     }
 }
 
