@@ -101,7 +101,7 @@ class KlageMediator(
             )
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                loggOppgaveOpprettelsesfeil(klageBehandling)
                 throw e
             }
             .getOrThrow()
@@ -155,7 +155,7 @@ class KlageMediator(
             }
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                loggOppgaveOpprettelsesfeil(klageBehandling)
                 throw e
             }
             .getOrThrow()
@@ -354,6 +354,10 @@ class KlageMediator(
         ).also {
             requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
         }
+    }
+
+    private fun loggOppgaveOpprettelsesfeil(klageBehandling: KlageBehandling) {
+        logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
     }
 }
 
