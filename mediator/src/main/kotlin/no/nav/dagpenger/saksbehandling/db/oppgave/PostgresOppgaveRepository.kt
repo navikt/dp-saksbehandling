@@ -905,7 +905,6 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
             throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
         }
 
-    // TODO: Kan vi bruke TomHendelse her??? Er det egentlig riktig at Behandling har hendelse?
     return Oppgave.rehydrer(
         oppgaveId = oppgaveId,
         behandlerIdent = this.stringOrNull("saksbehandler_ident"),

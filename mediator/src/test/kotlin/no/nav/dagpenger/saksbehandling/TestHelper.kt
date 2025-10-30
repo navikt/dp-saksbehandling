@@ -175,7 +175,7 @@ internal object TestHelper {
 
     fun lagBehandling(
         behandlingId: UUID = UUIDv7.ny(),
-        opprettet: LocalDateTime = LocalDateTime.now(),
+        opprettet: LocalDateTime = opprettetNå,
         hendelse: Hendelse = TomHendelse,
         utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
     ): Behandling {

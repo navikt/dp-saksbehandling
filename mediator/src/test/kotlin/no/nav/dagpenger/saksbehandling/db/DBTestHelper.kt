@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -29,7 +30,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
         companion object {
             val sakId = UUIDv7.ny()
             val søknadId = UUIDv7.ny()
-
+            val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
             val testPerson =
                 Person(
                     id = UUIDv7.ny(),
@@ -80,7 +81,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     Sak(
                         sakId = sakId,
                         søknadId = søknadId,
-                        opprettet = LocalDateTime.now(),
+                        opprettet = opprettetNå,
                     ),
                 block: DBTestHelper.(DataSource) -> Unit,
             ) {
@@ -101,14 +102,14 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     Behandling(
                         behandlingId = UUIDv7.ny(),
                         utløstAv = SØKNAD,
-                        opprettet = LocalDateTime.now(),
+                        opprettet = opprettetNå,
                         hendelse = TomHendelse,
                     ),
                 sak: Sak =
                     Sak(
                         sakId = sakId,
                         søknadId = søknadId,
-                        opprettet = LocalDateTime.now(),
+                        opprettet = opprettetNå,
                         behandlinger = mutableSetOf(behandling),
                     ),
                 block: DBTestHelper.(DataSource) -> Unit,
@@ -125,7 +126,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     Sak(
                         sakId = sakId,
                         søknadId = søknadId,
-                        opprettet = LocalDateTime.now(),
+                        opprettet = opprettetNå,
                         behandlinger = behandlinger.toMutableSet(),
                     ),
                 block: DBTestHelper.(DataSource) -> Unit,
@@ -161,7 +162,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
             emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
-            opprettet: LocalDateTime = LocalDateTime.now(),
+            opprettet: LocalDateTime = opprettetNå,
             type: UtløstAvType = SØKNAD,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             saksbehandlerIdent: String? = null,
@@ -216,7 +217,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 Behandling(
                     behandlingId = behandlingId,
                     utløstAv = utløstAvType,
-                    opprettet = LocalDateTime.now(),
+                    opprettet = opprettetNå,
                     hendelse = TomHendelse,
                 )
             Oppgave(

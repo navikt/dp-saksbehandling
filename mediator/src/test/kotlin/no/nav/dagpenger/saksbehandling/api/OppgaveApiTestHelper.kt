@@ -52,16 +52,17 @@ internal object OppgaveApiTestHelper {
             application {
                 installerApis(
                     oppgaveMediator = oppgaveMediator,
-                    oppgaveDTOMapper = OppgaveDTOMapper(
-                        Oppslag(
-                            pdlKlient = pdlKlient,
-                            relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
-                            saksbehandlerOppslag = saksbehandlerOppslag,
-                            skjermingKlient = mockk(relaxed = true),
+                    oppgaveDTOMapper =
+                        OppgaveDTOMapper(
+                            Oppslag(
+                                pdlKlient = pdlKlient,
+                                relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
+                                saksbehandlerOppslag = saksbehandlerOppslag,
+                                skjermingKlient = mockk(relaxed = true),
+                            ),
+                            OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+                            mockk<SakMediator>(relaxed = true),
                         ),
-                        OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
-                        mockk<SakMediator>(relaxed = true),
-                    ),
                     statistikkTjeneste = mockk(relaxed = true),
                     klageMediator = mockk(relaxed = true),
                     klageDTOMapper = mockk(relaxed = true),
