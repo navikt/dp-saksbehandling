@@ -518,13 +518,7 @@ class OppgaveMediator(
                     ).onSuccess {
                         oppgaveRepository.lagre(oppgave)
                     }.onFailure {
-                        utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                            when (rowsDeleted) {
-                                1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                                else -> logger.error { "Fant ikke utsending med id $utsendingId" }
-                            }
-                        }
-                        throw it
+                        håndterUtsendingVedFeil(utsendingId, it)
                     }
             }
 
@@ -537,13 +531,7 @@ class OppgaveMediator(
                     ).onSuccess {
                         oppgaveRepository.lagre(oppgave)
                     }.onFailure {
-                        utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                            when (rowsDeleted) {
-                                1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                                else -> logger.error { "Fant ikke utsending med id $utsendingId" }
-                            }
-                        }
-                        throw it
+                        håndterUtsendingVedFeil(utsendingId, it)
                     }
             }
         }
@@ -649,6 +637,19 @@ class OppgaveMediator(
             UNDER_KONTROLL -> true
             null -> false
         }
+    }
+
+    private fun håndterUtsendingVedFeil(
+        utsendingId: String,
+        error: Throwable,
+    ): Nothing {
+        utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
+            when (rowsDeleted) {
+                1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                else -> logger.error { "Fant ikke utsending med id $utsendingId" }
+            }
+        }
+        throw error
     }
 
     private fun sendAlertTilRapid(
