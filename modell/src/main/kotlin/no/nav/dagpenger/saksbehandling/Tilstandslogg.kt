@@ -5,12 +5,6 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class OppgaveTilstandslogg(
-    tilstandsendringer: List<Tilstandsendring<Oppgave.Tilstand.Type>> = listOf(),
-) : Tilstandslogg<Oppgave.Tilstand.Type>(tilstandsendringer.toMutableList()) {
-    constructor(vararg tilstandsEndringer: Tilstandsendring<Oppgave.Tilstand.Type>) : this(tilstandsEndringer.toMutableList())
-}
-
 open class Tilstandslogg<T : Enum<T>>(
     protected val tilstandsendringer: MutableList<Tilstandsendring<T>> = mutableListOf(),
 ) : List<Tilstandsendring<T>> by tilstandsendringer {
