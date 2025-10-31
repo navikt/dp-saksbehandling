@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -46,6 +47,7 @@ internal class HenvendelseBehovløser(
                         "journalpostId",
                         "fødselsnummer",
                         "kategori",
+                        "skjemaKode",
                         "registrertDato",
                     )
                     it.interestedIn("søknadId")
@@ -177,17 +179,4 @@ internal class HenvendelseBehovløser(
             )
     }
 
-    enum class Kategori {
-        NY_SØKNAD,
-        GJENOPPTAK,
-        GENERELL,
-        UTDANNING,
-        ETABLERING,
-        KLAGE,
-        ANKE,
-        KLAGE_FORSKUDD,
-        ETTERSENDING,
-        UKJENT_SKJEMA_KODE,
-        UTEN_BRUKER,
-    }
 }

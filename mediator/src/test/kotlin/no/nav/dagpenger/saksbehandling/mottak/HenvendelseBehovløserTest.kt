@@ -611,6 +611,7 @@ class HenvendelseBehovløserTest {
         ident: String,
         kategori: String,
         søknadId: UUID? = null,
+        skjemaKode: String = "NAV 04-07.08",
     ) = when (søknadId == null) {
         true ->
             //language=JSON
@@ -622,6 +623,7 @@ class HenvendelseBehovløserTest {
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$ident",
               "kategori" : "$kategori",
+              "skjemaKode" : "$skjemaKode",
               "registrertDato" : "${LocalDateTime.now()}"
             }
             """.trimIndent()
@@ -637,6 +639,7 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$ident",
               "søknadId" : "$søknadId",
               "kategori" : "$kategori",
+              "skjemaKode" : "$skjemaKode",
               "registrertDato" : "${LocalDateTime.now()}"
             }
             """.trimIndent()
