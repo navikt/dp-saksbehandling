@@ -7,6 +7,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.Oppslag
@@ -19,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -86,7 +86,7 @@ class PostgresKlageRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente klagebehandlinger`() {
-        setupDBOgSak { klageRepository, sakId ->
+        setupDBOgSak { klageRepository, _ ->
 
             val klageMottattHendelse =
                 KlageMottattHendelse(
@@ -105,7 +105,7 @@ class PostgresKlageRepositoryTest {
                     behandlendeEnhet = null,
                     tilstandslogg =
                         KlageTilstandslogg(
-                            KlageTilstandsendring(
+                            Tilstandsendring(
                                 tilstand = BEHANDLES,
                                 hendelse = klageMottattHendelse,
                             ),

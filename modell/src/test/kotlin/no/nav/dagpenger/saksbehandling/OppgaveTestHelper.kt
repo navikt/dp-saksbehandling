@@ -22,7 +22,7 @@ object OppgaveTestHelper {
         behandler: Saksbehandler? = null,
         skjermesSomEgneAnsatte: Boolean = false,
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
-        tilstandslogg: Tilstandslogg = Tilstandslogg(),
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         emneknagger: Set<String> = emptySet(),
         hendelse: Hendelse = TomHendelse,
         meldingOmVedtakKilde: Oppgave.MeldingOmVedtak =

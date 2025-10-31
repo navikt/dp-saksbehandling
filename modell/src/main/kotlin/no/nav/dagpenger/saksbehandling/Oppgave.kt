@@ -59,7 +59,7 @@ data class Oppgave private constructor(
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = KlarTilBehandling,
     private var utsattTil: LocalDate? = null,
-    private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
+    private val _tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     val behandlingId: UUID,
     val utløstAv: UtløstAvType,
     val person: Person,
@@ -71,7 +71,7 @@ data class Oppgave private constructor(
         opprettet: LocalDateTime,
         tilstand: Tilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
-        tilstandslogg: Tilstandslogg = Tilstandslogg(),
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         behandlingId: UUID,
         utløstAv: UtløstAvType,
         person: Person,
@@ -108,7 +108,7 @@ data class Oppgave private constructor(
             emneknagger: Set<String>,
             tilstand: Tilstand,
             utsattTil: LocalDate?,
-            tilstandslogg: Tilstandslogg = Tilstandslogg(),
+            tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             behandlingId: UUID,
             utløstAv: UtløstAvType,
             person: Person,
@@ -183,7 +183,7 @@ data class Oppgave private constructor(
 
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
-    val tilstandslogg: Tilstandslogg
+    val tilstandslogg: OppgaveTilstandslogg
         get() = _tilstandslogg
 
     fun personIdent() = person.ident

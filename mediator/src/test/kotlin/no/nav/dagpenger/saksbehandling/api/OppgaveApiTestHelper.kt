@@ -34,11 +34,11 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -180,39 +180,37 @@ internal object OppgaveApiTestHelper {
                     kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                 ),
             tilstandslogg =
-                Tilstandslogg.rehydrer(
-                    listOf(
-                        Tilstandsendring(
-                            tilstand = tilstand,
-                            hendelse =
-                                ForslagTilVedtakHendelse(
-                                    ident = TEST_IDENT,
-                                    behandletHendelseId = SOKNAD_ID.toString(),
-                                    behandletHendelseType = "Søknad",
-                                    behandlingId = behandling.behandlingId,
-                                ),
-                            tidspunkt = opprettet,
-                        ),
-                        Tilstandsendring(
-                            tilstand = UNDER_BEHANDLING,
-                            hendelse =
-                                SettOppgaveAnsvarHendelse(
-                                    oppgaveId = oppgaveId,
-                                    ansvarligIdent = SAKSBEHANDLER_IDENT,
-                                    utførtAv = Saksbehandler(SAKSBEHANDLER_IDENT, emptySet()),
-                                ),
-                            tidspunkt = opprettet.minusDays(2),
-                        ),
-                        Tilstandsendring(
-                            tilstand = UNDER_KONTROLL,
-                            hendelse =
-                                SettOppgaveAnsvarHendelse(
-                                    oppgaveId = oppgaveId,
-                                    ansvarligIdent = BESLUTTER_IDENT,
-                                    utførtAv = Saksbehandler(BESLUTTER_IDENT, emptySet()),
-                                ),
-                            tidspunkt = opprettet.minusDays(1),
-                        ),
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        tilstand = tilstand,
+                        hendelse =
+                            ForslagTilVedtakHendelse(
+                                ident = TEST_IDENT,
+                                behandletHendelseId = SOKNAD_ID.toString(),
+                                behandletHendelseType = "Søknad",
+                                behandlingId = behandling.behandlingId,
+                            ),
+                        tidspunkt = opprettet,
+                    ),
+                    Tilstandsendring(
+                        tilstand = UNDER_BEHANDLING,
+                        hendelse =
+                            SettOppgaveAnsvarHendelse(
+                                oppgaveId = oppgaveId,
+                                ansvarligIdent = SAKSBEHANDLER_IDENT,
+                                utførtAv = Saksbehandler(SAKSBEHANDLER_IDENT, emptySet()),
+                            ),
+                        tidspunkt = opprettet.minusDays(2),
+                    ),
+                    Tilstandsendring(
+                        tilstand = UNDER_KONTROLL,
+                        hendelse =
+                            SettOppgaveAnsvarHendelse(
+                                oppgaveId = oppgaveId,
+                                ansvarligIdent = BESLUTTER_IDENT,
+                                utførtAv = Saksbehandler(BESLUTTER_IDENT, emptySet()),
+                            ),
+                        tidspunkt = opprettet.minusDays(1),
                     ),
                 ),
         )

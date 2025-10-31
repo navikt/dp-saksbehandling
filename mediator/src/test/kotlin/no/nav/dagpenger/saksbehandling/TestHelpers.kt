@@ -37,7 +37,7 @@ fun lagOppgave(
     utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
     emneknagger: Set<String> = emptySet(),
     utsattTil: LocalDate? = null,
-    tilstandslogg: Tilstandslogg = Tilstandslogg(),
+    tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     oppgaveId: UUID = UUIDv7.ny(),
 ): Oppgave {
     return Oppgave.rehydrer(

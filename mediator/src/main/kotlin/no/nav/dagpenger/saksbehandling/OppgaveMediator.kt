@@ -89,7 +89,7 @@ class OppgaveMediator(
                     emneknagger = emptySet(),
                     opprettet = behandling.opprettet,
                     tilstandslogg =
-                        Tilstandslogg(
+                        OppgaveTilstandslogg(
                             Tilstandsendring(
                                 tilstand = KLAR_TIL_BEHANDLING,
                                 hendelse = behandlingOpprettetHendelse,
@@ -166,7 +166,7 @@ class OppgaveMediator(
                             emneknagger = forslagTilVedtakHendelse.emneknagger,
                             opprettet = behandling.opprettet,
                             tilstandslogg =
-                                Tilstandslogg(
+                                OppgaveTilstandslogg(
                                     Tilstandsendring(
                                         tilstand = KLAR_TIL_BEHANDLING,
                                         hendelse = forslagTilVedtakHendelse,
