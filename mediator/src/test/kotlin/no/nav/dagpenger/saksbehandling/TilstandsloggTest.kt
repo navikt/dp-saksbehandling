@@ -34,14 +34,14 @@ class TilstandsloggTest {
 
     @Test
     fun `elementer sorteres etter tidspunkt, nyeste først`() {
-        Tilstandslogg.rehydrer(listOf(hendelseIdag, hendelseImorgen, hendelseIGår)).let {
+        Tilstandslogg(hendelseIdag, hendelseImorgen, hendelseIGår).let {
             it shouldBe (listOf(hendelseImorgen, hendelseIdag, hendelseIGår))
         }
     }
 
     @Test
     fun `elementer legges til starten av listen`() {
-        Tilstandslogg().let { logg ->
+        Tilstandslogg<Oppgave.Tilstand.Type>().let { logg ->
             logg.leggTil(OPPRETTET, TomHendelse)
             logg.leggTil(KLAR_TIL_KONTROLL, TomHendelse)
             logg.leggTil(UNDER_BEHANDLING, TomHendelse)

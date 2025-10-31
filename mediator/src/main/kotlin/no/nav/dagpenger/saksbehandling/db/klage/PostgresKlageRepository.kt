@@ -6,6 +6,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -21,7 +22,6 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
-import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
@@ -116,7 +116,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
 
     private fun TransactionalSession.lagre(
         behandlingId: UUID,
-        tilstandsendring: KlageTilstandsendring,
+        tilstandsendring: Tilstandsendring<KlageTilstand.Type>,
     ) {
         this.run(
             queryOf(
@@ -198,7 +198,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
-                    KlageTilstandsendring(
+                    Tilstandsendring(
                         id = row.uuid("id"),
                         tilstand = KlageTilstand.Type.valueOf(row.string("tilstand")),
                         hendelse =
@@ -209,7 +209,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         tidspunkt = row.localDateTime("tidspunkt"),
                     )
                 }.asList,
-            ).let { KlageTilstandslogg.rehydrer(it) }
+            ).let { KlageTilstandslogg(it) }
         }
     }
 

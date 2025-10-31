@@ -4,10 +4,10 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
@@ -164,7 +164,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             person: Person = testPerson,
             opprettet: LocalDateTime = opprettetNå,
             type: UtløstAvType = SØKNAD,
-            tilstandslogg: Tilstandslogg = Tilstandslogg(),
+            tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             saksbehandlerIdent: String? = null,
         ): Oppgave {
             this.lagre(person)

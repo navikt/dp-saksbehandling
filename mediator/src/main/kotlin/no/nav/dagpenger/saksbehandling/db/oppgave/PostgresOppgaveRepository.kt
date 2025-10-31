@@ -33,9 +33,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
@@ -682,7 +682,7 @@ private fun finnNotat(
 private fun hentTilstandsloggForOppgave(
     oppgaveId: UUID,
     dataSource: DataSource,
-): Tilstandslogg {
+): OppgaveTilstandslogg {
     return sessionOf(dataSource).use { session ->
         session.run(
             queryOf(
@@ -695,7 +695,7 @@ private fun hentTilstandsloggForOppgave(
                     """.trimIndent(),
                 paramMap = mapOf("oppgave_id" to oppgaveId),
             ).map { row ->
-                Tilstandsendring(
+                Tilstandsendring<Type>(
                     id = row.uuid("id"),
                     tilstand = Type.valueOf(row.string("tilstand")),
                     hendelse =
@@ -706,7 +706,7 @@ private fun hentTilstandsloggForOppgave(
                     tidspunkt = row.localDateTime("tidspunkt"),
                 )
             }.asList,
-        ).let { Tilstandslogg.rehydrer(it) }
+        ).let { OppgaveTilstandslogg(it) }
     }
 }
 
@@ -837,7 +837,7 @@ private fun TransactionalSession.lagre(
 
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
-    tilstandsendring: Tilstandsendring,
+    tilstandsendring: Tilstandsendring<Type>,
 ) {
     this.run(
         queryOf(
@@ -869,7 +869,7 @@ private fun TransactionalSession.lagre(
 
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
-    tilstandslogg: Tilstandslogg,
+    tilstandslogg: OppgaveTilstandslogg,
 ) {
     tilstandslogg.forEach { tilstandsendring ->
         this.lagre(oppgaveId, tilstandsendring)

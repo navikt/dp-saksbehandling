@@ -50,10 +50,12 @@ data class Henvendelse(
                 "for henvendelseId: ${this.henvendelseId} basert på hendelse: ${hendelse.javaClass.simpleName}"
         }
         this.tilstand = nyTilstand
-        this._tilstandslogg.leggTil(nyTilstand, hendelse)
+        this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
     }
 
     sealed interface Tilstand {
+        val type: Type
+
         fun tildel(
             henvendelse: Henvendelse,
             tildelHendelse: TildelHendelse,
@@ -81,7 +83,15 @@ data class Henvendelse(
             }
         }
 
+        enum class Type {
+            KLAR_TIL_BEHANDLING,
+            UNDER_BEHANDLING,
+            FERDIGBEHANDLET,
+        }
+
         object KlarTilBehandling : Tilstand {
+            override val type: Type = Type.KLAR_TIL_BEHANDLING
+
             override fun tildel(
                 henvendelse: Henvendelse,
                 tildelHendelse: TildelHendelse,
@@ -95,6 +105,8 @@ data class Henvendelse(
         }
 
         data object UnderBehandling : Tilstand {
+            override val type: Type = Type.UNDER_BEHANDLING
+
             override fun fjernAnsvar(
                 henvendelse: Henvendelse,
                 fjernAnsvarHendelse: FjernAnsvarHendelse,
@@ -117,7 +129,9 @@ data class Henvendelse(
             }
         }
 
-        data object Ferdigbehandlet : Tilstand
+        data object Ferdigbehandlet : Tilstand {
+            override val type: Type = Type.FERDIGBEHANDLET
+        }
 
         private fun ulovligTilstandsendring(
             henvendelseId: UUID,
