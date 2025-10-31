@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -12,9 +13,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
@@ -26,7 +27,7 @@ internal class OppgaveHistorikkDTOMapper(
     private val repository: OppgaveRepository,
     private val saksbehandlerOppslag: SaksbehandlerOppslag,
 ) {
-    suspend fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
+    suspend fun lagOppgaveHistorikk(tilstandslogg: OppgaveTilstandslogg): List<OppgaveHistorikkDTO> {
         val historikk = mutableListOf<OppgaveHistorikkDTO>()
         tilstandslogg.forEach { tilstandsendring ->
 
@@ -56,7 +57,7 @@ internal class OppgaveHistorikkDTOMapper(
         return historikk
     }
 
-    private fun tilstandsendringTittel(tilstandsendring: Tilstandsendring): String {
+    private fun tilstandsendringTittel(tilstandsendring: Tilstandsendring<Oppgave.Tilstand.Type>): String {
         return when (tilstandsendring.tilstand) {
             OPPRETTET -> "Opprettet"
             KLAR_TIL_BEHANDLING -> "Klar til behandling"

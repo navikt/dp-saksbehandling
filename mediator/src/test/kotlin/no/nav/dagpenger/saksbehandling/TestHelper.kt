@@ -35,7 +35,7 @@ internal object TestHelper {
             id = personId,
             ident = personIdent,
             skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            adressebeskyttelseGradering = UGRADERT,
         )
 
     val testBehandling =
@@ -106,40 +106,38 @@ internal object TestHelper {
 
     val søknadId = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
 
-    fun lagTilstandLogg(): Tilstandslogg {
-        return Tilstandslogg.rehydrer(
-            listOf(
-                Tilstandsendring(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    hendelse =
-                        ForslagTilVedtakHendelse(
-                            ident = personIdent,
-                            behandletHendelseId = søknadId.toString(),
-                            behandletHendelseType = "Søknad",
-                            behandlingId = UUID.randomUUID(),
-                        ),
-                    tidspunkt = opprettetNå,
-                ),
-                Tilstandsendring(
-                    tilstand = UNDER_BEHANDLING,
-                    hendelse =
-                        SettOppgaveAnsvarHendelse(
-                            oppgaveId = oppgaveId,
-                            ansvarligIdent = saksbehandler.navIdent,
-                            utførtAv = saksbehandler,
-                        ),
-                    tidspunkt = opprettetNå.minusDays(2),
-                ),
-                Tilstandsendring(
-                    tilstand = UNDER_KONTROLL,
-                    hendelse =
-                        SettOppgaveAnsvarHendelse(
-                            oppgaveId = oppgaveId,
-                            ansvarligIdent = beslutter.navIdent,
-                            utførtAv = beslutter,
-                        ),
-                    tidspunkt = opprettetNå.minusDays(1),
-                ),
+    fun lagTilstandLogg(): OppgaveTilstandslogg {
+        return OppgaveTilstandslogg(
+            Tilstandsendring(
+                tilstand = KLAR_TIL_BEHANDLING,
+                hendelse =
+                    ForslagTilVedtakHendelse(
+                        ident = personIdent,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        behandlingId = UUID.randomUUID(),
+                    ),
+                tidspunkt = opprettetNå,
+            ),
+            Tilstandsendring(
+                tilstand = UNDER_BEHANDLING,
+                hendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                tidspunkt = opprettetNå.minusDays(2),
+            ),
+            Tilstandsendring(
+                tilstand = UNDER_KONTROLL,
+                hendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgaveId,
+                        ansvarligIdent = beslutter.navIdent,
+                        utførtAv = beslutter,
+                    ),
+                tidspunkt = opprettetNå.minusDays(1),
             ),
         )
     }
@@ -152,7 +150,7 @@ internal object TestHelper {
         behandling: Behandling = lagBehandling(opprettet = opprettet),
         emneknagger: Set<String> = emptySet(),
         utsattTil: LocalDate? = null,
-        tilstandslogg: Tilstandslogg = Tilstandslogg(),
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
     ): Oppgave {
         return Oppgave.rehydrer(

@@ -178,5 +178,4 @@ internal class HenvendelseBehovløser(
                     },
             )
     }
-
 }

@@ -5,8 +5,8 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
@@ -24,7 +24,7 @@ class RelevanteJournalpostIdOppslagTest {
         val oppgave =
             TestHelper.lagOppgave(
                 tilstandslogg =
-                    Tilstandslogg().also {
+                    OppgaveTilstandslogg().also {
                         it.leggTil(
                             nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             hendelse =

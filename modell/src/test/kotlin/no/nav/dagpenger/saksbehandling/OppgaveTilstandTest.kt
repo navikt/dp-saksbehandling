@@ -430,7 +430,7 @@ class OppgaveTilstandTest {
                 tilstandType = UNDER_KONTROLL,
                 behandler = beslutter,
                 tilstandslogg =
-                    Tilstandslogg(
+                    OppgaveTilstandslogg(
                         tilstandsendringer =
                             mutableListOf(
                                 Tilstandsendring(
@@ -826,7 +826,7 @@ class OppgaveTilstandTest {
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 tilstandslogg =
-                    Tilstandslogg().also {
+                    OppgaveTilstandslogg().also {
                         it.leggTil(
                             nyTilstand = KLAR_TIL_BEHANDLING,
                             hendelse =

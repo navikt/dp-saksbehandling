@@ -36,9 +36,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
@@ -535,19 +535,17 @@ class OppgaveApiTest {
                 tilstand = Oppgave.KlarTilBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
                 tilstandslogg =
-                    Tilstandslogg.rehydrer(
-                        listOf(
-                            Tilstandsendring(
-                                tilstand = KLAR_TIL_BEHANDLING,
-                                hendelse =
-                                    ForslagTilVedtakHendelse(
-                                        ident = TestHelper.personIdent,
-                                        behandletHendelseId = TestHelper.søknadId.toString(),
-                                        behandletHendelseType = "Søknad",
-                                        behandlingId = UUID.randomUUID(),
-                                    ),
-                                tidspunkt = TestHelper.opprettetNå,
-                            ),
+                    OppgaveTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = KLAR_TIL_BEHANDLING,
+                            hendelse =
+                                ForslagTilVedtakHendelse(
+                                    ident = TestHelper.personIdent,
+                                    behandletHendelseId = TestHelper.søknadId.toString(),
+                                    behandletHendelseType = "Søknad",
+                                    behandlingId = UUID.randomUUID(),
+                                ),
+                            tidspunkt = TestHelper.opprettetNå,
                         ),
                     ),
             )

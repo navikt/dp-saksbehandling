@@ -6,13 +6,12 @@ import java.util.UUID
 
 sealed class HåndterHenvendelseResultat {
     data class HåndtertHenvendelse(val sakId: UUID) : HåndterHenvendelseResultat()
-    object UhåndtertHenvendelse : HåndterHenvendelseResultat()
 
+    object UhåndtertHenvendelse : HåndterHenvendelseResultat()
 }
 
 class HenvendelseMediator(private val sakMediator: SakMediator) {
     fun taImotHenvendelse(hendelse: HenvendelseMottattHendelse): HåndterHenvendelseResultat {
-
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
         return when (sisteSakId) {
             null -> {

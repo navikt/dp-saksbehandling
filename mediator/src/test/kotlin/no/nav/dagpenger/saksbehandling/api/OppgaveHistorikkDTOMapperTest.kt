@@ -9,11 +9,11 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -71,7 +71,7 @@ class OppgaveHistorikkDTOMapperTest {
                 val historikk =
                     mapper.lagOppgaveHistorikk(
                         tilstandslogg =
-                            Tilstandslogg().also {
+                            OppgaveTilstandslogg().also {
                                 it.leggTil(
                                     nyTilstand = UNDER_KONTROLL,
                                     hendelse =
