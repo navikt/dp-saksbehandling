@@ -11,6 +11,9 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
+import no.nav.dagpenger.saksbehandling.henvendelse.HåndterHenvendelseResultat
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -39,13 +42,43 @@ class HenvendelseBehovløserTest {
             coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomSkalVarsles, any()) } returns true
             coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomIkkeSkalVarsles, any()) } returns false
         }
+    private val henvendelseMediatorMock =
+        mockk<HenvendelseMediator>().also {
+            coEvery {
+                it.taImotHenvendelse(
+                    HenvendelseMottattHendelse(
+                        ident = testIdentMedSak,
+                        journalpostId = any(),
+                        registrertTidspunkt = any(),
+                        søknadId = any(),
+                        skjemaKode = any(),
+                        kategori = any(),
+                        utførtAv = any(),
+                    ),
+                )
+            } returns HåndterHenvendelseResultat.HåndtertHenvendelse(sakId)
+            coEvery {
+                it.taImotHenvendelse(
+                    HenvendelseMottattHendelse(
+                        ident = testIdentUtenSak,
+                        journalpostId = any(),
+                        registrertTidspunkt = any(),
+                        søknadId = any(),
+                        skjemaKode = any(),
+                        kategori = any(),
+                        utførtAv = any(),
+                    ),
+                )
+            } returns HåndterHenvendelseResultat.UhåndtertHenvendelse
+        }
 
     init {
         HenvendelseBehovløser(
-            testRapid,
-            sakMediatorMock,
-            klageMediatorMock,
-            oppgaveMediatorMock,
+            rapidsConnection = testRapid,
+            sakMediator = sakMediatorMock,
+            klageMediator = klageMediatorMock,
+            oppgaveMediator = oppgaveMediatorMock,
+            henvendelseMediator = henvendelseMediatorMock,
         )
     }
 
@@ -262,6 +295,8 @@ class HenvendelseBehovløserTest {
               ],
               "journalpostId": "$journalpostId",
               "fødselsnummer": "$testIdentUtenSak",
+              "registrertDato": "2024-01-01T12:00:00",
+              "skjemaKode": "todoFixMe",
               "kategori": "KLAGE",
               "@løsning" : {
                 "HåndterHenvendelse": {
@@ -294,6 +329,8 @@ class HenvendelseBehovløserTest {
               "@behov" : [ "HåndterHenvendelse" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$testIdentMedSak",
+              "registrertDato": "2024-01-01T12:00:00",
+              "skjemaKode": "todoFixMe",
               "kategori" : "ANKE",
               "@løsning" : {
                 "HåndterHenvendelse": {
@@ -327,6 +364,8 @@ class HenvendelseBehovløserTest {
               "@behov" : [ "HåndterHenvendelse" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$testIdentUtenSak",
+              "registrertDato": "2024-01-01T12:00:00",
+              "skjemaKode": "todoFixMe",
               "kategori" : "ANKE",
               "@løsning" : {
                 "HåndterHenvendelse": {
@@ -640,7 +679,7 @@ class HenvendelseBehovløserTest {
               "søknadId" : "$søknadId",
               "kategori" : "$kategori",
               "skjemaKode" : "$skjemaKode",
-              "registrertDato" : "${LocalDateTime.now()}"
+              "registrertDato" : "2024-01-01T12:00:00"
             }
             """.trimIndent()
     }

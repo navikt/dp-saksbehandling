@@ -9,11 +9,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
+import no.nav.dagpenger.saksbehandling.henvendelse.HåndterHenvendelseResultat
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -22,6 +23,7 @@ internal class HenvendelseBehovløser(
     private val sakMediator: SakMediator,
     private val klageMediator: KlageMediator,
     private val oppgaveMediator: OppgaveMediator,
+    private val henvendelseMediator: HenvendelseMediator,
 ) : River.PacketListener {
     companion object {
         val behovNavn: String = "HåndterHenvendelse"
@@ -61,86 +63,50 @@ internal class HenvendelseBehovløser(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val kategori: Kategori = Kategori.valueOf(packet["kategori"].asText())
         val ident = packet["fødselsnummer"].asText()
-        val registrertDato = packet["registrertDato"].asLocalDateTime()
+        val kategori: Kategori = Kategori.valueOf(packet["kategori"].asText())
         val journalpostId = packet["journalpostId"].asText()
+
         withLoggingContext("journalpostId" to journalpostId, "kategori" to kategori.name) {
+            val søknadId: UUID? =
+                if (!packet["søknadId"].isMissingNode && !packet["søknadId"].isNull) {
+                    packet["søknadId"].asUUID()
+                } else {
+                    null
+                }
+            val henvendelseMottattHendelse =
+                HenvendelseMottattHendelse(
+                    ident = ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = packet["registrertDato"].asLocalDateTime(),
+                    søknadId = søknadId,
+                    skjemaKode = packet["skjemaKode"].asText(),
+                    kategori = Kategori.valueOf(packet["kategori"].asText()),
+                )
             logger.info { "Skal løse behov $behovNavn for journalpostId $journalpostId og kategori $kategori" }
-            when (kategori) {
-                Kategori.KLAGE -> {
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        true -> {
-                            klageMediator.opprettKlage(
-                                KlageMottattHendelse(
-                                    ident = ident,
-                                    opprettet = registrertDato,
-                                    journalpostId = journalpostId,
-                                    sakId = sisteSakId,
-                                    utførtAv = Applikasjon("dp-saksbehandling"),
+
+            val håndterHenvendelseResultat = henvendelseMediator.taImotHenvendelse(henvendelseMottattHendelse)
+            when (håndterHenvendelseResultat) {
+                is HåndterHenvendelseResultat.HåndtertHenvendelse -> {
+                    packet["@løsning"] =
+                        mapOf(
+                            "$behovNavn" to
+                                mapOf(
+                                    "sakId" to håndterHenvendelseResultat.sakId,
+                                    "håndtert" to true,
                                 ),
-                            )
-                            packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        }
-
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
-                }
-                Kategori.ANKE -> {
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        true -> {
-                            // TODO Skal denne sendes rett til KA eller opprett henvendelse og ta det derfra?
-                            packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        }
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
-                }
-                Kategori.ETTERSENDING -> {
-                    if (!packet["søknadId"].isMissingNode && !packet["søknadId"].isNull) {
-                        val søknadId = packet["søknadId"].asUUID()
-                        if (oppgaveMediator.skalEttersendingTilSøknadVarsles(ident = ident, søknadId = søknadId)) {
-                            // TODO opprett henvendelse
-                        }
-                    }
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
-                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
-                }
-                Kategori.UTDANNING -> {
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
-                }
-                Kategori.ETABLERING -> {
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
-                }
-                Kategori.GENERELL -> {
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
-                }
-                Kategori.UKJENT_SKJEMA_KODE -> {
-                    val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    when (sisteSakId != null) {
-                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                        false -> packet.lagLøsning(håndtert = false)
-                    }
+                        )
                 }
 
-                else -> packet.lagLøsning(false)
+                HåndterHenvendelseResultat.UhåndtertHenvendelse -> {
+                    packet["@løsning"] =
+                        mapOf(
+                            "$behovNavn" to
+                                mapOf(
+                                    "håndtert" to false,
+                                ),
+                        )
+                }
             }
             packet["@final"] = true
             context.publish(
@@ -154,29 +120,4 @@ internal class HenvendelseBehovløser(
             }
         }
     }
-
-    private fun JsonMessage.lagLøsning(
-        håndtert: Boolean,
-        sakId: UUID? = null,
-    ) {
-        this["@løsning"] =
-            mapOf(
-                "$behovNavn" to
-                    when (sakId != null) {
-                        true -> {
-                            mapOf(
-                                "sakId" to sakId,
-                                "håndtert" to håndtert,
-                            )
-                        }
-
-                        false -> {
-                            mapOf(
-                                "håndtert" to håndtert,
-                            )
-                        }
-                    },
-            )
-    }
-
 }

@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
@@ -151,6 +152,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             meldingOmVedtakKlient = meldingOmVedtakKlient,
             sakMediator = sakMediator,
         )
+    private val henvendelseMediator =
+        HenvendelseMediator(
+            sakMediator = sakMediator,
+            oppgaveMediator = oppgaveMediator,
+        )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
             oppslag = oppslag,
@@ -209,6 +215,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 sakMediator = sakMediator,
                 klageMediator = klageMediator,
                 oppgaveMediator = oppgaveMediator,
+                henvendelseMediator = henvendelseMediator,
             )
 
             BehandlingsresultatMottakForUtsending(
