@@ -362,7 +362,7 @@ OppgaveMediatorTest {
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger1,
                 ),
             )
@@ -372,7 +372,7 @@ OppgaveMediatorTest {
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger2,
                 ),
             )
@@ -425,13 +425,13 @@ OppgaveMediatorTest {
             Behandling(
                 behandlingId = hendelse.behandlingId,
                 opprettet = LocalDateTime.now(),
+                utløstAv = UtløstAvType.SØKNAD,
                 hendelse = hendelse,
             )
         val oppgave =
-            lagOppgave(
+            TestHelper.lagOppgave(
                 tilstand = tilstand,
-                behandlingId = behandling.behandlingId,
-                utløstAvType = behandling.utløstAv,
+                behandling = behandling,
                 person = person,
             )
 
@@ -639,8 +639,8 @@ OppgaveMediatorTest {
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
             ferdigbehandletOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
-            val utsending = utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandlingId)
-            utsending.behandlingId shouldBe ferdigbehandletOppgave.behandlingId
+            val utsending = utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId)
+            utsending.behandlingId shouldBe ferdigbehandletOppgave.behandling.behandlingId
             utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
         }
     }
@@ -710,7 +710,7 @@ OppgaveMediatorTest {
                 utsendingRepository = PostgresUtsendingRepository(datasource),
                 brevProdusent = mockk(),
             ).also { utsendingMediator ->
-                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandlingId) shouldBe null
+                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId) shouldBe null
             }
         }
     }
@@ -779,7 +779,7 @@ OppgaveMediatorTest {
 
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     behandletHendelseId = oppgave.soknadId()!!.toString(),
                     behandletHendelseType = "Søknad",
                     ident = testIdent,

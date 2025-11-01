@@ -51,6 +51,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 data class Oppgave private constructor(
     val oppgaveId: UUID,
@@ -60,9 +61,8 @@ data class Oppgave private constructor(
     private var tilstand: Tilstand = KlarTilBehandling,
     private var utsattTil: LocalDate? = null,
     private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
-    val behandlingId: UUID,
-    val utløstAv: UtløstAvType,
     val person: Person,
+    val behandling: Behandling,
     private var meldingOmVedtak: MeldingOmVedtak,
 ) {
     constructor(
@@ -72,9 +72,8 @@ data class Oppgave private constructor(
         tilstand: Tilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
-        behandlingId: UUID,
-        utløstAv: UtløstAvType,
         person: Person,
+        behandling: Behandling,
         meldingOmVedtak: MeldingOmVedtak,
     ) : this(
         oppgaveId = oppgaveId,
@@ -83,15 +82,12 @@ data class Oppgave private constructor(
         _emneknagger = emneknagger.toMutableSet(),
         tilstand = tilstand,
         _tilstandslogg = tilstandslogg,
-        behandlingId = behandlingId,
-        utløstAv = utløstAv,
         person = person,
+        behandling = behandling,
         meldingOmVedtak = meldingOmVedtak,
     )
 
     companion object {
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
-
         internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
@@ -109,9 +105,8 @@ data class Oppgave private constructor(
             tilstand: Tilstand,
             utsattTil: LocalDate?,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
-            behandlingId: UUID,
-            utløstAv: UtløstAvType,
             person: Person,
+            behandling: Behandling,
             meldingOmVedtak: MeldingOmVedtak,
         ): Oppgave =
             Oppgave(
@@ -122,9 +117,8 @@ data class Oppgave private constructor(
                 tilstand = tilstand,
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
-                behandlingId = behandlingId,
-                utløstAv = utløstAv,
                 person = person,
+                behandling = behandling,
                 meldingOmVedtak = meldingOmVedtak,
             )
 

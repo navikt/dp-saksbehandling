@@ -14,12 +14,12 @@ class RelevanteJournalpostIdOppslag(
     private val klageRepository: KlageRepository,
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
-        when (oppgave.utløstAv) {
+        when (oppgave.behandling.utløstAv) {
             UtløstAvType.KLAGE -> return coroutineScope {
                 val journalpostIderKlage: String? =
-                    klageRepository.hentKlageBehandling(oppgave.behandlingId).journalpostId()
+                    klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
                 val journalpostMeldingOmVedtak =
-                    utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandlingId)?.journalpostId()
+                    utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
                 (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
             }
 
@@ -27,7 +27,7 @@ class RelevanteJournalpostIdOppslag(
                 return coroutineScope {
                     val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
                     val journalpostMeldingOmVedtak =
-                        utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandlingId)?.journalpostId()
+                        utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
                     (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
                 }
 

@@ -141,7 +141,7 @@ internal class OppgaveDTOMapper(
 
         OppgaveDTO(
             oppgaveId = oppgave.oppgaveId,
-            behandlingId = oppgave.behandlingId,
+            behandlingId = oppgave.behandling.behandlingId,
             person = lagPersonDTO(oppgave.person, person),
             tidspunktOpprettet = oppgave.opprettet,
             behandlingType = oppgave.tilBehandlingTypeDTO(),
@@ -236,7 +236,7 @@ internal class OppgaveDTOMapper(
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
-        behandlingId = this.behandlingId,
+        behandlingId = this.behandling.behandlingId,
         personIdent = this.personIdent(),
         tidspunktOpprettet = this.opprettet,
         behandlingType = this.tilBehandlingTypeDTO(),
@@ -290,7 +290,7 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
 }
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
-    return when (this.utløstAv) {
+    return when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
@@ -299,7 +299,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
 }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
-    return when (this.utløstAv) {
+    return when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
