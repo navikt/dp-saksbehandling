@@ -32,22 +32,16 @@ class HenvendelseMediator(
 
         if (skalEttersendingTilSøknadVarsles || sisteSakId != null) {
             val henvendelse =
-                Henvendelse.opprett(
-                    person = personMediator.finnEllerOpprettPerson(hendelse.ident),
-                    journalpostId = hendelse.journalpostId,
-                    registrert = hendelse.registrertTidspunkt,
-                    skjemaKode = hendelse.skjemaKode,
-                    kategori = hendelse.kategori,
-                    hendelse = hendelse,
-                )
-            henvendelseRepository.lagre(henvendelse)
+                Henvendelse.opprett(hendelse = hendelse) { ident ->
+                    personMediator.finnEllerOpprettPerson(ident)
+                }
+            henvendelseRepository.lagre(henvendelse = henvendelse)
         }
 
         return when (sisteSakId) {
             null -> {
                 HåndterHenvendelseResultat.UhåndtertHenvendelse
             }
-
             else -> {
                 HåndterHenvendelseResultat.HåndtertHenvendelse(sisteSakId)
             }

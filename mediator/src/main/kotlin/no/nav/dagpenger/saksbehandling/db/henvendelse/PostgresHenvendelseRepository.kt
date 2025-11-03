@@ -5,10 +5,13 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseTilstandslogg
@@ -34,6 +37,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
     }
 
     private fun finnHenvendelse(henvendelseId: UUID): Henvendelse? {
+        val tilstandLoggg = hentTilstandsloggForHenvendelse(henvendelseId)
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
@@ -49,13 +53,13 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                             "henvendelse_id" to henvendelseId,
                         ),
                 ).map { row ->
-                    row.rehydrerHenvendelse()
+                    row.rehydrerHenvendelse(tilstandLoggg)
                 }.asSingle,
             )
         }
     }
 
-    private fun Row.rehydrerHenvendelse(): Henvendelse {
+    private fun Row.rehydrerHenvendelse(tilstandLoggg: HenvendelseTilstandslogg): Henvendelse {
         val henvendelseId = this.uuid("id")
         val tilstand =
             runCatching {
@@ -67,26 +71,27 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
             }.getOrElse { t ->
                 throw RuntimeException("Kunne ikke rehydrere henvendelse til tilstand: ${string("tilstand")} ${t.message}")
             }
-        return Henvendelse(
+
+        return Henvendelse.rehydrer(
             henvendelseId = henvendelseId,
-            person = TODO(),
+            person =
+                Person(
+                    id = this.uuid("person_id"),
+                    ident = this.string("ident"),
+                    skjermesSomEgneAnsatte = this.boolean("skjermesSomEgneAnsatte"),
+                    adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse")),
+                ),
             journalpostId = this.string("journalpost_id"),
-            skjemaKode = this.string("skjema_kode"),
             mottatt = this.localDateTime("mottatt"),
+            skjemaKode = this.string("skjemaKode"),
+            kategori = Kategori.valueOf(this.string("kategori")),
             behandlerIdent = this.stringOrNull("behandler_ident"),
             tilstand = tilstand,
-//            _tilstandslogg = HenvendelseTilstandslogg()
-//            _tilstandslogg = hentTilstandsloggForHenvendelse(
-//                henvendelseId = henvendelseId,
-//                dataSource = dataSource,
-//            )
+            tilstandslogg = tilstandLoggg,
         )
     }
 
-    private fun hentTilstandsloggForHenvendelse(
-        henvendelseId: UUID,
-        dataSource: DataSource,
-    ): HenvendelseTilstandslogg {
+    private fun hentTilstandsloggForHenvendelse(henvendelseId: UUID): HenvendelseTilstandslogg {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(

@@ -19,7 +19,7 @@ class Henvendelse private constructor(
     val henvendelseId: UUID = UUIDv7.ny(),
     val person: Person,
     val journalpostId: String,
-    val registrert: LocalDateTime,
+    val mottatt: LocalDateTime,
     val skjemaKode: String,
     val kategori: Kategori,
     private var behandlerIdent: String? = null,
@@ -28,22 +28,43 @@ class Henvendelse private constructor(
 ) {
     companion object {
         fun opprett(
-            person: Person,
-            journalpostId: String,
-            registrert: LocalDateTime,
-            skjemaKode: String,
-            kategori: Kategori,
             hendelse: HenvendelseMottattHendelse,
+            personProvider: (ident: String) -> Person,
         ): Henvendelse {
             return Henvendelse(
-                person = person,
-                journalpostId = journalpostId,
-                registrert = registrert,
-                skjemaKode = skjemaKode,
-                kategori = kategori,
+                person = personProvider.invoke(hendelse.ident),
+                journalpostId = hendelse.journalpostId,
+                mottatt = hendelse.registrertTidspunkt,
+                skjemaKode = hendelse.skjemaKode,
+                kategori = hendelse.kategori,
+                tilstand = Tilstand.KlarTilBehandling,
             ).also {
                 it._tilstandslogg.leggTil(Tilstand.Type.KLAR_TIL_BEHANDLING, hendelse)
             }
+        }
+
+        fun rehydrer(
+            henvendelseId: UUID = UUIDv7.ny(),
+            person: Person,
+            journalpostId: String,
+            mottatt: LocalDateTime,
+            skjemaKode: String,
+            kategori: Kategori,
+            behandlerIdent: String?,
+            tilstand: Tilstand,
+            tilstandslogg: HenvendelseTilstandslogg,
+        ): Henvendelse {
+            return Henvendelse(
+                henvendelseId = henvendelseId,
+                person = person,
+                journalpostId = journalpostId,
+                mottatt = mottatt,
+                skjemaKode = skjemaKode,
+                kategori = kategori,
+                behandlerIdent = behandlerIdent,
+                tilstand = tilstand,
+                _tilstandslogg = tilstandslogg,
+            )
         }
     }
 

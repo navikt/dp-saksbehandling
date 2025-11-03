@@ -4,6 +4,8 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.ModellTestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import org.junit.jupiter.api.Test
@@ -14,12 +16,20 @@ class HenvendelseTest {
     fun `Livssyklus til en henvendelse`() {
         val saksbehandler = ModellTestHelper.lagSaksbehandler()
         val testPerson = ModellTestHelper.lagPerson()
-        val henvendelse =
-            Henvendelse(
-                person = testPerson,
-                journalpostId = "JP123456",
-                registrert = LocalDateTime.now(),
+        val henvendelseMottattHendelse =
+            HenvendelseMottattHendelse(
+                ident = testPerson.ident,
+                journalpostId = "jp12",
+                registrertTidspunkt = LocalDateTime.now(),
+                søknadId = null,
+                skjemaKode = "skjemaKode",
+                kategori = Kategori.GENERELL,
             )
+
+        val henvendelse =
+            Henvendelse.opprett(
+                hendelse = henvendelseMottattHendelse,
+            ) { ident -> testPerson }
 
         henvendelse.tildel(
             TildelHendelse(

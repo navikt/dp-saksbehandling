@@ -92,7 +92,7 @@ class HenvendelseMediatorTest {
         slot.captured.let {
             it.person shouldBe personMedSak
             it.journalpostId shouldBe journalpostId
-            it.registrert shouldBe registrertTidspunkt
+            it.mottatt shouldBe registrertTidspunkt
             it.skjemaKode shouldBe skjemaKode
             it.kategori shouldBe Kategori.KLAGE
             it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -162,7 +162,7 @@ class HenvendelseMediatorTest {
         slot.captured.let {
             it.person shouldBe personUtenSak
             it.journalpostId shouldBe journalpostId
-            it.registrert shouldBe registrertTidspunkt
+            it.mottatt shouldBe registrertTidspunkt
             it.skjemaKode shouldBe skjemaKode
             it.kategori shouldBe Kategori.ETTERSENDING
             it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
