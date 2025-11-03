@@ -12,10 +12,13 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseTilstandslogg
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
+import no.nav.dagpenger.saksbehandling.serder.tilJson
+import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -36,6 +39,38 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
             ?: throw DataNotFoundException("Kan ikke finne henvendelse med id $henvendelseId")
     }
 
+    private fun TransactionalSession.lagre(
+        henvendelseId: UUID,
+        tilstandsendring: Tilstandsendring<Type>,
+    ) {
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO henvendelse_tilstand_logg_v1
+                        (id, henvendelse_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                    VALUES
+                        (:id, :henvendelse_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "id" to tilstandsendring.id,
+                        "henvendelse_id" to henvendelseId,
+                        "tilstand" to tilstandsendring.tilstand.name,
+                        "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
+                        "hendelse" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = tilstandsendring.hendelse.tilJson()
+                            },
+                        "tidspunkt" to tilstandsendring.tidspunkt,
+                    ),
+            ).asUpdate,
+        )
+    }
+
     private fun finnHenvendelse(henvendelseId: UUID): Henvendelse? {
         val tilstandLoggg = hentTilstandsloggForHenvendelse(henvendelseId)
         sessionOf(dataSource).use { session ->
@@ -44,9 +79,20 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT * 
-                        FROM   henvendelse_v1
-                        WHERE  id = :henvendelse_id
+                        SELECT  henv.id as henvendelse_id, 
+                                henv.journalpost_id, 
+                                henv.skjema_kode, 
+                                henv.kategori,
+                                henv.mottatt, 
+                                henv.behandler_ident, 
+                                henv.tilstand,
+                                pers.id as person_id, 
+                                pers.ident, 
+                                pers.skjermes_som_egne_ansatte, 
+                                pers.adressebeskyttelse_gradering as adressebeskyttelse
+                        FROM    henvendelse_v1 henv
+                        JOIN    person_v1 pers ON pers.id = henv.person_id
+                        WHERE   henv.id = :henvendelse_id
                         """.trimIndent(),
                     paramMap =
                         mapOf(
@@ -60,7 +106,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
     }
 
     private fun Row.rehydrerHenvendelse(tilstandLoggg: HenvendelseTilstandslogg): Henvendelse {
-        val henvendelseId = this.uuid("id")
+        val henvendelseId = this.uuid("henvendelse_id")
         val tilstand =
             runCatching {
                 when (Type.valueOf(value = string("tilstand"))) {
@@ -78,12 +124,12 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                 Person(
                     id = this.uuid("person_id"),
                     ident = this.string("ident"),
-                    skjermesSomEgneAnsatte = this.boolean("skjermesSomEgneAnsatte"),
+                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
                     adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse")),
                 ),
             journalpostId = this.string("journalpost_id"),
             mottatt = this.localDateTime("mottatt"),
-            skjemaKode = this.string("skjemaKode"),
+            skjemaKode = this.string("skjema_kode"),
             kategori = Kategori.valueOf(this.string("kategori")),
             behandlerIdent = this.stringOrNull("behandler_ident"),
             tilstand = tilstand,
@@ -125,6 +171,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
     ): Hendelse {
         return when (hendelseType) {
             "HenvendelseMottattHendelse" -> hendelseJson.tilHendelse<HenvendelseMottattHendelse>()
+            "TildelHendelse" -> hendelseJson.tilHendelse<TildelHendelse>()
             else -> {
                 logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
                 sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
@@ -140,10 +187,10 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                 statement =
                     """
                     INSERT INTO henvendelse_v1
-                        (id, person_id, journalpost_id, skjema_kode, mottatt, behandler_ident, tilstand)
+                        (id, person_id, journalpost_id, skjema_kode, kategori, mottatt, behandler_ident, tilstand)
                     VALUES
-                        (:id, :person_id, :journalpost_id, : skjema_kode, :mottatt, :behandler_ident, :tilstand)
-                    ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
+                        (:id, :person_id, :journalpost_id, :skjema_kode, :kategori, :mottatt, :behandler_ident, :tilstand)
+                    ON CONFLICT (id) DO UPDATE SET behandler_ident = :behandler_ident, tilstand = :tilstand     
                     """.trimIndent(),
                 paramMap =
                     mapOf(
@@ -151,11 +198,15 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                         "person_id" to henvendelse.person.id,
                         "journalpost_id" to henvendelse.journalpostId,
                         "skjema_kode" to henvendelse.skjemaKode,
+                        "kategori" to henvendelse.kategori.name,
                         "mottatt" to henvendelse.mottatt,
                         "behandler_ident" to henvendelse.behandlerIdent(),
                         "tilstand" to henvendelse.tilstand().type.name,
                     ),
             ).asUpdate,
         )
+        henvendelse.tilstandslogg.forEach { tilstandsendring ->
+            lagre(henvendelse.henvendelseId, tilstandsendring)
+        }
     }
 }

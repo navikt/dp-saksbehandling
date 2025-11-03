@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS henvendelse_v1
     journalpost_id       TEXT                        NOT NULL,
     mottatt              TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     skjema_kode          TEXT                        NOT NULL,
+    kategori             TEXT                        NOT NULL,
     tilstand             TEXT                        NOT NULL,
     behandler_ident      TEXT,
     registrert_tidspunkt TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp),

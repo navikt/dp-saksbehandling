@@ -87,6 +87,12 @@ class Henvendelse private constructor(
 
     fun behandlerIdent(): String? = behandlerIdent
 
+    override fun toString(): String {
+        return "Henvendelse(henvendelseId=$henvendelseId, person=$person, journalpostId='$journalpostId', " +
+            "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, behandlerIdent=$behandlerIdent, " +
+            "tilstand=${tilstand.type})"
+    }
+
     private fun endreTilstand(
         nyTilstand: Tilstand,
         hendelse: Hendelse,
@@ -97,6 +103,38 @@ class Henvendelse private constructor(
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Henvendelse
+
+        if (henvendelseId != other.henvendelseId) return false
+        if (person != other.person) return false
+        if (journalpostId != other.journalpostId) return false
+        if (mottatt != other.mottatt) return false
+        if (skjemaKode != other.skjemaKode) return false
+        if (kategori != other.kategori) return false
+        if (behandlerIdent != other.behandlerIdent) return false
+        if (tilstand != other.tilstand) return false
+        if (_tilstandslogg != other._tilstandslogg) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = henvendelseId.hashCode()
+        result = 31 * result + person.hashCode()
+        result = 31 * result + journalpostId.hashCode()
+        result = 31 * result + mottatt.hashCode()
+        result = 31 * result + skjemaKode.hashCode()
+        result = 31 * result + kategori.hashCode()
+        result = 31 * result + (behandlerIdent?.hashCode() ?: 0)
+        result = 31 * result + tilstand.hashCode()
+        result = 31 * result + _tilstandslogg.hashCode()
+        return result
     }
 
     sealed interface Tilstand {
