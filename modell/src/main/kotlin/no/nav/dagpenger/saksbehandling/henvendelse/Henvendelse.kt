@@ -6,6 +6,8 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import java.time.LocalDateTime
@@ -13,15 +15,38 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-data class Henvendelse(
+class Henvendelse private constructor(
     val henvendelseId: UUID = UUIDv7.ny(),
     val person: Person,
     val journalpostId: String,
     val registrert: LocalDateTime,
+    val skjemaKode: String,
+    val kategori: Kategori,
     private var behandlerIdent: String? = null,
     private var tilstand: Tilstand = Tilstand.KlarTilBehandling,
     private val _tilstandslogg: HenvendelseTilstandslogg = HenvendelseTilstandslogg(),
 ) {
+    companion object {
+        fun opprett(
+            person: Person,
+            journalpostId: String,
+            registrert: LocalDateTime,
+            skjemaKode: String,
+            kategori: Kategori,
+            hendelse: HenvendelseMottattHendelse,
+        ): Henvendelse {
+            return Henvendelse(
+                person = person,
+                journalpostId = journalpostId,
+                registrert = registrert,
+                skjemaKode = skjemaKode,
+                kategori = kategori,
+            ).also {
+                it._tilstandslogg.leggTil(Tilstand.Type.KLAR_TIL_BEHANDLING, hendelse)
+            }
+        }
+    }
+
     val tilstandslogg: HenvendelseTilstandslogg
         get() = _tilstandslogg
 
