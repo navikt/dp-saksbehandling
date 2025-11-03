@@ -212,9 +212,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
             HenvendelseBehovløser(
                 rapidsConnection = rapidsConnection,
-                sakMediator = sakMediator,
-                klageMediator = klageMediator,
-                oppgaveMediator = oppgaveMediator,
                 henvendelseMediator = henvendelseMediator,
             )
 
