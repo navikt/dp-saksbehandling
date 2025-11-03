@@ -40,13 +40,13 @@ class HenvendelseTest {
 
         henvendelse.tilstand() shouldBe Henvendelse.Tilstand.UnderBehandling
         henvendelse.behandlerIdent() shouldBe saksbehandler.navIdent
-        henvendelse.tilstandslogg.size shouldBe 1
+        henvendelse.tilstandslogg.size shouldBe 2
 
         henvendelse.leggTilbake(FjernAnsvarHendelse(utførtAv = saksbehandler))
 
         henvendelse.tilstand() shouldBe Henvendelse.Tilstand.KlarTilBehandling
         henvendelse.behandlerIdent() shouldBe null
-        henvendelse.tilstandslogg.size shouldBe 2
+        henvendelse.tilstandslogg.size shouldBe 3
 
         henvendelse.tildel(
             TildelHendelse(
@@ -57,7 +57,7 @@ class HenvendelseTest {
 
         henvendelse.tilstand() shouldBe Henvendelse.Tilstand.UnderBehandling
         henvendelse.behandlerIdent() shouldBe saksbehandler.navIdent
-        henvendelse.tilstandslogg.size shouldBe 3
+        henvendelse.tilstandslogg.size shouldBe 4
 
         henvendelse.ferdigstill(
             OpprettManuellBehandlingHendelse(
@@ -72,6 +72,6 @@ class HenvendelseTest {
 
         henvendelse.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
         henvendelse.behandlerIdent() shouldBe saksbehandler.navIdent
-        henvendelse.tilstandslogg.size shouldBe 4
+        henvendelse.tilstandslogg.size shouldBe 5
     }
 }
