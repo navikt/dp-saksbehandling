@@ -65,7 +65,7 @@ class HenvendelseTest {
             henvendelseFerdigstiltHendelse =
                 HenvendelseFerdigstiltHendelse(
                     henvendelseId = henvendelse.henvendelseId,
-                    aksjon = Aksjon.OpprettManuellBehandling,
+                    aksjon = Aksjon.OpprettManuellBehandling::class.java.simpleName,
                     behandlingId = UUIDv7.ny(),
                     utførtAv = saksbehandler,
                 ),

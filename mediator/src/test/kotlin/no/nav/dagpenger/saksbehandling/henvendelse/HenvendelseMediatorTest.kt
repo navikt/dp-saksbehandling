@@ -134,7 +134,7 @@ class HenvendelseMediatorTest {
         val henvendelseFerdigstiltHendelse =
             HenvendelseFerdigstiltHendelse(
                 henvendelseId = henvendelseId,
-                aksjon = "aksjon",
+                aksjon = Aksjon.OpprettKlage::class.java.simpleName,
                 behandlingId = behandlingId,
                 utførtAv = saksbehandler,
             )
@@ -170,8 +170,7 @@ class HenvendelseMediatorTest {
         slot.captured.let {
             it.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
             it.tilstandslogg.first().hendelse.let { hendelse ->
-                hendelse shouldBe
-                    henvendelseFerdigstiltHendelse
+                hendelse shouldBe henvendelseFerdigstiltHendelse
             }
         }
     }
