@@ -24,6 +24,10 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseBehandler
 import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
@@ -158,8 +162,16 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             sakMediator = sakMediator,
             oppgaveMediator = oppgaveMediator,
             personMediator = personMediator,
-            klageMediator = klageMediator,
             henvendelseRepository = PostgresHenvendelseRepository(dataSource),
+            henvendelseBehandler =
+                object : HenvendelseBehandler {
+                    override fun utførAksjon(
+                        hendelse: FerdigstillHenvendelseHendelse,
+                        henvendelse: Henvendelse,
+                    ): HenvendelseFerdigstiltHendelse {
+                        TODO("Not yet implemented")
+                    }
+                },
         )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
