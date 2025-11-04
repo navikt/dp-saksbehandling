@@ -12,8 +12,11 @@ import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseTilstandslogg
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDate
@@ -30,6 +33,15 @@ internal object TestHelper {
     val behandlingId = UUIDv7.ny()
     val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     val oppgaveId = UUIDv7.ny()
+    val saksbehandler =
+        Saksbehandler(
+            "SaksbehandlerIdent",
+            setOf(Configuration.saksbehandlerADGruppe),
+            setOf(
+                SAKSBEHANDLER,
+            ),
+        )
+
     val testPerson =
         Person(
             id = personId,
@@ -76,6 +88,19 @@ internal object TestHelper {
                 ),
         )
 
+    val testHenvendelse =
+        Henvendelse.rehydrer(
+            henvendelseId = UUID.randomUUID(),
+            person = testPerson,
+            journalpostId = "journalpostId",
+            mottatt = opprettetNå,
+            skjemaKode = "skjemaKode",
+            kategori = Kategori.GENERELL,
+            behandlerIdent = saksbehandler.navIdent,
+            tilstand = Henvendelse.Tilstand.KlarTilBehandling,
+            tilstandslogg = HenvendelseTilstandslogg(),
+        )
+
     fun lagPerson(
         ident: String = randomFnr(),
         id: UUID = UUIDv7.ny(),
@@ -87,15 +112,6 @@ internal object TestHelper {
         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
         adressebeskyttelseGradering = addresseBeskyttelseGradering,
     )
-
-    val saksbehandler =
-        Saksbehandler(
-            "SaksbehandlerIdent",
-            setOf(Configuration.saksbehandlerADGruppe),
-            setOf(
-                SAKSBEHANDLER,
-            ),
-        )
 
     val beslutter =
         Saksbehandler(
