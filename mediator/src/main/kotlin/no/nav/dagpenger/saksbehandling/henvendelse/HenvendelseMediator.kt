@@ -82,8 +82,13 @@ class HenvendelseBehandlerImpl(
                     behandlingId = null,
                     utførtAv = hendelse.utførtAv,
                 )
+
             is Aksjon.OpprettKlage -> opprettKlage(hendelse = hendelse, henvendelse = henvendelse)
-            is Aksjon.OpprettManuellBehandling -> opprettManuellBehandling(hendelse = hendelse, henvendelse = henvendelse)
+            is Aksjon.OpprettManuellBehandling ->
+                opprettManuellBehandling(
+                    hendelse = hendelse,
+                    henvendelse = henvendelse,
+                )
         }
     }
 
