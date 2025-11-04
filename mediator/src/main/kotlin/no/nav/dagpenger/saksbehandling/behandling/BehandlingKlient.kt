@@ -116,11 +116,13 @@ internal class BehandlingHttpKlient(
             runCatching {
                 httpClient.post("$dpBehandlingApiUrl/person/behandling") {
                     header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
                     accept(ContentType.Application.Json)
+                    setBody(Request(personIdent))
                 }.body<BehandlingDTO>().behandlingId.let { UUID.fromString(it) }
             }
         }.onFailure {
-            logger.error(it) { "Kall til dp-behandling for å hente opprette manuell behandling feilet ${it.message}" }
+            logger.error(it) { "Kall til dp-behandling for hente opprette manuell behandling feilet ${it.message}" }
         }
     }
 

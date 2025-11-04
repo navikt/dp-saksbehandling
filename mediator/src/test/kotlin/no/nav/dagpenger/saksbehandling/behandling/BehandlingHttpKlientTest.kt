@@ -6,13 +6,14 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.request.HttpRequestData
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
 import kotlin.test.Test
-import kotlin.test.fail
 
 class BehandlingHttpKlientTest {
     val saksbehandlerToken = "token"
@@ -33,11 +34,30 @@ class BehandlingHttpKlientTest {
                         MockEngine { request: HttpRequestData ->
                             requestData = request
                             when (request.url.encodedPath) {
-                                in setOf("asfsaf") -> {
-                                    respond(
-                                        content = "OK",
-                                        status = HttpStatusCode.OK,
-                                    )
+                                in setOf("/person/behandling") -> {
+                                    when (request.method.value) {
+                                        "POST" -> {
+                                            respond(
+                                                //language=JSON
+                                                content =
+                                                    """
+                                                    {
+                                                      "behandlingId": "$behandlingId",
+                                                      "kreverTotrinnskontroll": false
+                                                    }
+                                                    """.trimIndent(),
+                                                status = HttpStatusCode.OK,
+                                                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                                            )
+                                        }
+
+                                        else -> {
+                                            respond(
+                                                content = "Error",
+                                                status = HttpStatusCode.InternalServerError,
+                                            )
+                                        }
+                                    }
                                 }
 
                                 in
@@ -47,17 +67,19 @@ class BehandlingHttpKlientTest {
                                     "/$behandlingId/beslutt",
                                     "/$behandlingId/send-tilbake",
                                 ),
-                                ->
+                                -> {
                                     respond(
                                         content = "OK",
                                         status = HttpStatusCode.OK,
                                     )
+                                }
 
-                                else ->
+                                else -> {
                                     respond(
                                         content = "Error",
                                         status = HttpStatusCode.InternalServerError,
                                     )
+                                }
                             }
                         },
                     registry = PrometheusRegistry(),
@@ -66,7 +88,17 @@ class BehandlingHttpKlientTest {
 
     @Test
     fun `kall mot dp-behandling opprett manuelt behandling `() {
-        fail("NOT IMPLEMENTED")
+        runBlocking {
+            behandlingKlient.opprettManuellBehandling(ident, saksbehandlerToken)
+                .getOrThrow() shouldBe behandlingId
+
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+                it.headers[HttpHeaders.Authorization] shouldBe "Bearer $saksbehandlerToken"
+                it.headers[HttpHeaders.Accept] shouldBe "application/json"
+            }
+        }
     }
 
     @Test
