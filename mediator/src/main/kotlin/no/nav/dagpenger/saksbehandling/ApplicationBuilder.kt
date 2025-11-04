@@ -158,6 +158,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             sakMediator = sakMediator,
             oppgaveMediator = oppgaveMediator,
             personMediator = personMediator,
+            klageMediator = klageMediator,
             henvendelseRepository = PostgresHenvendelseRepository(dataSource),
         )
     private val oppgaveDTOMapper =

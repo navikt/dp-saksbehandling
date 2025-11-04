@@ -10,12 +10,17 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettKlageHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
@@ -59,6 +64,16 @@ class HenvendelseMediatorTest {
             every { it.finnEllerOpprettPerson(personMedSak.ident) } returns personMedSak
             every { it.finnEllerOpprettPerson(personUtenSak.ident) } returns personUtenSak
         }
+    private val klageOppgave =
+        TestHelper.lagOppgave(
+            person = personMedSak,
+            behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE),
+        )
+
+    private val klageMediatorMock: KlageMediator =
+        mockk<KlageMediator>().also {
+            every { it.opprettKlage(any()) } returns klageOppgave
+        }
 
     @Test
     fun `Skal lage henvendelse dersom vi eier saken`() {
@@ -72,6 +87,7 @@ class HenvendelseMediatorTest {
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
+                klageMediator = klageMediatorMock,
                 henvendelseRepository = henvendelseRepositoryMock,
             )
 
@@ -108,6 +124,7 @@ class HenvendelseMediatorTest {
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
+                klageMediator = klageMediatorMock,
                 henvendelseRepository = henvendelseRepository,
             )
 
@@ -142,6 +159,7 @@ class HenvendelseMediatorTest {
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
+                klageMediator = klageMediatorMock,
                 henvendelseRepository = henvendelseRepositoryMock,
             )
 
@@ -168,5 +186,52 @@ class HenvendelseMediatorTest {
             it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
             it.tilstandslogg.single().hendelse shouldBe henvendelseMottattHendelse
         }
+    }
+
+    @Test
+    fun `Skal ferdigstille henvendelse når klage opprettes`() {
+        val henvendelse =
+            Henvendelse.opprett(
+                hendelse =
+                    HenvendelseMottattHendelse(
+                        ident = personMedSak.ident,
+                        journalpostId = journalpostId,
+                        registrertTidspunkt = registrertTidspunkt,
+                        søknadId = null,
+                        skjemaKode = skjemaKode,
+                        kategori = Kategori.KLAGE,
+                    ),
+                personProvider = { ident -> personMedSak },
+            )
+        val henvendelseRepositoryMock: HenvendelseRepository =
+            mockk<HenvendelseRepository>().also {
+                every { it.hent(any()) } returns henvendelse
+            }
+        val mediator =
+            HenvendelseMediator(
+                sakMediator = sakMediatorMock,
+                oppgaveMediator = oppgaveMediatorMock,
+                personMediator = personMediatorMock,
+                klageMediator = klageMediatorMock,
+                henvendelseRepository = henvendelseRepositoryMock,
+            )
+        henvendelse.tildel(
+            tildelHendelse =
+                TildelHendelse(
+                    utførtAv = TestHelper.saksbehandler,
+                    ansvarligIdent = TestHelper.saksbehandler.navIdent,
+                ),
+        )
+        mediator.ferdigstill(
+            OpprettKlageHendelse(
+                henvendelseId = henvendelse.henvendelseId,
+                ident = personMedSak.ident,
+                mottatt = henvendelse.mottatt,
+                journalpostId = henvendelse.journalpostId,
+                sakId = sakId,
+                utførtAv = TestHelper.saksbehandler,
+            ),
+        )
+        henvendelse.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
     }
 }

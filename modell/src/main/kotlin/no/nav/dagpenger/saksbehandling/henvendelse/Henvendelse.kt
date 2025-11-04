@@ -8,6 +8,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import java.time.LocalDateTime
@@ -79,8 +81,19 @@ class Henvendelse private constructor(
         tilstand.fjernAnsvar(this, fjernAnsvarHendelse)
     }
 
+    fun ferdigstill(henvendelseFerdigstiltHendelse: HenvendelseFerdigstiltHendelse) {
+
+    }
     fun ferdigstill(opprettManuellBehandlingHendelse: OpprettManuellBehandlingHendelse) {
         tilstand.ferdigstill(this, opprettManuellBehandlingHendelse)
+    }
+
+//    fun ferdigstill(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
+//        tilstand.ferdigstill(this, manuellBehandlingOpprettetHendelse)
+//    }
+
+    fun ferdigstill(klageOpprettetHendelse: KlageOpprettetHendelse) {
+        tilstand.ferdigstill(this, klageOpprettetHendelse)
     }
 
     fun tilstand(): Tilstand = tilstand
@@ -167,6 +180,24 @@ class Henvendelse private constructor(
             }
         }
 
+        fun ferdigstill(
+            henvendelse: Henvendelse,
+            hendelse: ManuellBehandlingOpprettetHendelse,
+        ) {
+            ulovligTilstandsendring(henvendelse.henvendelseId) {
+                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            }
+        }
+
+        fun ferdigstill(
+            henvendelse: Henvendelse,
+            hendelse: KlageOpprettetHendelse,
+        ) {
+            ulovligTilstandsendring(henvendelse.henvendelseId) {
+                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            }
+        }
+
         enum class Type {
             KLAR_TIL_BEHANDLING,
             UNDER_BEHANDLING,
@@ -205,6 +236,26 @@ class Henvendelse private constructor(
             override fun ferdigstill(
                 henvendelse: Henvendelse,
                 hendelse: OpprettManuellBehandlingHendelse,
+            ) {
+                henvendelse.endreTilstand(
+                    nyTilstand = Ferdigbehandlet,
+                    hendelse = hendelse,
+                )
+            }
+
+            override fun ferdigstill(
+                henvendelse: Henvendelse,
+                hendelse: ManuellBehandlingOpprettetHendelse,
+            ) {
+                henvendelse.endreTilstand(
+                    nyTilstand = Ferdigbehandlet,
+                    hendelse = hendelse,
+                )
+            }
+
+            override fun ferdigstill(
+                henvendelse: Henvendelse,
+                hendelse: KlageOpprettetHendelse,
             ) {
                 henvendelse.endreTilstand(
                     nyTilstand = Ferdigbehandlet,
