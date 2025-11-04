@@ -112,7 +112,16 @@ internal class BehandlingHttpKlient(
         personIdent: String,
         saksbehandlerToken: String,
     ): Result<UUID> {
-        TODO("Not yet implemented")
+        return runBlocking {
+            runCatching {
+                httpClient.post("$dpBehandlingApiUrl/person/behandling") {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    accept(ContentType.Application.Json)
+                }.body<BehandlingDTO>().behandlingId.let { UUID.fromString(it) }
+            }
+        }.onFailure {
+            logger.error(it) { "Kall til dp-behandling for å hente opprette manuell behandling feilet ${it.message}" }
+        }
     }
 
     override suspend fun kreverTotrinnskontroll(

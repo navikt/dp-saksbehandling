@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
 import kotlin.test.Test
+import kotlin.test.fail
 
 class BehandlingHttpKlientTest {
     val saksbehandlerToken = "token"
@@ -32,6 +33,13 @@ class BehandlingHttpKlientTest {
                         MockEngine { request: HttpRequestData ->
                             requestData = request
                             when (request.url.encodedPath) {
+                                in setOf("asfsaf") -> {
+                                    respond(
+                                        content = "OK",
+                                        status = HttpStatusCode.OK,
+                                    )
+                                }
+
                                 in
                                 setOf(
                                     "/$behandlingId/avbryt",
@@ -55,6 +63,11 @@ class BehandlingHttpKlientTest {
                     registry = PrometheusRegistry(),
                 ),
         )
+
+    @Test
+    fun `kall mot dp-behandling opprett manuelt behandling `() {
+        fail("NOT IMPLEMENTED")
+    }
 
     @Test
     fun `kall mot dp-behandling happy path `(): Unit =
