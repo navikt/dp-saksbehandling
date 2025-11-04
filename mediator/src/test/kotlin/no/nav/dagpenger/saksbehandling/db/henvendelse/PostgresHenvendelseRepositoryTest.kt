@@ -8,13 +8,11 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import no.nav.dagpenger.saksbehandling.hendelser.KlageOpprettetHendelse
 
 class PostgresHenvendelseRepositoryTest {
     @Test
@@ -79,17 +77,8 @@ class PostgresHenvendelseRepositoryTest {
 
             repository.hent(henvendelse.henvendelseId) shouldBe henvendelse
 
-            henvendelse.ferdigstill(
-                opprettManuellBehandlingHendelse =
-                    OpprettManuellBehandlingHendelse(
-                        manuellId = UUIDv7.ny(),
-                        behandlingId = UUIDv7.ny(),
-                        ident = testPerson.ident,
-                        opprettet = nå,
-                        basertPåBehandling = UUIDv7.ny(),
-                        utførtAv = saksbehandler,
-                    ),
-            )
+//            TODO henvendelse.ferdigstill(
+
             repository.lagre(henvendelse)
 
             repository.hent(henvendelse.henvendelseId) shouldBe henvendelse
@@ -137,21 +126,11 @@ class PostgresHenvendelseRepositoryTest {
             repository.lagre(henvendelse)
             repository.hent(henvendelse.henvendelseId) shouldBe henvendelse
 
-            henvendelse.ferdigstill(
-                klageOpprettetHendelse =
-                    KlageOpprettetHendelse(
-                        behandlingId = UUIDv7.ny(),
-                        ident = testPerson.ident,
-                        mottatt = henvendelseMottattHendelse.registrertTidspunkt,
-                        journalpostId = henvendelseMottattHendelse.journalpostId,
-                        sakId = sakId,
-                        utførtAv = saksbehandler,
-                    ),
-            )
+//            TODO henvendelse.ferdigstill(
+
             repository.lagre(henvendelse)
 
             repository.hent(henvendelse.henvendelseId) shouldBe henvendelse
         }
     }
-
 }

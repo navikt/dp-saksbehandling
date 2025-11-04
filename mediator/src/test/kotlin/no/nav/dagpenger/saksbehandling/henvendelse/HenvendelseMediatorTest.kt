@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -222,16 +221,8 @@ class HenvendelseMediatorTest {
                     ansvarligIdent = TestHelper.saksbehandler.navIdent,
                 ),
         )
-        mediator.ferdigstill(
-            OpprettKlageHendelse(
-                henvendelseId = henvendelse.henvendelseId,
-                ident = personMedSak.ident,
-                mottatt = henvendelse.mottatt,
-                journalpostId = henvendelse.journalpostId,
-                sakId = sakId,
-                utførtAv = TestHelper.saksbehandler,
-            ),
-        )
+        // TODO ferdigstill
+
         henvendelse.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
     }
 }

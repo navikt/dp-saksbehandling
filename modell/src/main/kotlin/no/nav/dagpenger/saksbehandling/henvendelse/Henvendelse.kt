@@ -6,11 +6,9 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.KlageOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -82,18 +80,7 @@ class Henvendelse private constructor(
     }
 
     fun ferdigstill(henvendelseFerdigstiltHendelse: HenvendelseFerdigstiltHendelse) {
-
-    }
-    fun ferdigstill(opprettManuellBehandlingHendelse: OpprettManuellBehandlingHendelse) {
-        tilstand.ferdigstill(this, opprettManuellBehandlingHendelse)
-    }
-
-//    fun ferdigstill(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-//        tilstand.ferdigstill(this, manuellBehandlingOpprettetHendelse)
-//    }
-
-    fun ferdigstill(klageOpprettetHendelse: KlageOpprettetHendelse) {
-        tilstand.ferdigstill(this, klageOpprettetHendelse)
+        tilstand.ferdigstill(this, henvendelseFerdigstiltHendelse)
     }
 
     fun tilstand(): Tilstand = tilstand
@@ -173,25 +160,7 @@ class Henvendelse private constructor(
 
         fun ferdigstill(
             henvendelse: Henvendelse,
-            hendelse: OpprettManuellBehandlingHendelse,
-        ) {
-            ulovligTilstandsendring(henvendelse.henvendelseId) {
-                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
-            }
-        }
-
-        fun ferdigstill(
-            henvendelse: Henvendelse,
-            hendelse: ManuellBehandlingOpprettetHendelse,
-        ) {
-            ulovligTilstandsendring(henvendelse.henvendelseId) {
-                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
-            }
-        }
-
-        fun ferdigstill(
-            henvendelse: Henvendelse,
-            hendelse: KlageOpprettetHendelse,
+            hendelse: HenvendelseFerdigstiltHendelse,
         ) {
             ulovligTilstandsendring(henvendelse.henvendelseId) {
                 "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
@@ -235,27 +204,7 @@ class Henvendelse private constructor(
 
             override fun ferdigstill(
                 henvendelse: Henvendelse,
-                hendelse: OpprettManuellBehandlingHendelse,
-            ) {
-                henvendelse.endreTilstand(
-                    nyTilstand = Ferdigbehandlet,
-                    hendelse = hendelse,
-                )
-            }
-
-            override fun ferdigstill(
-                henvendelse: Henvendelse,
-                hendelse: ManuellBehandlingOpprettetHendelse,
-            ) {
-                henvendelse.endreTilstand(
-                    nyTilstand = Ferdigbehandlet,
-                    hendelse = hendelse,
-                )
-            }
-
-            override fun ferdigstill(
-                henvendelse: Henvendelse,
-                hendelse: KlageOpprettetHendelse,
+                hendelse: HenvendelseFerdigstiltHendelse,
             ) {
                 henvendelse.endreTilstand(
                     nyTilstand = Ferdigbehandlet,

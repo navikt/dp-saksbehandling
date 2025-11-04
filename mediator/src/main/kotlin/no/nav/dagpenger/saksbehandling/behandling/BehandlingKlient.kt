@@ -49,6 +49,8 @@ interface BehandlingKlient {
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
+
+    fun opprettManuellBehandling(personIdent: String, saksbehandlerToken: String): Result<UUID>
 }
 
 internal class BehandlingHttpKlient(
@@ -101,6 +103,13 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
     ): Result<Unit> {
         return kallBehandling("avbryt", behandlingId, saksbehandlerToken, ident)
+    }
+
+    override fun opprettManuellBehandling(
+        personIdent: String,
+        saksbehandlerToken: String
+    ): Result<UUID> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun kreverTotrinnskontroll(

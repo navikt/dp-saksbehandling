@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-import java.util.UUID
 import no.nav.dagpenger.saksbehandling.Behandler
+import java.util.UUID
 
 data class FerdigstillHenvendelseHendelse(
     val henvendelseId: UUID,
@@ -10,13 +10,16 @@ data class FerdigstillHenvendelseHendelse(
 ) : Hendelse(utførtAv)
 
 data class HenvendelseFerdigstiltHendelse(
-    val ferdigstillHenvendelseHendelse: FerdigstillHenvendelseHendelse,
-    val behandlingId: UUID,
+    val henvendelseId: UUID,
+    val aksjon: String,
+    val behandlingId: UUID?,
     override val utførtAv: Behandler,
 ) : Hendelse(utførtAv)
 
 sealed class Aksjon {
     object Avslutt : Aksjon()
-    object OpprettManuellBehandling : Aksjon()
-    object OpprettKlage : Aksjon()
+
+    data class OpprettManuellBehandling(val saksbehandlerToken: String) : Aksjon()
+
+    data class OpprettKlage(val sakId: UUID) : Aksjon()
 }

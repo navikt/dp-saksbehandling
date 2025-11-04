@@ -13,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettManuellBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type
@@ -175,7 +174,6 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
             "HenvendelseMottattHendelse" -> hendelseJson.tilHendelse<HenvendelseMottattHendelse>()
             "TildelHendelse" -> hendelseJson.tilHendelse<TildelHendelse>()
             "FjernAnsvarHendelse" -> hendelseJson.tilHendelse<FjernAnsvarHendelse>()
-            "OpprettManuellBehandlingHendelse" -> hendelseJson.tilHendelse<OpprettManuellBehandlingHendelse>()
             else -> {
                 logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
                 sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
