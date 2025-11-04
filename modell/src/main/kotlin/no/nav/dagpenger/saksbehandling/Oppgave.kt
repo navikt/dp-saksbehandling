@@ -2,10 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -23,10 +19,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
-import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
-import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
-import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -188,33 +180,9 @@ data class Oppgave private constructor(
 
     fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
 
-    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
-        require(
-            if (this.person.skjermesSomEgneAnsatte) {
-                saksbehandler.tilganger.contains(EGNE_ANSATTE)
-            } else {
-                true
-            },
-        ) {
-            throw Tilstand.IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
-        }
-    }
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) = this.person.egneAnsatteTilgangskontroll(saksbehandler)
 
-    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
-        val adressebeskyttelseGradering = this.person.adressebeskyttelseGradering
-        require(
-            when (adressebeskyttelseGradering) {
-                FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)
-                STRENGT_FORTROLIG -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE)
-                STRENGT_FORTROLIG_UTLAND -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE_UTLAND)
-                UGRADERT -> true
-            },
-        ) {
-            throw Tilstand.ManglendeTilgangTilAdressebeskyttelse(
-                "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
-            )
-        }
-    }
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
 
     fun utsattTil() = this.utsattTil
 
@@ -355,6 +323,7 @@ data class Oppgave private constructor(
                         }
                         null
                     }
+
                     else -> {
                         logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
                         null
