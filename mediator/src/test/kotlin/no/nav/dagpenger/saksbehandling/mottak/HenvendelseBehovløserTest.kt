@@ -21,7 +21,7 @@ class HenvendelseBehovløserTest {
     private val sakId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
     private val testRapid = TestRapid()
-    private val journalPostId = "123123"
+    private val journalpostId = "123123"
     private val nå = LocalDateTime.now()
 
     @BeforeEach
@@ -37,9 +37,7 @@ class HenvendelseBehovløserTest {
             henvendelseMediator =
                 mockk<HenvendelseMediator>(relaxed = true).also {
                     every { it.taImotHenvendelse(capture(slot)) } returns
-                        HåndterHenvendelseResultat.HåndtertHenvendelse(
-                            sakId,
-                        )
+                        HåndterHenvendelseResultat.HåndtertHenvendelse(sakId)
                 },
         )
         testRapid.sendTestMessage(
@@ -47,7 +45,7 @@ class HenvendelseBehovløserTest {
             message =
                 håndterHenvendelseBehov(
                     ident = testIdent,
-                    journalpostId = journalPostId,
+                    journalpostId = journalpostId,
                     registrertTidspunkt = nå,
                     søknadId = søknadId,
                     skjemaKode = "NAVe",
@@ -57,7 +55,7 @@ class HenvendelseBehovløserTest {
 
         slot.captured.let {
             it.ident shouldBe testIdent
-            it.journalpostId shouldBe journalPostId
+            it.journalpostId shouldBe journalpostId
             it.registrertTidspunkt shouldBe nå
             it.søknadId shouldBe søknadId
             it.skjemaKode shouldBe "NAVe"
@@ -70,7 +68,7 @@ class HenvendelseBehovløserTest {
             {
               "@event_name" : "behov",
               "@behov" : [ "HåndterHenvendelse" ],
-              "journalpostId" : "$journalPostId",
+              "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$testIdent",
               "kategori" : "ETTERSENDING",
               "@løsning" : {
@@ -99,7 +97,7 @@ class HenvendelseBehovløserTest {
             message =
                 håndterHenvendelseBehov(
                     ident = testIdent,
-                    journalpostId = journalPostId,
+                    journalpostId = journalpostId,
                     registrertTidspunkt = nå,
                     søknadId = null,
                     skjemaKode = "NAVe",
@@ -109,7 +107,7 @@ class HenvendelseBehovløserTest {
 
         slot.captured.let {
             it.ident shouldBe testIdent
-            it.journalpostId shouldBe journalPostId
+            it.journalpostId shouldBe journalpostId
             it.registrertTidspunkt shouldBe nå
             it.søknadId shouldBe null
             it.skjemaKode shouldBe "NAVe"
@@ -122,7 +120,7 @@ class HenvendelseBehovløserTest {
             {
               "@event_name" : "behov",
               "@behov" : [ "HåndterHenvendelse" ],
-              "journalpostId" : "$journalPostId",
+              "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$testIdent",
               "kategori" : "KLAGE",
               "@løsning" : {

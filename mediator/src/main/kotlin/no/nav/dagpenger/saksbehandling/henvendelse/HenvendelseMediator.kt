@@ -37,14 +37,9 @@ class HenvendelseMediator(
                 }
             henvendelseRepository.lagre(henvendelse = henvendelse)
         }
-
         return when (sisteSakId) {
-            null -> {
-                HåndterHenvendelseResultat.UhåndtertHenvendelse
-            }
-            else -> {
-                HåndterHenvendelseResultat.HåndtertHenvendelse(sisteSakId)
-            }
+            null -> HåndterHenvendelseResultat.UhåndtertHenvendelse
+            else -> HåndterHenvendelseResultat.HåndtertHenvendelse(sisteSakId)
         }
     }
 }
