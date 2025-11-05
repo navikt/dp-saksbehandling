@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.IkkeTilgangTilEgneAnsatte
 import no.nav.dagpenger.saksbehandling.ManglendeTilgangTilAdressebeskyttelse
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -18,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -88,6 +90,44 @@ class HenvendelseMediatorTilgangTest {
                     mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandler)
                 }
             }
+        }
+    }
+
+    @Test
+    fun `Vanlig saksbehandler har ikke tilgang til egne ansatte`() {
+        val henvendelse =
+            TestHelper.lagHenvendelse(
+                person = TestHelper.lagPerson(skjermesSomEgneAnsatte = true),
+            )
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                grupper = emptySet(),
+                tilganger = setOf(SAKSBEHANDLER),
+            )
+        val saksbehandlerMedEgneAnsatteTilgang =
+            Saksbehandler(
+                navIdent = "saksbehandlerMedEgneAnsatteTilgang",
+                grupper = emptySet(),
+                tilganger = setOf(SAKSBEHANDLER, TilgangType.EGNE_ANSATTE),
+            )
+        val mediator =
+            HenvendelseMediator(
+                henvendelseRepository =
+                    mockk<HenvendelseRepository>().also {
+                        every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+                    },
+                personMediator = mockk(),
+                sakMediator = mockk(),
+                oppgaveMediator = mockk(),
+                henvendelseBehandler = mockk(),
+            )
+
+        shouldThrow<IkkeTilgangTilEgneAnsatte> {
+            mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandler)
+        }
+        shouldNotThrowAny {
+            mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandlerMedEgneAnsatteTilgang)
         }
     }
 }
