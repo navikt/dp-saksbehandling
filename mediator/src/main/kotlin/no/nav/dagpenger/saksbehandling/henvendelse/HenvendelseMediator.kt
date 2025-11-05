@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.util.UUID
@@ -57,6 +58,16 @@ class HenvendelseMediator(
             henvendelseBehandler.utførAksjon(hendelse, henvendelse)
         henvendelse.ferdigstill(henvendelseBehandlet)
         henvendelseRepository.lagre(henvendelse = henvendelse)
+    }
+
+    fun tildel(tildelHendelse: TildelHendelse) {
+        hentHenvendelse(
+            henvendelseId = tildelHendelse.henvendelseId,
+            behandler = tildelHendelse.utførtAv,
+        ).let {
+            it.tildel(tildelHendelse)
+            henvendelseRepository.lagre(henvendelse = it)
+        }
     }
 
     fun hentHenvendelse(

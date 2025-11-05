@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.db.henvendelse
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
@@ -41,7 +42,7 @@ class PostgresHenvendelseRepositoryTest {
             val henvendelse =
                 Henvendelse.opprett(
                     hendelse = henvendelseMottattHendelse,
-                    personProvider = { ident -> testPerson },
+                    personProvider = { _ -> testPerson },
                 )
 
             repository.lagre(henvendelse = henvendelse)
@@ -56,6 +57,7 @@ class PostgresHenvendelseRepositoryTest {
                     TildelHendelse(
                         utførtAv = saksbehandler,
                         ansvarligIdent = saksbehandler.navIdent,
+                        henvendelseId = UUIDv7.ny(),
                     ),
             )
             repository.lagre(henvendelse)
@@ -83,6 +85,7 @@ class PostgresHenvendelseRepositoryTest {
                     TildelHendelse(
                         utførtAv = saksbehandler,
                         ansvarligIdent = saksbehandler.navIdent,
+                        henvendelseId = UUIDv7.ny(),
                     ),
             )
             repository.lagre(henvendelse)

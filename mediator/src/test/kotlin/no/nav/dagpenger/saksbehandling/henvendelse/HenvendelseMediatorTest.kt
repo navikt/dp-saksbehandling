@@ -13,12 +13,14 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
@@ -181,40 +183,67 @@ class HenvendelseMediatorTest {
     }
 
     @Test
-    fun `Ferdigstilling av en henvendelse`() {
+    fun `Tildeling av en henvendelse`() {
         val slot = slot<Henvendelse>()
-        val behandlingId = UUIDv7.ny()
-        val henvendelseId = UUIDv7.ny()
         val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
         val henvendelse =
-            Henvendelse.rehydrer(
-                henvendelseId = henvendelseId,
-                person = personMedSak,
-                journalpostId = journalpostId,
-                mottatt = LocalDateTime.now(),
-                skjemaKode = skjemaKode,
-                kategori = Kategori.KLAGE,
-                behandlerIdent = saksbehandler.navIdent,
-                tilstand = Henvendelse.Tilstand.UnderBehandling,
-                tilstandslogg = HenvendelseTilstandslogg(),
+            TestHelper.lagHenvendelse(
+                behandlerIdent = null,
+                tilstand = Henvendelse.Tilstand.KlarTilBehandling,
             )
+
         val henvendelseRepository =
             mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelseId) } returns henvendelse
+                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+                every { it.lagre(capture(slot)) } just Runs
+            }
+        HenvendelseMediator(
+            sakMediator = mockk(),
+            oppgaveMediator = mockk(),
+            personMediator = mockk(),
+            henvendelseRepository = henvendelseRepository,
+            henvendelseBehandler = mockk(),
+        ).tildel(
+            TildelHendelse(
+                henvendelseId = henvendelse.henvendelseId,
+                ansvarligIdent = "ansvarlig",
+                utførtAv = saksbehandler,
+            ),
+        )
+
+        slot.captured.let {
+            it.tilstand() shouldBe Henvendelse.Tilstand.UnderBehandling
+            it.behandlerIdent() shouldBe "ansvarlig"
+        }
+    }
+
+    @Test
+    fun `Ferdigstilling av en henvendelse`() {
+        val slot = slot<Henvendelse>()
+        val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
+        val henvendelse =
+            TestHelper.lagHenvendelse(
+                tilstand = Henvendelse.Tilstand.UnderBehandling,
+                behandlerIdent = saksbehandler.navIdent,
+            )
+
+        val henvendelseRepository =
+            mockk<HenvendelseRepository>().also {
+                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
                 every { it.lagre(capture(slot)) } just Runs
             }
 
         val henvendelseFerdigstiltHendelse =
             HenvendelseFerdigstiltHendelse(
-                henvendelseId = henvendelseId,
+                henvendelseId = henvendelse.henvendelseId,
                 aksjon = Aksjon.OpprettKlage::class.java.simpleName,
-                behandlingId = behandlingId,
+                behandlingId = UUIDv7.ny(),
                 utførtAv = saksbehandler,
             )
 
         val ferdigstillHenvendelseHendelse =
             FerdigstillHenvendelseHendelse(
-                henvendelseId = henvendelseId,
+                henvendelseId = henvendelse.henvendelseId,
                 aksjon = Aksjon.OpprettKlage(sakId),
                 utførtAv = saksbehandler,
             )
