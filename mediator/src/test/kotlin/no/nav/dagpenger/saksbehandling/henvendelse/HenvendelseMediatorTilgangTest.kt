@@ -19,6 +19,9 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.UnderBehandling
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -128,6 +131,57 @@ class HenvendelseMediatorTilgangTest {
         }
         shouldNotThrowAny {
             mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandlerMedEgneAnsatteTilgang)
+        }
+    }
+
+    @Test
+    fun `Bare saksbehandler som eier henvendelse kan ferdigstille den`() {
+        val henvendelse =
+            TestHelper.lagHenvendelse(
+                behandlerIdent = "saksbehandlerSomEier",
+                tilstand = UnderBehandling,
+            )
+        val saksbehandlerSomEier =
+            Saksbehandler(
+                navIdent = "saksbehandlerSomEier",
+                grupper = emptySet(),
+                tilganger = setOf(SAKSBEHANDLER),
+            )
+        val annenSaksbehandler =
+            Saksbehandler(
+                navIdent = "annenSaksbehandler",
+                grupper = emptySet(),
+                tilganger = setOf(SAKSBEHANDLER),
+            )
+        val mediator =
+            HenvendelseMediator(
+                henvendelseRepository =
+                    mockk<HenvendelseRepository>(relaxed = true).also {
+                        every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+                    },
+                personMediator = mockk(),
+                sakMediator = mockk(),
+                oppgaveMediator = mockk(),
+                henvendelseBehandler = mockk(relaxed = true),
+            )
+
+        shouldThrow<SaksbehandlerErIkkeEier> {
+            mediator.ferdigstill(
+                FerdigstillHenvendelseHendelse(
+                    henvendelseId = henvendelse.henvendelseId,
+                    utførtAv = annenSaksbehandler,
+                    aksjon = Aksjon.Avslutt,
+                ),
+            )
+        }
+        shouldNotThrowAny {
+            mediator.ferdigstill(
+                FerdigstillHenvendelseHendelse(
+                    henvendelseId = henvendelse.henvendelseId,
+                    utførtAv = saksbehandlerSomEier,
+                    aksjon = Aksjon.Avslutt,
+                ),
+            )
         }
     }
 }
