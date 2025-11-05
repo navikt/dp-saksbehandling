@@ -1,8 +1,8 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-import no.nav.dagpenger.saksbehandling.Behandler
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 
-class TildelHendelse(
-    utførtAv: Behandler,
-    override val ansvarligIdent: String?,
+data class TildelHendelse(
+    override val utførtAv: Saksbehandler,
+    override val ansvarligIdent: String,
 ) : AnsvarHendelse(utførtAv, ansvarligIdent)

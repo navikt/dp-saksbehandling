@@ -33,6 +33,6 @@ sealed class AnsvarHendelse(utførtAv: Behandler, open val ansvarligIdent: Strin
     }
 }
 
-data object TomHendelse : Hendelse(Applikasjon("dp-saksbehandling")) {
+data object TomHendelse : Hendelse(utførtAv = Applikasjon("dp-saksbehandling")) {
     fun tilJson(): String = "{}"
 }

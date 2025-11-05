@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
 import no.nav.dagpenger.saksbehandling.Behandler
-import no.nav.dagpenger.saksbehandling.henvendelse.Aksjon
 import java.util.UUID
 
-data class FerdigstillHenvendelseHendelse(
+data class HenvendelseFerdigstiltHendelse(
     val henvendelseId: UUID,
-    val aksjon: Aksjon,
+    val aksjon: String,
+    val behandlingId: UUID?,
     override val utførtAv: Behandler,
 ) : Hendelse(utførtAv)

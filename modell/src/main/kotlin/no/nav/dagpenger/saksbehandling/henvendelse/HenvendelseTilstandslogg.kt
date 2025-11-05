@@ -7,5 +7,5 @@ import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand
 class HenvendelseTilstandslogg(
     tilstandsendringer: List<Tilstandsendring<Tilstand.Type>> = listOf(),
 ) : Tilstandslogg<Tilstand.Type>(tilstandsendringer.toMutableList()) {
-    constructor(vararg tilstandsEndringer: Tilstandsendring<Tilstand.Type>) : this(tilstandsEndringer.toMutableList())
+    constructor(vararg tilstandsendringer: Tilstandsendring<Tilstand.Type>) : this(tilstandsendringer.toMutableList())
 }
