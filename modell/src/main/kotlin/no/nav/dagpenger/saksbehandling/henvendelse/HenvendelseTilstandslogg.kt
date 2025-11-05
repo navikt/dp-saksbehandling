@@ -9,7 +9,7 @@ class HenvendelseTilstandslogg(
     tilstandsendringer: List<Tilstandsendring<Tilstand.Type>> = listOf(),
 ) : Tilstandslogg<Tilstand.Type>(tilstandsendringer.toMutableList()) {
     fun inneholderHendelseMedSøknadId(søknadId: UUID): Boolean {
-        return true
+        TODO("Dette fikser Giao i kveld :) ")
     }
 
     constructor(vararg tilstandsendringer: Tilstandsendring<Tilstand.Type>) : this(tilstandsendringer.toMutableList())
