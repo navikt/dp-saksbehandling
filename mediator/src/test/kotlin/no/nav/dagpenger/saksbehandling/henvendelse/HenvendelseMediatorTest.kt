@@ -25,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 class HenvendelseMediatorTest {
     private val sakId = UUIDv7.ny()
@@ -107,75 +106,6 @@ class HenvendelseMediatorTest {
     }
 
     @Test
-    fun `Ferdigstilling av en henvendelse`() {
-        val slot = slot<Henvendelse>()
-        val behandlingId = UUID.randomUUID()
-        val henvendelseId = UUIDv7.ny()
-        val henvendelse =
-            Henvendelse.rehydrer(
-                henvendelseId = henvendelseId,
-                person = personMedSak,
-                journalpostId = journalpostId,
-                mottatt = LocalDateTime.now(),
-                skjemaKode = skjemaKode,
-                kategori = Kategori.KLAGE,
-                behandlerIdent = "saksbehandler1",
-                tilstand = Henvendelse.Tilstand.UnderBehandling,
-                tilstandslogg = HenvendelseTilstandslogg(),
-            )
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelseId) } returns henvendelse
-                every { it.lagre(capture(slot)) } just Runs
-            }
-
-        val saksbehandler = Saksbehandler(navIdent = "saksbehandler2", emptySet())
-
-        val henvendelseFerdigstiltHendelse =
-            HenvendelseFerdigstiltHendelse(
-                henvendelseId = henvendelseId,
-                aksjon = Aksjon.OpprettKlage::class.java.simpleName,
-                behandlingId = behandlingId,
-                utførtAv = saksbehandler,
-            )
-
-        val ferdigstillHenvendelseHendelse =
-            FerdigstillHenvendelseHendelse(
-                henvendelseId = henvendelseId,
-                aksjon = Aksjon.OpprettKlage(sakId),
-                utførtAv = saksbehandler,
-            )
-
-        val henvendelseBehandler =
-            mockk<HenvendelseBehandler>().also {
-                every {
-                    it.utførAksjon(
-                        hendelse = ferdigstillHenvendelseHendelse,
-                        henvendelse = henvendelse,
-                    )
-                } returns
-                    henvendelseFerdigstiltHendelse
-            }
-
-        HenvendelseMediator(
-            sakMediator = mockk(),
-            oppgaveMediator = mockk(),
-            personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = henvendelseBehandler,
-        ).ferdigstill(
-            ferdigstillHenvendelseHendelse,
-        )
-
-        slot.captured.let {
-            it.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
-            it.tilstandslogg.first().hendelse.let { hendelse ->
-                hendelse shouldBe henvendelseFerdigstiltHendelse
-            }
-        }
-    }
-
-    @Test
     fun `Skal ikke håndtere henvendelse hvis vi ikke eier saken`() {
         val henvendelseRepository = mockk<HenvendelseRepository>(relaxed = false)
         val henvendelseBehandler = mockk<HenvendelseBehandler>()
@@ -248,6 +178,73 @@ class HenvendelseMediatorTest {
             it.kategori shouldBe Kategori.ETTERSENDING
             it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
             it.tilstandslogg.single().hendelse shouldBe henvendelseMottattHendelse
+        }
+    }
+
+    @Test
+    fun `Ferdigstilling av en henvendelse`() {
+        val slot = slot<Henvendelse>()
+        val behandlingId = UUIDv7.ny()
+        val henvendelseId = UUIDv7.ny()
+        val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
+        val henvendelse =
+            Henvendelse.rehydrer(
+                henvendelseId = henvendelseId,
+                person = personMedSak,
+                journalpostId = journalpostId,
+                mottatt = LocalDateTime.now(),
+                skjemaKode = skjemaKode,
+                kategori = Kategori.KLAGE,
+                behandlerIdent = saksbehandler.navIdent,
+                tilstand = Henvendelse.Tilstand.UnderBehandling,
+                tilstandslogg = HenvendelseTilstandslogg(),
+            )
+        val henvendelseRepository =
+            mockk<HenvendelseRepository>().also {
+                every { it.hent(henvendelseId) } returns henvendelse
+                every { it.lagre(capture(slot)) } just Runs
+            }
+
+        val henvendelseFerdigstiltHendelse =
+            HenvendelseFerdigstiltHendelse(
+                henvendelseId = henvendelseId,
+                aksjon = Aksjon.OpprettKlage::class.java.simpleName,
+                behandlingId = behandlingId,
+                utførtAv = saksbehandler,
+            )
+
+        val ferdigstillHenvendelseHendelse =
+            FerdigstillHenvendelseHendelse(
+                henvendelseId = henvendelseId,
+                aksjon = Aksjon.OpprettKlage(sakId),
+                utførtAv = saksbehandler,
+            )
+
+        val henvendelseBehandler =
+            mockk<HenvendelseBehandler>().also {
+                every {
+                    it.utførAksjon(
+                        hendelse = ferdigstillHenvendelseHendelse,
+                        henvendelse = henvendelse,
+                    )
+                } returns henvendelseFerdigstiltHendelse
+            }
+
+        HenvendelseMediator(
+            sakMediator = mockk(),
+            oppgaveMediator = mockk(),
+            personMediator = mockk(),
+            henvendelseRepository = henvendelseRepository,
+            henvendelseBehandler = henvendelseBehandler,
+        ).ferdigstill(
+            ferdigstillHenvendelseHendelse,
+        )
+
+        slot.captured.let {
+            it.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
+            it.tilstandslogg.first().hendelse.let { hendelse ->
+                hendelse shouldBe henvendelseFerdigstiltHendelse
+            }
         }
     }
 }

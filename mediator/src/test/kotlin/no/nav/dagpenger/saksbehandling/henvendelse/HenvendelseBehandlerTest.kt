@@ -18,9 +18,10 @@ import java.util.UUID
 class HenvendelseBehandlerTest {
     private val saksbehandler = Saksbehandler("Z123456", emptySet())
     private val testHenvendelse = TestHelper.testHenvendelse
+    private val testOppgave = TestHelper.testOppgave
 
     @Test
-    fun `behandle en henvendelse med aksjon av type AVBRUTT `() {
+    fun `Behandle en henvendelse med aksjon av type Avslutt `() {
         val henvendelseBehandler =
             HenvendelseBehandler(
                 klageMediator = mockk(),
@@ -36,7 +37,7 @@ class HenvendelseBehandlerTest {
     }
 
     @Test
-    fun `behandle en henvendelse med aksjon av type OpprettKlagee `() {
+    fun `Behandle en henvendelse med aksjon av type OpprettKlage`() {
         val testSakId = UUID.randomUUID()
 
         val slot = slot<KlageMottattHendelse>()
@@ -44,7 +45,7 @@ class HenvendelseBehandlerTest {
             mockk<KlageMediator>().also {
                 every {
                     it.opprettKlage(capture(slot))
-                } returns TestHelper.testOppgave
+                } returns testOppgave
             }
         val henvendelseBehandler =
             HenvendelseBehandler(
@@ -57,9 +58,9 @@ class HenvendelseBehandlerTest {
             henvendelse = testHenvendelse,
         )
             .let {
-                it.henvendelseId shouldBe TestHelper.testHenvendelse.henvendelseId
+                it.henvendelseId shouldBe testHenvendelse.henvendelseId
                 it.aksjon shouldBe "OpprettKlage"
-                it.behandlingId shouldBe TestHelper.testOppgave.behandling.behandlingId
+                it.behandlingId shouldBe testOppgave.behandling.behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 
@@ -72,7 +73,7 @@ class HenvendelseBehandlerTest {
     }
 
     @Test
-    fun `behandle en henvendelse med aksjon av type OpprettManuellBehandling`() {
+    fun `Behandle en henvendelse med aksjon av type OpprettManuellBehandling`() {
         val saksbehandlerToken = "token"
         val behandlingId = UUID.randomUUID()
 
@@ -96,7 +97,7 @@ class HenvendelseBehandlerTest {
             henvendelse = testHenvendelse,
         )
             .let {
-                it.henvendelseId shouldBe TestHelper.testHenvendelse.henvendelseId
+                it.henvendelseId shouldBe testHenvendelse.henvendelseId
                 it.aksjon shouldBe "OpprettManuellBehandling"
                 it.behandlingId shouldBe behandlingId
                 it.utførtAv shouldBe saksbehandler
@@ -109,7 +110,7 @@ class HenvendelseBehandlerTest {
 
     private fun lagHendelse(aksjon: Aksjon): FerdigstillHenvendelseHendelse {
         return FerdigstillHenvendelseHendelse(
-            henvendelseId = TestHelper.testHenvendelse.henvendelseId,
+            henvendelseId = testHenvendelse.henvendelseId,
             aksjon = aksjon,
             utførtAv = saksbehandler,
         )
