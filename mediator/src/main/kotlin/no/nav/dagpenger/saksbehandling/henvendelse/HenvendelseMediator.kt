@@ -59,27 +59,26 @@ class HenvendelseMediator(
         val henvendelseBehandlet: HenvendelseFerdigstiltHendelse =
             henvendelseBehandler.utførAksjon(hendelse, henvendelse)
         henvendelse.ferdigstill(henvendelseBehandlet)
-        henvendelseRepository.lagre(henvendelse = henvendelse)
+        henvendelseRepository.lagre(henvendelse)
     }
 
     fun avbrytHenvendelse(hendelse: BehandlingOpprettetForSøknadHendelse) {
         val henvendelser = henvendelseRepository.finnHenvendelserForPerson(ident = hendelse.ident)
         henvendelser.singleOrNull {
             it.tilstand().type == KLAR_TIL_BEHANDLING && it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
+        }?.let { henvendelse ->
+            henvendelse.avbryt(hendelse)
+            henvendelseRepository.lagre(henvendelse)
         }
-            ?.let { henvendelse ->
-                henvendelse.avbryt(hendelse)
-                henvendelseRepository.lagre(henvendelse = henvendelse)
-            }
     }
 
     fun tildel(tildelHendelse: TildelHendelse) {
         hentHenvendelse(
             henvendelseId = tildelHendelse.henvendelseId,
             behandler = tildelHendelse.utførtAv,
-        ).let {
-            it.tildel(tildelHendelse)
-            henvendelseRepository.lagre(henvendelse = it)
+        ).let { henvendelse ->
+            henvendelse.tildel(tildelHendelse)
+            henvendelseRepository.lagre(henvendelse)
         }
     }
 
