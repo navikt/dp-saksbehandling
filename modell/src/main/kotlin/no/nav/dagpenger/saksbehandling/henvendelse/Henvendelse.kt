@@ -7,12 +7,14 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -42,7 +44,7 @@ class Henvendelse private constructor(
                 kategori = hendelse.kategori,
                 tilstand = Tilstand.KlarTilBehandling,
             ).also {
-                it._tilstandslogg.leggTil(Tilstand.Type.KLAR_TIL_BEHANDLING, hendelse)
+                it._tilstandslogg.leggTil(KLAR_TIL_BEHANDLING, hendelse)
             }
         }
 
@@ -84,6 +86,17 @@ class Henvendelse private constructor(
 
     fun ferdigstill(henvendelseFerdigstiltHendelse: HenvendelseFerdigstiltHendelse) {
         tilstand.ferdigstill(this, henvendelseFerdigstiltHendelse)
+    }
+
+    fun avbryt(behandlingOpprettetForSøknadHendelse: BehandlingOpprettetForSøknadHendelse) {
+        tilstand.avbryt(this, behandlingOpprettetForSøknadHendelse)
+    }
+
+    fun gjelderSøknadMedId(søknadId: UUID): Boolean {
+        return (
+            kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK) &&
+                this.tilstandslogg.inneholderHendelseMedSøknadId(søknadId)
+        )
     }
 
     fun tilstand(): Tilstand = tilstand
@@ -179,14 +192,24 @@ class Henvendelse private constructor(
             }
         }
 
+        fun avbryt(
+            henvendelse: Henvendelse,
+            hendelse: BehandlingOpprettetForSøknadHendelse,
+        ) {
+            ulovligTilstandsendring(henvendelse.henvendelseId) {
+                "Kan ikke avbryte henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            }
+        }
+
         enum class Type {
             KLAR_TIL_BEHANDLING,
             UNDER_BEHANDLING,
             FERDIGBEHANDLET,
+            AVBRUTT,
         }
 
         object KlarTilBehandling : Tilstand {
-            override val type: Type = Type.KLAR_TIL_BEHANDLING
+            override val type: Type = KLAR_TIL_BEHANDLING
 
             override fun tildel(
                 henvendelse: Henvendelse,
@@ -197,6 +220,16 @@ class Henvendelse private constructor(
                     hendelse = tildelHendelse,
                 )
                 henvendelse.behandlerIdent = tildelHendelse.ansvarligIdent
+            }
+
+            override fun avbryt(
+                henvendelse: Henvendelse,
+                behandlingOpprettetForSøknadHendelse: BehandlingOpprettetForSøknadHendelse,
+            ) {
+                henvendelse.endreTilstand(
+                    nyTilstand = Avbrutt,
+                    hendelse = behandlingOpprettetForSøknadHendelse,
+                )
             }
         }
 
@@ -216,17 +249,21 @@ class Henvendelse private constructor(
 
             override fun ferdigstill(
                 henvendelse: Henvendelse,
-                hendelse: HenvendelseFerdigstiltHendelse,
+                henvendelseFerdigstiltHendelse: HenvendelseFerdigstiltHendelse,
             ) {
                 henvendelse.endreTilstand(
                     nyTilstand = Ferdigbehandlet,
-                    hendelse = hendelse,
+                    hendelse = henvendelseFerdigstiltHendelse,
                 )
             }
         }
 
         data object Ferdigbehandlet : Tilstand {
             override val type: Type = Type.FERDIGBEHANDLET
+        }
+
+        data object Avbrutt : Tilstand {
+            override val type: Type = Type.AVBRUTT
         }
 
         private fun ulovligTilstandsendring(

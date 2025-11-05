@@ -7,4 +7,6 @@ interface HenvendelseRepository {
     fun lagre(henvendelse: Henvendelse)
 
     fun hent(henvendelseId: UUID): Henvendelse
+
+    fun finnHenvendelserForPerson(ident: String): List<Henvendelse>
 }

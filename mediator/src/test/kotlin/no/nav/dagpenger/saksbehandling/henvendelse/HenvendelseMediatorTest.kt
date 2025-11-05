@@ -16,12 +16,15 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.UnderBehandling
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -189,7 +192,7 @@ class HenvendelseMediatorTest {
         val henvendelse =
             TestHelper.lagHenvendelse(
                 behandlerIdent = null,
-                tilstand = Henvendelse.Tilstand.KlarTilBehandling,
+                tilstand = KlarTilBehandling,
             )
 
         val henvendelseRepository =
@@ -212,7 +215,7 @@ class HenvendelseMediatorTest {
         )
 
         slot.captured.let {
-            it.tilstand() shouldBe Henvendelse.Tilstand.UnderBehandling
+            it.tilstand() shouldBe UnderBehandling
             it.behandlerIdent() shouldBe "ansvarlig"
         }
     }
@@ -223,7 +226,7 @@ class HenvendelseMediatorTest {
         val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
         val henvendelse =
             TestHelper.lagHenvendelse(
-                tilstand = Henvendelse.Tilstand.UnderBehandling,
+                tilstand = UnderBehandling,
                 behandlerIdent = saksbehandler.navIdent,
             )
 
@@ -272,6 +275,61 @@ class HenvendelseMediatorTest {
             it.tilstand() shouldBe Henvendelse.Tilstand.Ferdigbehandlet
             it.tilstandslogg.first().hendelse.let { hendelse ->
                 hendelse shouldBe henvendelseFerdigstiltHendelse
+            }
+        }
+    }
+
+    @Test
+    fun `Avbryt henvendelse hvis behandling opprettes for søknad`() {
+        val slot = slot<Henvendelse>()
+        val person = TestHelper.testPerson
+        val søknadId = UUIDv7.ny()
+        val henvendelse =
+            TestHelper.lagHenvendelse(
+                person = person,
+                tilstand = KlarTilBehandling,
+                kategori = Kategori.NY_SØKNAD,
+            ).also { henvendelse ->
+                henvendelse.tilstandslogg.leggTil(
+                    nyTilstand = KlarTilBehandling.type,
+                    hendelse =
+                        HenvendelseMottattHendelse(
+                            ident = person.ident,
+                            journalpostId = henvendelse.journalpostId,
+                            registrertTidspunkt = henvendelse.mottatt,
+                            søknadId = søknadId,
+                            skjemaKode = "NAV 04-01.03",
+                            kategori = Kategori.NY_SØKNAD,
+                        ),
+                )
+            }
+
+        val henvendelseRepository =
+            mockk<HenvendelseRepository>().also {
+                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+                every { it.lagre(capture(slot)) } just Runs
+                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+            }
+
+        val behandlingOpprettetForSøknadHendelse =
+            BehandlingOpprettetForSøknadHendelse(
+                ident = henvendelse.person.ident,
+                søknadId = søknadId,
+                behandlingId = UUIDv7.ny(),
+            )
+
+        HenvendelseMediator(
+            sakMediator = mockk(),
+            oppgaveMediator = mockk(),
+            personMediator = mockk(),
+            henvendelseRepository = henvendelseRepository,
+            henvendelseBehandler = mockk(),
+        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+
+        slot.captured.let {
+            it.tilstand() shouldBe Henvendelse.Tilstand.Avbrutt
+            it.tilstandslogg.first().hendelse.let { hendelse ->
+                hendelse shouldBe behandlingOpprettetForSøknadHendelse
             }
         }
     }

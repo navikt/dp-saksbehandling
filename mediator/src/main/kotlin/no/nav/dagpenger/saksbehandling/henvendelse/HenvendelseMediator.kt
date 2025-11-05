@@ -6,11 +6,13 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.util.UUID
@@ -58,6 +60,17 @@ class HenvendelseMediator(
             henvendelseBehandler.utførAksjon(hendelse, henvendelse)
         henvendelse.ferdigstill(henvendelseBehandlet)
         henvendelseRepository.lagre(henvendelse = henvendelse)
+    }
+
+    fun avbrytHenvendelse(hendelse: BehandlingOpprettetForSøknadHendelse) {
+        val henvendelser = henvendelseRepository.finnHenvendelserForPerson(ident = hendelse.ident)
+        henvendelser.singleOrNull {
+            it.tilstand().type == KLAR_TIL_BEHANDLING && it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
+        }
+            ?.let { henvendelse ->
+                henvendelse.avbryt(hendelse)
+                henvendelseRepository.lagre(henvendelse = henvendelse)
+            }
     }
 
     fun tildel(tildelHendelse: TildelHendelse) {

@@ -41,6 +41,41 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
             ?: throw DataNotFoundException("Kan ikke finne henvendelse med id $henvendelseId")
     }
 
+    override fun finnHenvendelserForPerson(ident: String): List<Henvendelse> {
+        sessionOf(dataSource).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  henv.id as henvendelse_id, 
+                                henv.journalpost_id, 
+                                henv.skjema_kode, 
+                                henv.kategori,
+                                henv.mottatt, 
+                                henv.behandler_ident, 
+                                henv.tilstand,
+                                pers.id as person_id, 
+                                pers.ident, 
+                                pers.skjermes_som_egne_ansatte, 
+                                pers.adressebeskyttelse_gradering as adressebeskyttelse
+                        FROM    henvendelse_v1 henv
+                        JOIN    person_v1 pers ON pers.id = henv.person_id
+                        WHERE   pers.ident = :ident
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "ident" to ident,
+                        ),
+                ).map { row ->
+                    val henvendelseId = row.uuid("henvendelse_id")
+                    val tilstandslogg = hentTilstandsloggForHenvendelse(henvendelseId)
+                    row.rehydrerHenvendelse(tilstandslogg)
+                }.asList,
+            )
+        }
+    }
+
     private fun TransactionalSession.lagre(
         henvendelseId: UUID,
         tilstandsendring: Tilstandsendring<Type>,
@@ -107,7 +142,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
         }
     }
 
-    private fun Row.rehydrerHenvendelse(tilstandLoggg: HenvendelseTilstandslogg): Henvendelse {
+    private fun Row.rehydrerHenvendelse(tilstandsloggg: HenvendelseTilstandslogg): Henvendelse {
         val henvendelseId = this.uuid("henvendelse_id")
         val tilstand =
             runCatching {
@@ -115,6 +150,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                     Type.KLAR_TIL_BEHANDLING -> Henvendelse.Tilstand.KlarTilBehandling
                     Type.UNDER_BEHANDLING -> Henvendelse.Tilstand.UnderBehandling
                     Type.FERDIGBEHANDLET -> Henvendelse.Tilstand.Ferdigbehandlet
+                    Type.AVBRUTT -> Henvendelse.Tilstand.Avbrutt
                 }
             }.getOrElse { t ->
                 throw RuntimeException("Kunne ikke rehydrere henvendelse til tilstand: ${string("tilstand")} ${t.message}")
@@ -135,7 +171,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
             kategori = Kategori.valueOf(this.string("kategori")),
             behandlerIdent = this.stringOrNull("behandler_ident"),
             tilstand = tilstand,
-            tilstandslogg = tilstandLoggg,
+            tilstandslogg = tilstandsloggg,
         )
     }
 
