@@ -122,7 +122,7 @@ internal class BehandlingHttpKlient(
                 }.body<BehandlingDTO>().behandlingId.let { UUID.fromString(it) }
             }
         }.onFailure {
-            logger.error(it) { "Kall til dp-behandling for hente opprette manuell behandling feilet ${it.message}" }
+            logger.error(it) { "Kall til dp-behandling for å opprette manuell behandling feilet ${it.message}" }
         }
     }
 
