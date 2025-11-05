@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.henvendelse
 
 import PersonMediator
+import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
@@ -47,10 +48,22 @@ class HenvendelseMediator(
     }
 
     fun ferdigstill(hendelse: FerdigstillHenvendelseHendelse) {
+        // Sjekk tilgang til egne ansatte og adressebeskyttelsegradering
+        // Sjekk at SB eier henvendelsen
         val henvendelse = henvendelseRepository.hent(hendelse.henvendelseId)
         val henvendelseBehandlet: HenvendelseFerdigstiltHendelse =
             henvendelseBehandler.utførAksjon(hendelse, henvendelse)
         henvendelse.ferdigstill(henvendelseBehandlet)
         henvendelseRepository.lagre(henvendelse = henvendelse)
+    }
+
+    fun hentHenvendelse(
+        henvendelseId: UUID,
+        utførtAv: Behandler,
+    ): Henvendelse {
+        // Sjekk tilgang til egne ansatte og adressebeskyttelsegradering
+        return henvendelseRepository.hent(henvendelseId).also { henvendelse ->
+            henvendelse.harTilgang(utførtAv)
+        }
     }
 }

@@ -2,7 +2,10 @@ package no.nav.dagpenger.saksbehandling.henvendelse
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
+import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -135,6 +138,15 @@ class Henvendelse private constructor(
         result = 31 * result + tilstand.hashCode()
         result = 31 * result + _tilstandslogg.hashCode()
         return result
+    }
+
+    fun harTilgang(utførtAv: Behandler) {
+        when (utførtAv) {
+            is Applikasjon -> {}
+            is Saksbehandler -> {
+                this.person.harTilgang(utførtAv)
+            }
+        }
     }
 
     sealed interface Tilstand {

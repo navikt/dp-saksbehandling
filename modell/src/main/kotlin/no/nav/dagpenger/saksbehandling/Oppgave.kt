@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -1139,10 +1140,6 @@ data class Oppgave private constructor(
             throw UlovligTilstandsendringException(message)
         }
 
-        open class ManglendeTilgang(
-            message: String,
-        ) : RuntimeException(message)
-
         class SaksbehandlerEierIkkeOppgaven(
             message: String,
         ) : ManglendeTilgang(message)
@@ -1152,14 +1149,6 @@ data class Oppgave private constructor(
         ) : ManglendeTilgang(message)
 
         class KanIkkeBeslutteEgenSaksbehandling(
-            message: String,
-        ) : ManglendeTilgang(message)
-
-        class IkkeTilgangTilEgneAnsatte(
-            message: String,
-        ) : ManglendeTilgang(message)
-
-        class ManglendeTilgangTilAdressebeskyttelse(
             message: String,
         ) : ManglendeTilgang(message)
 

@@ -4,11 +4,11 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import java.util.UUID
 
 data class Person(
@@ -30,7 +30,7 @@ data class Person(
             return
         }
         require(saksbehandler.tilganger.contains(EGNE_ANSATTE)) {
-            throw Oppgave.Tilstand.IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
+            throw IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
         }
     }
 
@@ -44,10 +44,15 @@ data class Person(
                 UGRADERT -> true
             },
         ) {
-            throw Tilstand.ManglendeTilgangTilAdressebeskyttelse(
+            throw ManglendeTilgangTilAdressebeskyttelse(
                 "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
             )
         }
+    }
+
+    fun harTilgang(saksbehandler: Saksbehandler) {
+        egneAnsatteTilgangskontroll(saksbehandler)
+        adressebeskyttelseTilgangskontroll(saksbehandler)
     }
 }
 
@@ -57,3 +62,11 @@ enum class AdressebeskyttelseGradering {
     FORTROLIG,
     UGRADERT,
 }
+
+class IkkeTilgangTilEgneAnsatte(
+    message: String,
+) : ManglendeTilgang(message)
+
+class ManglendeTilgangTilAdressebeskyttelse(
+    message: String,
+) : ManglendeTilgang(message)
