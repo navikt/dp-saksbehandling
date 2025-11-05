@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
@@ -174,6 +175,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
             "HenvendelseMottattHendelse" -> hendelseJson.tilHendelse<HenvendelseMottattHendelse>()
             "TildelHendelse" -> hendelseJson.tilHendelse<TildelHendelse>()
             "FjernAnsvarHendelse" -> hendelseJson.tilHendelse<FjernAnsvarHendelse>()
+            "HenvendelseFerdigstiltHendelse" -> hendelseJson.tilHendelse<HenvendelseFerdigstiltHendelse>()
             else -> {
                 logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
                 sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
