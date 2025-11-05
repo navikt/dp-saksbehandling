@@ -88,18 +88,31 @@ internal object TestHelper {
                 ),
         )
 
-    val testHenvendelse =
-        Henvendelse.rehydrer(
-            henvendelseId = UUID.randomUUID(),
-            person = testPerson,
-            journalpostId = "journalpostId",
-            mottatt = opprettetNå,
-            skjemaKode = "skjemaKode",
-            kategori = Kategori.GENERELL,
-            behandlerIdent = saksbehandler.navIdent,
-            tilstand = Henvendelse.Tilstand.KlarTilBehandling,
-            tilstandslogg = HenvendelseTilstandslogg(),
+    val testHenvendelse = lagHenvendelse()
+
+    fun lagHenvendelse(
+        henvendelseId: UUID = UUIDv7.ny(),
+        person: Person = testPerson,
+        journalpostId: String = "journalpostId",
+        mottatt: LocalDateTime = opprettetNå,
+        skjemaKode: String = "skjemaKode",
+        kategori: Kategori = Kategori.GENERELL,
+        behandlerIdent: String? = saksbehandler.navIdent,
+        tilstand: Henvendelse.Tilstand = Henvendelse.Tilstand.KlarTilBehandling,
+        tilstandslogg: HenvendelseTilstandslogg = HenvendelseTilstandslogg(),
+    ): Henvendelse {
+        return Henvendelse.rehydrer(
+            henvendelseId = henvendelseId,
+            person = person,
+            journalpostId = journalpostId,
+            mottatt = mottatt,
+            skjemaKode = skjemaKode,
+            kategori = kategori,
+            behandlerIdent = behandlerIdent,
+            tilstand = tilstand,
+            tilstandslogg = tilstandslogg,
         )
+    }
 
     fun lagPerson(
         ident: String = randomFnr(),

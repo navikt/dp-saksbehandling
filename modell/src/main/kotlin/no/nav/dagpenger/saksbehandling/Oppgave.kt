@@ -39,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -121,7 +122,7 @@ data class Oppgave private constructor(
             hendelseNavn: String,
         ) {
             require(oppgave.erEierAvOppgave(saksbehandler)) {
-                throw Tilstand.SaksbehandlerEierIkkeOppgaven(
+                throw SaksbehandlerErIkkeEier(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
@@ -1139,10 +1140,6 @@ data class Oppgave private constructor(
             }
             throw UlovligTilstandsendringException(message)
         }
-
-        class SaksbehandlerEierIkkeOppgaven(
-            message: String,
-        ) : ManglendeTilgang(message)
 
         class ManglendeBeslutterTilgang(
             message: String,

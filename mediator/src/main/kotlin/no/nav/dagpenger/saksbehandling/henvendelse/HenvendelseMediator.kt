@@ -1,14 +1,17 @@
 package no.nav.dagpenger.saksbehandling.henvendelse
 
 import PersonMediator
+import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.util.UUID
 
 sealed class HåndterHenvendelseResultat {
@@ -48,9 +51,8 @@ class HenvendelseMediator(
     }
 
     fun ferdigstill(hendelse: FerdigstillHenvendelseHendelse) {
-        // Sjekk tilgang til egne ansatte og adressebeskyttelsegradering
-        // Sjekk at SB eier henvendelsen
-        val henvendelse = henvendelseRepository.hent(hendelse.henvendelseId)
+        val henvendelse = hentHenvendelse(henvendelseId = hendelse.henvendelseId, behandler = hendelse.utførtAv)
+        requireEierskap(henvendelse = henvendelse, behandler = hendelse.utførtAv)
         val henvendelseBehandlet: HenvendelseFerdigstiltHendelse =
             henvendelseBehandler.utførAksjon(hendelse, henvendelse)
         henvendelse.ferdigstill(henvendelseBehandlet)
@@ -59,11 +61,27 @@ class HenvendelseMediator(
 
     fun hentHenvendelse(
         henvendelseId: UUID,
-        utførtAv: Behandler,
+        behandler: Behandler,
     ): Henvendelse {
-        // Sjekk tilgang til egne ansatte og adressebeskyttelsegradering
         return henvendelseRepository.hent(henvendelseId).also { henvendelse ->
-            henvendelse.harTilgang(utførtAv)
+            henvendelse.harTilgang(behandler)
+        }
+    }
+
+    private fun requireEierskap(
+        henvendelse: Henvendelse,
+        behandler: Behandler,
+    ) {
+        when (behandler) {
+            is Applikasjon -> {}
+            is Saksbehandler -> {
+                if (henvendelse.behandlerIdent() != behandler.navIdent) {
+                    throw SaksbehandlerErIkkeEier(
+                        "Saksbehandler ${behandler.navIdent} eier ikke " +
+                            "henvendelsen ${henvendelse.henvendelseId}",
+                    )
+                }
+            }
         }
     }
 }
