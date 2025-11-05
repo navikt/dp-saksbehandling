@@ -36,6 +36,7 @@ class HenvendelseTest {
             TildelHendelse(
                 utførtAv = saksbehandler,
                 ansvarligIdent = saksbehandler.navIdent,
+                henvendelseId = henvendelse.henvendelseId,
             ),
         )
 
@@ -53,6 +54,7 @@ class HenvendelseTest {
             TildelHendelse(
                 utførtAv = saksbehandler,
                 ansvarligIdent = saksbehandler.navIdent,
+                henvendelseId = henvendelse.henvendelseId,
             ),
         )
 
