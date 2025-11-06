@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
@@ -22,8 +23,10 @@ import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Avbrutt
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.UnderBehandling
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
@@ -327,10 +330,121 @@ class HenvendelseMediatorTest {
         ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
 
         slot.captured.let {
-            it.tilstand() shouldBe Henvendelse.Tilstand.Avbrutt
+            it.tilstand() shouldBe Avbrutt
             it.tilstandslogg.first().hendelse.let { hendelse ->
                 hendelse shouldBe behandlingOpprettetForSøknadHendelse
             }
         }
+    }
+
+    @Test
+    fun `Ikke avbryt henvendelse hvis behandling opprettes for søknad og henvendelsen er under arbeid`() {
+        val slot = slot<Henvendelse>()
+        val person = TestHelper.testPerson
+        val søknadId = UUIDv7.ny()
+        val henvendelse =
+            TestHelper.lagHenvendelse(
+                person = person,
+                tilstand = UnderBehandling,
+                kategori = Kategori.NY_SØKNAD,
+                behandlerIdent = saksbehandler.navIdent,
+            ).also { henvendelse ->
+                henvendelse.tilstandslogg.leggTil(
+                    nyTilstand = KLAR_TIL_BEHANDLING,
+                    hendelse =
+                        HenvendelseMottattHendelse(
+                            ident = person.ident,
+                            journalpostId = henvendelse.journalpostId,
+                            registrertTidspunkt = henvendelse.mottatt,
+                            søknadId = søknadId,
+                            skjemaKode = "NAV 04-01.03",
+                            kategori = Kategori.NY_SØKNAD,
+                        ),
+                )
+                henvendelse.tilstandslogg.leggTil(
+                    nyTilstand = UNDER_BEHANDLING,
+                    hendelse =
+                        TildelHendelse(
+                            henvendelseId = henvendelse.henvendelseId,
+                            utførtAv = saksbehandler,
+                            ansvarligIdent = saksbehandler.navIdent,
+                        ),
+                )
+            }
+
+        val henvendelseRepository =
+            mockk<HenvendelseRepository>().also {
+                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+                every { it.lagre(capture(slot)) } just Runs
+                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+            }
+
+        val behandlingOpprettetForSøknadHendelse =
+            BehandlingOpprettetForSøknadHendelse(
+                ident = henvendelse.person.ident,
+                søknadId = søknadId,
+                behandlingId = UUIDv7.ny(),
+            )
+
+        HenvendelseMediator(
+            sakMediator = mockk(),
+            oppgaveMediator = mockk(),
+            personMediator = mockk(),
+            henvendelseRepository = henvendelseRepository,
+            henvendelseBehandler = mockk(),
+        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+
+        verify(exactly = 0) { henvendelseRepository.lagre(any()) }
+    }
+
+    @Test
+    fun `Ikke avbryt henvendelse hvis behandling opprettes for søknad og henvendelsen mangler søknadId`() {
+        val slot = slot<Henvendelse>()
+        val person = TestHelper.testPerson
+        val søknadId = UUIDv7.ny()
+        val henvendelse =
+            TestHelper.lagHenvendelse(
+                person = person,
+                tilstand = KlarTilBehandling,
+                kategori = Kategori.NY_SØKNAD,
+                behandlerIdent = saksbehandler.navIdent,
+            ).also { henvendelse ->
+                henvendelse.tilstandslogg.leggTil(
+                    nyTilstand = KLAR_TIL_BEHANDLING,
+                    hendelse =
+                        HenvendelseMottattHendelse(
+                            ident = person.ident,
+                            journalpostId = henvendelse.journalpostId,
+                            registrertTidspunkt = henvendelse.mottatt,
+                            søknadId = null,
+                            skjemaKode = "NAV 04-01.03",
+                            kategori = Kategori.NY_SØKNAD,
+                        ),
+                )
+            }
+
+        val henvendelseRepository =
+            mockk<HenvendelseRepository>().also {
+                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+                every { it.lagre(capture(slot)) } just Runs
+                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+            }
+
+        val behandlingOpprettetForSøknadHendelse =
+            BehandlingOpprettetForSøknadHendelse(
+                ident = henvendelse.person.ident,
+                søknadId = søknadId,
+                behandlingId = UUIDv7.ny(),
+            )
+
+        HenvendelseMediator(
+            sakMediator = mockk(),
+            oppgaveMediator = mockk(),
+            personMediator = mockk(),
+            henvendelseRepository = henvendelseRepository,
+            henvendelseBehandler = mockk(),
+        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+
+        verify(exactly = 0) { henvendelseRepository.lagre(any()) }
     }
 }
