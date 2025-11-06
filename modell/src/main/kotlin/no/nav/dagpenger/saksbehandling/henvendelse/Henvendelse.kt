@@ -92,11 +92,13 @@ class Henvendelse private constructor(
         tilstand.avbryt(this, behandlingOpprettetForSøknadHendelse)
     }
 
-    fun gjelderSøknadMedId(søknadId: UUID): Boolean {
-        return (
-            kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK) &&
-                this.tilstandslogg.inneholderHendelseMedSøknadId(søknadId)
-        )
+    fun gjelderSøknadMedId(søknadId: UUID): Boolean =
+        kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK) && this.tilstandslogg.gjelderSøknadMedId(søknadId)
+
+    private fun HenvendelseTilstandslogg.gjelderSøknadMedId(søknadId: UUID): Boolean {
+        return this.any {
+            it.hendelse is HenvendelseMottattHendelse && it.hendelse.søknadId == søknadId
+        }
     }
 
     fun tilstand(): Tilstand = tilstand
