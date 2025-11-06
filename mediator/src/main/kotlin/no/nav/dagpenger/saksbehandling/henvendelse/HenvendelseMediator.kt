@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
@@ -45,7 +44,7 @@ class HenvendelseMediator(
                 Henvendelse.opprett(hendelse = hendelse) { ident ->
                     personMediator.finnEllerOpprettPerson(ident)
                 }
-            henvendelseRepository.lagre(henvendelse = henvendelse)
+            henvendelseRepository.lagre(henvendelse)
         }
         return when (sisteSakId) {
             null -> HåndterHenvendelseResultat.UhåndtertHenvendelse
@@ -56,9 +55,8 @@ class HenvendelseMediator(
     fun ferdigstill(hendelse: FerdigstillHenvendelseHendelse) {
         val henvendelse = hentHenvendelse(henvendelseId = hendelse.henvendelseId, behandler = hendelse.utførtAv)
         requireEierskap(henvendelse = henvendelse, behandler = hendelse.utførtAv)
-        val henvendelseBehandlet: HenvendelseFerdigstiltHendelse =
-            henvendelseBehandler.utførAksjon(hendelse, henvendelse)
-        henvendelse.ferdigstill(henvendelseBehandlet)
+        val henvendelseFerdigstiltHendelse = henvendelseBehandler.utførAksjon(hendelse, henvendelse)
+        henvendelse.ferdigstill(henvendelseFerdigstiltHendelse)
         henvendelseRepository.lagre(henvendelse)
     }
 
