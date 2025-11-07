@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.db.henvendelse
+package no.nav.dagpenger.saksbehandling.db.innsending
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
@@ -11,13 +11,13 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseTilstandslogg
+import no.nav.dagpenger.saksbehandling.innsending.Innsending
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingTilstandslogg
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
@@ -27,40 +27,40 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresHenvendelseRepository(private val dataSource: DataSource) : HenvendelseRepository {
-    override fun lagre(henvendelse: Henvendelse) {
+class PostgresInnsendingRepository(private val dataSource: DataSource) : InnsendingRepository {
+    override fun lagre(innsending: Innsending) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
-                tx.lagre(henvendelse)
+                tx.lagre(innsending)
             }
         }
     }
 
-    override fun hent(henvendelseId: UUID): Henvendelse {
-        return finnHenvendelse(henvendelseId)
-            ?: throw DataNotFoundException("Kan ikke finne henvendelse med id $henvendelseId")
+    override fun hent(innsendingId: UUID): Innsending {
+        return finnInnsending(innsendingId)
+            ?: throw DataNotFoundException("Kan ikke finne innsending med id $innsendingId")
     }
 
-    override fun finnHenvendelserForPerson(ident: String): List<Henvendelse> {
+    override fun finnInnsendingerForPerson(ident: String): List<Innsending> {
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  henv.id as henvendelse_id, 
-                                henv.journalpost_id, 
-                                henv.skjema_kode, 
-                                henv.kategori,
-                                henv.mottatt, 
-                                henv.behandler_ident, 
-                                henv.tilstand,
+                        SELECT  inns.id as innsending_id, 
+                                inns.journalpost_id, 
+                                inns.skjema_kode, 
+                                inns.kategori,
+                                inns.mottatt, 
+                                inns.behandler_ident, 
+                                inns.tilstand,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
                                 pers.adressebeskyttelse_gradering as adressebeskyttelse
-                        FROM    henvendelse_v1 henv
-                        JOIN    person_v1 pers ON pers.id = henv.person_id
+                        FROM    innsending_v1 inns
+                        JOIN    person_v1 pers ON pers.id = inns.person_id
                         WHERE   pers.ident = :ident
                         """.trimIndent(),
                     paramMap =
@@ -68,16 +68,16 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                             "ident" to ident,
                         ),
                 ).map { row ->
-                    val henvendelseId = row.uuid("henvendelse_id")
-                    val tilstandslogg = hentTilstandsloggForHenvendelse(henvendelseId)
-                    row.rehydrerHenvendelse(tilstandslogg)
+                    val innsendingId = row.uuid("innsending_id")
+                    val tilstandslogg = hentTilstandsloggForInnsending(innsendingId)
+                    row.rehydrerInnsending(tilstandslogg)
                 }.asList,
             )
         }
     }
 
     private fun TransactionalSession.lagre(
-        henvendelseId: UUID,
+        innsendingId: UUID,
         tilstandsendring: Tilstandsendring<Type>,
     ) {
         this.run(
@@ -85,16 +85,16 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                 //language=PostgreSQL
                 statement =
                     """
-                    INSERT INTO henvendelse_tilstand_logg_v1
-                        (id, henvendelse_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                    INSERT INTO innsending_tilstand_logg_v1
+                        (id, innsending_id, tilstand, hendelse_type, hendelse, tidspunkt)
                     VALUES
-                        (:id, :henvendelse_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                        (:id, :innsending_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
                     ON CONFLICT DO NOTHING
                     """.trimIndent(),
                 paramMap =
                     mapOf(
                         "id" to tilstandsendring.id,
-                        "henvendelse_id" to henvendelseId,
+                        "innsending_id" to innsendingId,
                         "tilstand" to tilstandsendring.tilstand.name,
                         "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
                         "hendelse" to
@@ -108,56 +108,56 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
         )
     }
 
-    private fun finnHenvendelse(henvendelseId: UUID): Henvendelse? {
-        val tilstandLoggg = hentTilstandsloggForHenvendelse(henvendelseId)
+    private fun finnInnsending(innsendingId: UUID): Innsending? {
+        val tilstandLoggg = hentTilstandsloggForInnsending(innsendingId)
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  henv.id as henvendelse_id, 
-                                henv.journalpost_id, 
-                                henv.skjema_kode, 
-                                henv.kategori,
-                                henv.mottatt, 
-                                henv.behandler_ident, 
-                                henv.tilstand,
+                        SELECT  inns.id as innsending_id, 
+                                inns.journalpost_id, 
+                                inns.skjema_kode, 
+                                inns.kategori,
+                                inns.mottatt, 
+                                inns.behandler_ident, 
+                                inns.tilstand,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
                                 pers.adressebeskyttelse_gradering as adressebeskyttelse
-                        FROM    henvendelse_v1 henv
-                        JOIN    person_v1 pers ON pers.id = henv.person_id
-                        WHERE   henv.id = :henvendelse_id
+                        FROM    innsending_v1 inns
+                        JOIN    person_v1 pers ON pers.id = inns.person_id
+                        WHERE   inns.id = :innsending_id
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "henvendelse_id" to henvendelseId,
+                            "innsending_id" to innsendingId,
                         ),
                 ).map { row ->
-                    row.rehydrerHenvendelse(tilstandLoggg)
+                    row.rehydrerInnsending(tilstandLoggg)
                 }.asSingle,
             )
         }
     }
 
-    private fun Row.rehydrerHenvendelse(tilstandsloggg: HenvendelseTilstandslogg): Henvendelse {
-        val henvendelseId = this.uuid("henvendelse_id")
+    private fun Row.rehydrerInnsending(tilstandsloggg: InnsendingTilstandslogg): Innsending {
+        val innsendingId = this.uuid("innsending_id")
         val tilstand =
             runCatching {
                 when (Type.valueOf(value = string("tilstand"))) {
-                    Type.KLAR_TIL_BEHANDLING -> Henvendelse.Tilstand.KlarTilBehandling
-                    Type.UNDER_BEHANDLING -> Henvendelse.Tilstand.UnderBehandling
-                    Type.FERDIGBEHANDLET -> Henvendelse.Tilstand.Ferdigbehandlet
-                    Type.AVBRUTT -> Henvendelse.Tilstand.Avbrutt
+                    Type.KLAR_TIL_BEHANDLING -> Innsending.Tilstand.KlarTilBehandling
+                    Type.UNDER_BEHANDLING -> Innsending.Tilstand.UnderBehandling
+                    Type.FERDIGBEHANDLET -> Innsending.Tilstand.Ferdigbehandlet
+                    Type.AVBRUTT -> Innsending.Tilstand.Avbrutt
                 }
             }.getOrElse { t ->
-                throw RuntimeException("Kunne ikke rehydrere henvendelse til tilstand: ${string("tilstand")} ${t.message}")
+                throw RuntimeException("Kunne ikke rehydrere innsending til tilstand: ${string("tilstand")} ${t.message}")
             }
 
-        return Henvendelse.rehydrer(
-            henvendelseId = henvendelseId,
+        return Innsending.rehydrer(
+            innsendingId = innsendingId,
             person =
                 Person(
                     id = this.uuid("person_id"),
@@ -175,18 +175,18 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
         )
     }
 
-    private fun hentTilstandsloggForHenvendelse(henvendelseId: UUID): HenvendelseTilstandslogg {
+    private fun hentTilstandsloggForInnsending(innsendingId: UUID): InnsendingTilstandslogg {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT id, henvendelse_id, tilstand, hendelse_type, hendelse, tidspunkt
-                        FROM   henvendelse_tilstand_logg_v1
-                        WHERE  henvendelse_id = :henvendelse_id
+                        SELECT id, innsending_id, tilstand, hendelse_type, hendelse, tidspunkt
+                        FROM   innsending_tilstand_logg_v1
+                        WHERE  innsending_id = :innsending_id
                         """.trimIndent(),
-                    paramMap = mapOf("henvendelse_id" to henvendelseId),
+                    paramMap = mapOf("innsending_id" to innsendingId),
                 ).map { row ->
                     Tilstandsendring(
                         id = row.uuid("id"),
@@ -199,7 +199,7 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                         tidspunkt = row.localDateTime("tidspunkt"),
                     )
                 }.asList,
-            ).let { HenvendelseTilstandslogg(it) }
+            ).let { InnsendingTilstandslogg(it) }
         }
     }
 
@@ -208,10 +208,10 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
         hendelseJson: String,
     ): Hendelse {
         return when (hendelseType) {
-            "HenvendelseMottattHendelse" -> hendelseJson.tilHendelse<HenvendelseMottattHendelse>()
+            "InnsendingMottattHendelse" -> hendelseJson.tilHendelse<InnsendingMottattHendelse>()
             "TildelHendelse" -> hendelseJson.tilHendelse<TildelHendelse>()
             "FjernAnsvarHendelse" -> hendelseJson.tilHendelse<FjernAnsvarHendelse>()
-            "HenvendelseFerdigstiltHendelse" -> hendelseJson.tilHendelse<HenvendelseFerdigstiltHendelse>()
+            "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
             else -> {
                 logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
                 sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
@@ -220,13 +220,13 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
         }
     }
 
-    private fun TransactionalSession.lagre(henvendelse: Henvendelse) {
+    private fun TransactionalSession.lagre(innsending: Innsending) {
         run(
             queryOf(
                 //language=PostgreSQL
                 statement =
                     """
-                    INSERT INTO henvendelse_v1
+                    INSERT INTO innsending_v1
                         (id, person_id, journalpost_id, skjema_kode, kategori, mottatt, behandler_ident, tilstand)
                     VALUES
                         (:id, :person_id, :journalpost_id, :skjema_kode, :kategori, :mottatt, :behandler_ident, :tilstand)
@@ -234,19 +234,19 @@ class PostgresHenvendelseRepository(private val dataSource: DataSource) : Henven
                     """.trimIndent(),
                 paramMap =
                     mapOf(
-                        "id" to henvendelse.henvendelseId,
-                        "person_id" to henvendelse.person.id,
-                        "journalpost_id" to henvendelse.journalpostId,
-                        "skjema_kode" to henvendelse.skjemaKode,
-                        "kategori" to henvendelse.kategori.name,
-                        "mottatt" to henvendelse.mottatt,
-                        "behandler_ident" to henvendelse.behandlerIdent(),
-                        "tilstand" to henvendelse.tilstand().type.name,
+                        "id" to innsending.innsendingId,
+                        "person_id" to innsending.person.id,
+                        "journalpost_id" to innsending.journalpostId,
+                        "skjema_kode" to innsending.skjemaKode,
+                        "kategori" to innsending.kategori.name,
+                        "mottatt" to innsending.mottatt,
+                        "behandler_ident" to innsending.behandlerIdent(),
+                        "tilstand" to innsending.tilstand().type.name,
                     ),
             ).asUpdate,
         )
-        henvendelse.tilstandslogg.forEach { tilstandsendring ->
-            lagre(henvendelse.henvendelseId, tilstandsendring)
+        innsending.tilstandslogg.forEach { tilstandsendring ->
+            lagre(innsending.innsendingId, tilstandsendring)
         }
     }
 }

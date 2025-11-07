@@ -7,16 +7,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
-import no.nav.dagpenger.saksbehandling.henvendelse.HåndterHenvendelseResultat
+import no.nav.dagpenger.saksbehandling.innsending.HåndterInnsendingResultat
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HenvendelseBehovløserTest {
+class InnsendingBehovløserTest {
     private val testIdent = "12345612345"
     private val sakId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
@@ -31,19 +31,19 @@ class HenvendelseBehovløserTest {
 
     @Test
     fun `Skal parse behov riktig og svare med riktig løsning der vi eier saken`() {
-        val slot = slot<HenvendelseMottattHendelse>()
-        HenvendelseBehovløser(
+        val slot = slot<InnsendingMottattHendelse>()
+        InnsendingBehovløser(
             rapidsConnection = testRapid,
-            henvendelseMediator =
-                mockk<HenvendelseMediator>(relaxed = true).also {
-                    every { it.taImotHenvendelse(capture(slot)) } returns
-                        HåndterHenvendelseResultat.HåndtertHenvendelse(sakId)
+            innsendingMediator =
+                mockk<InnsendingMediator>(relaxed = true).also {
+                    every { it.taImotInnsending(capture(slot)) } returns
+                        HåndterInnsendingResultat.HåndtertInnsending(sakId)
                 },
         )
         testRapid.sendTestMessage(
             key = testIdent,
             message =
-                håndterHenvendelseBehov(
+                håndterInnsendingBehov(
                     ident = testIdent,
                     journalpostId = journalpostId,
                     registrertTidspunkt = nå,
@@ -67,12 +67,12 @@ class HenvendelseBehovløserTest {
             """
             {
               "@event_name" : "behov",
-              "@behov" : [ "HåndterHenvendelse" ],
+              "@behov" : [ "HåndterInnsending" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$testIdent",
               "kategori" : "ETTERSENDING",
               "@løsning" : {
-                "HåndterHenvendelse": {
+                "HåndterInnsending": {
                   "sakId" : "$sakId",
                   "håndtert" : true
                   }
@@ -84,18 +84,18 @@ class HenvendelseBehovløserTest {
 
     @Test
     fun `Skal parse behov riktig og svare med riktig løsning der vi IKKE eier saken`() {
-        val slot = slot<HenvendelseMottattHendelse>()
-        HenvendelseBehovløser(
+        val slot = slot<InnsendingMottattHendelse>()
+        InnsendingBehovløser(
             rapidsConnection = testRapid,
-            henvendelseMediator =
-                mockk<HenvendelseMediator>(relaxed = true).also {
-                    every { it.taImotHenvendelse(capture(slot)) } returns HåndterHenvendelseResultat.UhåndtertHenvendelse
+            innsendingMediator =
+                mockk<InnsendingMediator>(relaxed = true).also {
+                    every { it.taImotInnsending(capture(slot)) } returns HåndterInnsendingResultat.UhåndtertInnsending
                 },
         )
         testRapid.sendTestMessage(
             key = testIdent,
             message =
-                håndterHenvendelseBehov(
+                håndterInnsendingBehov(
                     ident = testIdent,
                     journalpostId = journalpostId,
                     registrertTidspunkt = nå,
@@ -119,12 +119,12 @@ class HenvendelseBehovløserTest {
             """
             {
               "@event_name" : "behov",
-              "@behov" : [ "HåndterHenvendelse" ],
+              "@behov" : [ "HåndterInnsending" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$testIdent",
               "kategori" : "KLAGE",
               "@løsning" : {
-                "HåndterHenvendelse": {
+                "HåndterInnsending": {
                   "håndtert" : false
                   }
               },
@@ -133,7 +133,7 @@ class HenvendelseBehovløserTest {
             """.trimIndent()
     }
 
-    private fun håndterHenvendelseBehov(
+    private fun håndterInnsendingBehov(
         ident: String,
         journalpostId: String,
         registrertTidspunkt: LocalDateTime,
@@ -147,7 +147,7 @@ class HenvendelseBehovløserTest {
             {
               "@event_name" : "behov",
               "@behovId" : "${UUIDv7.ny()}",
-              "@behov" : [ "HåndterHenvendelse" ],
+              "@behov" : [ "HåndterInnsending" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$ident",
               "kategori" : "${kategori.name}",
@@ -162,7 +162,7 @@ class HenvendelseBehovløserTest {
             {
               "@event_name" : "behov",
               "@behovId" : "${UUIDv7.ny()}",
-              "@behov" : [ "HåndterHenvendelse" ],
+              "@behov" : [ "HåndterInnsending" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$ident",
               "søknadId" : "$søknadId",

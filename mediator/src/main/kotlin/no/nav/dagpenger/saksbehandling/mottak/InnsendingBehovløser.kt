@@ -9,18 +9,18 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
-import no.nav.dagpenger.saksbehandling.henvendelse.HåndterHenvendelseResultat
+import no.nav.dagpenger.saksbehandling.innsending.HåndterInnsendingResultat
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import java.util.UUID
 
-internal class HenvendelseBehovløser(
+internal class InnsendingBehovløser(
     rapidsConnection: RapidsConnection,
-    private val henvendelseMediator: HenvendelseMediator,
+    private val innsendingMediator: InnsendingMediator,
 ) : River.PacketListener {
     companion object {
-        val behovNavn: String = "HåndterHenvendelse"
+        val behovNavn: String = "HåndterInnsending"
         private val logger = KotlinLogging.logger {}
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
@@ -30,9 +30,10 @@ internal class HenvendelseBehovløser(
             .apply {
                 precondition { it.requireValue("@event_name", "behov") }
                 precondition {
+                    // TODO fjern HåndterHenvendelse når alle har oppdatert til HåndterInnsending
                     it.requireAllOrAny(
                         "@behov",
-                        listOf(behovNavn),
+                        listOf(behovNavn, "HåndterHenvendelse"),
                     )
                     it.forbid("@løsning")
                     it.forbid("@feil")
@@ -68,8 +69,8 @@ internal class HenvendelseBehovløser(
                 } else {
                     null
                 }
-            val henvendelseMottattHendelse =
-                HenvendelseMottattHendelse(
+            val innsendingMottattHendelse =
+                InnsendingMottattHendelse(
                     ident = ident,
                     journalpostId = journalpostId,
                     registrertTidspunkt = packet["registrertDato"].asLocalDateTime(),
@@ -79,23 +80,33 @@ internal class HenvendelseBehovløser(
                 )
             logger.info { "Skal løse behov $behovNavn for journalpostId $journalpostId og kategori $kategori" }
 
-            val håndterHenvendelseResultat = henvendelseMediator.taImotHenvendelse(henvendelseMottattHendelse)
-            when (håndterHenvendelseResultat) {
-                is HåndterHenvendelseResultat.HåndtertHenvendelse -> {
+            val håndterInnsendingResultat = innsendingMediator.taImotInnsending(innsendingMottattHendelse)
+            when (håndterInnsendingResultat) {
+                // TODO fjern HåndterHenvendelse når alle har oppdatert til HåndterInnsending
+                is HåndterInnsendingResultat.HåndtertInnsending -> {
                     packet["@løsning"] =
                         mapOf(
                             "$behovNavn" to
                                 mapOf(
-                                    "sakId" to håndterHenvendelseResultat.sakId,
+                                    "sakId" to håndterInnsendingResultat.sakId,
+                                    "håndtert" to true,
+                                ),
+                            "HåndterHenvendelse" to
+                                mapOf(
+                                    "sakId" to håndterInnsendingResultat.sakId,
                                     "håndtert" to true,
                                 ),
                         )
                 }
 
-                HåndterHenvendelseResultat.UhåndtertHenvendelse -> {
+                HåndterInnsendingResultat.UhåndtertInnsending -> {
                     packet["@løsning"] =
                         mapOf(
                             "$behovNavn" to
+                                mapOf(
+                                    "håndtert" to false,
+                                ),
+                            "HåndterHenvendelse" to
                                 mapOf(
                                     "håndtert" to false,
                                 ),

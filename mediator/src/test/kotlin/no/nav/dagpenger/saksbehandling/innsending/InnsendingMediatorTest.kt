@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.henvendelse
+package no.nav.dagpenger.saksbehandling.innsending
 
 import PersonMediator
 import io.kotest.matchers.shouldBe
@@ -16,26 +16,26 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
+import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Avbrutt
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Ferdigbehandlet
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.FERDIGBEHANDLET
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.UnderBehandling
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Avbrutt
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Ferdigbehandlet
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Type.FERDIGBEHANDLET
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.UnderBehandling
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class HenvendelseMediatorTest {
+class InnsendingMediatorTest {
     private val sakId = UUIDv7.ny()
     private val journalpostId = "journalpostId123"
     private val søknadIdSomSkalVarsles = UUIDv7.ny()
@@ -74,23 +74,23 @@ class HenvendelseMediatorTest {
         }
 
     @Test
-    fun `Skal lage henvendelse dersom vi eier saken`() {
-        val slot = slot<Henvendelse>()
-        val henvendelseRepositoryMock: HenvendelseRepository =
-            mockk<HenvendelseRepository>().also {
+    fun `Skal lage innsending dersom vi eier saken`() {
+        val slot = slot<Innsending>()
+        val innsendingRepositoryMock: InnsendingRepository =
+            mockk<InnsendingRepository>().also {
                 every { it.lagre(capture(slot)) } just Runs
             }
         val mediator =
-            HenvendelseMediator(
+            InnsendingMediator(
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
-                henvendelseRepository = henvendelseRepositoryMock,
-                henvendelseBehandler = mockk(),
+                innsendingRepository = innsendingRepositoryMock,
+                innsendingBehandler = mockk(),
             )
 
-        val henvendelseMottattHendelse =
-            HenvendelseMottattHendelse(
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
                 ident = personMedSak.ident,
                 journalpostId = journalpostId,
                 registrertTidspunkt = registrertTidspunkt,
@@ -99,9 +99,9 @@ class HenvendelseMediatorTest {
                 kategori = Kategori.KLAGE,
             )
 
-        mediator.taImotHenvendelse(
-            henvendelseMottattHendelse,
-        ) shouldBe HåndterHenvendelseResultat.HåndtertHenvendelse(sakId)
+        mediator.taImotInnsending(
+            innsendingMottattHendelse,
+        ) shouldBe HåndterInnsendingResultat.HåndtertInnsending(sakId)
 
         slot.captured.let {
             it.person shouldBe personMedSak
@@ -110,25 +110,25 @@ class HenvendelseMediatorTest {
             it.skjemaKode shouldBe skjemaKode
             it.kategori shouldBe Kategori.KLAGE
             it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
-            it.tilstandslogg.single().hendelse shouldBe henvendelseMottattHendelse
+            it.tilstandslogg.single().hendelse shouldBe innsendingMottattHendelse
         }
     }
 
     @Test
-    fun `Skal ikke håndtere henvendelse hvis vi ikke eier saken`() {
-        val henvendelseRepository = mockk<HenvendelseRepository>(relaxed = false)
-        val henvendelseBehandler = mockk<HenvendelseBehandler>()
+    fun `Skal ikke håndtere innsending hvis vi ikke eier saken`() {
+        val innsendingRepository = mockk<InnsendingRepository>(relaxed = false)
+        val innsendingBehandler = mockk<InnsendingBehandler>()
         val mediator =
-            HenvendelseMediator(
+            InnsendingMediator(
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
-                henvendelseRepository = henvendelseRepository,
-                henvendelseBehandler = henvendelseBehandler,
+                innsendingRepository = innsendingRepository,
+                innsendingBehandler = innsendingBehandler,
             )
 
-        val henvendelseMottattHendelse =
-            HenvendelseMottattHendelse(
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
                 ident = personUtenSak.ident,
                 journalpostId = journalpostId,
                 registrertTidspunkt = registrertTidspunkt,
@@ -137,36 +137,36 @@ class HenvendelseMediatorTest {
                 kategori = Kategori.KLAGE,
             )
 
-        mediator.taImotHenvendelse(
-            henvendelseMottattHendelse,
-        ) shouldBe HåndterHenvendelseResultat.UhåndtertHenvendelse
+        mediator.taImotInnsending(
+            innsendingMottattHendelse,
+        ) shouldBe HåndterInnsendingResultat.UhåndtertInnsending
 
         verify(exactly = 0) {
-            henvendelseRepository.lagre(any())
+            innsendingRepository.lagre(any())
         }
         verify(exactly = 0) {
-            henvendelseBehandler.utførAksjon(any(), any())
+            innsendingBehandler.utførAksjon(any(), any())
         }
     }
 
     @Test
-    fun `Skal lage henvendelse hvis vi ikke eier saken men skal varsle om ettersending`() {
-        val slot = slot<Henvendelse>()
-        val henvendelseRepositoryMock: HenvendelseRepository =
-            mockk<HenvendelseRepository>().also {
+    fun `Skal lage innsending hvis vi ikke eier saken men skal varsle om ettersending`() {
+        val slot = slot<Innsending>()
+        val innsendingRepositoryMock: InnsendingRepository =
+            mockk<InnsendingRepository>().also {
                 every { it.lagre(capture(slot)) } just Runs
             }
         val mediator =
-            HenvendelseMediator(
+            InnsendingMediator(
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
-                henvendelseRepository = henvendelseRepositoryMock,
-                henvendelseBehandler = mockk(),
+                innsendingRepository = innsendingRepositoryMock,
+                innsendingBehandler = mockk(),
             )
 
-        val henvendelseMottattHendelse =
-            HenvendelseMottattHendelse(
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
                 ident = personUtenSak.ident,
                 journalpostId = journalpostId,
                 registrertTidspunkt = registrertTidspunkt,
@@ -175,9 +175,9 @@ class HenvendelseMediatorTest {
                 kategori = Kategori.ETTERSENDING,
             )
 
-        mediator.taImotHenvendelse(
-            henvendelseMottattHendelse,
-        ) shouldBe HåndterHenvendelseResultat.UhåndtertHenvendelse
+        mediator.taImotInnsending(
+            innsendingMottattHendelse,
+        ) shouldBe HåndterInnsendingResultat.UhåndtertInnsending
 
         slot.captured.let {
             it.person shouldBe personUtenSak
@@ -186,34 +186,34 @@ class HenvendelseMediatorTest {
             it.skjemaKode shouldBe skjemaKode
             it.kategori shouldBe Kategori.ETTERSENDING
             it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
-            it.tilstandslogg.single().hendelse shouldBe henvendelseMottattHendelse
+            it.tilstandslogg.single().hendelse shouldBe innsendingMottattHendelse
         }
     }
 
     @Test
-    fun `Tildeling av en henvendelse`() {
-        val slot = slot<Henvendelse>()
+    fun `Tildeling av en innsending`() {
+        val slot = slot<Innsending>()
         val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 behandlerIdent = null,
                 tilstand = KlarTilBehandling,
             )
 
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+        val innsendingRepository =
+            mockk<InnsendingRepository>().also {
+                every { it.hent(innsending.innsendingId) } returns innsending
                 every { it.lagre(capture(slot)) } just Runs
             }
-        HenvendelseMediator(
+        InnsendingMediator(
             sakMediator = mockk(),
             oppgaveMediator = mockk(),
             personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = mockk(),
+            innsendingRepository = innsendingRepository,
+            innsendingBehandler = mockk(),
         ).tildel(
             TildelHendelse(
-                henvendelseId = henvendelse.henvendelseId,
+                innsendingId = innsending.innsendingId,
                 ansvarligIdent = "ansvarlig",
                 utførtAv = saksbehandler,
             ),
@@ -226,82 +226,82 @@ class HenvendelseMediatorTest {
     }
 
     @Test
-    fun `Ferdigstilling av en henvendelse`() {
-        val slot = slot<Henvendelse>()
+    fun `Ferdigstilling av en innsending`() {
+        val slot = slot<Innsending>()
         val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 tilstand = UnderBehandling,
                 behandlerIdent = saksbehandler.navIdent,
             )
 
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+        val innsendingRepository =
+            mockk<InnsendingRepository>().also {
+                every { it.hent(innsending.innsendingId) } returns innsending
                 every { it.lagre(capture(slot)) } just Runs
             }
 
-        val henvendelseFerdigstiltHendelse =
-            HenvendelseFerdigstiltHendelse(
-                henvendelseId = henvendelse.henvendelseId,
+        val innsendingFerdigstiltHendelse =
+            InnsendingFerdigstiltHendelse(
+                innsendingId = innsending.innsendingId,
                 aksjon = Aksjon.OpprettKlage::class.java.simpleName,
                 behandlingId = UUIDv7.ny(),
                 utførtAv = saksbehandler,
             )
 
-        val ferdigstillHenvendelseHendelse =
-            FerdigstillHenvendelseHendelse(
-                henvendelseId = henvendelse.henvendelseId,
+        val ferdigstillInnsendingHendelse =
+            FerdigstillInnsendingHendelse(
+                innsendingId = innsending.innsendingId,
                 aksjon = Aksjon.OpprettKlage(sakId),
                 utførtAv = saksbehandler,
             )
 
-        val henvendelseBehandler =
-            mockk<HenvendelseBehandler>().also {
+        val innsendingBehandler =
+            mockk<InnsendingBehandler>().also {
                 every {
                     it.utførAksjon(
-                        hendelse = ferdigstillHenvendelseHendelse,
-                        henvendelse = henvendelse,
+                        hendelse = ferdigstillInnsendingHendelse,
+                        innsending = innsending,
                     )
-                } returns henvendelseFerdigstiltHendelse
+                } returns innsendingFerdigstiltHendelse
             }
 
-        HenvendelseMediator(
+        InnsendingMediator(
             sakMediator = mockk(),
             oppgaveMediator = mockk(),
             personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = henvendelseBehandler,
+            innsendingRepository = innsendingRepository,
+            innsendingBehandler = innsendingBehandler,
         ).ferdigstill(
-            ferdigstillHenvendelseHendelse,
+            ferdigstillInnsendingHendelse,
         )
 
         slot.captured.let {
             it.tilstand() shouldBe Ferdigbehandlet
             it.tilstandslogg.first().hendelse.let { hendelse ->
-                hendelse shouldBe henvendelseFerdigstiltHendelse
+                hendelse shouldBe innsendingFerdigstiltHendelse
             }
         }
     }
 
     @Test
-    fun `Avbryt henvendelse hvis behandling opprettes for søknad`() {
-        val slot = slot<Henvendelse>()
+    fun `Avbryt innsending hvis behandling opprettes for søknad`() {
+        val slot = slot<Innsending>()
         val person = TestHelper.testPerson
         val søknadId = UUIDv7.ny()
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 person = person,
                 tilstand = KlarTilBehandling,
                 kategori = Kategori.NY_SØKNAD,
-            ).also { henvendelse ->
-                henvendelse.tilstandslogg.leggTil(
+            ).also { innsending ->
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = KlarTilBehandling.type,
                     hendelse =
-                        HenvendelseMottattHendelse(
+                        InnsendingMottattHendelse(
                             ident = person.ident,
-                            journalpostId = henvendelse.journalpostId,
-                            registrertTidspunkt = henvendelse.mottatt,
+                            journalpostId = innsending.journalpostId,
+                            registrertTidspunkt = innsending.mottatt,
                             søknadId = søknadId,
                             skjemaKode = "NAV 04-01.03",
                             kategori = Kategori.NY_SØKNAD,
@@ -309,27 +309,27 @@ class HenvendelseMediatorTest {
                 )
             }
 
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+        val innsendingRepository =
+            mockk<InnsendingRepository>().also {
+                every { it.hent(innsending.innsendingId) } returns innsending
                 every { it.lagre(capture(slot)) } just Runs
-                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+                every { it.finnInnsendingerForPerson(person.ident) } returns listOf(innsending)
             }
 
         val behandlingOpprettetForSøknadHendelse =
             BehandlingOpprettetForSøknadHendelse(
-                ident = henvendelse.person.ident,
+                ident = innsending.person.ident,
                 søknadId = søknadId,
                 behandlingId = UUIDv7.ny(),
             )
 
-        HenvendelseMediator(
+        InnsendingMediator(
             sakMediator = mockk(),
             oppgaveMediator = mockk(),
             personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = mockk(),
-        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+            innsendingRepository = innsendingRepository,
+            innsendingBehandler = mockk(),
+        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
 
         slot.captured.let {
             it.tilstand() shouldBe Avbrutt
@@ -340,153 +340,153 @@ class HenvendelseMediatorTest {
     }
 
     @Test
-    fun `Ikke avbryt henvendelse hvis behandling opprettes for søknad og henvendelsen er under behandling`() {
-        val slot = slot<Henvendelse>()
+    fun `Ikke avbryt innsending hvis behandling opprettes for søknad og innsendingen er under behandling`() {
+        val slot = slot<Innsending>()
         val person = TestHelper.testPerson
         val søknadId = UUIDv7.ny()
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 person = person,
                 tilstand = UnderBehandling,
                 kategori = Kategori.NY_SØKNAD,
                 behandlerIdent = saksbehandler.navIdent,
-            ).also { henvendelse ->
-                henvendelse.tilstandslogg.leggTil(
+            ).also { innsending ->
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = KLAR_TIL_BEHANDLING,
                     hendelse =
-                        HenvendelseMottattHendelse(
+                        InnsendingMottattHendelse(
                             ident = person.ident,
-                            journalpostId = henvendelse.journalpostId,
-                            registrertTidspunkt = henvendelse.mottatt,
+                            journalpostId = innsending.journalpostId,
+                            registrertTidspunkt = innsending.mottatt,
                             søknadId = søknadId,
                             skjemaKode = "NAV 04-01.03",
                             kategori = Kategori.NY_SØKNAD,
                         ),
                 )
-                henvendelse.tilstandslogg.leggTil(
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = UNDER_BEHANDLING,
                     hendelse =
                         TildelHendelse(
-                            henvendelseId = henvendelse.henvendelseId,
+                            innsendingId = innsending.innsendingId,
                             utførtAv = saksbehandler,
                             ansvarligIdent = saksbehandler.navIdent,
                         ),
                 )
             }
 
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+        val innsendingRepository =
+            mockk<InnsendingRepository>().also {
+                every { it.hent(innsending.innsendingId) } returns innsending
                 every { it.lagre(capture(slot)) } just Runs
-                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+                every { it.finnInnsendingerForPerson(person.ident) } returns listOf(innsending)
             }
 
         val behandlingOpprettetForSøknadHendelse =
             BehandlingOpprettetForSøknadHendelse(
-                ident = henvendelse.person.ident,
+                ident = innsending.person.ident,
                 søknadId = søknadId,
                 behandlingId = UUIDv7.ny(),
             )
 
-        HenvendelseMediator(
+        InnsendingMediator(
             sakMediator = mockk(),
             oppgaveMediator = mockk(),
             personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = mockk(),
-        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+            innsendingRepository = innsendingRepository,
+            innsendingBehandler = mockk(),
+        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
 
-        verify(exactly = 0) { henvendelseRepository.lagre(any()) }
+        verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
 
     @Test
-    fun `Ikke avbryt henvendelse hvis behandling opprettes for søknad og henvendelsen er ferdigbehandlet`() {
-        val slot = slot<Henvendelse>()
+    fun `Ikke avbryt innsending hvis behandling opprettes for søknad og innsendingen er ferdigbehandlet`() {
+        val slot = slot<Innsending>()
         val person = TestHelper.testPerson
         val søknadId = UUIDv7.ny()
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 person = person,
                 tilstand = Ferdigbehandlet,
                 kategori = Kategori.NY_SØKNAD,
                 behandlerIdent = saksbehandler.navIdent,
-            ).also { henvendelse ->
-                henvendelse.tilstandslogg.leggTil(
+            ).also { innsending ->
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = KLAR_TIL_BEHANDLING,
                     hendelse =
-                        HenvendelseMottattHendelse(
+                        InnsendingMottattHendelse(
                             ident = person.ident,
-                            journalpostId = henvendelse.journalpostId,
-                            registrertTidspunkt = henvendelse.mottatt,
+                            journalpostId = innsending.journalpostId,
+                            registrertTidspunkt = innsending.mottatt,
                             søknadId = søknadId,
                             skjemaKode = "NAV 04-01.03",
                             kategori = Kategori.NY_SØKNAD,
                         ),
                 )
-                henvendelse.tilstandslogg.leggTil(
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = UNDER_BEHANDLING,
                     hendelse =
                         TildelHendelse(
-                            henvendelseId = henvendelse.henvendelseId,
+                            innsendingId = innsending.innsendingId,
                             utførtAv = saksbehandler,
                             ansvarligIdent = saksbehandler.navIdent,
                         ),
                 )
-                henvendelse.tilstandslogg.leggTil(
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = FERDIGBEHANDLET,
                     hendelse =
-                        FerdigstillHenvendelseHendelse(
-                            henvendelseId = henvendelse.henvendelseId,
+                        FerdigstillInnsendingHendelse(
+                            innsendingId = innsending.innsendingId,
                             aksjon = Aksjon.Avslutt,
                             utførtAv = saksbehandler,
                         ),
                 )
             }
 
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+        val innsendingRepository =
+            mockk<InnsendingRepository>().also {
+                every { it.hent(innsending.innsendingId) } returns innsending
                 every { it.lagre(capture(slot)) } just Runs
-                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+                every { it.finnInnsendingerForPerson(person.ident) } returns listOf(innsending)
             }
 
         val behandlingOpprettetForSøknadHendelse =
             BehandlingOpprettetForSøknadHendelse(
-                ident = henvendelse.person.ident,
+                ident = innsending.person.ident,
                 søknadId = søknadId,
                 behandlingId = UUIDv7.ny(),
             )
 
-        HenvendelseMediator(
+        InnsendingMediator(
             sakMediator = mockk(),
             oppgaveMediator = mockk(),
             personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = mockk(),
-        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+            innsendingRepository = innsendingRepository,
+            innsendingBehandler = mockk(),
+        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
 
-        verify(exactly = 0) { henvendelseRepository.lagre(any()) }
+        verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
 
     @Test
-    fun `Ikke avbryt henvendelse hvis behandling opprettes for søknad og henvendelsen mangler søknadId`() {
-        val slot = slot<Henvendelse>()
+    fun `Ikke avbryt innsending hvis behandling opprettes for søknad og innsendingen mangler søknadId`() {
+        val slot = slot<Innsending>()
         val person = TestHelper.testPerson
         val søknadId = UUIDv7.ny()
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 person = person,
                 tilstand = KlarTilBehandling,
                 kategori = Kategori.NY_SØKNAD,
                 behandlerIdent = saksbehandler.navIdent,
-            ).also { henvendelse ->
-                henvendelse.tilstandslogg.leggTil(
+            ).also { innsending ->
+                innsending.tilstandslogg.leggTil(
                     nyTilstand = KLAR_TIL_BEHANDLING,
                     hendelse =
-                        HenvendelseMottattHendelse(
+                        InnsendingMottattHendelse(
                             ident = person.ident,
-                            journalpostId = henvendelse.journalpostId,
-                            registrertTidspunkt = henvendelse.mottatt,
+                            journalpostId = innsending.journalpostId,
+                            registrertTidspunkt = innsending.mottatt,
                             søknadId = null,
                             skjemaKode = "NAV 04-01.03",
                             kategori = Kategori.NY_SØKNAD,
@@ -494,28 +494,28 @@ class HenvendelseMediatorTest {
                 )
             }
 
-        val henvendelseRepository =
-            mockk<HenvendelseRepository>().also {
-                every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+        val innsendingRepository =
+            mockk<InnsendingRepository>().also {
+                every { it.hent(innsending.innsendingId) } returns innsending
                 every { it.lagre(capture(slot)) } just Runs
-                every { it.finnHenvendelserForPerson(person.ident) } returns listOf(henvendelse)
+                every { it.finnInnsendingerForPerson(person.ident) } returns listOf(innsending)
             }
 
         val behandlingOpprettetForSøknadHendelse =
             BehandlingOpprettetForSøknadHendelse(
-                ident = henvendelse.person.ident,
+                ident = innsending.person.ident,
                 søknadId = søknadId,
                 behandlingId = UUIDv7.ny(),
             )
 
-        HenvendelseMediator(
+        InnsendingMediator(
             sakMediator = mockk(),
             oppgaveMediator = mockk(),
             personMediator = mockk(),
-            henvendelseRepository = henvendelseRepository,
-            henvendelseBehandler = mockk(),
-        ).avbrytHenvendelse(hendelse = behandlingOpprettetForSøknadHendelse)
+            innsendingRepository = innsendingRepository,
+            innsendingBehandler = mockk(),
+        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
 
-        verify(exactly = 0) { henvendelseRepository.lagre(any()) }
+        verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
 }

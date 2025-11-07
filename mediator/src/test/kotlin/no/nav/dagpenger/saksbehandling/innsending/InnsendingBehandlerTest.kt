@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.henvendelse
+package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -9,26 +9,26 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class HenvendelseBehandlerTest {
+class InnsendingBehandlerTest {
     private val saksbehandler = Saksbehandler("Z123456", emptySet())
-    private val testHenvendelse = TestHelper.testHenvendelse
+    private val testInnsending = TestHelper.testInnsending
     private val testOppgave = TestHelper.testOppgave
 
     @Test
-    fun `Behandle en henvendelse med aksjon av type Avslutt `() {
-        val henvendelseBehandler =
-            HenvendelseBehandler(
+    fun `Behandle en innsending med aksjon av type Avslutt `() {
+        val innsendingBehandler =
+            InnsendingBehandler(
                 klageMediator = mockk(),
                 behandlingKlient = mockk(),
             )
 
-        henvendelseBehandler.utførAksjon(lagHendelse(Aksjon.Avslutt), testHenvendelse).let {
-            it.henvendelseId shouldBe testHenvendelse.henvendelseId
+        innsendingBehandler.utførAksjon(lagHendelse(Aksjon.Avslutt), testInnsending).let {
+            it.innsendingId shouldBe testInnsending.innsendingId
             it.aksjon shouldBe "Avslutt"
             it.behandlingId shouldBe null
             it.utførtAv shouldBe saksbehandler
@@ -36,7 +36,7 @@ class HenvendelseBehandlerTest {
     }
 
     @Test
-    fun `Behandle en henvendelse med aksjon av type OpprettKlage`() {
+    fun `Behandle en innsending med aksjon av type OpprettKlage`() {
         val testSakId = UUID.randomUUID()
 
         val slot = slot<KlageMottattHendelse>()
@@ -46,33 +46,33 @@ class HenvendelseBehandlerTest {
                     it.opprettKlage(capture(slot))
                 } returns testOppgave
             }
-        val henvendelseBehandler =
-            HenvendelseBehandler(
+        val innsendingBehandler =
+            InnsendingBehandler(
                 klageMediator = klageMediator,
                 behandlingKlient = mockk(),
             )
 
-        henvendelseBehandler.utførAksjon(
+        innsendingBehandler.utførAksjon(
             hendelse = lagHendelse(Aksjon.OpprettKlage(sakId = testSakId)),
-            henvendelse = testHenvendelse,
+            innsending = testInnsending,
         )
             .let {
-                it.henvendelseId shouldBe testHenvendelse.henvendelseId
+                it.innsendingId shouldBe testInnsending.innsendingId
                 it.aksjon shouldBe "OpprettKlage"
                 it.behandlingId shouldBe testOppgave.behandling.behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 
         with(slot.captured) {
-            ident shouldBe testHenvendelse.person.ident
-            opprettet shouldBe testHenvendelse.mottatt
-            journalpostId shouldBe testHenvendelse.journalpostId
+            ident shouldBe testInnsending.person.ident
+            opprettet shouldBe testInnsending.mottatt
+            journalpostId shouldBe testInnsending.journalpostId
             sakId shouldBe testSakId
         }
     }
 
     @Test
-    fun `Behandle en henvendelse med aksjon av type OpprettManuellBehandling`() {
+    fun `Behandle en innsending med aksjon av type OpprettManuellBehandling`() {
         val saksbehandlerToken = "token"
         val behandlingId = UUID.randomUUID()
 
@@ -80,36 +80,36 @@ class HenvendelseBehandlerTest {
             mockk<BehandlingKlient>().also {
                 every {
                     it.opprettManuellBehandling(
-                        personIdent = testHenvendelse.person.ident,
+                        personIdent = testInnsending.person.ident,
                         saksbehandlerToken = saksbehandlerToken,
                     )
                 } returns Result.success(behandlingId)
             }
-        val henvendelseBehandler =
-            HenvendelseBehandler(
+        val innsendingBehandler =
+            InnsendingBehandler(
                 klageMediator = mockk<KlageMediator>(),
                 behandlingKlient = behandlingKlient,
             )
 
-        henvendelseBehandler.utførAksjon(
+        innsendingBehandler.utførAksjon(
             hendelse = lagHendelse(Aksjon.OpprettManuellBehandling(saksbehandlerToken = saksbehandlerToken)),
-            henvendelse = testHenvendelse,
+            innsending = testInnsending,
         )
             .let {
-                it.henvendelseId shouldBe testHenvendelse.henvendelseId
+                it.innsendingId shouldBe testInnsending.innsendingId
                 it.aksjon shouldBe "OpprettManuellBehandling"
                 it.behandlingId shouldBe behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 
         verify(exactly = 1) {
-            behandlingKlient.opprettManuellBehandling(testHenvendelse.person.ident, saksbehandlerToken)
+            behandlingKlient.opprettManuellBehandling(testInnsending.person.ident, saksbehandlerToken)
         }
     }
 
-    private fun lagHendelse(aksjon: Aksjon): FerdigstillHenvendelseHendelse {
-        return FerdigstillHenvendelseHendelse(
-            henvendelseId = testHenvendelse.henvendelseId,
+    private fun lagHendelse(aksjon: Aksjon): FerdigstillInnsendingHendelse {
+        return FerdigstillInnsendingHendelse(
+            innsendingId = testInnsending.innsendingId,
             aksjon = aksjon,
             utførtAv = saksbehandler,
         )

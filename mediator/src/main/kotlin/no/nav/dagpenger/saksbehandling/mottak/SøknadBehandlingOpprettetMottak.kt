@@ -9,7 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseMediator
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -17,7 +17,7 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class SøknadBehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
-    private val henvendelseMediator: HenvendelseMediator,
+    private val innsendingMediator: InnsendingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -48,7 +48,7 @@ internal class SøknadBehandlingOpprettetMottak(
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_opprettet hendelse for søknad i SøknadBehandlingOpprettetMottak" }
 
-            henvendelseMediator.avbrytHenvendelse(
+            innsendingMediator.avbrytInnsending(
                 hendelse =
                     BehandlingOpprettetForSøknadHendelse(
                         ident = ident,

@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.henvendelse
+package no.nav.dagpenger.saksbehandling.innsending
 
 import java.util.UUID
 

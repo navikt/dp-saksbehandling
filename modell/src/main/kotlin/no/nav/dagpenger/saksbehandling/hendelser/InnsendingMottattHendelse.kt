@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class HenvendelseMottattHendelse(
+data class InnsendingMottattHendelse(
     val ident: String,
     val journalpostId: String,
     val registrertTidspunkt: LocalDateTime,

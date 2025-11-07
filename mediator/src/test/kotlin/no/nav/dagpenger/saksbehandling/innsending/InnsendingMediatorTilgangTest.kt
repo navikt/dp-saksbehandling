@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.henvendelse
+package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
@@ -18,9 +18,9 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
-import no.nav.dagpenger.saksbehandling.db.henvendelse.HenvendelseRepository
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.UnderBehandling
+import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.UnderBehandling
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -28,7 +28,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
-class HenvendelseMediatorTilgangTest {
+class InnsendingMediatorTilgangTest {
     companion object {
         @JvmStatic
         private fun adressebeskyttelseTester(): Stream<Arguments> {
@@ -61,8 +61,8 @@ class HenvendelseMediatorTilgangTest {
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,
     ) {
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 person = TestHelper.lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering),
             )
         val saksbehandler =
@@ -72,25 +72,25 @@ class HenvendelseMediatorTilgangTest {
                 tilganger = setOf(saksbehandlerTilgang),
             )
         val mediator =
-            HenvendelseMediator(
-                henvendelseRepository =
-                    mockk<HenvendelseRepository>().also {
-                        every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+            InnsendingMediator(
+                innsendingRepository =
+                    mockk<InnsendingRepository>().also {
+                        every { it.hent(innsending.innsendingId) } returns innsending
                     },
                 personMediator = mockk(),
                 sakMediator = mockk(),
                 oppgaveMediator = mockk(),
-                henvendelseBehandler = mockk(),
+                innsendingBehandler = mockk(),
             )
         when (forventetTilgang) {
             true -> {
                 shouldNotThrowAny {
-                    mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandler)
+                    mediator.hentInnsending(innsending.innsendingId, saksbehandler)
                 }
             }
             false -> {
                 shouldThrow<ManglendeTilgangTilAdressebeskyttelse> {
-                    mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandler)
+                    mediator.hentInnsending(innsending.innsendingId, saksbehandler)
                 }
             }
         }
@@ -98,8 +98,8 @@ class HenvendelseMediatorTilgangTest {
 
     @Test
     fun `Vanlig saksbehandler har ikke tilgang til egne ansatte`() {
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+        val innsending =
+            TestHelper.lagInnsending(
                 person = TestHelper.lagPerson(skjermesSomEgneAnsatte = true),
             )
         val saksbehandler =
@@ -115,29 +115,29 @@ class HenvendelseMediatorTilgangTest {
                 tilganger = setOf(SAKSBEHANDLER, TilgangType.EGNE_ANSATTE),
             )
         val mediator =
-            HenvendelseMediator(
-                henvendelseRepository =
-                    mockk<HenvendelseRepository>().also {
-                        every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+            InnsendingMediator(
+                innsendingRepository =
+                    mockk<InnsendingRepository>().also {
+                        every { it.hent(innsending.innsendingId) } returns innsending
                     },
                 personMediator = mockk(),
                 sakMediator = mockk(),
                 oppgaveMediator = mockk(),
-                henvendelseBehandler = mockk(),
+                innsendingBehandler = mockk(),
             )
 
         shouldThrow<IkkeTilgangTilEgneAnsatte> {
-            mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandler)
+            mediator.hentInnsending(innsending.innsendingId, saksbehandler)
         }
         shouldNotThrowAny {
-            mediator.hentHenvendelse(henvendelse.henvendelseId, saksbehandlerMedEgneAnsatteTilgang)
+            mediator.hentInnsending(innsending.innsendingId, saksbehandlerMedEgneAnsatteTilgang)
         }
     }
 
     @Test
-    fun `Bare saksbehandler som eier henvendelse kan ferdigstille den`() {
-        val henvendelse =
-            TestHelper.lagHenvendelse(
+    fun `Bare saksbehandler som eier innsendingen kan ferdigstille den`() {
+        val innsending =
+            TestHelper.lagInnsending(
                 behandlerIdent = "saksbehandlerSomEier",
                 tilstand = UnderBehandling,
             )
@@ -154,21 +154,21 @@ class HenvendelseMediatorTilgangTest {
                 tilganger = setOf(SAKSBEHANDLER),
             )
         val mediator =
-            HenvendelseMediator(
-                henvendelseRepository =
-                    mockk<HenvendelseRepository>(relaxed = true).also {
-                        every { it.hent(henvendelse.henvendelseId) } returns henvendelse
+            InnsendingMediator(
+                innsendingRepository =
+                    mockk<InnsendingRepository>(relaxed = true).also {
+                        every { it.hent(innsending.innsendingId) } returns innsending
                     },
                 personMediator = mockk(),
                 sakMediator = mockk(),
                 oppgaveMediator = mockk(),
-                henvendelseBehandler = mockk(relaxed = true),
+                innsendingBehandler = mockk(relaxed = true),
             )
 
         shouldThrow<SaksbehandlerErIkkeEier> {
             mediator.ferdigstill(
-                FerdigstillHenvendelseHendelse(
-                    henvendelseId = henvendelse.henvendelseId,
+                FerdigstillInnsendingHendelse(
+                    innsendingId = innsending.innsendingId,
                     utførtAv = annenSaksbehandler,
                     aksjon = Aksjon.Avslutt,
                 ),
@@ -176,8 +176,8 @@ class HenvendelseMediatorTilgangTest {
         }
         shouldNotThrowAny {
             mediator.ferdigstill(
-                FerdigstillHenvendelseHendelse(
-                    henvendelseId = henvendelse.henvendelseId,
+                FerdigstillInnsendingHendelse(
+                    innsendingId = innsending.innsendingId,
                     utførtAv = saksbehandlerSomEier,
                     aksjon = Aksjon.Avslutt,
                 ),

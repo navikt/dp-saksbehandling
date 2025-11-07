@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.henvendelse
+package no.nav.dagpenger.saksbehandling.innsending
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
@@ -10,18 +10,18 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-class Henvendelse private constructor(
-    val henvendelseId: UUID = UUIDv7.ny(),
+class Innsending private constructor(
+    val innsendingId: UUID = UUIDv7.ny(),
     val person: Person,
     val journalpostId: String,
     val mottatt: LocalDateTime,
@@ -29,14 +29,14 @@ class Henvendelse private constructor(
     val kategori: Kategori,
     private var behandlerIdent: String? = null,
     private var tilstand: Tilstand = Tilstand.KlarTilBehandling,
-    private val _tilstandslogg: HenvendelseTilstandslogg = HenvendelseTilstandslogg(),
+    private val _tilstandslogg: InnsendingTilstandslogg = InnsendingTilstandslogg(),
 ) {
     companion object {
         fun opprett(
-            hendelse: HenvendelseMottattHendelse,
+            hendelse: InnsendingMottattHendelse,
             personProvider: (ident: String) -> Person,
-        ): Henvendelse {
-            return Henvendelse(
+        ): Innsending {
+            return Innsending(
                 person = personProvider.invoke(hendelse.ident),
                 journalpostId = hendelse.journalpostId,
                 mottatt = hendelse.registrertTidspunkt,
@@ -49,7 +49,7 @@ class Henvendelse private constructor(
         }
 
         fun rehydrer(
-            henvendelseId: UUID = UUIDv7.ny(),
+            innsendingId: UUID = UUIDv7.ny(),
             person: Person,
             journalpostId: String,
             mottatt: LocalDateTime,
@@ -57,10 +57,10 @@ class Henvendelse private constructor(
             kategori: Kategori,
             behandlerIdent: String?,
             tilstand: Tilstand,
-            tilstandslogg: HenvendelseTilstandslogg,
-        ): Henvendelse {
-            return Henvendelse(
-                henvendelseId = henvendelseId,
+            tilstandslogg: InnsendingTilstandslogg,
+        ): Innsending {
+            return Innsending(
+                innsendingId = innsendingId,
                 person = person,
                 journalpostId = journalpostId,
                 mottatt = mottatt,
@@ -73,7 +73,7 @@ class Henvendelse private constructor(
         }
     }
 
-    val tilstandslogg: HenvendelseTilstandslogg
+    val tilstandslogg: InnsendingTilstandslogg
         get() = _tilstandslogg
 
     fun tildel(tildelHendelse: TildelHendelse) {
@@ -84,8 +84,8 @@ class Henvendelse private constructor(
         tilstand.fjernAnsvar(this, fjernAnsvarHendelse)
     }
 
-    fun ferdigstill(henvendelseFerdigstiltHendelse: HenvendelseFerdigstiltHendelse) {
-        tilstand.ferdigstill(this, henvendelseFerdigstiltHendelse)
+    fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
+        tilstand.ferdigstill(this, innsendingFerdigstiltHendelse)
     }
 
     fun avbryt(behandlingOpprettetForSøknadHendelse: BehandlingOpprettetForSøknadHendelse) {
@@ -95,9 +95,9 @@ class Henvendelse private constructor(
     fun gjelderSøknadMedId(søknadId: UUID): Boolean =
         kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK) && this.tilstandslogg.gjelderSøknadMedId(søknadId)
 
-    private fun HenvendelseTilstandslogg.gjelderSøknadMedId(søknadId: UUID): Boolean {
+    private fun InnsendingTilstandslogg.gjelderSøknadMedId(søknadId: UUID): Boolean {
         return this.any {
-            it.hendelse is HenvendelseMottattHendelse && it.hendelse.søknadId == søknadId
+            it.hendelse is InnsendingMottattHendelse && it.hendelse.søknadId == søknadId
         }
     }
 
@@ -106,7 +106,7 @@ class Henvendelse private constructor(
     fun behandlerIdent(): String? = behandlerIdent
 
     override fun toString(): String {
-        return "Henvendelse(henvendelseId=$henvendelseId, person=$person, journalpostId='$journalpostId', " +
+        return "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
             "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, behandlerIdent=$behandlerIdent, " +
             "tilstand=${tilstand.type})"
     }
@@ -117,7 +117,7 @@ class Henvendelse private constructor(
     ) {
         logger.info {
             "Endrer tilstand fra ${this.tilstand.javaClass.simpleName} til ${nyTilstand.javaClass.simpleName} " +
-                "for henvendelseId: ${this.henvendelseId} basert på hendelse: ${hendelse.javaClass.simpleName}"
+                "for innsendingId: ${this.innsendingId} basert på hendelse: ${hendelse.javaClass.simpleName}"
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
@@ -127,9 +127,9 @@ class Henvendelse private constructor(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Henvendelse
+        other as Innsending
 
-        if (henvendelseId != other.henvendelseId) return false
+        if (innsendingId != other.innsendingId) return false
         if (person != other.person) return false
         if (journalpostId != other.journalpostId) return false
         if (mottatt != other.mottatt) return false
@@ -143,7 +143,7 @@ class Henvendelse private constructor(
     }
 
     override fun hashCode(): Int {
-        var result = henvendelseId.hashCode()
+        var result = innsendingId.hashCode()
         result = 31 * result + person.hashCode()
         result = 31 * result + journalpostId.hashCode()
         result = 31 * result + mottatt.hashCode()
@@ -168,38 +168,38 @@ class Henvendelse private constructor(
         val type: Type
 
         fun tildel(
-            henvendelse: Henvendelse,
+            innsending: Innsending,
             tildelHendelse: TildelHendelse,
         ) {
-            ulovligTilstandsendring(henvendelse.henvendelseId) {
-                "Kan ikke tildele henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            ulovligTilstandsendring(innsending.innsendingId) {
+                "Kan ikke tildele innsending i tilstanden ${innsending.tilstand.javaClass.simpleName}"
             }
         }
 
         fun fjernAnsvar(
-            henvendelse: Henvendelse,
+            innsending: Innsending,
             fjernAnsvarHendelse: FjernAnsvarHendelse,
         ) {
-            ulovligTilstandsendring(henvendelse.henvendelseId) {
-                "Kan ikke fjerne ansvar for henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            ulovligTilstandsendring(innsending.innsendingId) {
+                "Kan ikke fjerne ansvar for innsending i tilstanden ${innsending.tilstand.javaClass.simpleName}"
             }
         }
 
         fun ferdigstill(
-            henvendelse: Henvendelse,
-            hendelse: HenvendelseFerdigstiltHendelse,
+            innsending: Innsending,
+            hendelse: InnsendingFerdigstiltHendelse,
         ) {
-            ulovligTilstandsendring(henvendelse.henvendelseId) {
-                "Kan ikke ferdigstille henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            ulovligTilstandsendring(innsending.innsendingId) {
+                "Kan ikke ferdigstille innsending i tilstanden ${innsending.tilstand.javaClass.simpleName}"
             }
         }
 
         fun avbryt(
-            henvendelse: Henvendelse,
+            innsending: Innsending,
             hendelse: BehandlingOpprettetForSøknadHendelse,
         ) {
-            ulovligTilstandsendring(henvendelse.henvendelseId) {
-                "Kan ikke avbryte henvendelse i tilstanden ${henvendelse.tilstand.javaClass.simpleName}"
+            ulovligTilstandsendring(innsending.innsendingId) {
+                "Kan ikke avbryte innsending i tilstanden ${innsending.tilstand.javaClass.simpleName}"
             }
         }
 
@@ -214,21 +214,21 @@ class Henvendelse private constructor(
             override val type: Type = KLAR_TIL_BEHANDLING
 
             override fun tildel(
-                henvendelse: Henvendelse,
+                innsending: Innsending,
                 tildelHendelse: TildelHendelse,
             ) {
-                henvendelse.endreTilstand(
+                innsending.endreTilstand(
                     nyTilstand = UnderBehandling,
                     hendelse = tildelHendelse,
                 )
-                henvendelse.behandlerIdent = tildelHendelse.ansvarligIdent
+                innsending.behandlerIdent = tildelHendelse.ansvarligIdent
             }
 
             override fun avbryt(
-                henvendelse: Henvendelse,
+                innsending: Innsending,
                 behandlingOpprettetForSøknadHendelse: BehandlingOpprettetForSøknadHendelse,
             ) {
-                henvendelse.endreTilstand(
+                innsending.endreTilstand(
                     nyTilstand = Avbrutt,
                     hendelse = behandlingOpprettetForSøknadHendelse,
                 )
@@ -239,23 +239,23 @@ class Henvendelse private constructor(
             override val type: Type = Type.UNDER_BEHANDLING
 
             override fun fjernAnsvar(
-                henvendelse: Henvendelse,
+                innsending: Innsending,
                 fjernAnsvarHendelse: FjernAnsvarHendelse,
             ) {
-                henvendelse.endreTilstand(
+                innsending.endreTilstand(
                     nyTilstand = KlarTilBehandling,
                     hendelse = fjernAnsvarHendelse,
                 )
-                henvendelse.behandlerIdent = null
+                innsending.behandlerIdent = null
             }
 
             override fun ferdigstill(
-                henvendelse: Henvendelse,
-                henvendelseFerdigstiltHendelse: HenvendelseFerdigstiltHendelse,
+                innsending: Innsending,
+                innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse,
             ) {
-                henvendelse.endreTilstand(
+                innsending.endreTilstand(
                     nyTilstand = Ferdigbehandlet,
-                    hendelse = henvendelseFerdigstiltHendelse,
+                    hendelse = innsendingFerdigstiltHendelse,
                 )
             }
         }
@@ -269,14 +269,14 @@ class Henvendelse private constructor(
         }
 
         private fun ulovligTilstandsendring(
-            henvendelseId: UUID,
+            innsendingId: UUID,
             message: () -> String?,
         ): Nothing {
-            withLoggingContext("henvendelseId" to henvendelseId.toString()) {
+            withLoggingContext("innsendingId" to innsendingId.toString()) {
                 logger.error(message)
             }
             // TODO gjøre noe med excaptions. Skal vi gjenbruke noe eller blir det igjen trippel opp med klasser
-            // avhengig av om det er oppgave eller henvendelse eller kalge
+            // avhengig av om det er oppgave eller innsending eller kalge
             throw RuntimeException(message.invoke())
         }
     }

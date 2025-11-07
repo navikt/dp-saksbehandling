@@ -1,47 +1,47 @@
-package no.nav.dagpenger.saksbehandling.henvendelse
+package no.nav.dagpenger.saksbehandling.innsending
 
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillHenvendelseHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.HenvendelseFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 
-class HenvendelseBehandler(
+class InnsendingBehandler(
     private val klageMediator: KlageMediator,
     private val behandlingKlient: BehandlingKlient,
 ) {
     fun utførAksjon(
-        hendelse: FerdigstillHenvendelseHendelse,
-        henvendelse: Henvendelse,
-    ): HenvendelseFerdigstiltHendelse {
+        hendelse: FerdigstillInnsendingHendelse,
+        innsending: Innsending,
+    ): InnsendingFerdigstiltHendelse {
         return when (hendelse.aksjon) {
             Aksjon.Avslutt ->
-                HenvendelseFerdigstiltHendelse(
-                    henvendelseId = henvendelse.henvendelseId,
+                InnsendingFerdigstiltHendelse(
+                    innsendingId = innsending.innsendingId,
                     aksjon = hendelse.aksjon.javaClass.simpleName,
                     behandlingId = null,
                     utførtAv = hendelse.utførtAv,
                 )
 
-            is Aksjon.OpprettKlage -> opprettKlage(hendelse = hendelse, henvendelse = henvendelse)
+            is Aksjon.OpprettKlage -> opprettKlage(hendelse = hendelse, innsending = innsending)
             is Aksjon.OpprettManuellBehandling ->
                 opprettManuellBehandling(
                     hendelse = hendelse,
-                    henvendelse = henvendelse,
+                    innsending = innsending,
                 )
         }
     }
 
     private fun opprettManuellBehandling(
-        hendelse: FerdigstillHenvendelseHendelse,
-        henvendelse: Henvendelse,
-    ): HenvendelseFerdigstiltHendelse {
+        hendelse: FerdigstillInnsendingHendelse,
+        innsending: Innsending,
+    ): InnsendingFerdigstiltHendelse {
         behandlingKlient.opprettManuellBehandling(
-            personIdent = henvendelse.person.ident,
+            personIdent = innsending.person.ident,
             saksbehandlerToken = (hendelse.aksjon as Aksjon.OpprettManuellBehandling).saksbehandlerToken,
         ).let { result ->
-            return HenvendelseFerdigstiltHendelse(
-                henvendelseId = henvendelse.henvendelseId,
+            return InnsendingFerdigstiltHendelse(
+                innsendingId = innsending.innsendingId,
                 aksjon = hendelse.aksjon.javaClass.simpleName,
                 behandlingId = result.getOrThrow(),
                 utførtAv = hendelse.utførtAv,
@@ -50,22 +50,22 @@ class HenvendelseBehandler(
     }
 
     private fun opprettKlage(
-        hendelse: FerdigstillHenvendelseHendelse,
-        henvendelse: Henvendelse,
-    ): HenvendelseFerdigstiltHendelse {
+        hendelse: FerdigstillInnsendingHendelse,
+        innsending: Innsending,
+    ): InnsendingFerdigstiltHendelse {
         val klageOppgave =
             klageMediator.opprettKlage(
                 klageMottattHendelse =
                     KlageMottattHendelse(
-                        ident = henvendelse.person.ident,
-                        opprettet = henvendelse.mottatt,
-                        journalpostId = henvendelse.journalpostId,
+                        ident = innsending.person.ident,
+                        opprettet = innsending.mottatt,
+                        journalpostId = innsending.journalpostId,
                         sakId = (hendelse.aksjon as Aksjon.OpprettKlage).sakId,
                         utførtAv = hendelse.utførtAv,
                     ),
             )
-        return HenvendelseFerdigstiltHendelse(
-            henvendelseId = henvendelse.henvendelseId,
+        return InnsendingFerdigstiltHendelse(
+            innsendingId = innsending.innsendingId,
             aksjon = hendelse.aksjon.javaClass.simpleName,
             behandlingId = klageOppgave.behandling.behandlingId,
             utførtAv = hendelse.utførtAv,

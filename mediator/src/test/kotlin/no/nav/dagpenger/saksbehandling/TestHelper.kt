@@ -15,8 +15,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.Henvendelse
-import no.nav.dagpenger.saksbehandling.henvendelse.HenvendelseTilstandslogg
+import no.nav.dagpenger.saksbehandling.innsending.Innsending
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingTilstandslogg
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDate
@@ -88,21 +88,21 @@ internal object TestHelper {
                 ),
         )
 
-    val testHenvendelse = lagHenvendelse()
+    val testInnsending = lagInnsending()
 
-    fun lagHenvendelse(
-        henvendelseId: UUID = UUIDv7.ny(),
+    fun lagInnsending(
+        innsendingId: UUID = UUIDv7.ny(),
         person: Person = testPerson,
         journalpostId: String = "journalpostId",
         mottatt: LocalDateTime = opprettetNå,
         skjemaKode: String = "skjemaKode",
         kategori: Kategori = Kategori.GENERELL,
         behandlerIdent: String? = saksbehandler.navIdent,
-        tilstand: Henvendelse.Tilstand = Henvendelse.Tilstand.KlarTilBehandling,
-        tilstandslogg: HenvendelseTilstandslogg = HenvendelseTilstandslogg(),
-    ): Henvendelse {
-        return Henvendelse.rehydrer(
-            henvendelseId = henvendelseId,
+        tilstand: Innsending.Tilstand = Innsending.Tilstand.KlarTilBehandling,
+        tilstandslogg: InnsendingTilstandslogg = InnsendingTilstandslogg(),
+    ): Innsending {
+        return Innsending.rehydrer(
+            innsendingId = innsendingId,
             person = person,
             journalpostId = journalpostId,
             mottatt = mottatt,
