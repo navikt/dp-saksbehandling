@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS innsending_v1
 
 );
 CREATE INDEX IF NOT EXISTS innsending_person_id_index ON innsending_v1 (person_id);
-CREATE TRIGGER oppdater_endret_tidspunkt
+
+CREATE OR REPLACE TRIGGER  oppdater_endret_tidspunkt
     BEFORE UPDATE
     ON innsending_v1
     FOR EACH ROW
