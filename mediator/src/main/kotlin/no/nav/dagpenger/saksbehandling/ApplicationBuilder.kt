@@ -42,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.mottak.BehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
+import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -215,6 +216,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             klageMediator.setRapidsConnection(rapidsConnection)
             klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
             BehandlingOpprettetMottak(rapidsConnection, sakMediator)
+            SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
             ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
