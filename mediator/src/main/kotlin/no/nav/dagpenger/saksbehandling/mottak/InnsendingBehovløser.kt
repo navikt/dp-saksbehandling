@@ -30,10 +30,9 @@ internal class InnsendingBehovløser(
             .apply {
                 precondition { it.requireValue("@event_name", "behov") }
                 precondition {
-                    // TODO fjern HåndterHenvendelse når alle har oppdatert til HåndterInnsending
                     it.requireAllOrAny(
                         "@behov",
-                        listOf(behovNavn, "HåndterHenvendelse"),
+                        listOf(behovNavn),
                     )
                     it.forbid("@løsning")
                     it.forbid("@feil")
@@ -82,16 +81,10 @@ internal class InnsendingBehovløser(
 
             val håndterInnsendingResultat = innsendingMediator.taImotInnsending(innsendingMottattHendelse)
             when (håndterInnsendingResultat) {
-                // TODO fjern HåndterHenvendelse når alle har oppdatert til HåndterInnsending
                 is HåndterInnsendingResultat.HåndtertInnsending -> {
                     packet["@løsning"] =
                         mapOf(
                             "$behovNavn" to
-                                mapOf(
-                                    "sakId" to håndterInnsendingResultat.sakId,
-                                    "håndtert" to true,
-                                ),
-                            "HåndterHenvendelse" to
                                 mapOf(
                                     "sakId" to håndterInnsendingResultat.sakId,
                                     "håndtert" to true,
@@ -103,10 +96,6 @@ internal class InnsendingBehovløser(
                     packet["@løsning"] =
                         mapOf(
                             "$behovNavn" to
-                                mapOf(
-                                    "håndtert" to false,
-                                ),
-                            "HåndterHenvendelse" to
                                 mapOf(
                                     "håndtert" to false,
                                 ),
