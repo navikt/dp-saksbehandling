@@ -49,7 +49,7 @@ internal class SøknadBehandlingOpprettetMottak(
             logger.info { "Mottok behandling_opprettet hendelse for søknad i SøknadBehandlingOpprettetMottak" }
 
             innsendingMediator.avbrytInnsending(
-                hendelse =
+                behandlingOpprettetForSøknadHendelse =
                     BehandlingOpprettetForSøknadHendelse(
                         ident = ident,
                         søknadId = søknadId,

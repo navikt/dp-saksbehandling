@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -609,6 +610,19 @@ class OppgaveMediator(
                 oppgave.avbryt(hendelse)
                 oppgaveRepository.lagre(oppgave)
                 logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
+            }
+        }
+    }
+
+    fun avbrytOppgave(behandlingOpprettetForSøknadHendelse: BehandlingOpprettetForSøknadHendelse) {
+        oppgaveRepository.finnOppgaveFor(behandlingOpprettetForSøknadHendelse.behandlingId)?.let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+            ) {
+                logger.info { "Mottatt BehandlingOpprettetForSøknadHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
+                oppgave.avbryt(behandlingOpprettetForSøknadHendelse)
+                oppgaveRepository.lagre(oppgave)
+                logger.info { "Tilstand etter BehandlingOpprettetForSøknadHendelse: ${oppgave.tilstand().type}" }
             }
         }
     }

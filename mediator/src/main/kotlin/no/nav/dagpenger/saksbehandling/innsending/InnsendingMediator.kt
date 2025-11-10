@@ -46,6 +46,7 @@ class InnsendingMediator(
                 Innsending.opprett(hendelse = hendelse) { ident ->
                     personMediator.finnEllerOpprettPerson(ident)
                 }
+
             val oppgave =
                 oppgaveMediator.opprettOppgaveForBehandling(
                     BehandlingOpprettetHendelse(
@@ -76,12 +77,14 @@ class InnsendingMediator(
         oppgaveMediator.ferdigstillOppgave(innsendingFerdigstiltHendelse)
     }
 
-    fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {
-        val innsendinger = innsendingRepository.finnInnsendingerForPerson(ident = hendelse.ident)
+    fun avbrytInnsending(behandlingOpprettetForSøknadHendelse: BehandlingOpprettetForSøknadHendelse) {
+        val innsendinger =
+            innsendingRepository.finnInnsendingerForPerson(ident = behandlingOpprettetForSøknadHendelse.ident)
         innsendinger.singleOrNull {
-            it.tilstand().type == KLAR_TIL_BEHANDLING && it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
+            it.tilstand().type == KLAR_TIL_BEHANDLING && it.gjelderSøknadMedId(søknadId = behandlingOpprettetForSøknadHendelse.søknadId)
         }?.let { innsending ->
-            innsending.avbryt(hendelse)
+            innsending.avbryt(behandlingOpprettetForSøknadHendelse)
+            oppgaveMediator.avbrytOppgave(behandlingOpprettetForSøknadHendelse)
             innsendingRepository.lagre(innsending)
         }
     }

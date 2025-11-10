@@ -329,7 +329,7 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).avbrytInnsending(behandlingOpprettetForSøknadHendelse = behandlingOpprettetForSøknadHendelse)
 
         slot.captured.let {
             it.tilstand() shouldBe Avbrutt
@@ -394,7 +394,7 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).avbrytInnsending(behandlingOpprettetForSøknadHendelse = behandlingOpprettetForSøknadHendelse)
 
         verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
@@ -463,7 +463,7 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).avbrytInnsending(behandlingOpprettetForSøknadHendelse = behandlingOpprettetForSøknadHendelse)
 
         verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
@@ -514,7 +514,7 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).avbrytInnsending(behandlingOpprettetForSøknadHendelse = behandlingOpprettetForSøknadHendelse)
 
         verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }

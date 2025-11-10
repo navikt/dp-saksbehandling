@@ -14,25 +14,31 @@ class RelevanteJournalpostIdOppslag(
     private val klageRepository: KlageRepository,
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
-        when (oppgave.behandling.utløstAv) {
-            UtløstAvType.KLAGE -> return coroutineScope {
-                val journalpostIderKlage: String? =
-                    klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
-                val journalpostMeldingOmVedtak =
-                    utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
-                (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
-            }
-
-            UtløstAvType.SØKNAD ->
-                return coroutineScope {
-                    val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
+        return when (oppgave.behandling.utløstAv) {
+            UtløstAvType.KLAGE ->
+                coroutineScope {
+                    val journalpostIderKlage: String? =
+                        klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
                     val journalpostMeldingOmVedtak =
                         utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
+                    (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
+                }
+
+            UtløstAvType.SØKNAD ->
+                coroutineScope {
+                    val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
+                    val journalpostMeldingOmVedtak =
+                        utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)
+                            ?.journalpostId()
                     (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
                 }
 
-            UtløstAvType.MELDEKORT -> return emptySet()
-            UtløstAvType.MANUELL -> return emptySet()
+            UtløstAvType.MELDEKORT -> emptySet()
+            UtløstAvType.MANUELL -> emptySet()
+            UtløstAvType.INNSENDING -> {
+                // todo hentun journalpost basert på oppgave.behandling.behandlingId
+                emptySet()
+            }
         }
     }
 

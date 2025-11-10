@@ -56,6 +56,9 @@ class MeldingOmVedtakKlient(
                 UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
                 UtløstAvType.MELDEKORT -> "MELDEKORT"
                 UtløstAvType.MANUELL -> "MANUELL"
+                else -> {
+                    TODO("Not implemented")
+                }
             }
 
         val meldingOmVedtakDataDTO =
