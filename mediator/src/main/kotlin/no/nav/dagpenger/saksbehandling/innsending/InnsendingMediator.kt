@@ -46,19 +46,18 @@ class InnsendingMediator(
                 Innsending.opprett(hendelse = hendelse) { ident ->
                     personMediator.finnEllerOpprettPerson(ident)
                 }
-
-            val oppgave =
-                oppgaveMediator.opprettOppgaveForBehandling(
-                    BehandlingOpprettetHendelse(
-                        behandlingId = innsending.innsendingId,
-                        ident = innsending.person.ident,
-                        // todo nullpointer her hvis sisteSakId er null
-                        sakId = sisteSakId!!,
-                        opprettet = hendelse.registrertTidspunkt,
-                        type = UtløstAvType.INNSENDING,
-                        utførtAv = hendelse.utførtAv,
-                    ),
+            val behandlingOpprettetHendelse =
+                BehandlingOpprettetHendelse(
+                    behandlingId = innsending.innsendingId,
+                    ident = innsending.person.ident,
+                    // todo nullpointer her hvis sisteSakId er null
+                    sakId = sisteSakId!!,
+                    opprettet = hendelse.registrertTidspunkt,
+                    type = UtløstAvType.INNSENDING,
+                    utførtAv = hendelse.utførtAv,
                 )
+            sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+            val oppgave = oppgaveMediator.opprettOppgaveForBehandling(behandlingOpprettetHendelse)
             innsendingRepository.lagre(innsending)
         }
 

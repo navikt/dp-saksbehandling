@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
 import PersonMediator
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -10,12 +11,14 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
@@ -28,6 +31,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Avbrutt
 import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Ferdigbehandlet
 import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.KlarTilBehandling
@@ -79,8 +84,16 @@ class InnsendingMediatorTest {
         }
 
     @Test
-    fun `Livsyklus`() {
-        DBTestHelper.withSak { ds ->
+    fun `Livssyklus`() {
+        val søknadBehandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = DBTestHelper.opprettetNå,
+                hendelse = TomHendelse,
+                utløstAv = UtløstAvType.SØKNAD,
+            )
+        val testRapid = TestRapid()
+        DBTestHelper.withBehandling(behandling = søknadBehandling) { ds ->
             val personRepository = PostgresPersonRepository(ds)
             val personMediator = PersonMediator(personRepository, mockk())
             val sakRepository = PostgresSakRepository(ds)
@@ -100,11 +113,22 @@ class InnsendingMediatorTest {
                             behandlingKlient = mockk(),
                             utsendingMediator = mockk(),
                             sakMediator = sakMediator,
-                        ),
+                        ).also { it.setRapidsConnection(testRapid) },
                     personMediator = personMediator,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                 )
+
+            sakMediator.merkSakenSomDpSak(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = søknadBehandling.behandlingId,
+                        behandletHendelseId = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = DBTestHelper.testPerson.ident,
+                        sak = null,
+                    ),
+            )
 
             val resultat =
                 innsendingMediator.taImotInnsending(
