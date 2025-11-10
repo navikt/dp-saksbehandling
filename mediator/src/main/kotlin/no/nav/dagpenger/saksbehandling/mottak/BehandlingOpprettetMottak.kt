@@ -58,7 +58,7 @@ internal class BehandlingOpprettetMottak(
                 packet["basertPåBehandling"].asUUID()
             }
 
-        val skipSet = emptySet<UUID>()
+        val skipSet = listOf<UUID>(UUID.fromString("019a6c98-c888-7998-9d61-b88fad7fa782"))
         if (behandlingId in skipSet) {
             logger.info { "Skipper behandlingId: $behandlingId" }
             return
