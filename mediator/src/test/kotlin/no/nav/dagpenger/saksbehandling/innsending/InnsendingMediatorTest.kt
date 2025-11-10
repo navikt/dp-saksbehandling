@@ -16,7 +16,12 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
+import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
@@ -72,6 +77,51 @@ class InnsendingMediatorTest {
             every { it.finnEllerOpprettPerson(personMedSak.ident) } returns personMedSak
             every { it.finnEllerOpprettPerson(personUtenSak.ident) } returns personUtenSak
         }
+
+    @Test
+    fun `Livsyklus`() {
+        DBTestHelper.withSak { ds ->
+            val personRepository = PostgresPersonRepository(ds)
+            val personMediator = PersonMediator(personRepository, mockk())
+            val sakRepository = PostgresSakRepository(ds)
+
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = sakRepository,
+                )
+            val innsendingRepository = PostgresInnsendingRepository(ds)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator =
+                        OppgaveMediator(
+                            oppgaveRepository = PostgresOppgaveRepository(ds),
+                            behandlingKlient = mockk(),
+                            utsendingMediator = mockk(),
+                            sakMediator = sakMediator,
+                        ),
+                    personMediator = personMediator,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                )
+
+            val resultat =
+                innsendingMediator.taImotInnsending(
+                    hendelse =
+                        InnsendingMottattHendelse(
+                            ident = DBTestHelper.testPerson.ident,
+                            journalpostId = journalpostId,
+                            registrertTidspunkt = registrertTidspunkt,
+                            søknadId = null,
+                            skjemaKode = skjemaKode,
+                            kategori = Kategori.KLAGE,
+                        ),
+                )
+
+            resultat shouldBe HåndterInnsendingResultat.HåndtertInnsending(sakId = DBTestHelper.sakId)
+        }
+    }
 
     @Test
     fun `Skal lage innsending dersom vi eier saken`() {
