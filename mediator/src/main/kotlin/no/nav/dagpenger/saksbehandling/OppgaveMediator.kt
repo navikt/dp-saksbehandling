@@ -415,12 +415,12 @@ class OppgaveMediator(
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
                 logger.info {
-                    "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                    "Mottatt InnsendingFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(innsendingFerdigstiltHendelse)
                 oppgaveRepository.lagre(oppgave)
                 logger.info {
-                    "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    "Behandlet InnsendingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }
