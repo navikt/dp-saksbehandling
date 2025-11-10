@@ -5,9 +5,12 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
@@ -32,10 +35,10 @@ class InnsendingMediator(
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
         val skalEttersendingTilSøknadVarsles =
             hendelse.kategori == Kategori.ETTERSENDING && hendelse.søknadId != null &&
-                oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                    søknadId = hendelse.søknadId!!,
-                    ident = hendelse.ident,
-                )
+                    oppgaveMediator.skalEttersendingTilSøknadVarsles(
+                        søknadId = hendelse.søknadId!!,
+                        ident = hendelse.ident,
+                    )
 
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
@@ -44,8 +47,20 @@ class InnsendingMediator(
                 Innsending.opprett(hendelse = hendelse) { ident ->
                     personMediator.finnEllerOpprettPerson(ident)
                 }
+            val oppgave = oppgaveMediator.opprettOppgaveForBehandling(
+                BehandlingOpprettetHendelse(
+                    behandlingId = innsending.innsendingId,
+                    ident = innsending.person.ident,
+                    //todo nullpointer her hvis sisteSakId er null
+                    sakId = sisteSakId!!,
+                    opprettet = hendelse.registrertTidspunkt,
+                    type = UtløstAvType.INNSENDING,
+                    utførtAv = hendelse.utførtAv,
+                )
+            )
             innsendingRepository.lagre(innsending)
         }
+
         return when (sisteSakId) {
             null -> HåndterInnsendingResultat.UhåndtertInnsending
             else -> HåndterInnsendingResultat.HåndtertInnsending(sisteSakId)
@@ -58,6 +73,9 @@ class InnsendingMediator(
         val innsendingFerdigstiltHendelse = innsendingBehandler.utførAksjon(hendelse, innsending)
         innsending.ferdigstill(innsendingFerdigstiltHendelse)
         innsendingRepository.lagre(innsending)
+        oppgaveMediator.ferdigstillOppgave(innsendingFerdigstiltHendelse)
+
+
     }
 
     fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {
@@ -99,7 +117,7 @@ class InnsendingMediator(
                 if (innsending.behandlerIdent() != behandler.navIdent) {
                     throw SaksbehandlerErIkkeEier(
                         "Saksbehandler ${behandler.navIdent} eier ikke " +
-                            "innsendingen ${innsending.innsendingId}",
+                                "innsendingen ${innsending.innsendingId}",
                     )
                 }
             }
