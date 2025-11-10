@@ -31,5 +31,5 @@ enum class UtløstAvType {
     SØKNAD,
     MELDEKORT,
     MANUELL,
-    INNSENDING
+    INNSENDING,
 }

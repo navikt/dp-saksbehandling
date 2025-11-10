@@ -203,6 +203,7 @@ class Innsending private constructor(
             }
         }
 
+
         enum class Type {
             KLAR_TIL_BEHANDLING,
             UNDER_BEHANDLING,
