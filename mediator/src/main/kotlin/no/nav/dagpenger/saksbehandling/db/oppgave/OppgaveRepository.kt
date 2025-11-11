@@ -42,8 +42,8 @@ interface OppgaveRepository {
 
     fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID>
 
-    fun oppgaveTilstandForSøknad(
+    fun oppgaveTilstandOgSakIdForSøknad(
         ident: String,
         søknadId: UUID,
-    ): Oppgave.Tilstand.Type?
+    ): Pair<Oppgave.Tilstand.Type, UUID>?
 }

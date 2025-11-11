@@ -2,7 +2,10 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
@@ -11,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.IkkeTilgangTilEgneAnsatte
 import no.nav.dagpenger.saksbehandling.ManglendeTilgangTilAdressebeskyttelse
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -20,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.UnderBehandling
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import org.junit.jupiter.api.Test
@@ -161,7 +166,12 @@ class InnsendingMediatorTilgangTest {
                     },
                 personMediator = mockk(),
                 sakMediator = mockk(),
-                oppgaveMediator = mockk(),
+                oppgaveMediator =
+                    mockk<OppgaveMediator>().also {
+                        coEvery {
+                            it.ferdigstillOppgave(any<InnsendingFerdigstiltHendelse>())
+                        } just Runs
+                    },
                 innsendingBehandler = mockk(relaxed = true),
             )
 

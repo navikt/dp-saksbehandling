@@ -43,6 +43,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 class PostgresOppgaveRepositoryTest {
     private val saksbehandler =
@@ -99,7 +100,7 @@ class PostgresOppgaveRepositoryTest {
         val søknadBehandlingKlarTilKontroll =
             lagBehandling(utløstAvType = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(1))
         DBTestHelper.Companion.withBehandlinger(
-            person = TestHelper.testPerson,
+            person = testPerson,
             behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1292,12 +1293,13 @@ class PostgresOppgaveRepositoryTest {
                 hendelse = hendelse,
                 utløstAv = UtløstAvType.SØKNAD,
             )
+        val sakId = UUIDv7.ny()
 
         DBTestHelper.withBehandling(
             person = person,
             sak =
                 Sak(
-                    sakId = UUIDv7.ny(),
+                    sakId = sakId,
                     søknadId = hendelse.søknadId,
                     opprettet = hendelse.opprettet,
                     behandlinger = mutableSetOf(behandling),
@@ -1312,12 +1314,16 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgave = oppgave)
 
-            repo.oppgaveTilstandForSøknad(
-                ident = hendelse.ident,
-                søknadId = hendelse.søknadId,
-            ) shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            val oppgavetilstandOgSakId: Pair<Oppgave.Tilstand.Type, UUID>? =
+                repo.oppgaveTilstandOgSakIdForSøknad(
+                    ident = hendelse.ident,
+                    søknadId = hendelse.søknadId,
+                )
 
-            repo.oppgaveTilstandForSøknad(
+            oppgavetilstandOgSakId!!.first shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            oppgavetilstandOgSakId.second shouldBe sakId
+
+            repo.oppgaveTilstandOgSakIdForSøknad(
                 ident = hendelse.ident,
                 søknadId = UUIDv7.ny(),
             ) shouldBe null

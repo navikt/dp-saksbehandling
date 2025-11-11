@@ -396,16 +396,17 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun oppgaveTilstandForSøknad(
+    override fun oppgaveTilstandOgSakIdForSøknad(
         ident: String,
         søknadId: UUID,
-    ): Type? {
+    ): Pair<Type, UUID>? {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     """
-                        SELECT  oppg.tilstand AS tilstand
+                        SELECT  oppg.tilstand
+                              , beha.sak_id
                         FROM    oppgave_v1      oppg
                         JOIN    behandling_v1   beha ON beha.id = oppg.behandling_id
                         JOIN    person_v1       pers ON pers.id = beha.person_id
@@ -418,7 +419,10 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         "soknad_id" to søknadId.toString(),
                     ),
                 ).map { row ->
-                    Type.valueOf(row.string("tilstand"))
+                    Pair(
+                        first = Type.valueOf(row.string("tilstand")),
+                        second = row.uuid("sak_id"),
+                    )
                 }.asSingle,
             )
         }

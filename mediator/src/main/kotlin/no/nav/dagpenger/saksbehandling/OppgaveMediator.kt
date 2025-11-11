@@ -12,13 +12,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
@@ -664,21 +660,19 @@ class OppgaveMediator(
     fun skalEttersendingTilSøknadVarsles(
         søknadId: UUID,
         ident: String,
-    ): Boolean {
-        val tilstand = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
+    ): VarsleEttersending {
+        val tilstandOgSakId =
+            oppgaveRepository.oppgaveTilstandOgSakIdForSøknad(søknadId = søknadId, ident = ident)
+                ?: return VarsleEttersending(skalVarsle = false, sakId = null)
 
-        return when (tilstand) {
-            OPPRETTET -> false
-            KLAR_TIL_BEHANDLING -> false
-            AVBRUTT -> false
-            AVVENTER_LÅS_AV_BEHANDLING -> false
-            AVVENTER_OPPLÅSING_AV_BEHANDLING -> false
-            UNDER_BEHANDLING -> true
-            FERDIG_BEHANDLET -> true
-            PAA_VENT -> true
-            KLAR_TIL_KONTROLL -> true
-            UNDER_KONTROLL -> true
-            null -> false
+        return when (tilstandOgSakId.first) {
+            in setOf(UNDER_BEHANDLING, FERDIG_BEHANDLET, PAA_VENT, KLAR_TIL_KONTROLL, UNDER_KONTROLL) -> {
+                VarsleEttersending(skalVarsle = true, sakId = tilstandOgSakId.second)
+            }
+
+            else -> {
+                VarsleEttersending(skalVarsle = false, sakId = tilstandOgSakId.second)
+            }
         }
     }
 
@@ -686,4 +680,9 @@ class OppgaveMediator(
         feilType: AlertManager.AlertType,
         utvidetFeilmelding: String,
     ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
+
+    class VarsleEttersending(
+        val skalVarsle: Boolean,
+        val sakId: UUID?,
+    )
 }

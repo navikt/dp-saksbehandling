@@ -405,7 +405,7 @@ OppgaveMediatorTest {
     @MethodSource("skalEttersendingTilSøknadVarsles")
     fun `Finnes det en oppgave til behandling`(
         tilstand: Oppgave.Tilstand,
-        skalLageGosysOppgave: Boolean,
+        skalVarsleOmEttersending: Boolean,
     ) {
         val hendelse =
             SøknadsbehandlingOpprettetHendelse(
@@ -443,7 +443,7 @@ OppgaveMediatorTest {
             oppgaveMediator.skalEttersendingTilSøknadVarsles(
                 hendelse.søknadId,
                 hendelse.ident,
-            ) shouldBe skalLageGosysOppgave
+            ).skalVarsle shouldBe skalVarsleOmEttersending
         }
     }
 
