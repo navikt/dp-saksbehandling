@@ -24,7 +24,7 @@ dependencies {
 
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
-    implementation("io.prometheus:prometheus-metrics-core:1.4.2")
+    implementation("io.prometheus:prometheus-metrics-core:1.4.3")
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-html-builder:$ktorVersion")
@@ -39,7 +39,7 @@ dependencies {
     implementation("de.slub-dresden:urnlib:3.0.0")
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.3")
 
-    implementation("io.opentelemetry:opentelemetry-api:1.55.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.56.0")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
 
     api("com.fasterxml.uuid:java-uuid-generator:5.1.1")
