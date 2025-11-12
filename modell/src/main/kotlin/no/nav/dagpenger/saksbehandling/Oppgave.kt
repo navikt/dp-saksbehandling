@@ -2,10 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -23,10 +19,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
-import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
-import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
-import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -46,11 +38,14 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 data class Oppgave private constructor(
     val oppgaveId: UUID,
@@ -59,10 +54,9 @@ data class Oppgave private constructor(
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = KlarTilBehandling,
     private var utsattTil: LocalDate? = null,
-    private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
-    val behandlingId: UUID,
-    val utløstAv: UtløstAvType,
+    private val _tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     val person: Person,
+    val behandling: Behandling,
     private var meldingOmVedtak: MeldingOmVedtak,
 ) {
     constructor(
@@ -71,10 +65,9 @@ data class Oppgave private constructor(
         opprettet: LocalDateTime,
         tilstand: Tilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
-        tilstandslogg: Tilstandslogg = Tilstandslogg(),
-        behandlingId: UUID,
-        utløstAv: UtløstAvType,
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
+        behandling: Behandling,
         meldingOmVedtak: MeldingOmVedtak,
     ) : this(
         oppgaveId = oppgaveId,
@@ -83,15 +76,12 @@ data class Oppgave private constructor(
         _emneknagger = emneknagger.toMutableSet(),
         tilstand = tilstand,
         _tilstandslogg = tilstandslogg,
-        behandlingId = behandlingId,
-        utløstAv = utløstAv,
         person = person,
+        behandling = behandling,
         meldingOmVedtak = meldingOmVedtak,
     )
 
     companion object {
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
-
         internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
@@ -108,10 +98,9 @@ data class Oppgave private constructor(
             emneknagger: Set<String>,
             tilstand: Tilstand,
             utsattTil: LocalDate?,
-            tilstandslogg: Tilstandslogg = Tilstandslogg(),
-            behandlingId: UUID,
-            utløstAv: UtløstAvType,
+            tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             person: Person,
+            behandling: Behandling,
             meldingOmVedtak: MeldingOmVedtak,
         ): Oppgave =
             Oppgave(
@@ -122,9 +111,8 @@ data class Oppgave private constructor(
                 tilstand = tilstand,
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
-                behandlingId = behandlingId,
-                utløstAv = utløstAv,
                 person = person,
+                behandling = behandling,
                 meldingOmVedtak = meldingOmVedtak,
             )
 
@@ -134,7 +122,7 @@ data class Oppgave private constructor(
             hendelseNavn: String,
         ) {
             require(oppgave.erEierAvOppgave(saksbehandler)) {
-                throw Tilstand.SaksbehandlerEierIkkeOppgaven(
+                throw SaksbehandlerErIkkeEier(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
@@ -183,7 +171,7 @@ data class Oppgave private constructor(
 
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
-    val tilstandslogg: Tilstandslogg
+    val tilstandslogg: OppgaveTilstandslogg
         get() = _tilstandslogg
 
     fun personIdent() = person.ident
@@ -194,33 +182,9 @@ data class Oppgave private constructor(
 
     fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
 
-    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
-        require(
-            if (this.person.skjermesSomEgneAnsatte) {
-                saksbehandler.tilganger.contains(EGNE_ANSATTE)
-            } else {
-                true
-            },
-        ) {
-            throw Tilstand.IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
-        }
-    }
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) = this.person.egneAnsatteTilgangskontroll(saksbehandler)
 
-    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
-        val adressebeskyttelseGradering = this.person.adressebeskyttelseGradering
-        require(
-            when (adressebeskyttelseGradering) {
-                FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)
-                STRENGT_FORTROLIG -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE)
-                STRENGT_FORTROLIG_UTLAND -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE_UTLAND)
-                UGRADERT -> true
-            },
-        ) {
-            throw Tilstand.ManglendeTilgangTilAdressebeskyttelse(
-                "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
-            )
-        }
-    }
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
 
     fun utsattTil() = this.utsattTil
 
@@ -361,6 +325,7 @@ data class Oppgave private constructor(
                         }
                         null
                     }
+
                     else -> {
                         logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
                         null
@@ -518,7 +483,7 @@ data class Oppgave private constructor(
         ) {
             logger.info {
                 "Endrer kilde for melding om vedtak fra ${oppgave.meldingOmVedtak.kilde.name} til " +
-                    "${endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name}"
+                    endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name
             }
             oppgave.meldingOmVedtak.kilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
             oppgave.meldingOmVedtak.kontrollertGosysBrev = IKKE_RELEVANT
@@ -1176,27 +1141,11 @@ data class Oppgave private constructor(
             throw UlovligTilstandsendringException(message)
         }
 
-        open class ManglendeTilgang(
-            message: String,
-        ) : RuntimeException(message)
-
-        class SaksbehandlerEierIkkeOppgaven(
-            message: String,
-        ) : ManglendeTilgang(message)
-
         class ManglendeBeslutterTilgang(
             message: String,
         ) : ManglendeTilgang(message)
 
         class KanIkkeBeslutteEgenSaksbehandling(
-            message: String,
-        ) : ManglendeTilgang(message)
-
-        class IkkeTilgangTilEgneAnsatte(
-            message: String,
-        ) : ManglendeTilgang(message)
-
-        class ManglendeTilgangTilAdressebeskyttelse(
             message: String,
         ) : ManglendeTilgang(message)
 

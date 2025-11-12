@@ -4,43 +4,24 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
+import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
 class BehandlingsresultatMottakTest {
-    private val testIdent = "12345678901"
     private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
     private val behandlingIdUtenOppgave = UUID.randomUUID()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
-    private val person =
-        Person(
-            id = UUIDv7.ny(),
-            ident = testIdent,
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = UGRADERT,
-        )
     private val oppgave =
-        Oppgave(
-            oppgaveId = UUIDv7.ny(),
+        TestHelper.lagOppgave(
             opprettet = opprettet,
-            behandlingId = behandlingId,
-            utløstAv = SØKNAD,
-            person = person,
-            meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
-                    kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                ),
+            person = TestHelper.testPerson,
+            behandling = lagBehandling(behandlingId = behandlingId),
         )
 
     private val testRapid = TestRapid()
@@ -64,7 +45,7 @@ class BehandlingsresultatMottakTest {
                     behandlingId = behandlingId,
                     behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
-                    ident = testIdent,
+                    ident = TestHelper.testPerson.ident,
                     automatiskBehandlet = true,
                     sak = null,
                 ),
@@ -81,7 +62,7 @@ class BehandlingsresultatMottakTest {
                     behandlingId = behandlingId,
                     behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
-                    ident = testIdent,
+                    ident = TestHelper.testPerson.ident,
                     automatiskBehandlet = false,
                     sak = null,
                 ),
@@ -98,7 +79,7 @@ class BehandlingsresultatMottakTest {
                     behandlingId = behandlingId,
                     behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Meldekort",
-                    ident = testIdent,
+                    ident = TestHelper.testPerson.ident,
                     automatiskBehandlet = true,
                     sak = null,
                 ),
@@ -115,7 +96,7 @@ class BehandlingsresultatMottakTest {
                     behandlingId = behandlingId,
                     behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Manuell",
-                    ident = testIdent,
+                    ident = TestHelper.testPerson.ident,
                     automatiskBehandlet = true,
                     sak = null,
                 ),
@@ -132,7 +113,7 @@ class BehandlingsresultatMottakTest {
     }
 
     private fun behandlingResultatEvent(
-        ident: String = this.testIdent,
+        ident: String = TestHelper.testPerson.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
         automatisk: Boolean = true,

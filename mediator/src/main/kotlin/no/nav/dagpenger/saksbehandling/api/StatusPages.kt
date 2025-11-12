@@ -11,7 +11,6 @@ import io.ktor.server.response.respond
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
@@ -19,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.net.URI
 import java.time.format.DateTimeParseException

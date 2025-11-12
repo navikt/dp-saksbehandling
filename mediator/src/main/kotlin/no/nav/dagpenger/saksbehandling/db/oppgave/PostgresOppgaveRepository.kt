@@ -7,6 +7,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
@@ -32,9 +33,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
@@ -49,6 +50,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -56,6 +59,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
@@ -516,7 +520,9 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppg.melding_om_vedtak_kilde,
                         oppg.kontrollert_brev,
                         beha.opprettet AS behandling_opprettet,
-                        beha.utlost_av
+                        beha.utlost_av,
+                        hend.hendelse_type AS hendelse_type,
+                        hend.hendelse_data AS hendelse_data
                 """.trimIndent()
 
             val antallSelect =
@@ -526,11 +532,12 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             val fromJoinAndWhereClause =
                 StringBuilder(
                     """
-                    FROM    oppgave_v1    oppg
-                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN    person_v1     pers ON pers.id = beha.person_id
-                    WHERE   oppg.opprettet >= :fom
-                    AND     oppg.opprettet <  :tom_pluss_1_dag
+                    FROM      oppgave_v1    oppg
+                    JOIN      behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN      person_v1     pers ON pers.id = beha.person_id
+                    LEFT JOIN hendelse_v1      hend ON hend.behandling_id = beha.id
+                    WHERE     oppg.opprettet >= :fom
+                    AND       oppg.opprettet <  :tom_pluss_1_dag
                     """.trimIndent(),
                 )
                     .append(
@@ -675,7 +682,7 @@ private fun finnNotat(
 private fun hentTilstandsloggForOppgave(
     oppgaveId: UUID,
     dataSource: DataSource,
-): Tilstandslogg {
+): OppgaveTilstandslogg {
     return sessionOf(dataSource).use { session ->
         session.run(
             queryOf(
@@ -688,7 +695,7 @@ private fun hentTilstandsloggForOppgave(
                     """.trimIndent(),
                 paramMap = mapOf("oppgave_id" to oppgaveId),
             ).map { row ->
-                Tilstandsendring(
+                Tilstandsendring<Type>(
                     id = row.uuid("id"),
                     tilstand = Type.valueOf(row.string("tilstand")),
                     hendelse =
@@ -699,7 +706,7 @@ private fun hentTilstandsloggForOppgave(
                     tidspunkt = row.localDateTime("tidspunkt"),
                 )
             }.asList,
-        ).let { Tilstandslogg.rehydrer(it) }
+        ).let { OppgaveTilstandslogg(it) }
     }
 }
 
@@ -741,7 +748,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             paramMap =
                 mapOf(
                     "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandlingId,
+                    "behandling_id" to oppgave.behandling.behandlingId,
                     "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,
@@ -830,7 +837,7 @@ private fun TransactionalSession.lagre(
 
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
-    tilstandsendring: Tilstandsendring,
+    tilstandsendring: Tilstandsendring<Type>,
 ) {
     this.run(
         queryOf(
@@ -862,7 +869,7 @@ private fun TransactionalSession.lagre(
 
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
-    tilstandslogg: Tilstandslogg,
+    tilstandslogg: OppgaveTilstandslogg,
 ) {
     tilstandslogg.forEach { tilstandsendring ->
         this.lagre(oppgaveId, tilstandsendring)
@@ -906,8 +913,13 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         tilstand = tilstand,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
-        behandlingId = this.uuid("behandling_id"),
-        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
+        behandling =
+            Behandling.rehydrer(
+                behandlingId = this.uuid("behandling_id"),
+                opprettet = this.localDateTime("behandling_opprettet"),
+                hendelse = this.rehydrerHendelse(),
+                utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
+            ),
         person = person,
         meldingOmVedtak =
             Oppgave.MeldingOmVedtak(
@@ -919,6 +931,30 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
 
 private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
     return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
+}
+
+private fun Row.rehydrerHendelse(): Hendelse {
+    return when (val hendelseType = this.string("hendelse_type")) {
+        "TomHendelse" -> return TomHendelse
+        "SøknadsbehandlingOpprettetHendelse" ->
+            this.string("hendelse_data")
+                .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
+
+        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
+        "MeldekortbehandlingOpprettetHendelse" ->
+            this.string("hendelse_data")
+                .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
+
+        "ManuellBehandlingOpprettetHendelse" ->
+            this.string("hendelse_data")
+                .tilHendelse<ManuellBehandlingOpprettetHendelse>()
+
+        else -> {
+            logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
+            sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
+            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+        }
+    }
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)

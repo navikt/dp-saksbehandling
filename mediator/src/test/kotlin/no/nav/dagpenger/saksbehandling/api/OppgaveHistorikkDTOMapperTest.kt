@@ -7,12 +7,13 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Notat
-import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -20,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
@@ -71,7 +71,7 @@ class OppgaveHistorikkDTOMapperTest {
                 val historikk =
                     mapper.lagOppgaveHistorikk(
                         tilstandslogg =
-                            Tilstandslogg().also {
+                            OppgaveTilstandslogg().also {
                                 it.leggTil(
                                     nyTilstand = UNDER_KONTROLL,
                                     hendelse =
@@ -116,8 +116,8 @@ class OppgaveHistorikkDTOMapperTest {
         val sistEndretTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                lagOppgave(
-                    tilstand = Opprettet,
+                TestHelper.lagOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
                 )
             val saksbehandler =
                 Saksbehandler(
@@ -138,7 +138,7 @@ class OppgaveHistorikkDTOMapperTest {
                     ident = oppgave.personIdent(),
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                 ),
             )
 
@@ -202,7 +202,7 @@ class OppgaveHistorikkDTOMapperTest {
                         tilstandslogg = oppgave.tilstandslogg,
                     )
 
-                historikk.size shouldBe 5
+                historikk.size shouldBe 4
                 historikk.first().tittel shouldBe "Notat"
                 objectMapper.writeValueAsString(historikk) shouldEqualSpecifiedJsonIgnoringOrder """
                 [
@@ -234,13 +234,6 @@ class OppgaveHistorikkDTOMapperTest {
                         "tittel": "Under behandling",
                         "behandler": {
                             "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
-                        }
-                    },
-                    {
-                        "type": "statusendring",
-                        "tittel": "Klar til behandling",
-                        "behandler": {
-                            "navn": "dp-behandling"
                         }
                     }
                 ]

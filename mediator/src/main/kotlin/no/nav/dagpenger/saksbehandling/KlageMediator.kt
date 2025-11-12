@@ -20,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.Hjemler
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
@@ -78,7 +77,7 @@ class KlageMediator(
                 opprettet = klageMottattHendelse.opprettet,
                 tilstandslogg =
                     KlageTilstandslogg(
-                        KlageTilstandsendring(
+                        Tilstandsendring(
                             tilstand = BEHANDLES,
                             hendelse = klageMottattHendelse,
                         ),
@@ -114,7 +113,7 @@ class KlageMediator(
                 opprettet = manuellKlageMottattHendelse.opprettet,
                 tilstandslogg =
                     KlageTilstandslogg(
-                        KlageTilstandsendring(
+                        Tilstandsendring(
                             tilstand = BEHANDLES,
                             hendelse = manuellKlageMottattHendelse,
                         ),
@@ -210,7 +209,7 @@ class KlageMediator(
                         person = personDeferred.await(),
                         saksbehandler = saksbehandlerDeferred.await(),
                         beslutter = null,
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
                         utløstAvType = UtløstAvType.KLAGE,
                     )
@@ -239,7 +238,7 @@ class KlageMediator(
 
             val html = htmlDeferred.await().getOrThrow()
             utsendingMediator.opprettUtsending(
-                behandlingId = oppgave.behandlingId,
+                behandlingId = oppgave.behandling.behandlingId,
                 brev = html,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
@@ -363,6 +362,6 @@ fun KlageBehandling.hjemler(): List<String> {
         this.synligeOpplysninger()
             .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?
     return verdi?.value?.mapNotNull {
-        Hjemler.values().find { hjemmel -> hjemmel.tittel == it }?.name
+        Hjemler.entries.find { hjemmel -> hjemmel.tittel == it }?.name
     }.orEmpty()
 }

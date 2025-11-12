@@ -58,9 +58,9 @@ internal class BehandlingOpprettetMottak(
                 packet["basertPåBehandling"].asUUID()
             }
 
-        val skipSet = listOf<UUID>(UUID.fromString("019a6c98-c888-7998-9d61-b88fad7fa782"))
+        val skipSet = setOf<UUID>(UUID.fromString("019a5e65-869d-78f2-84b9-fdd152f4f9aa"))
         if (behandlingId in skipSet) {
-            logger.info { "Skipper behandlingId: $behandlingId" }
+            logger.info { "Skipper behandlingId: $behandlingId fra BehandlingOpprettetMottak" }
             return
         }
         when (behandletHendelseType) {
@@ -68,25 +68,18 @@ internal class BehandlingOpprettetMottak(
                 val søknadId = packet.søknadId()
                 withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for søknad" }
+                    val søknadsbehandlingOpprettetHendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingId,
+                            ident = ident,
+                            opprettet = opprettet,
+                            basertPåBehandling = basertPåBehandling,
+                        )
                     if (basertPåBehandling != null) {
-                        sakMediator.knyttTilSak(
-                            SøknadsbehandlingOpprettetHendelse(
-                                søknadId = søknadId,
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = opprettet,
-                                basertPåBehandling = basertPåBehandling,
-                            ),
-                        )
+                        sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelse)
                     } else {
-                        sakMediator.opprettSak(
-                            SøknadsbehandlingOpprettetHendelse(
-                                søknadId = søknadId,
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = opprettet,
-                            ),
-                        )
+                        sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
                     }
                 }
             }

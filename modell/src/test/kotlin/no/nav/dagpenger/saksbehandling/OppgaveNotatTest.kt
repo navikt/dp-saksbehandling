@@ -1,9 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse

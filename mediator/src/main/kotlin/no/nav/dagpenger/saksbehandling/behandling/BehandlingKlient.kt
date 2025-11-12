@@ -49,6 +49,11 @@ interface BehandlingKlient {
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
+
+    fun opprettManuellBehandling(
+        personIdent: String,
+        saksbehandlerToken: String,
+    ): Result<UUID>
 }
 
 internal class BehandlingHttpKlient(
@@ -101,6 +106,24 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
     ): Result<Unit> {
         return kallBehandling("avbryt", behandlingId, saksbehandlerToken, ident)
+    }
+
+    override fun opprettManuellBehandling(
+        personIdent: String,
+        saksbehandlerToken: String,
+    ): Result<UUID> {
+        return runBlocking {
+            runCatching {
+                httpClient.post("$dpBehandlingApiUrl/person/behandling") {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(Request(personIdent))
+                }.body<BehandlingDTO>().behandlingId.let { UUID.fromString(it) }
+            }
+        }.onFailure {
+            logger.error(it) { "Kall til dp-behandling for å opprette manuell behandling feilet ${it.message}" }
+        }
     }
 
     override suspend fun kreverTotrinnskontroll(

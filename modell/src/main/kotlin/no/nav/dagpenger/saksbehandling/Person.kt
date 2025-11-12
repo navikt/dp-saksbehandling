@@ -1,5 +1,14 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
+import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import java.util.UUID
 
 data class Person(
@@ -11,6 +20,40 @@ data class Person(
     init {
         require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
     }
+
+    override fun toString(): String {
+        return "Person(id=$id, skjermesSomEgneAnsatte=$skjermesSomEgneAnsatte, adressebeskyttelseGradering=$adressebeskyttelseGradering)"
+    }
+
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
+        if (!this.skjermesSomEgneAnsatte) {
+            return
+        }
+        require(saksbehandler.tilganger.contains(EGNE_ANSATTE)) {
+            throw IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
+        }
+    }
+
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
+        val adressebeskyttelseGradering = this.adressebeskyttelseGradering
+        require(
+            when (adressebeskyttelseGradering) {
+                FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)
+                STRENGT_FORTROLIG -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE)
+                STRENGT_FORTROLIG_UTLAND -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE_UTLAND)
+                UGRADERT -> true
+            },
+        ) {
+            throw ManglendeTilgangTilAdressebeskyttelse(
+                "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
+            )
+        }
+    }
+
+    fun harTilgang(saksbehandler: Saksbehandler) {
+        egneAnsatteTilgangskontroll(saksbehandler)
+        adressebeskyttelseTilgangskontroll(saksbehandler)
+    }
 }
 
 enum class AdressebeskyttelseGradering {
@@ -19,3 +62,11 @@ enum class AdressebeskyttelseGradering {
     FORTROLIG,
     UGRADERT,
 }
+
+class IkkeTilgangTilEgneAnsatte(
+    message: String,
+) : ManglendeTilgang(message)
+
+class ManglendeTilgangTilAdressebeskyttelse(
+    message: String,
+) : ManglendeTilgang(message)

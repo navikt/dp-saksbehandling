@@ -12,12 +12,18 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
+import no.nav.dagpenger.saksbehandling.TestHelper.opprettetNå
+import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
@@ -32,11 +38,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.lagBehandling
-import no.nav.dagpenger.saksbehandling.lagOppgave
-import no.nav.dagpenger.saksbehandling.lagPerson
-import no.nav.dagpenger.saksbehandling.opprettetNå
-import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -53,13 +54,6 @@ class PostgresOppgaveRepositoryTest {
             setOf(TilgangType.BESLUTTER, TilgangType.SAKSBEHANDLER),
         )
     private val oppgaveIdTest = UUIDv7.ny()
-    val person =
-        Person(
-            id = testPerson.id,
-            ident = testPerson.ident,
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = UGRADERT,
-        )
 
     @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
@@ -78,7 +72,7 @@ class PostgresOppgaveRepositoryTest {
                     navIdent = "NAVIdent2",
                     grupper = emptySet(),
                 )
-            val oppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet, behandlingId = behandling.behandlingId)
+            val oppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet, behandling = behandling)
             repo.lagre(oppgave)
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
@@ -101,11 +95,11 @@ class PostgresOppgaveRepositoryTest {
     fun `Tildel neste ledige kontroll-oppgave ved søk på tilstand KLAR_TIL_KONTROLL`() {
         val oppgaveIdKlarTilKontroll = UUIDv7.ny()
         val søknadBehandlingKlarTilBehandling =
-            lagBehandling(type = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(2))
+            lagBehandling(utløstAvType = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(2))
         val søknadBehandlingKlarTilKontroll =
-            lagBehandling(type = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(1))
+            lagBehandling(utløstAvType = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(1))
         DBTestHelper.Companion.withBehandlinger(
-            person = testPerson,
+            person = TestHelper.testPerson,
             behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -113,7 +107,7 @@ class PostgresOppgaveRepositoryTest {
             lagOppgave(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = søknadBehandlingKlarTilBehandling.opprettet,
-                behandlingId = søknadBehandlingKlarTilBehandling.behandlingId,
+                behandling = søknadBehandlingKlarTilBehandling,
                 person = testPerson,
             ).also { repo.lagre(it) }
 
@@ -121,32 +115,29 @@ class PostgresOppgaveRepositoryTest {
                 oppgaveId = oppgaveIdKlarTilKontroll,
                 tilstand = Oppgave.KlarTilKontroll,
                 opprettet = søknadBehandlingKlarTilKontroll.opprettet,
-                behandlingId = søknadBehandlingKlarTilKontroll.behandlingId,
+                behandling = søknadBehandlingKlarTilKontroll,
                 person = testPerson,
                 tilstandslogg =
-                    Tilstandslogg(
-                        tilstandsendringer =
-                            mutableListOf(
-                                Tilstandsendring(
-                                    tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                                    hendelse =
-                                        SettOppgaveAnsvarHendelse(
-                                            oppgaveId = oppgaveIdKlarTilKontroll,
-                                            ansvarligIdent = saksbehandler.navIdent,
-                                            utførtAv = saksbehandler,
-                                        ),
-                                    tidspunkt = opprettetNå,
+                    OppgaveTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            hendelse =
+                                SettOppgaveAnsvarHendelse(
+                                    oppgaveId = oppgaveIdKlarTilKontroll,
+                                    ansvarligIdent = saksbehandler.navIdent,
+                                    utførtAv = saksbehandler,
                                 ),
-                                Tilstandsendring(
-                                    tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
-                                    hendelse =
-                                        SendTilKontrollHendelse(
-                                            oppgaveId = oppgaveIdKlarTilKontroll,
-                                            utførtAv = saksbehandler,
-                                        ),
-                                    tidspunkt = opprettetNå,
+                            tidspunkt = opprettetNå,
+                        ),
+                        Tilstandsendring(
+                            tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                            hendelse =
+                                SendTilKontrollHendelse(
+                                    oppgaveId = oppgaveIdKlarTilKontroll,
+                                    utførtAv = saksbehandler,
                                 ),
-                            ),
+                            tidspunkt = opprettetNå,
+                        ),
                     ),
             ).also { repo.lagre(it) }
 
@@ -169,7 +160,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )!!
 
-            nesteOppgave.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
+            nesteOppgave.behandling.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
             nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
             nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
         }
@@ -177,8 +168,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Tildel neste ledige klage-oppgave`() {
-        val klageBehandling = lagBehandling(type = UtløstAvType.KLAGE)
-        val søknadBehandling = lagBehandling(type = UtløstAvType.SØKNAD)
+        val klageBehandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val søknadBehandling = lagBehandling(utløstAvType = UtløstAvType.SØKNAD)
         DBTestHelper.Companion.withBehandlinger(
             person = testPerson,
             behandlinger = listOf(klageBehandling, søknadBehandling),
@@ -188,7 +179,7 @@ class PostgresOppgaveRepositoryTest {
             lagOppgave(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = opprettetNå.minusDays(1),
-                behandlingId = søknadBehandling.behandlingId,
+                behandling = søknadBehandling,
                 person = testPerson,
             ).also { repo.lagre(it) }
 
@@ -196,9 +187,8 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå,
-                    behandlingId = klageBehandling.behandlingId,
+                    behandling = klageBehandling,
                     person = testPerson,
-                    utløstAvType = UtløstAvType.KLAGE,
                 ).also { repo.lagre(it) }
 
             val nesteOppgave =
@@ -465,58 +455,55 @@ class PostgresOppgaveRepositoryTest {
             val oppgaveId = UUIDv7.ny()
 
             val tilstandsloggUnderBehandling =
-                Tilstandslogg(
-                    tilstandsendringer =
-                        mutableListOf(
-                            Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                                hendelse =
-                                    NesteOppgaveHendelse(
-                                        ansvarligIdent = annenBeslutter.navIdent,
-                                        utførtAv = annenBeslutter,
-                                    ),
-                                tidspunkt = LocalDateTime.now().minusDays(3),
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        hendelse =
+                            NesteOppgaveHendelse(
+                                ansvarligIdent = annenBeslutter.navIdent,
+                                utførtAv = annenBeslutter,
                             ),
-                            Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                                hendelse =
-                                    NesteOppgaveHendelse(
-                                        ansvarligIdent = saksbehandlerUtført.navIdent,
-                                        utførtAv = saksbehandlerUtført,
-                                    ),
-                                tidspunkt = LocalDateTime.now().minusDays(2),
+                        tidspunkt = LocalDateTime.now().minusDays(3),
+                    ),
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        hendelse =
+                            NesteOppgaveHendelse(
+                                ansvarligIdent = saksbehandlerUtført.navIdent,
+                                utførtAv = saksbehandlerUtført,
                             ),
-                            Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.PAA_VENT,
-                                hendelse =
-                                    UtsettOppgaveHendelse(
-                                        oppgaveId = oppgaveId,
-                                        navIdent = saksbehandlerUtført.navIdent,
-                                        utsattTil = LocalDate.now(),
-                                        beholdOppgave = true,
-                                        utførtAv = saksbehandlerUtført,
-                                    ),
-                                tidspunkt = LocalDateTime.now().minusDays(1),
+                        tidspunkt = LocalDateTime.now().minusDays(2),
+                    ),
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.PAA_VENT,
+                        hendelse =
+                            UtsettOppgaveHendelse(
+                                oppgaveId = oppgaveId,
+                                navIdent = saksbehandlerUtført.navIdent,
+                                utsattTil = LocalDate.now(),
+                                beholdOppgave = true,
+                                utførtAv = saksbehandlerUtført,
                             ),
-                            Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                                hendelse =
-                                    PåVentFristUtgåttHendelse(
-                                        oppgaveId = oppgaveId,
-                                        utførtAv = Applikasjon("dp-saksbehandling"),
-                                    ),
-                                tidspunkt = LocalDateTime.now().minusHours(1),
+                        tidspunkt = LocalDateTime.now().minusDays(1),
+                    ),
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        hendelse =
+                            PåVentFristUtgåttHendelse(
+                                oppgaveId = oppgaveId,
+                                utførtAv = Applikasjon("dp-saksbehandling"),
                             ),
-                            Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
-                                hendelse =
-                                    SendTilKontrollHendelse(
-                                        oppgaveId = oppgaveId,
-                                        utførtAv = saksbehandlerUtført,
-                                    ),
-                                tidspunkt = LocalDateTime.now(),
+                        tidspunkt = LocalDateTime.now().minusHours(1),
+                    ),
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                        hendelse =
+                            SendTilKontrollHendelse(
+                                oppgaveId = oppgaveId,
+                                utførtAv = saksbehandlerUtført,
                             ),
-                        ),
+                        tidspunkt = LocalDateTime.now(),
+                    ),
                 )
 
             val oppgave =
@@ -573,7 +560,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Tildeling av neste oppgave ut fra søkefilter og tilganger`() {
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val saksbehandlerUtført =
                 Saksbehandler(
                     navIdent = "saksbehandlerUtført",
@@ -582,18 +569,15 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             fun tilstandsloggUnderBehandling() =
-                Tilstandslogg(
-                    tilstandsendringer =
-                        mutableListOf(
-                            Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                                hendelse =
-                                    NesteOppgaveHendelse(
-                                        ansvarligIdent = saksbehandlerUtført.navIdent,
-                                        utførtAv = saksbehandlerUtført,
-                                    ),
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        hendelse =
+                            NesteOppgaveHendelse(
+                                ansvarligIdent = saksbehandlerUtført.navIdent,
+                                utførtAv = saksbehandlerUtført,
                             ),
-                        ),
+                    ),
                 )
 
             val testSaksbehandler =
@@ -727,7 +711,10 @@ class PostgresOppgaveRepositoryTest {
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(18),
-                    person = lagPerson(addresseBeskyttelseGradering = AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND),
+                    person =
+                        lagPerson(
+                            addresseBeskyttelseGradering = AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND,
+                        ),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
@@ -745,7 +732,7 @@ class PostgresOppgaveRepositoryTest {
 
             val emneknaggFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("Testknagg"),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
@@ -800,7 +787,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang = testSaksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
@@ -824,7 +811,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
@@ -848,7 +835,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
@@ -872,7 +859,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
@@ -896,7 +883,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
@@ -921,7 +908,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
@@ -945,7 +932,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         egneAnsatteTilgang =
                             beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
@@ -971,13 +958,11 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre en oppgave flere ganger`() {
-        val testOppgave = lagOppgave()
-
-        DBTestHelper.Companion.withOppgave(oppgave = testOppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             shouldNotThrowAny {
-                repo.lagre(testOppgave)
-                repo.lagre(testOppgave)
+                repo.lagre(TestHelper.testOppgave)
+                repo.lagre(TestHelper.testOppgave)
             }
         }
     }
@@ -985,7 +970,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave med notat`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        DBTestHelper.Companion.withOppgave(testOppgave) { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             testOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
@@ -1011,7 +996,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre notatet til en oppgave`() {
         val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        DBTestHelper.Companion.withOppgave(oppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
             oppgave.tildel(
@@ -1041,7 +1026,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne finne et notat`() {
         val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        DBTestHelper.Companion.withOppgave(oppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
             oppgave.tildel(
@@ -1071,9 +1056,9 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val behandling = lagBehandling()
-        val testOppgave = lagOppgave(behandlingId = behandling.behandlingId, person = testPerson)
+        val testOppgave = lagOppgave(behandling = behandling, person = testPerson)
 
-        DBTestHelper.Companion.withBehandling(behandling = behandling, person = testPerson) { ds ->
+        DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1084,7 +1069,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne slette et notat for en oppgave`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        DBTestHelper.Companion.withOppgave(testOppgave) { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
 
             testOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -1119,41 +1104,39 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
         val nå = LocalDateTime.now()
         val tilstandslogg =
-            Tilstandslogg(
-                mutableListOf(
-                    Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
-                        hendelse =
-                            SendTilKontrollHendelse(
-                                oppgaveId = oppgaveIdTest,
-                                utførtAv = saksbehandler,
-                            ),
-                        tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
-                    ),
-                    Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.UNDER_KONTROLL,
-                        hendelse =
-                            SettOppgaveAnsvarHendelse(
-                                oppgaveId = oppgaveIdTest,
-                                beslutter.navIdent,
-                                beslutter,
-                            ),
-                        tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
-                    ),
-                    Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
-                        hendelse =
-                            GodkjentBehandlingHendelse(
-                                oppgaveId = oppgaveIdTest,
-                                meldingOmVedtak = "<h1>This is HTML</h1>",
-                                utførtAv = beslutter,
-                            ),
-                        tidspunkt = nå.truncatedTo(ChronoUnit.SECONDS),
-                    ),
+            OppgaveTilstandslogg(
+                Tilstandsendring(
+                    tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                    hendelse =
+                        SendTilKontrollHendelse(
+                            oppgaveId = oppgaveIdTest,
+                            utførtAv = saksbehandler,
+                        ),
+                    tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
+                ),
+                Tilstandsendring(
+                    tilstand = Oppgave.Tilstand.Type.UNDER_KONTROLL,
+                    hendelse =
+                        SettOppgaveAnsvarHendelse(
+                            oppgaveId = oppgaveIdTest,
+                            beslutter.navIdent,
+                            beslutter,
+                        ),
+                    tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
+                ),
+                Tilstandsendring(
+                    tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
+                    hendelse =
+                        GodkjentBehandlingHendelse(
+                            oppgaveId = oppgaveIdTest,
+                            meldingOmVedtak = "<h1>This is HTML</h1>",
+                            utførtAv = beslutter,
+                        ),
+                    tidspunkt = nå.truncatedTo(ChronoUnit.SECONDS),
                 ),
             )
         val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
-        DBTestHelper.Companion.withOppgave(testOppgave) { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1172,7 +1155,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne endre tilstand på en oppgave`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilBehandling)
-        DBTestHelper.Companion.withOppgave(testOppgave) { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(testOppgave)
@@ -1187,7 +1170,7 @@ class PostgresOppgaveRepositoryTest {
     fun `CRUD på oppgave i tilstand PAA_VENT`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
-        DBTestHelper.Companion.withOppgave(testOppgave) { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(
                 testOppgave.copy(
@@ -1204,7 +1187,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på tilstand`() {
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val oppgaveKlarTilBehandling = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling)
             val oppgaveFerdigBehandlet = this.leggTilOppgave(tilstand = Oppgave.FerdigBehandlet)
             val repo = PostgresOppgaveRepository(ds)
@@ -1222,16 +1205,25 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på type utløsende hendelse`() {
-        DBTestHelper.Companion.withMigratedDb { ds ->
-            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, type = UtløstAvType.SØKNAD, opprettet = opprettetNå)
-            val klageOppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, type = UtløstAvType.KLAGE, opprettet = opprettetNå)
+        DBTestHelper.withMigratedDb { ds ->
+            this.leggTilOppgave(
+                tilstand = Oppgave.KlarTilBehandling,
+                type = UtløstAvType.SØKNAD,
+                opprettet = opprettetNå,
+            )
+            val klageOppgave =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    type = UtløstAvType.KLAGE,
+                    opprettet = opprettetNå,
+                )
 
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 søkeFilter =
                     Søkefilter(
                         tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         utløstAvTyper = setOf(UtløstAvType.KLAGE),
                     ),
@@ -1254,14 +1246,22 @@ class PostgresOppgaveRepositoryTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
 
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgave1TilOla =
                 this.leggTilOppgave(person = ola, tilstand = Oppgave.KlarTilBehandling, opprettet = opprettetNå)
             val oppgave2TilOla =
-                this.leggTilOppgave(person = ola, tilstand = Oppgave.FerdigBehandlet, opprettet = opprettetNå.minusDays(1))
+                this.leggTilOppgave(
+                    person = ola,
+                    tilstand = Oppgave.FerdigBehandlet,
+                    opprettet = opprettetNå.minusDays(1),
+                )
             val oppgave1TilGry =
-                this.leggTilOppgave(person = gry, tilstand = Oppgave.FerdigBehandlet, opprettet = opprettetNå.minusDays(2))
+                this.leggTilOppgave(
+                    person = gry,
+                    tilstand = Oppgave.FerdigBehandlet,
+                    opprettet = opprettetNå.minusDays(2),
+                )
 
             repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
             repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry)
@@ -1293,7 +1293,7 @@ class PostgresOppgaveRepositoryTest {
                 utløstAv = UtløstAvType.SØKNAD,
             )
 
-        DBTestHelper.Companion.withBehandling(
+        DBTestHelper.withBehandling(
             person = person,
             sak =
                 Sak(
@@ -1303,14 +1303,14 @@ class PostgresOppgaveRepositoryTest {
                     behandlinger = mutableSetOf(behandling),
                 ),
         ) { ds ->
-            val oppgve =
+            val oppgave =
                 lagOppgave(
                     oppgaveId = UUIDv7.ny(),
-                    behandlingId = hendelse.behandlingId,
+                    behandling = behandling,
                     person = person,
                 )
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(oppgave = oppgve)
+            repo.lagre(oppgave = oppgave)
 
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
@@ -1326,21 +1326,20 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal hente oppgaveId fra behandlingId`() {
-        val behandlingId = UUIDv7.ny()
-        val behandling = lagBehandling(behandlingId = behandlingId)
-        val oppgave = lagOppgave(behandlingId = behandlingId, utløstAvType = UtløstAvType.SØKNAD)
+        val behandling = lagBehandling(utløstAvType = UtløstAvType.SØKNAD)
+        val oppgave = lagOppgave(behandling = behandling)
 
-        DBTestHelper.Companion.withBehandling(behandling = behandling) { ds ->
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgave)
-            repo.hentOppgaveIdFor(behandlingId = behandlingId) shouldBe oppgave.oppgaveId
+            repo.hentOppgaveIdFor(behandlingId = behandling.behandlingId) shouldBe oppgave.oppgaveId
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
 
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val oppgave1 = this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"), opprettet = opprettetNå)
             val oppgave2 = this.leggTilOppgave(emneknagger = setOf("hubba"), opprettet = opprettetNå)
             val oppgave3 = this.leggTilOppgave(emneknagger = emptySet(), opprettet = opprettetNå)
@@ -1349,7 +1348,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = emptySet(),
                 ),
             ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3)
@@ -1357,7 +1356,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("hubba"),
                 ),
             ).oppgaver shouldBe listOf(oppgave1, oppgave2)
@@ -1365,7 +1364,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("bubba"),
                 ),
             ).oppgaver shouldBe listOf(oppgave1)
@@ -1373,7 +1372,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("bubba", "hubba"),
                 ),
             ).oppgaver shouldBe listOf(oppgave1, oppgave2)
@@ -1386,7 +1385,7 @@ class PostgresOppgaveRepositoryTest {
         val saksbehandler1 = "saksbehandler1"
         val saksbehandler2 = "saksbehandler2"
 
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             this.leggTilOppgave(
                 tilstand = Oppgave.UnderBehandling,
                 opprettet = enUkeSiden,
@@ -1413,7 +1412,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler1,
                 ),
             ).oppgaver.size shouldBe 1
@@ -1421,7 +1420,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                 ),
             ).oppgaver.size shouldBe 2
@@ -1429,7 +1428,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = null,
                 ),
             ).oppgaver.size shouldBe 4
@@ -1437,7 +1436,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                     emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
                 ),
@@ -1447,7 +1446,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne hente paginerte oppgaver`() {
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
             val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
             val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
@@ -1456,8 +1455,8 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     paginering = null,
                 ),
             ).let {
@@ -1468,7 +1467,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     paginering = Søkefilter.Paginering(2, 0),
                 ),
             ).let {
@@ -1522,7 +1521,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne søke etter oppgaver filtrert på tilstand og opprettet`() {
         val enUkeSiden = opprettetNå.minusDays(7)
 
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val oppgaveUnderBehandlingEnUkeGammel =
                 this.leggTilOppgave(
                     tilstand = Oppgave.UnderBehandling,
@@ -1542,7 +1541,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                 ),
             ).oppgaver.single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
@@ -1553,14 +1552,14 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             Oppgave.Tilstand.Type.UNDER_BEHANDLING,
                         ),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                 ),
             ).oppgaver.size shouldBe 3
 
             repo.søk(
                 Søkefilter(
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
-                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                    periode = Periode.UBEGRENSET_PERIODE,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = null,
                     oppgaveId = null,
@@ -1623,7 +1622,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver opprettet en bestemt dato, uavhengig av tid på døgnet`() {
-        DBTestHelper.Companion.withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val iDag = LocalDate.now()
             val iGår: LocalDate = iDag.minusDays(1)
             val iForgårs = iDag.minusDays(2)
@@ -1654,10 +1653,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal hente en oppgave basert på behandlingId`() {
-        val oppgave = lagOppgave()
-        DBTestHelper.Companion.withOppgave(oppgave = oppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.hentOppgaveFor(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
 
             shouldThrow<DataNotFoundException> {
                 repo.hentOppgaveFor(behandlingId = UUIDv7.ny())
@@ -1667,10 +1665,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
-        val oppgave = lagOppgave()
-        DBTestHelper.Companion.withOppgave(oppgave) { ds ->
+        DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.finnOppgaveFor(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
@@ -1681,11 +1678,10 @@ class PostgresOppgaveRepositoryTest {
             lagOppgave(
                 person =
                     lagPerson(
-                        ident = testPerson.ident,
                         addresseBeskyttelseGradering = STRENGT_FORTROLIG,
                     ),
             )
-        DBTestHelper.Companion.withOppgave(oppgave = oppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave = oppgave) { ds ->
             PostgresOppgaveRepository(ds)
                 .adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
         }
@@ -1702,10 +1698,10 @@ class PostgresOppgaveRepositoryTest {
             )
         val testOppgave =
             lagOppgave(
-                behandlingId = behandling.behandlingId,
-                tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)),
+                behandling = behandling,
+                tilstandslogg = OppgaveTilstandslogg(tilstandsendring),
             )
-        DBTestHelper.Companion.withBehandling(behandling = behandling) { ds ->
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)

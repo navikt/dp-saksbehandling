@@ -8,11 +8,11 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
@@ -21,17 +21,17 @@ class ArenaSinkVedtakOpprettetMottakTest {
     private val testRapid = TestRapid()
     private val sakId = "123"
     private val søknadId = UUIDv7.ny()
-    private val testOppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet)
+    private val testOppgave = TestHelper.lagOppgave(tilstand = Oppgave.FerdigBehandlet)
     private val mockPersonRepository =
         mockk<PersonRepository>(relaxed = true).apply {
-            every { hentPersonForBehandlingId(testOppgave.behandlingId) } returns testOppgave.person
+            every { hentPersonForBehandlingId(testOppgave.behandling.behandlingId) } returns testOppgave.person
         }
 
     @Test
     fun `Skal ta imot arenasink_vedtak_opprettet hendelser`() {
         val forventetVedtakFattetNendelse =
             VedtakFattetHendelse(
-                behandlingId = testOppgave.behandlingId,
+                behandlingId = testOppgave.behandling.behandlingId,
                 behandletHendelseId = søknadId.toString(),
                 behandletHendelseType = "Søknad",
                 ident = testOppgave.person.ident,
@@ -60,7 +60,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {
-            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandlingId)
+            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandling.behandlingId)
             mockUtsendingMediator.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse)
         }
     }
@@ -78,7 +78,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
             arenaSinkVedtakOpprettetHendelse.replace(VEDTAKSTATUS_IVERKSATT, "Muse Mikk")
         testRapid.sendTestMessage(vedtakOpprettetMenIkkeIverksattMelding)
         verify(exactly = 1) {
-            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandlingId)
+            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandling.behandlingId)
         }
 
         testRapid.inspektør.size shouldBe 0
@@ -96,7 +96,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
           "rettighet": "PERM",
           "utfall": false,
           "kilde": {
-            "id": "${testOppgave.behandlingId}",
+            "id": "${testOppgave.behandling.behandlingId}",
             "system": "dp-behandling"
           },
           "@id": "b525ed15-e041-4d80-a20c-2a26885eae75",

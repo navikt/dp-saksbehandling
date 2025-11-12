@@ -18,11 +18,14 @@ import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
@@ -37,8 +40,9 @@ import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMottak
-import no.nav.dagpenger.saksbehandling.mottak.HenvendelseBehovløser
+import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
+import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -151,6 +155,18 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             meldingOmVedtakKlient = meldingOmVedtakKlient,
             sakMediator = sakMediator,
         )
+    private val innsendingMediator =
+        InnsendingMediator(
+            sakMediator = sakMediator,
+            oppgaveMediator = oppgaveMediator,
+            personMediator = personMediator,
+            innsendingRepository = PostgresInnsendingRepository(dataSource),
+            innsendingBehandler =
+                InnsendingBehandler(
+                    klageMediator = klageMediator,
+                    behandlingKlient = behandlingKlient,
+                ),
+        )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
             oppslag = oppslag,
@@ -199,15 +215,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             klageMediator.setRapidsConnection(rapidsConnection)
             klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
             BehandlingOpprettetMottak(rapidsConnection, sakMediator)
+            SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
             ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
-            HenvendelseBehovløser(
+            InnsendingBehovløser(
                 rapidsConnection = rapidsConnection,
-                sakMediator = sakMediator,
-                klageMediator = klageMediator,
-                oppgaveMediator = oppgaveMediator,
+                innsendingMediator = innsendingMediator,
             )
 
             BehandlingsresultatMottakForUtsending(

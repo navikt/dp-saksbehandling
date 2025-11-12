@@ -7,13 +7,12 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagSaksbehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
-import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagSaksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
@@ -27,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
