@@ -175,7 +175,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val utsendingAlarmJob: Timer
     private val oversendKlageinstansAlarmJob: Timer
-    private val slettGamleOppgaverJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
 
@@ -262,14 +261,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 ).startJob(
                     period = 60.Minutt,
                 )
-            slettGamleOppgaverJob =
-                SletteGamleOppgaverJob(
-                    rapidsConnection,
-                    GamleOppgaverRepository(dataSource),
-                ).startJob(
-                    startAt = getNextOccurrence(3, 0),
-                    period = 1.Dag,
-                )
             oppgaveFristUtgåttJob =
                 OppgaveFristUtgåttJob(oppgaveMediator).startJob(
                     startAt = getNextOccurrence(3, 0),
@@ -299,7 +290,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
         oversendKlageinstansAlarmJob.cancel()
-        slettGamleOppgaverJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         logger.info { "Skrur av applikasjonen" }
