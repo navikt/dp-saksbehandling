@@ -396,7 +396,7 @@ OppgaveMediatorTest {
                 Arguments.of(UnderBehandling, true),
                 Arguments.of(KlarTilKontroll, true),
                 Arguments.of(Oppgave.UnderKontroll(), true),
-                Arguments.of(FerdigBehandlet, true),
+                Arguments.of(FerdigBehandlet, false),
             )
         }
     }

@@ -640,8 +640,8 @@ class OppgaveMediator(
             AVBRUTT -> false
             AVVENTER_LÅS_AV_BEHANDLING -> false
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> false
+            FERDIG_BEHANDLET -> false
             UNDER_BEHANDLING -> true
-            FERDIG_BEHANDLET -> true
             PAA_VENT -> true
             KLAR_TIL_KONTROLL -> true
             UNDER_KONTROLL -> true
