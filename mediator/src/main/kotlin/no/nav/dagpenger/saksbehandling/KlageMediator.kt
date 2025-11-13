@@ -175,7 +175,7 @@ class KlageMediator(
     }
 
     private fun requireEierAvOppgave(
-        oppgave: RettTilDagpengerOppgave,
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
     ) {
         require(oppgave.erEierAvOppgave(saksbehandler)) {
@@ -337,7 +337,7 @@ class KlageMediator(
     private fun sjekkTilgangTilOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): RettTilDagpengerOppgave {
+    ): Oppgave {
         return oppgaveMediator.hentOppgaveHvisTilgang(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
@@ -347,7 +347,7 @@ class KlageMediator(
     private fun sjekkTilgangOgEierAvOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): RettTilDagpengerOppgave {
+    ): Oppgave {
         return sjekkTilgangTilOppgave(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,

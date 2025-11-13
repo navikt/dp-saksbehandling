@@ -1,7 +1,8 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -65,5 +66,9 @@ class KlageOppgave private constructor(
                 behandling = behandling,
                 meldingOmVedtak = meldingOmVedtak,
             )
+    }
+
+    object KlarTilBehandling : Tilstand {
+        override val type: Type = KLAR_TIL_BEHANDLING
     }
 }
