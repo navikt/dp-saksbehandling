@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -99,7 +100,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             fun withBehandling(
                 person: Person = testPerson,
                 behandling: Behandling =
-                    Behandling(
+                    RettTilDagpengerBehandling(
                         behandlingId = UUIDv7.ny(),
                         utløstAv = SØKNAD,
                         opprettet = opprettetNå,
@@ -141,7 +142,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 block: DBTestHelper.(DataSource) -> Unit,
             ) {
                 val behandling =
-                    Behandling(
+                    RettTilDagpengerBehandling(
                         behandlingId = oppgave.behandling.behandlingId,
                         utløstAv = oppgave.behandling.utløstAv,
                         opprettet = oppgave.opprettet,
@@ -170,7 +171,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             this.lagre(person)
 
             val behandling =
-                Behandling(
+                RettTilDagpengerBehandling(
                     behandlingId = UUIDv7.ny(),
                     utløstAv = type,
                     opprettet = opprettet,
@@ -214,7 +215,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             person: Person = testPerson,
         ) {
             val behandling =
-                Behandling(
+                RettTilDagpengerBehandling(
                     behandlingId = behandlingId,
                     utløstAv = utløstAvType,
                     opprettet = opprettetNå,

@@ -8,7 +8,7 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.job.Job
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import javax.sql.DataSource
 
 internal class OversendKlageinstansAlarmJob(

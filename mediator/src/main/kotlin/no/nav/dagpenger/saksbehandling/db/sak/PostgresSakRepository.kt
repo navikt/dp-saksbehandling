@@ -7,7 +7,9 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.KlageBehandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -398,15 +400,34 @@ class PostgresSakRepository(
             // Map Behandling
             val behandlingId = this.uuidOrNull("behandling_id")
             if (behandlingId != null) {
-                sak.leggTilBehandling(
-                    Behandling(
-                        behandlingId = behandlingId,
-                        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
-                        opprettet = this.localDateTime("behandling_opprettet"),
-                        oppgaveId = this.uuidOrNull("oppgave_id"),
-                        hendelse = this.rehydrerHendelse(),
-                    ),
-                )
+                val utløstAvType = UtløstAvType.valueOf(this.string("utlost_av"))
+                val opprettet = this.localDateTime("behandling_opprettet")
+                val oppgaveId = this.uuidOrNull("oppgave_id")
+                val hendelse = this.rehydrerHendelse()
+
+                // todo refaktoer
+                val behandling =
+                    when (utløstAvType) {
+                        UtløstAvType.KLAGE -> {
+                            KlageBehandling(
+                                behandlingId = behandlingId,
+                                opprettet = opprettet,
+                                hendelse = hendelse,
+                                oppgaveId = oppgaveId,
+                            )
+                        }
+
+                        else -> {
+                            RettTilDagpengerBehandling(
+                                behandlingId = behandlingId,
+                                opprettet = opprettet,
+                                hendelse = hendelse,
+                                utløstAv = utløstAvType,
+                                oppgaveId = oppgaveId,
+                            )
+                        }
+                    }
+                sak.leggTilBehandling(behandling)
             }
         }
         return sakHistorikk

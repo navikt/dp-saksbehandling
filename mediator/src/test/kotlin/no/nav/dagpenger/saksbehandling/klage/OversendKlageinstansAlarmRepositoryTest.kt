@@ -32,52 +32,52 @@ class OversendKlageinstansAlarmRepositoryTest {
 
         withMigratedDb { ds ->
             val repository = OversendKlageinstansAlarmRepository(ds)
-            val klageBehandlingOversendtLittMerEnnEnTimeSiden =
+            val klageOversendtLittMerEnnEnTimeSiden =
                 ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.OversendKlageinstans,
+                    Klage.OversendKlageinstans,
                     littMerEnnEnTimeSiden,
                 )
-            val klageBehandlingOversendtEnTimeSiden =
+            val klageOversendtEnTimeSiden =
                 ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.OversendKlageinstans,
+                    Klage.OversendKlageinstans,
                     enTimeSiden,
                 )
             ds.opprettOgLagreKlageBehandling(
-                KlageBehandling.OversendKlageinstans,
+                Klage.OversendKlageinstans,
                 littMindreEnnEnTimeSiden,
             )
             ds.opprettOgLagreKlageBehandling(
-                KlageBehandling.OversendKlageinstans,
+                Klage.OversendKlageinstans,
                 nå,
             )
             ds.opprettOgLagreKlageBehandling(
-                KlageBehandling.Behandles,
+                Klage.Behandles,
                 toTimerSiden,
             )
             ds.opprettOgLagreKlageBehandling(
-                KlageBehandling.Ferdigstilt,
+                Klage.Ferdigstilt,
                 toTimerSiden,
             )
 
             val ventendeOversendelser = repository.hentVentendeOversendelser(intervallAntallTimer = 1)
             ventendeOversendelser.size shouldBe 2
-            ventendeOversendelser.forEach { it.tilstand shouldBe KlageBehandling.OversendKlageinstans.type.name }
+            ventendeOversendelser.forEach { it.tilstand shouldBe Klage.OversendKlageinstans.type.name }
             ventendeOversendelser.map {
                 it.behandlingId
             } shouldBe
                 listOf(
-                    klageBehandlingOversendtLittMerEnnEnTimeSiden.behandlingId,
-                    klageBehandlingOversendtEnTimeSiden.behandlingId,
+                    klageOversendtLittMerEnnEnTimeSiden.behandlingId,
+                    klageOversendtEnTimeSiden.behandlingId,
                 )
         }
     }
 
     private fun DataSource.opprettOgLagreKlageBehandling(
-        tilstand: KlageBehandling.KlageTilstand,
+        tilstand: Klage.KlageTilstand,
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-    ): KlageBehandling {
-        val klageBehandling =
-            KlageBehandling.rehydrer(
+    ): Klage {
+        val klage =
+            Klage.rehydrer(
                 behandlingId = UUIDv7.ny(),
                 journalpostId = Random.nextInt(1, 1000).toString(),
                 tilstand = tilstand,
@@ -98,21 +98,21 @@ class OversendKlageinstansAlarmRepositoryTest {
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "id" to klageBehandling.behandlingId,
+                            "id" to klage.behandlingId,
                             "tilstand" to tilstand.type.name,
                             "registrert_tidspunkt" to tidspunkt,
                             "endret_tidspunkt" to tidspunkt,
-                            "journalpost_id" to klageBehandling.journalpostId(),
-                            "behandlende_enhet" to klageBehandling.behandlendeEnhet(),
+                            "journalpost_id" to klage.journalpostId(),
+                            "behandlende_enhet" to klage.behandlendeEnhet(),
                             "opplysninger" to
                                 PGobject().also {
                                     it.type = "JSONB"
-                                    it.value = klageBehandling.alleOpplysninger().tilJson()
+                                    it.value = klage.alleOpplysninger().tilJson()
                                 },
                         ),
                 ).asUpdate,
             )
         }
-        return klageBehandling
+        return klage
     }
 }

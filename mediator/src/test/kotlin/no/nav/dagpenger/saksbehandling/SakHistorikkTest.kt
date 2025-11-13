@@ -10,7 +10,7 @@ class SakHistorikkTest {
     private val nå = LocalDateTime.now()
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
@@ -18,21 +18,21 @@ class SakHistorikkTest {
             hendelse = TomHendelse,
         )
     private val behandling2 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling3 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling4 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,

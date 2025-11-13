@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 class SakTest {
     private val now = LocalDateTime.now()
     private val behandling =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = now,

@@ -12,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Klage
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import org.junit.jupiter.api.Test
@@ -67,10 +67,10 @@ class RelevanteJournalpostIdOppslagTest {
                 klageRepository =
                     mockk<KlageRepository>().also {
                         coEvery { it.hentKlageBehandling(any()) } returns
-                            KlageBehandling.rehydrer(
+                            Klage.rehydrer(
                                 behandlingId = UUIDv7.ny(),
                                 journalpostId = "1",
-                                tilstand = KlageBehandling.Behandles,
+                                tilstand = Klage.Behandles,
                                 behandlendeEnhet = null,
                                 opprettet = LocalDateTime.now(),
                             )

@@ -206,12 +206,23 @@ internal object TestHelper {
         hendelse: Hendelse = TomHendelse,
         utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
     ): Behandling {
-        return Behandling(
-            behandlingId = behandlingId,
-            opprettet = opprettet,
-            hendelse = hendelse,
-            utløstAv = utløstAvType,
-        )
+        return when (utløstAvType) {
+            UtløstAvType.KLAGE ->
+                KlageBehandling.rehydrer(
+                    behandlingId = behandlingId,
+                    opprettet = opprettet,
+                    hendelse = hendelse,
+                )
+
+            else -> {
+                RettTilDagpengerBehandling.rehydrer(
+                    behandlingId = behandlingId,
+                    opprettet = opprettet,
+                    hendelse = hendelse,
+                    utløstAv = utløstAvType,
+                )
+            }
+        }
     }
 
     fun lagUtsending(

@@ -18,8 +18,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.klage.Datatype
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -96,12 +96,12 @@ class PostgresKlageRepositoryTest {
                     journalpostId = "journalpostId",
                 )
 
-            val klageBehandling =
-                KlageBehandling.rehydrer(
+            val klage =
+                Klage.rehydrer(
                     behandlingId = klageId,
                     opprettet = klageMottattHendelse.opprettet,
                     journalpostId = "journalpostId",
-                    tilstand = KlageBehandling.Behandles,
+                    tilstand = Klage.Behandles,
                     behandlendeEnhet = null,
                     tilstandslogg =
                         KlageTilstandslogg(
@@ -113,38 +113,38 @@ class PostgresKlageRepositoryTest {
                 )
 
             val boolskOpplysningId =
-                klageBehandling.finnEnBoolskOpplysning().also {
-                    klageBehandling.svar(it, Verdi.Boolsk(true))
+                klage.finnEnBoolskOpplysning().also {
+                    klage.svar(it, Verdi.Boolsk(true))
                 }
 
             val datoOpplysningerId =
-                klageBehandling.finnEnDatoOpplysningerId().also {
-                    klageBehandling.svar(it, Verdi.Dato(LocalDate.MIN))
+                klage.finnEnDatoOpplysningerId().also {
+                    klage.svar(it, Verdi.Dato(LocalDate.MIN))
                 }
 
             val listeOpplysning =
-                klageBehandling.finnEnListeOpplysning().also {
-                    klageBehandling.svar(it.opplysningId, Verdi.Flervalg(it.valgmuligheter))
+                klage.finnEnListeOpplysning().also {
+                    klage.svar(it.opplysningId, Verdi.Flervalg(it.valgmuligheter))
                 }
 
             val tekstOpplysningUtenValg =
-                klageBehandling.finnEnStringOpplysningUtenValg().also {
-                    klageBehandling.svar(it.opplysningId, Verdi.TekstVerdi("String"))
+                klage.finnEnStringOpplysningUtenValg().also {
+                    klage.svar(it.opplysningId, Verdi.TekstVerdi("String"))
                 }
 
             val boolskOpplysningMedTomVerdi =
-                klageBehandling.synligeOpplysninger().first {
+                klage.synligeOpplysninger().first {
                     it.type.datatype == Datatype.BOOLSK && it.verdi() is Verdi.TomVerdi
                 }.opplysningId
 
-            klageRepository.lagre(klageBehandling)
+            klageRepository.lagre(klage)
 
-            val hentetKlageBehandling = klageRepository.hentKlageBehandling(klageBehandling.behandlingId)
+            val hentetKlageBehandling = klageRepository.hentKlageBehandling(klage.behandlingId)
 
-            hentetKlageBehandling.behandlingId shouldBe klageBehandling.behandlingId
-            hentetKlageBehandling.journalpostId() shouldBe klageBehandling.journalpostId()
+            hentetKlageBehandling.behandlingId shouldBe klage.behandlingId
+            hentetKlageBehandling.journalpostId() shouldBe klage.journalpostId()
             hentetKlageBehandling.tilstand().type shouldBe BEHANDLES
-            hentetKlageBehandling.alleOpplysninger() shouldContainExactly klageBehandling.alleOpplysninger()
+            hentetKlageBehandling.alleOpplysninger() shouldContainExactly klage.alleOpplysninger()
 
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningId).verdi() shouldBe Verdi.Boolsk(true)
             hentetKlageBehandling.finnEnOpplysning(datoOpplysningerId).verdi() shouldBe Verdi.Dato(LocalDate.MIN)
@@ -156,30 +156,30 @@ class PostgresKlageRepositoryTest {
                 .verdi() shouldBe Verdi.TekstVerdi("String")
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
 
-            hentetKlageBehandling.tilstandslogg.size shouldBe klageBehandling.tilstandslogg.size
+            hentetKlageBehandling.tilstandslogg.size shouldBe klage.tilstandslogg.size
         }
     }
 
-    private fun KlageBehandling.finnEnOpplysning(id: UUID): Opplysning {
+    private fun Klage.finnEnOpplysning(id: UUID): Opplysning {
         return this.alleOpplysninger().single { opplysning -> opplysning.opplysningId == id }
     }
 
-    private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
+    private fun Klage.finnEnBoolskOpplysning(): UUID {
         return this.synligeOpplysninger()
             .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
     }
 
-    private fun KlageBehandling.finnEnStringOpplysningUtenValg(): Opplysning {
+    private fun Klage.finnEnStringOpplysningUtenValg(): Opplysning {
         return this.synligeOpplysninger().first { opplysning ->
             opplysning.type.datatype == Datatype.TEKST && opplysning.valgmuligheter.isEmpty()
         }
     }
 
-    private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
+    private fun Klage.finnEnDatoOpplysningerId(): UUID {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
     }
 
-    private fun KlageBehandling.finnEnListeOpplysning(): Opplysning {
+    private fun Klage.finnEnListeOpplysning(): Opplysning {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }
     }
 }

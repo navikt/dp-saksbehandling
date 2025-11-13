@@ -50,7 +50,7 @@ object ModellTestHelper {
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
         val behandling =
-            Behandling(
+            RettTilDagpengerBehandling(
                 behandlingId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
                 utløstAv = UtløstAvType.SØKNAD,

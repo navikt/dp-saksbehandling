@@ -19,7 +19,7 @@ import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Klage
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -35,19 +35,19 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
     }
 
     suspend fun tilDto(
-        klageBehandling: KlageBehandling,
+        klage: Klage,
         saksbehandler: Saksbehandler,
     ): KlageDTO {
-        val synligeOpplysninger = klageBehandling.synligeOpplysninger().toList()
+        val synligeOpplysninger = klage.synligeOpplysninger().toList()
         return KlageDTO(
-            behandlingId = klageBehandling.behandlingId,
+            behandlingId = klage.behandlingId,
             saksbehandler = oppslag.hentBehandler(saksbehandler.navIdent),
             behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfallOpplysninger = utfallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfall =
                 UtfallDTO(
                     verdi =
-                        when (klageBehandling.utfall()) {
+                        when (klage.utfall()) {
                             UtfallType.OPPRETTHOLDELSE -> UtfallDTOVerdiDTO.OPPRETTHOLDELSE
                             UtfallType.MEDHOLD -> UtfallDTOVerdiDTO.MEDHOLD
                             UtfallType.DELVIS_MEDHOLD -> UtfallDTOVerdiDTO.DELVIS_MEDHOLD

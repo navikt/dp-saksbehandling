@@ -18,8 +18,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.Hjemler
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
@@ -58,7 +58,7 @@ class KlageMediator(
     fun hentKlageBehandling(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): KlageBehandling {
+    ): Klage {
         sjekkTilgangTilOppgave(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
@@ -71,8 +71,8 @@ class KlageMediator(
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): RettTilDagpenger {
         // todo her kan en Exception kastes hvis personen ikke finnes
 
-        val klageBehandling =
-            KlageBehandling(
+        val klage =
+            Klage(
                 journalpostId = klageMottattHendelse.journalpostId,
                 opprettet = klageMottattHendelse.opprettet,
                 tilstandslogg =
@@ -83,10 +83,10 @@ class KlageMediator(
                         ),
                     ),
             )
-        klageRepository.lagre(klageBehandling = klageBehandling)
+        klageRepository.lagre(klage = klage)
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
-                behandlingId = klageBehandling.behandlingId,
+                behandlingId = klage.behandlingId,
                 ident = klageMottattHendelse.ident,
                 sakId = klageMottattHendelse.sakId,
                 opprettet = klageMottattHendelse.opprettet,
@@ -100,15 +100,15 @@ class KlageMediator(
             )
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klage.behandlingId}" }
                 throw e
             }
             .getOrThrow()
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): RettTilDagpenger {
-        val klageBehandling =
-            KlageBehandling(
+        val klage =
+            Klage(
                 journalpostId = manuellKlageMottattHendelse.journalpostId,
                 opprettet = manuellKlageMottattHendelse.opprettet,
                 tilstandslogg =
@@ -120,12 +120,12 @@ class KlageMediator(
                     ),
             )
 
-        klageRepository.lagre(klageBehandling)
+        klageRepository.lagre(klage)
 
         val utførtAv = manuellKlageMottattHendelse.utførtAv
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
-                behandlingId = klageBehandling.behandlingId,
+                behandlingId = klage.behandlingId,
                 ident = manuellKlageMottattHendelse.ident,
                 sakId = manuellKlageMottattHendelse.sakId,
                 opprettet = manuellKlageMottattHendelse.opprettet,
@@ -154,7 +154,7 @@ class KlageMediator(
             }
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klage.behandlingId}" }
                 throw e
             }
             .getOrThrow()
@@ -169,7 +169,7 @@ class KlageMediator(
         sjekkTilgangOgEierAvOppgave(behandlingId, saksbehandler)
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
-            klageRepository.lagre(klageBehandling = klageBehandling)
+            klageRepository.lagre(klage = klageBehandling)
             auditlogg.oppdater("Oppdaterte en klageopplysning", klageBehandling.personIdent(), saksbehandler.navIdent)
         }
     }
@@ -357,7 +357,7 @@ class KlageMediator(
     }
 }
 
-fun KlageBehandling.hjemler(): List<String> {
+fun Klage.hjemler(): List<String> {
     val verdi =
         this.synligeOpplysninger()
             .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?

@@ -36,7 +36,7 @@ data class Sak(
         ) {
             true -> {
                 behandlinger.add(
-                    Behandling(
+                    RettTilDagpengerBehandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
                         utløstAv = UtløstAvType.SØKNAD,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
@@ -59,7 +59,7 @@ data class Sak(
         ) {
             true -> {
                 behandlinger.add(
-                    Behandling(
+                    RettTilDagpengerBehandling(
                         behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
                         utløstAv = UtløstAvType.MELDEKORT,
                         opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
@@ -81,7 +81,7 @@ data class Sak(
 
         return if (forrigeBehandling != null) {
             behandlinger.add(
-                Behandling(
+                RettTilDagpengerBehandling(
                     behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
                     utløstAv = UtløstAvType.MANUELL,
                     opprettet = manuellBehandlingOpprettetHendelse.opprettet,
@@ -94,13 +94,13 @@ data class Sak(
         }
     }
 
+    // todo denne  gjelder kun for Klage, var nok ment som noe generisk
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat {
         return when (this.sakId == behandlingOpprettetHendelse.sakId) {
             true -> {
                 behandlinger.add(
-                    Behandling(
+                    KlageBehandling(
                         behandlingId = behandlingOpprettetHendelse.behandlingId,
-                        utløstAv = behandlingOpprettetHendelse.type,
                         opprettet = behandlingOpprettetHendelse.opprettet,
                         hendelse = behandlingOpprettetHendelse,
                     ),

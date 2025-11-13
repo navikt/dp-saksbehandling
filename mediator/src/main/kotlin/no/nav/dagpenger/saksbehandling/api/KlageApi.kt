@@ -81,7 +81,7 @@ fun Route.klageApi(
                         )
                     val klageDTO =
                         klageDtoMapper.tilDto(
-                            klageBehandling = klageBehandling,
+                            klage = klageBehandling,
                             saksbehandler = saksbehandler,
                         )
                     call.respond(HttpStatusCode.OK, klageDTO)

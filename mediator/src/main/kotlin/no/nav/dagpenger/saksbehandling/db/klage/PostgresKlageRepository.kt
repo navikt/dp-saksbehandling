@@ -16,12 +16,12 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.Klage
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
@@ -33,19 +33,19 @@ private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class PostgresKlageRepository(private val datasource: DataSource) : KlageRepository {
-    override fun lagre(klageBehandling: KlageBehandling) {
+    override fun lagre(klage: Klage) {
         sessionOf(datasource).use { session ->
             session.transaction { tx ->
-                tx.lagre(klageBehandling)
+                tx.lagre(klage)
             }
         }
     }
 
-    override fun hentKlageBehandling(behandlingId: UUID): KlageBehandling {
+    override fun hentKlageBehandling(behandlingId: UUID): Klage {
         return finnKlageBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke klage med id $behandlingId")
     }
 
-    private fun finnKlageBehandling(behandlingId: UUID): KlageBehandling? {
+    private fun finnKlageBehandling(behandlingId: UUID): Klage? {
         val klageBehandling =
             sessionOf(datasource).use { session ->
                 session.run(
@@ -72,7 +72,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
         return klageBehandling
     }
 
-    private fun TransactionalSession.lagre(klageBehandling: KlageBehandling) {
+    private fun TransactionalSession.lagre(klage: Klage) {
         run(
             queryOf(
                 //language=PostgreSQL
@@ -90,19 +90,19 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                     """.trimIndent(),
                 paramMap =
                     mapOf(
-                        "id" to klageBehandling.behandlingId,
-                        "tilstand" to klageBehandling.tilstand().type.name,
-                        "journalpost_id" to klageBehandling.journalpostId(),
-                        "behandlende_enhet" to klageBehandling.behandlendeEnhet(),
+                        "id" to klage.behandlingId,
+                        "tilstand" to klage.tilstand().type.name,
+                        "journalpost_id" to klage.journalpostId(),
+                        "behandlende_enhet" to klage.behandlendeEnhet(),
                         "opplysninger" to
                             PGobject().also {
                                 it.type = "JSONB"
-                                it.value = klageBehandling.alleOpplysninger().tilJson()
+                                it.value = klage.alleOpplysninger().tilJson()
                             },
                     ),
             ).asUpdate,
         )
-        lagre(behandlingId = klageBehandling.behandlingId, tilstandslogg = klageBehandling.tilstandslogg)
+        lagre(behandlingId = klage.behandlingId, tilstandslogg = klage.tilstandslogg)
     }
 
     private fun TransactionalSession.lagre(
@@ -146,17 +146,17 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
         )
     }
 
-    private fun Row.rehydrerKlageBehandling(dataSource: DataSource): KlageBehandling {
+    private fun Row.rehydrerKlageBehandling(dataSource: DataSource): Klage {
         val behandlingId = this.uuid("behandling_id")
         val tilstandAsText = this.string("tilstand")
         val tilstand =
             kotlin
                 .runCatching {
                     when (KlageTilstand.Type.valueOf(tilstandAsText)) {
-                        BEHANDLES -> KlageBehandling.Behandles
-                        OVERSEND_KLAGEINSTANS -> KlageBehandling.OversendKlageinstans
-                        FERDIGSTILT -> KlageBehandling.Ferdigstilt
-                        AVBRUTT -> KlageBehandling.Avbrutt
+                        BEHANDLES -> Klage.Behandles
+                        OVERSEND_KLAGEINSTANS -> Klage.OversendKlageinstans
+                        FERDIGSTILT -> Klage.Ferdigstilt
+                        AVBRUTT -> Klage.Avbrutt
                     }
                 }.getOrElse { t ->
                     throw UgyldigTilstandException("Kunne ikke rehydrere klagebehandling til tilstand: ${string("tilstand")} ${t.message}")
@@ -171,7 +171,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
             )
         val opprettet = this.localDateTime("opprettet")
 
-        return KlageBehandling.rehydrer(
+        return Klage.rehydrer(
             behandlingId = behandlingId,
             tilstand = tilstand,
             journalpostId = journalpostId,

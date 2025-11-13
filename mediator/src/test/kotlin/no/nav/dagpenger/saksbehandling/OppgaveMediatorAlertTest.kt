@@ -94,7 +94,7 @@ class OppgaveMediatorAlertTest {
                             opprettet = opprettet,
                             behandlinger =
                                 mutableSetOf(
-                                    Behandling(
+                                    RettTilDagpengerBehandling(
                                         behandlingId = behandlingId,
                                         opprettet = LocalDateTime.now(),
                                         hendelse =

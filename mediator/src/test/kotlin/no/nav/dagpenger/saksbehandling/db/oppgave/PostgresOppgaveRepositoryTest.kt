@@ -9,11 +9,11 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -58,7 +58,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         val behandling =
-            Behandling(
+            RettTilDagpengerBehandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = UtløstAvType.SØKNAD,
                 opprettet = LocalDateTime.now(),
@@ -1286,7 +1286,7 @@ class PostgresOppgaveRepositoryTest {
             )
 
         val behandling =
-            Behandling(
+            RettTilDagpengerBehandling(
                 behandlingId = hendelse.behandlingId,
                 opprettet = hendelse.opprettet,
                 hendelse = hendelse,
@@ -1466,7 +1466,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpenger.Tilstand.Type.Companion.søkbareTilstander,
+                    tilstander = RettTilDagpenger.Tilstand.Type.søkbareTilstander,
                     periode = Periode.UBEGRENSET_PERIODE,
                     paginering = Søkefilter.Paginering(2, 0),
                 ),

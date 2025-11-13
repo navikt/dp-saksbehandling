@@ -422,7 +422,7 @@ OppgaveMediatorTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
         val behandling =
-            Behandling(
+            RettTilDagpengerBehandling(
                 behandlingId = hendelse.behandlingId,
                 opprettet = LocalDateTime.now(),
                 utløstAv = UtløstAvType.SØKNAD,

@@ -8,11 +8,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
 import java.time.LocalDateTime
@@ -21,7 +21,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 @ConsistentCopyVisibility
-data class KlageBehandling private constructor(
+data class Klage private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
     val opprettet: LocalDateTime,
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
@@ -71,8 +71,8 @@ data class KlageBehandling private constructor(
                     OversendKlageinstansSteg,
                     FullmektigSteg,
                 ),
-        ): KlageBehandling =
-            KlageBehandling(
+        ): Klage =
+            Klage(
                 behandlingId = behandlingId,
                 opprettet = opprettet,
                 opplysninger = opplysninger,
@@ -177,21 +177,21 @@ data class KlageBehandling private constructor(
         }
         this.behandlendeEnhet = behandlendeEnhet
         tilstand.saksbehandlingFerdig(
-            klageBehandling = this,
+            klage = this,
             hendelse = hendelse,
         )
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
         tilstand.oversendtKlageinstans(
-            klageBehandling = this,
+            klage = this,
             hendelse = hendelse,
         )
     }
 
     fun avbryt(hendelse: AvbruttHendelse) {
         tilstand.avbryt(
-            klageBehandling = this,
+            klage = this,
             hendelse = hendelse,
         )
     }
@@ -200,19 +200,19 @@ data class KlageBehandling private constructor(
         override val type: Type = BEHANDLES
 
         override fun saksbehandlingFerdig(
-            klageBehandling: KlageBehandling,
+            klage: Klage,
             hendelse: KlageFerdigbehandletHendelse,
         ) {
-            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
-                klageBehandling.endreTilstand(
+            if (klage.utfall() == UtfallType.OPPRETTHOLDELSE) {
+                klage.endreTilstand(
                     nyTilstand = OversendKlageinstans,
                     hendelse = hendelse,
                 )
-            } else if (klageBehandling.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
+            } else if (klage.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
                 // TODO: implementer ferdigstilling av disse utfallene
                 throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
             } else {
-                klageBehandling.endreTilstand(
+                klage.endreTilstand(
                     nyTilstand = Ferdigstilt,
                     hendelse = hendelse,
                 )
@@ -220,10 +220,10 @@ data class KlageBehandling private constructor(
         }
 
         override fun avbryt(
-            klageBehandling: KlageBehandling,
+            klage: Klage,
             hendelse: AvbruttHendelse,
         ) {
-            klageBehandling.endreTilstand(
+            klage.endreTilstand(
                 nyTilstand = Avbrutt,
                 hendelse = hendelse,
             )
@@ -234,10 +234,10 @@ data class KlageBehandling private constructor(
         override val type: Type = OVERSEND_KLAGEINSTANS
 
         override fun oversendtKlageinstans(
-            klageBehandling: KlageBehandling,
+            klage: Klage,
             hendelse: OversendtKlageinstansHendelse,
         ) {
-            klageBehandling.endreTilstand(
+            klage.endreTilstand(
                 nyTilstand = Ferdigstilt,
                 hendelse = hendelse,
             )
@@ -256,21 +256,21 @@ data class KlageBehandling private constructor(
         val type: Type
 
         fun saksbehandlingFerdig(
-            klageBehandling: KlageBehandling,
+            klage: Klage,
             hendelse: KlageFerdigbehandletHendelse,
         ) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
         }
 
         fun avbryt(
-            klageBehandling: KlageBehandling,
+            klage: Klage,
             hendelse: AvbruttHendelse,
         ) {
             throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $type")
         }
 
         fun oversendtKlageinstans(
-            klageBehandling: KlageBehandling,
+            klage: Klage,
             hendelse: OversendtKlageinstansHendelse,
         ) {
             throw IllegalStateException("Kan ikke motta hendelse om oversendt klageinstans i tilstand $type")

@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagUtsending
 import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -21,7 +21,7 @@ import java.util.UUID
 
 class PostgresUtsendingRepositoryTest {
     val behandling =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = LocalDateTime.now(),

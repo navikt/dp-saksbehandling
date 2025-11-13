@@ -10,7 +10,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.KlageBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -48,7 +49,7 @@ class UtsendingMediatorTest {
     @Test
     fun `livssyklus for en utsending uten brev ved opprettelse når vedtak fattes i dp-sak`() {
         val behandling =
-            Behandling(
+            RettTilDagpengerBehandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = UtløstAvType.SØKNAD,
                 opprettet = LocalDateTime.now(),
@@ -226,7 +227,7 @@ class UtsendingMediatorTest {
     @Test
     fun `livssyklus for en utsending uten brev ved opprettelse når vedtak fattes i Arena`() {
         val behandling =
-            Behandling(
+            RettTilDagpengerBehandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = UtløstAvType.SØKNAD,
                 opprettet = LocalDateTime.now(),
@@ -393,9 +394,8 @@ class UtsendingMediatorTest {
     @Test
     fun `livssyklus for en utsending med brev ved opprettelse`() {
         val behandling =
-            Behandling(
+            KlageBehandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.KLAGE,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )

@@ -20,7 +20,7 @@ class SakHistorikkKnyttTilSakTest {
         )
 
     private val behandling =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = now,

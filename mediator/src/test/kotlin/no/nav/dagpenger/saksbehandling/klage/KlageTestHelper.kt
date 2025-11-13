@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -16,7 +16,7 @@ fun lagKlagebehandling(
     behandlendeEnhet: String? = null,
     tilstand: KlageTilstand.Type = BEHANDLES,
     klageMottattTidspunkt: LocalDateTime = LocalDateTime.now(),
-): KlageBehandling {
+): Klage {
     val opplysninger =
         mutableSetOf(
             Opplysning(
@@ -120,15 +120,15 @@ fun lagKlagebehandling(
         )
     }
 
-    return KlageBehandling.rehydrer(
+    return Klage.rehydrer(
         opplysninger = opplysninger,
         behandlendeEnhet = behandlendeEnhet,
         tilstand =
             when (tilstand) {
-                BEHANDLES -> KlageBehandling.Behandles
-                OVERSEND_KLAGEINSTANS -> KlageBehandling.OversendKlageinstans
-                FERDIGSTILT -> KlageBehandling.Ferdigstilt
-                AVBRUTT -> KlageBehandling.Avbrutt
+                BEHANDLES -> Klage.Behandles
+                OVERSEND_KLAGEINSTANS -> Klage.OversendKlageinstans
+                FERDIGSTILT -> Klage.Ferdigstilt
+                AVBRUTT -> Klage.Avbrutt
             },
         behandlingId = UUIDv7.ny(),
         journalpostId = null,

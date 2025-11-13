@@ -8,8 +8,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -48,7 +48,7 @@ class SakMediator(
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
             ).also {
                 it.leggTilBehandling(
-                    Behandling(
+                    RettTilDagpengerBehandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
                         utløstAv = UtløstAvType.SØKNAD,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,

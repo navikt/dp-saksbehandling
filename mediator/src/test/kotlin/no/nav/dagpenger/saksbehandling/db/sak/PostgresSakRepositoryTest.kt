@@ -5,8 +5,8 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -32,7 +32,7 @@ class PostgresSakRepositoryTest {
 
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå.minusDays(9),
@@ -40,21 +40,21 @@ class PostgresSakRepositoryTest {
             hendelse = TomHendelse,
         )
     private val behandling2 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå.minusDays(5),
             hendelse = TomHendelse,
         )
     private val behandling3 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå.minusDays(1),
             hendelse = TomHendelse,
         )
     private val behandling4 =
-        Behandling(
+        RettTilDagpengerBehandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå.minusDays(3),

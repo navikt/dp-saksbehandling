@@ -33,7 +33,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Klage
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -75,10 +75,10 @@ class KlageApiTest {
                         saksbehandler = TestHelper.saksbehandler,
                     )
                 } returns
-                    KlageBehandling.rehydrer(
+                    Klage.rehydrer(
                         behandlingId = klageBehandlingId,
                         journalpostId = journalpostId,
-                        tilstand = KlageBehandling.Behandles,
+                        tilstand = Klage.Behandles,
                         behandlendeEnhet = null,
                         opprettet = opprettet,
                     )

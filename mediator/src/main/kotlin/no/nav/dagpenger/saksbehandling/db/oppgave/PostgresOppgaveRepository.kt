@@ -7,7 +7,6 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
@@ -35,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONT
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderKontroll
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
@@ -914,7 +914,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): RettTilDagpenger {
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
         behandling =
-            Behandling.rehydrer(
+            RettTilDagpengerBehandling.rehydrer(
                 behandlingId = this.uuid("behandling_id"),
                 opprettet = this.localDateTime("behandling_opprettet"),
                 hendelse = this.rehydrerHendelse(),
