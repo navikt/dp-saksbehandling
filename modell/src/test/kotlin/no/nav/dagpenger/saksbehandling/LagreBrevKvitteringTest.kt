@@ -3,11 +3,11 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.KontrollertBrev.JA
-import no.nav.dagpenger.saksbehandling.KontrollertBrev.NEI
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UlovligKvitteringAvKontrollertBrev
@@ -48,7 +48,7 @@ class LagreBrevKvitteringTest {
                 UNDER_KONTROLL,
                 saksbehandler,
                 meldingOmVedtakKilde =
-                    MeldingOmVedtak(
+                    Oppgave.MeldingOmVedtak(
                         kilde = GOSYS,
                         kontrollertGosysBrev = NEI,
                     ),

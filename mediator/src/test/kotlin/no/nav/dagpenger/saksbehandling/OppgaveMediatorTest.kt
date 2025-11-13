@@ -14,11 +14,11 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
-import no.nav.dagpenger.saksbehandling.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.KontrollertBrev.JA
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigBehandlet

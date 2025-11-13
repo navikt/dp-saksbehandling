@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
@@ -25,10 +27,10 @@ object ModellTestHelper {
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         emneknagger: Set<String> = emptySet(),
         hendelse: Hendelse = TomHendelse,
-        meldingOmVedtakKilde: MeldingOmVedtak =
-            MeldingOmVedtak(
-                kilde = MeldingOmVedtakKilde.DP_SAK,
-                kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+        meldingOmVedtakKilde: Oppgave.MeldingOmVedtak =
+            Oppgave.MeldingOmVedtak(
+                kilde = DP_SAK,
+                kontrollertGosysBrev = IKKE_RELEVANT,
             ),
     ): RettTilDagpengerOppgave {
         val tilstand =

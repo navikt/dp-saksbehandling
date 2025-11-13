@@ -7,11 +7,11 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.KontrollertBrev
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtak
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtak
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling

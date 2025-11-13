@@ -6,9 +6,9 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Handling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
@@ -98,9 +98,9 @@ class OppgaveMediator(
                     person = sakHistorikk.person,
                     behandling = behandling,
                     meldingOmVedtak =
-                        MeldingOmVedtak(
+                        Oppgave.MeldingOmVedtak(
                             kilde = DP_SAK,
-                            kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                         ),
                 )
             oppgaveRepository.lagre(oppgave)
@@ -177,9 +177,9 @@ class OppgaveMediator(
                             person = sakHistorikk.person,
                             behandling = behandling,
                             meldingOmVedtak =
-                                MeldingOmVedtak(
+                                Oppgave.MeldingOmVedtak(
                                     kilde = DP_SAK,
-                                    kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                                 ),
                         )
                     oppgaveRepository.lagre(oppgave)
@@ -311,7 +311,7 @@ class OppgaveMediator(
 
     fun lagreKontrollertBrev(
         oppgaveId: UUID,
-        kontrollertBrev: KontrollertBrev,
+        kontrollertBrev: Oppgave.KontrollertBrev,
         saksbehandler: Saksbehandler,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
@@ -333,7 +333,7 @@ class OppgaveMediator(
 
     fun endreMeldingOmVedtakKilde(
         oppgaveId: UUID,
-        meldingOmVedtakKilde: MeldingOmVedtakKilde,
+        meldingOmVedtakKilde: Oppgave.MeldingOmVedtakKilde,
         saksbehandler: Saksbehandler,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->

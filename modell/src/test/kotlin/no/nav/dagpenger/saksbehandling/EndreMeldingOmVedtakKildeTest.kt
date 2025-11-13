@@ -3,11 +3,11 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UlovligEndringAvKildeForMeldingOmVedtak

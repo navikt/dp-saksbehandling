@@ -49,21 +49,21 @@ sealed class Oppgave {
     fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
 
     fun utsattTil() = this.utsattTil
-}
 
-enum class KontrollertBrev {
-    JA,
-    NEI,
-    IKKE_RELEVANT,
-}
+    enum class KontrollertBrev {
+        JA,
+        NEI,
+        IKKE_RELEVANT,
+    }
 
-data class MeldingOmVedtak(
-    var kilde: MeldingOmVedtakKilde,
-    var kontrollertGosysBrev: KontrollertBrev,
-)
+    data class MeldingOmVedtak(
+        var kilde: MeldingOmVedtakKilde,
+        var kontrollertGosysBrev: KontrollertBrev,
+    )
 
-enum class MeldingOmVedtakKilde {
-    DP_SAK,
-    GOSYS,
-    INGEN,
+    enum class MeldingOmVedtakKilde {
+        DP_SAK,
+        GOSYS,
+        INGEN,
+    }
 }

@@ -2,9 +2,9 @@ package no.nav.dagpenger.saksbehandling.db
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.KontrollertBrev
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtak
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtak
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
@@ -205,7 +205,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 meldingOmVedtak =
                     MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = IKKE_RELEVANT,
                     ),
             ).also { this.lagre(it) }
         }
@@ -233,7 +233,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 meldingOmVedtak =
                     MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = IKKE_RELEVANT,
                     ),
             ).also { lagre(it) }
         }

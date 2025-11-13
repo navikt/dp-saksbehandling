@@ -3,7 +3,9 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtak
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -210,7 +212,7 @@ internal object TestHelper {
             meldingOmVedtak =
                 MeldingOmVedtak(
                     kilde = DP_SAK,
-                    kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                    kontrollertGosysBrev = IKKE_RELEVANT,
                 ),
         )
     }
@@ -239,7 +241,7 @@ internal object TestHelper {
             meldingOmVedtak =
                 MeldingOmVedtak(
                     kilde = DP_SAK,
-                    kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                    kontrollertGosysBrev = IKKE_RELEVANT,
                 ),
         )
     }

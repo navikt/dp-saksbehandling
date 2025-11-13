@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT

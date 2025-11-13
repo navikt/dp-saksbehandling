@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
 
