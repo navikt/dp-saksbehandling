@@ -4,8 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType

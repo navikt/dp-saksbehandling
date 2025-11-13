@@ -9,6 +9,8 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Avbrutt
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerLåsAvBehandling
@@ -33,8 +35,6 @@ import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONT
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderKontroll
-import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
@@ -349,7 +349,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 sessionOf(dataSource).use { session ->
                     session.lagreNotat(
                         notatId = notat.notatId,
-                        tilstandsendringId = oppgave.tilstandslogg.first().id,
+                        tilstandsendringId = oppgave.tilstandslogg().first().id,
                         tekst = notat.hentTekst(),
                         skrevetAv = notat.skrevetAv,
                     )
@@ -359,7 +359,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun slettNotatFor(oppgave: RettTilDagpenger) {
-        val tilstandsloggId = oppgave.tilstandslogg.first().id
+        val tilstandsloggId = oppgave.tilstandslogg().first().id
 
         sessionOf(dataSource).use { session ->
             session.run(
@@ -758,12 +758,12 @@ private fun TransactionalSession.lagre(oppgave: RettTilDagpenger) {
                 ),
         ).asUpdate,
     )
-    this.lagre(oppgave.oppgaveId, oppgave.emneknagger)
-    this.lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
+    this.lagre(oppgave.oppgaveId, oppgave.emneknagger())
+    this.lagre(oppgave.oppgaveId, oppgave.tilstandslogg())
     oppgave.tilstand().notat()?.let {
         lagreNotat(
             notatId = it.notatId,
-            tilstandsendringId = oppgave.tilstandslogg.first().id,
+            tilstandsendringId = oppgave.tilstandslogg().first().id,
             tekst = it.hentTekst(),
             skrevetAv = it.skrevetAv,
         )

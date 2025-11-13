@@ -645,7 +645,7 @@ class OppgaveTilgangTest {
         val beslutterSomSaksbehandlet =
             Saksbehandler("beslutterSomSaksbehandlet", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
         val oppgave = lagOppgave(tilstandType = KLAR_TIL_KONTROLL)
-        oppgave.tilstandslogg.leggTil(
+        oppgave.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
@@ -680,7 +680,7 @@ class OppgaveTilgangTest {
     fun `Oppgave under kontroll kan ikke ferdigstilles av samme behandler som saksbehandlet, selv om hen er beslutter`() {
         val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
         val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
-        oppgave1.tilstandslogg.leggTil(
+        oppgave1.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave1.oppgaveId,
@@ -700,7 +700,7 @@ class OppgaveTilgangTest {
 
         val enAnnenBeslutter = Saksbehandler("enAnnenBeslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
         val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
-        oppgave2.tilstandslogg.leggTil(
+        oppgave2.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave2.oppgaveId,
@@ -723,7 +723,7 @@ class OppgaveTilgangTest {
     fun `Oppgave under kontroll kan ikke retureres til saksbehandling av samme behandler som saksbehandlet`() {
         val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
         val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
-        oppgave1.tilstandslogg.leggTil(
+        oppgave1.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave1.oppgaveId,
@@ -742,7 +742,7 @@ class OppgaveTilgangTest {
 
         val enAnnenBeslutter = Saksbehandler("beslutter 2", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
         val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
-        oppgave2.tilstandslogg.leggTil(
+        oppgave2.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave2.oppgaveId,

@@ -47,19 +47,18 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-
 data class RettTilDagpenger private constructor(
-    val oppgaveId: UUID,
-    val opprettet: LocalDateTime,
-    var behandlerIdent: String? = null,
-    private val _emneknagger: MutableSet<String>,
-    private var tilstand: Tilstand = KlarTilBehandling,
-    private var utsattTil: LocalDate? = null,
-    private val _tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
-    val person: Person,
-    val behandling: Behandling,
-    private var meldingOmVedtak: MeldingOmVedtak,
-) {
+    override val oppgaveId: UUID,
+    override val opprettet: LocalDateTime,
+    override var behandlerIdent: String? = null,
+    override val emneknagger: MutableSet<String>,
+    override var tilstand: Tilstand = KlarTilBehandling,
+    override var utsattTil: LocalDate? = null,
+    override val tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
+    override val person: Person,
+    override val behandling: Behandling,
+    override var meldingOmVedtak: MeldingOmVedtak,
+) : Oppgave() {
     constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
@@ -74,9 +73,9 @@ data class RettTilDagpenger private constructor(
         oppgaveId = oppgaveId,
         behandlerIdent = behandlerIdent,
         opprettet = opprettet,
-        _emneknagger = emneknagger.toMutableSet(),
+        emneknagger = emneknagger.toMutableSet(),
         tilstand = tilstand,
-        _tilstandslogg = tilstandslogg,
+        tilstandslogg = tilstandslogg,
         person = person,
         behandling = behandling,
         meldingOmVedtak = meldingOmVedtak,
@@ -108,10 +107,10 @@ data class RettTilDagpenger private constructor(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 behandlerIdent = behandlerIdent,
-                _emneknagger = emneknagger.toMutableSet(),
+                emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
                 utsattTil = utsattTil,
-                _tilstandslogg = tilstandslogg,
+                tilstandslogg = tilstandslogg,
                 person = person,
                 behandling = behandling,
                 meldingOmVedtak = meldingOmVedtak,
@@ -170,10 +169,9 @@ data class RettTilDagpenger private constructor(
         }
     }
 
-    val emneknagger: Set<String>
-        get() = _emneknagger.toSet()
-    val tilstandslogg: OppgaveTilstandslogg
-        get() = _tilstandslogg
+    fun emneknagger(): Set<String> = emneknagger.toSet()
+
+    fun tilstandslogg(): OppgaveTilstandslogg = tilstandslogg
 
     fun personIdent() = person.ident
 
@@ -190,17 +188,17 @@ data class RettTilDagpenger private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
-        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
-        this._emneknagger.clear()
-        this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
-        this._emneknagger.addAll(beholdEmneknagger)
+        val beholdEmneknagger = this.emneknagger().filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
+        this.emneknagger.clear()
+        this.emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
+        this.emneknagger.addAll(beholdEmneknagger)
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
     fun avbryt(avbrytOppgaveHendelse: AvbrytOppgaveHendelse) {
         adressebeskyttelseTilgangskontroll(avbrytOppgaveHendelse.utførtAv)
         egneAnsatteTilgangskontroll(avbrytOppgaveHendelse.utførtAv)
-        this._emneknagger.add(avbrytOppgaveHendelse.årsak.visningsnavn)
+        this.emneknagger.add(avbrytOppgaveHendelse.årsak.visningsnavn)
         tilstand.avbryt(this, avbrytOppgaveHendelse)
     }
 
@@ -293,12 +291,12 @@ data class RettTilDagpenger private constructor(
                 "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
-        this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
+        this.tilstandslogg().leggTil(nyTilstand.type, hendelse)
     }
 
     fun sisteSaksbehandler(): String? =
         runCatching {
-            _tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
+            tilstandslogg().firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
         }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
@@ -306,7 +304,7 @@ data class RettTilDagpenger private constructor(
 
     fun sisteBeslutter(): String? =
         runCatching {
-            _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
+            tilstandslogg().firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
         }.onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
@@ -314,7 +312,7 @@ data class RettTilDagpenger private constructor(
 
     fun soknadId(): UUID? =
         runCatching {
-            _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
+            tilstandslogg().firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 val hendelse = it.hendelse as ForslagTilVedtakHendelse
                 when (hendelse.behandletHendelseType) {
                     "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
@@ -421,8 +419,8 @@ data class RettTilDagpenger private constructor(
             } else {
                 oppgave.behandlerIdent = oppgave.sisteBeslutter()
                 oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
-                oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
-                oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
+                oppgave.emneknagger.add(TIDLIGERE_KONTROLLERT)
+                oppgave.emneknagger.remove(RETUR_FRA_KONTROLL)
             }
         }
 
@@ -460,7 +458,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
-            oppgave._emneknagger.add(utsettOppgaveHendelse.årsak.visningsnavn)
+            oppgave.emneknagger.add(utsettOppgaveHendelse.årsak.visningsnavn)
             oppgave.endreTilstand(PåVent, utsettOppgaveHendelse)
             oppgave.behandlerIdent =
                 when (utsettOppgaveHendelse.beholdOppgave) {
@@ -663,7 +661,7 @@ data class RettTilDagpenger private constructor(
                 }
             oppgave.endreTilstand(nyTilstand, hendelse)
             oppgave.utsattTil = null
-            oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
+            oppgave.emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
         }
     }
 
@@ -846,8 +844,8 @@ data class RettTilDagpenger private constructor(
 
             oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
-            oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
-            oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
+            oppgave.emneknagger.add(RETUR_FRA_KONTROLL)
+            oppgave.emneknagger.remove(TIDLIGERE_KONTROLLERT)
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
                 oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }

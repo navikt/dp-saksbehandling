@@ -7,12 +7,12 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.PåVent
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
@@ -88,31 +88,31 @@ class OppgaveFristUtgåttJobTest {
 
             repo.hentOppgave(oppgave1.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe KlarTilBehandling
-                oppgave.emneknagger shouldContain TIDLIGERE_UTSATT.visningsnavn
+                oppgave.emneknagger() shouldContain TIDLIGERE_UTSATT.visningsnavn
                 oppgave.behandlerIdent shouldBe null
-                oppgave.tilstandslogg.first().tilstand shouldBe KLAR_TIL_BEHANDLING
+                oppgave.tilstandslogg().first().tilstand shouldBe KLAR_TIL_BEHANDLING
                 oppgave.utsattTil() shouldBe null
             }
 
             repo.hentOppgave(oppgave2.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe UnderBehandling
-                oppgave.emneknagger shouldContain TIDLIGERE_UTSATT.visningsnavn
+                oppgave.emneknagger() shouldContain TIDLIGERE_UTSATT.visningsnavn
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent1
-                oppgave.tilstandslogg.first().tilstand shouldBe UNDER_BEHANDLING
+                oppgave.tilstandslogg().first().tilstand shouldBe UNDER_BEHANDLING
                 oppgave.utsattTil() shouldBe null
             }
 
             repo.hentOppgave(oppgave3.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe UnderBehandling
-                oppgave.emneknagger shouldContain TIDLIGERE_UTSATT.visningsnavn
+                oppgave.emneknagger() shouldContain TIDLIGERE_UTSATT.visningsnavn
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent2
-                oppgave.tilstandslogg.first().tilstand shouldBe UNDER_BEHANDLING
+                oppgave.tilstandslogg().first().tilstand shouldBe UNDER_BEHANDLING
                 oppgave.utsattTil() shouldBe null
             }
 
             repo.hentOppgave(oppgave4.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe PåVent
-                oppgave.emneknagger shouldNotContain TIDLIGERE_UTSATT.visningsnavn
+                oppgave.emneknagger() shouldNotContain TIDLIGERE_UTSATT.visningsnavn
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent1
                 oppgave.utsattTil() shouldNotBe null
             }

@@ -7,9 +7,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Notat
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
@@ -199,7 +199,7 @@ class OppgaveHistorikkDTOMapperTest {
             ).let { mapper ->
                 val historikk =
                     mapper.lagOppgaveHistorikk(
-                        tilstandslogg = oppgave.tilstandslogg,
+                        tilstandslogg = oppgave.tilstandslogg(),
                     )
 
                 historikk.size shouldBe 4

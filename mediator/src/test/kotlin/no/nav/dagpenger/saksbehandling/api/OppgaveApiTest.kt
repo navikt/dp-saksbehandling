@@ -30,13 +30,13 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -914,7 +914,7 @@ class OppgaveApiTest {
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         utlostAv = testOppgave.tilUtlostAvTypeDTO(),
-                        emneknagger = testOppgave.emneknagger.toList(),
+                        emneknagger = testOppgave.emneknagger().toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
@@ -1065,7 +1065,7 @@ class OppgaveApiTest {
                         tidspunktOpprettet = oppgave.opprettet,
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
                         utlostAv = oppgave.tilUtlostAvTypeDTO(),
-                        emneknagger = oppgave.emneknagger.toList(),
+                        emneknagger = oppgave.emneknagger().toList(),
                         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(

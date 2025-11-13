@@ -11,9 +11,9 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Emneknagg
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -422,7 +422,7 @@ class PostgresOppgaveRepositoryTest {
                     utførtAv = saksbehandler,
                 )
             val rehydrertOppgave = repo.hentOppgave(oppgave.oppgaveId)
-            val antallTilstandsendringer = rehydrertOppgave.tilstandslogg.size
+            val antallTilstandsendringer = rehydrertOppgave.tilstandslogg().size
 
             val filter =
                 TildelNesteOppgaveFilter(
@@ -432,7 +432,7 @@ class PostgresOppgaveRepositoryTest {
                     navIdent = saksbehandler.navIdent,
                 )
             val nesteOppgave = repo.tildelOgHentNesteOppgave(nesteOppgaveHendelse, filter)
-            nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsendringer + 1
+            nesteOppgave!!.tilstandslogg().size shouldBe antallTilstandsendringer + 1
         }
     }
 
@@ -1017,7 +1017,7 @@ class PostgresOppgaveRepositoryTest {
                 ),
             )
             repo.lagreNotatFor(oppgave)
-            repo.finnNotat(oppgave.tilstandslogg.first().id)?.hentTekst().let {
+            repo.finnNotat(oppgave.tilstandslogg().first().id)?.hentTekst().let {
                 it shouldBe "Dette er et notat"
             }
         }
@@ -1045,7 +1045,7 @@ class PostgresOppgaveRepositoryTest {
             )
             repo.lagre(oppgave)
 
-            repo.finnNotat(oppgave.tilstandslogg.first().id)?.hentTekst().let {
+            repo.finnNotat(oppgave.tilstandslogg().first().id)?.hentTekst().let {
                 it shouldBe "Dette er et notat"
             }
 
@@ -1140,9 +1140,9 @@ class PostgresOppgaveRepositoryTest {
 
             val repo = PostgresOppgaveRepository(ds)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
-            oppgaveFraDatabase.tilstandslogg.size shouldBe testOppgave.tilstandslogg.size
-            oppgaveFraDatabase.tilstandslogg.forEachIndexed { index, tilstandsendring ->
-                val testOppgaveTilstandsendring = testOppgave.tilstandslogg[index]
+            oppgaveFraDatabase.tilstandslogg().size shouldBe testOppgave.tilstandslogg().size
+            oppgaveFraDatabase.tilstandslogg().forEachIndexed { index, tilstandsendring ->
+                val testOppgaveTilstandsendring = testOppgave.tilstandslogg()[index]
                 tilstandsendring.tilstand shouldBe testOppgaveTilstandsendring.tilstand
                 tilstandsendring.id shouldBe testOppgaveTilstandsendring.id
                 tilstandsendring.hendelse shouldBe testOppgaveTilstandsendring.hendelse
@@ -1705,7 +1705,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
-            oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg
+            oppgaveFraDatabase.tilstandslogg() shouldBe testOppgave.tilstandslogg()
         }
     }
 }

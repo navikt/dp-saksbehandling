@@ -82,7 +82,7 @@ class OppgaveDTOMapperTest {
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
-                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
+                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg()) } returns
                             listOf(
                                 OppgaveHistorikkDTO(
                                     type = OppgaveHistorikkDTOTypeDTO.NOTAT,
@@ -228,7 +228,7 @@ class OppgaveDTOMapperTest {
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
-                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
+                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg()) } returns
                             listOf(
                                 OppgaveHistorikkDTO(
                                     type = OppgaveHistorikkDTOTypeDTO.NOTAT,
@@ -388,7 +388,7 @@ class OppgaveDTOMapperTest {
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
-                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
+                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg()) } returns
                             listOf(
                                 OppgaveHistorikkDTO(
                                     type = OppgaveHistorikkDTOTypeDTO.NOTAT,
@@ -548,7 +548,7 @@ class OppgaveDTOMapperTest {
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
-                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
+                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg()) } returns
                             listOf(
                                 OppgaveHistorikkDTO(
                                     type = OppgaveHistorikkDTOTypeDTO.NOTAT,

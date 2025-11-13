@@ -113,7 +113,10 @@ class OppgaveMediator(
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<RettTilDagpenger> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
+    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<RettTilDagpenger> =
+        oppgaveRepository.hentAlleOppgaverMedTilstand(
+            tilstand,
+        )
 
     fun hentOppgave(
         oppgaveId: UUID,

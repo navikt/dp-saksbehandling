@@ -457,7 +457,7 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        oppgave.emneknagger.shouldContain(RETUR_FRA_KONTROLL)
+        oppgave.emneknagger().shouldContain(RETUR_FRA_KONTROLL)
     }
 
     @Test
@@ -498,7 +498,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger
+        oppgave.emneknagger() shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger
         oppgave.tilstand() shouldBe RettTilDagpenger.KlarTilBehandling
     }
 
@@ -518,7 +518,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger
+        oppgave.emneknagger() shouldBe nyeEmneknagger + kontrollEmneknagger
         oppgave.tilstand() shouldBe RettTilDagpenger.PåVent
     }
 
@@ -538,7 +538,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger
+        oppgave.emneknagger() shouldBe nyeEmneknagger + kontrollEmneknagger
         oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
     }
 
@@ -658,8 +658,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe RettTilDagpenger.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger() shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger() shouldNotContain RETUR_FRA_KONTROLL
 
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         oppgave.tildel(
@@ -671,8 +671,8 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand() shouldBe RettTilDagpenger.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger() shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger() shouldNotContain RETUR_FRA_KONTROLL
 
         oppgave.returnerTilSaksbehandling(
             ReturnerTilSaksbehandlingHendelse(
@@ -683,8 +683,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        oppgave.emneknagger shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger() shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger() shouldContain RETUR_FRA_KONTROLL
 
         oppgave.sendTilKontroll(
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
@@ -692,8 +692,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe RettTilDagpenger.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger() shouldContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger() shouldNotContain RETUR_FRA_KONTROLL
     }
 
     @ParameterizedTest

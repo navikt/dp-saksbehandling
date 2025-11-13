@@ -4,6 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.JA
@@ -12,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -115,7 +115,7 @@ internal class OppgaveDTOMapper(
 
             val oppgaveHistorikk =
                 async {
-                    oppgaveHistorikkDTOMapper.lagOppgaveHistorikk(oppgave.tilstandslogg)
+                    oppgaveHistorikkDTOMapper.lagOppgaveHistorikk(oppgave.tilstandslogg())
                 }
             lagOppgaveDTO(
                 oppgave = oppgave,
@@ -146,7 +146,7 @@ internal class OppgaveDTOMapper(
             tidspunktOpprettet = oppgave.opprettet,
             behandlingType = oppgave.tilBehandlingTypeDTO(),
             utlostAv = oppgave.tilUtlostAvTypeDTO(),
-            emneknagger = oppgave.emneknagger.toList(),
+            emneknagger = oppgave.emneknagger().toList(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
             utsattTilDato = oppgave.utsattTil(),
@@ -241,7 +241,7 @@ internal fun RettTilDagpenger.tilOppgaveOversiktDTO() =
         tidspunktOpprettet = this.opprettet,
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
-        emneknagger = this.emneknagger.toList(),
+        emneknagger = this.emneknagger().toList(),
         skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
             when (this.person.adressebeskyttelseGradering) {

@@ -379,7 +379,7 @@ OppgaveMediatorTest {
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
 
-            oppdatertOppgave.emneknagger shouldBe testEmneknagger2
+            oppdatertOppgave.emneknagger() shouldBe testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe KlarTilBehandling
         }
     }
@@ -817,8 +817,8 @@ OppgaveMediatorTest {
             val avbruttOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
 
             avbruttOppgave.tilstand().type shouldBe AVBRUTT
-            avbruttOppgave.tilstandslogg.first().tilstand shouldBe AVBRUTT
-            avbruttOppgave.emneknagger.contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
+            avbruttOppgave.tilstandslogg().first().tilstand shouldBe AVBRUTT
+            avbruttOppgave.emneknagger().contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
             avbruttOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
@@ -850,7 +850,7 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT)
-                .single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
+                .single().emneknagger() shouldContain AVVENT_MELDEKORT.visningsnavn
         }
     }
 
