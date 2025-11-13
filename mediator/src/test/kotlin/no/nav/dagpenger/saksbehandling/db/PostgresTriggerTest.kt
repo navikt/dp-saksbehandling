@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import org.junit.jupiter.api.Test
@@ -20,7 +20,7 @@ class PostgresTriggerTest {
             val endretTidspunkt = ds.hentEndretTidspunkt(TestHelper.testOppgave.oppgaveId)
             Thread.sleep(100)
 
-            val endretOppgave = TestHelper.testOppgave.copy(tilstand = Oppgave.UnderBehandling)
+            val endretOppgave = TestHelper.testOppgave.copy(tilstand = RettTilDagpenger.UnderBehandling)
             repo.lagre(endretOppgave)
             val nyttEndretTidspunkt = ds.hentEndretTidspunkt(TestHelper.testOppgave.oppgaveId)
             nyttEndretTidspunkt.after(endretTidspunkt) shouldBe true

@@ -68,7 +68,7 @@ class KlageMediator(
         return klageBehandling
     }
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
+    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): RettTilDagpenger {
         // todo her kan en Exception kastes hvis personen ikke finnes
 
         val klageBehandling =
@@ -106,7 +106,7 @@ class KlageMediator(
             .getOrThrow()
     }
 
-    fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
+    fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): RettTilDagpenger {
         val klageBehandling =
             KlageBehandling(
                 journalpostId = manuellKlageMottattHendelse.journalpostId,
@@ -175,7 +175,7 @@ class KlageMediator(
     }
 
     private fun requireEierAvOppgave(
-        oppgave: Oppgave,
+        oppgave: RettTilDagpenger,
         saksbehandler: Saksbehandler,
     ) {
         require(oppgave.erEierAvOppgave(saksbehandler)) {
@@ -337,7 +337,7 @@ class KlageMediator(
     private fun sjekkTilgangTilOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
+    ): RettTilDagpenger {
         return oppgaveMediator.hentOppgaveHvisTilgang(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
@@ -347,7 +347,7 @@ class KlageMediator(
     private fun sjekkTilgangOgEierAvOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
+    ): RettTilDagpenger {
         return sjekkTilgangTilOppgave(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,

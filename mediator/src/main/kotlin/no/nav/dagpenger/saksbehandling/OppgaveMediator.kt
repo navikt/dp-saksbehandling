@@ -6,22 +6,22 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
-import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.Handling
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.FerdigstillBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Handling
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -66,8 +66,8 @@ class OppgaveMediator(
         this.rapidsConnection = rapidsConnection
     }
 
-    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
-        var oppgave: Oppgave? = null
+    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): RettTilDagpenger {
+        var oppgave: RettTilDagpenger? = null
 
         val sakHistorikk = sakMediator.finnSakHistorikk(behandlingOpprettetHendelse.ident)
 
@@ -84,7 +84,7 @@ class OppgaveMediator(
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
             oppgave =
-                Oppgave(
+                RettTilDagpenger(
                     oppgaveId = UUIDv7.ny(),
                     emneknagger = emptySet(),
                     opprettet = behandling.opprettet,
@@ -98,9 +98,9 @@ class OppgaveMediator(
                     person = sakHistorikk.person,
                     behandling = behandling,
                     meldingOmVedtak =
-                        Oppgave.MeldingOmVedtak(
+                        RettTilDagpenger.MeldingOmVedtak(
                             kilde = DP_SAK,
-                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                            kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
                         ),
                 )
             oppgaveRepository.lagre(oppgave)
@@ -113,12 +113,12 @@ class OppgaveMediator(
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
+    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<RettTilDagpenger> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
 
     fun hentOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave =
+    ): RettTilDagpenger =
         oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
@@ -127,7 +127,7 @@ class OppgaveMediator(
     fun hentOppgaveFor(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave =
+    ): RettTilDagpenger =
         oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
@@ -136,14 +136,14 @@ class OppgaveMediator(
     fun hentOppgaveHvisTilgang(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave =
+    ): RettTilDagpenger =
         oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
 
-    fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
-        var oppgave: Oppgave? = null
+    fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): RettTilDagpenger? {
+        var oppgave: RettTilDagpenger? = null
         val sakHistorikk = sakMediator.finnSakHistorikk(forslagTilVedtakHendelse.ident)
         val behandling =
             sakHistorikk
@@ -160,7 +160,7 @@ class OppgaveMediator(
             when (oppgave == null) {
                 true -> {
                     oppgave =
-                        Oppgave(
+                        RettTilDagpenger(
                             oppgaveId = UUIDv7.ny(),
                             emneknagger = forslagTilVedtakHendelse.emneknagger,
                             opprettet = behandling.opprettet,
@@ -174,9 +174,9 @@ class OppgaveMediator(
                             person = sakHistorikk.person,
                             behandling = behandling,
                             meldingOmVedtak =
-                                Oppgave.MeldingOmVedtak(
+                                RettTilDagpenger.MeldingOmVedtak(
                                     kilde = DP_SAK,
-                                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                                    kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
                                 ),
                         )
                     oppgaveRepository.lagre(oppgave)
@@ -216,7 +216,7 @@ class OppgaveMediator(
             }
     }
 
-    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave =
+    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): RettTilDagpenger =
         oppgaveRepository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
             oppgave.tildel(settOppgaveAnsvarHendelse)
             oppgaveRepository.lagre(oppgave)
@@ -308,7 +308,7 @@ class OppgaveMediator(
 
     fun lagreKontrollertBrev(
         oppgaveId: UUID,
-        kontrollertBrev: Oppgave.KontrollertBrev,
+        kontrollertBrev: RettTilDagpenger.KontrollertBrev,
         saksbehandler: Saksbehandler,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
@@ -330,7 +330,7 @@ class OppgaveMediator(
 
     fun endreMeldingOmVedtakKilde(
         oppgaveId: UUID,
-        meldingOmVedtakKilde: Oppgave.MeldingOmVedtakKilde,
+        meldingOmVedtakKilde: RettTilDagpenger.MeldingOmVedtakKilde,
         saksbehandler: Saksbehandler,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
@@ -424,7 +424,7 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave =
+    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): RettTilDagpenger =
         oppgaveRepository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
@@ -496,7 +496,7 @@ class OppgaveMediator(
     }
 
     private fun ferdigstillOppgaveMedUtsending(
-        oppgave: Oppgave,
+        oppgave: RettTilDagpenger,
         ferdigstillBehandling: FerdigstillBehandling,
         saksbehandlerToken: String,
     ) {
@@ -548,7 +548,7 @@ class OppgaveMediator(
     }
 
     private fun ferdigstillOppgaveUtenUtsending(
-        oppgave: Oppgave,
+        oppgave: RettTilDagpenger,
         ferdigstillBehandling: FerdigstillBehandling,
         saksbehandlerToken: String,
     ) {
@@ -612,14 +612,14 @@ class OppgaveMediator(
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID? = oppgaveRepository.hentOppgaveIdFor(behandlingId)
 
-    fun finnOppgaverFor(ident: String): List<Oppgave> = oppgaveRepository.finnOppgaverFor(ident)
+    fun finnOppgaverFor(ident: String): List<RettTilDagpenger> = oppgaveRepository.finnOppgaverFor(ident)
 
     fun søk(søkefilter: Søkefilter): OppgaveSøkResultat = oppgaveRepository.søk(søkefilter)
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,
-    ): Oppgave? {
+    ): RettTilDagpenger? {
         val tildelNesteOppgaveFilter =
             TildelNesteOppgaveFilter.fra(
                 queryString = queryString,

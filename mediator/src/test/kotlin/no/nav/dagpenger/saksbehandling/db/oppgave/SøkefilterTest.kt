@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -31,8 +31,8 @@ class SøkefilterTest {
                         ),
                     tilstander =
                         setOf(
-                            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                            Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING,
                         ),
                     utløstAvTyper =
                         setOf(
@@ -51,7 +51,7 @@ class SøkefilterTest {
         Søkefilter.fra(Parameters.Companion.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                tilstander = RettTilDagpenger.Tilstand.Type.Companion.søkbareTilstander,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,

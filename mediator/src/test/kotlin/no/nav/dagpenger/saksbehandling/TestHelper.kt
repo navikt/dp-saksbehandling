@@ -3,11 +3,11 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -172,7 +172,7 @@ internal object TestHelper {
     }
 
     fun lagOppgave(
-        tilstand: Oppgave.Tilstand = KlarTilBehandling,
+        tilstand: RettTilDagpenger.Tilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
@@ -181,8 +181,8 @@ internal object TestHelper {
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
-    ): Oppgave {
-        return Oppgave.rehydrer(
+    ): RettTilDagpenger {
+        return RettTilDagpenger.rehydrer(
             oppgaveId = oppgaveId,
             behandlerIdent = saksbehandlerIdent,
             opprettet = opprettet,
@@ -193,9 +193,9 @@ internal object TestHelper {
             person = person,
             behandling = behandling,
             meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
+                RettTilDagpenger.MeldingOmVedtak(
                     kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
                 ),
         )
     }

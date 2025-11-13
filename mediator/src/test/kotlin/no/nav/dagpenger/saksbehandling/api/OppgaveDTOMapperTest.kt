@@ -5,8 +5,8 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
@@ -41,7 +41,7 @@ class OppgaveDTOMapperTest {
         runBlocking {
             val oppgave =
                 TestHelper.lagOppgave(
-                    tilstand = Oppgave.UnderKontroll(),
+                    tilstand = RettTilDagpenger.UnderKontroll(),
                     opprettet = etTidspunkt,
                     person = TestHelper.testPerson,
                     tilstandslogg = TestHelper.lagTilstandLogg(),

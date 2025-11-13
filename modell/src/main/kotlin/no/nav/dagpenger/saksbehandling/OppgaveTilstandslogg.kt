@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 class OppgaveTilstandslogg(
-    tilstandsendringer: List<Tilstandsendring<Oppgave.Tilstand.Type>> = listOf(),
-) : Tilstandslogg<Oppgave.Tilstand.Type>(tilstandsendringer.toMutableList()) {
-    constructor(vararg tilstandsEndringer: Tilstandsendring<Oppgave.Tilstand.Type>) : this(tilstandsEndringer.toMutableList())
+    tilstandsendringer: List<Tilstandsendring<RettTilDagpenger.Tilstand.Type>> = listOf(),
+) : Tilstandslogg<RettTilDagpenger.Tilstand.Type>(tilstandsendringer.toMutableList()) {
+    constructor(vararg tilstandsEndringer: Tilstandsendring<RettTilDagpenger.Tilstand.Type>) : this(tilstandsEndringer.toMutableList())
 }

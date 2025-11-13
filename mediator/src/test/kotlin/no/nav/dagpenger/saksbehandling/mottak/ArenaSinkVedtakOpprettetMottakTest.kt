@@ -7,7 +7,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
@@ -21,7 +21,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
     private val testRapid = TestRapid()
     private val sakId = "123"
     private val søknadId = UUIDv7.ny()
-    private val testOppgave = TestHelper.lagOppgave(tilstand = Oppgave.FerdigBehandlet)
+    private val testOppgave = TestHelper.lagOppgave(tilstand = RettTilDagpenger.FerdigBehandlet)
     private val mockPersonRepository =
         mockk<PersonRepository>(relaxed = true).apply {
             every { hentPersonForBehandlingId(testOppgave.behandling.behandlingId) } returns testOppgave.person

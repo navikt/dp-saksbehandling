@@ -8,20 +8,20 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
-import no.nav.dagpenger.saksbehandling.Oppgave.Companion.RETUR_FRA_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
-import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AlleredeTildeltException
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Companion.RETUR_FRA_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Companion.kontrollEmneknagger
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Companion.påVentEmneknagger
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
@@ -107,14 +107,14 @@ class OppgaveTilstandTest {
             )
 
         lagOppgave(tilstandType = OPPRETTET).let { oppgave ->
-            oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe Oppgave.Handling.LAGRE_OPPGAVE
+            oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe RettTilDagpenger.Handling.LAGRE_OPPGAVE
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         }
 
         setOf(KLAR_TIL_BEHANDLING, PAA_VENT, UNDER_BEHANDLING).forEach { tilstand ->
             lagOppgave(tilstandType = tilstand).let { oppgave ->
                 val tilstandFørHendelse = oppgave.tilstand().type
-                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe Oppgave.Handling.LAGRE_OPPGAVE
+                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe RettTilDagpenger.Handling.LAGRE_OPPGAVE
                 oppgave.tilstand().type shouldBe tilstandFørHendelse
             }
         }
@@ -151,8 +151,8 @@ class OppgaveTilstandTest {
             }
 
             when (tilstand) {
-                in setOf(UNDER_BEHANDLING, UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe Oppgave.Handling.INGEN
-                else -> resultat shouldBe Oppgave.Handling.LAGRE_OPPGAVE
+                in setOf(UNDER_BEHANDLING, UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe RettTilDagpenger.Handling.INGEN
+                else -> resultat shouldBe RettTilDagpenger.Handling.LAGRE_OPPGAVE
             }
         }
 
@@ -194,8 +194,8 @@ class OppgaveTilstandTest {
             oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
             when (tilstand) {
-                in setOf(FERDIG_BEHANDLET) -> resultat shouldBe Oppgave.Handling.INGEN
-                else -> resultat shouldBe Oppgave.Handling.LAGRE_OPPGAVE
+                in setOf(FERDIG_BEHANDLET) -> resultat shouldBe RettTilDagpenger.Handling.INGEN
+                else -> resultat shouldBe RettTilDagpenger.Handling.LAGRE_OPPGAVE
             }
         }
 
@@ -499,7 +499,7 @@ class OppgaveTilstandTest {
             )
         }
         oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger
-        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.KlarTilBehandling
     }
 
     @Test
@@ -519,7 +519,7 @@ class OppgaveTilstandTest {
             )
         }
         oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger
-        oppgave.tilstand() shouldBe Oppgave.PåVent
+        oppgave.tilstand() shouldBe RettTilDagpenger.PåVent
     }
 
     @Test
@@ -539,7 +539,7 @@ class OppgaveTilstandTest {
             )
         }
         oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
     }
 
     @Test
@@ -570,13 +570,13 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.PåVent
+        oppgave.tilstand() shouldBe RettTilDagpenger.PåVent
         oppgave.utsattTil() shouldBe utsattTil
         oppgave.behandlerIdent shouldBe null
 
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
 
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
         oppgave.utsattTil() shouldBe null
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
@@ -596,7 +596,7 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.PåVent
+        oppgave.tilstand() shouldBe RettTilDagpenger.PåVent
         oppgave.utsattTil() shouldBe utsattTil
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
@@ -623,7 +623,7 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.KlarTilBehandling
         oppgave.utsattTil() shouldBe null
         oppgave.behandlerIdent shouldBe null
     }
@@ -636,7 +636,7 @@ class OppgaveTilstandTest {
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
+        oppgave.tilstand() shouldBe RettTilDagpenger.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
     }
 
@@ -656,9 +656,9 @@ class OppgaveTilstandTest {
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
+        oppgave.tilstand() shouldBe RettTilDagpenger.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
         oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
 
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
@@ -669,9 +669,9 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
         oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
 
         oppgave.returnerTilSaksbehandling(
@@ -681,18 +681,18 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
         oppgave.emneknagger shouldContain RETUR_FRA_KONTROLL
 
         oppgave.sendTilKontroll(
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldContain RettTilDagpenger.TIDLIGERE_KONTROLLERT
         oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
     }
 
@@ -740,7 +740,7 @@ class OppgaveTilstandTest {
                 utførtAv = saksbehandler,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
 
@@ -772,7 +772,7 @@ class OppgaveTilstandTest {
                 utførtAv = saksbehandler,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.tilstand() shouldBe RettTilDagpenger.UnderBehandling
     }
 
     @Test
@@ -815,7 +815,7 @@ class OppgaveTilstandTest {
                 ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+        oppgave.tilstand() shouldBe RettTilDagpenger.FerdigBehandlet
         oppgave.behandlerIdent shouldBe beslutter.navIdent
     }
 

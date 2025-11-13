@@ -7,8 +7,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Notat
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -117,7 +117,7 @@ class OppgaveHistorikkDTOMapperTest {
         runBlocking {
             val oppgave =
                 TestHelper.lagOppgave(
-                    tilstand = Oppgave.KlarTilBehandling,
+                    tilstand = RettTilDagpenger.KlarTilBehandling,
                 )
             val saksbehandler =
                 Saksbehandler(

@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpenger
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -26,7 +26,7 @@ class RelevanteJournalpostIdOppslagTest {
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             hendelse =
                                 ForslagTilVedtakHendelse(
                                     behandletHendelseId = UUIDv7.ny().toString(),
