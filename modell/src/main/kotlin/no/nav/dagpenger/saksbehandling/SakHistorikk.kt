@@ -25,6 +25,12 @@ data class SakHistorikk(
             .firstOrNull { it.behandlingId == behandlingId }
     }
 
+    inline fun <reified T : Behandling> finnBehandlingAvType(behandlingId: UUID): T? {
+        return saker().asSequence()
+            .flatMap { it.behandlinger() }
+            .firstOrNull { it.behandlingId == behandlingId && it is T } as T?
+    }
+
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat {
         return saker.map { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }.knyttTilSakResultat()
     }
@@ -42,7 +48,8 @@ data class SakHistorikk(
     }
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
-        val sakerTilKnyttet: List<KnyttTilSakResultat.KnyttetTilSak> = this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
+        val sakerTilKnyttet: List<KnyttTilSakResultat.KnyttetTilSak> =
+            this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
         return when (sakerTilKnyttet.size) {
             0 -> {
                 KnyttTilSakResultat.IkkeKnyttetTilSak(*saker.map { it.sakId }.toTypedArray())

@@ -176,7 +176,7 @@ internal object TestHelper {
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
-        behandling: Behandling = lagBehandling(opprettet = opprettet),
+        behandling: RettTilDagpengerBehandling = lagBehandling(opprettet = opprettet),
         emneknagger: Set<String> = emptySet(),
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
@@ -205,24 +205,13 @@ internal object TestHelper {
         opprettet: LocalDateTime = opprettetNå,
         hendelse: Hendelse = TomHendelse,
         utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
-    ): Behandling {
-        return when (utløstAvType) {
-            UtløstAvType.KLAGE ->
-                KlageBehandling.rehydrer(
-                    behandlingId = behandlingId,
-                    opprettet = opprettet,
-                    hendelse = hendelse,
-                )
-
-            else -> {
-                RettTilDagpengerBehandling.rehydrer(
-                    behandlingId = behandlingId,
-                    opprettet = opprettet,
-                    hendelse = hendelse,
-                    utløstAv = utløstAvType,
-                )
-            }
-        }
+    ): RettTilDagpengerBehandling {
+        return RettTilDagpengerBehandling.rehydrer(
+            behandlingId = behandlingId,
+            opprettet = opprettet,
+            hendelse = hendelse,
+            utløstAv = utløstAvType,
+        )
     }
 
     fun lagUtsending(

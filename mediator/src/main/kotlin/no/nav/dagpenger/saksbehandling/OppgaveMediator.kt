@@ -73,7 +73,7 @@ class OppgaveMediator(
 
         val behandling =
             sakHistorikk
-                ?.finnBehandling(behandlingOpprettetHendelse.behandlingId)
+                ?.finnBehandlingAvType<RettTilDagpengerBehandling>(behandlingOpprettetHendelse.behandlingId)
 
         if (behandling == null) {
             val feilmelding =
@@ -150,7 +150,7 @@ class OppgaveMediator(
         val sakHistorikk = sakMediator.finnSakHistorikk(forslagTilVedtakHendelse.ident)
         val behandling =
             sakHistorikk
-                ?.finnBehandling(forslagTilVedtakHendelse.behandlingId)
+                ?.finnBehandlingAvType<RettTilDagpengerBehandling>(forslagTilVedtakHendelse.behandlingId)
 
         if (behandling == null) {
             val feilmelding =

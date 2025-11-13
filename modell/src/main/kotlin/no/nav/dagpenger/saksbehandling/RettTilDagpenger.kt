@@ -55,7 +55,7 @@ data class RettTilDagpenger private constructor(
     override var utsattTil: LocalDate? = null,
     override val tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     override val person: Person,
-    override val behandling: Behandling,
+    override val behandling: RettTilDagpengerBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
 ) : Oppgave() {
     constructor(
@@ -66,7 +66,7 @@ data class RettTilDagpenger private constructor(
         behandlerIdent: String? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
-        behandling: Behandling,
+        behandling: RettTilDagpengerBehandling,
         meldingOmVedtak: MeldingOmVedtak,
     ) : this(
         oppgaveId = oppgaveId,
@@ -99,7 +99,7 @@ data class RettTilDagpenger private constructor(
             utsattTil: LocalDate?,
             tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             person: Person,
-            behandling: Behandling,
+            behandling: RettTilDagpengerBehandling,
             meldingOmVedtak: MeldingOmVedtak,
         ): RettTilDagpenger =
             RettTilDagpenger(
