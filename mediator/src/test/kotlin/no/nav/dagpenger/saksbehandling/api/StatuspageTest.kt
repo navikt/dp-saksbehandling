@@ -9,10 +9,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.ManglendeBeslutterTilgang
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.ManglendeBeslutterTilgang
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
@@ -388,7 +388,7 @@ class StatuspageTest {
                     sakMediator = mockk(),
                 )
                 routing {
-                    get(path) { throw RettTilDagpenger.AlleredeTildeltException(message) }
+                    get(path) { throw RettTilDagpengerOppgave.AlleredeTildeltException(message) }
                 }
             }
 

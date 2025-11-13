@@ -23,7 +23,6 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
@@ -48,7 +47,6 @@ class KlageApiTest {
     private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
     private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
-    private val dato = LocalDateTime.of(2025, 1, 1, 1, 1)
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
@@ -98,7 +96,7 @@ class KlageApiTest {
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
         val sakId = UUIDv7.ny()
-        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = KLAGE), opprettet = dato)
+        val oppgave = TestHelper.lagKlageOppgave(behandling = TestHelper.lagKlageBehandling(), opprettet = opprettet)
         val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
@@ -108,7 +106,7 @@ class KlageApiTest {
                             KlageMottattHendelse(
                                 ident = oppgave.personIdent(),
                                 sakId = sakId,
-                                opprettet = dato,
+                                opprettet = opprettet,
                                 journalpostId = "journalpostId",
                             ),
                     )
@@ -124,7 +122,7 @@ class KlageApiTest {
                     """
                     {
                         "journalpostId": "journalpostId",
-                        "opprettet": "$dato",
+                        "opprettet": "$opprettet",
                         "sakId": "$sakId",
                         "personIdent": {"ident":  "$ident"}
                     }
@@ -153,7 +151,7 @@ class KlageApiTest {
                     KlageMottattHendelse(
                         ident = ident,
                         sakId = sakId,
-                        opprettet = dato,
+                        opprettet = opprettet,
                         journalpostId = "journalpostId",
                     ),
             )
@@ -163,7 +161,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
-        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = KLAGE), opprettet = dato)
+        val oppgave = TestHelper.lagKlageOppgave(behandling = TestHelper.lagKlageBehandling(), opprettet = opprettet)
         val ident = oppgave.personIdent()
         val sakId = UUIDv7.ny()
         val mediator =
@@ -174,7 +172,7 @@ class KlageApiTest {
                             ManuellKlageMottattHendelse(
                                 ident = oppgave.personIdent(),
                                 sakId = sakId,
-                                opprettet = dato,
+                                opprettet = opprettet,
                                 journalpostId = "journalpostId",
                                 utførtAv = TestHelper.saksbehandler,
                             ),
@@ -191,7 +189,7 @@ class KlageApiTest {
                     """
                     {
                         "journalpostId": "journalpostId",
-                        "opprettet": "$dato",
+                        "opprettet": "$opprettet",
                         "sakId": "$sakId",
                         "personIdent": {"ident":  "$ident"}
                     }
@@ -220,7 +218,7 @@ class KlageApiTest {
                     ManuellKlageMottattHendelse(
                         ident = ident,
                         sakId = sakId,
-                        opprettet = dato,
+                        opprettet = opprettet,
                         journalpostId = "journalpostId",
                         utførtAv = TestHelper.saksbehandler,
                     ),

@@ -5,7 +5,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -22,11 +22,11 @@ class RelevanteJournalpostIdOppslagTest {
     @Test
     fun `For søknadsbehandling skal vi først hente journalposter for søknad og ettersendinger sortert stigende og deretter utsending`() {
         val oppgave =
-            TestHelper.lagOppgave(
+            TestHelper.lagRettTilDPOppgave(
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             hendelse =
                                 ForslagTilVedtakHendelse(
                                     behandletHendelseId = UUIDv7.ny().toString(),
@@ -60,7 +60,7 @@ class RelevanteJournalpostIdOppslagTest {
 
     @Test
     fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
-        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE))
+        val oppgave = TestHelper.lagRettTilDPOppgave(behandling = TestHelper.lagRettTilDPBehandling(utløstAvType = UtløstAvType.KLAGE))
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient = mockk(),

@@ -1,17 +1,17 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
@@ -25,24 +25,24 @@ object ModellTestHelper {
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         emneknagger: Set<String> = emptySet(),
         hendelse: Hendelse = TomHendelse,
-        meldingOmVedtakKilde: RettTilDagpenger.MeldingOmVedtak =
-            RettTilDagpenger.MeldingOmVedtak(
-                kilde = RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK,
-                kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
+        meldingOmVedtakKilde: MeldingOmVedtak =
+            MeldingOmVedtak(
+                kilde = MeldingOmVedtakKilde.DP_SAK,
+                kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
             ),
-    ): RettTilDagpenger {
+    ): RettTilDagpengerOppgave {
         val tilstand =
             when (tilstandType) {
-                OPPRETTET -> RettTilDagpenger.Opprettet
-                KLAR_TIL_BEHANDLING -> RettTilDagpenger.KlarTilBehandling
-                FERDIG_BEHANDLET -> RettTilDagpenger.FerdigBehandlet
-                UNDER_BEHANDLING -> RettTilDagpenger.UnderBehandling
-                PAA_VENT -> RettTilDagpenger.PåVent
-                KLAR_TIL_KONTROLL -> RettTilDagpenger.KlarTilKontroll
-                UNDER_KONTROLL -> RettTilDagpenger.UnderKontroll()
-                AVVENTER_LÅS_AV_BEHANDLING -> RettTilDagpenger.AvventerLåsAvBehandling
-                AVVENTER_OPPLÅSING_AV_BEHANDLING -> RettTilDagpenger.AvventerOpplåsingAvBehandling
-                AVBRUTT -> RettTilDagpenger.Avbrutt
+                OPPRETTET -> RettTilDagpengerOppgave.Opprettet
+                KLAR_TIL_BEHANDLING -> RettTilDagpengerOppgave.KlarTilBehandling
+                FERDIG_BEHANDLET -> RettTilDagpengerOppgave.FerdigBehandlet
+                UNDER_BEHANDLING -> RettTilDagpengerOppgave.UnderBehandling
+                PAA_VENT -> RettTilDagpengerOppgave.PåVent
+                KLAR_TIL_KONTROLL -> RettTilDagpengerOppgave.KlarTilKontroll
+                UNDER_KONTROLL -> RettTilDagpengerOppgave.UnderKontroll()
+                AVVENTER_LÅS_AV_BEHANDLING -> RettTilDagpengerOppgave.AvventerLåsAvBehandling
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
+                AVBRUTT -> RettTilDagpengerOppgave.Avbrutt
             }
         val person =
             lagPerson(
@@ -56,7 +56,7 @@ object ModellTestHelper {
                 utløstAv = UtløstAvType.SØKNAD,
                 hendelse = hendelse,
             )
-        return RettTilDagpenger.rehydrer(
+        return RettTilDagpengerOppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             behandlerIdent = behandler?.navIdent,
             opprettet = LocalDateTime.now(),

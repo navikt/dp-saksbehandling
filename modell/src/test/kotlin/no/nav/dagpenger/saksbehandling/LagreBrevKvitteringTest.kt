@@ -3,14 +3,14 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.NEI
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.JA
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.NEI
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UlovligKvitteringAvKontrollertBrev
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UlovligKvitteringAvKontrollertBrev
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import org.junit.jupiter.api.Test
@@ -48,7 +48,7 @@ class LagreBrevKvitteringTest {
                 UNDER_KONTROLL,
                 saksbehandler,
                 meldingOmVedtakKilde =
-                    RettTilDagpenger.MeldingOmVedtak(
+                    MeldingOmVedtak(
                         kilde = GOSYS,
                         kontrollertGosysBrev = NEI,
                     ),

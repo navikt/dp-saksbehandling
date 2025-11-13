@@ -55,7 +55,7 @@ class OppgaveMediatorTilgangskontrollTest {
         forventetTilgang: Boolean,
     ) {
         val oppgave =
-            TestHelper.lagOppgave(person = TestHelper.lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering))
+            TestHelper.lagRettTilDPOppgave(person = TestHelper.lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering))
         val saksbehandler =
             Saksbehandler(
                 navIdent = "saksbehandler",
@@ -82,7 +82,7 @@ class OppgaveMediatorTilgangskontrollTest {
 
     @Test
     fun `Saksbehandler må ha tilgang for å hente en oppgave med egne ansatte`() {
-        val oppgave = TestHelper.lagOppgave(person = TestHelper.lagPerson(skjermesSomEgneAnsatte = true))
+        val oppgave = TestHelper.lagRettTilDPOppgave(person = TestHelper.lagPerson(skjermesSomEgneAnsatte = true))
 
         val oppgaveRepositoryMock =
             mockk<OppgaveRepository>().also { every { it.hentOppgave(oppgave.oppgaveId) } returns oppgave }

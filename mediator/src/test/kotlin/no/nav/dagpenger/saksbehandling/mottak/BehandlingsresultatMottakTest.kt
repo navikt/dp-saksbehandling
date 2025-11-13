@@ -6,7 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
-import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagRettTilDPBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -18,10 +18,10 @@ class BehandlingsresultatMottakTest {
     private val behandlingIdUtenOppgave = UUID.randomUUID()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val oppgave =
-        TestHelper.lagOppgave(
+        TestHelper.lagRettTilDPOppgave(
             opprettet = opprettet,
             person = TestHelper.testPerson,
-            behandling = lagBehandling(behandlingId = behandlingId),
+            behandling = lagRettTilDPBehandling(behandlingId = behandlingId),
         )
 
     private val testRapid = TestRapid()

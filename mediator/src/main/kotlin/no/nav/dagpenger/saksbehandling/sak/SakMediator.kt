@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -106,13 +106,13 @@ class SakMediator(
         }
     }
 
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also {
+    fun knyttTilSak(klageBehandlingOpprettetHendelse: KlageBehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(klageBehandlingOpprettetHendelse.ident).also {
+            it.knyttTilSak(klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse).also {
                     resultat ->
                 sjekkResultat(
-                    behandlingOpprettetHendelse.behandlingId,
-                    behandlingOpprettetHendelse.javaClass.simpleName,
+                    klageBehandlingOpprettetHendelse.behandlingId,
+                    klageBehandlingOpprettetHendelse.javaClass.simpleName,
                     resultat,
                 )
             }

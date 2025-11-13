@@ -32,11 +32,11 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.Companion.søkbareTilstander
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.Companion.søkbareTilstander
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -141,15 +141,15 @@ class OppgaveApiTest {
     fun `GET på oppgaver uten query parameters`() {
         val iMorgen = LocalDate.now().plusDays(1)
         val oppgave1 =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.KlarTilBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
                 utsattTil = iMorgen,
                 person = TestHelper.testPerson,
             )
         val oppgave2 =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.KlarTilBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
                 person =
                     TestHelper.lagPerson(
                         skjermesSomEgneAnsatte = true,
@@ -215,8 +215,8 @@ class OppgaveApiTest {
             mockk<OppgaveMediator>().also {
                 val oppgaveSøkResultat =
                     listOf(
-                        TestHelper.lagOppgave(tilstand = RettTilDagpenger.KlarTilBehandling),
-                        TestHelper.lagOppgave(tilstand = RettTilDagpenger.KlarTilBehandling),
+                        TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.KlarTilBehandling),
+                        TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.KlarTilBehandling),
                     ).let {
                         PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
                     }
@@ -252,8 +252,8 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver basert på emneknagg`() {
         val søkResultat =
             listOf(
-                TestHelper.lagOppgave(tilstand = RettTilDagpenger.KlarTilBehandling),
-                TestHelper.lagOppgave(tilstand = RettTilDagpenger.KlarTilBehandling),
+                TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.KlarTilBehandling),
+                TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.KlarTilBehandling),
             ).let {
                 PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
             }
@@ -291,8 +291,8 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val søkResultat =
             listOf(
-                TestHelper.lagOppgave(tilstand = RettTilDagpenger.UnderBehandling),
-                TestHelper.lagOppgave(tilstand = RettTilDagpenger.UnderBehandling),
+                TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.UnderBehandling),
+                TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.UnderBehandling),
             ).let {
                 PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
             }
@@ -407,8 +407,8 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne ferdigstille en oppgave`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
@@ -444,8 +444,8 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne sende en oppgave til kontroll`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
@@ -470,8 +470,8 @@ class OppgaveApiTest {
     @Test
     fun `Skal feile på send til kontroll hvis oppgaven ikke trenger totrinns`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
@@ -501,8 +501,8 @@ class OppgaveApiTest {
     @Test
     fun `Beslutter skal kunne sende en oppgave tilbake til saksbehandler`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderKontroll(),
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderKontroll(),
                 saksbehandlerIdent = TestHelper.beslutter.navIdent,
             )
         val beslutterToken =
@@ -531,8 +531,8 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.KlarTilBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
                 tilstandslogg =
                     OppgaveTilstandslogg(
@@ -629,7 +629,7 @@ class OppgaveApiTest {
                     utførtAv = TestHelper.saksbehandler,
                 ),
             )
-        } returns TestHelper.lagOppgave(oppgaveId = testOppgaveId, tilstand = RettTilDagpenger.UnderBehandling)
+        } returns TestHelper.lagRettTilDPOppgave(oppgaveId = testOppgaveId, tilstand = RettTilDagpengerOppgave.UnderBehandling)
 
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/$testOppgaveId/tildel") { autentisert() }.also { response ->
@@ -689,8 +689,8 @@ class OppgaveApiTest {
     fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
 
@@ -723,8 +723,8 @@ class OppgaveApiTest {
     fun `Saksbehandler skal kunne utsette oppgave`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val utsettTilDato = LocalDate.now().plusDays(1)
@@ -769,8 +769,8 @@ class OppgaveApiTest {
     @Test
     fun `Saksbehandler skal kunne avbryte en oppgave`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
@@ -819,8 +819,8 @@ class OppgaveApiTest {
     @Test
     fun `Skal får 404 hvis man forsøker å avbryte en oppgave som ikke finnes`() {
         val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderBehandling,
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
@@ -877,8 +877,8 @@ class OppgaveApiTest {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
 
         val testOppgave =
-            TestHelper.lagOppgave(
-                tilstand = RettTilDagpenger.UnderKontroll(),
+            TestHelper.lagRettTilDPOppgave(
+                tilstand = RettTilDagpengerOppgave.UnderKontroll(),
                 saksbehandlerIdent = TestHelper.beslutter.navIdent,
                 person = TestHelper.testPerson,
             )
@@ -1034,9 +1034,9 @@ class OppgaveApiTest {
     fun `Hent oppgave for person uten sikkerhetstiltak`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
         val oppgave =
-            TestHelper.lagOppgave(
+            TestHelper.lagRettTilDPOppgave(
                 person = TestHelper.testPerson,
-                tilstand = RettTilDagpenger.UnderBehandling,
+                tilstand = RettTilDagpengerOppgave.UnderBehandling,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns oppgave
@@ -1193,8 +1193,8 @@ class OppgaveApiTest {
             mockk<OppgaveMediator>().also {
                 every { it.finnOppgaverFor(TestHelper.personIdent) } returns
                     listOf(
-                        TestHelper.lagOppgave(tilstand = RettTilDagpenger.FerdigBehandlet),
-                        TestHelper.lagOppgave(tilstand = RettTilDagpenger.FerdigBehandlet),
+                        TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.FerdigBehandlet),
+                        TestHelper.lagRettTilDPOppgave(tilstand = RettTilDagpengerOppgave.FerdigBehandlet),
                     )
             }
         withOppgaveApi(oppgaveMediatorMock) {

@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -95,14 +95,14 @@ data class Sak(
     }
 
     // todo denne  gjelder kun for Klage, var nok ment som noe generisk
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return when (this.sakId == behandlingOpprettetHendelse.sakId) {
+    fun knyttTilSak(klageBehandlingOpprettetHendelse: KlageBehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return when (this.sakId == klageBehandlingOpprettetHendelse.sakId) {
             true -> {
                 behandlinger.add(
                     KlageBehandling(
-                        behandlingId = behandlingOpprettetHendelse.behandlingId,
-                        opprettet = behandlingOpprettetHendelse.opprettet,
-                        hendelse = behandlingOpprettetHendelse,
+                        behandlingId = klageBehandlingOpprettetHendelse.behandlingId,
+                        opprettet = klageBehandlingOpprettetHendelse.opprettet,
+                        hendelse = klageBehandlingOpprettetHendelse,
                     ),
                 )
                 KnyttTilSakResultat.KnyttetTilSak(this)

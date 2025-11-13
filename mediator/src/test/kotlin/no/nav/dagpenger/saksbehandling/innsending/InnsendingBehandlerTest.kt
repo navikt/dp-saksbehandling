@@ -17,7 +17,7 @@ import java.util.UUID
 class InnsendingBehandlerTest {
     private val saksbehandler = Saksbehandler("Z123456", emptySet())
     private val testInnsending = TestHelper.testInnsending
-    private val testOppgave = TestHelper.testOppgave
+    private val klageOppgave = TestHelper.klageOppgave
 
     @Test
     fun `Behandle en innsending med aksjon av type Avslutt `() {
@@ -44,7 +44,7 @@ class InnsendingBehandlerTest {
             mockk<KlageMediator>().also {
                 every {
                     it.opprettKlage(capture(slot))
-                } returns testOppgave
+                } returns klageOppgave
             }
         val innsendingBehandler =
             InnsendingBehandler(
@@ -59,7 +59,7 @@ class InnsendingBehandlerTest {
             .let {
                 it.innsendingId shouldBe testInnsending.innsendingId
                 it.aksjon shouldBe "OpprettKlage"
-                it.behandlingId shouldBe testOppgave.behandling.behandlingId
+                it.behandlingId shouldBe klageOppgave.behandling.behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 

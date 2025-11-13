@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import org.junit.jupiter.api.Test
@@ -14,15 +14,15 @@ import javax.sql.DataSource
 class PostgresTriggerTest {
     @Test
     fun `Når en oppgave endres så skal endret_tidspunkt oppdateres`() {
-        DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
+        DBTestHelper.withOppgave(TestHelper.rettTilDagpengerOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(TestHelper.testOppgave)
-            val endretTidspunkt = ds.hentEndretTidspunkt(TestHelper.testOppgave.oppgaveId)
+            repo.lagre(TestHelper.rettTilDagpengerOppgave)
+            val endretTidspunkt = ds.hentEndretTidspunkt(TestHelper.rettTilDagpengerOppgave.oppgaveId)
             Thread.sleep(100)
 
-            val endretOppgave = TestHelper.testOppgave.copy(tilstand = RettTilDagpenger.UnderBehandling)
+            val endretOppgave = TestHelper.rettTilDagpengerOppgave.copy(tilstand = RettTilDagpengerOppgave.UnderBehandling)
             repo.lagre(endretOppgave)
-            val nyttEndretTidspunkt = ds.hentEndretTidspunkt(TestHelper.testOppgave.oppgaveId)
+            val nyttEndretTidspunkt = ds.hentEndretTidspunkt(TestHelper.rettTilDagpengerOppgave.oppgaveId)
             nyttEndretTidspunkt.after(endretTidspunkt) shouldBe true
         }
     }

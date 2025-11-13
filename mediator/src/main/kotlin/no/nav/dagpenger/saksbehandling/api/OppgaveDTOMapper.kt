@@ -4,15 +4,16 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.NEI
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.JA
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.NEI
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.INGEN
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -100,7 +101,7 @@ internal class OppgaveDTOMapper(
         )
     }
 
-    suspend fun lagOppgaveDTO(oppgave: RettTilDagpenger): OppgaveDTO {
+    suspend fun lagOppgaveDTO(oppgave: RettTilDagpengerOppgave): OppgaveDTO {
         return coroutineScope {
             val person = async { oppslag.hentPerson(oppgave.personIdent()) }
             val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
@@ -130,7 +131,7 @@ internal class OppgaveDTOMapper(
     }
 
     private fun lagOppgaveDTO(
-        oppgave: RettTilDagpenger,
+        oppgave: RettTilDagpengerOppgave,
         person: PDLPersonIntern,
         journalpostIder: Set<String>,
         sisteSaksbehandlerDTO: BehandlerDTO? = null,
@@ -233,7 +234,7 @@ internal class OppgaveDTOMapper(
     }
 }
 
-internal fun RettTilDagpenger.tilOppgaveOversiktDTO() =
+internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
         behandlingId = this.behandling.behandlingId,
@@ -255,7 +256,7 @@ internal fun RettTilDagpenger.tilOppgaveOversiktDTO() =
         utsattTilDato = this.utsattTil(),
     )
 
-internal fun List<RettTilDagpenger>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> {
+internal fun List<RettTilDagpengerOppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
@@ -266,22 +267,22 @@ internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktRe
     )
 }
 
-internal fun RettTilDagpenger.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
+internal fun RettTilDagpengerOppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
     return when (this) {
-        is RettTilDagpenger.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        is RettTilDagpenger.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        is RettTilDagpenger.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
-        is RettTilDagpenger.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
-        is RettTilDagpenger.PåVent -> OppgaveTilstandDTO.PAA_VENT
-        is RettTilDagpenger.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
-        is RettTilDagpenger.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
-        is RettTilDagpenger.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
-        is RettTilDagpenger.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
-        is RettTilDagpenger.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
+        is RettTilDagpengerOppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
+        is RettTilDagpengerOppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        is RettTilDagpengerOppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        is RettTilDagpengerOppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        is RettTilDagpengerOppgave.PåVent -> OppgaveTilstandDTO.PAA_VENT
+        is RettTilDagpengerOppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
+        is RettTilDagpengerOppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
+        is RettTilDagpengerOppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
+        is RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
+        is RettTilDagpengerOppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
     }
 }
 
-internal fun RettTilDagpenger.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
+internal fun RettTilDagpengerOppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     return TildeltOppgaveDTO(
         nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
         behandlingType = this.tilBehandlingTypeDTO(),
@@ -289,7 +290,7 @@ internal fun RettTilDagpenger.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     )
 }
 
-internal fun RettTilDagpenger.tilBehandlingTypeDTO(): BehandlingTypeDTO {
+internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     return when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
@@ -298,7 +299,7 @@ internal fun RettTilDagpenger.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     }
 }
 
-internal fun RettTilDagpenger.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
+internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
     return when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE

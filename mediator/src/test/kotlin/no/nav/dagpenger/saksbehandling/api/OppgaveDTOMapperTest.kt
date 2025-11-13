@@ -5,8 +5,8 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
@@ -40,8 +40,8 @@ class OppgaveDTOMapperTest {
 
         runBlocking {
             val oppgave =
-                TestHelper.lagOppgave(
-                    tilstand = RettTilDagpenger.UnderKontroll(),
+                TestHelper.lagRettTilDPOppgave(
+                    tilstand = RettTilDagpengerOppgave.UnderKontroll(),
                     opprettet = etTidspunkt,
                     person = TestHelper.testPerson,
                     tilstandslogg = TestHelper.lagTilstandLogg(),
@@ -187,7 +187,7 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                TestHelper.lagOppgave(
+                TestHelper.lagRettTilDPOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
                     tilstandslogg = TestHelper.lagTilstandLogg(),
@@ -346,10 +346,10 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                TestHelper.lagOppgave(
+                TestHelper.lagRettTilDPOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = MANUELL),
+                    behandling = TestHelper.lagRettTilDPBehandling(utløstAvType = MANUELL),
                     tilstandslogg = TestHelper.lagTilstandLogg(),
                 )
             OppgaveDTOMapper(
@@ -506,10 +506,10 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                TestHelper.lagOppgave(
+                TestHelper.lagRettTilDPOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = MELDEKORT),
+                    behandling = TestHelper.lagRettTilDPBehandling(utløstAvType = MELDEKORT),
                     tilstandslogg = TestHelper.lagTilstandLogg(),
                 )
             OppgaveDTOMapper(

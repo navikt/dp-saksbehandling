@@ -9,8 +9,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -98,7 +98,7 @@ class OppgaveMediatorAlertTest {
                                         behandlingId = behandlingId,
                                         opprettet = LocalDateTime.now(),
                                         hendelse =
-                                            BehandlingOpprettetHendelse(
+                                            KlageBehandlingOpprettetHendelse(
                                                 behandlingId = behandlingId,
                                                 ident = forslagTilVedtakHendelse.ident,
                                                 sakId = sakId,

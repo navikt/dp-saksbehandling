@@ -10,9 +10,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -829,7 +829,9 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
-                )
+                ).also {
+                    it.setRapidsConnection(rapidsConnection = testRapid)
+                }
             val klageMediator =
                 KlageMediator(
                     klageRepository = PostgresKlageRepository(dataSource),

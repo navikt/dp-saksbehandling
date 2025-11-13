@@ -14,26 +14,26 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerLåsAvBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerOpplåsingAvBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.FerdigBehandlet
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilKontroll
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.JA
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.INGEN
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Opprettet
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerLåsAvBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigBehandlet
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
@@ -54,9 +54,9 @@ import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -216,7 +216,7 @@ OppgaveMediatorTest {
 
         shouldThrow<IllegalStateException> {
             oppgaveMediator.opprettOppgaveForBehandling(
-                BehandlingOpprettetHendelse(
+                KlageBehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),
                     ident = personUtenSakHistorikk,
@@ -227,7 +227,7 @@ OppgaveMediatorTest {
         }
         shouldThrow<IllegalStateException> {
             oppgaveMediator.opprettOppgaveForBehandling(
-                BehandlingOpprettetHendelse(
+                KlageBehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),
                     ident = personUtenBehandling,
@@ -392,10 +392,10 @@ OppgaveMediatorTest {
                 Arguments.of(KlarTilBehandling, false),
                 Arguments.of(AvventerOpplåsingAvBehandling, false),
                 Arguments.of(AvventerLåsAvBehandling, false),
-                Arguments.of(RettTilDagpenger.PåVent, true),
+                Arguments.of(RettTilDagpengerOppgave.PåVent, true),
                 Arguments.of(UnderBehandling, true),
                 Arguments.of(KlarTilKontroll, true),
-                Arguments.of(RettTilDagpenger.UnderKontroll(), true),
+                Arguments.of(RettTilDagpengerOppgave.UnderKontroll(), true),
                 Arguments.of(FerdigBehandlet, false),
             )
         }
@@ -404,7 +404,7 @@ OppgaveMediatorTest {
     @ParameterizedTest
     @MethodSource("skalEttersendingTilSøknadVarsles")
     fun `Finnes det en oppgave til behandling`(
-        tilstand: RettTilDagpenger.Tilstand,
+        tilstand: RettTilDagpengerOppgave.Tilstand,
         skalLageGosysOppgave: Boolean,
     ) {
         val hendelse =
@@ -429,7 +429,7 @@ OppgaveMediatorTest {
                 hendelse = hendelse,
             )
         val oppgave =
-            TestHelper.lagOppgave(
+            TestHelper.lagRettTilDPOppgave(
                 tilstand = tilstand,
                 behandling = behandling,
                 person = person,
@@ -1023,7 +1023,7 @@ OppgaveMediatorTest {
                 saksbehandlerToken = "testtoken",
             )
 
-            shouldThrow<RettTilDagpenger.Tilstand.KreverKontrollAvGosysBrev> {
+            shouldThrow<RettTilDagpengerOppgave.Tilstand.KreverKontrollAvGosysBrev> {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = beslutter,
@@ -1049,7 +1049,7 @@ OppgaveMediatorTest {
         tilstand: Type = KLAR_TIL_BEHANDLING,
         behandlingId: UUID = UUIDv7.ny(),
         søknadId: UUID = UUIDv7.ny(),
-    ): RettTilDagpenger {
+    ): RettTilDagpengerOppgave {
         val personRepository = PostgresPersonRepository(this)
         val sakMediator =
             SakMediator(
@@ -1176,8 +1176,8 @@ OppgaveMediatorTest {
                         søknadsbehandlingOpprettetHendelse = hendelse,
                     )
                 sakMediator.knyttTilSak(
-                    behandlingOpprettetHendelse =
-                        BehandlingOpprettetHendelse(
+                    klageBehandlingOpprettetHendelse =
+                        KlageBehandlingOpprettetHendelse(
                             behandlingId = hendelse.behandlingId,
                             ident = hendelse.ident,
                             sakId = sak.sakId,

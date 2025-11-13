@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.klage.Datatype
@@ -69,8 +69,8 @@ class PostgresKlageRepositoryTest {
                         ),
                 )
             sakMediator.knyttTilSak(
-                behandlingOpprettetHendelse =
-                    BehandlingOpprettetHendelse(
+                klageBehandlingOpprettetHendelse =
+                    KlageBehandlingOpprettetHendelse(
                         behandlingId = klageId,
                         ident = testPerson.ident,
                         sakId = sak.sakId,

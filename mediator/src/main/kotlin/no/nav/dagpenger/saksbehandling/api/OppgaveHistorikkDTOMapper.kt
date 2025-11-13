@@ -3,17 +3,17 @@ package no.nav.dagpenger.saksbehandling.api
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -57,7 +57,7 @@ internal class OppgaveHistorikkDTOMapper(
         return historikk
     }
 
-    private fun tilstandsendringTittel(tilstandsendring: Tilstandsendring<RettTilDagpenger.Tilstand.Type>): String {
+    private fun tilstandsendringTittel(tilstandsendring: Tilstandsendring<RettTilDagpengerOppgave.Tilstand.Type>): String {
         return when (tilstandsendring.tilstand) {
             OPPRETTET -> "Opprettet"
             KLAR_TIL_BEHANDLING -> "Klar til behandling"

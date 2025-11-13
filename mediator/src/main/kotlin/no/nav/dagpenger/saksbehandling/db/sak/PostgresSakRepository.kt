@@ -14,8 +14,8 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -439,8 +439,9 @@ class PostgresSakRepository(
             "SøknadsbehandlingOpprettetHendelse" ->
                 this.string("hendelse_data")
                     .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-
-            "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
+            // Tidligere navn for KlageBehandlingOpprettetHendelse - kan fjernes hvis vi "nuker" klager i Dev
+            "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<KlageBehandlingOpprettetHendelse>()
+            "KlageBehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<KlageBehandlingOpprettetHendelse>()
             "MeldekortbehandlingOpprettetHendelse" ->
                 this.string("hendelse_data")
                     .tilHendelse<MeldekortbehandlingOpprettetHendelse>()

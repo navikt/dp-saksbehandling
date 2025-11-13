@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -28,9 +28,9 @@ class HendelseJsonSerDerTest {
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
         )
 
-    private fun behandlingOppretteHendelse(utførtAv: Behandler): BehandlingOpprettetHendelse {
+    private fun behandlingOppretteHendelse(utførtAv: Behandler): KlageBehandlingOpprettetHendelse {
         val uuid = UUID.fromString(aUUID)
-        return BehandlingOpprettetHendelse(
+        return KlageBehandlingOpprettetHendelse(
             behandlingId = uuid,
             ident = "1234",
             sakId = uuid,
@@ -67,7 +67,7 @@ class HendelseJsonSerDerTest {
                 "utførtAv": { "navn": "dp-mottak" }
              }
             """
-            json.tilHendelse<BehandlingOpprettetHendelse>() shouldBe hendelse
+            json.tilHendelse<KlageBehandlingOpprettetHendelse>() shouldBe hendelse
         }
 
         behandlingOppretteHendelse(
@@ -101,7 +101,7 @@ class HendelseJsonSerDerTest {
                 }              
              }
             """
-            json.tilHendelse<BehandlingOpprettetHendelse>() shouldBe hendelse
+            json.tilHendelse<KlageBehandlingOpprettetHendelse>() shouldBe hendelse
         }
     }
 

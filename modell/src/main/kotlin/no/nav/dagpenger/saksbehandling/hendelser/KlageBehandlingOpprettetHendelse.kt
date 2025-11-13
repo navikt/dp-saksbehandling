@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class BehandlingOpprettetHendelse(
+data class KlageBehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val sakId: UUID,

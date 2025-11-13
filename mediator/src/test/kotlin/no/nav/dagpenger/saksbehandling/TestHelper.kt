@@ -3,11 +3,11 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -50,20 +50,35 @@ internal object TestHelper {
             adressebeskyttelseGradering = UGRADERT,
         )
 
-    val testBehandling =
-        lagBehandling(
+    val rettTilDagpengerBehandling =
+        lagRettTilDPBehandling(
             behandlingId = behandlingId,
             opprettet = opprettetNå,
             hendelse = TomHendelse,
             utløstAvType = UtløstAvType.SØKNAD,
         )
 
-    val testOppgave =
-        lagOppgave(
+    val rettTilDagpengerOppgave =
+        lagRettTilDPOppgave(
             oppgaveId = oppgaveId,
             opprettet = opprettetNå,
             person = testPerson,
-            behandling = testBehandling,
+            behandling = rettTilDagpengerBehandling,
+        )
+
+    val klageBehandling =
+        lagKlageBehandling(
+            behandlingId = behandlingId,
+            opprettet = opprettetNå,
+            hendelse = TomHendelse,
+        )
+
+    val klageOppgave =
+        lagKlageOppgave(
+            oppgaveId = oppgaveId,
+            opprettet = opprettetNå,
+            person = testPerson,
+            behandling = klageBehandling,
         )
 
     val pdlPerson =
@@ -171,18 +186,18 @@ internal object TestHelper {
         )
     }
 
-    fun lagOppgave(
-        tilstand: RettTilDagpenger.Tilstand = KlarTilBehandling,
+    fun lagKlageOppgave(
+        tilstand: RettTilDagpengerOppgave.Tilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
-        behandling: RettTilDagpengerBehandling = lagBehandling(opprettet = opprettet),
+        behandling: KlageBehandling = lagKlageBehandling(opprettet = opprettet),
         emneknagger: Set<String> = emptySet(),
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
-    ): RettTilDagpenger {
-        return RettTilDagpenger.rehydrer(
+    ): KlageOppgave {
+        return KlageOppgave.rehydrer(
             oppgaveId = oppgaveId,
             behandlerIdent = saksbehandlerIdent,
             opprettet = opprettet,
@@ -193,14 +208,55 @@ internal object TestHelper {
             person = person,
             behandling = behandling,
             meldingOmVedtak =
-                RettTilDagpenger.MeldingOmVedtak(
+                MeldingOmVedtak(
                     kilde = DP_SAK,
-                    kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
+                    kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
                 ),
         )
     }
 
-    fun lagBehandling(
+    fun lagRettTilDPOppgave(
+        tilstand: RettTilDagpengerOppgave.Tilstand = KlarTilBehandling,
+        opprettet: LocalDateTime = opprettetNå,
+        saksbehandlerIdent: String? = null,
+        person: Person = testPerson,
+        behandling: RettTilDagpengerBehandling = lagRettTilDPBehandling(opprettet = opprettet),
+        emneknagger: Set<String> = emptySet(),
+        utsattTil: LocalDate? = null,
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
+        oppgaveId: UUID = UUIDv7.ny(),
+    ): RettTilDagpengerOppgave {
+        return RettTilDagpengerOppgave.rehydrer(
+            oppgaveId = oppgaveId,
+            behandlerIdent = saksbehandlerIdent,
+            opprettet = opprettet,
+            emneknagger = emneknagger,
+            tilstand = tilstand,
+            utsattTil = utsattTil,
+            tilstandslogg = tilstandslogg,
+            person = person,
+            behandling = behandling,
+            meldingOmVedtak =
+                MeldingOmVedtak(
+                    kilde = DP_SAK,
+                    kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
+                ),
+        )
+    }
+
+    fun lagKlageBehandling(
+        behandlingId: UUID = UUIDv7.ny(),
+        opprettet: LocalDateTime = opprettetNå,
+        hendelse: Hendelse = TomHendelse,
+    ): KlageBehandling {
+        return KlageBehandling.rehydrer(
+            behandlingId = behandlingId,
+            opprettet = opprettet,
+            hendelse = hendelse,
+        )
+    }
+
+    fun lagRettTilDPBehandling(
         behandlingId: UUID = UUIDv7.ny(),
         opprettet: LocalDateTime = opprettetNå,
         hendelse: Hendelse = TomHendelse,

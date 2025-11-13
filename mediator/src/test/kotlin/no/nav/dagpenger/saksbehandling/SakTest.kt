@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -102,7 +102,7 @@ class SakTest {
         val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now)
 
         sak.knyttTilSak(
-            BehandlingOpprettetHendelse(
+            KlageBehandlingOpprettetHendelse(
                 sakId = UUIDv7.ny(),
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",
@@ -112,7 +112,7 @@ class SakTest {
         ) shouldBe KnyttTilSakResultat.IkkeKnyttetTilSak(sak.sakId)
 
         sak.knyttTilSak(
-            BehandlingOpprettetHendelse(
+            KlageBehandlingOpprettetHendelse(
                 sakId = sak.sakId,
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",

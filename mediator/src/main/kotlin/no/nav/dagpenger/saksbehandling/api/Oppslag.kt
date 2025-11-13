@@ -4,7 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -21,7 +21,7 @@ class Oppslag(
         return pdlKlient.person(ident).getOrThrow()
     }
 
-    suspend fun hentJournalpostIder(oppgave: RettTilDagpenger): Set<String> {
+    suspend fun hentJournalpostIder(oppgave: RettTilDagpengerOppgave): Set<String> {
         return relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave)
     }
 

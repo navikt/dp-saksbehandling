@@ -5,8 +5,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
+import no.nav.dagpenger.saksbehandling.TestHelper.lagRettTilDPBehandling
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
@@ -27,12 +27,12 @@ class UtsendingAlarmRepositoryTest {
         val nå = LocalDateTime.now()
         val tjueFireTimerSiden = nå.minusHours(24)
         val person = lagPerson()
-        val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-        val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-        val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
-        val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
-        val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-        val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+        val behandling1 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+        val behandling2 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+        val behandling3 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
+        val behandling4 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
+        val behandling5 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+        val behandling6 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
 
         DBTestHelper.withBehandlinger(
             person = person,
@@ -89,7 +89,7 @@ class UtsendingAlarmRepositoryTest {
     private fun DataSource.lagreUtsending(
         tilstand: Utsending.Tilstand.Type,
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-        behandling: Behandling = lagBehandling(utløstAvType = SØKNAD),
+        behandling: Behandling = lagRettTilDPBehandling(utløstAvType = SØKNAD),
         person: Person = lagPerson(),
     ): Utsending {
         val utsending =

@@ -2,11 +2,13 @@ package no.nav.dagpenger.saksbehandling.db
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.KontrollertBrev
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtak
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -138,7 +140,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             )
 
             fun withOppgave(
-                oppgave: RettTilDagpenger,
+                oppgave: RettTilDagpengerOppgave,
                 block: DBTestHelper.(DataSource) -> Unit,
             ) {
                 val behandling =
@@ -160,14 +162,14 @@ class DBTestHelper private constructor(private val ds: DataSource) :
 
         fun leggTilOppgave(
             id: UUID = UUIDv7.ny(),
-            tilstand: RettTilDagpenger.Tilstand = RettTilDagpenger.KlarTilBehandling,
+            tilstand: RettTilDagpengerOppgave.Tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
             emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
             opprettet: LocalDateTime = opprettetNå,
             type: UtløstAvType = SØKNAD,
             tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             saksbehandlerIdent: String? = null,
-        ): RettTilDagpenger {
+        ): RettTilDagpengerOppgave {
             this.lagre(person)
 
             val behandling =
@@ -191,7 +193,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 )
             this.lagre(sakHistorikk)
 
-            return RettTilDagpenger(
+            return RettTilDagpengerOppgave(
                 oppgaveId = id,
                 opprettet = opprettet,
                 tilstand = tilstand,
@@ -201,9 +203,9 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandling = behandling,
                 person = person,
                 meldingOmVedtak =
-                    RettTilDagpenger.MeldingOmVedtak(
+                    MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
                     ),
             ).also { this.lagre(it) }
         }
@@ -221,17 +223,17 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     opprettet = opprettetNå,
                     hendelse = TomHendelse,
                 )
-            RettTilDagpenger(
+            RettTilDagpengerOppgave(
                 oppgaveId = oppgaveId,
                 emneknagger = setOf(),
                 opprettet = behandling.opprettet,
-                tilstand = RettTilDagpenger.KlarTilBehandling,
+                tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
                 behandling = behandling,
                 person = person,
                 meldingOmVedtak =
-                    RettTilDagpenger.MeldingOmVedtak(
+                    MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT,
                     ),
             ).also { lagre(it) }
         }

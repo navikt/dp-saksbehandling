@@ -7,34 +7,37 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.KontrollertBrev
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtak
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde
 import no.nav.dagpenger.saksbehandling.Notat
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Avbrutt
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerLåsAvBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerOpplåsingAvBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.FerdigBehandlet
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilKontroll
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Opprettet
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.PåVent
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.UgyldigTilstandException
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.UnderKontroll
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Avbrutt
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerLåsAvBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigBehandlet
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.PåVent
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UgyldigTilstandException
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
@@ -43,13 +46,13 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -78,7 +81,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     override fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
-    ): RettTilDagpenger? =
+    ): RettTilDagpengerOppgave? =
         tildelNesteOppgave(nesteOppgaveHendelse, filter)?.let {
             hentOppgave(it)
         }
@@ -250,7 +253,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun lagre(oppgave: RettTilDagpenger) {
+    override fun lagre(oppgave: Oppgave) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.lagre(oppgave)
@@ -258,7 +261,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<RettTilDagpenger> =
+    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<RettTilDagpengerOppgave> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -287,10 +290,10 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun hentOppgaveFor(behandlingId: UUID): RettTilDagpenger =
+    override fun hentOppgaveFor(behandlingId: UUID): RettTilDagpengerOppgave =
         finnOppgaveFor(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
-    override fun finnOppgaveFor(behandlingId: UUID): RettTilDagpenger? =
+    override fun finnOppgaveFor(behandlingId: UUID): RettTilDagpengerOppgave? =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -342,7 +345,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
 
     override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, dataSource)
 
-    override fun lagreNotatFor(oppgave: RettTilDagpenger): LocalDateTime {
+    override fun lagreNotatFor(oppgave: RettTilDagpengerOppgave): LocalDateTime {
         return when (val notat = oppgave.tilstand().notat()) {
             null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
             else -> {
@@ -358,7 +361,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun slettNotatFor(oppgave: RettTilDagpenger) {
+    override fun slettNotatFor(oppgave: RettTilDagpengerOppgave) {
         val tilstandsloggId = oppgave.tilstandslogg().first().id
 
         sessionOf(dataSource).use { session ->
@@ -425,7 +428,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     //language=PostgreSQL
-    override fun hentOppgave(oppgaveId: UUID): RettTilDagpenger =
+    override fun hentOppgave(oppgaveId: UUID): RettTilDagpengerOppgave =
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
@@ -434,7 +437,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             ),
         ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
-    override fun finnOppgaverFor(ident: String): List<RettTilDagpenger> =
+    override fun finnOppgaverFor(ident: String): List<RettTilDagpengerOppgave> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -451,7 +454,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         ).oppgaver
 
     data class OppgaveSøkResultat(
-        val oppgaver: List<RettTilDagpenger>,
+        val oppgaver: List<RettTilDagpengerOppgave>,
         val totaltAntallOppgaver: Int,
     )
 
@@ -613,7 +616,9 @@ private fun rehydrerTilstandsendringHendelse(
         "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
         "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
         "BehandlingOpplåstHendelse" -> hendelseJson.tilHendelse<BehandlingOpplåstHendelse>()
-        "BehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<BehandlingOpprettetHendelse>()
+        // Renamet til KlageBehandlingOpprettetHendelse - Kan fjernes hvis vi "nuker" klager i dev
+        "BehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<KlageBehandlingOpprettetHendelse>()
+        "KlageBehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<KlageBehandlingOpprettetHendelse>()
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
@@ -710,7 +715,7 @@ private fun hentTilstandsloggForOppgave(
     }
 }
 
-private fun TransactionalSession.lagre(oppgave: RettTilDagpenger) {
+private fun TransactionalSession.lagre(oppgave: Oppgave) {
     run(
         queryOf(
             //language=PostgreSQL
@@ -876,7 +881,7 @@ private fun TransactionalSession.lagre(
     }
 }
 
-private fun Row.rehydrerOppgave(dataSource: DataSource): RettTilDagpenger {
+private fun Row.rehydrerOppgave(dataSource: DataSource): RettTilDagpengerOppgave {
     val oppgaveId = this.uuid("oppgave_id")
     val person =
         Person(
@@ -905,7 +910,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): RettTilDagpenger {
             throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
         }
 
-    return RettTilDagpenger.rehydrer(
+    return RettTilDagpengerOppgave.rehydrer(
         oppgaveId = oppgaveId,
         behandlerIdent = this.stringOrNull("saksbehandler_ident"),
         opprettet = this.localDateTime("oppgave_opprettet"),
@@ -922,9 +927,9 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): RettTilDagpenger {
             ),
         person = person,
         meldingOmVedtak =
-            RettTilDagpenger.MeldingOmVedtak(
+            MeldingOmVedtak(
                 kilde = MeldingOmVedtakKilde.valueOf(this.string("melding_om_vedtak_kilde")),
-                kontrollertGosysBrev = RettTilDagpenger.KontrollertBrev.valueOf(this.string("kontrollert_brev")),
+                kontrollertGosysBrev = KontrollertBrev.valueOf(this.string("kontrollert_brev")),
             ),
     )
 }
@@ -939,8 +944,9 @@ private fun Row.rehydrerHendelse(): Hendelse {
         "SøknadsbehandlingOpprettetHendelse" ->
             this.string("hendelse_data")
                 .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-
-        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
+        // Renamet til KlageBehandlingOpprettetHendelse - Kan fjernes hvis vi "nuker" klager i dev
+        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<KlageBehandlingOpprettetHendelse>()
+        "KlageBehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<KlageBehandlingOpprettetHendelse>()
         "MeldekortbehandlingOpprettetHendelse" ->
             this.string("hendelse_data")
                 .tilHendelse<MeldekortbehandlingOpprettetHendelse>()

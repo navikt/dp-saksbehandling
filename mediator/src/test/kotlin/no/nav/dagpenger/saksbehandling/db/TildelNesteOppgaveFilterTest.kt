@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType

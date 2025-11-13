@@ -10,8 +10,8 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
@@ -68,7 +68,7 @@ class KlageMediator(
         return klageBehandling
     }
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): RettTilDagpenger {
+    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): KlageOppgave {
         // todo her kan en Exception kastes hvis personen ikke finnes
 
         val klage =
@@ -84,8 +84,8 @@ class KlageMediator(
                     ),
             )
         klageRepository.lagre(klage = klage)
-        val behandlingOpprettetHendelse =
-            BehandlingOpprettetHendelse(
+        val klageBehandlingOpprettetHendelse =
+            KlageBehandlingOpprettetHendelse(
                 behandlingId = klage.behandlingId,
                 ident = klageMottattHendelse.ident,
                 sakId = klageMottattHendelse.sakId,
@@ -93,10 +93,10 @@ class KlageMediator(
                 type = UtløstAvType.KLAGE,
                 utførtAv = klageMottattHendelse.utførtAv,
             )
-        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+        sakMediator.knyttTilSak(klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse)
         return kotlin.runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
-                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+                klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse,
             )
         }
             .onFailure { e ->
@@ -106,7 +106,7 @@ class KlageMediator(
             .getOrThrow()
     }
 
-    fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): RettTilDagpenger {
+    fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): KlageOppgave {
         val klage =
             Klage(
                 journalpostId = manuellKlageMottattHendelse.journalpostId,
@@ -123,8 +123,8 @@ class KlageMediator(
         klageRepository.lagre(klage)
 
         val utførtAv = manuellKlageMottattHendelse.utførtAv
-        val behandlingOpprettetHendelse =
-            BehandlingOpprettetHendelse(
+        val klageBehandlingOpprettetHendelse =
+            KlageBehandlingOpprettetHendelse(
                 behandlingId = klage.behandlingId,
                 ident = manuellKlageMottattHendelse.ident,
                 sakId = manuellKlageMottattHendelse.sakId,
@@ -132,7 +132,7 @@ class KlageMediator(
                 type = UtløstAvType.KLAGE,
                 utførtAv = utførtAv,
             )
-        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+        sakMediator.knyttTilSak(klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse)
 
         auditlogg.opprett(
             "Opprettet en manuell klage",
@@ -142,7 +142,7 @@ class KlageMediator(
 
         return kotlin.runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
-                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+                klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse,
             ).also { oppgave ->
                 oppgaveMediator.tildelOppgave(
                     SettOppgaveAnsvarHendelse(
@@ -175,7 +175,7 @@ class KlageMediator(
     }
 
     private fun requireEierAvOppgave(
-        oppgave: RettTilDagpenger,
+        oppgave: RettTilDagpengerOppgave,
         saksbehandler: Saksbehandler,
     ) {
         require(oppgave.erEierAvOppgave(saksbehandler)) {
@@ -337,7 +337,7 @@ class KlageMediator(
     private fun sjekkTilgangTilOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): RettTilDagpenger {
+    ): RettTilDagpengerOppgave {
         return oppgaveMediator.hentOppgaveHvisTilgang(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
@@ -347,7 +347,7 @@ class KlageMediator(
     private fun sjekkTilgangOgEierAvOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): RettTilDagpenger {
+    ): RettTilDagpengerOppgave {
         return sjekkTilgangTilOppgave(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,

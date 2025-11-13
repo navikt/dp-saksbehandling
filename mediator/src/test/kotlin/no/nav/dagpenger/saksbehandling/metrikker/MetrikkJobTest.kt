@@ -1,19 +1,19 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerLåsAvBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.AvventerOpplåsingAvBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KlarTilKontroll
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.PåVent
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
-import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerLåsAvBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.PåVent
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
+import no.nav.dagpenger.saksbehandling.TestHelper.lagRettTilDPBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagRettTilDPOppgave
 import no.nav.dagpenger.saksbehandling.TestHelper.lagUtsending
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
@@ -26,14 +26,14 @@ import org.junit.jupiter.api.Test
 
 class MetrikkJobTest {
     val person = lagPerson()
-    val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
-    val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
-    val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling7 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling8 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling1 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling2 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling3 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
+    val behandling4 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
+    val behandling5 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling6 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling7 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling8 = lagRettTilDPBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
 
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {
@@ -52,21 +52,21 @@ class MetrikkJobTest {
                 ),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling1))
-            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling2))
-            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling3))
-            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling4))
-            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling5))
-            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilKontroll, behandling = behandling6))
+            repo.lagre(lagRettTilDPOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling1))
+            repo.lagre(lagRettTilDPOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling2))
+            repo.lagre(lagRettTilDPOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling3))
+            repo.lagre(lagRettTilDPOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling4))
+            repo.lagre(lagRettTilDPOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling5))
+            repo.lagre(lagRettTilDPOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilKontroll, behandling = behandling6))
             repo.lagre(
-                lagOppgave(
+                lagRettTilDPOppgave(
                     oppgaveId = UUIDv7.ny(),
                     tilstand = AvventerLåsAvBehandling,
                     behandling = behandling7,
                 ),
             )
             repo.lagre(
-                lagOppgave(
+                lagRettTilDPOppgave(
                     oppgaveId = UUIDv7.ny(),
                     tilstand = AvventerOpplåsingAvBehandling,
                     behandling = behandling8,
@@ -114,7 +114,7 @@ class MetrikkJobTest {
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val utsendingRepository = PostgresUtsendingRepository(ds)
-            lagOppgave(tilstand = PåVent, behandling = behandling1).also {
+            lagRettTilDPOppgave(tilstand = PåVent, behandling = behandling1).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -123,7 +123,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = PåVent, behandling = behandling2).also {
+            lagRettTilDPOppgave(tilstand = PåVent, behandling = behandling2).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -132,7 +132,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilBehandling, behandling = behandling3).also {
+            lagRettTilDPOppgave(tilstand = KlarTilBehandling, behandling = behandling3).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -141,7 +141,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilBehandling, behandling = behandling4).also {
+            lagRettTilDPOppgave(tilstand = KlarTilBehandling, behandling = behandling4).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -150,7 +150,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilBehandling, behandling = behandling5).also {
+            lagRettTilDPOppgave(tilstand = KlarTilBehandling, behandling = behandling5).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -159,7 +159,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = KlarTilKontroll, behandling = behandling6).also {
+            lagRettTilDPOppgave(tilstand = KlarTilKontroll, behandling = behandling6).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -168,7 +168,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = AvventerLåsAvBehandling, behandling = behandling7).also {
+            lagRettTilDPOppgave(tilstand = AvventerLåsAvBehandling, behandling = behandling7).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
@@ -177,7 +177,7 @@ class MetrikkJobTest {
                     ),
                 )
             }
-            lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandling = behandling8).also {
+            lagRettTilDPOppgave(tilstand = AvventerOpplåsingAvBehandling, behandling = behandling8).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(

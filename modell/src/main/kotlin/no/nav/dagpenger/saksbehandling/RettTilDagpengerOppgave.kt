@@ -2,22 +2,19 @@ package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.FerdigstillBehandling.BESLUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.IKKE_RELEVANT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.JA
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.KontrollertBrev.NEI
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling.BESLUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
@@ -46,7 +43,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-data class RettTilDagpenger private constructor(
+data class RettTilDagpengerOppgave private constructor(
     override val oppgaveId: UUID,
     override val opprettet: LocalDateTime,
     override var behandlerIdent: String? = null,
@@ -101,8 +98,8 @@ data class RettTilDagpenger private constructor(
             person: Person,
             behandling: RettTilDagpengerBehandling,
             meldingOmVedtak: MeldingOmVedtak,
-        ): RettTilDagpenger =
-            RettTilDagpenger(
+        ): RettTilDagpengerOppgave =
+            RettTilDagpengerOppgave(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 behandlerIdent = behandlerIdent,
@@ -126,7 +123,7 @@ data class RettTilDagpenger private constructor(
         }
 
         private fun requireBeslutterUlikSaksbehandler(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             beslutter: Saksbehandler,
             hendelseNavn: String,
         ) {
@@ -140,11 +137,11 @@ data class RettTilDagpenger private constructor(
         }
 
         private fun requireKvittertGosysBrev(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             hendelseNavn: String,
         ) {
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
-                require(oppgave.meldingOmVedtak.kontrollertGosysBrev == JA) {
+                require(oppgave.meldingOmVedtak.kontrollertGosysBrev == KontrollertBrev.JA) {
                     throw Tilstand.KreverKontrollAvGosysBrev(
                         "Brev i Gosys må være kontrollert av beslutter for å kunne behandle $hendelseNavn i " +
                             "tilstand ${oppgave.tilstand.type}. Brevkilde: ${oppgave.meldingOmVedtak.kilde}, " +
@@ -154,8 +151,6 @@ data class RettTilDagpenger private constructor(
             }
         }
     }
-
-    fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
         val beholdEmneknagger = this.emneknagger().filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
@@ -307,7 +302,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = OPPRETTET
 
         override fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             oppgave.endreTilstand(KlarTilBehandling, forslagTilVedtakHendelse)
@@ -315,14 +310,14 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
@@ -334,7 +329,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = KLAR_TIL_BEHANDLING
 
         override fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand $type" }
@@ -342,7 +337,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun tildel(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
@@ -350,7 +345,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
@@ -358,7 +353,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
@@ -369,7 +364,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = UNDER_BEHANDLING
 
         override fun sendTilKontroll(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
             oppgave.requireEierskapTilOppgave(
@@ -378,7 +373,7 @@ data class RettTilDagpenger private constructor(
             )
 
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
-                oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
             }
             if (oppgave.sisteBeslutter() == null) {
                 oppgave.behandlerIdent = null
@@ -392,7 +387,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun fjernAnsvar(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
@@ -400,14 +395,14 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun tildel(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             if (oppgave.behandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
@@ -422,7 +417,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun utsett(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             oppgave.emneknagger.add(utsettOppgaveHendelse.årsak.visningsnavn)
@@ -436,7 +431,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
@@ -444,7 +439,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun endreMeldingOmVedtakKilde(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
         ) {
             logger.info {
@@ -452,11 +447,11 @@ data class RettTilDagpenger private constructor(
                     endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name
             }
             oppgave.meldingOmVedtak.kilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
-            oppgave.meldingOmVedtak.kontrollertGosysBrev = IKKE_RELEVANT
+            oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             when (vedtakFattetHendelse.automatiskBehandlet) {
@@ -475,7 +470,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ): FerdigstillBehandling {
             oppgave.requireEierskapTilOppgave(
@@ -487,7 +482,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
         ): FerdigstillBehandling {
             oppgave.requireEierskapTilOppgave(
@@ -499,7 +494,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             avbruttHendelse: AvbruttHendelse,
         ) {
             oppgave.requireEierskapTilOppgave(
@@ -510,7 +505,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             avbruttHendelse: AvbruttHendelse,
         ) {
             oppgave.requireEierskapTilOppgave(
@@ -521,7 +516,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
         ) {
             oppgave.requireEierskapTilOppgave(
@@ -540,7 +535,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = FERDIG_BEHANDLET
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             logger.warn { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
@@ -548,7 +543,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             logger.warn { "Mottok forslagTilVedtakHendelse i tilstand $type. Ignorerer meldingen." }
@@ -560,7 +555,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = AVBRUTT
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             logger.info { "Behandling er allerede avbrutt." }
@@ -571,7 +566,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = PAA_VENT
 
         override fun tildel(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
@@ -580,7 +575,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun fjernAnsvar(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
@@ -589,7 +584,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
@@ -597,7 +592,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
@@ -605,14 +600,14 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun oppgavePåVentMedUtgåttFrist(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             hendelse: PåVentFristUtgåttHendelse,
         ) {
             val nyTilstand =
@@ -631,7 +626,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = KLAR_TIL_KONTROLL
 
         override fun tildel(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             requireBeslutterTilgang(
@@ -650,7 +645,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
@@ -671,7 +666,7 @@ data class RettTilDagpenger private constructor(
         override val type: Type = UNDER_KONTROLL
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             when (vedtakFattetHendelse.automatiskBehandlet) {
@@ -690,7 +685,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ): FerdigstillBehandling {
             requireBeslutterTilgang(
@@ -716,7 +711,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
         ): FerdigstillBehandling {
             requireBeslutterTilgang(
@@ -739,7 +734,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             logger.warn { "Mottok forslagTilVedtakHendelse i tilstand $type. Ignorerer meldingen." }
@@ -747,7 +742,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun tildel(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.requireEierskapTilOppgave(
@@ -762,7 +757,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun lagreBrevKvittering(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse,
         ) {
             requireBeslutterTilgang(
@@ -776,13 +771,13 @@ data class RettTilDagpenger private constructor(
                 hendelseNavn = lagreBrevKvitteringHendelse.javaClass.simpleName,
             )
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
-                require(lagreBrevKvitteringHendelse.kontrollertBrev != IKKE_RELEVANT)
+                require(lagreBrevKvitteringHendelse.kontrollertBrev != KontrollertBrev.IKKE_RELEVANT)
             }
             oppgave.meldingOmVedtak.kontrollertGosysBrev = lagreBrevKvitteringHendelse.kontrollertBrev
         }
 
         override fun returnerTilSaksbehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
             requireBeslutterTilgang(
@@ -805,12 +800,12 @@ data class RettTilDagpenger private constructor(
             oppgave.emneknagger.add(RETUR_FRA_KONTROLL)
             oppgave.emneknagger.remove(TIDLIGERE_KONTROLLERT)
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
-                oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
             }
         }
 
         override fun fjernAnsvar(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(KlarTilKontroll, fjernOppgaveAnsvarHendelse)
@@ -818,14 +813,14 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun lagreNotat(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             notatHendelse: NotatHendelse,
         ) {
             when (notat) {
@@ -846,7 +841,7 @@ data class RettTilDagpenger private constructor(
         }
 
         override fun slettNotat(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             slettNotatHendelse: SlettNotatHendelse,
         ) {
             notat = null
@@ -862,23 +857,6 @@ data class RettTilDagpenger private constructor(
 
     enum class Handling {
         LAGRE_OPPGAVE,
-        INGEN,
-    }
-
-    enum class KontrollertBrev {
-        JA,
-        NEI,
-        IKKE_RELEVANT,
-    }
-
-    data class MeldingOmVedtak(
-        var kilde: MeldingOmVedtakKilde,
-        var kontrollertGosysBrev: KontrollertBrev,
-    )
-
-    enum class MeldingOmVedtakKilde {
-        DP_SAK,
-        GOSYS,
         INGEN,
     }
 
@@ -917,7 +895,7 @@ data class RettTilDagpenger private constructor(
         fun behov() = emptySet<String>()
 
         fun oppgaveKlarTilBehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
             ulovligTilstandsendring(
@@ -927,7 +905,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             avbruttHendelse: AvbruttHendelse,
         ) {
             ulovligTilstandsendring(
@@ -939,7 +917,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
         ) {
             ulovligTilstandsendring(
@@ -951,7 +929,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
             ulovligTilstandsendring(
@@ -963,7 +941,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ): FerdigstillBehandling {
             ulovligTilstandsendring(
@@ -975,7 +953,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
         ): FerdigstillBehandling {
             ulovligTilstandsendring(
@@ -987,7 +965,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun ferdigstill(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             avbruttHendelse: AvbruttHendelse,
         ) {
             ulovligTilstandsendring(
@@ -999,7 +977,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun fjernAnsvar(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1009,7 +987,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun tildel(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1019,7 +997,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun utsett(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1029,7 +1007,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun sendTilKontroll(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1039,7 +1017,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun avbryt(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1049,7 +1027,7 @@ data class RettTilDagpenger private constructor(
         }
 
         fun returnerTilSaksbehandling(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1059,27 +1037,27 @@ data class RettTilDagpenger private constructor(
         }
 
         fun lagreBrevKvittering(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse,
         ): Unit = throw UlovligKvitteringAvKontrollertBrev("Lagring av brevkvittering er ikke tillat i tilstand $type")
 
         fun endreMeldingOmVedtakKilde(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
         ): Unit = throw UlovligEndringAvKildeForMeldingOmVedtak("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
 
         fun lagreNotat(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             notatHendelse: NotatHendelse,
         ): Unit = throw RuntimeException("Notat er ikke tillatt i tilstand $type")
 
         fun slettNotat(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             slettNotatHendelse: SlettNotatHendelse,
         ): Unit = throw RuntimeException("Kan ikke slette notat i tilstand $type")
 
         fun oppgavePåVentMedUtgåttFrist(
-            oppgave: RettTilDagpenger,
+            oppgave: RettTilDagpengerOppgave,
             hendelse: PåVentFristUtgåttHendelse,
         ) {
             ulovligTilstandsendring(

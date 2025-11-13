@@ -4,8 +4,8 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.Companion.søkbareTilstander
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType

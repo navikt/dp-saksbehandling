@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
@@ -13,7 +13,7 @@ class RelevanteJournalpostIdOppslag(
     private val utsendingRepository: UtsendingRepository,
     private val klageRepository: KlageRepository,
 ) {
-    suspend fun hentJournalpostIder(oppgave: RettTilDagpenger): Set<String> {
+    suspend fun hentJournalpostIder(oppgave: RettTilDagpengerOppgave): Set<String> {
         when (oppgave.behandling.utløstAv) {
             UtløstAvType.KLAGE -> return coroutineScope {
                 val journalpostIderKlage: String? =
@@ -36,7 +36,7 @@ class RelevanteJournalpostIdOppslag(
         }
     }
 
-    private suspend fun JournalpostIdKlient.hentJournalPostIder(oppgave: RettTilDagpenger): Set<String> {
+    private suspend fun JournalpostIdKlient.hentJournalPostIder(oppgave: RettTilDagpengerOppgave): Set<String> {
         return oppgave.soknadId()?.let {
             this.hentJournalpostIder(it, oppgave.personIdent())
         }?.getOrNull()?.toSortedSet() ?: emptySet()

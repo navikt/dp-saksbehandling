@@ -9,10 +9,10 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagSaksbehandler
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE

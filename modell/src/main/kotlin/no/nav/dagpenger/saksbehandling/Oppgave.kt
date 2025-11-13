@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtak
-import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,6 +30,8 @@ sealed class Oppgave {
         }
     }
 
+    fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
+
     fun erEierAvOppgave(saksbehandler: Saksbehandler): Boolean = this.behandlerIdent == saksbehandler.navIdent
 
     fun emneknagger(): Set<String> = emneknagger.toSet()
@@ -48,4 +49,21 @@ sealed class Oppgave {
     fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
 
     fun utsattTil() = this.utsattTil
+}
+
+enum class KontrollertBrev {
+    JA,
+    NEI,
+    IKKE_RELEVANT,
+}
+
+data class MeldingOmVedtak(
+    var kilde: MeldingOmVedtakKilde,
+    var kontrollertGosysBrev: KontrollertBrev,
+)
+
+enum class MeldingOmVedtakKilde {
+    DP_SAK,
+    GOSYS,
+    INGEN,
 }
