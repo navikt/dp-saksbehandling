@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.MeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.RettTilDagpenger.Tilstand
+import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -17,4 +18,18 @@ sealed class Oppgave {
     abstract val person: Person
     abstract val behandling: Behandling
     protected abstract var meldingOmVedtak: MeldingOmVedtak
+
+    protected fun requireEierskapTilOppgave(
+        saksbehandler: Saksbehandler,
+        hendelseNavn: String,
+    ) {
+        require(this.erEierAvOppgave(saksbehandler)) {
+            throw SaksbehandlerErIkkeEier(
+                "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${this.tilstand.type} uten å eie oppgaven. " +
+                    "Oppgave eies av ${this.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+            )
+        }
+    }
+
+    fun erEierAvOppgave(saksbehandler: Saksbehandler): Boolean = this.behandlerIdent == saksbehandler.navIdent
 }

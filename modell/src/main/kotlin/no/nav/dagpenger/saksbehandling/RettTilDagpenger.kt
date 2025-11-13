@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
-import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -115,19 +114,6 @@ data class RettTilDagpenger private constructor(
                 behandling = behandling,
                 meldingOmVedtak = meldingOmVedtak,
             )
-
-        private fun requireEierskapTilOppgave(
-            oppgave: RettTilDagpenger,
-            saksbehandler: Saksbehandler,
-            hendelseNavn: String,
-        ) {
-            require(oppgave.erEierAvOppgave(saksbehandler)) {
-                throw SaksbehandlerErIkkeEier(
-                    "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
-                        "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
-                )
-            }
-        }
 
         private fun requireBeslutterTilgang(
             saksbehandler: Saksbehandler,
@@ -280,8 +266,6 @@ data class RettTilDagpenger private constructor(
         tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
 
-    fun erEierAvOppgave(saksbehandler: Saksbehandler): Boolean = this.behandlerIdent == saksbehandler.navIdent
-
     private fun endreTilstand(
         nyTilstand: Tilstand,
         hendelse: Hendelse,
@@ -404,8 +388,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
-            requireEierskapTilOppgave(
-                oppgave,
+            oppgave.requireEierskapTilOppgave(
                 sendTilKontrollHendelse.utførtAv,
                 sendTilKontrollHendelse.javaClass.simpleName,
             )
@@ -511,8 +494,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ): FerdigstillBehandling {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
@@ -524,8 +506,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
         ): FerdigstillBehandling {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
             )
@@ -537,8 +518,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             avbruttHendelse: AvbruttHendelse,
         ) {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = avbruttHendelse.utførtAv,
                 hendelseNavn = avbruttHendelse.javaClass.simpleName,
             )
@@ -549,8 +529,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             avbruttHendelse: AvbruttHendelse,
         ) {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = avbruttHendelse.utførtAv,
                 hendelseNavn = avbruttHendelse.javaClass.simpleName,
             )
@@ -561,8 +540,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
         ) {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = avbrytOppgaveHendelse.utførtAv,
                 hendelseNavn = avbrytOppgaveHendelse.javaClass.simpleName,
             )
@@ -736,8 +714,7 @@ data class RettTilDagpenger private constructor(
                 tilstandType = type,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
@@ -763,8 +740,7 @@ data class RettTilDagpenger private constructor(
                 tilstandType = type,
                 hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
             )
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
             )
@@ -790,8 +766,7 @@ data class RettTilDagpenger private constructor(
             oppgave: RettTilDagpenger,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = settOppgaveAnsvarHendelse.utførtAv,
                 hendelseNavn = settOppgaveAnsvarHendelse.javaClass.simpleName,
             )
@@ -831,8 +806,7 @@ data class RettTilDagpenger private constructor(
                 tilstandType = type,
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
             )
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
+            oppgave.requireEierskapTilOppgave(
                 saksbehandler = returnerTilSaksbehandlingHendelse.utførtAv,
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
             )
