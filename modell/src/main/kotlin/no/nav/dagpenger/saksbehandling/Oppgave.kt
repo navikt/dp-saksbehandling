@@ -32,4 +32,20 @@ sealed class Oppgave {
     }
 
     fun erEierAvOppgave(saksbehandler: Saksbehandler): Boolean = this.behandlerIdent == saksbehandler.navIdent
+
+    fun emneknagger(): Set<String> = emneknagger.toSet()
+
+    fun tilstandslogg(): OppgaveTilstandslogg = tilstandslogg
+
+    fun personIdent() = person.ident
+
+    fun tilstand() = this.tilstand
+
+    fun meldingOmVedtakKilde() = this.meldingOmVedtak.kilde
+
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) = this.person.egneAnsatteTilgangskontroll(saksbehandler)
+
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
+
+    fun utsattTil() = this.utsattTil
 }

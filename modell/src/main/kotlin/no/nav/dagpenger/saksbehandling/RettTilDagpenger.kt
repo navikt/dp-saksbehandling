@@ -155,23 +155,7 @@ data class RettTilDagpenger private constructor(
         }
     }
 
-    fun emneknagger(): Set<String> = emneknagger.toSet()
-
-    fun tilstandslogg(): OppgaveTilstandslogg = tilstandslogg
-
-    fun personIdent() = person.ident
-
-    fun tilstand() = this.tilstand
-
-    fun meldingOmVedtakKilde() = this.meldingOmVedtak.kilde
-
     fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
-
-    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) = this.person.egneAnsatteTilgangskontroll(saksbehandler)
-
-    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
-
-    fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
         val beholdEmneknagger = this.emneknagger().filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
