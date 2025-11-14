@@ -1,9 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -41,7 +41,7 @@ class TilstandsloggTest {
 
     @Test
     fun `elementer legges til starten av listen`() {
-        Tilstandslogg<RettTilDagpengerOppgave.Tilstand.Type>().let { logg ->
+        Tilstandslogg<Oppgave.Tilstand.Type>().let { logg ->
             logg.leggTil(OPPRETTET, TomHendelse)
             logg.leggTil(KLAR_TIL_KONTROLL, TomHendelse)
             logg.leggTil(UNDER_BEHANDLING, TomHendelse)

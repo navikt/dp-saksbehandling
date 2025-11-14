@@ -5,7 +5,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UgyldigTilstandException
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
@@ -20,7 +20,7 @@ import no.nav.dagpenger.saksbehandling.klage.Klage
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
@@ -155,7 +155,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                     when (KlageTilstand.Type.valueOf(tilstandAsText)) {
                         BEHANDLES -> Klage.Behandles
                         OVERSEND_KLAGEINSTANS -> Klage.OversendKlageinstans
-                        FERDIGSTILT -> Klage.Ferdigstilt
+                        OVERSENDT_KLAGEINSTANS -> Klage.OversendtKlageinstans
                         AVBRUTT -> Klage.Avbrutt
                     }
                 }.getOrElse { t ->

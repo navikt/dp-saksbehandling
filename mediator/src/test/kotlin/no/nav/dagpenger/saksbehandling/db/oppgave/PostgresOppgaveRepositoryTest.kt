@@ -10,6 +10,14 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
@@ -120,7 +128,7 @@ class PostgresOppgaveRepositoryTest {
                 tilstandslogg =
                     OppgaveTilstandslogg(
                         Tilstandsendring(
-                            tilstand = RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            tilstand = UNDER_BEHANDLING,
                             hendelse =
                                 SettOppgaveAnsvarHendelse(
                                     oppgaveId = oppgaveIdKlarTilKontroll,
@@ -130,7 +138,7 @@ class PostgresOppgaveRepositoryTest {
                             tidspunkt = opprettetNå,
                         ),
                         Tilstandsendring(
-                            tilstand = RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                            tilstand = KLAR_TIL_KONTROLL,
                             hendelse =
                                 SendTilKontrollHendelse(
                                     oppgaveId = oppgaveIdKlarTilKontroll,
@@ -152,7 +160,7 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
                             emneknagger = emptySet(),
-                            tilstander = setOf(RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL),
+                            tilstander = setOf(KLAR_TIL_KONTROLL),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = beslutter.navIdent,
@@ -162,7 +170,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgave.behandling.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
             nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
-            nesteOppgave.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+            nesteOppgave.tilstand().type shouldBe UNDER_KONTROLL
         }
     }
 
@@ -211,7 +219,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgave.oppgaveId shouldBe klageOppgave.oppgaveId
             nesteOppgave.behandlerIdent shouldBe saksbehandler.navIdent
-            nesteOppgave.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -279,7 +287,7 @@ class PostgresOppgaveRepositoryTest {
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
             nesteOppgave.behandlerIdent shouldBe saksbehandlerUtenTilgangTilEgneAnsatte.navIdent
-            nesteOppgave.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val saksbehandlerMedTilgangTilEgneAnsatte =
                 Saksbehandler(
@@ -305,7 +313,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingSomEgneAnsatte.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
-            nesteOppgaveMedTilgang.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -365,7 +373,7 @@ class PostgresOppgaveRepositoryTest {
             requireNotNull(nesteOppgave)
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
             nesteOppgave.behandlerIdent shouldBe saksbehandlernUtenTilgangTilAdressebeskyttede.navIdent
-            nesteOppgave.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val saksbehandlerMedTilgangTilEgneAnsatte =
                 Saksbehandler(
@@ -395,7 +403,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
-            nesteOppgaveMedTilgang.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -457,7 +465,7 @@ class PostgresOppgaveRepositoryTest {
             val tilstandsloggUnderBehandling =
                 OppgaveTilstandslogg(
                     Tilstandsendring(
-                        tilstand = RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             NesteOppgaveHendelse(
                                 ansvarligIdent = annenBeslutter.navIdent,
@@ -466,7 +474,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusDays(3),
                     ),
                     Tilstandsendring(
-                        tilstand = RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             NesteOppgaveHendelse(
                                 ansvarligIdent = saksbehandlerUtført.navIdent,
@@ -475,7 +483,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusDays(2),
                     ),
                     Tilstandsendring(
-                        tilstand = RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT,
+                        tilstand = PAA_VENT,
                         hendelse =
                             UtsettOppgaveHendelse(
                                 oppgaveId = oppgaveId,
@@ -487,7 +495,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusDays(1),
                     ),
                     Tilstandsendring(
-                        tilstand = RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             PåVentFristUtgåttHendelse(
                                 oppgaveId = oppgaveId,
@@ -496,7 +504,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusHours(1),
                     ),
                     Tilstandsendring(
-                        tilstand = RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                        tilstand = KLAR_TIL_KONTROLL,
                         hendelse =
                             SendTilKontrollHendelse(
                                 oppgaveId = oppgaveId,
@@ -571,7 +579,7 @@ class PostgresOppgaveRepositoryTest {
             fun tilstandsloggUnderBehandling() =
                 OppgaveTilstandslogg(
                     Tilstandsendring(
-                        tilstand = RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             NesteOppgaveHendelse(
                                 ansvarligIdent = saksbehandlerUtført.navIdent,
@@ -822,7 +830,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
-                    it.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
                 }
             }
@@ -846,7 +854,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
                 }
             }
@@ -870,7 +878,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
-                    it.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
                 }
             }
@@ -894,7 +902,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
-                    it.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
                     it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
                 }
@@ -919,7 +927,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
-                    it.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
                 }
             }
@@ -949,7 +957,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
                 }
             }
@@ -1106,7 +1114,7 @@ class PostgresOppgaveRepositoryTest {
         val tilstandslogg =
             OppgaveTilstandslogg(
                 Tilstandsendring(
-                    tilstand = RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                    tilstand = KLAR_TIL_KONTROLL,
                     hendelse =
                         SendTilKontrollHendelse(
                             oppgaveId = oppgaveIdTest,
@@ -1115,7 +1123,7 @@ class PostgresOppgaveRepositoryTest {
                     tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                 ),
                 Tilstandsendring(
-                    tilstand = RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL,
+                    tilstand = UNDER_KONTROLL,
                     hendelse =
                         SettOppgaveAnsvarHendelse(
                             oppgaveId = oppgaveIdTest,
@@ -1125,7 +1133,7 @@ class PostgresOppgaveRepositoryTest {
                     tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
                 ),
                 Tilstandsendring(
-                    tilstand = RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET,
+                    tilstand = FERDIG_BEHANDLET,
                     hendelse =
                         GodkjentBehandlingHendelse(
                             oppgaveId = oppgaveIdTest,
@@ -1159,10 +1167,10 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(testOppgave)
-            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
             repo.lagre(testOppgave.copy(tilstand = RettTilDagpengerOppgave.FerdigBehandlet))
-            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 
@@ -1191,12 +1199,12 @@ class PostgresOppgaveRepositoryTest {
             val oppgaveKlarTilBehandling = this.leggTilOppgave(tilstand = RettTilDagpengerOppgave.KlarTilBehandling)
             val oppgaveFerdigBehandlet = this.leggTilOppgave(tilstand = RettTilDagpengerOppgave.FerdigBehandlet)
             val repo = PostgresOppgaveRepository(ds)
-            repo.hentAlleOppgaverMedTilstand(RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET).let { oppgaver ->
+            repo.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).let { oppgaver ->
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveFerdigBehandlet.oppgaveId
             }
 
-            repo.hentAlleOppgaverMedTilstand(RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).let { oppgaver ->
+            repo.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).let { oppgaver ->
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveKlarTilBehandling.oppgaveId
             }
@@ -1222,7 +1230,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 søkeFilter =
                     Søkefilter(
-                        tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                        tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
                         utløstAvTyper = setOf(UtløstAvType.KLAGE),
@@ -1315,7 +1323,7 @@ class PostgresOppgaveRepositoryTest {
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
                 søknadId = hendelse.søknadId,
-            ) shouldBe RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            ) shouldBe KLAR_TIL_BEHANDLING
 
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
@@ -1347,7 +1355,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = emptySet(),
                 ),
@@ -1355,7 +1363,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("hubba"),
                 ),
@@ -1363,7 +1371,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("bubba"),
                 ),
@@ -1371,7 +1379,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     emneknagger = setOf("bubba", "hubba"),
                 ),
@@ -1411,7 +1419,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler1,
                 ),
@@ -1419,7 +1427,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                 ),
@@ -1427,7 +1435,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = null,
                 ),
@@ -1435,7 +1443,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                     emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
@@ -1455,7 +1463,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.søkbareTilstander,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
                     periode = Periode.UBEGRENSET_PERIODE,
                     paginering = null,
                 ),
@@ -1466,7 +1474,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.søkbareTilstander,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
                     periode = Periode.UBEGRENSET_PERIODE,
                     paginering = Søkefilter.Paginering(2, 0),
                 ),
@@ -1479,7 +1487,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Periode.Companion.UBEGRENSET_PERIODE,
                     paginering = Søkefilter.Paginering(2, 1),
                 ),
@@ -1492,7 +1500,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.Companion.søkbareTilstander,
+                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
                     periode = Periode.Companion.UBEGRENSET_PERIODE,
                     paginering = Søkefilter.Paginering(10, 0),
                 ),
@@ -1506,7 +1514,7 @@ class PostgresOppgaveRepositoryTest {
             }
             repo.søk(
                 Søkefilter(
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.Companion.søkbareTilstander,
+                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
                     periode = Periode.Companion.UBEGRENSET_PERIODE,
                     paginering = Søkefilter.Paginering(10, 1),
                 ),
@@ -1540,7 +1548,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 Søkefilter(
-                    tilstander = setOf(RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING),
+                    tilstander = setOf(UNDER_BEHANDLING),
                     periode = Periode.UBEGRENSET_PERIODE,
                 ),
             ).oppgaver.single() shouldBe oppgaveUnderBehandlingEnUkeGammel
@@ -1549,8 +1557,8 @@ class PostgresOppgaveRepositoryTest {
                 Søkefilter(
                     tilstander =
                         setOf(
-                            RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                            RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            KLAR_TIL_BEHANDLING,
+                            UNDER_BEHANDLING,
                         ),
                     periode = Periode.UBEGRENSET_PERIODE,
                 ),
@@ -1559,7 +1567,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = RettTilDagpengerOppgave.Tilstand.Type.søkbareTilstander,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = null,
                     oppgaveId = null,
@@ -1569,14 +1577,14 @@ class PostgresOppgaveRepositoryTest {
                 it.oppgaver.size shouldBe 3
                 it.oppgaver.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
                     setOf(
-                        RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING,
-                        RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                        UNDER_BEHANDLING,
+                        KLAR_TIL_BEHANDLING,
                     )
             }
 
             repo.søk(
                 Søkefilter(
-                    tilstander = setOf(RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                    tilstander = setOf(KLAR_TIL_BEHANDLING),
                     periode =
                         Periode(
                             fom = enUkeSiden.plusDays(1).toLocalDate(),
@@ -1587,7 +1595,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = setOf(RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING),
+                    tilstander = setOf(UNDER_BEHANDLING),
                     periode =
                         Periode(
                             fom = enUkeSiden.minusDays(1).toLocalDate(),
@@ -1598,7 +1606,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = setOf(RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                    tilstander = setOf(KLAR_TIL_BEHANDLING),
                     periode =
                         Periode(
                             fom = opprettetNå.toLocalDate(),
@@ -1609,7 +1617,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = emptySet(),
+                    tilstander = emptySet<Oppgave.Tilstand.Type>(),
                     periode =
                         Periode(
                             fom = opprettetNå.toLocalDate(),
@@ -1641,7 +1649,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgaver =
                 repo.søk(
                     Søkefilter(
-                        tilstander = setOf(RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode = Periode(fom = iGår, tom = iGår),
                     ),
                 )
@@ -1692,7 +1700,7 @@ class PostgresOppgaveRepositoryTest {
         val behandling = lagRettTilDPBehandling()
         val tilstandsendring =
             Tilstandsendring(
-                tilstand = RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT,
+                tilstand = AVBRUTT,
                 hendelse = SkriptHendelse(Applikasjon("Dette er et skript")),
                 tidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
             )

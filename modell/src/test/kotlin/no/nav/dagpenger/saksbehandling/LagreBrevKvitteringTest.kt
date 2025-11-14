@@ -8,9 +8,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UlovligKvitteringAvKontrollertBrev
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UlovligKvitteringAvKontrollertBrev
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import org.junit.jupiter.api.Test

@@ -12,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.klage.Klage.Behandles
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
@@ -182,7 +182,7 @@ class KlageBehandlingTest {
                 hendelse = klageFerdigbehandletHendelse,
             )
         }
-        klage.tilstand().type shouldBe FERDIGSTILT
+        klage.tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
     }
 
     @Test
@@ -283,7 +283,7 @@ class KlageBehandlingTest {
             hendelse = klageFerdigbehandletHendelse,
         )
 
-        klage.tilstand().type shouldBe FERDIGSTILT
+        klage.tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
 
         shouldThrow<IllegalStateException> {
             klage.avbryt(

@@ -19,20 +19,20 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Opprettet
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
@@ -404,7 +404,7 @@ OppgaveMediatorTest {
     @ParameterizedTest
     @MethodSource("skalEttersendingTilSøknadVarsles")
     fun `Finnes det en oppgave til behandling`(
-        tilstand: RettTilDagpengerOppgave.Tilstand,
+        tilstand: RettTilDagpengerOppgave.RettTilDagpengerTilstand,
         skalLageGosysOppgave: Boolean,
     ) {
         val hendelse =
@@ -1023,7 +1023,7 @@ OppgaveMediatorTest {
                 saksbehandlerToken = "testtoken",
             )
 
-            shouldThrow<RettTilDagpengerOppgave.Tilstand.KreverKontrollAvGosysBrev> {
+            shouldThrow<RettTilDagpengerOppgave.RettTilDagpengerTilstand.KreverKontrollAvGosysBrev> {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = beslutter,

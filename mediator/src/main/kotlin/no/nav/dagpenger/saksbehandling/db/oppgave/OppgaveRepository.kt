@@ -18,7 +18,7 @@ interface OppgaveRepository {
 
     fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveSøkResultat
 
-    fun hentAlleOppgaverMedTilstand(tilstand: RettTilDagpengerOppgave.Tilstand.Type): List<RettTilDagpengerOppgave>
+    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<RettTilDagpengerOppgave>
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
@@ -46,5 +46,5 @@ interface OppgaveRepository {
     fun oppgaveTilstandForSøknad(
         ident: String,
         søknadId: UUID,
-    ): RettTilDagpengerOppgave.Tilstand.Type?
+    ): Oppgave.Tilstand.Type?
 }

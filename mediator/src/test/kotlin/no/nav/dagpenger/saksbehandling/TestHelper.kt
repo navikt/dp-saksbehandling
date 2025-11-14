@@ -6,10 +6,10 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -189,7 +189,7 @@ internal object TestHelper {
     }
 
     fun lagKlageOppgave(
-        tilstand: RettTilDagpengerOppgave.Tilstand = KlarTilBehandling,
+        tilstand: RettTilDagpengerOppgave.RettTilDagpengerTilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
@@ -218,7 +218,7 @@ internal object TestHelper {
     }
 
     fun lagRettTilDPOppgave(
-        tilstand: RettTilDagpengerOppgave.Tilstand = KlarTilBehandling,
+        tilstand: RettTilDagpengerOppgave.RettTilDagpengerTilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,

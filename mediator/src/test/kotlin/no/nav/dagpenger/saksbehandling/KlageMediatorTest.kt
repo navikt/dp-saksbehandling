@@ -10,9 +10,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -31,7 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_1
@@ -243,7 +243,7 @@ class KlageMediatorTest {
             )
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand().type shouldBe FERDIGSTILT
+                .tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
 
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
@@ -343,7 +343,7 @@ class KlageMediatorTest {
             )
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand().type shouldBe FERDIGSTILT
+                .tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
@@ -408,7 +408,7 @@ class KlageMediatorTest {
             )
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+            klageBehandling.tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
             klageBehandling.utfall() shouldBe UtfallType.AVVIST
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 1

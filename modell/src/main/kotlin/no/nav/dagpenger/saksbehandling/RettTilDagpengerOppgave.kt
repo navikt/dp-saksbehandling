@@ -3,18 +3,14 @@ package no.nav.dagpenger.saksbehandling
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling.BESLUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
@@ -48,7 +44,7 @@ data class RettTilDagpengerOppgave private constructor(
     override val opprettet: LocalDateTime,
     override var behandlerIdent: String? = null,
     override val emneknagger: MutableSet<String>,
-    override var tilstand: Tilstand = KlarTilBehandling,
+    override var tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
     override var utsattTil: LocalDate? = null,
     override val tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     override val person: Person,
@@ -59,7 +55,7 @@ data class RettTilDagpengerOppgave private constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstand: Tilstand = KlarTilBehandling,
+        tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
@@ -92,7 +88,7 @@ data class RettTilDagpengerOppgave private constructor(
             behandlerIdent: String?,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
-            tilstand: Tilstand,
+            tilstand: RettTilDagpengerTilstand,
             utsattTil: LocalDate?,
             tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             person: Person,
@@ -114,11 +110,13 @@ data class RettTilDagpengerOppgave private constructor(
 
         private fun requireBeslutterTilgang(
             saksbehandler: Saksbehandler,
-            tilstandType: Type,
+            tilstandType: Tilstand.Type,
             hendelseNavn: String,
         ) {
             require(saksbehandler.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeBeslutterTilgang("Kan ikke behandle $hendelseNavn i tilstand $tilstandType uten beslutter-tilgang")
+                throw RettTilDagpengerTilstand.ManglendeBeslutterTilgang(
+                    "Kan ikke behandle $hendelseNavn i tilstand $tilstandType uten beslutter-tilgang",
+                )
             }
         }
 
@@ -128,7 +126,7 @@ data class RettTilDagpengerOppgave private constructor(
             hendelseNavn: String,
         ) {
             require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
-                throw Tilstand.KanIkkeBeslutteEgenSaksbehandling(
+                throw RettTilDagpengerTilstand.KanIkkeBeslutteEgenSaksbehandling(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
                         "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
                         "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
@@ -142,7 +140,7 @@ data class RettTilDagpengerOppgave private constructor(
         ) {
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
                 require(oppgave.meldingOmVedtak.kontrollertGosysBrev == KontrollertBrev.JA) {
-                    throw Tilstand.KreverKontrollAvGosysBrev(
+                    throw RettTilDagpengerTilstand.KreverKontrollAvGosysBrev(
                         "Brev i Gosys må være kontrollert av beslutter for å kunne behandle $hendelseNavn i " +
                             "tilstand ${oppgave.tilstand.type}. Brevkilde: ${oppgave.meldingOmVedtak.kilde}, " +
                             "KontrollertGosysBrev: ${oppgave.meldingOmVedtak.kontrollertGosysBrev}",
@@ -246,7 +244,7 @@ data class RettTilDagpengerOppgave private constructor(
     }
 
     private fun endreTilstand(
-        nyTilstand: Tilstand,
+        nyTilstand: RettTilDagpengerTilstand,
         hendelse: Hendelse,
     ) {
         logger.info {
@@ -298,8 +296,8 @@ data class RettTilDagpengerOppgave private constructor(
             logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
         }.getOrThrow()
 
-    object Opprettet : Tilstand {
-        override val type: Type = OPPRETTET
+    object Opprettet : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = OPPRETTET
 
         override fun oppgaveKlarTilBehandling(
             oppgave: RettTilDagpengerOppgave,
@@ -325,8 +323,8 @@ data class RettTilDagpengerOppgave private constructor(
         }
     }
 
-    object KlarTilBehandling : Tilstand {
-        override val type: Type = KLAR_TIL_BEHANDLING
+    object KlarTilBehandling : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = Tilstand.Type.KLAR_TIL_BEHANDLING
 
         override fun oppgaveKlarTilBehandling(
             oppgave: RettTilDagpengerOppgave,
@@ -360,8 +358,8 @@ data class RettTilDagpengerOppgave private constructor(
         }
     }
 
-    object UnderBehandling : Tilstand {
-        override val type: Type = UNDER_BEHANDLING
+    object UnderBehandling : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = UNDER_BEHANDLING
 
         override fun sendTilKontroll(
             oppgave: RettTilDagpengerOppgave,
@@ -531,8 +529,8 @@ data class RettTilDagpengerOppgave private constructor(
         message: String,
     ) : RuntimeException(message)
 
-    object FerdigBehandlet : Tilstand {
-        override val type: Type = FERDIG_BEHANDLET
+    object FerdigBehandlet : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = FERDIG_BEHANDLET
 
         override fun ferdigstill(
             oppgave: RettTilDagpengerOppgave,
@@ -551,8 +549,8 @@ data class RettTilDagpengerOppgave private constructor(
         }
     }
 
-    object Avbrutt : Tilstand {
-        override val type: Type = AVBRUTT
+    object Avbrutt : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = Tilstand.Type.AVBRUTT
 
         override fun avbryt(
             oppgave: RettTilDagpengerOppgave,
@@ -562,8 +560,8 @@ data class RettTilDagpengerOppgave private constructor(
         }
     }
 
-    object PåVent : Tilstand {
-        override val type: Type = PAA_VENT
+    object PåVent : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = Tilstand.Type.PAA_VENT
 
         override fun tildel(
             oppgave: RettTilDagpengerOppgave,
@@ -622,8 +620,8 @@ data class RettTilDagpengerOppgave private constructor(
         }
     }
 
-    object KlarTilKontroll : Tilstand {
-        override val type: Type = KLAR_TIL_KONTROLL
+    object KlarTilKontroll : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = KLAR_TIL_KONTROLL
 
         override fun tildel(
             oppgave: RettTilDagpengerOppgave,
@@ -652,18 +650,18 @@ data class RettTilDagpengerOppgave private constructor(
         }
     }
 
-    object AvventerLåsAvBehandling : Tilstand {
-        override val type: Type = AVVENTER_LÅS_AV_BEHANDLING
+    object AvventerLåsAvBehandling : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = AVVENTER_LÅS_AV_BEHANDLING
     }
 
-    object AvventerOpplåsingAvBehandling : Tilstand {
-        override val type: Type = AVVENTER_OPPLÅSING_AV_BEHANDLING
+    object AvventerOpplåsingAvBehandling : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = AVVENTER_OPPLÅSING_AV_BEHANDLING
     }
 
     data class UnderKontroll(
         private var notat: Notat? = null,
-    ) : Tilstand {
-        override val type: Type = UNDER_KONTROLL
+    ) : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = UNDER_KONTROLL
 
         override fun ferdigstill(
             oppgave: RettTilDagpengerOppgave,
@@ -860,36 +858,7 @@ data class RettTilDagpengerOppgave private constructor(
         INGEN,
     }
 
-    sealed interface Tilstand {
-        val type: Type
-
-        enum class Type {
-            OPPRETTET,
-            KLAR_TIL_BEHANDLING,
-            UNDER_BEHANDLING,
-            FERDIG_BEHANDLET,
-            PAA_VENT,
-            KLAR_TIL_KONTROLL,
-            UNDER_KONTROLL,
-            AVVENTER_LÅS_AV_BEHANDLING,
-            AVVENTER_OPPLÅSING_AV_BEHANDLING,
-            AVBRUTT,
-            ;
-
-            companion object {
-                val values
-                    get() = entries.toSet()
-
-                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
-                val søkbareTilstander =
-                    entries
-                        .toSet()
-                        .minus(OPPRETTET)
-                        .minus(AVVENTER_LÅS_AV_BEHANDLING)
-                        .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
-            }
-        }
-
+    sealed interface RettTilDagpengerTilstand : Oppgave.Tilstand {
         fun notat(): Notat? = null
 
         fun behov() = emptySet<String>()

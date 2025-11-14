@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -11,7 +11,7 @@ sealed class Oppgave {
     abstract val opprettet: LocalDateTime
     abstract var behandlerIdent: String?
     protected abstract val emneknagger: MutableSet<String>
-    protected abstract var tilstand: Tilstand
+    protected abstract var tilstand: RettTilDagpengerTilstand
     protected abstract var utsattTil: LocalDate?
     protected abstract val tilstandslogg: OppgaveTilstandslogg
     abstract val person: Person
@@ -65,5 +65,36 @@ sealed class Oppgave {
         DP_SAK,
         GOSYS,
         INGEN,
+    }
+
+    interface Tilstand {
+        val type: Type
+
+        enum class Type {
+            KLAR_TIL_BEHANDLING,
+            UNDER_BEHANDLING,
+            PAA_VENT,
+            KLAR_TIL_KONTROLL,
+            UNDER_KONTROLL,
+            FERDIG_BEHANDLET,
+            AVBRUTT,
+            OPPRETTET,
+            AVVENTER_LÅS_AV_BEHANDLING,
+            AVVENTER_OPPLÅSING_AV_BEHANDLING,
+            ;
+
+            companion object {
+                val values
+                    get() = entries.toSet()
+
+                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
+                val søkbareTilstander =
+                    entries
+                        .toSet()
+                        .minus(OPPRETTET)
+                        .minus(AVVENTER_LÅS_AV_BEHANDLING)
+                        .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
+            }
+        }
     }
 }

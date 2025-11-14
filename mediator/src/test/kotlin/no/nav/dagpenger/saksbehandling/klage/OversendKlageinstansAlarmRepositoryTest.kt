@@ -55,7 +55,7 @@ class OversendKlageinstansAlarmRepositoryTest {
                 toTimerSiden,
             )
             ds.opprettOgLagreKlageBehandling(
-                Klage.Ferdigstilt,
+                Klage.OversendtKlageinstans,
                 toTimerSiden,
             )
 

@@ -4,7 +4,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -127,7 +127,7 @@ fun lagKlagebehandling(
             when (tilstand) {
                 BEHANDLES -> Klage.Behandles
                 OVERSEND_KLAGEINSTANS -> Klage.OversendKlageinstans
-                FERDIGSTILT -> Klage.Ferdigstilt
+                OVERSENDT_KLAGEINSTANS -> Klage.OversendtKlageinstans
                 AVBRUTT -> Klage.Avbrutt
             },
         behandlingId = UUIDv7.ny(),

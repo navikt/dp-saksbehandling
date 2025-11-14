@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
@@ -213,7 +213,7 @@ data class Klage private constructor(
                 throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
             } else {
                 klage.endreTilstand(
-                    nyTilstand = Ferdigstilt,
+                    nyTilstand = OversendtKlageinstans,
                     hendelse = hendelse,
                 )
             }
@@ -238,14 +238,14 @@ data class Klage private constructor(
             hendelse: OversendtKlageinstansHendelse,
         ) {
             klage.endreTilstand(
-                nyTilstand = Ferdigstilt,
+                nyTilstand = OversendtKlageinstans,
                 hendelse = hendelse,
             )
         }
     }
 
-    object Ferdigstilt : KlageTilstand {
-        override val type: Type = FERDIGSTILT
+    object OversendtKlageinstans : KlageTilstand {
+        override val type: Type = OVERSENDT_KLAGEINSTANS
     }
 
     object Avbrutt : KlageTilstand {
@@ -279,7 +279,7 @@ data class Klage private constructor(
         enum class Type {
             BEHANDLES,
             OVERSEND_KLAGEINSTANS,
-            FERDIGSTILT,
+            OVERSENDT_KLAGEINSTANS,
             AVBRUTT,
         }
     }

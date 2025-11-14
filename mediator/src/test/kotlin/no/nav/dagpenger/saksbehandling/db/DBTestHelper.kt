@@ -162,7 +162,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
 
         fun leggTilOppgave(
             id: UUID = UUIDv7.ny(),
-            tilstand: RettTilDagpengerOppgave.Tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
+            tilstand: RettTilDagpengerOppgave.RettTilDagpengerTilstand = RettTilDagpengerOppgave.KlarTilBehandling,
             emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
             opprettet: LocalDateTime = opprettetNå,

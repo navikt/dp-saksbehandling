@@ -4,8 +4,8 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.Companion.søkbareTilstander
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -15,7 +15,7 @@ import java.util.UUID
 
 data class Søkefilter(
     val periode: Periode,
-    val tilstander: Set<Tilstand.Type>,
+    val tilstander: Set<Oppgave.Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
@@ -70,7 +70,7 @@ data class Søkefilter(
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagger: Set<String>,
-    val tilstander: Set<Tilstand.Type> = emptySet(),
+    val tilstander: Set<Oppgave.Tilstand.Type> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
@@ -164,8 +164,8 @@ class FilterBuilder {
         }
     }
 
-    fun tilstander(): Set<Tilstand.Type>? {
-        return stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
+    fun tilstander(): Set<Oppgave.Tilstand.Type>? {
+        return stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
     }
 
     fun utløstAvTyper(): Set<UtløstAvType>? {

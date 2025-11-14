@@ -12,6 +12,17 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerBehandling
@@ -24,18 +35,7 @@ import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.PåVent
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.UgyldigTilstandException
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
@@ -72,6 +72,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.collections.isNotEmpty
+import kotlin.collections.joinToString
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -221,7 +223,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
 
                 sikkerlogger.info { "Henter oppgaver med SQL i tildelNesteOppgave: $statement - Filter = $filter" }
 
-                val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
+                val oppgaveIdOgTilstandType: Pair<UUID, Oppgave.Tilstand.Type>? =
                     tx.run(
                         queryOf(
                             statement = statement,
@@ -261,7 +263,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<RettTilDagpengerOppgave> =
+    override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<RettTilDagpengerOppgave> =
         søk(
             søkeFilter =
                 Søkefilter(

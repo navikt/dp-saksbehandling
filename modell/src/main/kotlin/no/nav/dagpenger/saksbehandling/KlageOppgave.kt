@@ -1,8 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -12,7 +11,7 @@ class KlageOppgave private constructor(
     override val opprettet: LocalDateTime,
     override var behandlerIdent: String? = null,
     override val emneknagger: MutableSet<String>,
-    override var tilstand: Tilstand = KlarTilBehandling,
+    override var tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
     override var utsattTil: LocalDate? = null,
     override val tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     override val person: Person,
@@ -23,7 +22,7 @@ class KlageOppgave private constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstand: Tilstand = KlarTilBehandling,
+        tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
@@ -47,7 +46,7 @@ class KlageOppgave private constructor(
             behandlerIdent: String?,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
-            tilstand: Tilstand,
+            tilstand: RettTilDagpengerTilstand,
             utsattTil: LocalDate?,
             tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             person: Person,
@@ -68,7 +67,7 @@ class KlageOppgave private constructor(
             )
     }
 
-    object KlarTilBehandling : Tilstand {
-        override val type: Type = KLAR_TIL_BEHANDLING
+    object KlarTilBehandling : RettTilDagpengerTilstand {
+        override val type: Tilstand.Type = KLAR_TIL_BEHANDLING
     }
 }

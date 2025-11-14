@@ -12,9 +12,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -268,7 +268,7 @@ internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktRe
     )
 }
 
-internal fun RettTilDagpengerOppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
+internal fun RettTilDagpengerOppgave.RettTilDagpengerTilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
     return when (this) {
         is RettTilDagpengerOppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
         is RettTilDagpengerOppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
