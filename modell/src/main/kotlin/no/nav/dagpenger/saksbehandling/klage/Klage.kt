@@ -149,7 +149,7 @@ data class Klage private constructor(
     ) {
         logger.info {
             "Endrer klagetilstand fra ${this.tilstand.type} til ${nyTilstand.type} for klage ${this.behandlingId} " +
-                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
+                "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)

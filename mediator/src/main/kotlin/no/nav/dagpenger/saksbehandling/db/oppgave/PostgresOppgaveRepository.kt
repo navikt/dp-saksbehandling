@@ -917,7 +917,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): RettTilDagpengerOppgave
         behandlerIdent = this.stringOrNull("saksbehandler_ident"),
         opprettet = this.localDateTime("oppgave_opprettet"),
         emneknagger = hentEmneknaggerForOppgave(oppgaveId, dataSource),
-        tilstand = tilstand,
+        tilstandsType = tilstand,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
         behandling =

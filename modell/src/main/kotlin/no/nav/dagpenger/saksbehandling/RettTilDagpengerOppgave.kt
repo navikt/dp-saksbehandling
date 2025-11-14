@@ -3,11 +3,14 @@ package no.nav.dagpenger.saksbehandling
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling.BESLUTT
@@ -44,18 +47,33 @@ data class RettTilDagpengerOppgave private constructor(
     override val opprettet: LocalDateTime,
     override var behandlerIdent: String? = null,
     override val emneknagger: MutableSet<String>,
-    override var tilstand: Tilstand = KlarTilBehandling,
+    override var tilstandType: Tilstand.Type = Tilstand.Type.KLAR_TIL_BEHANDLING,
     override var utsattTil: LocalDate? = null,
     override val tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     override val person: Person,
     override val behandling: RettTilDagpengerBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
 ) : Oppgave() {
+    private var tilstand: RettTilDagpengerTilstand =
+        when (tilstandType) {
+            Tilstand.Type.KLAR_TIL_BEHANDLING -> KlarTilBehandling
+            Tilstand.Type.UNDER_BEHANDLING -> UnderBehandling
+            Tilstand.Type.PAA_VENT -> PåVent
+            Tilstand.Type.KLAR_TIL_KONTROLL -> KlarTilKontroll
+            // todo
+            Tilstand.Type.UNDER_KONTROLL -> UnderKontroll(null)
+            Tilstand.Type.FERDIG_BEHANDLET -> FerdigBehandlet
+            Tilstand.Type.AVBRUTT -> Avbrutt
+            Tilstand.Type.OPPRETTET -> Opprettet
+            Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
+            Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
+        }
+
     constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstand: Tilstand = KlarTilBehandling,
+        tilstandType: Tilstand.Type = Tilstand.Type.KLAR_TIL_BEHANDLING,
         behandlerIdent: String? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
@@ -66,7 +84,7 @@ data class RettTilDagpengerOppgave private constructor(
         behandlerIdent = behandlerIdent,
         opprettet = opprettet,
         emneknagger = emneknagger.toMutableSet(),
-        tilstand = tilstand,
+        tilstandType = tilstandType,
         tilstandslogg = tilstandslogg,
         person = person,
         behandling = behandling,
@@ -88,7 +106,7 @@ data class RettTilDagpengerOppgave private constructor(
             behandlerIdent: String?,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
-            tilstand: RettTilDagpengerTilstand,
+            tilstandType: Tilstand.Type,
             utsattTil: LocalDate?,
             tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             person: Person,
@@ -100,7 +118,7 @@ data class RettTilDagpengerOppgave private constructor(
                 opprettet = opprettet,
                 behandlerIdent = behandlerIdent,
                 emneknagger = emneknagger.toMutableSet(),
-                tilstand = tilstand,
+                tilstandType = tilstandType,
                 utsattTil = utsattTil,
                 tilstandslogg = tilstandslogg,
                 person = person,
@@ -295,6 +313,8 @@ data class RettTilDagpengerOppgave private constructor(
         }.onFailure { e ->
             logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
         }.getOrThrow()
+
+    override fun tilstand(): Tilstand = this.tilstand
 
     object Opprettet : RettTilDagpengerTilstand {
         override val type: Tilstand.Type = OPPRETTET
@@ -859,8 +879,6 @@ data class RettTilDagpengerOppgave private constructor(
     }
 
     sealed interface RettTilDagpengerTilstand : Oppgave.Tilstand {
-        fun notat(): Notat? = null
-
         fun behov() = emptySet<String>()
 
         fun oppgaveKlarTilBehandling(
