@@ -10,7 +10,6 @@ sealed class Oppgave {
     abstract val opprettet: LocalDateTime
     abstract var behandlerIdent: String?
     protected abstract val emneknagger: MutableSet<String>
-    protected abstract val tilstandType: Tilstand.Type
     protected abstract var utsattTil: LocalDate?
     protected abstract val tilstandslogg: OppgaveTilstandslogg
     abstract val person: Person
@@ -23,7 +22,7 @@ sealed class Oppgave {
     ) {
         require(this.erEierAvOppgave(saksbehandler)) {
             throw SaksbehandlerErIkkeEier(
-                "Ulovlig hendelse $hendelseNavn på oppgave i tilstand $tilstandType uten å eie oppgaven. " +
+                "Ulovlig hendelse $hendelseNavn på oppgave i tilstand $${tilstandType()} uten å eie oppgaven. " +
                     "Oppgave eies av ${this.behandlerIdent} og ikke ${saksbehandler.navIdent}",
             )
         }
@@ -48,6 +47,8 @@ sealed class Oppgave {
     fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
 
     fun utsattTil() = this.utsattTil
+
+    abstract fun tilstandType(): Tilstand.Type
 
     enum class KontrollertBrev {
         JA,

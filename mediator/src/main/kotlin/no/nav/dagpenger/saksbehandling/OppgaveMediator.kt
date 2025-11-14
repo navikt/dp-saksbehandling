@@ -85,7 +85,6 @@ class OppgaveMediator(
             oppgave =
                 KlageOppgave(
                     oppgaveId = UUIDv7.ny(),
-                    emneknagger = emptySet(),
                     opprettet = behandling.opprettet,
                     tilstandslogg =
                         OppgaveTilstandslogg(

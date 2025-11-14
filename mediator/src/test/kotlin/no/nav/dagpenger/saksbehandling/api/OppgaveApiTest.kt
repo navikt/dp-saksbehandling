@@ -339,7 +339,7 @@ class OppgaveApiTest {
                 navIdent = TestHelper.beslutter.navIdent,
             )
 
-        val notat: String = "Dette er et notat"
+        val notat: String = "kDette er et notat"
 
         @Language("JSON")
         val notatJson = """ {"tekst": "$notat"} """
@@ -915,7 +915,7 @@ class OppgaveApiTest {
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         utlostAv = testOppgave.tilUtlostAvTypeDTO(),
                         emneknagger = testOppgave.emneknagger().toList(),
-                        tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
+                        tilstand = testOppgave.tilstandType().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
                                 ident = TestHelper.saksbehandler.navIdent,
@@ -1066,7 +1066,7 @@ class OppgaveApiTest {
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
                         utlostAv = oppgave.tilUtlostAvTypeDTO(),
                         emneknagger = oppgave.emneknagger().toList(),
-                        tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
+                        tilstand = oppgave.tilstandType().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
                                 ident = TestHelper.saksbehandler.navIdent,

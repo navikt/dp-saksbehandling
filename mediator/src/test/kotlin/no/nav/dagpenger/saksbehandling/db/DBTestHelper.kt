@@ -196,7 +196,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             return RettTilDagpengerOppgave(
                 oppgaveId = id,
                 opprettet = opprettet,
-                tilstandType = tilstand,
+                tilstand = tilstand,
                 emneknagger = emneknagger,
                 tilstandslogg = tilstandslogg,
                 behandlerIdent = saksbehandlerIdent,
@@ -227,7 +227,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 oppgaveId = oppgaveId,
                 emneknagger = setOf(),
                 opprettet = behandling.opprettet,
-                tilstandType = RettTilDagpengerOppgave.KlarTilBehandling,
+                tilstand = RettTilDagpengerOppgave.KlarTilBehandling,
                 behandling = behandling,
                 person = person,
                 meldingOmVedtak =

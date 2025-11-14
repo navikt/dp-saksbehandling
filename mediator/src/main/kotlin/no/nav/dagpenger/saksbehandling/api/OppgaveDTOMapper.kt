@@ -4,7 +4,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.KlageOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -149,7 +148,7 @@ internal class OppgaveDTOMapper(
             behandlingType = oppgave.tilBehandlingTypeDTO(),
             utlostAv = oppgave.tilUtlostAvTypeDTO(),
             emneknagger = oppgave.emneknagger().toList(),
-            tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
+            tilstand = oppgave.tilstandType().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
             utsattTilDato = oppgave.utsattTil(),
             saksbehandler = sisteSaksbehandlerDTO,
@@ -252,7 +251,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
-        tilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        tilstand = this.tilstandType().tilOppgaveTilstandDTO(),
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
     )
@@ -268,25 +267,24 @@ internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktRe
     )
 }
 
-internal fun RettTilDagpengerOppgave.RettTilDagpengerTilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
+internal fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
     return when (this) {
-        is RettTilDagpengerOppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        is RettTilDagpengerOppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        is RettTilDagpengerOppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
-        is RettTilDagpengerOppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
-        is RettTilDagpengerOppgave.PåVent -> OppgaveTilstandDTO.PAA_VENT
-        is RettTilDagpengerOppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
-        is RettTilDagpengerOppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
-        is RettTilDagpengerOppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
-        is RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
-        is RettTilDagpengerOppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
-        is KlageOppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        Oppgave.Tilstand.Type.PAA_VENT -> OppgaveTilstandDTO.PAA_VENT
+        Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
+        Oppgave.Tilstand.Type.UNDER_KONTROLL -> OppgaveTilstandDTO.UNDER_KONTROLL
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        Oppgave.Tilstand.Type.AVBRUTT -> OppgaveTilstandDTO.AVBRUTT
+        Oppgave.Tilstand.Type.OPPRETTET -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
+        Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
+        Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
     }
 }
 
 internal fun RettTilDagpengerOppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     return TildeltOppgaveDTO(
-        nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        nyTilstand = this.tilstandType().tilOppgaveTilstandDTO(),
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
     )

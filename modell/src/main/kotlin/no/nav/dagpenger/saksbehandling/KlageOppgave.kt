@@ -14,27 +14,18 @@ class KlageOppgave private constructor(
     override val opprettet: LocalDateTime,
     override var behandlerIdent: String? = null,
     override val emneknagger: MutableSet<String>,
-    override var tilstandType: Tilstand.Type = KLAR_TIL_BEHANDLING,
     override var utsattTil: LocalDate? = null,
     override val tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
     override val person: Person,
     override val behandling: KlageBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
+    private var tilstand: KlageOppgaveTilstand = KlarTilBehandling,
 ) : Oppgave() {
-    private var tilstand: KlageOppgaveTilstand =
-        when (tilstandType) {
-            KLAR_TIL_BEHANDLING -> KlarTilBehandling
-            UNDER_BEHANDLING -> KlageOppgaveTilstand.UnderBehandling
-            PAA_VENT -> KlageOppgaveTilstand.Påvent
-            FERDIG_BEHANDLET -> KlageOppgaveTilstand.FerdigBehandlet
-            else -> throw IllegalArgumentException("Ukjent tilstand for klageoppgave: $tilstandType")
-        }
-
     constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstandType: Tilstand.Type,
+        tilstandType: Tilstand.Type = KLAR_TIL_BEHANDLING,
         behandlerIdent: String? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
@@ -45,14 +36,24 @@ class KlageOppgave private constructor(
         behandlerIdent = behandlerIdent,
         opprettet = opprettet,
         emneknagger = emneknagger.toMutableSet(),
-        tilstandType = tilstandType,
         tilstandslogg = tilstandslogg,
         person = person,
         behandling = behandling,
         meldingOmVedtak = meldingOmVedtak,
-    )
+    ) {
+        this.tilstand =
+            when (tilstandType) {
+                KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                UNDER_BEHANDLING -> KlageOppgaveTilstand.UnderBehandling
+                PAA_VENT -> KlageOppgaveTilstand.Påvent
+                FERDIG_BEHANDLET -> KlageOppgaveTilstand.FerdigBehandlet
+                else -> throw IllegalArgumentException("Ukjent tilstand for klageoppgave: $tilstandType")
+            }
+    }
 
     override fun tilstand(): Tilstand = tilstand
+
+    override fun tilstandType(): Tilstand.Type = tilstand.type
 
     companion object {
         fun rehydrer(
@@ -60,7 +61,7 @@ class KlageOppgave private constructor(
             behandlerIdent: String?,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
-            tilstandType: Tilstand.Type = KLAR_TIL_BEHANDLING,
+            tilstand: KlageOppgaveTilstand,
             utsattTil: LocalDate?,
             tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
             person: Person,
@@ -72,7 +73,7 @@ class KlageOppgave private constructor(
                 opprettet = opprettet,
                 behandlerIdent = behandlerIdent,
                 emneknagger = emneknagger.toMutableSet(),
-                tilstandType = tilstandType,
+                tilstand = tilstand,
                 utsattTil = utsattTil,
                 tilstandslogg = tilstandslogg,
                 person = person,
@@ -81,7 +82,7 @@ class KlageOppgave private constructor(
             )
     }
 
-    private sealed interface KlageOppgaveTilstand : Tilstand {
+    sealed interface KlageOppgaveTilstand : Tilstand {
         object KlarTilBehandling : KlageOppgaveTilstand {
             override val type = KLAR_TIL_BEHANDLING
         }

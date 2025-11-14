@@ -189,7 +189,7 @@ internal object TestHelper {
     }
 
     fun lagKlageOppgave(
-        tilstand: RettTilDagpengerOppgave.RettTilDagpengerTilstand = KlarTilBehandling,
+        tilstand: KlageOppgave.KlageOppgaveTilstand = KlageOppgave.KlageOppgaveTilstand.KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
@@ -204,7 +204,7 @@ internal object TestHelper {
             behandlerIdent = saksbehandlerIdent,
             opprettet = opprettet,
             emneknagger = emneknagger,
-            tilstandType = tilstand,
+            tilstand = tilstand,
             utsattTil = utsattTil,
             tilstandslogg = tilstandslogg,
             person = person,
@@ -233,7 +233,7 @@ internal object TestHelper {
             behandlerIdent = saksbehandlerIdent,
             opprettet = opprettet,
             emneknagger = emneknagger,
-            tilstandsType = tilstand,
+            tilstand = tilstand,
             utsattTil = utsattTil,
             tilstandslogg = tilstandslogg,
             person = person,
