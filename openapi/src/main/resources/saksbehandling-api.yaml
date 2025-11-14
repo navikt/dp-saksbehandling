@@ -9,6 +9,67 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
+  /innsending/{behandlingId}/ferdigstill:
+    put:
+      summary: Ferdigstill innsending for en gitt id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FerdigstillInnsendingRequest'
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Innsending ferdigstilt
+        '404':
+          description: Innsending informasjon for behandlingId ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /innsending/{behandlingId}:
+    get:
+      summary: Hent innsending for en gitt id
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med innsending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Innsending'
+        '404':
+          description: Innsending informasjon for behandlingId ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave:
     get:
       summary: Hent alle oppgaver med status Klar til behandling
@@ -871,6 +932,42 @@ paths:
 
 components:
   schemas:
+    Innsending:
+      type: object
+      properties:
+        behandlingId:
+          type: string
+          format: uuid
+        journalpostId:
+          type: string
+        lovligeSaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/TynnSak'
+        sakId:
+          type: string
+          format: uuid
+        vurdering:
+          type: string
+        nyBehandling:
+          $ref: '#/components/schemas/Behandling'
+      required:
+        - behandlingId
+        - journalpostId
+        - lovligeSaker
+
+    TynnSak:
+      type: object
+      properties:
+        sakId:
+          type: string
+          format: uuid
+        opprettetDato:
+          type: string
+          format: date-time
+      required:
+        - sakId
+        - opprettetDato
     Person:
       type: object
       properties:
@@ -1152,6 +1249,7 @@ components:
       enum:
         - RETT_TIL_DAGPENGER
         - KLAGE
+        - INGEN
 
     LovligeEndringer:
       type: object
@@ -1740,6 +1838,19 @@ components:
       required:
         - verdi
         - tilgjengeligeUtfall
+
+    FerdigstillInnsendingRequest:
+      type: object
+      properties:
+        sakId:
+          type: string
+          format: uuid
+        vurdering:
+          type: string
+        behandlingsType:
+          $ref: '#/components/schemas/BehandlingType'
+      required:
+        - sakId
     HttpProblem:
       type: object
       properties:
