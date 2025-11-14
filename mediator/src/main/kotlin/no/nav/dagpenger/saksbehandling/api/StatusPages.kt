@@ -10,9 +10,9 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UgyldigTilstandException
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -65,7 +65,7 @@ fun Application.statusPages() {
                     call.respond(HttpStatusCode.InternalServerError, problem)
                 }
 
-                is UlovligTilstandsendringException -> {
+                is Oppgave.Tilstand.UlovligTilstandsendringException -> {
                     val problem =
                         HttpProblemDTO(
                             title = "Ulovlig tilstandsendring på oppgave",

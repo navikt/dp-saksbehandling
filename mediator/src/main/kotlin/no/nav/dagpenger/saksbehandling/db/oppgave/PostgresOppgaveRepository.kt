@@ -255,7 +255,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun lagre(oppgave: Oppgave) {
+    override fun lagre(oppgave: Oppgave<*>) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.lagre(oppgave)
@@ -717,7 +717,7 @@ private fun hentTilstandsloggForOppgave(
     }
 }
 
-private fun TransactionalSession.lagre(oppgave: Oppgave) {
+private fun TransactionalSession.lagre(oppgave: Oppgave<*>) {
     run(
         queryOf(
             //language=PostgreSQL

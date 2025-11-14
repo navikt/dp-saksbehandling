@@ -1,23 +1,33 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-sealed class Oppgave {
+private val logger = KotlinLogging.logger {}
+
+sealed class Oppgave<T : Oppgave.Tilstand> {
     abstract val oppgaveId: UUID
     abstract val opprettet: LocalDateTime
     abstract var behandlerIdent: String?
     protected abstract val emneknagger: MutableSet<String>
-    protected abstract var utsattTil: LocalDate?
+    abstract var utsattTil: LocalDate?
     protected abstract val tilstandslogg: OppgaveTilstandslogg
     abstract val person: Person
     abstract val behandling: Behandling
     protected abstract var meldingOmVedtak: MeldingOmVedtak
-    protected abstract val tilstand: Tilstand
+    protected abstract var tilstand: T
 
-    protected fun requireEierskapTilOppgave(
+    fun requireEierskapTilOppgave(
         saksbehandler: Saksbehandler,
         hendelseNavn: String,
     ) {
@@ -51,6 +61,21 @@ sealed class Oppgave {
 
     fun tilstandType() = this.tilstand.type
 
+    fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        egneAnsatteTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+        tilstand.tildel(this, settOppgaveAnsvarHendelse)
+    }
+
+    fun endreTilstand(
+        nyTilstand: Tilstand,
+        hendelse: Hendelse,
+    ) {
+        tilstandslogg.leggTil(nyTilstand.type, hendelse)
+        @Suppress("UNCHECKED_CAST")
+        tilstand = nyTilstand as T
+    }
+
     enum class KontrollertBrev {
         JA,
         NEI,
@@ -70,6 +95,16 @@ sealed class Oppgave {
 
     interface Tilstand {
         fun notat(): Notat? = null
+
+        fun tildel(
+            oppgave: Oppgave<*>,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type",
+            )
+        }
 
         val type: Type
 
@@ -99,5 +134,60 @@ sealed class Oppgave {
                         .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
             }
         }
+
+        fun ulovligTilstandsendring(
+            oppgaveId: UUID,
+            message: String,
+        ): Nothing {
+            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                logger.error { message }
+            }
+            throw UlovligTilstandsendringException(message)
+        }
+
+        class UlovligTilstandsendringException(
+            message: String,
+        ) : RuntimeException(message)
     }
+
+    fun sisteSaksbehandler(): String? =
+        runCatching {
+            tilstandslogg().firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
+                (it.hendelse as AnsvarHendelse).ansvarligIdent
+            }
+        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
+            .getOrThrow()
+
+    fun sisteBeslutter(): String? =
+        runCatching {
+            tilstandslogg().firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
+                (it.hendelse as AnsvarHendelse).ansvarligIdent
+            }
+        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
+            .getOrThrow()
+
+    fun soknadId(): UUID? =
+        runCatching {
+            tilstandslogg().firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
+                val hendelse = it.hendelse as ForslagTilVedtakHendelse
+                when (hendelse.behandletHendelseType) {
+                    "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
+                    "Manuell", "Meldekort" -> {
+                        logger.info {
+                            "behandletHendelseType is ${hendelse.behandletHendelseType} " +
+                                "for oppgave: ${this.oppgaveId} " +
+                                "søknadId eksisterer derfor ikke"
+                        }
+                        null
+                    }
+
+                    else -> {
+                        logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
+                        null
+                    }
+                }
+            }
+        }.onFailure { e ->
+            logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
+        }.getOrThrow()
 }

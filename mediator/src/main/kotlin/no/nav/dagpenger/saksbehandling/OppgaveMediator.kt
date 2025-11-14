@@ -111,7 +111,7 @@ class OppgaveMediator(
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> =
+    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave<*>> =
         oppgaveRepository.hentAlleOppgaverMedTilstand(
             tilstand,
         )
@@ -137,7 +137,7 @@ class OppgaveMediator(
     fun hentOppgaveHvisTilgang(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave =
+    ): Oppgave<*> =
         oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)

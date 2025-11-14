@@ -20,7 +20,7 @@ class KlageOppgave private constructor(
     override val behandling: KlageBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
     override var tilstand: KlageOppgaveTilstand = KlarTilBehandling,
-) : Oppgave() {
+) : Oppgave<KlageOppgave.KlageOppgaveTilstand>() {
     constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),

@@ -12,7 +12,7 @@ import java.util.UUID
 interface OppgaveRepository {
     fun hentOppgave(oppgaveId: UUID): RettTilDagpengerOppgave
 
-    fun lagre(oppgave: Oppgave)
+    fun lagre(oppgave: Oppgave<*>)
 
     fun finnOppgaverFor(ident: String): List<RettTilDagpengerOppgave>
 

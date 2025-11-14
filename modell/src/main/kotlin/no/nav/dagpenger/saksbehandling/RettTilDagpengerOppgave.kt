@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -11,8 +10,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling.BESLUTT
+import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -21,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
-import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -50,7 +48,7 @@ data class RettTilDagpengerOppgave private constructor(
     override val behandling: RettTilDagpengerBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
     override var tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
-) : Oppgave() {
+) : Oppgave<RettTilDagpengerTilstand>() {
     constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
@@ -156,13 +154,13 @@ data class RettTilDagpengerOppgave private constructor(
         }
 
         private fun requireBeslutterUlikSaksbehandler(
-            oppgave: RettTilDagpengerOppgave,
+            oppgave: Oppgave<*>,
             beslutter: Saksbehandler,
             hendelseNavn: String,
         ) {
             require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
                 throw RettTilDagpengerTilstand.KanIkkeBeslutteEgenSaksbehandling(
-                    "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
+                    "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstandType()}. " +
                         "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
                         "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
                 )
@@ -224,12 +222,6 @@ data class RettTilDagpengerOppgave private constructor(
         tilstand.fjernAnsvar(this, fjernOppgaveAnsvarHendelse)
     }
 
-    fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
-        egneAnsatteTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
-        tilstand.tildel(this, settOppgaveAnsvarHendelse)
-    }
-
     fun utsett(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
         egneAnsatteTilgangskontroll(utsettOppgaveHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(utsettOppgaveHendelse.utførtAv)
@@ -278,58 +270,28 @@ data class RettTilDagpengerOppgave private constructor(
         tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
 
-    private fun endreTilstand(
-        nyTilstand: RettTilDagpengerTilstand,
-        hendelse: Hendelse,
-    ) {
-        logger.info {
-            "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
-                "basert på hendelse: ${hendelse.javaClass.simpleName} "
-        }
-        this.tilstand = nyTilstand
-        this.tilstandslogg().leggTil(nyTilstand.type, hendelse)
-    }
-
-    fun sisteSaksbehandler(): String? =
-        runCatching {
-            tilstandslogg().firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
-                (it.hendelse as AnsvarHendelse).ansvarligIdent
-            }
-        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
-            .getOrThrow()
-
-    fun sisteBeslutter(): String? =
-        runCatching {
-            tilstandslogg().firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
-                (it.hendelse as AnsvarHendelse).ansvarligIdent
-            }
-        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
-            .getOrThrow()
-
-    fun soknadId(): UUID? =
-        runCatching {
-            tilstandslogg().firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
-                val hendelse = it.hendelse as ForslagTilVedtakHendelse
-                when (hendelse.behandletHendelseType) {
-                    "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
-                    "Manuell", "Meldekort" -> {
-                        logger.info {
-                            "behandletHendelseType is ${hendelse.behandletHendelseType} " +
-                                "for oppgave: ${this.oppgaveId} " +
-                                "søknadId eksisterer derfor ikke"
-                        }
-                        null
-                    }
-
-                    else -> {
-                        logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
-                        null
-                    }
-                }
-            }
-        }.onFailure { e ->
-            logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
-        }.getOrThrow()
+//    override fun endreTilstand(
+//        nyTilstand: Tilstand,
+//        hendelse: Hendelse,
+//    ) {
+//        logger.info {
+//            "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
+//                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
+//        }
+//        this.tilstand = nyTilstand as RettTilDagpengerTilstand
+//        this.tilstandslogg().leggTil(nyTilstand.type, hendelse)
+//    }
+//    override fun endreTilstand(
+//        nyTilstand: Tilstand,
+//        hendelse: Hendelse,
+//    ) {
+//        logger.info {
+//            "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
+//                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
+//        }
+//        this.tilstand = nyTilstand as RettTilDagpengerTilstand
+//        this.tilstandslogg().leggTil(nyTilstand.type, hendelse)
+//    }
 
     object Opprettet : RettTilDagpengerTilstand {
         override val type: Tilstand.Type = OPPRETTET
@@ -370,7 +332,7 @@ data class RettTilDagpengerOppgave private constructor(
         }
 
         override fun tildel(
-            oppgave: RettTilDagpengerOppgave,
+            oppgave: Oppgave<*>,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
@@ -435,7 +397,7 @@ data class RettTilDagpengerOppgave private constructor(
         }
 
         override fun tildel(
-            oppgave: RettTilDagpengerOppgave,
+            oppgave: Oppgave<*>,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             if (oppgave.behandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
@@ -599,7 +561,7 @@ data class RettTilDagpengerOppgave private constructor(
         override val type: Tilstand.Type = Tilstand.Type.PAA_VENT
 
         override fun tildel(
-            oppgave: RettTilDagpengerOppgave,
+            oppgave: Oppgave<*>,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
@@ -659,7 +621,7 @@ data class RettTilDagpengerOppgave private constructor(
         override val type: Tilstand.Type = KLAR_TIL_KONTROLL
 
         override fun tildel(
-            oppgave: RettTilDagpengerOppgave,
+            oppgave: Oppgave<*>,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             requireBeslutterTilgang(
@@ -775,7 +737,7 @@ data class RettTilDagpengerOppgave private constructor(
         }
 
         override fun tildel(
-            oppgave: RettTilDagpengerOppgave,
+            oppgave: Oppgave<*>,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.requireEierskapTilOppgave(
@@ -988,16 +950,6 @@ data class RettTilDagpengerOppgave private constructor(
             )
         }
 
-        fun tildel(
-            oppgave: RettTilDagpengerOppgave,
-            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type",
-            )
-        }
-
         fun utsett(
             oppgave: RettTilDagpengerOppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
@@ -1068,16 +1020,6 @@ data class RettTilDagpengerOppgave private constructor(
             )
         }
 
-        private fun ulovligTilstandsendring(
-            oppgaveId: UUID,
-            message: String,
-        ): Nothing {
-            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                logger.error { message }
-            }
-            throw UlovligTilstandsendringException(message)
-        }
-
         class ManglendeBeslutterTilgang(
             message: String,
         ) : ManglendeTilgang(message)
@@ -1085,10 +1027,6 @@ data class RettTilDagpengerOppgave private constructor(
         class KanIkkeBeslutteEgenSaksbehandling(
             message: String,
         ) : ManglendeTilgang(message)
-
-        class UlovligTilstandsendringException(
-            message: String,
-        ) : RuntimeException(message)
 
         class KreverKontrollAvGosysBrev(
             message: String,

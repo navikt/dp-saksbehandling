@@ -234,7 +234,7 @@ internal class OppgaveDTOMapper(
     }
 }
 
-internal fun Oppgave.tilOppgaveOversiktDTO() =
+internal fun Oppgave<*>.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
         behandlingId = this.behandling.behandlingId,
@@ -290,7 +290,7 @@ internal fun RettTilDagpengerOppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     )
 }
 
-internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
+internal fun Oppgave<*>.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     return when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
@@ -299,7 +299,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     }
 }
 
-internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
+internal fun Oppgave<*>.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
     return when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
