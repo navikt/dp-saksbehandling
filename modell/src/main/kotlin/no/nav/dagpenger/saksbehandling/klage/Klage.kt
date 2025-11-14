@@ -43,7 +43,7 @@ data class Klage private constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
         opprettet: LocalDateTime = LocalDateTime.now(),
-    ) : this (
+    ) : this(
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
         opprettet = opprettet,
@@ -120,13 +120,14 @@ data class Klage private constructor(
 
     fun personIdent(): String {
         return runCatching {
-            _tilstandslogg.firstOrNull { it.hendelse is KlageMottattHendelse || it.hendelse is ManuellKlageMottattHendelse }?.let {
-                if (it.hendelse is KlageMottattHendelse) {
-                    (it.hendelse).ident
-                } else {
-                    (it.hendelse as ManuellKlageMottattHendelse).ident
+            _tilstandslogg.firstOrNull { it.hendelse is KlageMottattHendelse || it.hendelse is ManuellKlageMottattHendelse }
+                ?.let {
+                    if (it.hendelse is KlageMottattHendelse) {
+                        (it.hendelse).ident
+                    } else {
+                        (it.hendelse as ManuellKlageMottattHendelse).ident
+                    }
                 }
-            }
         }
             .onFailure { e -> logger.error(e) { "Feil ved henting av personident for klagebehandling: ${this.behandlingId}" } }
             .getOrThrow()!!
@@ -148,7 +149,7 @@ data class Klage private constructor(
     ) {
         logger.info {
             "Endrer klagetilstand fra ${this.tilstand.type} til ${nyTilstand.type} for klage ${this.behandlingId} " +
-                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
