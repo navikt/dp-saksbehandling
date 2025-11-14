@@ -49,7 +49,7 @@ data class RettTilDagpengerOppgave private constructor(
     override val person: Person,
     override val behandling: RettTilDagpengerBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
-    private var tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
+    override var tilstand: RettTilDagpengerTilstand = KlarTilBehandling,
 ) : Oppgave() {
     constructor(
         oppgaveId: UUID,
@@ -330,10 +330,6 @@ data class RettTilDagpengerOppgave private constructor(
         }.onFailure { e ->
             logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
         }.getOrThrow()
-
-    override fun tilstand(): Tilstand = this.tilstand
-
-    override fun tilstandType(): Tilstand.Type = this.tilstand.type
 
     object Opprettet : RettTilDagpengerTilstand {
         override val type: Tilstand.Type = OPPRETTET

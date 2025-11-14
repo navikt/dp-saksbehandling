@@ -15,6 +15,7 @@ sealed class Oppgave {
     abstract val person: Person
     abstract val behandling: Behandling
     protected abstract var meldingOmVedtak: MeldingOmVedtak
+    protected abstract val tilstand: Tilstand
 
     protected fun requireEierskapTilOppgave(
         saksbehandler: Saksbehandler,
@@ -38,7 +39,7 @@ sealed class Oppgave {
 
     fun personIdent() = person.ident
 
-    abstract fun tilstand(): Tilstand
+    fun tilstand(): Tilstand = tilstand
 
     fun meldingOmVedtakKilde() = this.meldingOmVedtak.kilde
 
@@ -48,7 +49,7 @@ sealed class Oppgave {
 
     fun utsattTil() = this.utsattTil
 
-    abstract fun tilstandType(): Tilstand.Type
+    fun tilstandType() = this.tilstand.type
 
     enum class KontrollertBrev {
         JA,

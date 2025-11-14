@@ -19,7 +19,7 @@ class KlageOppgave private constructor(
     override val person: Person,
     override val behandling: KlageBehandling,
     override var meldingOmVedtak: MeldingOmVedtak,
-    private var tilstand: KlageOppgaveTilstand = KlarTilBehandling,
+    override var tilstand: KlageOppgaveTilstand = KlarTilBehandling,
 ) : Oppgave() {
     constructor(
         oppgaveId: UUID,
@@ -50,10 +50,6 @@ class KlageOppgave private constructor(
                 else -> throw IllegalArgumentException("Ukjent tilstand for klageoppgave: $tilstandType")
             }
     }
-
-    override fun tilstand(): Tilstand = tilstand
-
-    override fun tilstandType(): Tilstand.Type = tilstand.type
 
     companion object {
         fun rehydrer(
