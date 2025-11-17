@@ -55,7 +55,7 @@ class KlageMediator(
         this.auditlogg = auditlogg
     }
 
-    fun hentKlageBehandling(
+    fun hentKlage(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): Klage {

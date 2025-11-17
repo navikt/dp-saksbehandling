@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import java.time.LocalDate
@@ -129,6 +130,7 @@ fun lagKlagebehandling(
                 OVERSEND_KLAGEINSTANS -> Klage.OversendKlageinstans
                 OVERSENDT_KLAGEINSTANS -> Klage.OversendtKlageinstans
                 AVBRUTT -> Klage.Avbrutt
+                FERDIGSTILT -> Klage.Ferdigstilt
             },
         behandlingId = UUIDv7.ny(),
         journalpostId = null,

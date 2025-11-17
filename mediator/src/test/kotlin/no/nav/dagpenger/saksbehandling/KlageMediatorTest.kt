@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
@@ -167,7 +168,7 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
+            klageMediator.hentKlage(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -208,7 +209,7 @@ class KlageMediatorTest {
             )
 
             val klageBehandling =
-                klageMediator.hentKlageBehandling(
+                klageMediator.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 )
@@ -242,7 +243,7 @@ class KlageMediatorTest {
                 message = løsningPåBehovForOversendelseTilKA,
             )
 
-            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            klageMediator.hentKlage(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
 
             oppgaveMediator.hentOppgaveFor(
@@ -277,7 +278,7 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
+            klageMediator.hentKlage(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -309,7 +310,7 @@ class KlageMediatorTest {
                 saksbehandlerToken = "token",
             )
             val klageBehandling =
-                klageMediator.hentKlageBehandling(
+                klageMediator.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 )
@@ -342,7 +343,7 @@ class KlageMediatorTest {
                 message = løsningPåBehovForOversendelseTilKA,
             )
 
-            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            klageMediator.hentKlage(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
@@ -369,7 +370,7 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
+            klageMediator.hentKlage(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -406,11 +407,10 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-            val klageBehandling =
-                klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-            klageBehandling.tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
-            klageBehandling.utfall() shouldBe UtfallType.AVVIST
-            klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
+            val klage = klageMediator.hentKlage(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            klage.tilstand().type shouldBe FERDIGSTILT
+            klage.utfall() shouldBe UtfallType.AVVIST
+            klage.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
         }
@@ -429,7 +429,7 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(
+            klageMediator.hentKlage(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             ).tilstand().type shouldBe BEHANDLES
@@ -455,7 +455,7 @@ class KlageMediatorTest {
                     ),
             )
 
-            klageMediator.hentKlageBehandling(
+            klageMediator.hentKlage(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             ).tilstand().type shouldBe AVBRUTT
@@ -479,7 +479,7 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(
+            klageMediator.hentKlage(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             ).tilstand().type shouldBe BEHANDLES
@@ -531,7 +531,7 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(
+            klageMediator.hentKlage(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             ).tilstand().type shouldBe BEHANDLES
@@ -587,7 +587,7 @@ class KlageMediatorTest {
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -597,7 +597,7 @@ class KlageMediatorTest {
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -607,7 +607,7 @@ class KlageMediatorTest {
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -616,7 +616,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -625,14 +625,14 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == KLAGEFRIST_OPPFYLT }.opplysningId,
             svar = Verdi.Boolsk(true),
         )
-        this.hentKlageBehandling(
+        this.hentKlage(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         ).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
@@ -660,7 +660,7 @@ class KlageMediatorTest {
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
@@ -668,7 +668,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -694,7 +694,7 @@ class KlageMediatorTest {
         }
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
@@ -702,7 +702,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -711,7 +711,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -720,7 +720,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -733,7 +733,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -742,7 +742,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -751,7 +751,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -760,7 +760,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -769,7 +769,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -778,7 +778,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -787,7 +787,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
@@ -796,7 +796,7 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
+                this.hentKlage(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()

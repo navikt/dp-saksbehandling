@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
@@ -204,19 +205,14 @@ data class Klage private constructor(
             klage: Klage,
             hendelse: KlageFerdigbehandletHendelse,
         ) {
-            if (klage.utfall() == UtfallType.OPPRETTHOLDELSE) {
-                klage.endreTilstand(
-                    nyTilstand = OversendKlageinstans,
-                    hendelse = hendelse,
+            when (klage.utfall()) {
+                UtfallType.OPPRETTHOLDELSE -> klage.endreTilstand(OversendKlageinstans, hendelse)
+                UtfallType.MEDHOLD -> throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
+                UtfallType.DELVIS_MEDHOLD -> throw IllegalStateException(
+                    "Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).",
                 )
-            } else if (klage.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
-                // TODO: implementer ferdigstilling av disse utfallene
-                throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
-            } else {
-                klage.endreTilstand(
-                    nyTilstand = OversendtKlageinstans,
-                    hendelse = hendelse,
-                )
+                UtfallType.AVVIST -> klage.endreTilstand(Ferdigstilt, hendelse)
+                null -> throw IllegalStateException("Kan ikke ferdigstille klage uten utfall.")
             }
         }
 
@@ -247,6 +243,10 @@ data class Klage private constructor(
 
     object OversendtKlageinstans : KlageTilstand {
         override val type: Type = OVERSENDT_KLAGEINSTANS
+    }
+
+    object Ferdigstilt : KlageTilstand {
+        override val type: Type = FERDIGSTILT
     }
 
     object Avbrutt : KlageTilstand {
@@ -281,6 +281,7 @@ data class Klage private constructor(
             BEHANDLES,
             OVERSEND_KLAGEINSTANS,
             OVERSENDT_KLAGEINSTANS,
+            FERDIGSTILT,
             AVBRUTT,
         }
     }

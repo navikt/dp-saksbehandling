@@ -68,7 +68,7 @@ class KlageApiTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.hentKlageBehandling(
+                    it.hentKlage(
                         behandlingId = klageBehandlingId,
                         saksbehandler = TestHelper.saksbehandler,
                     )

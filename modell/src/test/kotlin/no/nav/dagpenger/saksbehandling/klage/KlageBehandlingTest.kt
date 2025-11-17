@@ -9,9 +9,11 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.Klage.Behandles
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSENDT_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Klage.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
@@ -182,7 +184,7 @@ class KlageBehandlingTest {
                 hendelse = klageFerdigbehandletHendelse,
             )
         }
-        klage.tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
+        klage.tilstand().type shouldBe FERDIGSTILT
     }
 
     @Test
@@ -270,7 +272,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT`() {
         val klage = Klage()
         svarPåAlleOpplysninger(klage)
         val klageFerdigbehandletHendelse =
@@ -281,6 +283,66 @@ class KlageBehandlingTest {
         klage.saksbehandlingFerdig(
             behandlendeEnhet = "4408",
             hendelse = klageFerdigbehandletHendelse,
+        )
+
+        klage.tilstand().type shouldBe FERDIGSTILT
+
+        shouldThrow<IllegalStateException> {
+            klage.avbryt(
+                hendelse =
+                    AvbruttHendelse(
+                        behandlingId = klage.behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+        }
+    }
+
+    @Test
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand OVERSEND_KLAGEINSTANS`() {
+        val klage = Klage()
+        svarPåAlleOpplysninger(klage = klage, utfall = UtfallType.OPPRETTHOLDELSE)
+        val klageFerdigbehandletHendelse =
+            KlageFerdigbehandletHendelse(
+                behandlingId = klage.behandlingId,
+                utførtAv = saksbehandler,
+            )
+        klage.saksbehandlingFerdig(
+            behandlendeEnhet = "4408",
+            hendelse = klageFerdigbehandletHendelse,
+        )
+
+        klage.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
+
+        shouldThrow<IllegalStateException> {
+            klage.avbryt(
+                hendelse =
+                    AvbruttHendelse(
+                        behandlingId = klage.behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+        }
+    }
+
+    @Test
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand OVERSENDT_KLAGEINSTANS`() {
+        val klage = Klage()
+        svarPåAlleOpplysninger(klage = klage, utfall = UtfallType.OPPRETTHOLDELSE)
+        val klageFerdigbehandletHendelse =
+            KlageFerdigbehandletHendelse(
+                behandlingId = klage.behandlingId,
+                utførtAv = saksbehandler,
+            )
+        klage.saksbehandlingFerdig(
+            behandlendeEnhet = "4408",
+            hendelse = klageFerdigbehandletHendelse,
+        )
+
+        klage.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
+
+        klage.oversendtTilKlageinstans(
+            hendelse = OversendtKlageinstansHendelse(behandlingId = klage.behandlingId),
         )
 
         klage.tilstand().type shouldBe OVERSENDT_KLAGEINSTANS
@@ -296,7 +358,10 @@ class KlageBehandlingTest {
         }
     }
 
-    private fun svarPåAlleOpplysninger(klage: Klage) {
+    private fun svarPåAlleOpplysninger(
+        klage: Klage,
+        utfall: UtfallType = UtfallType.AVVIST,
+    ) {
         klage.alleOpplysninger().forEach {
             when (it.type.datatype) {
                 Datatype.BOOLSK -> klage.svar(it.opplysningId, Boolsk(true))
@@ -307,7 +372,7 @@ class KlageBehandlingTest {
                             TekstVerdi(
                                 value =
                                     when (it.type) {
-                                        OpplysningType.UTFALL -> "Avvist"
+                                        OpplysningType.UTFALL -> utfall.tekst
                                         else -> it.valgmuligheter.firstOrNull() ?: "String"
                                     },
                             ),

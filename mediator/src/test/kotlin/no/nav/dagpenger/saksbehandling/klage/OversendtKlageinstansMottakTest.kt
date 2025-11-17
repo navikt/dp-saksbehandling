@@ -21,7 +21,7 @@ class OversendtKlageinstansMottakTest {
         OversendtKlageinstansHendelse(behandlingId = klageBehandling.behandlingId)
     private val klageMediatorMock =
         mockk<KlageMediator>().also {
-            every { it.hentKlageBehandling(any(), any()) } returns klageBehandling
+            every { it.hentKlage(any(), any()) } returns klageBehandling
             every { it.oversendtTilKlageinstans(any()) } just Runs
         }
 

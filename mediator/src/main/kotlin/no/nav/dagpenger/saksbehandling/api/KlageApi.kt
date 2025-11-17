@@ -75,7 +75,7 @@ fun Route.klageApi(
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
                     val klageBehandling =
-                        mediator.hentKlageBehandling(
+                        mediator.hentKlage(
                             behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
