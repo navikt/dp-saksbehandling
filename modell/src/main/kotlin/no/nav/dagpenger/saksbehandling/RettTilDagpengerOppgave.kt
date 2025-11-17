@@ -35,6 +35,9 @@ import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -55,7 +58,7 @@ data class RettTilDagpengerOppgave private constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstandType: Tilstand.Type = Tilstand.Type.KLAR_TIL_BEHANDLING,
+        tilstandType: Tilstand.Type = KLAR_TIL_BEHANDLING,
         behandlerIdent: String? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
@@ -73,16 +76,16 @@ data class RettTilDagpengerOppgave private constructor(
     ) {
         this.tilstand =
             when (tilstandType) {
-                Tilstand.Type.KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                Tilstand.Type.UNDER_BEHANDLING -> UnderBehandling
-                Tilstand.Type.PAA_VENT -> PåVent
-                Tilstand.Type.KLAR_TIL_KONTROLL -> KlarTilKontroll
-                Tilstand.Type.UNDER_KONTROLL -> UnderKontroll(null)
-                Tilstand.Type.FERDIG_BEHANDLET -> FerdigBehandlet
-                Tilstand.Type.AVBRUTT -> Avbrutt
-                Tilstand.Type.OPPRETTET -> Opprettet
-                Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
-                Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
+                KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                UNDER_BEHANDLING -> UnderBehandling
+                PAA_VENT -> PåVent
+                KLAR_TIL_KONTROLL -> KlarTilKontroll
+                UNDER_KONTROLL -> UnderKontroll(null)
+                FERDIG_BEHANDLET -> FerdigBehandlet
+                AVBRUTT -> Avbrutt
+                OPPRETTET -> Opprettet
+                AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
             }
     }
 
@@ -359,7 +362,7 @@ data class RettTilDagpengerOppgave private constructor(
     }
 
     object KlarTilBehandling : RettTilDagpengerTilstand {
-        override val type: Tilstand.Type = Tilstand.Type.KLAR_TIL_BEHANDLING
+        override val type: Tilstand.Type = KLAR_TIL_BEHANDLING
 
         override fun oppgaveKlarTilBehandling(
             oppgave: RettTilDagpengerOppgave,
@@ -585,7 +588,7 @@ data class RettTilDagpengerOppgave private constructor(
     }
 
     object Avbrutt : RettTilDagpengerTilstand {
-        override val type: Tilstand.Type = Tilstand.Type.AVBRUTT
+        override val type: Tilstand.Type = AVBRUTT
 
         override fun avbryt(
             oppgave: RettTilDagpengerOppgave,
@@ -596,7 +599,7 @@ data class RettTilDagpengerOppgave private constructor(
     }
 
     object PåVent : RettTilDagpengerTilstand {
-        override val type: Tilstand.Type = Tilstand.Type.PAA_VENT
+        override val type: Tilstand.Type = PAA_VENT
 
         override fun tildel(
             oppgave: RettTilDagpengerOppgave,
