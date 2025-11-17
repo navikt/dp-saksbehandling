@@ -1243,13 +1243,14 @@ components:
         - MELDEKORT
         - SØKNAD
         - MANUELL
+        - INNSENDING
 
     BehandlingType:
       type: string
       enum:
         - RETT_TIL_DAGPENGER
         - KLAGE
-        - INGEN
+        - INNSENDING
 
     LovligeEndringer:
       type: object
@@ -1847,10 +1848,12 @@ components:
           format: uuid
         vurdering:
           type: string
-        behandlingsType:
+        behandlingType:
           $ref: '#/components/schemas/BehandlingType'
       required:
         - sakId
+        - vurdering
+
     HttpProblem:
       type: object
       properties:
