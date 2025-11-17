@@ -3,14 +3,12 @@ package no.nav.dagpenger.saksbehandling.api
 import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -37,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
@@ -367,12 +366,24 @@ internal fun Route.oppgaveApi(
             get {
                 val behandlingId = call.finnUUID("behandlingId")
                 when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {
-                    null -> call.respond(HttpStatusCode.NotFound)
+                    null ->
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message =
+                                HttpProblemDTO(
+                                    title = "Ingen oppgaveId funnet",
+                                    status = 404,
+                                    instance = call.request.path(),
+                                    detail = "Ingen oppgaveId funnet for behandlingId: $behandlingId",
+                                    type =
+                                        URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgaveId-funnet")
+                                            .toString(),
+                                ),
+                        )
                     else ->
-                        call.respondText(
-                            contentType = ContentType.Text.Plain,
+                        call.respond(
                             status = HttpStatusCode.OK,
-                            text = oppgaveId.toString(),
+                            message = OppgaveIdDTO(oppgaveId = oppgaveId),
                         )
                 }
             }

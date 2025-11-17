@@ -56,6 +56,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -1222,8 +1223,9 @@ class OppgaveApiTest {
     fun `Skal hente oppgaveId basert på behandlingId`() {
         val behandlingIdSomFinnes = UUIDv7.ny()
         val behandlingIdSomIkkeFinnes = UUIDv7.ny()
-
         val oppgaveId = UUIDv7.ny()
+        val forventetOppgaveIdDTO = OppgaveIdDTO(oppgaveId = oppgaveId)
+
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
@@ -1231,13 +1233,32 @@ class OppgaveApiTest {
             }
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
             client.get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert() }.also { response ->
+
                 response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "text/plain"
-                response.bodyAsText() shouldBe "$oppgaveId"
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                        "oppgaveId": "$oppgaveId"
+                    }
+                    """.trimIndent()
+                val oppgaveIdDTO =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<OppgaveIdDTO>() {},
+                    )
+                oppgaveIdDTO shouldBe forventetOppgaveIdDTO
             }
 
             client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                    "type" : "dagpenger.nav.no/saksbehandling:problem:ingen-oppgaveId-funnet",
+                    "title" : "Ingen oppgaveId funnet",
+                    "status" : 404,
+                    "detail" : "Ingen oppgaveId funnet for behandlingId: $behandlingIdSomIkkeFinnes"
+                }"""
             }
         }
     }
