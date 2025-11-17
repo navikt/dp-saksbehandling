@@ -189,7 +189,7 @@ internal object TestHelper {
     }
 
     fun lagKlageOppgave(
-        tilstand: KlageOppgave.KlageOppgaveTilstand = KlageOppgave.KlageOppgaveTilstand.KlarTilBehandling,
+        tilstand: KlageOppgave.KlageOppgaveTilstand = KlageOppgave.KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,

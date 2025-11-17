@@ -4,13 +4,22 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
 
 object ModellTestHelper {
-    internal fun lagOppgave(
+    internal fun lagRettTilDagpengerOppgave(
         tilstandType: Type = KLAR_TIL_BEHANDLING,
         behandler: Saksbehandler? = null,
         skjermesSomEgneAnsatte: Boolean = false,
@@ -26,16 +35,16 @@ object ModellTestHelper {
     ): RettTilDagpengerOppgave {
         val tilstand =
             when (tilstandType) {
-                Type.OPPRETTET -> RettTilDagpengerOppgave.Opprettet
+                OPPRETTET -> RettTilDagpengerOppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> RettTilDagpengerOppgave.KlarTilBehandling
-                Type.FERDIG_BEHANDLET -> RettTilDagpengerOppgave.FerdigBehandlet
-                Type.UNDER_BEHANDLING -> RettTilDagpengerOppgave.UnderBehandling
-                Type.PAA_VENT -> RettTilDagpengerOppgave.PåVent
-                Type.KLAR_TIL_KONTROLL -> RettTilDagpengerOppgave.KlarTilKontroll
-                Type.UNDER_KONTROLL -> RettTilDagpengerOppgave.UnderKontroll()
-                Type.AVVENTER_LÅS_AV_BEHANDLING -> RettTilDagpengerOppgave.AvventerLåsAvBehandling
-                Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
-                Type.AVBRUTT -> RettTilDagpengerOppgave.Avbrutt
+                FERDIG_BEHANDLET -> RettTilDagpengerOppgave.FerdigBehandlet
+                UNDER_BEHANDLING -> RettTilDagpengerOppgave.UnderBehandling
+                PAA_VENT -> RettTilDagpengerOppgave.PåVent
+                KLAR_TIL_KONTROLL -> RettTilDagpengerOppgave.KlarTilKontroll
+                UNDER_KONTROLL -> RettTilDagpengerOppgave.UnderKontroll()
+                AVVENTER_LÅS_AV_BEHANDLING -> RettTilDagpengerOppgave.AvventerLåsAvBehandling
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> RettTilDagpengerOppgave.AvventerOpplåsingAvBehandling
+                AVBRUTT -> RettTilDagpengerOppgave.Avbrutt
             }
         val person =
             lagPerson(
@@ -50,6 +59,58 @@ object ModellTestHelper {
                 hendelse = hendelse,
             )
         return RettTilDagpengerOppgave.rehydrer(
+            oppgaveId = UUIDv7.ny(),
+            behandlerIdent = behandler?.navIdent,
+            opprettet = LocalDateTime.now(),
+            emneknagger = emneknagger,
+            tilstand = tilstand,
+            utsattTil = null,
+            tilstandslogg = tilstandslogg,
+            person = person,
+            behandling = behandling,
+            meldingOmVedtak = meldingOmVedtakKilde,
+        )
+    }
+
+    internal fun lagKlageOppgave(
+        tilstandType: Type = KLAR_TIL_BEHANDLING,
+        behandler: Saksbehandler? = null,
+        skjermesSomEgneAnsatte: Boolean = false,
+        adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
+        emneknagger: Set<String> = emptySet(),
+        hendelse: Hendelse = TomHendelse,
+        meldingOmVedtakKilde: Oppgave.MeldingOmVedtak =
+            Oppgave.MeldingOmVedtak(
+                kilde = DP_SAK,
+                kontrollertGosysBrev = IKKE_RELEVANT,
+            ),
+    ): KlageOppgave {
+        val tilstand =
+            when (tilstandType) {
+                OPPRETTET -> throw IllegalArgumentException("KlageOppgave kan ikke ha tilstand $tilstandType")
+                KLAR_TIL_BEHANDLING -> KlageOppgave.KlarTilBehandling
+                FERDIG_BEHANDLET -> KlageOppgave.FerdigBehandlet
+                UNDER_BEHANDLING -> KlageOppgave.UnderBehandling
+                PAA_VENT -> KlageOppgave.PåVent
+                KLAR_TIL_KONTROLL -> throw IllegalArgumentException("KlageOppgave kan ikke ha tilstand $tilstandType")
+                UNDER_KONTROLL -> throw IllegalArgumentException("KlageOppgave kan ikke ha tilstand $tilstandType")
+                AVVENTER_LÅS_AV_BEHANDLING -> throw IllegalArgumentException("KlageOppgave kan ikke ha tilstand $tilstandType")
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> throw IllegalArgumentException("KlageOppgave kan ikke ha tilstand $tilstandType")
+                AVBRUTT -> throw IllegalArgumentException("KlageOppgave kan ikke ha tilstand $tilstandType")
+            }
+        val person =
+            lagPerson(
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+            )
+        val behandling =
+            KlageBehandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
+            )
+        return KlageOppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             behandlerIdent = behandler?.navIdent,
             opprettet = LocalDateTime.now(),

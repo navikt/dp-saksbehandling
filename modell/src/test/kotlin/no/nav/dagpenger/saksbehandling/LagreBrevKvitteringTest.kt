@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagRettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
@@ -25,7 +25,7 @@ class LagreBrevKvitteringTest {
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlig endring av brevkontroll for melding om vedtak`(tilstandstype: Type) {
-        val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_KONTROLL) {
             shouldThrow<UlovligKvitteringAvKontrollertBrev> {
@@ -44,7 +44,7 @@ class LagreBrevKvitteringTest {
     @Test
     fun `Skal kunne endre brevkontroll for melding om vedtak i tilstand UNDER_KONTROLL`() {
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 UNDER_KONTROLL,
                 saksbehandler,
                 meldingOmVedtakKilde =

@@ -100,4 +100,8 @@ sealed class Oppgave {
             }
         }
     }
+
+    class AlleredeTildeltException(
+        message: String,
+    ) : RuntimeException(message)
 }

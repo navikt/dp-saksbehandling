@@ -10,7 +10,7 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AlleredeTildeltException
+import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.RettTilDagpengerTilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO

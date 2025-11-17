@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagRettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
@@ -16,7 +16,7 @@ class OppgaveNotatTest {
     @Test
     fun `Oppgave er KLAR_TIL_KONTROLL, og skal gå til UNDER_KONTROLL`() {
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(TilgangType.BESLUTTER))
-        val oppgave = lagOppgave(KLAR_TIL_KONTROLL, null)
+        val oppgave = lagRettTilDagpengerOppgave(KLAR_TIL_KONTROLL, null)
 
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
@@ -46,7 +46,7 @@ class OppgaveNotatTest {
     @Test
     fun `Skal slette notat når oppgave er UNDER_KONTROLL`() {
         val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
-        val oppgave = lagOppgave(UNDER_KONTROLL, null)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_KONTROLL, null)
         oppgave.lagreNotat(NotatHendelse(oppgaveId, "Hei", saksbehandler))
         oppgave.tilstand().notat()!!.hentTekst() shouldBe "Hei"
 

@@ -7,7 +7,9 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
-import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagKlageOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagRettTilDagpengerOppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -17,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Companion.RETUR_FRA_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Companion.kontrollEmneknagger
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.Companion.påVentEmneknagger
@@ -50,8 +51,8 @@ class OppgaveTilstandTest {
     private val utsendingSak = UtsendingSak("12342", "Arena")
 
     @Test
-    fun `Skal på nytt kunne tildele en tildelt oppgave til samme saksbehandler`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+    fun `Skal på nytt kunne tildele en tildelt rettTilDagpengerOppgave til samme saksbehandler`() {
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrow<AlleredeTildeltException> {
             oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
@@ -63,9 +64,40 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Skal kunne tildele en klageOppgave til samme saksbehandler flere ganger`() {
+        val oppgave = lagKlageOppgave(tilstandType = KLAR_TIL_BEHANDLING)
+        shouldNotThrow<AlleredeTildeltException> {
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+        }
+        shouldNotThrow<AlleredeTildeltException> {
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+        }
+        val enAnnenSaksbehandler = Saksbehandler("enAnnenSaksbehandler", emptySet())
+        shouldThrow<AlleredeTildeltException> {
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, enAnnenSaksbehandler.navIdent, enAnnenSaksbehandler))
+        }
+    }
+
+    @Test
+    fun `Skal kunne tildele en klageOppgave som er på vent`() {
+        val oppgave = lagKlageOppgave(tilstandType = PAA_VENT)
+        shouldNotThrow<AlleredeTildeltException> {
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+        }
+    }
+
+    @Test
+    fun `Skal ikke kunne tildele en klageOppgave som er ferdig behandlet`() {
+        val oppgave = lagKlageOppgave(tilstandType = FERDIG_BEHANDLET, behandler = saksbehandler)
+        shouldThrow<UlovligTilstandsendringException> {
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+        }
+    }
+
+    @Test
     fun `Skal på nytt kunne tildele en oppgave UnderKontroll til samme beslutter`() {
         val beslutter = Saksbehandler("beslutter", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, beslutter)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, beslutter)
         shouldNotThrow<AlleredeTildeltException> {
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -89,7 +121,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal ikke kunne tildele oppgave i tilstand Opprettet`() {
-        val oppgave = lagOppgave(OPPRETTET)
+        val oppgave = lagRettTilDagpengerOppgave(OPPRETTET)
         shouldThrow<UlovligTilstandsendringException> {
             oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
@@ -106,13 +138,13 @@ class OppgaveTilstandTest {
                 utførtAv = Applikasjon("dp-behandling"),
             )
 
-        lagOppgave(tilstandType = OPPRETTET).let { oppgave ->
+        lagRettTilDagpengerOppgave(tilstandType = OPPRETTET).let { oppgave ->
             oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe RettTilDagpengerOppgave.Handling.LAGRE_OPPGAVE
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         }
 
         setOf(KLAR_TIL_BEHANDLING, PAA_VENT, UNDER_BEHANDLING).forEach { tilstand ->
-            lagOppgave(tilstandType = tilstand).let { oppgave ->
+            lagRettTilDagpengerOppgave(tilstandType = tilstand).let { oppgave ->
                 val tilstandFørHendelse = oppgave.tilstand().type
                 oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe RettTilDagpengerOppgave.Handling.LAGRE_OPPGAVE
                 oppgave.tilstand().type shouldBe tilstandFørHendelse
@@ -125,7 +157,7 @@ class OppgaveTilstandTest {
         val lovligeTilstander =
             setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             val resultat =
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
@@ -157,7 +189,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
@@ -178,7 +210,7 @@ class OppgaveTilstandTest {
         val lovligeTilstander =
             setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             val resultat =
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
@@ -200,7 +232,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
@@ -222,7 +254,7 @@ class OppgaveTilstandTest {
             setOf(UNDER_BEHANDLING)
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = saksbehandler)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand, behandler = saksbehandler)
             shouldNotThrowAny {
                 oppgave.ferdigstill(
                     avbruttHendelse =
@@ -236,7 +268,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = saksbehandler)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand, behandler = saksbehandler)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     avbruttHendelse =
@@ -263,7 +295,7 @@ class OppgaveTilstandTest {
             )
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = null)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand, behandler = null)
             shouldNotThrowAny {
                 oppgave.avbryt(
                     BehandlingAvbruttHendelse(
@@ -278,7 +310,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.avbryt(
                     BehandlingAvbruttHendelse(
@@ -297,7 +329,7 @@ class OppgaveTilstandTest {
         val lovligeTilstander = setOf(UNDER_BEHANDLING)
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstandType = tilstand, behandler = saksbehandler)
+            val oppgave = lagRettTilDagpengerOppgave(tilstandType = tilstand, behandler = saksbehandler)
             shouldNotThrowAny {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
@@ -312,7 +344,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
@@ -339,7 +371,7 @@ class OppgaveTilstandTest {
             )
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = null)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand, behandler = null)
             shouldNotThrowAny {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
@@ -366,7 +398,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand)
+            val oppgave = lagRettTilDagpengerOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
@@ -382,7 +414,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderBehandling til KlarTilBehandling når oppgaveansvar fjernes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
@@ -394,7 +426,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderBehandling til Avbrutt når oppgaven avbrytes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.avbryt(
@@ -411,7 +443,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderKontroll til KlarTilKontroll når oppgaveansvar fjernes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
@@ -426,7 +458,7 @@ class OppgaveTilstandTest {
         val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_KONTROLL,
                 behandler = beslutter,
                 tilstandslogg =
@@ -463,7 +495,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå fra UnderBehandling til FerdigBehandlet når saksbehandler godkjenner en behandling`() {
         val saksbehandler = Saksbehandler("sIdent", emptySet())
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -481,7 +513,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 KLAR_TIL_BEHANDLING,
                 emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger,
             )
@@ -504,7 +536,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand PAA_VENT`() {
-        val oppgave = lagOppgave(PAA_VENT, emneknagger = setOf("skalSlettes") + kontrollEmneknagger)
+        val oppgave = lagRettTilDagpengerOppgave(PAA_VENT, emneknagger = setOf("skalSlettes") + kontrollEmneknagger)
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
@@ -524,7 +556,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand UNDER_BEHANDLING`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, emneknagger = setOf("skalSlettes") + kontrollEmneknagger)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_BEHANDLING, emneknagger = setOf("skalSlettes") + kontrollEmneknagger)
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
@@ -544,7 +576,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Ikke tillatt med tildel eller fjern ansvar i tilstand FerdigBehandlet`() {
-        val oppgave = lagOppgave(FERDIG_BEHANDLET)
+        val oppgave = lagRettTilDagpengerOppgave(FERDIG_BEHANDLET)
 
         shouldThrow<UlovligTilstandsendringException> {
             oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler))
@@ -557,7 +589,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal kunne utsette en opppgave uten å beholde den og deretter ta den tilbake UnderBehandling`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_BEHANDLING, saksbehandler)
         val utsattTil = LocalDate.now().plusDays(1)
 
         oppgave.utsett(
@@ -583,7 +615,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Saksbehandler skal kunne beholde en oppgave når den settes på vent`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_BEHANDLING, saksbehandler)
         val utsattTil = LocalDate.now().plusDays(1)
 
         oppgave.utsett(
@@ -603,7 +635,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Fjerning av ansvar fra en utsatt oppgave skal også fjerne datoen det er utsatt til`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_BEHANDLING, saksbehandler)
         val utsattTil = LocalDate.now().plusDays(1)
 
         oppgave.utsett(
@@ -630,7 +662,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderBehandling til AvventerLåsAvBehandling når oppgave sendes til kontroll`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_BEHANDLING, saksbehandler)
 
         oppgave.sendTilKontroll(
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
@@ -642,7 +674,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal sette og fjerne aktuell emneknagger når oppgave returneres fra kontroll og sendes til kontroll på nytt`() {
-        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING)
+        val oppgave = lagRettTilDagpengerOppgave(KLAR_TIL_BEHANDLING)
 
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
@@ -699,7 +731,7 @@ class OppgaveTilstandTest {
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlige bruk av sendTilKontroll`(tilstandstype: Type) {
-        val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
@@ -716,7 +748,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå fra KlarTilKontroll til UnderKontroll når beslutter tildeles en oppgave`() {
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(KLAR_TIL_KONTROLL, null)
+        val oppgave = lagRettTilDagpengerOppgave(KLAR_TIL_KONTROLL, null)
 
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
@@ -732,7 +764,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå fra KlarTilBehandling til UnderBehandling når saksbehandler tildeles en oppgave`() {
         val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf())
-        val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, null)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = KLAR_TIL_BEHANDLING, null)
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
@@ -746,7 +778,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra KlarTilBehandling til Avbrutt når oppgaven avbrytes`() {
-        val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = KLAR_TIL_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.avbryt(
@@ -764,7 +796,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå fra PaaVent til UnderBehandling når saksbehandler tildeles en oppgave`() {
         val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf())
-        val oppgave = lagOppgave(tilstandType = PAA_VENT, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = PAA_VENT, saksbehandler)
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
@@ -779,7 +811,7 @@ class OppgaveTilstandTest {
     fun `Ulovlige tilstandsendringer for tildeling av oppgave`() {
         val beslutter = Saksbehandler("saksbehandler", emptySet(), setOf(SAKSBEHANDLER, BESLUTTER))
 
-        val opprettetOppgave = lagOppgave(tilstandType = OPPRETTET, null)
+        val opprettetOppgave = lagRettTilDagpengerOppgave(tilstandType = OPPRETTET, null)
         shouldThrow<UlovligTilstandsendringException> {
             opprettetOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -790,7 +822,7 @@ class OppgaveTilstandTest {
             )
         }
 
-        val ferdigBehandletOppgave = lagOppgave(tilstandType = FERDIG_BEHANDLET, beslutter)
+        val ferdigBehandletOppgave = lagRettTilDagpengerOppgave(tilstandType = FERDIG_BEHANDLET, beslutter)
         shouldThrow<UlovligTilstandsendringException> {
             ferdigBehandletOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -805,7 +837,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal ferdigstille med brev i ny løsning fra UnderKontroll`() {
         val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_KONTROLL, beslutter)
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
                 GodkjentBehandlingHendelse(
@@ -823,7 +855,7 @@ class OppgaveTilstandTest {
     fun `Finn siste saksbehandler når oppgave er tildelt via neste-oppgave funksjon`() {
         val saksbehandler = Saksbehandler("Z080808", emptySet())
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
@@ -853,7 +885,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Finn saksbehandler og beslutter på oppgaven`() {
-        val oppgave = lagOppgave(OPPRETTET)
+        val oppgave = lagRettTilDagpengerOppgave(OPPRETTET)
         val oppgaveId = oppgave.oppgaveId
         oppgave.oppgaveKlarTilBehandling(
             ForslagTilVedtakHendelse(

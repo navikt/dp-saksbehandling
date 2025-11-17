@@ -94,7 +94,7 @@ class KlageMediator(
                 utførtAv = klageMottattHendelse.utførtAv,
             )
         sakMediator.knyttTilSak(klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse)
-        return kotlin.runCatching {
+        return runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
                 klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse,
             )
@@ -140,7 +140,7 @@ class KlageMediator(
             utførtAv.navIdent,
         )
 
-        return kotlin.runCatching {
+        return runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
                 klageBehandlingOpprettetHendelse = klageBehandlingOpprettetHendelse,
             ).also { oppgave ->

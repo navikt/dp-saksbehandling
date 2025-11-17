@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagRettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
@@ -24,7 +24,7 @@ class EndreMeldingOmVedtakKildeTest {
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlige endring av kilde for melding om vedtak`(tilstandstype: Type) {
-        val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligEndringAvKildeForMeldingOmVedtak> {
@@ -42,7 +42,7 @@ class EndreMeldingOmVedtakKildeTest {
 
     @Test
     fun `Skal kunne endre kilde for melding om vedtak i tilstand UNDER_BEHANDLING`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+        val oppgave = lagRettTilDagpengerOppgave(UNDER_BEHANDLING, saksbehandler)
 
         shouldNotThrowAny {
             oppgave.endreMeldingOmVedtakKilde(

@@ -3,11 +3,14 @@ package no.nav.dagpenger.saksbehandling
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.RettTilDagpengerOppgave.FerdigstillBehandling.BESLUTT
@@ -35,9 +38,6 @@ import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -562,10 +562,6 @@ data class RettTilDagpengerOppgave private constructor(
             oppgave.endreTilstand(Avbrutt, avbrytOppgaveHendelse)
         }
     }
-
-    class AlleredeTildeltException(
-        message: String,
-    ) : RuntimeException(message)
 
     object FerdigBehandlet : RettTilDagpengerTilstand {
         override val type: Tilstand.Type = FERDIG_BEHANDLET

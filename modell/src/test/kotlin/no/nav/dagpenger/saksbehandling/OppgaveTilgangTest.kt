@@ -7,7 +7,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
-import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagRettTilDagpengerOppgave
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagSaksbehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -77,7 +77,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Egne ansatte tilganger ved tildeling av totrinnskontroll oppgaver`() {
         val egneAnsatteOppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 KLAR_TIL_KONTROLL,
                 skjermesSomEgneAnsatte = true,
             )
@@ -122,7 +122,7 @@ class OppgaveTilgangTest {
         forventetTilgang: Boolean,
     ) {
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = KLAR_TIL_KONTROLL,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
@@ -163,7 +163,7 @@ class OppgaveTilgangTest {
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,
     ) {
-        val oppgave = lagOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
+        val oppgave = lagRettTilDagpengerOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
         val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
 
         if (forventetTilgang) {
@@ -192,7 +192,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Egne ansatte tilganger ved tildeling av oppgaver`() {
         val egneAnsatteOppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 KLAR_TIL_BEHANDLING,
                 skjermesSomEgneAnsatte = true,
             )
@@ -224,7 +224,7 @@ class OppgaveTilgangTest {
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,
     ) {
-        val oppgave = lagOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
+        val oppgave = lagRettTilDagpengerOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
         val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
 
         if (forventetTilgang) {
@@ -253,7 +253,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Oppgave med egne ansatte skjerming og adressebeskyttelse`() {
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 skjermesSomEgneAnsatte = true,
                 adressebeskyttelseGradering = FORTROLIG,
             )
@@ -297,7 +297,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Egne ansatte tilganger ved utsetting av oppgaver`() {
         val egneAnsatteOppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 UNDER_BEHANDLING,
                 behandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
@@ -336,7 +336,7 @@ class OppgaveTilgangTest {
         forventetTilgang: Boolean,
     ) {
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
@@ -378,7 +378,7 @@ class OppgaveTilgangTest {
         forventetTilgang: Boolean,
     ) {
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
@@ -409,7 +409,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Egne ansatte tilganger ved sending av oppgave til kontroll`() {
         shouldThrow<ManglendeTilgang> {
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 behandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
@@ -424,7 +424,7 @@ class OppgaveTilgangTest {
         }
 
         shouldNotThrow<ManglendeTilgang> {
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 behandler = saksbehandlerMedTilgangTilEgneAnsatte,
                 skjermesSomEgneAnsatte = true,
@@ -448,7 +448,7 @@ class OppgaveTilgangTest {
     ) {
         val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
                 behandler = saksbehandler,
@@ -482,7 +482,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Egne ansatte tilganger ved avbryting av oppgave`() {
         shouldThrow<ManglendeTilgang> {
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 behandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
@@ -499,7 +499,7 @@ class OppgaveTilgangTest {
         }
 
         shouldNotThrow<ManglendeTilgang> {
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 behandler = saksbehandlerMedTilgangTilEgneAnsatte,
                 skjermesSomEgneAnsatte = true,
@@ -518,7 +518,7 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Avbryting av oppgave under behandling krever at utførende saksbehandler også eier oppgaven`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
             oppgave.avbryt(
                 AvbrytOppgaveHendelse(
@@ -544,7 +544,7 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Ferdigstilling av oppgave under behandling uten brev krever at utførende saksbehandler også eier oppgaven`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelseUtenMeldingOmVedtak(
@@ -566,7 +566,7 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Ferdigstilling av oppgave under behandling med brev krever at utførende saksbehandler også eier oppgaven`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -593,7 +593,7 @@ class OppgaveTilgangTest {
         val beslutterSomEierOppgaven = Saksbehandler("eier", setOf(), setOf(BESLUTTER))
         val saksbehandler = Saksbehandler("saksbehandler", setOf(), setOf(SAKSBEHANDLER))
 
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomEierOppgaven)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomEierOppgaven)
         shouldThrow<ManglendeTilgang> {
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -618,7 +618,7 @@ class OppgaveTilgangTest {
         val saksbehandlerSomVarBeslutter =
             Saksbehandler("saksbehandler som var beslutter", setOf(), setOf(SAKSBEHANDLER))
         val oppgaveUnderKontrollUtenBeslutter =
-            lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandlerSomVarBeslutter)
+            lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandlerSomVarBeslutter)
         shouldThrow<ManglendeTilgang> {
             oppgaveUnderKontrollUtenBeslutter.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -644,7 +644,7 @@ class OppgaveTilgangTest {
     fun `Oppgave klar til kontroll kan ikke tildeles samme behandler som saksbehandlet, selv om hen er beslutter`() {
         val beslutterSomSaksbehandlet =
             Saksbehandler("beslutterSomSaksbehandlet", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = KLAR_TIL_KONTROLL)
+        val oppgave = lagRettTilDagpengerOppgave(tilstandType = KLAR_TIL_KONTROLL)
         oppgave.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
@@ -679,7 +679,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Oppgave under kontroll kan ikke ferdigstilles av samme behandler som saksbehandlet, selv om hen er beslutter`() {
         val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
+        val oppgave1 = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
         oppgave1.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
@@ -699,7 +699,7 @@ class OppgaveTilgangTest {
         }
 
         val enAnnenBeslutter = Saksbehandler("enAnnenBeslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
+        val oppgave2 = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
         oppgave2.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
@@ -722,7 +722,7 @@ class OppgaveTilgangTest {
     @Test
     fun `Oppgave under kontroll kan ikke retureres til saksbehandling av samme behandler som saksbehandlet`() {
         val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
+        val oppgave1 = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
         oppgave1.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
@@ -741,7 +741,7 @@ class OppgaveTilgangTest {
         }
 
         val enAnnenBeslutter = Saksbehandler("beslutter 2", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
+        val oppgave2 = lagRettTilDagpengerOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
         oppgave2.tilstandslogg().leggTil(
             UNDER_BEHANDLING,
             SettOppgaveAnsvarHendelse(
@@ -769,7 +769,7 @@ class OppgaveTilgangTest {
     ) {
         val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
         val oppgave =
-            lagOppgave(
+            lagRettTilDagpengerOppgave(
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
                 tilstandType = UNDER_BEHANDLING,
                 behandler = saksbehandler,
@@ -805,7 +805,7 @@ class OppgaveTilgangTest {
 
         shouldThrow<ManglendeTilgang> {
             val oppgave =
-                lagOppgave(
+                lagRettTilDagpengerOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
                     behandler = saksbehandler,
@@ -821,7 +821,7 @@ class OppgaveTilgangTest {
 
         shouldNotThrow<ManglendeTilgang> {
             val oppgave =
-                lagOppgave(
+                lagRettTilDagpengerOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
                     behandler = saksbehandlerMedEgneAnsatteTilgang,
@@ -837,7 +837,7 @@ class OppgaveTilgangTest {
 
         shouldThrow<ManglendeTilgang> {
             val oppgave =
-                lagOppgave(
+                lagRettTilDagpengerOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
                     behandler = saksbehandler,
@@ -853,7 +853,7 @@ class OppgaveTilgangTest {
 
         shouldNotThrow<ManglendeTilgang> {
             val oppgave =
-                lagOppgave(
+                lagRettTilDagpengerOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
                     behandler = saksbehandlerMedEgneAnsatteTilgang,
