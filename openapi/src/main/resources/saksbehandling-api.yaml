@@ -848,12 +848,11 @@ paths:
         '200':
           description: Fant oppgaveId for behandlingId
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                format: uuid
+                $ref: '#/components/schemas/OppgaveId'
         '404':
-          description: Fant ikke oppgaveId for behandlingId
+          description: OppgaveId for behandlingId ble ikke funnet
           content:
             application/problem+json:
               schema:
@@ -864,6 +863,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+
   /behandling/{behandlingId}/sakId:
     get:
       summary: Henter sakId basert på en behandlingId
@@ -1306,6 +1306,15 @@ components:
           format: uuid
       required:
         - id
+
+    OppgaveId:
+      type: object
+      properties:
+        oppgaveId:
+          type: string
+          format: uuid
+      required:
+        - oppgaveId
 
     OppgaveHistorikk:
       type: object
