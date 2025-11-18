@@ -76,22 +76,14 @@ class OppgaveMediator(
         val oppgaveId = UUIDv7.ny()
         Oppgave(
             oppgaveId = oppgaveId,
-            emneknagger = emptySet<String>(),
+            emneknagger = setOf(),
             opprettet = innsendingMottattHendelse.registrertTidspunkt,
-            tilstand = KLAR_TIL_BEHANDLING,
-            behandlerIdent = null,
-            tilstandslogg =
-                OppgaveTilstandslogg(
-                    Tilstandsendring(
-                        tilstand = KLAR_TIL_BEHANDLING,
-                        hendelse = innsendingMottattHendelse,
-                    ),
-                ),
-            person = person,
+            tilstand = Oppgave.KlarTilBehandling,
             behandling = behandling,
+            person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
-                    kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
+                    kilde = DP_SAK,
                     kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                 ),
         )

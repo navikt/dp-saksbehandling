@@ -18,11 +18,14 @@ import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
@@ -68,6 +71,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val personRepository = PostgresPersonRepository(dataSource)
     private val sakRepository = PostgresSakRepository(dataSource = dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
+    private val innsendingPostgresRepository = PostgresInnsendingRepository(dataSource)
 
     private val skjermingKlient =
         SkjermingHttpKlient(
@@ -151,6 +155,19 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             oppslag = oppslag,
             meldingOmVedtakKlient = meldingOmVedtakKlient,
             sakMediator = sakMediator,
+        )
+
+    private val innsendingMediator =
+        InnsendingMediator(
+            sakMediator = sakMediator,
+            oppgaveMediator = oppgaveMediator,
+            personMediator = personMediator,
+            innsendingRepository = innsendingPostgresRepository,
+            innsendingBehandler =
+                InnsendingBehandler(
+                    klageMediator = klageMediator,
+                    behandlingKlient = behandlingKlient,
+                ),
         )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
