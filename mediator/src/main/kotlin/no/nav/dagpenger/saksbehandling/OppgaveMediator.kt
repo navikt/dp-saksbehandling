@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -653,4 +654,8 @@ class OppgaveMediator(
         feilType: AlertManager.AlertType,
         utvidetFeilmelding: String,
     ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
+
+    fun avbrytNoeGreier(hendelse: BehandlingOpprettetForSøknadHendelse) {
+        TODO("Not yet implemented")
+    }
 }
