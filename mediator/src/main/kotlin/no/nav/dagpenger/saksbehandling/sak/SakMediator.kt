@@ -212,4 +212,12 @@ class SakMediator(
             }
         }
     }
+
+    fun something(behandling: Behandling): UUID {
+        TODO("Not yet implemented")
+    }
+
+    fun something2(sisteSakId: UUID) {
+        TODO("Not yet implemented")
+    }
 }

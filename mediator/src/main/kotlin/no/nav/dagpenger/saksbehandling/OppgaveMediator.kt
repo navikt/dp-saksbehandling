@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendel
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -67,7 +68,36 @@ class OppgaveMediator(
         this.rapidsConnection = rapidsConnection
     }
 
-    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
+    fun lagOppgaveForInnsendingBehandling(
+        innsendingMottattHendelse: InnsendingMottattHendelse,
+        behandling: Behandling,
+        person: Person,
+    ) {
+        val oppgaveId = UUIDv7.ny()
+        Oppgave(
+            oppgaveId = oppgaveId,
+            emneknagger = emptySet<String>(),
+            opprettet = innsendingMottattHendelse.registrertTidspunkt,
+            tilstand = KLAR_TIL_BEHANDLING,
+            behandlerIdent = null,
+            tilstandslogg =
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        tilstand = KLAR_TIL_BEHANDLING,
+                        hendelse = innsendingMottattHendelse,
+                    ),
+                ),
+            person = person,
+            behandling = behandling,
+            meldingOmVedtak =
+                Oppgave.MeldingOmVedtak(
+                    kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
+                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                ),
+        )
+    }
+
+    fun opprettOppgaveForKlageBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
         var oppgave: Oppgave? = null
 
         val sakHistorikk = sakMediator.finnSakHistorikk(behandlingOpprettetHendelse.ident)

@@ -215,7 +215,7 @@ OppgaveMediatorTest {
             }
 
         shouldThrow<IllegalStateException> {
-            oppgaveMediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),
@@ -226,7 +226,7 @@ OppgaveMediatorTest {
             )
         }
         shouldThrow<IllegalStateException> {
-            oppgaveMediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),

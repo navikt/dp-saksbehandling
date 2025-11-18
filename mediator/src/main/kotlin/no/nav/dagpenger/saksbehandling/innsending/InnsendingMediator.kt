@@ -1,19 +1,16 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
 import PersonMediator
-import no.nav.dagpenger.saksbehandling.Applikasjon
-import no.nav.dagpenger.saksbehandling.Behandler
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
-import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.util.UUID
 
 sealed class HåndterInnsendingResultat {
@@ -40,11 +37,33 @@ class InnsendingMediator(
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
         if (skalEttersendingTilSøknadVarsles || sisteSakId != null) {
+            val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
             val innsending =
-                Innsending.opprett(hendelse = hendelse) { ident ->
-                    personMediator.finnEllerOpprettPerson(ident)
-                }
-            innsendingRepository.lagre(innsending)
+                Innsending.opprett(hendelse = hendelse) { ident -> person }
+
+            val behandling =
+                Behandling(
+                    behandlingId = innsending.innsendingId,
+                    opprettet = innsending.mottatt,
+                    hendelse = hendelse,
+                    utløstAv = UtløstAvType.INNSENDING,
+                )
+
+            if (skalEttersendingTilSøknadVarsles) {
+                val sakId: UUID = sakMediator.something(behandling)
+                oppgaveMediator.lagOppgaveForInnsendingBehandling(
+                    innsendingMottattHendelse = hendelse,
+                    behandling = behandling,
+                    person = person,
+                )
+            } else if (sisteSakId != null) {
+                sakMediator.something2(sisteSakId)
+                oppgaveMediator.lagOppgaveForInnsendingBehandling(
+                    innsendingMottattHendelse = hendelse,
+                    behandling = behandling,
+                    person = person,
+                )
+            }
         }
         return when (sisteSakId) {
             null -> HåndterInnsendingResultat.UhåndtertInnsending
@@ -53,56 +72,16 @@ class InnsendingMediator(
     }
 
     fun ferdigstill(hendelse: FerdigstillInnsendingHendelse) {
-        val innsending = hentInnsending(innsendingId = hendelse.innsendingId, behandler = hendelse.utførtAv)
-        requireEierskap(innsending = innsending, behandler = hendelse.utførtAv)
-        val innsendingFerdigstiltHendelse = innsendingBehandler.utførAksjon(hendelse, innsending)
-        innsending.ferdigstill(innsendingFerdigstiltHendelse)
-        innsendingRepository.lagre(innsending)
+        // innsendingBehandler.utførAksjon()
+        TODO()
     }
 
     fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {
-        val innsendinger = innsendingRepository.finnInnsendingerForPerson(ident = hendelse.ident)
-        innsendinger.singleOrNull {
-            it.tilstand().type == KLAR_TIL_BEHANDLING && it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
-        }?.let { innsending ->
-            innsending.avbryt(hendelse)
-            innsendingRepository.lagre(innsending)
-        }
+        oppgaveMediator.finnOppgaverFor(hendelse.ident)
+        TODO()
     }
 
     fun tildel(tildelHendelse: TildelHendelse) {
-        hentInnsending(
-            innsendingId = tildelHendelse.innsendingId,
-            behandler = tildelHendelse.utførtAv,
-        ).let { innsending ->
-            innsending.tildel(tildelHendelse)
-            innsendingRepository.lagre(innsending)
-        }
-    }
-
-    fun hentInnsending(
-        innsendingId: UUID,
-        behandler: Behandler,
-    ): Innsending {
-        return innsendingRepository.hent(innsendingId).also { innsending ->
-            innsending.harTilgang(behandler)
-        }
-    }
-
-    private fun requireEierskap(
-        innsending: Innsending,
-        behandler: Behandler,
-    ) {
-        when (behandler) {
-            is Applikasjon -> {}
-            is Saksbehandler -> {
-                if (innsending.behandlerIdent() != behandler.navIdent) {
-                    throw SaksbehandlerErIkkeEier(
-                        "Saksbehandler ${behandler.navIdent} eier ikke " +
-                            "innsendingen ${innsending.innsendingId}",
-                    )
-                }
-            }
-        }
+        oppgaveMediator.hentOppgaveHvisTilgang(tildelHendelse.innsendingId, tildelHendelse.utførtAv)
     }
 }
