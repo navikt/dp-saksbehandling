@@ -66,6 +66,7 @@ internal class OppgaveDTOMapper(
                                             UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
                                         },
                                     utlostAv =
                                         when (behandling.utløstAv) {
@@ -73,6 +74,7 @@ internal class OppgaveDTOMapper(
                                             UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
                                             UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
                                             UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
+                                            UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
                                         },
                                     opprettet = behandling.opprettet,
                                     oppgaveId = behandling.oppgaveId,
@@ -295,6 +297,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
+        UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
     }
 }
 
@@ -304,5 +307,6 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
+        UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
     }
 }

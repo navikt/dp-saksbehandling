@@ -33,6 +33,7 @@ class RelevanteJournalpostIdOppslag(
 
             UtløstAvType.MELDEKORT -> return emptySet()
             UtløstAvType.MANUELL -> return emptySet()
+            UtløstAvType.INNSENDING -> TODO()
         }
     }
 

@@ -56,6 +56,7 @@ class MeldingOmVedtakKlient(
                 UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
                 UtløstAvType.MELDEKORT -> "MELDEKORT"
                 UtløstAvType.MANUELL -> "MANUELL"
+                UtløstAvType.INNSENDING -> "INNSENDING"
             }
 
         val meldingOmVedtakDataDTO =
