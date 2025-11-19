@@ -63,6 +63,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 inns.skjema_kode, 
                                 inns.kategori,
                                 inns.mottatt, 
+                                inns.soknad_id,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
@@ -94,6 +95,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 inns.skjema_kode, 
                                 inns.kategori,
                                 inns.mottatt, 
+                                inns.soknad_id,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
@@ -127,6 +129,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
             mottatt = this.localDateTime("mottatt"),
             skjemaKode = this.string("skjema_kode"),
             kategori = Kategori.valueOf(this.string("kategori")),
+            søknadId = this.uuidOrNull("soknad_id"),
         )
     }
 }

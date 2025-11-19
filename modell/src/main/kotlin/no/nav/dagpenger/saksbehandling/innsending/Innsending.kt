@@ -30,6 +30,7 @@ class Innsending private constructor(
                 mottatt = hendelse.registrertTidspunkt,
                 skjemaKode = hendelse.skjemaKode,
                 kategori = hendelse.kategori,
+                søknadId = hendelse.søknadId,
             )
         }
 
@@ -40,6 +41,7 @@ class Innsending private constructor(
             mottatt: LocalDateTime,
             skjemaKode: String,
             kategori: Kategori,
+            søknadId: UUID?,
         ): Innsending {
             return Innsending(
                 innsendingId = innsendingId,
@@ -48,6 +50,7 @@ class Innsending private constructor(
                 mottatt = mottatt,
                 skjemaKode = skjemaKode,
                 kategori = kategori,
+                søknadId = søknadId,
             )
         }
     }

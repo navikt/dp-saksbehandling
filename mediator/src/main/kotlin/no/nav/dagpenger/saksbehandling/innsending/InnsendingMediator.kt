@@ -5,11 +5,11 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -38,8 +38,7 @@ class InnsendingMediator(
 
         if (skalEttersendingTilSøknadVarsles || sisteSakId != null) {
             val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
-            val innsending =
-                Innsending.opprett(hendelse = hendelse) { ident -> person }
+            val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
             innsendingRepository.lagre(innsending)
             val behandling =
                 Behandling(
@@ -84,11 +83,23 @@ class InnsendingMediator(
     }
 
     fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {
-//        oppgaveMediator.finnOppgaverFor(hendelse.ident)
-        TODO()
-    }
+        val innsendinger = innsendingRepository.finnInnsendingerForPerson(ident = hendelse.ident)
+        innsendinger.singleOrNull {
+            it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
+        }?.let { innsending ->
 
-    fun tildel(tildelHendelse: TildelHendelse) {
-        oppgaveMediator.hentOppgaveHvisTilgang(tildelHendelse.innsendingId, tildelHendelse.utførtAv)
+            // TODO: sett nyBehandling på innsendingen
+            innsendingRepository.lagre(innsending)
+            oppgaveMediator.avbrytOppgave(
+                hendelse =
+                    BehandlingAvbruttHendelse(
+                        behandlingId = innsending.innsendingId,
+                        behandletHendelseId = hendelse.søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = hendelse.ident,
+                        utførtAv = hendelse.utførtAv,
+                    ),
+            )
+        }
     }
 }

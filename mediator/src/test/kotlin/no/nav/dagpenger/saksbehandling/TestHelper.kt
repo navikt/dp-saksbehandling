@@ -96,6 +96,7 @@ internal object TestHelper {
         mottatt: LocalDateTime = opprettetNå,
         skjemaKode: String = "skjemaKode",
         kategori: Kategori = Kategori.GENERELL,
+        søknadId: UUID? = null,
     ): Innsending {
         return Innsending.rehydrer(
             innsendingId = innsendingId,
@@ -104,6 +105,7 @@ internal object TestHelper {
             mottatt = mottatt,
             skjemaKode = skjemaKode,
             kategori = kategori,
+            søknadId = søknadId,
         )
     }
 

@@ -1,0 +1,1 @@
+DROP TABLE innsending_tilstand_logg_v1;
