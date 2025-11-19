@@ -40,7 +40,7 @@ class InnsendingMediator(
             val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
             val innsending =
                 Innsending.opprett(hendelse = hendelse) { ident -> person }
-
+            innsendingRepository.lagre(innsending)
             val behandling =
                 Behandling(
                     behandlingId = innsending.innsendingId,
@@ -50,14 +50,14 @@ class InnsendingMediator(
                 )
 
             if (skalEttersendingTilSøknadVarsles) {
-                val sakId: UUID = sakMediator.something(behandling)
+                val sakId: UUID = sakMediator.knyttEttersendingTilSammeSakSomSøknad(behandling, hendelse.søknadId!!)
                 oppgaveMediator.lagOppgaveForInnsendingBehandling(
                     innsendingMottattHendelse = hendelse,
                     behandling = behandling,
                     person = person,
                 )
             } else if (sisteSakId != null) {
-                sakMediator.something2(sisteSakId)
+                sakMediator.knyttBehandlingTilSak(behandling, sisteSakId)
                 oppgaveMediator.lagOppgaveForInnsendingBehandling(
                     innsendingMottattHendelse = hendelse,
                     behandling = behandling,
@@ -77,7 +77,7 @@ class InnsendingMediator(
     }
 
     fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {
-        oppgaveMediator.finnOppgaverFor(hendelse.ident)
+//        oppgaveMediator.finnOppgaverFor(hendelse.ident)
         TODO()
     }
 

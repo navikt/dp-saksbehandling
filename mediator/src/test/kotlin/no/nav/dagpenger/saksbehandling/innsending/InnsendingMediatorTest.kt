@@ -56,6 +56,7 @@ class InnsendingMediatorTest {
         mockk<OppgaveMediator>().also {
             coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomSkalVarsles, any()) } returns true
             coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomIkkeSkalVarsles, any()) } returns false
+            coEvery { it.lagOppgaveForInnsendingBehandling(any(), any(), any()) } just Runs
         }
 
     private val personMediatorMock: PersonMediator =

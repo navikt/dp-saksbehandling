@@ -213,11 +213,17 @@ class SakMediator(
         }
     }
 
-    fun something(behandling: Behandling): UUID {
+    fun knyttEttersendingTilSammeSakSomSøknad(
+        behandling: Behandling,
+        søknadId: UUID,
+    ): UUID {
         TODO("Not yet implemented")
     }
 
-    fun something2(sisteSakId: UUID) {
+    fun knyttBehandlingTilSak(
+        behandling: Behandling,
+        sakId: UUID,
+    ) {
         TODO("Not yet implemented")
     }
 }
