@@ -50,14 +50,21 @@ class InnsendingMediator(
                 )
 
             if (skalEttersendingTilSøknadVarsles) {
-                val sakId: UUID = sakMediator.knyttEttersendingTilSammeSakSomSøknad(behandling, hendelse.søknadId!!)
+                sakMediator.knyttEttersendingTilSammeSakSomSøknad(
+                    behandling = behandling,
+                    hendelse = hendelse,
+                )
                 oppgaveMediator.lagOppgaveForInnsendingBehandling(
                     innsendingMottattHendelse = hendelse,
                     behandling = behandling,
                     person = person,
                 )
             } else if (sisteSakId != null) {
-                sakMediator.knyttBehandlingTilSak(behandling, sisteSakId)
+                sakMediator.knyttBehandlingTilSak(
+                    behandling = behandling,
+                    hendelse = hendelse,
+                    sakId = sisteSakId,
+                )
                 oppgaveMediator.lagOppgaveForInnsendingBehandling(
                     innsendingMottattHendelse = hendelse,
                     behandling = behandling,

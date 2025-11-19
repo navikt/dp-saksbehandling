@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.sak
 
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.fail
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -12,6 +13,7 @@ import io.mockk.mockk
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -22,6 +24,8 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -30,12 +34,14 @@ import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
 
 class SakMediatorTest {
     private val testIdent = "12345678901"
     private val søknadId = UUID.randomUUID()
+    private val endaEnSøknadId = UUID.randomUUID()
     private val meldekortId = "123L"
     private val manuellId = UUID.randomUUID()
     private val behandlingIdSøknadNyRett = UUIDv7.ny()
@@ -43,12 +49,21 @@ class SakMediatorTest {
     private val behandlingIdMeldekort = UUIDv7.ny()
     private val behandlingIdManuell = UUIDv7.ny()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.8")
+    private val opprettetLittSenere = LocalDateTime.parse("2025-08-21T11:41:52.8")
+    private val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingIdSøknadNyRett,
             ident = testIdent,
             opprettet = opprettet,
+        )
+    private val endaEnSøknadsbehandlingOpprettetHendelseNyRett =
+        SøknadsbehandlingOpprettetHendelse(
+            søknadId = endaEnSøknadId,
+            behandlingId = UUIDv7.ny(),
+            ident = testIdent,
+            opprettet = opprettetLittSenere,
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
         SøknadsbehandlingOpprettetHendelse(
@@ -401,6 +416,123 @@ class SakMediatorTest {
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
             packet["søknadId"].asUUID() shouldBe søknadId
             packet["ident"].asText() shouldBe testIdent
+        }
+    }
+
+    @Test
+    fun `Skal knytte ettersending til samme sak som søknad`() {
+        withMigratedDb { ds ->
+
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresSakRepository(ds),
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(ds),
+                            oppslag = oppslagMock,
+                        ),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
+                it.person.ident shouldBe testIdent
+                it.saker().single().let { sak ->
+                    sak.søknadId shouldBe søknadId
+                    sak.opprettet shouldBe opprettet
+                    sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
+                }
+            }
+
+            sakMediator.opprettSak(endaEnSøknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident).saker().size shouldBe 2
+
+            val hendelse =
+                InnsendingMottattHendelse(
+                    ident = testIdent,
+                    journalpostId = "journalpost",
+                    registrertTidspunkt = opprettetNå,
+                    søknadId = søknadId,
+                    skjemaKode = "skjema",
+                    kategori = Kategori.ETTERSENDING,
+                )
+            val behandling =
+                Behandling(
+                    behandlingId = UUIDv7.ny(),
+                    opprettet = opprettetNå,
+                    hendelse = hendelse,
+                    utløstAv = UtløstAvType.INNSENDING,
+                )
+
+            sakMediator.knyttEttersendingTilSammeSakSomSøknad(behandling = behandling, hendelse = hendelse)
+
+            val sakHistorikk = sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
+
+            sakHistorikk.finnSak { it.søknadId == søknadId }?.let { sak ->
+                sak.behandlinger().size shouldBe 2
+                sak.behandlinger().first() shouldBe behandling
+            } ?: fail("Sak med søknadId $søknadId ikke funnet")
+        }
+    }
+
+    @Test
+    fun `Skal knytte innsending til en gitt sak`() {
+        withMigratedDb { ds ->
+
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresSakRepository(ds),
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(ds),
+                            oppslag = oppslagMock,
+                        ),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
+                it.person.ident shouldBe testIdent
+                it.saker().single().let { sak ->
+                    sak.søknadId shouldBe søknadId
+                    sak.opprettet shouldBe opprettet
+                    sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
+                }
+            }
+
+            val sak = sakMediator.opprettSak(endaEnSøknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident).saker().size shouldBe 2
+
+            val hendelse =
+                InnsendingMottattHendelse(
+                    ident = testIdent,
+                    journalpostId = "journalpost",
+                    registrertTidspunkt = opprettetNå,
+                    søknadId = null,
+                    skjemaKode = "skjema",
+                    kategori = Kategori.GENERELL,
+                )
+            val behandling =
+                Behandling(
+                    behandlingId = UUIDv7.ny(),
+                    opprettet = opprettetNå,
+                    hendelse = hendelse,
+                    utløstAv = UtløstAvType.INNSENDING,
+                )
+
+            sakMediator.knyttBehandlingTilSak(
+                behandling = behandling,
+                hendelse = hendelse,
+                sakId = sak.sakId,
+            )
+
+            val sakHistorikk = sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
+                sak.behandlinger().size shouldBe 2
+                sak.behandlinger().first() shouldBe behandling
+            } ?: fail("Sak med id ${sak.sakId} ikke funnet")
         }
     }
 }

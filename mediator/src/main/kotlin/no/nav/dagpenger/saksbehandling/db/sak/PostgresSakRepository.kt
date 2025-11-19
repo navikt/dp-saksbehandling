@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -427,6 +428,10 @@ class PostgresSakRepository(
             "ManuellBehandlingOpprettetHendelse" ->
                 this.string("hendelse_data")
                     .tilHendelse<ManuellBehandlingOpprettetHendelse>()
+
+            "InnsendingMottattHendelse" ->
+                this.string("hendelse_data")
+                    .tilHendelse<InnsendingMottattHendelse>()
 
             else -> {
                 logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

@@ -70,4 +70,8 @@ data class SakHistorikk(
 
         return true
     }
+
+    fun finnSak(function: (Sak) -> Boolean): Sak? {
+        return saker.firstOrNull(function)
+    }
 }

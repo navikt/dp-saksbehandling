@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -215,15 +216,34 @@ class SakMediator(
 
     fun knyttEttersendingTilSammeSakSomSøknad(
         behandling: Behandling,
-        søknadId: UUID,
-    ): UUID {
-        TODO("Not yet implemented")
+        hendelse: InnsendingMottattHendelse,
+    ) {
+        sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
+            sakHistorikk?.saker()?.find { sak ->
+                sak.søknadId == hendelse.søknadId
+            }?.let { sak ->
+                sak.leggTilBehandling(
+                    behandling = behandling,
+                )
+                sakRepository.lagre(sakHistorikk)
+            } ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
+        }
     }
 
     fun knyttBehandlingTilSak(
         behandling: Behandling,
+        hendelse: InnsendingMottattHendelse,
         sakId: UUID,
     ) {
-        TODO("Not yet implemented")
+        sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
+            sakHistorikk?.saker()?.find { sak ->
+                sak.sakId == sakId
+            }?.let { sak ->
+                sak.leggTilBehandling(
+                    behandling = behandling,
+                )
+                sakRepository.lagre(sakHistorikk)
+            } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
+        }
     }
 }
