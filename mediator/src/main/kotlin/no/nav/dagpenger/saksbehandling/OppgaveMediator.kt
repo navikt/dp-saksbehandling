@@ -74,19 +74,21 @@ class OppgaveMediator(
         person: Person,
     ) {
         val oppgaveId = UUIDv7.ny()
-        Oppgave(
-            oppgaveId = oppgaveId,
-            emneknagger = setOf(),
-            opprettet = innsendingMottattHendelse.registrertTidspunkt,
-            tilstand = Oppgave.KlarTilBehandling,
-            behandling = behandling,
-            person = person,
-            meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
-                    kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                ),
-        )
+        val oppgave =
+            Oppgave(
+                oppgaveId = oppgaveId,
+                emneknagger = setOf(),
+                opprettet = innsendingMottattHendelse.registrertTidspunkt,
+                tilstand = Oppgave.KlarTilBehandling,
+                behandling = behandling,
+                person = person,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            )
+        oppgaveRepository.lagre(oppgave)
     }
 
     fun opprettOppgaveForKlageBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {

@@ -50,6 +50,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -948,6 +949,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
         "ManuellBehandlingOpprettetHendelse" ->
             this.string("hendelse_data")
                 .tilHendelse<ManuellBehandlingOpprettetHendelse>()
+
+        "InnsendingMottattHendelse" ->
+            this.string("hendelse_data")
+                .tilHendelse<InnsendingMottattHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
