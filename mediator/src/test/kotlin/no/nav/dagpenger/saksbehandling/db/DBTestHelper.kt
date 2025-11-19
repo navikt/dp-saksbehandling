@@ -157,6 +157,23 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             }
         }
 
+        fun lagHeleSulamitten(
+            person: Person,
+            sak: Sak,
+            behandling: Behandling,
+            oppgave: Oppgave,
+        ) {
+            sak.leggTilBehandling(behandling)
+            this.lagre(person)
+            this.lagre(
+                SakHistorikk(
+                    person = person,
+                    saker = mutableSetOf(sak),
+                ),
+            )
+            this.lagre(oppgave)
+        }
+
         fun leggTilOppgave(
             id: UUID = UUIDv7.ny(),
             tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
