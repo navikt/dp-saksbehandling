@@ -39,7 +39,10 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class InnsendingMediatorTest {
-    private val testSakId = UUIDv7.ny()
+    private val testPerson = DBTestHelper.testPerson
+    private val sakId = UUIDv7.ny()
+    private val søknadId = UUIDv7.ny()
+    private val behandlingIdSøknad = UUIDv7.ny()
     private val journalpostId = "journalpostId123"
     private val søknadIdSomSkalVarsles = UUIDv7.ny()
     private val søknadIdSomIkkeSkalVarsles = UUIDv7.ny()
@@ -61,7 +64,7 @@ class InnsendingMediatorTest {
     private val skjemaKode = "NAVe"
     private val sakMediatorMock: SakMediator =
         mockk<SakMediator>(relaxed = true).also {
-            coEvery { it.finnSisteSakId(personMedSak.ident) } returns testSakId
+            coEvery { it.finnSisteSakId(personMedSak.ident) } returns sakId
             coEvery { it.finnSisteSakId(personUtenSak.ident) } returns null
         }
     private val oppgaveMediatorMock =
@@ -75,15 +78,11 @@ class InnsendingMediatorTest {
         mockk<PersonMediator>().also {
             every { it.finnEllerOpprettPerson(personMedSak.ident) } returns personMedSak
             every { it.finnEllerOpprettPerson(personUtenSak.ident) } returns personUtenSak
-            every { it.finnEllerOpprettPerson(DBTestHelper.testPerson.ident) } returns DBTestHelper.testPerson
+            every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
         }
 
     @Test
     fun `Skal lage innsending behandling og oppgave dersom vi eier saken`() {
-        val testPerson = DBTestHelper.testPerson
-        val sakId = UUIDv7.ny()
-        val søknadId = UUIDv7.ny()
-        val behandlingIdSøknad = UUIDv7.ny()
         val sak =
             Sak(
                 sakId = sakId,
@@ -105,11 +104,6 @@ class InnsendingMediatorTest {
                         ),
                     ),
             )
-        val personMediatorMock: PersonMediator =
-            mockk<PersonMediator>().also {
-                every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
-            }
-
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
@@ -202,9 +196,6 @@ class InnsendingMediatorTest {
 
     @Test
     fun `Skal lage innsending behandling og oppgave dersom vi eier saken for ettersending som skal varsles`() {
-        val testPerson = DBTestHelper.testPerson
-        val sakId = UUIDv7.ny()
-        val søknadId = UUIDv7.ny()
         val sak =
             Sak(
                 sakId = sakId,
@@ -212,11 +203,6 @@ class InnsendingMediatorTest {
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
-        val behandlingIdSøknad = UUIDv7.ny()
-        val personMediatorMock: PersonMediator =
-            mockk<PersonMediator>().also {
-                every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
-            }
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
@@ -391,7 +377,7 @@ class InnsendingMediatorTest {
         val ferdigstillInnsendingHendelse =
             FerdigstillInnsendingHendelse(
                 innsendingId = innsending.innsendingId,
-                aksjon = Aksjon.OpprettKlage(testSakId),
+                aksjon = Aksjon.OpprettKlage(sakId),
                 utførtAv = saksbehandler,
             )
 
@@ -418,17 +404,14 @@ class InnsendingMediatorTest {
 
     @Test
     fun `Avbryt innsending hvis behandling opprettes for søknad`() {
-        val testPerson = DBTestHelper.testPerson
-        val søknadIdNyRettighet = UUIDv7.ny()
         val søknadIdGjenopptak = UUIDv7.ny()
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = søknadIdNyRettighet,
+                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
-        val behandlingIdSøknad = UUIDv7.ny()
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
@@ -436,17 +419,13 @@ class InnsendingMediatorTest {
                     opprettet = DBTestHelper.opprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
-                            søknadId = søknadIdNyRettighet,
+                            søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
                     utløstAv = UtløstAvType.SØKNAD,
                 )
-            val personMediatorMock: PersonMediator =
-                mockk<PersonMediator>().also {
-                    every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
-                }
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
                 sak = sak,
