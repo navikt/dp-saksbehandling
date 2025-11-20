@@ -59,6 +59,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -69,6 +70,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -645,7 +648,8 @@ OppgaveMediatorTest {
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
             ferdigbehandletOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
-            val utsending = utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId)
+            val utsending =
+                utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId)
             utsending.behandlingId shouldBe ferdigbehandletOppgave.behandling.behandlingId
             utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
         }
@@ -1092,7 +1096,7 @@ OppgaveMediatorTest {
                     TestHelper.lagOppgave(
                         person = testPerson,
                         behandling = behandling,
-                        tilstand = Oppgave.KlarTilKontroll,
+                        tilstand = KlarTilKontroll,
                     ),
             )
             val sakMediator =
@@ -1116,20 +1120,61 @@ OppgaveMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                 )
-
-            val innsendingMottattHendelse =
+            sakMediator.merkSakenSomDpSak(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = sak.behandlinger().first().behandlingId,
+                        behandletHendelseId = sak.søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = testPerson.ident,
+                        sak =
+                            UtsendingSak(
+                                id = sakId.toString(),
+                                kontekst = "Dagpenger",
+                            ),
+                        automatiskBehandlet = false,
+                    ),
+            )
+            innsendingMediator.taImotInnsending(
                 InnsendingMottattHendelse(
                     ident = testPerson.ident,
                     journalpostId = journalpostId,
                     registrertTidspunkt = registrertTidspunkt,
-                    søknadId = søknadId,
-                    skjemaKode = "skjemaKode",
-                    kategori = Kategori.ETTERSENDING,
-                )
-
-            innsendingMediator.taImotInnsending(
-                innsendingMottattHendelse,
+                    søknadId = null,
+                    skjemaKode = "SkjemaKode123",
+                    kategori = Kategori.KLAGE,
+                ),
             )
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            val innsendingOppgave =
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            innsendingOppgave.tilstand() shouldBe KlarTilBehandling
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = innsendingOppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                it.behandling.utløstAv == UtløstAvType.INNSENDING
+            }.tilstand() shouldBe UnderBehandling
+
+            oppgaveMediator.ferdigstillOppgave(
+                InnsendingFerdigstiltHendelse(
+                    innsendingId = innsendingOppgave.behandling.behandlingId,
+                    aksjon = Aksjon.Avslutt,
+                    behandlingId = UUIDv7.ny(),
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                it.behandling.utløstAv == UtløstAvType.INNSENDING
+            }.tilstand() shouldBe FerdigBehandlet
         }
     }
 

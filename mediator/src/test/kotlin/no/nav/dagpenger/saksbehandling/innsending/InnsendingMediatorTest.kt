@@ -165,7 +165,7 @@ class InnsendingMediatorTest {
                         automatiskBehandlet = false,
                     ),
             )
-            val innsendingMottattHendelse =
+            innsendingMediator.taImotInnsending(
                 InnsendingMottattHendelse(
                     ident = testPerson.ident,
                     journalpostId = journalpostId,
@@ -173,10 +173,7 @@ class InnsendingMediatorTest {
                     søknadId = null,
                     skjemaKode = skjemaKode,
                     kategori = Kategori.KLAGE,
-                )
-
-            innsendingMediator.taImotInnsending(
-                innsendingMottattHendelse,
+                ),
             )
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->

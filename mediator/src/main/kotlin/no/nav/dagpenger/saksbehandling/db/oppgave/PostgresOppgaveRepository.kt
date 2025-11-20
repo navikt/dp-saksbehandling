@@ -50,6 +50,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
@@ -623,6 +624,7 @@ private fun rehydrerTilstandsendringHendelse(
         "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
         "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
         "AvbrytOppgaveHendelse" -> hendelseJson.tilHendelse<AvbrytOppgaveHendelse>()
+        "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
         else -> {
             logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
