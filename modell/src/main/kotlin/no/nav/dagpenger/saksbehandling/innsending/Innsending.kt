@@ -91,7 +91,7 @@ class Innsending private constructor(
 
     override fun toString(): String {
         return "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
-            "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
+                "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -138,9 +138,17 @@ class Innsending private constructor(
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
         when (innsendingFerdigstiltHendelse.aksjon) {
-            Aksjon.Avslutt -> TODO()
-            is Aksjon.OpprettKlage -> TODO()
-            is Aksjon.OpprettManuellBehandling -> TODO()
+            Aksjon.Avslutt -> this.innsendingResultat = InnsendingResultat.Ingen
+            is Aksjon.OpprettKlage -> {
+                requireNotNull(innsendingFerdigstiltHendelse.behandlingId) { "behandlingId kan ikke være null etter opprettelse av klage" }
+                this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.behandlingId)
+            }
+
+            is Aksjon.OpprettManuellBehandling -> {
+                requireNotNull(innsendingFerdigstiltHendelse.behandlingId) { "behandlingId kan ikke være null etter opprettelse av manuell behandling" }
+                this.innsendingResultat =
+                    InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.behandlingId)
+            }
         }
     }
 }

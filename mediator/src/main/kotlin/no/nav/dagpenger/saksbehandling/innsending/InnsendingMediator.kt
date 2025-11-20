@@ -91,7 +91,7 @@ class InnsendingMediator(
 
         //  Oppdater innsending med behandlingId fra aksjon
         innsending.ferdigstill(innsendingFerdigstiltHendelse)
-        oppgaveMediator.ferdigstillOppgave()
+        oppgaveMediator.ferdigstillOppgave(innsendingFerdigstiltHendelse)
 
         // Setter tilstand "Ferdigstilt"
         innsendingRepository.lagre(innsending)
