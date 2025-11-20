@@ -53,10 +53,10 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                             )
                             ON CONFLICT (id) 
                             DO UPDATE 
-                            SET vurdering = :vurdering 
-                            AND tilstand = :tilstand 
-                            AND resultat_type = :resultat_type 
-                            AND resultat_behandling_id = :resultat_behandling_id
+                            SET vurdering = :vurdering ,
+                             tilstand = :tilstand ,
+                             resultat_type = :resultat_type ,
+                             resultat_behandling_id = :resultat_behandling_id
                             """.trimIndent(),
                         paramMap =
                             mapOf(
@@ -179,7 +179,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
             tilstand = this.string("tilstand"),
             vurdering = this.stringOrNull("vurdering"),
             innsendingResultat =
-                when (val resultat = this.stringOrNull("innsending_resultat")) {
+                when (val resultat = this.stringOrNull("resultat_type")) {
                     "Ingen" -> Innsending.InnsendingResultat.Ingen
                     "Klage" -> Innsending.InnsendingResultat.Klage(this.uuid("resultat_behandling_id"))
                     "RettTilDagpenger" -> Innsending.InnsendingResultat.RettTilDagpenger(this.uuid("resultat_behandling_id"))

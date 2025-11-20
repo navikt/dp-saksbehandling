@@ -68,7 +68,7 @@ class Innsending private constructor(
 
     fun vurdering(): String? = vurdering
 
-    fun tilstand() = tilstand.toString()
+    fun tilstand() = tilstand.name
 
     fun innsendingResultat() = innsendingResultat
 
