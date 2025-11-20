@@ -97,6 +97,9 @@ internal object TestHelper {
         skjemaKode: String = "skjemaKode",
         kategori: Kategori = Kategori.GENERELL,
         søknadId: UUID? = null,
+        tilstand: String = "BEHANDLES",
+        vurdering: String? = null,
+        innsendingResultat: Innsending.InnsendingResultat? = null,
     ): Innsending {
         return Innsending.rehydrer(
             innsendingId = innsendingId,
@@ -106,6 +109,9 @@ internal object TestHelper {
             skjemaKode = skjemaKode,
             kategori = kategori,
             søknadId = søknadId,
+            tilstand = tilstand,
+            vurdering = vurdering,
+            innsendingResultat = innsendingResultat,
         )
     }
 

@@ -91,7 +91,7 @@ class Innsending private constructor(
 
     override fun toString(): String {
         return "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
-                "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
+            "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -145,7 +145,9 @@ class Innsending private constructor(
             }
 
             is Aksjon.OpprettManuellBehandling -> {
-                requireNotNull(innsendingFerdigstiltHendelse.behandlingId) { "behandlingId kan ikke være null etter opprettelse av manuell behandling" }
+                requireNotNull(
+                    innsendingFerdigstiltHendelse.behandlingId,
+                ) { "behandlingId kan ikke være null etter opprettelse av manuell behandling" }
                 this.innsendingResultat =
                     InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.behandlingId)
             }

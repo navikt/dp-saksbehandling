@@ -46,8 +46,10 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -57,6 +59,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -65,6 +69,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -78,6 +83,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.stream.Stream
 import javax.sql.DataSource
@@ -1041,6 +1047,88 @@ OppgaveMediatorTest {
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandler = beslutter,
                 saksbehandlerToken = "token",
+            )
+        }
+    }
+
+    @Test
+    fun `Livssyklus for behandling av innsending`() {
+        val testPerson = DBTestHelper.testPerson
+        val sakId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        val behandlingIdSøknad = UUIDv7.ny()
+        val journalpostId = "journalpostId123"
+        val registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        val personMediatorMock: PersonMediator =
+            mockk<PersonMediator>().also {
+                every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
+            }
+        val sak =
+            Sak(
+                sakId = sakId,
+                søknadId = søknadId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = UtløstAvType.SØKNAD,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.KlarTilKontroll,
+                    ),
+            )
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(it),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                )
+
+            val innsendingMottattHendelse =
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = søknadId,
+                    skjemaKode = "skjemaKode",
+                    kategori = Kategori.ETTERSENDING,
+                )
+
+            innsendingMediator.taImotInnsending(
+                innsendingMottattHendelse,
             )
         }
     }

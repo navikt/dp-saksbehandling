@@ -369,7 +369,7 @@ class InnsendingMediatorTest {
         val innsendingFerdigstiltHendelse =
             InnsendingFerdigstiltHendelse(
                 innsendingId = innsending.innsendingId,
-                aksjon = Aksjon.OpprettKlage::class.java.simpleName,
+                aksjon = Aksjon.OpprettKlage(sakId),
                 behandlingId = UUIDv7.ny(),
                 utførtAv = saksbehandler,
             )
@@ -378,6 +378,7 @@ class InnsendingMediatorTest {
             FerdigstillInnsendingHendelse(
                 innsendingId = innsending.innsendingId,
                 aksjon = Aksjon.OpprettKlage(sakId),
+                vurdering = "Vurderingstekst",
                 utførtAv = saksbehandler,
             )
 
