@@ -80,13 +80,7 @@ class InnsendingMediatorTest {
 
     @Test
     fun `Skal lage innsending behandling og oppgave dersom vi eier saken`() {
-        val testPerson =
-            Person(
-                id = UUIDv7.ny(),
-                ident = "03030344444",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-            )
+        val testPerson = DBTestHelper.testPerson
         val sakId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val behandlingIdSøknad = UUIDv7.ny()
@@ -130,7 +124,7 @@ class InnsendingMediatorTest {
                         ),
                     utløstAv = UtløstAvType.SØKNAD,
                 )
-            lagHeleSulamitten(
+            opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
                 sak = sak,
                 behandling = behandling,
@@ -197,22 +191,18 @@ class InnsendingMediatorTest {
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
-            val oppgave = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).last()
-            oppgave.behandling.utløstAv shouldBe UtløstAvType.INNSENDING
-            oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            val innsendingOppgave =
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
         }
     }
 
     @Test
     fun `Skal lage innsending behandling og oppgave dersom vi eier saken for ettersending som skal varsles`() {
-        val testPerson =
-            Person(
-                id = UUIDv7.ny(),
-                ident = "06060688888",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-            )
+        val testPerson = DBTestHelper.testPerson
         val sakId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val sak =
@@ -241,7 +231,7 @@ class InnsendingMediatorTest {
                         ),
                     utløstAv = UtløstAvType.SØKNAD,
                 )
-            lagHeleSulamitten(
+            opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
                 sak = sak,
                 behandling = behandling,
@@ -294,9 +284,11 @@ class InnsendingMediatorTest {
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
-            val oppgave = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).last()
-            oppgave.behandling.utløstAv shouldBe UtløstAvType.INNSENDING
-            oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            val innsendingOppgave =
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
         }
     }
@@ -426,20 +418,12 @@ class InnsendingMediatorTest {
 
     @Test
     fun `Avbryt innsending hvis behandling opprettes for søknad`() {
+        val testPerson = DBTestHelper.testPerson
         val søknadIdNyRettighet = UUIDv7.ny()
         val søknadIdGjenopptak = UUIDv7.ny()
-        val sakId = UUIDv7.ny()
-
-        val testPerson =
-            Person(
-                id = UUIDv7.ny(),
-                ident = "01018911211",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-            )
         val sak =
             Sak(
-                sakId = sakId,
+                sakId = UUIDv7.ny(),
                 søknadId = søknadIdNyRettighet,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
@@ -463,7 +447,7 @@ class InnsendingMediatorTest {
                 mockk<PersonMediator>().also {
                     every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
                 }
-            lagHeleSulamitten(
+            opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
                 sak = sak,
                 behandling = behandling,
@@ -504,7 +488,7 @@ class InnsendingMediatorTest {
                         ident = testPerson.ident,
                         sak =
                             UtsendingSak(
-                                id = sakId.toString(),
+                                id = sak.sakId.toString(),
                                 kontekst = "Dagpenger",
                             ),
                         automatiskBehandlet = false,
@@ -544,8 +528,10 @@ class InnsendingMediatorTest {
                     ),
             )
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
-            val oppgaveEtterAvbryt = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).last()
-            oppgaveEtterAvbryt.behandling.utløstAv shouldBe UtløstAvType.INNSENDING
+            val oppgaveEtterAvbryt =
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
             oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.Avbrutt
         }
     }

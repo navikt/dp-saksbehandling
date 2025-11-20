@@ -157,7 +157,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             }
         }
 
-        fun lagHeleSulamitten(
+        fun opprettSakMedBehandlingOgOppgave(
             person: Person,
             sak: Sak,
             behandling: Behandling,
