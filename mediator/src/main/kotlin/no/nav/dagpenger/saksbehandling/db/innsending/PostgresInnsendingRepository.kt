@@ -19,16 +19,44 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
     override fun lagre(innsending: Innsending) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
+                val innsendingResultat = innsending.innsendingResultat()
                 tx.run(
                     queryOf(
                         //language=PostgreSQL
                         statement =
                             """
-                            INSERT INTO innsending_v1
-                                (id, person_id, journalpost_id, skjema_kode, kategori, mottatt, soknad_id)
-                            VALUES
-                                (:id, :person_id, :journalpost_id, :skjema_kode, :kategori, :mottatt, :soknad_id)
-                            ON CONFLICT (id) DO NOTHING 
+                            INSERT INTO innsending_v1 (
+                                id, 
+                                person_id, 
+                                journalpost_id, 
+                                skjema_kode, 
+                                kategori, 
+                                mottatt, 
+                                soknad_id, 
+                                vurdering, 
+                                tilstand, 
+                                resultat_type, 
+                                resultat_behandling_id
+                            )
+                            VALUES (
+                                :id, 
+                                :person_id, 
+                                :journalpost_id, 
+                                :skjema_kode, 
+                                :kategori, 
+                                :mottatt, 
+                                :soknad_id, 
+                                :vurdering, 
+                                :tilstand, 
+                                :resultat_type, 
+                                :resultat_behandling_id
+                            )
+                            ON CONFLICT (id) 
+                            DO UPDATE 
+                            SET vurdering = :vurdering 
+                            AND tilstand = :tilstand 
+                            AND resultat_type = :resultat_type 
+                            AND resultat_behandling_id = :resultat_behandling_id
                             """.trimIndent(),
                         paramMap =
                             mapOf(
@@ -39,6 +67,16 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 "kategori" to innsending.kategori.name,
                                 "mottatt" to innsending.mottatt,
                                 "soknad_id" to innsending.søknadId,
+                                "vurdering" to innsending.vurdering(),
+                                "tilstand" to innsending.tilstand(),
+                                "resultat_type" to innsendingResultat?.javaClass?.simpleName,
+                                "resultat_behandling_id" to
+                                    when (innsendingResultat) {
+                                        Innsending.InnsendingResultat.Ingen -> null
+                                        is Innsending.InnsendingResultat.Klage -> innsendingResultat.behandlingId
+                                        is Innsending.InnsendingResultat.RettTilDagpenger -> innsendingResultat.behandlingId
+                                        null -> null
+                                    },
                             ),
                     ).asUpdate,
                 )
@@ -64,6 +102,10 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 inns.kategori,
                                 inns.mottatt, 
                                 inns.soknad_id,
+                                inns.vurdering,
+                                inns.tilstand,
+                                inns.resultat_type, 
+                                inns.resultat_behandling_id,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
@@ -96,6 +138,10 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 inns.kategori,
                                 inns.mottatt, 
                                 inns.soknad_id,
+                                inns.vurdering,
+                                inns.tilstand,
+                                inns.resultat_type,
+                                inns.resultat_behandling_id,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
@@ -130,6 +176,15 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
             skjemaKode = this.string("skjema_kode"),
             kategori = Kategori.valueOf(this.string("kategori")),
             søknadId = this.uuidOrNull("soknad_id"),
+            tilstand = this.string("tilstand"),
+            vurdering = this.stringOrNull("vurdering"),
+            innsendingResultat =
+                when (val resultat = this.stringOrNull("innsending_resultat")) {
+                    "Ingen" -> Innsending.InnsendingResultat.Ingen
+                    "Klage" -> Innsending.InnsendingResultat.Klage(this.uuid("resultat_behandling_id"))
+                    "RettTilDagpenger" -> Innsending.InnsendingResultat.RettTilDagpenger(this.uuid("resultat_behandling_id"))
+                    else -> null
+                },
         )
     }
 }

@@ -5,6 +5,8 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import java.time.LocalDateTime
@@ -18,6 +20,9 @@ class Innsending private constructor(
     val skjemaKode: String,
     val kategori: Kategori,
     val søknadId: UUID? = null,
+    private var vurdering: String? = null,
+    private var tilstand: Tilstand = Tilstand.BEHANDLES,
+    private var innsendingResultat: InnsendingResultat? = null,
 ) {
     companion object {
         fun opprett(
@@ -42,6 +47,9 @@ class Innsending private constructor(
             skjemaKode: String,
             kategori: Kategori,
             søknadId: UUID?,
+            tilstand: String,
+            vurdering: String?,
+            innsendingResultat: InnsendingResultat?,
         ): Innsending {
             return Innsending(
                 innsendingId = innsendingId,
@@ -51,8 +59,31 @@ class Innsending private constructor(
                 skjemaKode = skjemaKode,
                 kategori = kategori,
                 søknadId = søknadId,
+                tilstand = Tilstand.valueOf(tilstand),
+                vurdering = vurdering,
+                innsendingResultat = innsendingResultat,
             )
         }
+    }
+
+    fun vurdering(): String? = vurdering
+
+    fun tilstand() = tilstand.toString()
+
+    fun innsendingResultat() = innsendingResultat
+
+    private enum class Tilstand {
+        BEHANDLES,
+        FERDIGSTILL_STARTET,
+        FERDIGSTILT,
+    }
+
+    sealed class InnsendingResultat {
+        object Ingen : InnsendingResultat()
+
+        data class Klage(val behandlingId: UUID) : InnsendingResultat()
+
+        data class RettTilDagpenger(val behandlingId: UUID) : InnsendingResultat()
     }
 
     fun gjelderSøknadMedId(søknadId: UUID): Boolean =
@@ -97,6 +128,19 @@ class Innsending private constructor(
             is Saksbehandler -> {
                 this.person.harTilgang(utførtAv)
             }
+        }
+    }
+
+    fun startFerdigstilling(ferdigstillInnsendingHendelse: FerdigstillInnsendingHendelse) {
+        this.vurdering = ferdigstillInnsendingHendelse.vurdering
+        this.tilstand = Tilstand.FERDIGSTILL_STARTET
+    }
+
+    fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
+        when (innsendingFerdigstiltHendelse.aksjon) {
+            Aksjon.Avslutt -> TODO()
+            is Aksjon.OpprettKlage -> TODO()
+            is Aksjon.OpprettManuellBehandling -> TODO()
         }
     }
 }

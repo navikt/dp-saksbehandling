@@ -55,6 +55,7 @@ fun Route.innsendingApi(
                                     FerdigstillInnsendingHendelse(
                                         innsendingId = behandlingId,
                                         aksjon = aksjon,
+                                        vurdering = requestDTO.vurdering,
                                         utførtAv = applicationCallParser.saksbehandler(call),
                                     ),
                             )

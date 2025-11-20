@@ -18,12 +18,16 @@ class InnsendingBehandler(
             Aksjon.Avslutt ->
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,
-                    aksjon = hendelse.aksjon.javaClass.simpleName,
+                    aksjon = hendelse.aksjon,
                     behandlingId = null,
                     utførtAv = hendelse.utførtAv,
                 )
 
-            is Aksjon.OpprettKlage -> opprettKlage(hendelse = hendelse, innsending = innsending)
+            is Aksjon.OpprettKlage ->
+                opprettKlage(
+                    hendelse = hendelse,
+                    innsending = innsending,
+                )
             is Aksjon.OpprettManuellBehandling ->
                 opprettManuellBehandling(
                     hendelse = hendelse,
@@ -42,7 +46,7 @@ class InnsendingBehandler(
         ).let { result ->
             return InnsendingFerdigstiltHendelse(
                 innsendingId = innsending.innsendingId,
-                aksjon = hendelse.aksjon.javaClass.simpleName,
+                aksjon = hendelse.aksjon,
                 behandlingId = result.getOrThrow(),
                 utførtAv = hendelse.utførtAv,
             )
@@ -66,7 +70,7 @@ class InnsendingBehandler(
             )
         return InnsendingFerdigstiltHendelse(
             innsendingId = innsending.innsendingId,
-            aksjon = hendelse.aksjon.javaClass.simpleName,
+            aksjon = hendelse.aksjon,
             behandlingId = klageOppgave.behandling.behandlingId,
             utførtAv = hendelse.utførtAv,
         )

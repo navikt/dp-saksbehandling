@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
 import PersonMediator
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -13,6 +14,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 sealed class HåndterInnsendingResultat {
     data class HåndtertInnsending(val sakId: UUID) : HåndterInnsendingResultat()
@@ -79,8 +82,19 @@ class InnsendingMediator(
     }
 
     fun ferdigstill(hendelse: FerdigstillInnsendingHendelse) {
-        // innsendingBehandler.utførAksjon()
-        TODO()
+        val innsending = hentInnsending(innsendingId = hendelse.innsendingId, saksbehandler = hendelse.utførtAv)
+        innsending.startFerdigstilling(hendelse)
+        innsendingRepository.lagre(innsending)
+
+        val innsendingFerdigstiltHendelse = innsendingBehandler.utførAksjon(innsending = innsending, hendelse = hendelse)
+        logger.info { "Ferdigstiller innsending med id=${innsending.innsendingId} med aksjon=${hendelse.aksjon}" }
+
+        //  Oppdater innsending med behandlingId fra aksjon
+        innsending.ferdigstill(innsendingFerdigstiltHendelse)
+        oppgaveMediator.ferdigstillOppgave()
+
+        // Setter tilstand "Ferdigstilt"
+        innsendingRepository.lagre(innsending)
     }
 
     fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {

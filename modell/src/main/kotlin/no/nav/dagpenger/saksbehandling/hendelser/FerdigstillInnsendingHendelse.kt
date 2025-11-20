@@ -7,5 +7,6 @@ import java.util.UUID
 data class FerdigstillInnsendingHendelse(
     val innsendingId: UUID,
     val aksjon: Aksjon,
+    val vurdering: String,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)
