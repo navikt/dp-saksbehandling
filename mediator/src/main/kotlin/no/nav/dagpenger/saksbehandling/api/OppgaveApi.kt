@@ -380,6 +380,7 @@ internal fun Route.oppgaveApi(
                                             .toString(),
                                 ),
                         )
+
                     else ->
                         call.respond(
                             status = HttpStatusCode.OK,
@@ -462,4 +463,4 @@ class InternDataException(message: String) : RuntimeException(message)
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {
         UUID.fromString(it)
-    } ?: throw IllegalArgumentException("Kunne ikke finne oppgaveId i path")
+    } ?: throw IllegalArgumentException("Kunne ikke finne $pathParam i path")

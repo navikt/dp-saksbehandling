@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.innsending
 import PersonMediator
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -100,6 +101,16 @@ class InnsendingMediator(
                         utførtAv = hendelse.utførtAv,
                     ),
             )
+        }
+    }
+
+    fun hentInnsending(
+        innsendingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Innsending {
+        return innsendingRepository.hent(innsendingId = innsendingId).let { innsending ->
+            innsending.harTilgang(saksbehandler)
+            innsending
         }
     }
 }
