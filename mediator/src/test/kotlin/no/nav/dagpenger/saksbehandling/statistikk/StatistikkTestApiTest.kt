@@ -38,6 +38,7 @@ class StatistikkTestApiTest {
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
                     sakMediator = mockk(),
+                    innsendingMediator = mockk(),
                 )
             }
 
@@ -67,6 +68,7 @@ class StatistikkTestApiTest {
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
                     sakMediator = mockk(),
+                    innsendingMediator = mockk(),
                 )
             }
 

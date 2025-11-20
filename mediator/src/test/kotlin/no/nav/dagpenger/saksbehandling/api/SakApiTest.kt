@@ -87,6 +87,7 @@ class SakApiTest {
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
                     sakMediator = sakMediator,
+                    innsendingMediator = mockk(),
                 )
             }
             test()

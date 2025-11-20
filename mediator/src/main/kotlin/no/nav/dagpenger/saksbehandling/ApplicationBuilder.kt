@@ -193,6 +193,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         klageDTOMapper = KlageDTOMapper(oppslag),
                         personMediator = personMediator,
                         sakMediator = sakMediator,
+                        innsendingMediator = innsendingMediator,
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =

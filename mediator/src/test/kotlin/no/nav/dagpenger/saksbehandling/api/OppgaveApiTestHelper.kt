@@ -33,6 +33,7 @@ internal object OppgaveApiTestHelper {
                     klageDTOMapper = mockk(relaxed = true),
                     personMediator = personMediator,
                     sakMediator = mockk(relaxed = true),
+                    innsendingMediator = mockk(relaxed = true),
                 )
             }
             test()
@@ -68,6 +69,7 @@ internal object OppgaveApiTestHelper {
                     klageDTOMapper = mockk(relaxed = true),
                     personMediator = personMediator,
                     sakMediator = mockk(relaxed = true),
+                    innsendingMediator = mockk(relaxed = true),
                 )
             }
             test()
