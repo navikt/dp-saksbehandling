@@ -6,7 +6,6 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.headers
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
@@ -19,14 +18,14 @@ class InnsendingApiTest {
         mockAzure()
     }
 
-    private val innsendingId = UUIDv7.ny()
+    private val behandlingId = UUIDv7.ny()
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<InnsendingMediator>()
         withInnsendingApi(mediator) {
-            client.get("innsending/$innsendingId").status shouldBe HttpStatusCode.Unauthorized
-            client.put("innsending/$innsendingId/ferdigstill") {
+            client.get("innsending/$behandlingId").status shouldBe HttpStatusCode.Unauthorized
+            client.put("innsending/$behandlingId/ferdigstill") {
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
                 setBody("""{ "tullebody": "tull" }""".trimIndent())

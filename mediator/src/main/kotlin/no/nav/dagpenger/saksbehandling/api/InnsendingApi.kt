@@ -25,16 +25,16 @@ fun Route.innsendingApi(
 ) {
     route("innsending") {
         authenticate("azureAd") {
-            route("{innsendingId}") {
+            route("{behandlingId}") {
                 get {
                     mediator.hentInnsending(
-                        innsendingId = call.innsendingId(),
+                        innsendingId = call.behandlingId(),
                         saksbehandler = applicationCallParser.saksbehandler(call),
                     )
                 }
                 route("ferdigstill") {
                     put {
-                        val innsendingId = call.innsendingId()
+                        val behandlingId = call.behandlingId()
 
                         call.receive<FerdigstillInnsendingRequestDTO>().let { requestDTO ->
                             val saksBehandlerToken = call.request.jwt()
@@ -53,7 +53,7 @@ fun Route.innsendingApi(
                             mediator.ferdigstill(
                                 hendelse =
                                     FerdigstillInnsendingHendelse(
-                                        innsendingId = innsendingId,
+                                        innsendingId = behandlingId,
                                         aksjon = aksjon,
                                         utførtAv = applicationCallParser.saksbehandler(call),
                                     ),
@@ -67,6 +67,6 @@ fun Route.innsendingApi(
     }
 }
 
-private fun ApplicationCall.innsendingId(): UUID {
-    return this.finnUUID("innsendingId")
+private fun ApplicationCall.behandlingId(): UUID {
+    return this.finnUUID("behandlingId")
 }
