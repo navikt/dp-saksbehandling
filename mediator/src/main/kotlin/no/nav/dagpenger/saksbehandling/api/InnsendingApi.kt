@@ -77,7 +77,9 @@ private fun Innsending.tilInnsendingDTO(): InnsendingDTO {
     return InnsendingDTO(
         behandlingId = this.innsendingId,
         journalpostId = this.journalpostId,
+        //Hent alle saker for en person
         lovligeSaker = emptyList(),
+        //sakbehandler har valgt denne saken og burde hentes fra InnsendingResultat
         sakId = null,
         vurdering = this.vurdering(),
         nyBehandling = this.toBehandling(),
@@ -92,6 +94,7 @@ private fun Innsending.toBehandling(): BehandlingDTO? {
                 behandlingType = BehandlingTypeDTO.KLAGE,
                 utlostAv = UtlostAvTypeDTO.INNSENDING,
                 opprettet = this.mottatt,
+                //kan gi på klage
                 oppgaveId = null,
             )
 
