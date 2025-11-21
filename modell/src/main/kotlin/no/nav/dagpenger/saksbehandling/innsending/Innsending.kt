@@ -91,7 +91,7 @@ class Innsending private constructor(
 
     override fun toString(): String {
         return "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
-                "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
+            "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -154,4 +154,3 @@ class Innsending private constructor(
         }
     }
 }
-

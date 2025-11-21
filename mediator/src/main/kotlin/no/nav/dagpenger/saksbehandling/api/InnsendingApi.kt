@@ -9,8 +9,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import io.ktor.util.reflect.TypeInfo
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDTO
@@ -82,28 +80,29 @@ private fun Innsending.tilInnsendingDTO(): InnsendingDTO {
         lovligeSaker = emptyList(),
         sakId = null,
         vurdering = this.vurdering(),
-        nyBehandling = this.toBehandling()
+        nyBehandling = this.toBehandling(),
     )
-
 }
 
 private fun Innsending.toBehandling(): BehandlingDTO? {
     return when (val resultat = this.innsendingResultat()) {
-        is Innsending.InnsendingResultat.Klage -> BehandlingDTO(
-            id = resultat.behandlingId,
-            behandlingType = BehandlingTypeDTO.KLAGE,
-            utlostAv = UtlostAvTypeDTO.INNSENDING,
-            opprettet = this.mottatt,
-            oppgaveId = null
-        )
+        is Innsending.InnsendingResultat.Klage ->
+            BehandlingDTO(
+                id = resultat.behandlingId,
+                behandlingType = BehandlingTypeDTO.KLAGE,
+                utlostAv = UtlostAvTypeDTO.INNSENDING,
+                opprettet = this.mottatt,
+                oppgaveId = null,
+            )
 
-        is Innsending.InnsendingResultat.RettTilDagpenger -> BehandlingDTO(
-            id = resultat.behandlingId,
-            behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-            utlostAv = UtlostAvTypeDTO.INNSENDING,
-            opprettet = this.mottatt,
-            oppgaveId = null
-        )
+        is Innsending.InnsendingResultat.RettTilDagpenger ->
+            BehandlingDTO(
+                id = resultat.behandlingId,
+                behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+                utlostAv = UtlostAvTypeDTO.INNSENDING,
+                opprettet = this.mottatt,
+                oppgaveId = null,
+            )
 
         else -> null
     }
