@@ -9,11 +9,17 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import io.ktor.util.reflect.TypeInfo
+import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.InnsendingDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon.Avslutt
+import no.nav.dagpenger.saksbehandling.innsending.Innsending
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
@@ -30,7 +36,9 @@ fun Route.innsendingApi(
                     mediator.hentInnsending(
                         innsendingId = call.behandlingId(),
                         saksbehandler = applicationCallParser.saksbehandler(call),
-                    )
+                    ).let {
+                        call.respond(HttpStatusCode.OK, it.tilInnsendingDTO())
+                    }
                 }
                 route("ferdigstill") {
                     put {
@@ -49,7 +57,6 @@ fun Route.innsendingApi(
                                     BehandlingTypeDTO.KLAGE -> Aksjon.OpprettKlage(requestDTO.sakId)
                                     else -> throw IllegalArgumentException("Ugyldig behandling type")
                                 }
-
                             mediator.ferdigstill(
                                 hendelse =
                                     FerdigstillInnsendingHendelse(
@@ -65,6 +72,40 @@ fun Route.innsendingApi(
                 }
             }
         }
+    }
+}
+
+private fun Innsending.tilInnsendingDTO(): InnsendingDTO {
+    return InnsendingDTO(
+        behandlingId = this.innsendingId,
+        journalpostId = this.journalpostId,
+        lovligeSaker = emptyList(),
+        sakId = null,
+        vurdering = this.vurdering(),
+        nyBehandling = this.toBehandling()
+    )
+
+}
+
+private fun Innsending.toBehandling(): BehandlingDTO? {
+    return when (val resultat = this.innsendingResultat()) {
+        is Innsending.InnsendingResultat.Klage -> BehandlingDTO(
+            id = resultat.behandlingId,
+            behandlingType = BehandlingTypeDTO.KLAGE,
+            utlostAv = UtlostAvTypeDTO.INNSENDING,
+            opprettet = this.mottatt,
+            oppgaveId = null
+        )
+
+        is Innsending.InnsendingResultat.RettTilDagpenger -> BehandlingDTO(
+            id = resultat.behandlingId,
+            behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+            utlostAv = UtlostAvTypeDTO.INNSENDING,
+            opprettet = this.mottatt,
+            oppgaveId = null
+        )
+
+        else -> null
     }
 }
 
