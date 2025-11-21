@@ -36,7 +36,8 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 vurdering, 
                                 tilstand, 
                                 resultat_type, 
-                                resultat_behandling_id
+                                resultat_behandling_id,
+                                valgt_sak_id
                             )
                             VALUES (
                                 :id, 
@@ -49,14 +50,16 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 :vurdering, 
                                 :tilstand, 
                                 :resultat_type, 
-                                :resultat_behandling_id
+                                :resultat_behandling_id,
+                                :valgt_sak_id
                             )
                             ON CONFLICT (id) 
                             DO UPDATE 
                             SET vurdering = :vurdering ,
                              tilstand = :tilstand ,
                              resultat_type = :resultat_type ,
-                             resultat_behandling_id = :resultat_behandling_id
+                             resultat_behandling_id = :resultat_behandling_id,
+                             valgt_sak_id = :valgt_sak_id
                             """.trimIndent(),
                         paramMap =
                             mapOf(
@@ -69,6 +72,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 "soknad_id" to innsending.søknadId,
                                 "vurdering" to innsending.vurdering(),
                                 "tilstand" to innsending.tilstand(),
+                                "valgt_sak_id" to innsending.valgtSakId(),
                                 "resultat_type" to innsendingResultat?.javaClass?.simpleName,
                                 "resultat_behandling_id" to
                                     when (innsendingResultat) {
@@ -106,6 +110,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 inns.tilstand,
                                 inns.resultat_type, 
                                 inns.resultat_behandling_id,
+                                inns.valgt_sak_id,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
@@ -142,6 +147,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                                 inns.tilstand,
                                 inns.resultat_type,
                                 inns.resultat_behandling_id,
+                                inns.valgt_sak_id,
                                 pers.id as person_id, 
                                 pers.ident, 
                                 pers.skjermes_som_egne_ansatte, 
@@ -178,6 +184,7 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
             søknadId = this.uuidOrNull("soknad_id"),
             tilstand = this.string("tilstand"),
             vurdering = this.stringOrNull("vurdering"),
+            valgtSakId = this.uuidOrNull("valgt_sak_id"),
             innsendingResultat =
                 when (val resultat = this.stringOrNull("resultat_type")) {
                     "Ingen" -> Innsending.InnsendingResultat.Ingen

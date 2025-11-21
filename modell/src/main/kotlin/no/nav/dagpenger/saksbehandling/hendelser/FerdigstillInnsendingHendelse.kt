@@ -9,4 +9,6 @@ data class FerdigstillInnsendingHendelse(
     val aksjon: Aksjon,
     val vurdering: String,
     override val utførtAv: Saksbehandler,
-) : Hendelse(utførtAv)
+) : Hendelse(utførtAv) {
+    fun valgtSakId() = aksjon.valgtSakId
+}

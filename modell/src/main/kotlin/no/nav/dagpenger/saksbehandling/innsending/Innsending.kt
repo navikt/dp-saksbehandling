@@ -23,6 +23,7 @@ class Innsending private constructor(
     private var vurdering: String? = null,
     private var tilstand: Tilstand = Tilstand.BEHANDLES,
     private var innsendingResultat: InnsendingResultat? = null,
+    private var valgtSakId: UUID? = null,
 ) {
     companion object {
         fun opprett(
@@ -50,6 +51,7 @@ class Innsending private constructor(
             tilstand: String,
             vurdering: String?,
             innsendingResultat: InnsendingResultat?,
+            valgtSakId: UUID?,
         ): Innsending {
             return Innsending(
                 innsendingId = innsendingId,
@@ -62,6 +64,7 @@ class Innsending private constructor(
                 tilstand = Tilstand.valueOf(tilstand),
                 vurdering = vurdering,
                 innsendingResultat = innsendingResultat,
+                valgtSakId = valgtSakId,
             )
         }
     }
@@ -71,6 +74,8 @@ class Innsending private constructor(
     fun tilstand() = tilstand.name
 
     fun innsendingResultat() = innsendingResultat
+
+    fun valgtSakId() = valgtSakId
 
     private enum class Tilstand {
         BEHANDLES,
@@ -137,6 +142,7 @@ class Innsending private constructor(
     fun startFerdigstilling(ferdigstillInnsendingHendelse: FerdigstillInnsendingHendelse) {
         this.vurdering = ferdigstillInnsendingHendelse.vurdering
         this.tilstand = Tilstand.FERDIGSTILL_STARTET
+        this.valgtSakId = ferdigstillInnsendingHendelse.valgtSakId()
     }
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {

@@ -100,6 +100,7 @@ internal object TestHelper {
         tilstand: String = "BEHANDLES",
         vurdering: String? = null,
         innsendingResultat: Innsending.InnsendingResultat? = null,
+        valgtSakId: UUID? = null,
     ): Innsending {
         return Innsending.rehydrer(
             innsendingId = innsendingId,
@@ -112,6 +113,7 @@ internal object TestHelper {
             tilstand = tilstand,
             vurdering = vurdering,
             innsendingResultat = innsendingResultat,
+            valgtSakId = valgtSakId,
         )
     }
 

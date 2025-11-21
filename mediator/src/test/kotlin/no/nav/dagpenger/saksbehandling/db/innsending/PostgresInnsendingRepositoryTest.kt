@@ -13,7 +13,9 @@ import java.time.temporal.ChronoUnit
 class PostgresInnsendingRepositoryTest {
     @Test
     fun `Skal lagre, endre og hente innsending fra database`() {
-        DBTestHelper.withPerson { ds ->
+        DBTestHelper.withSak(
+            person = testPerson,
+        ) { ds ->
             val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
             val innsending =
@@ -31,6 +33,7 @@ class PostgresInnsendingRepositoryTest {
                         Innsending.InnsendingResultat.RettTilDagpenger(
                             UUIDv7.ny(),
                         ),
+                    valgtSakId = null,
                 )
             val repository = PostgresInnsendingRepository(ds)
             repository.lagre(innsending = innsending)
@@ -51,6 +54,7 @@ class PostgresInnsendingRepositoryTest {
                     tilstand = "FERDIGSTILT",
                     vurdering = "Endret vurdering",
                     innsendingResultat = Innsending.InnsendingResultat.Klage(UUIDv7.ny()),
+                    valgtSakId = DBTestHelper.sakId,
                 )
 
             repository.lagre(innsending = endretInnsending)
@@ -65,6 +69,7 @@ class PostgresInnsendingRepositoryTest {
                 it.tilstand() shouldBe endretInnsending.tilstand()
                 it.vurdering() shouldBe endretInnsending.vurdering()
                 it.innsendingResultat() shouldBe endretInnsending.innsendingResultat()
+                it.valgtSakId() shouldBe endretInnsending.valgtSakId()
             }
         }
     }

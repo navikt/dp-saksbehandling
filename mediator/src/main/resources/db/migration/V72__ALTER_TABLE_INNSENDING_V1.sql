@@ -1,5 +1,5 @@
-UPDATE  innsending_v1
-SET     tilstand = 'BEHANDLES';
+UPDATE innsending_v1
+SET tilstand = 'BEHANDLES';
 
 ALTER TABLE innsending_v1
     DROP COLUMN IF EXISTS behandler_ident;
@@ -18,3 +18,9 @@ ALTER TABLE innsending_v1
 
 ALTER TABLE innsending_v1
     ADD COLUMN IF NOT EXISTS resultat_type TEXT DEFAULT NULL;
+
+ALTER TABLE innsending_v1
+    ADD COLUMN IF NOT EXISTS valgt_sak_id UUID DEFAULT NULL REFERENCES SAK_V2 (id);
+;
+CREATE INDEX IF NOT EXISTS innsending_v1_sak_v2_index ON INNSENDING_V1 (valgt_sak_id);
+
