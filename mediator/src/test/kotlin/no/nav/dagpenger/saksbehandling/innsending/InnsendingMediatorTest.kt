@@ -366,8 +366,8 @@ class InnsendingMediatorTest {
         val innsendingFerdigstiltHendelse =
             InnsendingFerdigstiltHendelse(
                 innsendingId = innsending.innsendingId,
-                aksjon = Aksjon.OpprettKlage(sakId),
-                behandlingId = UUIDv7.ny(),
+                aksjonType = Aksjon.Type.OPPRETT_KLAGE,
+                opprettetBehandlingId = UUIDv7.ny(),
                 utførtAv = saksbehandler,
             )
 

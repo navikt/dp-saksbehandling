@@ -36,8 +36,8 @@ class InnsendingBehandlerTest {
             innsending = testInnsending,
         ).let {
             it.innsendingId shouldBe testInnsending.innsendingId
-            it.aksjon.javaClass.simpleName shouldBe "Avslutt"
-            it.behandlingId shouldBe null
+            it.aksjonType shouldBe Aksjon.Type.AVSLUTT
+            it.opprettetBehandlingId shouldBe null
             it.utførtAv shouldBe saksbehandler
         }
     }
@@ -69,8 +69,8 @@ class InnsendingBehandlerTest {
         )
             .let {
                 it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjon.javaClass.simpleName shouldBe "OpprettKlage"
-                it.behandlingId shouldBe testOppgave.behandling.behandlingId
+                it.aksjonType shouldBe Aksjon.Type.OPPRETT_KLAGE
+                it.opprettetBehandlingId shouldBe testOppgave.behandling.behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 
@@ -116,8 +116,8 @@ class InnsendingBehandlerTest {
         )
             .let {
                 it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjon.javaClass.simpleName shouldBe "OpprettManuellBehandling"
-                it.behandlingId shouldBe behandlingId
+                it.aksjonType shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
+                it.opprettetBehandlingId shouldBe behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 

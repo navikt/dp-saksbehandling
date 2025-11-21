@@ -1147,8 +1147,8 @@ OppgaveMediatorTest {
             )
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
                 }
             innsendingOppgave.tilstand() shouldBe KlarTilBehandling
 
@@ -1160,20 +1160,20 @@ OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                it.behandling.utløstAv == UtløstAvType.INNSENDING
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
             }.tilstand() shouldBe UnderBehandling
 
             oppgaveMediator.ferdigstillOppgave(
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsendingOppgave.behandling.behandlingId,
-                    aksjon = Aksjon.Avslutt(null),
-                    behandlingId = UUIDv7.ny(),
+                    aksjonType = Aksjon.Type.AVSLUTT,
+                    opprettetBehandlingId = UUIDv7.ny(),
                     utførtAv = saksbehandler,
                 ),
             )
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                it.behandling.utløstAv == UtløstAvType.INNSENDING
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
             }.tilstand() shouldBe FerdigBehandlet
         }
     }

@@ -18,8 +18,8 @@ class InnsendingBehandler(
             is Aksjon.Avslutt ->
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,
-                    aksjon = hendelse.aksjon,
-                    behandlingId = null,
+                    aksjonType = hendelse.aksjon.type,
+                    opprettetBehandlingId = null,
                     utførtAv = hendelse.utførtAv,
                 )
 
@@ -28,6 +28,7 @@ class InnsendingBehandler(
                     hendelse = hendelse,
                     innsending = innsending,
                 )
+
             is Aksjon.OpprettManuellBehandling ->
                 opprettManuellBehandling(
                     hendelse = hendelse,
@@ -46,8 +47,8 @@ class InnsendingBehandler(
         ).let { result ->
             return InnsendingFerdigstiltHendelse(
                 innsendingId = innsending.innsendingId,
-                aksjon = hendelse.aksjon,
-                behandlingId = result.getOrThrow(),
+                aksjonType = hendelse.aksjon.type,
+                opprettetBehandlingId = result.getOrThrow(),
                 utførtAv = hendelse.utførtAv,
             )
         }
@@ -70,8 +71,8 @@ class InnsendingBehandler(
             )
         return InnsendingFerdigstiltHendelse(
             innsendingId = innsending.innsendingId,
-            aksjon = hendelse.aksjon,
-            behandlingId = klageOppgave.behandling.behandlingId,
+            aksjonType = hendelse.aksjon.type,
+            opprettetBehandlingId = klageOppgave.behandling.behandlingId,
             utførtAv = hendelse.utførtAv,
         )
     }

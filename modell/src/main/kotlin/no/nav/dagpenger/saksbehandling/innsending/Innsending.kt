@@ -146,19 +146,24 @@ class Innsending private constructor(
     }
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
-        when (innsendingFerdigstiltHendelse.aksjon) {
-            is Aksjon.Avslutt -> this.innsendingResultat = InnsendingResultat.Ingen
-            is Aksjon.OpprettKlage -> {
-                requireNotNull(innsendingFerdigstiltHendelse.behandlingId) { "behandlingId kan ikke være null etter opprettelse av klage" }
-                this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.behandlingId)
+        when (innsendingFerdigstiltHendelse.aksjonType) {
+            Aksjon.Type.AVSLUTT -> {
+                this.innsendingResultat = InnsendingResultat.Ingen
             }
 
-            is Aksjon.OpprettManuellBehandling -> {
+            Aksjon.Type.OPPRETT_MANUELL_BEHANDLING -> {
                 requireNotNull(
-                    innsendingFerdigstiltHendelse.behandlingId,
+                    innsendingFerdigstiltHendelse.opprettetBehandlingId,
+                ) { "behandlingId kan ikke være null etter opprettelse av klage" }
+                this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.opprettetBehandlingId)
+            }
+
+            Aksjon.Type.OPPRETT_KLAGE -> {
+                requireNotNull(
+                    innsendingFerdigstiltHendelse.opprettetBehandlingId,
                 ) { "behandlingId kan ikke være null etter opprettelse av manuell behandling" }
                 this.innsendingResultat =
-                    InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.behandlingId)
+                    InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
         }
     }
