@@ -15,7 +15,7 @@ class InnsendingBehandler(
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
         return when (hendelse.aksjon) {
-            Aksjon.Avslutt ->
+            is Aksjon.Avslutt ->
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,
                     aksjon = hendelse.aksjon,
@@ -64,7 +64,7 @@ class InnsendingBehandler(
                         ident = innsending.person.ident,
                         opprettet = innsending.mottatt,
                         journalpostId = innsending.journalpostId,
-                        sakId = (hendelse.aksjon as Aksjon.OpprettKlage).sakId,
+                        sakId = (hendelse.aksjon as Aksjon.OpprettKlage).valgtSakId,
                         utførtAv = hendelse.utførtAv,
                     ),
             )

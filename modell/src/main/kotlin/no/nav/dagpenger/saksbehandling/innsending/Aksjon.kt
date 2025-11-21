@@ -3,9 +3,11 @@ package no.nav.dagpenger.saksbehandling.innsending
 import java.util.UUID
 
 sealed class Aksjon {
-    object Avslutt : Aksjon()
+    abstract val valgtSakId: UUID?
 
-    data class OpprettManuellBehandling(val saksbehandlerToken: String) : Aksjon()
+    data class Avslutt(override val valgtSakId: UUID?) : Aksjon()
 
-    data class OpprettKlage(val sakId: UUID) : Aksjon()
+    data class OpprettManuellBehandling(val saksbehandlerToken: String, override val valgtSakId: UUID) : Aksjon()
+
+    data class OpprettKlage(override val valgtSakId: UUID) : Aksjon()
 }

@@ -79,11 +79,12 @@ class Innsending private constructor(
     }
 
     sealed class InnsendingResultat {
-        //open val valgSakId: UUID? = null
+        // open val valgSakId: UUID? = null
 
         object Ingen : InnsendingResultat()
 
-        data class Klage(val behandlingId: UUID /*val oppgaveId*/) : InnsendingResultat()
+        // val oppgaveId: UUID
+        data class Klage(val behandlingId: UUID) : InnsendingResultat()
 
         data class RettTilDagpenger(val behandlingId: UUID) : InnsendingResultat()
     }
@@ -93,7 +94,7 @@ class Innsending private constructor(
 
     override fun toString(): String {
         return "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
-                "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
+            "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -140,7 +141,7 @@ class Innsending private constructor(
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
         when (innsendingFerdigstiltHendelse.aksjon) {
-            Aksjon.Avslutt -> this.innsendingResultat = InnsendingResultat.Ingen
+            is Aksjon.Avslutt -> this.innsendingResultat = InnsendingResultat.Ingen
             is Aksjon.OpprettKlage -> {
                 requireNotNull(innsendingFerdigstiltHendelse.behandlingId) { "behandlingId kan ikke være null etter opprettelse av klage" }
                 this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.behandlingId)

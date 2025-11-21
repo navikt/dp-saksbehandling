@@ -46,13 +46,21 @@ fun Route.innsendingApi(
                             val saksBehandlerToken = call.request.jwt()
                             val aksjon =
                                 when (requestDTO.behandlingType) {
-                                    null -> Avslutt
-                                    BehandlingTypeDTO.RETT_TIL_DAGPENGER ->
+                                    null -> Avslutt(requestDTO.sakId)
+                                    BehandlingTypeDTO.RETT_TIL_DAGPENGER -> {
+                                        val valgtSakId = requestDTO.sakId
+                                        requireNotNull(valgtSakId)
                                         Aksjon.OpprettManuellBehandling(
                                             saksbehandlerToken = saksBehandlerToken,
+                                            valgtSakId = valgtSakId,
                                         )
+                                    }
+                                    BehandlingTypeDTO.KLAGE -> {
+                                        val valgtSakId = requestDTO.sakId
+                                        requireNotNull(valgtSakId)
+                                        Aksjon.OpprettKlage(valgtSakId)
+                                    }
 
-                                    BehandlingTypeDTO.KLAGE -> Aksjon.OpprettKlage(requestDTO.sakId)
                                     else -> throw IllegalArgumentException("Ugyldig behandling type")
                                 }
                             mediator.ferdigstill(
@@ -77,9 +85,9 @@ private fun Innsending.tilInnsendingDTO(): InnsendingDTO {
     return InnsendingDTO(
         behandlingId = this.innsendingId,
         journalpostId = this.journalpostId,
-        //Hent alle saker for en person
+        // Hent alle saker for en person
         lovligeSaker = emptyList(),
-        //sakbehandler har valgt denne saken og burde hentes fra InnsendingResultat
+        // sakbehandler har valgt denne saken og burde hentes fra InnsendingResultat
         sakId = null,
         vurdering = this.vurdering(),
         nyBehandling = this.toBehandling(),
@@ -94,7 +102,7 @@ private fun Innsending.toBehandling(): BehandlingDTO? {
                 behandlingType = BehandlingTypeDTO.KLAGE,
                 utlostAv = UtlostAvTypeDTO.INNSENDING,
                 opprettet = this.mottatt,
-                //kan gi på klage
+                // kan gi på klage
                 oppgaveId = null,
             )
 

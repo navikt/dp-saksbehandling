@@ -1167,7 +1167,7 @@ OppgaveMediatorTest {
             oppgaveMediator.ferdigstillOppgave(
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsendingOppgave.behandling.behandlingId,
-                    aksjon = Aksjon.Avslutt,
+                    aksjon = Aksjon.Avslutt(null),
                     behandlingId = UUIDv7.ny(),
                     utførtAv = saksbehandler,
                 ),

@@ -1860,7 +1860,6 @@ components:
         behandlingType:
           $ref: '#/components/schemas/BehandlingType'
       required:
-        - sakId
         - vurdering
 
     HttpProblem:

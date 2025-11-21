@@ -30,7 +30,7 @@ class InnsendingBehandlerTest {
         innsendingBehandler.utførAksjon(
             hendelse =
                 lagHendelse(
-                    aksjon = Aksjon.Avslutt,
+                    aksjon = Aksjon.Avslutt(null),
                     vurdering = "Dette er en vurdering",
                 ),
             innsending = testInnsending,
@@ -62,7 +62,7 @@ class InnsendingBehandlerTest {
         innsendingBehandler.utførAksjon(
             hendelse =
                 lagHendelse(
-                    aksjon = Aksjon.OpprettKlage(sakId = testSakId),
+                    aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
                     vurdering = "Dette er en vurdering",
                 ),
             innsending = testInnsending,
@@ -105,7 +105,11 @@ class InnsendingBehandlerTest {
         innsendingBehandler.utførAksjon(
             hendelse =
                 lagHendelse(
-                    aksjon = Aksjon.OpprettManuellBehandling(saksbehandlerToken = saksbehandlerToken),
+                    aksjon =
+                        Aksjon.OpprettManuellBehandling(
+                            saksbehandlerToken = saksbehandlerToken,
+                            valgtSakId = UUID.randomUUID(),
+                        ),
                     vurdering = "Dette er en vurdering",
                 ),
             innsending = testInnsending,

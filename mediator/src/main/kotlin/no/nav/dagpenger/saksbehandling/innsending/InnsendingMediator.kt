@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.UUID
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -14,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,10 +33,10 @@ class InnsendingMediator(
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
         val skalEttersendingTilSøknadVarsles =
             hendelse.kategori == Kategori.ETTERSENDING && hendelse.søknadId != null &&
-                    oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                        søknadId = hendelse.søknadId!!,
-                        ident = hendelse.ident,
-                    )
+                oppgaveMediator.skalEttersendingTilSøknadVarsles(
+                    søknadId = hendelse.søknadId!!,
+                    ident = hendelse.ident,
+                )
 
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
@@ -52,7 +52,6 @@ class InnsendingMediator(
     }
 
     private fun taImotEttersendingTilSøknad(hendelse: InnsendingMottattHendelse) {
-
         val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
         val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
         innsendingRepository.lagre(innsending)
@@ -74,9 +73,12 @@ class InnsendingMediator(
         )
     }
 
-    private fun taImotInnsendingPåSisteSak(hendelse: InnsendingMottattHendelse, sisteSakId: UUID) {
+    private fun taImotInnsendingPåSisteSak(
+        hendelse: InnsendingMottattHendelse,
+        sisteSakId: UUID,
+    ) {
         val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
-        val innsending = Innsending.opprett(hendelse = hendelse) { ident ->person }
+        val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
         innsendingRepository.lagre(innsending)
         val behandling =
             Behandling(
@@ -96,7 +98,6 @@ class InnsendingMediator(
             person = person,
         )
     }
-
 
     fun ferdigstill(hendelse: FerdigstillInnsendingHendelse) {
         val innsending = hentInnsending(innsendingId = hendelse.innsendingId, saksbehandler = hendelse.utførtAv)
