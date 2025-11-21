@@ -149,7 +149,7 @@ class PostgresSakRepositoryTest {
     }
 
     @Test
-    fun `Finner sakId for en søknad"`() {
+    fun `Finner sakId for en søknad`() {
         DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
             val sakRepository = PostgresSakRepository(ds)
 

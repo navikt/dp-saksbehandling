@@ -27,7 +27,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendel
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
@@ -210,12 +209,6 @@ data class Oppgave private constructor(
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
-    }
-
-    fun ferdigstill(godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak): FerdigstillBehandling {
-        adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv)
-        egneAnsatteTilgangskontroll(godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv)
-        return tilstand.ferdigstill(this, godkjentBehandlingHendelseUtenMeldingOmVedtak)
     }
 
     fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
@@ -542,19 +535,6 @@ data class Oppgave private constructor(
 
         override fun ferdigstill(
             oppgave: Oppgave,
-            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        ): FerdigstillBehandling {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
-                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
-            return FerdigstillBehandling.GODKJENN
-        }
-
-        override fun ferdigstill(
-            oppgave: Oppgave,
             avbruttHendelse: AvbruttHendelse,
         ) {
             requireEierskapTilOppgave(
@@ -771,30 +751,6 @@ data class Oppgave private constructor(
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
-            return BESLUTT
-        }
-
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        ): FerdigstillBehandling {
-            requireBeslutterTilgang(
-                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                tilstandType = type,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
-                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-            requireBeslutterUlikSaksbehandler(
-                oppgave = oppgave,
-                beslutter = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-
-            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
             return BESLUTT
         }
 
@@ -1033,18 +989,6 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjentBehandlingHendelse.javaClass.simpleName}",
-            )
-        }
-
-        fun ferdigstill(
-            oppgave: Oppgave,
-            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        ): FerdigstillBehandling {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName}",
             )
         }
 
