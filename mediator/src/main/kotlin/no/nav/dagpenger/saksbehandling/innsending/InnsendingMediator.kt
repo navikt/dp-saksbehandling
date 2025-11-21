@@ -4,6 +4,7 @@ import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
@@ -145,5 +146,9 @@ class InnsendingMediator(
             innsending.harTilgang(saksbehandler)
             innsending
         }
+    }
+
+    fun hentLovligeSaker(ident: String): List<Sak> {
+        return sakMediator.finnSakHistorikk(ident)?.saker() ?: emptyList()
     }
 }

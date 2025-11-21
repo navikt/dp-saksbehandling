@@ -9,10 +9,12 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.InnsendingDTO
+import no.nav.dagpenger.saksbehandling.api.models.TynnSakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
@@ -35,7 +37,12 @@ fun Route.innsendingApi(
                         innsendingId = call.behandlingId(),
                         saksbehandler = applicationCallParser.saksbehandler(call),
                     ).let {
-                        call.respond(HttpStatusCode.OK, it.tilInnsendingDTO())
+                        call.respond(
+                            HttpStatusCode.OK,
+                            it.tilInnsendingDTO(
+                                mediator.hentLovligeSaker(it.person.ident),
+                            ),
+                        )
                     }
                 }
                 route("ferdigstill") {
@@ -55,6 +62,7 @@ fun Route.innsendingApi(
                                             valgtSakId = valgtSakId,
                                         )
                                     }
+
                                     BehandlingTypeDTO.KLAGE -> {
                                         val valgtSakId = requestDTO.sakId
                                         requireNotNull(valgtSakId)
@@ -81,14 +89,19 @@ fun Route.innsendingApi(
     }
 }
 
-private fun Innsending.tilInnsendingDTO(): InnsendingDTO {
+private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO {
     return InnsendingDTO(
         behandlingId = this.innsendingId,
         journalpostId = this.journalpostId,
         // Hent alle saker for en person
-        lovligeSaker = emptyList(),
-        // sakbehandler har valgt denne saken og burde hentes fra InnsendingResultat
-        sakId = null,
+        lovligeSaker =
+            lovligeSaker.map {
+                TynnSakDTO(
+                    sakId = it.sakId,
+                    opprettetDato = it.opprettet,
+                )
+            },
+        sakId = this.valgtSakId(),
         vurdering = this.vurdering(),
         nyBehandling = this.toBehandling(),
     )
