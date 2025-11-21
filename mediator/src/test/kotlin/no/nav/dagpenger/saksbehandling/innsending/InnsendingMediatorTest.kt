@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -104,6 +105,13 @@ class InnsendingMediatorTest {
                         ),
                     ),
             )
+
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler1",
+                emptySet(),
+            )
+
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
@@ -148,8 +156,20 @@ class InnsendingMediatorTest {
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
-                    innsendingBehandler = mockk(),
+                    innsendingBehandler =
+                        mockk<InnsendingBehandler>().also {
+                            coEvery {
+                                it.utførAksjon(any(), any())
+                            } returns
+                                InnsendingFerdigstiltHendelse(
+                                    innsendingId = UUIDv7.ny(),
+                                    aksjonType = Aksjon.Type.AVSLUTT,
+                                    opprettetBehandlingId = null,
+                                    utførtAv = saksbehandler,
+                                )
+                        },
                 )
+
             sakMediator.merkSakenSomDpSak(
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
@@ -187,7 +207,57 @@ class InnsendingMediatorTest {
                     it.behandling.utløstAv == UtløstAvType.INNSENDING
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
-            innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
+            val innsending =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).let { innsendinger ->
+                    innsendinger.size shouldBe 1
+                    innsendinger.first()
+                }
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = innsendingOppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            InnsendingMediator(
+                sakMediator = sakMediator,
+                oppgaveMediator = oppgaveMediator,
+                personMediator = personMediatorMock,
+                innsendingRepository = innsendingRepository,
+                innsendingBehandler =
+                    mockk<InnsendingBehandler>().also {
+                        every { it.utførAksjon(any(), any()) } returns
+                            InnsendingFerdigstiltHendelse(
+                                innsendingId = innsending.innsendingId,
+                                aksjonType = Aksjon.Type.AVSLUTT,
+                                opprettetBehandlingId = null,
+                                utførtAv = saksbehandler,
+                            )
+                    },
+            ).let { mediator ->
+                mediator.ferdigstill(
+                    hendelse =
+                        FerdigstillInnsendingHendelse(
+                            innsendingId = innsendingOppgave.behandling.behandlingId,
+                            aksjon = Aksjon.Avslutt(sak.sakId),
+                            vurdering = "Vurderingstekst",
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
+
+            oppgaveMediator.hentOppgave(innsendingOppgave.oppgaveId, saksbehandler).let { oppgave ->
+                oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+            }
+
+            innsendingMediator.hentInnsending(innsending.innsendingId, saksbehandler).let { innsending ->
+                innsending.innsendingResultat().let { resultat ->
+                    resultat shouldBe Innsending.InnsendingResultat.Ingen
+                }
+                innsending.valgtSakId() shouldBe sak.sakId
+            }
         }
     }
 
