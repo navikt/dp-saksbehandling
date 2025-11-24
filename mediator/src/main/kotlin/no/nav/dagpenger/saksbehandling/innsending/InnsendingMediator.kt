@@ -31,21 +31,32 @@ class InnsendingMediator(
     private val innsendingRepository: InnsendingRepository,
     private val innsendingBehandler: InnsendingBehandler,
 ) {
+
+
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
-        val skalEttersendingTilSøknadVarsles =
-            hendelse.kategori == Kategori.ETTERSENDING && hendelse.søknadId != null &&
-                oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                    søknadId = hendelse.søknadId!!,
-                    ident = hendelse.ident,
-                )
+        oppgaveMediator.taImotEttersending(hendelse)
 
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
-        if (skalEttersendingTilSøknadVarsles) {
-            taImotEttersendingTilSøknad(hendelse)
-        } else if (sisteSakId != null) {
-            taImotInnsendingPåSisteSak(hendelse, sisteSakId)
+        if (sisteSakId != null) {
+            val erEttersendingTilSøknad =
+                hendelse.kategori == Kategori.ETTERSENDING && hendelse.søknadId != null
+
+            if (erEttersendingTilSøknad && oppgaveMediator.skalEttersendingTilSøknadVarsles(
+                    hendelse.søknadId!!,
+                    hendelse.ident
+                )
+            ) {
+                taImotEttersendingTilSøknad(hendelse)
+            } else {
+                taImotInnsendingPåSisteSak(hendelse, sisteSakId)
+            }
+
+        } else {
+            //Vi har ikke sak for ident så gjør ingenting
         }
+
+
         return when (sisteSakId) {
             null -> HåndterInnsendingResultat.UhåndtertInnsending
             else -> HåndterInnsendingResultat.HåndtertInnsending(sisteSakId)
@@ -53,8 +64,11 @@ class InnsendingMediator(
     }
 
     private fun taImotEttersendingTilSøknad(hendelse: InnsendingMottattHendelse) {
-        val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
-        val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
+        val innsending = Innsending.opprett(hendelse = hendelse) { ident ->
+            personMediator.finnEllerOpprettPerson(
+                hendelse.ident
+            )
+        }
         innsendingRepository.lagre(innsending)
         val behandling =
             Behandling(
@@ -67,19 +81,17 @@ class InnsendingMediator(
             behandling = behandling,
             hendelse = hendelse,
         )
-        oppgaveMediator.lagOppgaveForInnsendingBehandling(
-            innsendingMottattHendelse = hendelse,
-            behandling = behandling,
-            person = person,
-        )
     }
 
     private fun taImotInnsendingPåSisteSak(
         hendelse: InnsendingMottattHendelse,
         sisteSakId: UUID,
     ) {
-        val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
-        val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
+        val innsending = Innsending.opprett(hendelse = hendelse) { ident ->
+            personMediator.finnEllerOpprettPerson(
+                hendelse.ident
+            )
+        }
         innsendingRepository.lagre(innsending)
         val behandling =
             Behandling(
@@ -88,15 +100,17 @@ class InnsendingMediator(
                 hendelse = hendelse,
                 utløstAv = UtløstAvType.INNSENDING,
             )
+
         sakMediator.knyttBehandlingTilSak(
             behandling = behandling,
             hendelse = hendelse,
             sakId = sisteSakId,
         )
+
         oppgaveMediator.lagOppgaveForInnsendingBehandling(
             innsendingMottattHendelse = hendelse,
             behandling = behandling,
-            person = person,
+            person = personMediator.finnEllerOpprettPerson(hendelse.ident),
         )
     }
 
