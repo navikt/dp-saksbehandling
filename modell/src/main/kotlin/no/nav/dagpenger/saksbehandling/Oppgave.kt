@@ -371,6 +371,14 @@ data class Oppgave private constructor(
     object KlarTilBehandling : Tilstand {
         override val type: Type = KLAR_TIL_BEHANDLING
 
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
+
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
@@ -405,6 +413,14 @@ data class Oppgave private constructor(
 
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
 
         override fun sendTilKontroll(
             oppgave: Oppgave,
@@ -685,6 +701,14 @@ data class Oppgave private constructor(
     object KlarTilKontroll : Tilstand {
         override val type: Type = KLAR_TIL_KONTROLL
 
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
+
         override fun tildel(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
@@ -724,6 +748,14 @@ data class Oppgave private constructor(
         private var notat: Notat? = null,
     ) : Tilstand {
         override val type: Type = UNDER_KONTROLL
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
 
         override fun ferdigstill(
             oppgave: Oppgave,
@@ -1132,8 +1164,6 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
-            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
-            oppgave.endreTilstand(oppgave.tilstand, hendelse)
         }
 
         private fun ulovligTilstandsendring(

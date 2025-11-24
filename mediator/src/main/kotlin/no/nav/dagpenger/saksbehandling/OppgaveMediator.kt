@@ -12,16 +12,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -119,7 +111,6 @@ class OppgaveMediator(
         ).oppgaver.singleOrNull()?.let { oppgave ->
             oppgave.taImotEttersending(hendelse)
             oppgaveRepository.lagre(oppgave)
-
         } ?: logger.warn {
             "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
         }
@@ -137,8 +128,8 @@ class OppgaveMediator(
         if (behandling == null) {
             val feilmelding =
                 "Mottatt hendelse behandlingOpprettetHendelse for behandling med id " +
-                        "${behandlingOpprettetHendelse.behandlingId}." +
-                        "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
+                    "${behandlingOpprettetHendelse.behandlingId}." +
+                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
@@ -168,12 +159,11 @@ class OppgaveMediator(
         // todo Bedre  Exception håndtering
         return oppgave ?: throw IllegalStateException(
             "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
-                    "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
+                "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> =
-        oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
+    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
 
     fun hentOppgave(
         oppgaveId: UUID,
@@ -212,7 +202,7 @@ class OppgaveMediator(
         if (behandling == null) {
             val feilmelding =
                 "Mottatt hendelse forslag_til_vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                        "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
+                    "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
@@ -249,14 +239,14 @@ class OppgaveMediator(
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
-                                            " ${oppgave.tilstand().type} etter behandling."
+                                        " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             Handling.INGEN -> {
                                 logger.info {
                                     "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
-                                            " ${oppgave.tilstand().type}"
+                                        " ${oppgave.tilstand().type}"
                                 }
                             }
                         }
@@ -355,7 +345,7 @@ class OppgaveMediator(
                     }.onFailure {
                         val feil =
                             "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
-                                    "tilbake til saksbehandling: ${it.message}"
+                                "tilbake til saksbehandling: ${it.message}"
                         logger.error { feil }
                         throw it
                     }
@@ -685,8 +675,7 @@ class OppgaveMediator(
         }
     }
 
-    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> =
-        oppgaveRepository.finnOppgaverPåVentMedUtgåttFrist(frist)
+    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> = oppgaveRepository.finnOppgaverPåVentMedUtgåttFrist(frist)
 
     fun håndterPåVentFristUtgått(påVentFristUtgåttHendelse: PåVentFristUtgåttHendelse) {
         oppgaveRepository.hentOppgave(påVentFristUtgåttHendelse.oppgaveId).let { oppgave ->

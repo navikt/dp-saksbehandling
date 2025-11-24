@@ -940,12 +940,23 @@ class OppgaveTilstandTest {
                 kategori = Kategori.ETTERSENDING,
             )
 
-        Type.values.forEach {
+        val lagEmneknaggTilstander =
+            setOf(UNDER_BEHANDLING, UNDER_KONTROLL, PAA_VENT, KLAR_TIL_BEHANDLING, KLAR_TIL_KONTROLL)
+
+        lagEmneknaggTilstander.forEach {
             val oppgave = lagOppgave(it)
             oppgave.taImotEttersending(innsendingMottattHendelse)
 
             oppgave.emneknagger.single() shouldBe "Ettersending(${LocalDate.now()})"
             oppgave.tilstandslogg.single().hendelse shouldBe innsendingMottattHendelse
+        }
+
+        (Type.values - lagEmneknaggTilstander).forEach {
+            val oppgave = lagOppgave(it)
+            oppgave.taImotEttersending(innsendingMottattHendelse)
+
+            oppgave.emneknagger.size shouldBe 0
+            oppgave.tilstandslogg.size shouldBe 0
         }
     }
 
