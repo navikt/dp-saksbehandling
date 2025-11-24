@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -336,6 +337,10 @@ data class Oppgave private constructor(
             logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
         }.getOrThrow()
 
+    fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
+        tilstand.taImotEttersending(this, hendelse)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -607,6 +612,18 @@ data class Oppgave private constructor(
 
     object PåVent : Tilstand {
         override val type: Type = PAA_VENT
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            if (oppgave.behandlerIdent != null) {
+                oppgave.endreTilstand(UnderBehandling, hendelse)
+            } else {
+                oppgave.endreTilstand(KlarTilBehandling, hendelse)
+            }
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+        }
 
         override fun tildel(
             oppgave: Oppgave,
@@ -920,13 +937,18 @@ data class Oppgave private constructor(
                 val values
                     get() = entries.toSet()
 
+                val utgåtteTilstander =
+                    setOf(
+                        AVVENTER_LÅS_AV_BEHANDLING,
+                        AVVENTER_OPPLÅSING_AV_BEHANDLING,
+                    )
+
                 // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
                 val søkbareTilstander =
                     entries
                         .toSet()
                         .minus(OPPRETTET)
-                        .minus(AVVENTER_LÅS_AV_BEHANDLING)
-                        .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
+                        .minus(utgåtteTilstander)
             }
         }
 
@@ -1104,6 +1126,14 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sette utgått frist for oppgave på vent i tilstand $type",
             )
+        }
+
+        fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
         }
 
         private fun ulovligTilstandsendring(

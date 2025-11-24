@@ -30,6 +30,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -142,9 +144,11 @@ class OppgaveTilstandTest {
                 UNDER_KONTROLL -> {
                     oppgave.tilstand().type shouldBe UNDER_KONTROLL
                 }
+
                 UNDER_BEHANDLING -> {
                     oppgave.tilstand().type shouldBe UNDER_BEHANDLING
                 }
+
                 else -> {
                     oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
                 }
@@ -922,5 +926,52 @@ class OppgaveTilstandTest {
                     utførtAv = beslutter2,
                 ),
         )
+    }
+
+    @Test
+    fun `Default oppgave oppførsel ved ettersending til søknad`() {
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
+                ident = "12345678901",
+                journalpostId = "jp",
+                registrertTidspunkt = LocalDateTime.now(),
+                søknadId = UUIDv7.ny(),
+                skjemaKode = "NAV 04-07.05",
+                kategori = Kategori.ETTERSENDING,
+            )
+
+        Type.values.forEach {
+            val oppgave = lagOppgave(it)
+            oppgave.taImotEttersending(innsendingMottattHendelse)
+
+            oppgave.emneknagger.single() shouldBe "Ettersending(${LocalDate.now()})"
+            oppgave.tilstandslogg.single().hendelse shouldBe innsendingMottattHendelse
+        }
+    }
+
+    @Test
+    fun `Skal endre tilstand ved ettersending til søknad for oppgaver i tilstand Påvent`() {
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
+                ident = "12345678901",
+                journalpostId = "jp",
+                registrertTidspunkt = LocalDateTime.now(),
+                søknadId = UUIDv7.ny(),
+                skjemaKode = "NAV 04-07.05",
+                kategori = Kategori.ETTERSENDING,
+            )
+
+        lagOppgave(PAA_VENT).let {
+            it.taImotEttersending(innsendingMottattHendelse)
+            it.tilstand() shouldBe Oppgave.KlarTilBehandling
+        }
+
+        lagOppgave(
+            tilstandType = PAA_VENT,
+            behandler = saksbehandler,
+        ).let {
+            it.taImotEttersending(innsendingMottattHendelse)
+            it.tilstand() shouldBe Oppgave.UnderBehandling
+        }
     }
 }
