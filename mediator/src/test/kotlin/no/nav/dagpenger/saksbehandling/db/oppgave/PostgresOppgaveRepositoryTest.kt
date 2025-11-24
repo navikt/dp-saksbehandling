@@ -99,7 +99,7 @@ class PostgresOppgaveRepositoryTest {
         val søknadBehandlingKlarTilKontroll =
             lagBehandling(utløstAvType = UtløstAvType.SØKNAD, opprettet = opprettetNå.minusDays(1))
         DBTestHelper.Companion.withBehandlinger(
-            person = TestHelper.testPerson,
+            person = testPerson,
             behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1265,6 +1265,45 @@ class PostgresOppgaveRepositoryTest {
 
             repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
             repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry)
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente oppgave basert på søknadId`() {
+        val søknadId = UUIDv7.ny()
+        val hendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = søknadId,
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678910",
+                opprettet = LocalDateTime.now(),
+            )
+
+        val behandling =
+            Behandling(
+                behandlingId = hendelse.behandlingId,
+                opprettet = hendelse.opprettet,
+                hendelse = hendelse,
+                utløstAv = UtløstAvType.SØKNAD,
+            )
+        DBTestHelper.withBehandling(
+            behandling = behandling,
+        ) { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgave =
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    behandling = behandling,
+                    person = testPerson,
+                )
+            repo.lagre(oppgave = oppgave)
+            repo.søk(
+                Søkefilter(
+                    periode = Periode.UBEGRENSET_PERIODE,
+                    tilstander = Oppgave.Tilstand.Type.values,
+                    søknadId = søknadId,
+                ),
+            ).oppgaver.size shouldBe 1
         }
     }
 

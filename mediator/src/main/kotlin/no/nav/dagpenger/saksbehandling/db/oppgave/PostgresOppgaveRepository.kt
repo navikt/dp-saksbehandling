@@ -480,6 +480,9 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             val behandlingIdClause =
                 søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
 
+            val søknadIdClause =
+                søkeFilter.søknadId?.let { """AND hend.hendelse_data->>'søknadId' = :soknad_id """ } ?: ""
+
             val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
             val emneknaggClause =
                 if (søkeFilter.emneknagger.isNotEmpty()) {
@@ -548,6 +551,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppgaveIdClause,
                         behandlingIdClause,
                         emneknaggClause,
+                        søknadIdClause,
                     )
                     .toString()
 
@@ -574,6 +578,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     "person_ident" to søkeFilter.personIdent,
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,
+                    "soknad_id" to søkeFilter.søknadId?.toString(),
                     "emneknagger" to emneknaggerAsText,
                 )
             sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
