@@ -24,7 +24,9 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
@@ -511,26 +513,29 @@ class InnsendingMediatorTest {
                 sak.behandlinger().first().utløstAv shouldBe UtløstAvType.INNSENDING
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
-            val oppgaveFørAvbryt = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).last()
-            oppgaveFørAvbryt.behandling.utløstAv shouldBe UtløstAvType.INNSENDING
-            oppgaveFørAvbryt.tilstand() shouldBe Oppgave.KlarTilBehandling
+            val oppgaveFørAvbryt =
+                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            oppgaveFørAvbryt.tilstand() shouldBe Oppgave.Opprettet
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
 
-            innsendingMediator.avbrytInnsending(
+            innsendingMediator.automatiskFerdigstill(
                 hendelse =
                     BehandlingOpprettetForSøknadHendelse(
                         ident = testPerson.ident,
                         søknadId = søknadIdGjenopptak,
-                        behandlingId = UUIDv7.ny(),
+                        behandlingId = behandlingIdSøknad,
                     ),
             )
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val oppgaveEtterAvbryt =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
                     it.behandling.utløstAv == UtløstAvType.INNSENDING
                 }
             oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.Avbrutt
+            val innsendingEtterAvbryt = innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            innsendingEtterAvbryt.innsendingResultat() shouldBe Innsending.InnsendingResultat.RettTilDagpenger(behandlingIdSøknad)
+            innsendingEtterAvbryt.tilstand() shouldBe "FERDIGSTILT"
         }
     }
 
@@ -564,7 +569,7 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).automatiskFerdigstill(hendelse = behandlingOpprettetForSøknadHendelse)
 
         verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
@@ -600,7 +605,7 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).automatiskFerdigstill(hendelse = behandlingOpprettetForSøknadHendelse)
 
         verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
@@ -637,8 +642,17 @@ class InnsendingMediatorTest {
             personMediator = mockk(),
             innsendingRepository = innsendingRepository,
             innsendingBehandler = mockk(),
-        ).avbrytInnsending(hendelse = behandlingOpprettetForSøknadHendelse)
+        ).automatiskFerdigstill(hendelse = behandlingOpprettetForSøknadHendelse)
 
         verify(exactly = 0) { innsendingRepository.lagre(any()) }
+    }
+
+    private fun OppgaveMediator.finnAlleOppgaverFor(ident: String): List<Oppgave> {
+        return this.søk(
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstander = Oppgave.Tilstand.Type.values,
+            ),
+        ).oppgaver
     }
 }

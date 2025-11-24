@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -139,6 +140,11 @@ class Innsending private constructor(
         }
     }
 
+    fun automatiskFerdigstill(hendelse: BehandlingOpprettetForSøknadHendelse) {
+        this.innsendingResultat = InnsendingResultat.RettTilDagpenger(hendelse.behandlingId)
+        this.tilstand = Tilstand.FERDIGSTILT
+    }
+
     fun startFerdigstilling(ferdigstillInnsendingHendelse: FerdigstillInnsendingHendelse) {
         this.vurdering = ferdigstillInnsendingHendelse.vurdering
         this.tilstand = Tilstand.FERDIGSTILL_STARTET
@@ -166,5 +172,6 @@ class Innsending private constructor(
                     InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
         }
+        this.tilstand = Tilstand.FERDIGSTILT
     }
 }

@@ -25,13 +25,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -39,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -75,12 +76,22 @@ class OppgaveMediator(
         person: Person,
     ) {
         val oppgaveId = UUIDv7.ny()
+
+        // Forventer at søknadsbehandlinger skal opprettes via regelmotor.
+        val tilstand =
+            if (innsendingMottattHendelse.søknadId != null &&
+                innsendingMottattHendelse.kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK)
+            ) {
+                Oppgave.Opprettet
+            } else {
+                Oppgave.KlarTilBehandling
+            }
         val oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
                 emneknagger = setOf(),
                 opprettet = innsendingMottattHendelse.registrertTidspunkt,
-                tilstand = Oppgave.KlarTilBehandling,
+                tilstand = tilstand,
                 behandling = behandling,
                 person = person,
                 meldingOmVedtak =
@@ -626,7 +637,13 @@ class OppgaveMediator(
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
-        oppgaveRepository.finnOppgaveFor(hendelse.behandlingId)?.let { oppgave ->
+        oppgaveRepository.søk(
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstander = Tilstand.Type.values,
+                behandlingId = hendelse.behandlingId,
+            ),
+        ).oppgaver.singleOrNull()?.let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
             ) {
@@ -697,8 +714,4 @@ class OppgaveMediator(
         feilType: AlertManager.AlertType,
         utvidetFeilmelding: String,
     ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
-
-    fun avbrytNoeGreier(hendelse: BehandlingOpprettetForSøknadHendelse) {
-        TODO("Not yet implemented")
-    }
 }

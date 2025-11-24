@@ -1056,7 +1056,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for behandling av innsending`() {
+    fun `Livssyklus for behandling av innsending som ferdigstilles`() {
         val testPerson = DBTestHelper.testPerson
         val sakId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
@@ -1167,7 +1167,7 @@ OppgaveMediatorTest {
             oppgaveMediator.ferdigstillOppgave(
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsendingOppgave.behandling.behandlingId,
-                    aksjonType = Aksjon.Type.AVSLUTT,
+                    aksjonType = Aksjon.Type.OPPRETT_KLAGE,
                     opprettetBehandlingId = UUIDv7.ny(),
                     utførtAv = saksbehandler,
                 ),

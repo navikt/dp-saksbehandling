@@ -109,21 +109,19 @@ class InnsendingMediator(
             innsendingBehandler.utførAksjon(innsending = innsending, hendelse = hendelse)
         logger.info { "Ferdigstiller innsending med id=${innsending.innsendingId} med aksjon=${hendelse.aksjon}" }
 
-        //  Oppdater innsending med behandlingId fra aksjon
+        //  Oppdater innsending med behandlingId fra aksjon og sett til ferdigstilt
         innsending.ferdigstill(innsendingFerdigstiltHendelse)
         oppgaveMediator.ferdigstillOppgave(innsendingFerdigstiltHendelse)
 
-        // Setter tilstand "Ferdigstilt"
         innsendingRepository.lagre(innsending)
     }
 
-    fun avbrytInnsending(hendelse: BehandlingOpprettetForSøknadHendelse) {
+    fun automatiskFerdigstill(hendelse: BehandlingOpprettetForSøknadHendelse) {
         val innsendinger = innsendingRepository.finnInnsendingerForPerson(ident = hendelse.ident)
         innsendinger.singleOrNull {
             it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
         }?.let { innsending ->
-
-            // TODO: sett nyBehandling på innsendingen
+            innsending.automatiskFerdigstill(hendelse)
             innsendingRepository.lagre(innsending)
             oppgaveMediator.avbrytOppgave(
                 hendelse =

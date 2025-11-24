@@ -8,16 +8,15 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
-private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class SøknadBehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
-    private val oppgaveMediator: OppgaveMediator,
+    private val innsendingMediator: InnsendingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -47,8 +46,7 @@ internal class SøknadBehandlingOpprettetMottak(
         val søknadId = packet.søknadId()
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_opprettet hendelse for søknad i SøknadBehandlingOpprettetMottak" }
-
-            oppgaveMediator.avbrytNoeGreier(
+            innsendingMediator.automatiskFerdigstill(
                 hendelse =
                     BehandlingOpprettetForSøknadHendelse(
                         ident = ident,
@@ -61,7 +59,3 @@ internal class SøknadBehandlingOpprettetMottak(
 }
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.manuellId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.meldekortId(): String = this["behandletHendelse"]["id"].asText()

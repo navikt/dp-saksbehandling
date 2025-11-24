@@ -218,7 +218,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             klageMediator.setRapidsConnection(rapidsConnection)
             klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
             BehandlingOpprettetMottak(rapidsConnection, sakMediator)
-            SøknadBehandlingOpprettetMottak(rapidsConnection, oppgaveMediator)
+            SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
             ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
