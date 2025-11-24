@@ -617,6 +617,7 @@ private fun rehydrerTilstandsendringHendelse(
         "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
         "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
         "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
+        "InnsendingMottattHendelse" -> hendelseJson.tilHendelse<InnsendingMottattHendelse>()
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
         "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
         "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()

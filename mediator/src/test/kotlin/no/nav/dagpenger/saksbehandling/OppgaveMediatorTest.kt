@@ -5,6 +5,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -797,6 +798,85 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe AVBRUTT
+        }
+    }
+
+    @Test
+    fun `Håndtering av ettersending for søknad oppgaver`() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = behandlingId
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
+        ) { datasource, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgave = oppgaveMediator.finnOppgaverFor(testIdent).single()
+
+            val ikkeEttersendingManglerSøknadId =
+                InnsendingMottattHendelse(
+                    ident = oppgave.personIdent(),
+                    journalpostId = "asdf",
+                    registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+                    søknadId = null,
+                    skjemaKode = "NAV 11-12.05",
+                    kategori = Kategori.ETTERSENDING,
+                )
+            oppgaveMediator.taImotEttersending(ikkeEttersendingManglerSøknadId)
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør) shouldBe oppgave
+
+            oppgaveMediator.taImotEttersending(
+                ikkeEttersendingManglerSøknadId.copy(
+                    søknadId = oppgave.soknadId(),
+                    kategori = Kategori.KLAGE,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør) shouldBe oppgave
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = testInspektør.navIdent,
+                    utførtAv = testInspektør,
+                ),
+            )
+
+            oppgaveMediator.utsettOppgave(
+                UtsettOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = testInspektør.navIdent,
+                    utsattTil = LocalDate.now().plusDays(1),
+                    beholdOppgave = false,
+                    utførtAv = testInspektør,
+                ),
+            )
+
+            oppgaveMediator.taImotEttersending(
+                ikkeEttersendingManglerSøknadId.copy(
+                    søknadId = oppgave.soknadId(),
+                    kategori = Kategori.ETTERSENDING,
+                ),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { actual ->
+                actual shouldNotBe oppgave
+                actual.emneknagger shouldContain ("Ettersending(${LocalDate.now()})")
+                actual.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+            }
         }
     }
 
