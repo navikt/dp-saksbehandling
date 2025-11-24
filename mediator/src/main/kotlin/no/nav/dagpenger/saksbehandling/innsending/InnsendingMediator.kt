@@ -39,10 +39,7 @@ class InnsendingMediator(
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
         if (sisteSakId != null) {
-            val erEttersendingTilSøknad =
-                hendelse.kategori == Kategori.ETTERSENDING && hendelse.søknadId != null
-
-            if (erEttersendingTilSøknad && oppgaveMediator.skalEttersendingTilSøknadVarsles(
+            if (hendelse.erEttersending() && oppgaveMediator.skalEttersendingTilSøknadVarsles(
                     hendelse.søknadId!!,
                     hendelse.ident
                 )

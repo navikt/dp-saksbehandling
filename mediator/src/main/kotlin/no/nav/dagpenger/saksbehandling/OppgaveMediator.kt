@@ -105,9 +105,7 @@ class OppgaveMediator(
     }
 
     fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
-        if (hendelse.søknadId == null || hendelse.kategori != Kategori.ETTERSENDING) {
-            logger.warn { "Skal bare håndtere ettersendinger med søknad id" }
-            sikkerlogger.warn { "Skal bare håndtere ettersendinger med søknad id. Hendelse: $hendelse" }
+        if (!hendelse.erEttersending()) {
             return
         }
 

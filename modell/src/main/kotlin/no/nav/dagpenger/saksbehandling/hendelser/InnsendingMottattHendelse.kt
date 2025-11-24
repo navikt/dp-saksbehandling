@@ -13,7 +13,9 @@ data class InnsendingMottattHendelse(
     val skjemaKode: String,
     val kategori: Kategori,
     override val utførtAv: Behandler = Applikasjon("dp-mottak"),
-) : Hendelse(utførtAv)
+) : Hendelse(utførtAv) {
+    fun erEttersending() = kategori == Kategori.ETTERSENDING && søknadId != null
+}
 
 enum class Kategori {
     NY_SØKNAD,
