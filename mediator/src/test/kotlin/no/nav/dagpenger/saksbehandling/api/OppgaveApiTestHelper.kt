@@ -1,22 +1,16 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import PersonMediator
-import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
 internal object OppgaveApiTestHelper {
-    private val mockAzure = mockAzure()
-
     fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
@@ -75,22 +69,4 @@ internal object OppgaveApiTestHelper {
             test()
         }
     }
-
-    fun HttpRequestBuilder.autentisert(token: String = gyldigSaksbehandlerToken()) {
-        header(HttpHeaders.Authorization, "Bearer $token")
-    }
-
-    fun gyldigSaksbehandlerToken(
-        adGrupper: List<String> = emptyList(),
-        navIdent: String = TestHelper.saksbehandler.navIdent,
-    ): String {
-        return mockAzure.lagTokenMedClaims(
-            mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
-                "NAVident" to navIdent,
-            ),
-        )
-    }
-
-    fun gyldigMaskinToken(): String = mockAzure.lagTokenMedClaims(mapOf("idtyp" to "app"))
 }

@@ -35,6 +35,17 @@ class InnsendingApiTest {
         }
     }
 
+//    @Test
+//    fun `Skal kunne hente en innsending `() {
+//        val mediator = mockk<InnsendingMediator>()
+//        withInnsendingApi(mediator) {
+//            client.get("innsending/$behandlingId") {
+//                this.header(HttpHeaders.Accept, "application/json")
+//                this.header(HttpHeaders.Authorization, "Bearer token")
+//            }
+//        }
+//    }
+//
     private fun withInnsendingApi(
         innsendingMediator: InnsendingMediator,
         test: suspend ApplicationTestBuilder.() -> Unit,
