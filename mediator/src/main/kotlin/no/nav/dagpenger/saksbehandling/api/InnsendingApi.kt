@@ -122,7 +122,7 @@ private fun Innsending.toBehandling(): BehandlingDTO? {
             BehandlingDTO(
                 id = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-                utlostAv = UtlostAvTypeDTO.INNSENDING,
+                utlostAv = UtlostAvTypeDTO.MANUELL,
                 opprettet = this.mottatt,
                 oppgaveId = null,
             )
