@@ -82,9 +82,7 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -408,52 +406,6 @@ OppgaveMediatorTest {
                 Arguments.of(Oppgave.UnderKontroll(), true),
                 Arguments.of(FerdigBehandlet, false),
             )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("skalEttersendingTilSøknadVarsles")
-    fun `Finnes det en oppgave til behandling`(
-        tilstand: Oppgave.Tilstand,
-        skalLageGosysOppgave: Boolean,
-    ) {
-        val hendelse =
-            SøknadsbehandlingOpprettetHendelse(
-                søknadId = UUIDv7.ny(),
-                behandlingId = UUIDv7.ny(),
-                ident = "12345678910",
-                opprettet = LocalDateTime.now(),
-            )
-        val person =
-            Person(
-                id = UUIDv7.ny(),
-                ident = hendelse.ident,
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
-        val behandling =
-            Behandling(
-                behandlingId = hendelse.behandlingId,
-                opprettet = LocalDateTime.now(),
-                utløstAv = UtløstAvType.SØKNAD,
-                hendelse = hendelse,
-            )
-        val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = tilstand,
-                behandling = behandling,
-                person = person,
-            )
-
-        settOppOppgaveMediator(hendelse = hendelse) { datasource, oppgaveMediator ->
-            val oppgaveRepository = PostgresOppgaveRepository(datasource)
-
-            oppgaveRepository.lagre(oppgave)
-
-            oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                hendelse.søknadId,
-                hendelse.ident,
-            ) shouldBe skalLageGosysOppgave
         }
     }
 

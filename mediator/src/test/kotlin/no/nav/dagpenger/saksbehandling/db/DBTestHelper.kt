@@ -162,6 +162,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             sak: Sak,
             behandling: Behandling,
             oppgave: Oppgave,
+            merkSomEgenSak: Boolean = false,
         ) {
             sak.leggTilBehandling(behandling)
             this.lagre(person)
@@ -172,6 +173,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 ),
             )
             this.lagre(oppgave)
+            this.merkSakenSomDpSak(sak.sakId, merkSomEgenSak)
         }
 
         fun leggTilOppgave(

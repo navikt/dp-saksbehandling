@@ -8,7 +8,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -37,7 +36,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -73,6 +71,7 @@ class InnsendingMediatorTest {
         }
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {
+            every { it.taImotEttersending(any()) } just Runs
             coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomSkalVarsles, any()) } returns true
             coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomIkkeSkalVarsles, any()) } returns false
             coEvery { it.lagOppgaveForInnsendingBehandling(any(), any(), any()) } just Runs
@@ -239,33 +238,28 @@ class InnsendingMediatorTest {
                                 utførtAv = saksbehandler,
                             )
                     },
-            ).let { mediator ->
-                mediator.ferdigstill(
-                    hendelse =
-                        FerdigstillInnsendingHendelse(
-                            innsendingId = innsendingOppgave.behandling.behandlingId,
-                            aksjon = Aksjon.Avslutt(sak.sakId),
-                            vurdering = "Vurderingstekst",
-                            utførtAv = saksbehandler,
-                        ),
-                )
-            }
+            ).ferdigstill(
+                hendelse =
+                    FerdigstillInnsendingHendelse(
+                        innsendingId = innsendingOppgave.behandling.behandlingId,
+                        aksjon = Aksjon.Avslutt(sak.sakId),
+                        vurdering = "Vurderingstekst",
+                        utførtAv = saksbehandler,
+                    ),
+            )
 
-            oppgaveMediator.hentOppgave(innsendingOppgave.oppgaveId, saksbehandler).let { oppgave ->
-                oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
-            }
+            oppgaveMediator.hentOppgave(innsendingOppgave.oppgaveId, saksbehandler)
+                .tilstand() shouldBe Oppgave.FerdigBehandlet
 
             innsendingMediator.hentInnsending(innsending.innsendingId, saksbehandler).let { innsending ->
-                innsending.innsendingResultat().let { resultat ->
-                    resultat shouldBe Innsending.InnsendingResultat.Ingen
-                }
+                innsending.innsendingResultat() shouldBe Innsending.InnsendingResultat.Ingen
                 innsending.valgtSakId() shouldBe sak.sakId
             }
         }
     }
 
     @Test
-    fun `Skal lage innsending behandling og oppgave dersom vi eier saken for ettersending som skal varsles`() {
+    fun `Skal lage innsending, behandling og oppgave dersom det kommer en ettersending til en ferdigbehandlet oppgave i sak vi eier `() {
         val sak =
             Sak(
                 sakId = sakId,
@@ -295,8 +289,9 @@ class InnsendingMediatorTest {
                     TestHelper.lagOppgave(
                         person = testPerson,
                         behandling = behandling,
-                        tilstand = Oppgave.KlarTilKontroll,
+                        tilstand = Oppgave.FerdigBehandlet,
                     ),
+                merkSomEgenSak = true,
             )
             val sakMediator =
                 SakMediator(
@@ -350,7 +345,7 @@ class InnsendingMediatorTest {
     }
 
     @Test
-    fun `Skal ikke håndtere innsending hvis vi ikke eier saken`() {
+    fun `Skal ikke opprette innsending, behandling og oppgave dersom vi ikke eier saken`() {
         val innsendingRepository = mockk<InnsendingRepository>(relaxed = false)
         val innsendingBehandler = mockk<InnsendingBehandler>()
         val mediator =
@@ -376,50 +371,21 @@ class InnsendingMediatorTest {
             innsendingMottattHendelse,
         ) shouldBe HåndterInnsendingResultat.UhåndtertInnsending
 
+        verify(exactly = 1) {
+            oppgaveMediatorMock.taImotEttersending(innsendingMottattHendelse)
+        }
+
         verify(exactly = 0) {
             innsendingRepository.lagre(any())
         }
         verify(exactly = 0) {
             innsendingBehandler.utførAksjon(any(), any())
         }
-    }
-
-    @Test
-    fun `Skal lage innsending hvis vi ikke eier saken men skal varsle om ettersending`() {
-        val slot = slot<Innsending>()
-        val innsendingRepositoryMock: InnsendingRepository =
-            mockk<InnsendingRepository>().also {
-                every { it.lagre(capture(slot)) } just Runs
-            }
-        val mediator =
-            InnsendingMediator(
-                sakMediator = sakMediatorMock,
-                oppgaveMediator = oppgaveMediatorMock,
-                personMediator = personMediatorMock,
-                innsendingRepository = innsendingRepositoryMock,
-                innsendingBehandler = mockk(),
-            )
-
-        val innsendingMottattHendelse =
-            InnsendingMottattHendelse(
-                ident = personUtenSak.ident,
-                journalpostId = journalpostId,
-                registrertTidspunkt = registrertTidspunkt,
-                søknadId = søknadIdSomSkalVarsles,
-                skjemaKode = skjemaKode,
-                kategori = Kategori.ETTERSENDING,
-            )
-
-        mediator.taImotInnsending(
-            innsendingMottattHendelse,
-        ) shouldBe HåndterInnsendingResultat.UhåndtertInnsending
-
-        slot.captured.let {
-            it.person shouldBe personUtenSak
-            it.journalpostId shouldBe journalpostId
-            it.mottatt shouldBe registrertTidspunkt
-            it.skjemaKode shouldBe skjemaKode
-            it.kategori shouldBe Kategori.ETTERSENDING
+        verify(exactly = 0) {
+            sakMediatorMock.knyttBehandlingTilSak(any(), any(), any())
+        }
+        verify(exactly = 0) {
+            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any())
         }
     }
 
@@ -457,6 +423,7 @@ class InnsendingMediatorTest {
                         behandling = behandling,
                         tilstand = Oppgave.FerdigBehandlet,
                     ),
+                merkSomEgenSak = true,
             )
             val sakMediator =
                 SakMediator(
@@ -479,21 +446,6 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                 )
-            sakMediator.merkSakenSomDpSak(
-                vedtakFattetHendelse =
-                    VedtakFattetHendelse(
-                        behandlingId = sak.behandlinger().first().behandlingId,
-                        behandletHendelseId = sak.søknadId.toString(),
-                        behandletHendelseType = "Søknad",
-                        ident = testPerson.ident,
-                        sak =
-                            UtsendingSak(
-                                id = sak.sakId.toString(),
-                                kontekst = "Dagpenger",
-                            ),
-                        automatiskBehandlet = false,
-                    ),
-            )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
                     ident = testPerson.ident,
@@ -533,118 +485,14 @@ class InnsendingMediatorTest {
                     it.behandling.utløstAv == UtløstAvType.INNSENDING
                 }
             oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.Avbrutt
-            val innsendingEtterAvbryt = innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
-            innsendingEtterAvbryt.innsendingResultat() shouldBe Innsending.InnsendingResultat.RettTilDagpenger(behandlingIdSøknad)
+            val innsendingEtterAvbryt =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            innsendingEtterAvbryt.innsendingResultat() shouldBe
+                Innsending.InnsendingResultat.RettTilDagpenger(
+                    behandlingIdSøknad,
+                )
             innsendingEtterAvbryt.tilstand() shouldBe "FERDIGSTILT"
         }
-    }
-
-    @Test
-    @Disabled("Skal fikses senere")
-    fun `Ikke avbryt innsending hvis behandling opprettes for søknad og innsendingen er under behandling`() {
-        val slot = slot<Innsending>()
-        val person = TestHelper.testPerson
-        val søknadId = UUIDv7.ny()
-        val innsending =
-            TestHelper.lagInnsending(
-                person = person,
-                kategori = Kategori.NY_SØKNAD,
-            )
-
-        val innsendingRepository =
-            mockk<InnsendingRepository>().also {
-                every { it.lagre(capture(slot)) } just Runs
-            }
-
-        val behandlingOpprettetForSøknadHendelse =
-            BehandlingOpprettetForSøknadHendelse(
-                ident = innsending.person.ident,
-                søknadId = søknadId,
-                behandlingId = UUIDv7.ny(),
-            )
-
-        InnsendingMediator(
-            sakMediator = mockk(),
-            oppgaveMediator = mockk(),
-            personMediator = mockk(),
-            innsendingRepository = innsendingRepository,
-            innsendingBehandler = mockk(),
-        ).automatiskFerdigstill(hendelse = behandlingOpprettetForSøknadHendelse)
-
-        verify(exactly = 0) { innsendingRepository.lagre(any()) }
-    }
-
-    @Test
-    fun `Ikke avbryt innsending hvis behandling opprettes for søknad og innsendingen er ferdigbehandlet`() {
-        val slot = slot<Innsending>()
-        val person = TestHelper.testPerson
-        val søknadId = UUIDv7.ny()
-        val innsending =
-            TestHelper.lagInnsending(
-                person = person,
-                kategori = Kategori.NY_SØKNAD,
-            )
-
-        val innsendingRepository =
-            mockk<InnsendingRepository>().also {
-                every { it.hent(innsending.innsendingId) } returns innsending
-                every { it.lagre(capture(slot)) } just Runs
-                every { it.finnInnsendingerForPerson(person.ident) } returns listOf(innsending)
-            }
-
-        val behandlingOpprettetForSøknadHendelse =
-            BehandlingOpprettetForSøknadHendelse(
-                ident = innsending.person.ident,
-                søknadId = søknadId,
-                behandlingId = UUIDv7.ny(),
-            )
-
-        InnsendingMediator(
-            sakMediator = mockk(),
-            oppgaveMediator = mockk(),
-            personMediator = mockk(),
-            innsendingRepository = innsendingRepository,
-            innsendingBehandler = mockk(),
-        ).automatiskFerdigstill(hendelse = behandlingOpprettetForSøknadHendelse)
-
-        verify(exactly = 0) { innsendingRepository.lagre(any()) }
-    }
-
-    @Test
-    fun `Ikke avbryt innsending hvis behandling opprettes for søknad og innsendingen mangler søknadId`() {
-        val slot = slot<Innsending>()
-        val person = TestHelper.testPerson
-        val søknadId = UUIDv7.ny()
-        val innsending =
-            TestHelper.lagInnsending(
-                person = person,
-                kategori = Kategori.NY_SØKNAD,
-            ).also {
-            }
-
-        val innsendingRepository =
-            mockk<InnsendingRepository>().also {
-                every { it.hent(innsending.innsendingId) } returns innsending
-                every { it.lagre(capture(slot)) } just Runs
-                every { it.finnInnsendingerForPerson(person.ident) } returns listOf(innsending)
-            }
-
-        val behandlingOpprettetForSøknadHendelse =
-            BehandlingOpprettetForSøknadHendelse(
-                ident = innsending.person.ident,
-                søknadId = søknadId,
-                behandlingId = UUIDv7.ny(),
-            )
-
-        InnsendingMediator(
-            sakMediator = mockk(),
-            oppgaveMediator = mockk(),
-            personMediator = mockk(),
-            innsendingRepository = innsendingRepository,
-            innsendingBehandler = mockk(),
-        ).automatiskFerdigstill(hendelse = behandlingOpprettetForSøknadHendelse)
-
-        verify(exactly = 0) { innsendingRepository.lagre(any()) }
     }
 
     private fun OppgaveMediator.finnAlleOppgaverFor(ident: String): List<Oppgave> {
@@ -652,6 +500,7 @@ class InnsendingMediatorTest {
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 tilstander = Oppgave.Tilstand.Type.values,
+                personIdent = ident,
             ),
         ).oppgaver
     }

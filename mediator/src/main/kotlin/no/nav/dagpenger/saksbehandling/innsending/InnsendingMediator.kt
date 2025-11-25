@@ -57,11 +57,13 @@ class InnsendingMediator(
     }
 
     private fun taImotEttersendingTilSøknad(hendelse: InnsendingMottattHendelse) {
+        val person =
+            personMediator.finnEllerOpprettPerson(
+                hendelse.ident,
+            )
         val innsending =
             Innsending.opprett(hendelse = hendelse) { ident ->
-                personMediator.finnEllerOpprettPerson(
-                    hendelse.ident,
-                )
+                person
             }
         innsendingRepository.lagre(innsending)
         val behandling =
@@ -75,6 +77,7 @@ class InnsendingMediator(
             behandling = behandling,
             hendelse = hendelse,
         )
+        oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person)
     }
 
     private fun taImotInnsendingPåSisteSak(

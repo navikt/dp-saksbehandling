@@ -79,6 +79,7 @@ class OppgaveMediator(
             } else {
                 Oppgave.KlarTilBehandling
             }
+
         val oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
@@ -702,12 +703,12 @@ class OppgaveMediator(
         return oppgaveRepository.tildelOgHentNesteOppgave(nesteOppgaveHendelse, tildelNesteOppgaveFilter)
     }
 
+    // Todo bare sende ut oppgave tilstand kanskje?
     fun skalEttersendingTilSøknadVarsles(
         søknadId: UUID,
         ident: String,
     ): Boolean {
         val tilstand = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
-
         return when (tilstand) {
             FERDIG_BEHANDLET -> true
             else -> false
