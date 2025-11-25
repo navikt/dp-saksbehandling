@@ -78,7 +78,7 @@ class InnsendingApiTest {
                   "sakId": "${sak.sakId}",
                   "vurdering": "hubba",
                   "nyBehandling": {
-                      "id": "${innsendingResultat.behandlingId}",
+                      "behandlingId": "${innsendingResultat.behandlingId}",
                       "behandlingType": "RETT_TIL_DAGPENGER"
                     },
                   "lovligeSaker": [

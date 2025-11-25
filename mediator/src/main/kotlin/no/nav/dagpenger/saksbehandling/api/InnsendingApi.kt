@@ -10,12 +10,11 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Sak
-import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.InnsendingDTO
+import no.nav.dagpenger.saksbehandling.api.models.TynnBehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnSakDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon.Avslutt
@@ -106,25 +105,18 @@ private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO 
     )
 }
 
-private fun Innsending.toBehandling(): BehandlingDTO? {
+private fun Innsending.toBehandling(): TynnBehandlingDTO? {
     return when (val resultat = this.innsendingResultat()) {
         is Innsending.InnsendingResultat.Klage ->
-            BehandlingDTO(
-                id = resultat.behandlingId,
+            TynnBehandlingDTO(
+                behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.KLAGE,
-                utlostAv = UtlostAvTypeDTO.INNSENDING,
-                opprettet = this.mottatt,
-                // kan gi på klage
-                oppgaveId = null,
             )
 
         is Innsending.InnsendingResultat.RettTilDagpenger ->
-            BehandlingDTO(
-                id = resultat.behandlingId,
+            TynnBehandlingDTO(
+                behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-                utlostAv = UtlostAvTypeDTO.MANUELL,
-                opprettet = this.mottatt,
-                oppgaveId = null,
             )
 
         else -> null
