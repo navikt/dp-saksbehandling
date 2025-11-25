@@ -107,7 +107,7 @@ class UtsendingMediatorTest {
                 behandlingResultatEvent(
                     ident = person.ident,
                     behandlingId = behandling.behandlingId.toString(),
-                    søknadId = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     harRett = true,
                 )

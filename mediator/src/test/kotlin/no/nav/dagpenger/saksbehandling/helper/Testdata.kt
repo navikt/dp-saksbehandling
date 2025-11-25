@@ -8,7 +8,7 @@ import java.util.UUID
 internal fun behandlingResultatEvent(
     ident: String,
     behandlingId: String,
-    søknadId: String,
+    behandletHendelseId: String,
     behandletHendelseType: String = "Søknad",
     harRett: Boolean = true,
 ): String {
@@ -19,7 +19,7 @@ internal fun behandlingResultatEvent(
           "ident": "$ident",
           "behandlingId": "$behandlingId",
           "behandletHendelse": {
-            "id": "$søknadId",
+            "id": "$behandletHendelseId",
             "type": "$behandletHendelseType"
           },
           "automatisk": false,

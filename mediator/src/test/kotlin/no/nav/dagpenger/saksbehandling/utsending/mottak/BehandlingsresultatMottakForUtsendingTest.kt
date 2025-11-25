@@ -30,7 +30,6 @@ class BehandlingsresultatMottakForUtsendingTest {
             mockk<UtsendingMediator>().also {
                 every { it.startUtsendingForVedtakFattet(any()) } just Runs
             }
-
         val sakRepositoryMock =
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
@@ -85,24 +84,55 @@ class BehandlingsresultatMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
-        val utsendingMediatorMock = mockk<UtsendingMediator>()
-
+    fun `Skal håndtere meldekort-behandling som tilhører dp-sak`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>().also {
+                every { it.startUtsendingForVedtakFattet(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
+                every { it.hentSakIdForBehandlingId(any()) } returns sakId
+            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            sakRepository = mockk<SakRepository>(),
+            sakRepository = sakRepositoryMock,
         )
 
         testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
 
-        verify(exactly = 0) {
+        verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
         }
     }
 
     @Test
-    fun `Skal ikke håndtere behandlinger med flere rettighetsperiioder `() {
+    fun `Skal håndtere manuell behandling som tilhører dp-sak`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>().also {
+                every { it.startUtsendingForVedtakFattet(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
+                every { it.hentSakIdForBehandlingId(any()) } returns sakId
+            }
+        BehandlingsresultatMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository = sakRepositoryMock,
+        )
+
+        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Manuell"))
+
+        verify(exactly = 1) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        }
+    }
+
+    @Test
+    fun `Skal ikke håndtere behandlinger med flere rettighetsperioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
         BehandlingsresultatMottakForUtsending(
@@ -155,7 +185,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         return behandlingResultatEvent(
             ident = ident,
             behandlingId = behandlingId,
-            søknadId = søknadId,
+            behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
         )

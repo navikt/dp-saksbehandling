@@ -24,7 +24,7 @@ internal class BehandlingsresultatMottakForUtsending(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behandlingsresultat")
-                it.requireAny("behandletHendelse.type", listOf("Søknad", "Manuell"))
+                it.requireAny("behandletHendelse.type", listOf("Søknad", "Manuell", "Meldekort"))
                 it.requireKey("rettighetsperioder")
             }
             validate {
@@ -45,21 +45,16 @@ internal class BehandlingsresultatMottakForUtsending(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
-
-        if (behandlingId.toString() == "0199b92a-c954-7f81-9324-1e628a6eaafc") {
-            return
-        }
-
         logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
 
-        val dagpengerSakiD =
+        val dagpengerSakId =
             try {
                 sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
             } catch (e: Exception) {
                 null
             }
 
-        if (dagpengerSakiD != null || vedtakSkalTilhøreDpSak(packet)) {
+        if (dagpengerSakId != null || vedtakSkalTilhøreDpSak(packet)) {
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()
@@ -99,7 +94,10 @@ internal class BehandlingsresultatMottakForUtsending(
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
         val rettighetsperioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
+        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
+        val dagpengerInnvilget =
+            behandletHendelseType == "Søknad" &&
+                rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
         return dagpengerInnvilget.also {
             logger.info { "BehandlingsresultatMottakForUtsending med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
         }

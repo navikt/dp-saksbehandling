@@ -96,7 +96,7 @@ class BehandlingsresultatMottakForSakTest {
         return behandlingResultatEvent(
             ident = ident,
             behandlingId = behandlingId,
-            søknadId = søknadId,
+            behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
         )
