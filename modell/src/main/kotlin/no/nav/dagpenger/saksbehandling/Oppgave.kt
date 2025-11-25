@@ -639,6 +639,7 @@ data class Oppgave private constructor(
                 oppgave.endreTilstand(KlarTilBehandling, hendelse)
             }
             oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.utsattTil = null
         }
 
         override fun tildel(
