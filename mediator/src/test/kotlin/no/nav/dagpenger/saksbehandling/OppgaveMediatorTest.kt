@@ -394,7 +394,7 @@ OppgaveMediatorTest {
 
     companion object {
         @JvmStatic
-        private fun skalEttersendingTilSøknadVarsles(): Stream<Arguments> {
+        private fun oppgaveTilstandForSøknad(): Stream<Arguments> {
             return Stream.of(
                 Arguments.of(Opprettet, false),
                 Arguments.of(KlarTilBehandling, false),

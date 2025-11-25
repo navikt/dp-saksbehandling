@@ -12,6 +12,8 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
@@ -46,8 +48,8 @@ class InnsendingMediatorTest {
     private val søknadId = UUIDv7.ny()
     private val behandlingIdSøknad = UUIDv7.ny()
     private val journalpostId = "journalpostId123"
-    private val søknadIdSomSkalVarsles = UUIDv7.ny()
-    private val søknadIdSomIkkeSkalVarsles = UUIDv7.ny()
+    private val søknadIdSomErFerdigBehandlet = UUIDv7.ny()
+    private val søknadIdSomIkkeErFerdigBehandlet = UUIDv7.ny()
     private val registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val personMedSak =
         Person(
@@ -72,8 +74,8 @@ class InnsendingMediatorTest {
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {
             every { it.taImotEttersending(any()) } just Runs
-            coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomSkalVarsles, any()) } returns true
-            coEvery { it.skalEttersendingTilSøknadVarsles(søknadIdSomIkkeSkalVarsles, any()) } returns false
+            coEvery { it.oppgaveTilstandForSøknad(søknadIdSomErFerdigBehandlet, any()) } returns FERDIG_BEHANDLET
+            coEvery { it.oppgaveTilstandForSøknad(søknadIdSomIkkeErFerdigBehandlet, any()) } returns UNDER_BEHANDLING
             coEvery { it.lagOppgaveForInnsendingBehandling(any(), any(), any()) } just Runs
         }
 

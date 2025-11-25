@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.innsending
 import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -37,17 +38,12 @@ class InnsendingMediator(
 
         if (sisteSakId != null) {
             if (hendelse.erEttersending() &&
-                oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                    hendelse.søknadId!!,
-                    hendelse.ident,
-                )
+                søknadFerdigBehandlet(hendelse)
             ) {
                 taImotEttersendingTilSøknad(hendelse)
             } else {
                 taImotInnsendingPåSisteSak(hendelse, sisteSakId)
             }
-        } else {
-            // Vi har ikke sak for ident så gjør ingenting
         }
 
         return when (sisteSakId) {
@@ -55,6 +51,12 @@ class InnsendingMediator(
             else -> HåndterInnsendingResultat.HåndtertInnsending(sisteSakId)
         }
     }
+
+    private fun søknadFerdigBehandlet(hendelse: InnsendingMottattHendelse): Boolean =
+        oppgaveMediator.oppgaveTilstandForSøknad(
+            hendelse.søknadId!!,
+            hendelse.ident,
+        ) == Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 
     private fun taImotEttersendingTilSøknad(hendelse: InnsendingMottattHendelse) {
         val person =

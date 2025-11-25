@@ -12,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -703,17 +702,10 @@ class OppgaveMediator(
         return oppgaveRepository.tildelOgHentNesteOppgave(nesteOppgaveHendelse, tildelNesteOppgaveFilter)
     }
 
-    // Todo bare sende ut oppgave tilstand kanskje?
-    fun skalEttersendingTilSøknadVarsles(
+    fun oppgaveTilstandForSøknad(
         søknadId: UUID,
         ident: String,
-    ): Boolean {
-        val tilstand = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
-        return when (tilstand) {
-            FERDIG_BEHANDLET -> true
-            else -> false
-        }
-    }
+    ) = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
 
     private fun sendAlertTilRapid(
         feilType: AlertManager.AlertType,
