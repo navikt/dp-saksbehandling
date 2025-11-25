@@ -93,7 +93,6 @@ private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO 
     return InnsendingDTO(
         behandlingId = this.innsendingId,
         journalpostId = this.journalpostId,
-        // Hent alle saker for en person
         lovligeSaker =
             lovligeSaker.map {
                 TynnSakDTO(
