@@ -13,10 +13,13 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
+import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import org.junit.jupiter.api.Test
@@ -26,14 +29,14 @@ class InnsendingApiTest {
         mockAzure()
     }
 
-    private val behandlingId = UUIDv7.ny()
+    private val innsendingId = UUIDv7.ny()
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<InnsendingMediator>()
         withInnsendingApi(mediator) {
-            client.get("innsending/$behandlingId").status shouldBe HttpStatusCode.Unauthorized
-            client.put("innsending/$behandlingId/ferdigstill") {
+            client.get("innsending/$innsendingId").status shouldBe HttpStatusCode.Unauthorized
+            client.put("innsending/$innsendingId/ferdigstill") {
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
                 setBody("""{ "tullebody": "tull" }""".trimIndent())
@@ -44,7 +47,7 @@ class InnsendingApiTest {
     }
 
     @Test
-    fun `Skal kunne hente en innsending `() {
+    fun `Skal kunne hente en innsending`() {
         val innsendingResultat = Innsending.InnsendingResultat.RettTilDagpenger(UUIDv7.ny())
         val sak =
             Sak(
@@ -60,14 +63,14 @@ class InnsendingApiTest {
             )
         val mediator =
             mockk<InnsendingMediator>().also {
-                every { it.hentInnsending(behandlingId, any()) } returns innsending
+                every { it.hentInnsending(innsendingId, any()) } returns innsending
                 every { it.hentLovligeSaker(TestHelper.personIdent) } returns
                     listOf(
                         sak,
                     )
             }
         withInnsendingApi(mediator) {
-            client.get("innsending/$behandlingId") {
+            client.get("innsending/$innsendingId") {
                 autentisert()
                 this.header(HttpHeaders.Accept, "application/json")
             }.bodyAsText() shouldEqualSpecifiedJson
@@ -88,8 +91,41 @@ class InnsendingApiTest {
                     }
                   ]
                 }
-                
                 """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en innsending`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillInnsendingHendelse>()
+        val mediator =
+            mockk<InnsendingMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withInnsendingApi(mediator) {
+            client.put("innsending/$innsendingId/ferdigstill") {
+                autentisert()
+                this.header(HttpHeaders.ContentType, "application/json")
+                //language=json
+                setBody(
+                    """
+                    {
+                        "sakId": "$sakId",
+                        "vurdering": "Hubba Bubba",
+                        "behandlingType": "RETT_TIL_DAGPENGER"
+                    }
+                    """.trimIndent(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+                slot.captured.let {
+                    it.innsendingId shouldBe innsendingId
+                    it.valgtSakId() shouldBe sakId
+                    it.vurdering shouldBe "Hubba Bubba"
+                    it.aksjon.type shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
+                }
+            }
         }
     }
 
