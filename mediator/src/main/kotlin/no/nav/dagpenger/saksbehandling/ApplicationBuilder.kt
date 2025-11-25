@@ -71,7 +71,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val personRepository = PostgresPersonRepository(dataSource)
     private val sakRepository = PostgresSakRepository(dataSource = dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
-    private val innsendingPostgresRepository = PostgresInnsendingRepository(dataSource)
+    private val innsendingRepository = PostgresInnsendingRepository(dataSource)
 
     private val skjermingKlient =
         SkjermingHttpKlient(
@@ -107,6 +107,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     journalpostIdKlient = journalpostIdClient,
                     utsendingRepository = utsendingRepository,
                     klageRepository = klageRepository,
+                    innsendingRepository = innsendingRepository,
                 ),
             saksbehandlerOppslag = saksbehandlerOppslag,
             skjermingKlient = skjermingKlient,
@@ -162,7 +163,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             sakMediator = sakMediator,
             oppgaveMediator = oppgaveMediator,
             personMediator = personMediator,
-            innsendingRepository = innsendingPostgresRepository,
+            innsendingRepository = innsendingRepository,
             innsendingBehandler =
                 InnsendingBehandler(
                     klageMediator = klageMediator,

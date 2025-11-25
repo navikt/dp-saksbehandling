@@ -4,6 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
@@ -12,6 +13,7 @@ class RelevanteJournalpostIdOppslag(
     private val journalpostIdKlient: JournalpostIdKlient,
     private val utsendingRepository: UtsendingRepository,
     private val klageRepository: KlageRepository,
+    private val innsendingRepository: InnsendingRepository,
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
         when (oppgave.behandling.utløstAv) {
@@ -33,7 +35,11 @@ class RelevanteJournalpostIdOppslag(
 
             UtløstAvType.MELDEKORT -> return emptySet()
             UtløstAvType.MANUELL -> return emptySet()
-            UtløstAvType.INNSENDING -> return emptySet()
+            UtløstAvType.INNSENDING -> return coroutineScope {
+                val journalpostIdInnsending: String? =
+                    innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
+                setOf(journalpostIdInnsending).filterNotNull().toSet()
+            }
         }
     }
 
