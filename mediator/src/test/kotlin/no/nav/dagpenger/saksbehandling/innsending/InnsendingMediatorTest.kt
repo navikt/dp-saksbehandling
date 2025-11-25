@@ -85,7 +85,7 @@ class InnsendingMediatorTest {
         }
 
     @Test
-    fun `Skal lage innsending behandling og oppgave dersom vi eier saken`() {
+    fun `Skal lage innsending, oppgave og behandling knyttet til siste sak vi eier`() {
         val sak =
             Sak(
                 sakId = sakId,
@@ -259,7 +259,7 @@ class InnsendingMediatorTest {
     }
 
     @Test
-    fun `Skal lage innsending, behandling og oppgave dersom det kommer en ettersending til en ferdigbehandlet oppgave i sak vi eier `() {
+    fun `Skal lage innsending, behandling og oppgave knyttet til sammme sak som soknaden ved mottak av ettersending i sak vi eier `() {
         val sak =
             Sak(
                 sakId = sakId,
