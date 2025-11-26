@@ -481,7 +481,12 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
 
             val søknadIdClause =
-                søkeFilter.søknadId?.let { "AND hend.hendelse_data ->> 'søknadId' = :soknad_id " } ?: ""
+                søkeFilter.søknadId?.let {
+                    """
+                    AND hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
+                    AND hend.hendelse_data ->> 'søknadId' = :soknad_id 
+                    """.trimIndent()
+                } ?: ""
 
             val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
             val emneknaggClause =
