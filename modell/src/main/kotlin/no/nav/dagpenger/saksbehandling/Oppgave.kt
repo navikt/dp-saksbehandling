@@ -638,6 +638,7 @@ data class Oppgave private constructor(
             } else {
                 oppgave.endreTilstand(KlarTilBehandling, hendelse)
             }
+            oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
             oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
             oppgave.utsattTil = null
         }

@@ -947,7 +947,7 @@ class OppgaveTilstandTest {
             val oppgave = lagOppgave(it)
             oppgave.taImotEttersending(innsendingMottattHendelse)
 
-            oppgave.emneknagger.single() shouldBe "Ettersending(${LocalDate.now()})"
+            oppgave.emneknagger shouldContain "Ettersending(${LocalDate.now()})"
             oppgave.tilstandslogg.single().hendelse shouldBe innsendingMottattHendelse
         }
 

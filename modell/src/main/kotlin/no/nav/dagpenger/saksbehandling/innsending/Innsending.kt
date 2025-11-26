@@ -140,15 +140,10 @@ class Innsending private constructor(
         }
     }
 
-    fun automatiskFerdigstill(hendelse: BehandlingOpprettetForSøknadHendelse) {
-        this.innsendingResultat = InnsendingResultat.RettTilDagpenger(hendelse.behandlingId)
-        this.tilstand = Tilstand.FERDIGSTILT
-    }
-
     fun startFerdigstilling(ferdigstillInnsendingHendelse: FerdigstillInnsendingHendelse) {
         this.vurdering = ferdigstillInnsendingHendelse.vurdering
-        this.tilstand = Tilstand.FERDIGSTILL_STARTET
         this.valgtSakId = ferdigstillInnsendingHendelse.valgtSakId()
+        this.tilstand = Tilstand.FERDIGSTILL_STARTET
     }
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
@@ -172,6 +167,11 @@ class Innsending private constructor(
                     InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
         }
+        this.tilstand = Tilstand.FERDIGSTILT
+    }
+
+    fun automatiskFerdigstill(hendelse: BehandlingOpprettetForSøknadHendelse) {
+        this.innsendingResultat = InnsendingResultat.RettTilDagpenger(hendelse.behandlingId)
         this.tilstand = Tilstand.FERDIGSTILT
     }
 }

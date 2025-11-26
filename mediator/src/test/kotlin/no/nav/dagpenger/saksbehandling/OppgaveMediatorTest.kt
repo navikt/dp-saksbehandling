@@ -777,31 +777,35 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val oppgave = oppgaveMediator.finnOppgaverFor(testIdent).single()
+            val søknadOppgave = oppgaveMediator.finnOppgaverFor(testIdent).single()
 
-            val ikkeEttersendingManglerSøknadId =
+            val ettersendingSomManglerSøknadId =
                 InnsendingMottattHendelse(
-                    ident = oppgave.personIdent(),
+                    ident = søknadOppgave.personIdent(),
                     journalpostId = "asdf",
                     registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
                     søknadId = null,
                     skjemaKode = "NAV 11-12.05",
                     kategori = Kategori.ETTERSENDING,
                 )
-            oppgaveMediator.taImotEttersending(ikkeEttersendingManglerSøknadId)
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør) shouldBe oppgave
+            oppgaveMediator.taImotEttersending(ettersendingSomManglerSøknadId)
+            oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør) shouldBe søknadOppgave
 
-            oppgaveMediator.taImotEttersending(
-                ikkeEttersendingManglerSøknadId.copy(
-                    søknadId = oppgave.soknadId(),
+            val klage =
+                InnsendingMottattHendelse(
+                    ident = søknadOppgave.personIdent(),
+                    journalpostId = "asdf",
+                    registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+                    søknadId = søknadOppgave.soknadId(),
+                    skjemaKode = "NAV 11-12.05",
                     kategori = Kategori.KLAGE,
-                ),
-            )
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør) shouldBe oppgave
+                )
+            oppgaveMediator.taImotEttersending(klage)
+            oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør) shouldBe søknadOppgave
 
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
+                    oppgaveId = søknadOppgave.oppgaveId,
                     ansvarligIdent = testInspektør.navIdent,
                     utførtAv = testInspektør,
                 ),
@@ -809,7 +813,7 @@ OppgaveMediatorTest {
 
             oppgaveMediator.utsettOppgave(
                 UtsettOppgaveHendelse(
-                    oppgaveId = oppgave.oppgaveId,
+                    oppgaveId = søknadOppgave.oppgaveId,
                     navIdent = testInspektør.navIdent,
                     utsattTil = LocalDate.now().plusDays(1),
                     beholdOppgave = false,
@@ -818,14 +822,14 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.taImotEttersending(
-                ikkeEttersendingManglerSøknadId.copy(
-                    søknadId = oppgave.soknadId(),
+                ettersendingSomManglerSøknadId.copy(
+                    søknadId = søknadOppgave.soknadId(),
                     kategori = Kategori.ETTERSENDING,
                 ),
             )
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { actual ->
-                actual shouldNotBe oppgave
+            oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør).let { actual ->
+                actual shouldNotBe søknadOppgave
                 actual.emneknagger shouldContain ("Ettersending(${LocalDate.now()})")
                 actual.tilstand().type shouldBe KLAR_TIL_BEHANDLING
             }
