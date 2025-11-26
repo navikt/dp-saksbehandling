@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -344,6 +345,14 @@ data class Oppgave private constructor(
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
+        override fun avbryt(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(AvbruttMaskinelt, behandlingAvbruttHendelse)
+        }
+
+        // TODO: Bør kunne slettes. Bare innsendingsoppgaver skal være i tilstand OPPRETTET.
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
@@ -352,13 +361,7 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        override fun avbryt(
-            oppgave: Oppgave,
-            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
-        ) {
-            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
-        }
-
+        // TODO: Bør kunne slettes. Bare innsendingsoppgaver skal være i tilstand OPPRETTET.
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
@@ -622,7 +625,18 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            logger.info { "Behandling er allerede avbrutt." }
+            logger.info { "Behandling ${behandlingAvbruttHendelse.behandlingId} er allerede avbrutt." }
+        }
+    }
+
+    object AvbruttMaskinelt : Tilstand {
+        override val type: Type = AVBRUTT_MASKINELT
+
+        override fun avbryt(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            logger.info { "Behandling ${behandlingAvbruttHendelse.behandlingId} er allerede avbrutt." }
         }
     }
 
@@ -965,6 +979,7 @@ data class Oppgave private constructor(
             AVVENTER_LÅS_AV_BEHANDLING,
             AVVENTER_OPPLÅSING_AV_BEHANDLING,
             AVBRUTT,
+            AVBRUTT_MASKINELT,
             ;
 
             companion object {
@@ -977,11 +992,13 @@ data class Oppgave private constructor(
                         AVVENTER_OPPLÅSING_AV_BEHANDLING,
                     )
 
-                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
+                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på.
+                // Tilstander som skal håndteres maskinelt, skal heller ikke være søkbare.
                 val søkbareTilstander =
                     entries
                         .toSet()
                         .minus(OPPRETTET)
+                        .minus(AVBRUTT_MASKINELT)
                         .minus(utgåtteTilstander)
             }
         }

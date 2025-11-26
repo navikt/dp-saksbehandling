@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -69,6 +70,7 @@ internal class OppgaveHistorikkDTOMapper(
             AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
             AVBRUTT -> "Avbrutt"
+            AVBRUTT_MASKINELT -> "Avbrutt maskinelt"
         }
     }
 

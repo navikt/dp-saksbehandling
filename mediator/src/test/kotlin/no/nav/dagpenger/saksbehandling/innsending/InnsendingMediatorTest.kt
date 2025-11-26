@@ -486,7 +486,7 @@ class InnsendingMediatorTest {
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
                     it.behandling.utløstAv == UtløstAvType.INNSENDING
                 }
-            oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.Avbrutt
+            oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.AvbruttMaskinelt
             val innsendingEtterAvbryt =
                 innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
             innsendingEtterAvbryt.innsendingResultat() shouldBe

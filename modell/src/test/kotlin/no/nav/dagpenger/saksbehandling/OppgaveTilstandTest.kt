@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -264,6 +265,7 @@ class OppgaveTilstandTest {
                 KLAR_TIL_KONTROLL,
                 UNDER_KONTROLL,
                 AVBRUTT,
+                AVBRUTT_MASKINELT,
             )
 
         lovligeTilstander.forEach { tilstand ->
@@ -278,7 +280,11 @@ class OppgaveTilstandTest {
                     ),
                 )
             }
-            oppgave.tilstand().type shouldBe AVBRUTT
+            when (tilstand) {
+                OPPRETTET -> oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+                AVBRUTT_MASKINELT -> oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+                else -> oppgave.tilstand().type shouldBe AVBRUTT
+            }
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
