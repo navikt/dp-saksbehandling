@@ -261,7 +261,7 @@ class InnsendingMediatorTest {
     }
 
     @Test
-    fun `Skal lage innsending, behandling og oppgave knyttet til sammme sak som soknaden ved mottak av ettersending i sak vi eier `() {
+    fun `Skal lage innsendingsoppgave ved mottak av ettersending til ferdigbehandlet søknad i sak vi eier `() {
         val sak =
             Sak(
                 sakId = sakId,
@@ -343,6 +343,88 @@ class InnsendingMediatorTest {
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `Skal ikke lage innsendingsoppgave ved mottak av ettersending til ikke-ferdigbehandlet søknad`() {
+        val sak =
+            Sak(
+                sakId = sakId,
+                søknadId = søknadId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = UtløstAvType.SØKNAD,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.KlarTilBehandling,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(it),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val innsendingRepository = mockk<InnsendingRepository>()
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                )
+
+            val innsendingMottattHendelse =
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = søknadId,
+                    skjemaKode = skjemaKode,
+                    kategori = Kategori.ETTERSENDING,
+                )
+
+            innsendingMediator.taImotInnsending(
+                innsendingMottattHendelse,
+            )
+            verify(exactly = 0) {
+                innsendingRepository.lagre(any())
+            }
+            verify(exactly = 0) {
+                sakMediatorMock.knyttBehandlingTilSak(any(), any(), any())
+            }
+            verify(exactly = 0) {
+                oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any())
+            }
         }
     }
 

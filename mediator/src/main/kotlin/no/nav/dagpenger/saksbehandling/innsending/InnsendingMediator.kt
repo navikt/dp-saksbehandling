@@ -37,9 +37,7 @@ class InnsendingMediator(
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
         if (sisteSakId != null) {
-            if (hendelse.erEttersending() &&
-                søknadFerdigBehandlet(hendelse)
-            ) {
+            if (hendelse.erEttersending()) {
                 taImotEttersendingTilSøknad(hendelse)
             } else {
                 taImotInnsendingPåSisteSak(hendelse, sisteSakId)
@@ -52,34 +50,30 @@ class InnsendingMediator(
         }
     }
 
-    private fun søknadFerdigBehandlet(hendelse: InnsendingMottattHendelse): Boolean =
+    private fun søknadErFerdigBehandlet(hendelse: InnsendingMottattHendelse): Boolean =
         oppgaveMediator.oppgaveTilstandForSøknad(
             hendelse.søknadId!!,
             hendelse.ident,
         ) == Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 
     private fun taImotEttersendingTilSøknad(hendelse: InnsendingMottattHendelse) {
-        val person =
-            personMediator.finnEllerOpprettPerson(
-                hendelse.ident,
-            )
-        val innsending =
-            Innsending.opprett(hendelse = hendelse) { ident ->
-                person
-            }
-        innsendingRepository.lagre(innsending)
-        val behandling =
-            Behandling(
-                behandlingId = innsending.innsendingId,
-                opprettet = innsending.mottatt,
+        if (søknadErFerdigBehandlet(hendelse)) {
+            val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
+            val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
+            innsendingRepository.lagre(innsending)
+            val behandling =
+                Behandling(
+                    behandlingId = innsending.innsendingId,
+                    opprettet = innsending.mottatt,
+                    hendelse = hendelse,
+                    utløstAv = UtløstAvType.INNSENDING,
+                )
+            sakMediator.knyttEttersendingTilSammeSakSomSøknad(
+                behandling = behandling,
                 hendelse = hendelse,
-                utløstAv = UtløstAvType.INNSENDING,
             )
-        sakMediator.knyttEttersendingTilSammeSakSomSøknad(
-            behandling = behandling,
-            hendelse = hendelse,
-        )
-        oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person)
+            oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person)
+        }
     }
 
     private fun taImotInnsendingPåSisteSak(
