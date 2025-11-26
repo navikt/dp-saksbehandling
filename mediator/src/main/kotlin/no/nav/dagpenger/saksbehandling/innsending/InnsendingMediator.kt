@@ -37,7 +37,7 @@ class InnsendingMediator(
         val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
 
         if (sisteSakId != null) {
-            if (hendelse.erEttersending()) {
+            if (hendelse.erEttersendingMedSøknadId()) {
                 taImotEttersendingTilSøknad(hendelse)
             } else {
                 taImotInnsendingPåSisteSak(hendelse, sisteSakId)

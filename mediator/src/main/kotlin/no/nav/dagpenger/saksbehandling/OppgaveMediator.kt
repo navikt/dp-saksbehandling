@@ -97,7 +97,7 @@ class OppgaveMediator(
     }
 
     fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
-        if (!hendelse.erEttersending()) {
+        if (!hendelse.erEttersendingMedSøknadId()) {
             return
         }
 

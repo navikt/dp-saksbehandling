@@ -595,10 +595,6 @@ data class Oppgave private constructor(
         }
     }
 
-    class AlleredeTildeltException(
-        message: String,
-    ) : RuntimeException(message)
-
     object FerdigBehandlet : Tilstand {
         override val type: Type = FERDIG_BEHANDLET
 
@@ -939,6 +935,10 @@ data class Oppgave private constructor(
         override fun notat(): Notat? = notat
     }
 
+    class AlleredeTildeltException(
+        message: String,
+    ) : RuntimeException(message)
+
     enum class FerdigstillBehandling {
         BESLUTT,
         GODKJENN,
@@ -993,13 +993,18 @@ data class Oppgave private constructor(
                         AVVENTER_OPPLÅSING_AV_BEHANDLING,
                     )
 
-                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på.
-                // Tilstander som skal håndteres maskinelt, skal heller ikke være søkbare.
+                val maskinelleTilstander =
+                    setOf(
+                        OPPRETTET,
+                        AVBRUTT_MASKINELT,
+                    )
+
+                // Tilstander som ikke lenger er i bruk, skal ikke ikke være søkbare.
+                // Tilstander som håndteres maskinelt, skal ikke være søkbare.
                 val søkbareTilstander =
                     entries
                         .toSet()
-                        .minus(OPPRETTET)
-                        .minus(AVBRUTT_MASKINELT)
+                        .minus(maskinelleTilstander)
                         .minus(utgåtteTilstander)
             }
         }
