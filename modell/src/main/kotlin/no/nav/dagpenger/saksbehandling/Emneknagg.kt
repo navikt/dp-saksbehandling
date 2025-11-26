@@ -4,7 +4,8 @@ import java.time.LocalDate
 
 object Emneknagg {
     data class Ettersending(private val mottatt: LocalDate = LocalDate.now()) {
-        val visningsnavn = "Ettersending($mottatt)"
+        val fastTekst = "Ettersending"
+        val visningsnavn = "$fastTekst($mottatt)"
     }
 
     enum class Regelknagg(val visningsnavn: String) {

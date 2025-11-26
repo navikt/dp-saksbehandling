@@ -490,10 +490,15 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
+        val ettersendingEmneknagger =
+            setOf(
+                Emneknagg.Ettersending(LocalDate.now()).visningsnavn,
+                Emneknagg.Ettersending(LocalDate.now().minusDays(2)).visningsnavn,
+            )
         val oppgave =
             lagOppgave(
                 KLAR_TIL_BEHANDLING,
-                emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger,
+                emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger + ettersendingEmneknagger,
             )
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
@@ -508,7 +513,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger + ettersendingEmneknagger
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
     }
 
