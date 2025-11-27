@@ -645,9 +645,23 @@ data class Oppgave private constructor(
             hendelse: InnsendingMottattHendelse,
         ) {
             if (oppgave.behandlerIdent != null) {
-                oppgave.endreTilstand(UnderBehandling, hendelse)
+                oppgave.endreTilstand(
+                    nyTilstand = oppgave.tilstand,
+                    hendelse = hendelse,
+                )
+                oppgave.endreTilstand(
+                    nyTilstand = UnderBehandling,
+                    hendelse = PåVentFristUtgåttHendelse(oppgaveId = oppgave.oppgaveId),
+                )
             } else {
-                oppgave.endreTilstand(KlarTilBehandling, hendelse)
+                oppgave.endreTilstand(
+                    nyTilstand = oppgave.tilstand,
+                    hendelse = hendelse,
+                )
+                oppgave.endreTilstand(
+                    nyTilstand = KlarTilBehandling,
+                    hendelse = PåVentFristUtgåttHendelse(oppgaveId = oppgave.oppgaveId),
+                )
             }
             oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
             oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
