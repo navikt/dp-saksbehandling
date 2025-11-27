@@ -17,16 +17,16 @@ data class InnsendingMottattHendelse(
     fun erEttersendingMedSøknadId() = kategori == Kategori.ETTERSENDING && søknadId != null
 }
 
-enum class Kategori {
-    NY_SØKNAD,
-    GJENOPPTAK,
-    GENERELL,
-    UTDANNING,
-    ETABLERING,
-    KLAGE,
-    ANKE,
-    KLAGE_FORSKUDD,
-    ETTERSENDING,
-    UKJENT_SKJEMA_KODE,
-    UTEN_BRUKER,
+enum class Kategori(val visningsnavn: String) {
+    NY_SØKNAD("Søknad"),
+    GJENOPPTAK("Søknad"),
+    GENERELL("Generell innsending"),
+    UTDANNING("Utdanning"),
+    ETABLERING("Etablering"),
+    KLAGE("Klage"),
+    ANKE("Anke"),
+    KLAGE_FORSKUDD("Klage forskudd"),
+    ETTERSENDING("Ettersending"),
+    UKJENT_SKJEMA_KODE("Ukjent skjema"),
+    UTEN_BRUKER("Uten bruker"),
 }

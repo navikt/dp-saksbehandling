@@ -85,6 +85,13 @@ class OppgaveMediator(
                 emneknagger = setOf(),
                 opprettet = innsendingMottattHendelse.registrertTidspunkt,
                 tilstand = tilstand,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = tilstand.type,
+                            hendelse = innsendingMottattHendelse,
+                        ),
+                    ),
                 behandling = behandling,
                 person = person,
                 meldingOmVedtak =
