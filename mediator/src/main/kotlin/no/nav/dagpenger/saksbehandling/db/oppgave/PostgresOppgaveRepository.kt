@@ -413,6 +413,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         JOIN    person_v1       pers ON pers.id = beha.person_id
                         JOIN    hendelse_v1     hend ON beha.id = hend.behandling_id
                         WHERE   pers.ident = :ident
+                        AND     hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse'
                         AND     hend.hendelse_data->>'søknadId' = :soknad_id
                     """.trimMargin(),
                     mapOf(
