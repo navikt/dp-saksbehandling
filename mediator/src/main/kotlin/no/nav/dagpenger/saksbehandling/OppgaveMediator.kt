@@ -201,7 +201,7 @@ class OppgaveMediator(
 
         if (behandling == null) {
             val feilmelding =
-                "Mottatt hendelse forslag_til_vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
+                "Mottatt forslag til vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
                     "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
@@ -238,14 +238,14 @@ class OppgaveMediator(
                             Handling.LAGRE_OPPGAVE -> {
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
-                                    "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
+                                    "Behandlet forslag til vedtak. Oppgavens tilstand er" +
                                         " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             Handling.INGEN -> {
                                 logger.info {
-                                    "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
+                                    "Mottatt forslag til vedtak. Oppgavens tilstand er uendret." +
                                         " ${oppgave.tilstand().type}"
                                 }
                             }
