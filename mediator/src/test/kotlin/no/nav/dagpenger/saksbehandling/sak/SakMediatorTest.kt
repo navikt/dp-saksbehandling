@@ -40,12 +40,14 @@ import javax.sql.DataSource
 
 class SakMediatorTest {
     private val testIdent = "12345678901"
-    private val søknadId = UUID.randomUUID()
+    private val søknadIdNyRett = UUID.randomUUID()
+    private val søknadIdGjenopptak = UUID.randomUUID()
     private val endaEnSøknadId = UUID.randomUUID()
     private val meldekortId = "123L"
     private val manuellId = UUID.randomUUID()
     private val behandlingIdSøknadNyRett = UUIDv7.ny()
     private val behandlingIdSøknadGjenopptak = UUIDv7.ny()
+    private val behandlingIdEndaEnSøknad = UUIDv7.ny()
     private val behandlingIdMeldekort = UUIDv7.ny()
     private val behandlingIdManuell = UUIDv7.ny()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.8")
@@ -53,7 +55,7 @@ class SakMediatorTest {
     private val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
-            søknadId = søknadId,
+            søknadId = søknadIdNyRett,
             behandlingId = behandlingIdSøknadNyRett,
             ident = testIdent,
             opprettet = opprettet,
@@ -61,13 +63,13 @@ class SakMediatorTest {
     private val endaEnSøknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = endaEnSøknadId,
-            behandlingId = UUIDv7.ny(),
+            behandlingId = behandlingIdEndaEnSøknad,
             ident = testIdent,
             opprettet = opprettetLittSenere,
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
         SøknadsbehandlingOpprettetHendelse(
-            søknadId = søknadId,
+            søknadId = søknadIdGjenopptak,
             behandlingId = behandlingIdSøknadGjenopptak,
             ident = testIdent,
             opprettet = opprettet,
@@ -124,7 +126,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
                 it.saker().single().let { sak ->
-                    sak.søknadId shouldBe søknadId
+                    sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                     sak.behandlinger().single().utløstAv shouldBe UtløstAvType.SØKNAD
@@ -153,7 +155,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
                 it.saker().single().let { sak ->
-                    sak.søknadId shouldBe søknadId
+                    sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                 }
@@ -162,7 +164,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
                 it.saker().single().let { sak ->
-                    sak.søknadId shouldBe søknadId
+                    sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().map { it.behandlingId } shouldContain behandlingIdSøknadNyRett
                     sak.behandlinger().map { it.behandlingId } shouldContain behandlingIdSøknadGjenopptak
@@ -317,7 +319,7 @@ class SakMediatorTest {
             ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe true
 
             sakMediator.finnSisteSakId(ident = testIdent) shouldBe sak.sakId
-            sakMediator.finnSakIdForSøknad(søknadId = sak.søknadId) shouldBe sak.sakId
+            sakMediator.finnSakIdForSøknad(søknadId = sak.søknadId, ident = testIdent) shouldBe sak.sakId
         }
     }
 
@@ -358,7 +360,7 @@ class SakMediatorTest {
             val packet = testRapid.inspektør.message(0)
             packet["@event_name"].asText() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["søknadId"].asUUID() shouldBe søknadId
+            packet["søknadId"].asUUID() shouldBe søknadIdNyRett
             packet["ident"].asText() shouldBe testIdent
         }
     }
@@ -414,7 +416,7 @@ class SakMediatorTest {
             val packet = testRapid.inspektør.message(0)
             packet["@event_name"].asText() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["søknadId"].asUUID() shouldBe søknadId
+            packet["søknadId"].asUUID() shouldBe søknadIdNyRett
             packet["ident"].asText() shouldBe testIdent
         }
     }
@@ -436,43 +438,66 @@ class SakMediatorTest {
                 }
 
             sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.merkSakenSomDpSak(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingIdSøknadNyRett,
+                    behandletHendelseId = søknadIdNyRett.toString(),
+                    behandletHendelseType = "Søknad",
+                    ident = testIdent,
+                    sak = null,
+                ),
+            )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
                 it.saker().single().let { sak ->
-                    sak.søknadId shouldBe søknadId
+                    sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                 }
             }
 
             sakMediator.opprettSak(endaEnSøknadsbehandlingOpprettetHendelseNyRett)
-            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident).saker().size shouldBe 2
+            sakMediator.merkSakenSomDpSak(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingIdEndaEnSøknad,
+                    behandletHendelseId = endaEnSøknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    ident = testIdent,
+                    sak = null,
+                ),
+            )
+            val sakHistorikkFørEttersending =
+                sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
+            sakHistorikkFørEttersending.saker().size shouldBe 2
 
-            val hendelse =
+            val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
                     ident = testIdent,
                     journalpostId = "journalpost",
                     registrertTidspunkt = opprettetNå,
-                    søknadId = søknadId,
+                    søknadId = søknadIdNyRett,
                     skjemaKode = "skjema",
                     kategori = Kategori.ETTERSENDING,
                 )
-            val behandling =
+            val innsendingBehandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
                     opprettet = opprettetNå,
-                    hendelse = hendelse,
+                    hendelse = innsendingMottattHendelse,
                     utløstAv = UtløstAvType.INNSENDING,
                 )
 
-            sakMediator.knyttEttersendingTilSammeSakSomSøknad(behandling = behandling, hendelse = hendelse)
+            sakMediator.knyttEttersendingTilSammeSakSomSøknad(
+                behandling = innsendingBehandling,
+                hendelse = innsendingMottattHendelse,
+            )
 
-            val sakHistorikk = sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
+            val sakHistorikk = sakMediator.hentSakHistorikk(testIdent)
 
-            sakHistorikk.finnSak { it.søknadId == søknadId }?.let { sak ->
+            sakHistorikk.finnSak { it.søknadId == søknadIdNyRett }?.let { sak ->
                 sak.behandlinger().size shouldBe 2
-                sak.behandlinger().first() shouldBe behandling
-            } ?: fail("Sak med søknadId $søknadId ikke funnet")
+                sak.behandlinger().first() shouldBe innsendingBehandling
+            } ?: fail("Sak med søknadId $søknadIdNyRett ikke funnet")
         }
     }
 
@@ -496,7 +521,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
                 it.saker().single().let { sak ->
-                    sak.søknadId shouldBe søknadId
+                    sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                 }

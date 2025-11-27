@@ -120,7 +120,10 @@ class PostgresSakRepository(
             )
         }
 
-    override fun finnSakIdForSøknad(søknadId: UUID): UUID? =
+    override fun finnSakIdForSøknad(
+        søknadId: UUID,
+        ident: String,
+    ): UUID? =
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -128,16 +131,21 @@ class PostgresSakRepository(
                     statement =
                         """
                         SELECT   sak.id
-                        FROM     sak_v2 sak
-                        JOIN     behandling_v1 beh ON beh.sak_id = sak.id
-                        WHERE    sak.soknad_id = :soknad_id
+                        FROM     sak_v2        sak
+                        JOIN     person_v1     per ON sak.person_id     = per.id
+                        JOIN     behandling_v1 beh ON beh.sak_id        = sak.id
+                        JOIN     hendelse_v1   hen ON hen.behandling_id = beh.id
+                        WHERE    per.ident         = :ident
+                        AND      hen.hendelse_type = 'SøknadsbehandlingOpprettetHendelse'
+                        AND      hen.hendelse_data->>'søknadId' = :soknad_id
                         AND      sak.er_dp_sak
                         ORDER BY beh.id DESC
                         LIMIT 1
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "soknad_id" to søknadId,
+                            "ident" to ident,
+                            "soknad_id" to søknadId.toString(),
                         ),
                 ).map { row ->
                     row.uuid("id")
