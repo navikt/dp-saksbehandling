@@ -90,13 +90,5 @@ internal object OppgaveApiTestHelper {
         )
     }
 
-    fun gyldigAdminToken(): String {
-        return mockAzure.lagTokenMedClaims(
-            mapOf(
-                "groups" to listOf("AdminADGruppe"),
-            ),
-        )
-    }
-
     fun gyldigMaskinToken(): String = mockAzure.lagTokenMedClaims(mapOf("idtyp" to "app"))
 }

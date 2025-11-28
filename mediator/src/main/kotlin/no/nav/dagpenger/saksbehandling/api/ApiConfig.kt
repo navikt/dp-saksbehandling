@@ -18,7 +18,6 @@ import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.auth.adminApi
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -67,7 +66,6 @@ internal fun Application.installerApis(
 
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
-        this.adminApi()
         this.oppgaveApi(
             oppgaveMediator = oppgaveMediator,
             oppgaveDTOMapper = oppgaveDTOMapper,
