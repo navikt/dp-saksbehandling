@@ -13,7 +13,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.serialization.jackson.jackson
 import no.nav.dagpenger.saksbehandling.Configuration
-import java.net.InetAddress
 
 object LeaderElector {
     private val log = KotlinLogging.logger {}
@@ -41,7 +40,7 @@ object LeaderElector {
     suspend fun isLeader(): Result<Boolean> {
         return kotlin.runCatching {
             val url = Configuration.properties[Key("ELECTOR_GET_URL", stringType)]
-            val hostName = InetAddress.getLocalHost().hostName
+            val hostName = Configuration.properties[Key("HOSTNAME", stringType)]
             httpClient.get(url).body<Leader>().let {
                 log.info {
                     "leader is ${it.name}, I am $hostName"
