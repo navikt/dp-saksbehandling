@@ -23,7 +23,7 @@ internal class BehandlingsresultatMottakForUtsending(
     companion object {
         val rapidFilter: River.() -> Unit = {
             precondition {
-                it.requireValue("@event_name", "behandlingsresultat")
+                it.requireAny("@event_name", listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry"))
                 it.requireAny("behandletHendelse.type", listOf("Søknad", "Manuell"))
                 it.requireKey("rettighetsperioder")
             }
@@ -99,7 +99,7 @@ internal class BehandlingsresultatMottakForUtsending(
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
         val rettighetsperioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
+        val dagpengerInnvilget = rettighetsperioderNode.any { it["harRett"].asBoolean() }
         return dagpengerInnvilget.also {
             logger.info { "BehandlingsresultatMottakForUtsending med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
         }
