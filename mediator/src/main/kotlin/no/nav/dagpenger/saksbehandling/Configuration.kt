@@ -24,6 +24,7 @@ object Configuration {
                 "KAFKA_MAX_RECORDS" to "100",
                 "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
+                "GRUPPE_ADMIN" to "AdminADGruppe",
                 "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
                 "GRUPPE_FORTROLIG" to "FortroligADGruppe",
                 "GRUPPE_STRENGT_FORTROLIG_UTLAND" to "StrengtFortroligUtlandADGruppe",
