@@ -1,6 +1,7 @@
 azure:
   tenant: trygdeetaten.no
   grupper:
+    admin: "c19cffcf-1e97-45fc-b4ba-4047deb8746e"     # dp-saksbehandling-admin-dev
     saksbehandler: "3e28466f-c53d-46da-8b44-a4abc2ad4593" # 0000-GA-Dagpenger-Saksbehandler
     beslutter: "11b8475a-fb12-41aa-b1f6-8497c1b5385b" # 0000-GA-Dagpenger-Beslutter
     egne_ansatte: "dbe4ad45-320b-4e9a-aaa1-73cca4ee124d" # 0000-GA-Egne_ansatte

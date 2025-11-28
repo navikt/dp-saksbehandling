@@ -20,6 +20,11 @@ fun Application.authConfig() {
             JWTPrincipal(jwtClaims.payload)
         }
 
+        jwt("admin") { jwtClaims ->
+            jwtClaims.måInneholde(autorisertADGruppe = Configuration.adminADGruppe)
+            JWTPrincipal(jwtClaims.payload)
+        }
+
         jwt("azureAd-maskin") { jwtClaims ->
             jwtClaims.måVæreApp()
             JWTPrincipal(jwtClaims.payload)
