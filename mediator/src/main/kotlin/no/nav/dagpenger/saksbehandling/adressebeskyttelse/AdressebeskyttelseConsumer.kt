@@ -1,10 +1,13 @@
 package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+
+private val logger = KotlinLogging.logger {}
 
 internal class AdressebeskyttelseConsumer(
     private val repository: AdressebeskyttelseRepository,
@@ -14,7 +17,12 @@ internal class AdressebeskyttelseConsumer(
     private val counter: Counter = registry.lagCounter()
 
     fun oppdaterAdressebeskyttelseGradering(identer: Set<String>) {
-        repository.eksistererIDPsystem(identer).forEach { ident ->
+        val eksistererIDPsystem = repository.eksistererIDPsystem(identer)
+        logger.info {
+            "Oppdaterer adressebeskyttelse gradering for ${eksistererIDPsystem.size} personer av totalt ${identer.size} mottatte identer."
+        }
+
+        eksistererIDPsystem.forEach { ident ->
             val adresseBeskyttelseGradering =
                 runBlocking {
                     pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
