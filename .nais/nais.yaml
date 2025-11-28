@@ -40,6 +40,8 @@ spec:
       value: -XX:+UseParallelGC -XX:MaxRAMPercentage=50.0 -XX:ActiveProcessorCount=4 -XX:+PrintFlagsFinal
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
+    - name: GRUPPE_ADMIN
+      value: "{{azure.grupper.admin}}"
     - name: GRUPPE_SAKSBEHANDLER
       value: "{{azure.grupper.saksbehandler}}"
     - name: GRUPPE_BESLUTTER
