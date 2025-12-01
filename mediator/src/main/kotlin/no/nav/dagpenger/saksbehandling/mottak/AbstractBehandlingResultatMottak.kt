@@ -104,9 +104,9 @@ internal data class BehandlingResultat(
             },
     )
 
-    fun dagpengerInnvilget(): Boolean =
+    private fun dagpengerInnvilget(): Boolean =
         behandletHendelseType == "Søknad" &&
-            rettighetsperioder.any { it.harRett }
+                rettighetsperioder.any { it.harRett }
 
     fun nyDagpengerettInnvilget(): Boolean = basertPåBehandlingId == null && dagpengerInnvilget()
 
