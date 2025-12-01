@@ -12,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.mottak.uuidOrNull
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -29,6 +31,7 @@ internal class BehandlingsresultatMottakForSak(
             }
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
+                it.interestedIn("basertPåBehandling")
             }
         }
     }
@@ -44,22 +47,22 @@ internal class BehandlingsresultatMottakForSak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingId = packet["behandlingId"].asUUID()
+        val behandlingResultat = BehandlingResultat(packet)
+        val behandlingId = behandlingResultat.behandlingId
         withLoggingContext("behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandlingresultat hendelse i BehandlingsresultatMottakForSak" }
 
-            if (vedtakSkalMeføreNyDpSak(packet)) {
+            if (vedtakSkalMeføreNyDpSak(behandlingResultat)) {
                 val ident = packet["ident"].asText()
                 val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
                 val automatiskBehandlet = packet["automatisk"].asBoolean()
                 val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
-                val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
-                logger.info { "Vedtak skal tilhøre dp-dak " }
+                logger.info { "Vedtak skal tilhøre dp-sak " }
                 sakMediator.merkSakenSomDpSak(
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = behandletHendelseId,
-                        behandletHendelseType = behandletHendelseType,
+                        behandletHendelseType = behandlingResultat.behandletHendelseType,
                         ident = ident,
                         sak =
                             UtsendingSak(
@@ -73,15 +76,38 @@ internal class BehandlingsresultatMottakForSak(
         }
     }
 
-    private fun vedtakSkalMeføreNyDpSak(packet: JsonMessage): Boolean {
-        if (!packet["basertPåBehandling"].isMissingNode && !packet["basertPåBehandling"].isNull) {
-            return false
-        }
-        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
-        val rettighetsperioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = (behandletHendelseType == "Søknad" && rettighetsperioderNode.any { it["harRett"].asBoolean() })
-        return dagpengerInnvilget.also {
-            logger.info { "BehandlingsresultatMottakForSak med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
+    private fun vedtakSkalMeføreNyDpSak(behandlingResultat: BehandlingResultat): Boolean {
+        return (behandlingResultat.basertPåBehandlingId == null && behandlingResultat.dagpengerInnvilget()).also {
+            logger.info { "BehandlingsresultatMottakForSak med utfall: $it. Basert på $behandlingResultat" }
         }
     }
+}
+
+// todo flytt til en egen klasse
+internal data class BehandlingResultat(
+    val behandlingId: UUID,
+    val basertPåBehandlingId: UUID? = null,
+    val behandletHendelseType: String,
+    val rettighetsperioder: List<Rettighetsperiode>,
+) {
+    constructor(packet: JsonMessage) : this(
+        behandlingId = packet["behandlingId"].asUUID(),
+        basertPåBehandlingId = packet["basertPåBehandling"].uuidOrNull(),
+        behandletHendelseType = packet["behandletHendelseType"].asText(),
+        rettighetsperioder =
+            packet["rettighetsperioder"].map {
+                Rettighetsperiode(
+                    harRett = it["harRett"].asBoolean(),
+                )
+            },
+    )
+
+    fun dagpengerInnvilget(): Boolean {
+        return behandletHendelseType == "Søknad" &&
+            rettighetsperioder.any { it.harRett }
+    }
+
+    data class Rettighetsperiode(
+        val harRett: Boolean,
+    )
 }

@@ -10,7 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.sak.BehandlingResultat
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 
 private val logger = KotlinLogging.logger {}
@@ -44,21 +44,21 @@ internal class BehandlingsresultatMottakForUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingId = packet["behandlingId"].asUUID()
+        val behandlingResultat = BehandlingResultat(packet)
+        val behandlingId = behandlingResultat.behandlingId
         logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
 
-        if (vedtakSkalTilhøreDpSak(packet)) {
+        if (vedtakSkalTilhøreDpSak(behandlingResultat)) {
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()
             val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
-            val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
 
             utsendingMediator.startUtsendingForVedtakFattet(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     behandletHendelseId = behandletHendelseId,
-                    behandletHendelseType = behandletHendelseType,
+                    behandletHendelseType = behandlingResultat.behandletHendelseType,
                     ident = ident,
                     sak =
                         UtsendingSak(
@@ -85,24 +85,21 @@ internal class BehandlingsresultatMottakForUtsending(
         }
     }
 
-    private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
-        val behandlingId = packet["behandlingId"].asUUID()
-        val dagpengerSakId =
+    private fun vedtakSkalTilhøreDpSak(behandlingResultat: BehandlingResultat): Boolean {
+        val dagpengerSakId by lazy {
             try {
-                sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+                sakRepository.hentDagpengerSakIdForBehandlingId(behandlingResultat.behandlingId)
             } catch (e: Exception) {
                 null
             }
-        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
-        val rettighetsperioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget =
-            behandletHendelseType == "Søknad" &&
-                rettighetsperioderNode.any { it["harRett"].asBoolean() }
-        return (dagpengerSakId != null || dagpengerInnvilget).also {
+        }
+        return (behandlingResultat.dagpengerInnvilget() || dagpengerSakId != null).also {
             logger.info {
-                "BehandlingsresultatMottakForUtsending: DagpengerSakId=$dagpengerSakId. " +
-                    "Dagpenger innvilget=$dagpengerInnvilget. " +
-                    "Rettighetsperioder=$rettighetsperioderNode"
+                "BehandlingsresultatMottakForUtsending med utfall: $it. Basert på $behandlingResultat".also { msg ->
+                    if (!behandlingResultat.dagpengerInnvilget()) {
+                        msg.plus("DagpengerSakId: $dagpengerSakId")
+                    }
+                }
             }
         }
     }
