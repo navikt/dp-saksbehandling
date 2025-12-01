@@ -39,7 +39,18 @@ internal class BehandlingsresultatMottakForUtsending(
             }
         }
 
-        if (behandlingResultat.nyDagpengerettInnvilget() || dagpengerSakId != null) {
+        val skalStarteUtsending = (behandlingResultat.nyDagpengerettInnvilget() || dagpengerSakId != null).also {
+            logger.info {
+                "BehandlingsresultatMottakForUtsending med utfall: $it. Basert på $behandlingResultat".also { msg ->
+                    if (!behandlingResultat.nyDagpengerettInnvilget()) {
+                        msg.plus("DagpengerSakId: $dagpengerSakId")
+                    }
+                }
+            }
+        }
+
+
+        if (skalStarteUtsending) {
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingResultat.behandlingId).toString()
             val vedtakFattetHendelse =
                 packet.vedtakFattetHendelse(
@@ -68,25 +79,6 @@ internal class BehandlingsresultatMottakForUtsending(
                             ).toMap(),
                     ).toJson(),
             )
-        }
-    }
-
-    private fun vedtakSkalTilhøreDpSak(behandlingResultat: BehandlingResultat): Boolean {
-        val dagpengerSakId by lazy {
-            try {
-                sakRepository.hentDagpengerSakIdForBehandlingId(behandlingResultat.behandlingId)
-            } catch (e: Exception) {
-                null
-            }
-        }
-        return (behandlingResultat.dagpengerInnvilget() || dagpengerSakId != null).also {
-            logger.info {
-                "BehandlingsresultatMottakForUtsending med utfall: $it. Basert på $behandlingResultat".also { msg ->
-                    if (!behandlingResultat.dagpengerInnvilget()) {
-                        msg.plus("DagpengerSakId: $dagpengerSakId")
-                    }
-                }
-            }
         }
     }
 
