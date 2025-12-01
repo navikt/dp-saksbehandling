@@ -48,7 +48,7 @@ internal class BehandlingsresultatMottakForSak(
         withLoggingContext("behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandlingresultat hendelse i BehandlingsresultatMottakForSak" }
 
-            if (vedtakSkalTilhøreDpSak(packet)) {
+            if (vedtakSkalMeføreNyDpSak(packet)) {
                 val ident = packet["ident"].asText()
                 val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
                 val automatiskBehandlet = packet["automatisk"].asBoolean()
@@ -73,9 +73,13 @@ internal class BehandlingsresultatMottakForSak(
         }
     }
 
-    private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
+    private fun vedtakSkalMeføreNyDpSak(packet: JsonMessage): Boolean {
+        if (!packet["basertPåBehandling"].isMissingNode && !packet["basertPåBehandling"].isNull) {
+            return false
+        }
+        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
         val rettighetsperioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
+        val dagpengerInnvilget = (behandletHendelseType == "Søknad" && rettighetsperioderNode.any { it["harRett"].asBoolean() })
         return dagpengerInnvilget.also {
             logger.info { "BehandlingsresultatMottakForSak med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
         }

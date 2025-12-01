@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -132,15 +133,16 @@ class BehandlingsresultatMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere behandlinger med flere rettighetsperioder `() {
-        val utsendingMediatorMock = mockk<UtsendingMediator>()
+    fun `Skal håndtere behandlinger med flere rettighetsperioder `() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
 
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository =
                 mockk<SakRepository>().also {
-                    every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
+                    every { it.hentDagpengerSakIdForBehandlingId(behandlingId) } returns sakId
+                    every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
                 },
         )
 
@@ -159,8 +161,8 @@ class BehandlingsresultatMottakForUtsendingTest {
               "rettighetsperioder": [
                 {
                   "fraOgMed": "2025-09-09",
-                  "harRett": true
-                }
+                  "harRett": false
+                },
                 {
                   "fraOgMed": "2025-09-09",
                   "harRett": true
@@ -170,8 +172,21 @@ class BehandlingsresultatMottakForUtsendingTest {
             """.trimIndent(),
         )
 
-        verify(exactly = 0) {
-            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        verify(exactly = 1) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    ident = ident,
+                    sak =
+                        UtsendingSak(
+                            id = sakId.toString(),
+                            kontekst = "Dagpenger",
+                        ),
+                    automatiskBehandlet = false,
+                ),
+            )
         }
     }
 
