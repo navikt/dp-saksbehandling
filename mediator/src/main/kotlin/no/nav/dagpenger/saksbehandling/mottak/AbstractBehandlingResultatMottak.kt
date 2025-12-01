@@ -32,7 +32,7 @@ internal abstract class AbstractBehandlingResultatMottak(
             }
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
-                it.interestedIn("basertPåBehandling")
+                it.interestedIn("basertPå")
             }
         }
 
@@ -92,7 +92,7 @@ internal data class BehandlingResultat(
 ) {
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
-        basertPåBehandlingId = packet["basertPåBehandling"].uuidOrNull(),
+        basertPåBehandlingId = packet["basertPå"].uuidOrNull(),
         behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
         behandletHendelseId = packet["behandletHendelse"]["id"].asText(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),

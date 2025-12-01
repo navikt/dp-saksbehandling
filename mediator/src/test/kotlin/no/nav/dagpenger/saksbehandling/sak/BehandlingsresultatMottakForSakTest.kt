@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class BehandlingsresultatMottakForSakTest {
     private val testRapid = TestRapid()
@@ -64,6 +65,24 @@ class BehandlingsresultatMottakForSakTest {
     }
 
     @Test
+    fun `Skal ikke markere er_dp_sak deroms behandling resultat er innvilgelse av gjenopptak`() {
+        val sakMediatorMock = mockk<SakMediator>()
+        val sakRepositoryMock = mockk<SakRepository>()
+        BehandlingsresultatMottakForSak(
+            rapidsConnection = testRapid,
+            sakRepository = sakRepositoryMock,
+            sakMediator = sakMediatorMock,
+        )
+
+        testRapid.sendTestMessage(behandlingResultat(harRett = true, basertPå = UUIDv7.ny()))
+
+        verify(exactly = 0) {
+            sakMediatorMock.merkSakenSomDpSak(any())
+        }
+        testRapid.inspektør.size shouldBe 0
+    }
+
+    @Test
     fun `Skal ikke markere er_dp_sak ved avslag på søknad`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
@@ -105,6 +124,7 @@ class BehandlingsresultatMottakForSakTest {
         søknadId: String = this.søknadId.toString(),
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
+        basertPå: UUID? = null,
     ): String {
         return behandlingResultatEvent(
             ident = ident,
@@ -112,6 +132,7 @@ class BehandlingsresultatMottakForSakTest {
             behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
+            basertPå = basertPå,
         )
     }
 }
