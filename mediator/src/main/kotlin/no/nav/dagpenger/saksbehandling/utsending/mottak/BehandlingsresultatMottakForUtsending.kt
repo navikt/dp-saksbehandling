@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -9,9 +8,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.sak.BehandlingResultat
+import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingResultatMottak
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingResultat
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -19,66 +19,51 @@ internal class BehandlingsresultatMottakForUtsending(
     rapidsConnection: RapidsConnection,
     private val utsendingMediator: UtsendingMediator,
     private val sakRepository: SakRepository,
-) : River.PacketListener {
-    companion object {
-        val rapidFilter: River.() -> Unit = {
-            precondition {
-                it.requireValue("@event_name", "behandlingsresultat")
-                it.requireAny("behandletHendelse.type", listOf("Søknad", "Manuell", "Meldekort"))
-                it.requireKey("rettighetsperioder")
-            }
-            validate {
-                it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
-                it.interestedIn("basertPåBehandling")
-            }
-        }
-    }
+) : AbstractBehandlingResultatMottak(rapidsConnection) {
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort")
 
-    init {
-        logger.info { "Starter BehandlingsresultatMottakForUtsending" }
-        River(rapidsConnection).apply(rapidFilter).register(this)
-    }
+    override val mottakNavn: String = "BehandlingsresultatMottakForUtsending"
 
-    override fun onPacket(
+    override fun håndter(
+        behandlingResultat: BehandlingResultat,
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingResultat = BehandlingResultat(packet)
-        val behandlingId = behandlingResultat.behandlingId
-        logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
+        val dagpengerSakId by lazy {
+            try {
+                sakRepository.hentDagpengerSakIdForBehandlingId(behandlingResultat.behandlingId)
+            } catch (e: Exception) {
+                null
+            }
+        }
 
-        if (vedtakSkalTilhøreDpSak(behandlingResultat)) {
-            val ident = packet["ident"].asText()
-            val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
-            val automatiskBehandlet = packet["automatisk"].asBoolean()
-            val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
-
-            utsendingMediator.startUtsendingForVedtakFattet(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    behandletHendelseId = behandletHendelseId,
-                    behandletHendelseType = behandlingResultat.behandletHendelseType,
-                    ident = ident,
+        if (behandlingResultat.nyDagpengerettInnvilget() || dagpengerSakId != null) {
+            val sakId = sakRepository.hentSakIdForBehandlingId(behandlingResultat.behandlingId).toString()
+            val vedtakFattetHendelse =
+                packet.vedtakFattetHendelse(
                     sak =
                         UtsendingSak(
                             id = sakId,
                             kontekst = "Dagpenger",
                         ),
-                    automatiskBehandlet = automatiskBehandlet,
-                ),
+                    behandlingResultat = behandlingResultat,
+                )
+
+            utsendingMediator.startUtsendingForVedtakFattet(
+                vedtakFattetHendelse = vedtakFattetHendelse,
             )
 
             context.publish(
-                key = ident,
+                key = packet["ident"].asText(),
                 message =
                     JsonMessage.newMessage(
                         map =
                             VedtakUtenforArena(
-                                behandlingId = behandlingId.toString(),
-                                søknadId = behandletHendelseId,
-                                ident = ident,
+                                behandlingId = behandlingResultat.behandlingId,
+                                søknadId = behandlingResultat.behandletHendelseId,
+                                ident = packet["ident"].asText(),
                                 sakId = sakId,
                             ).toMap(),
                     ).toJson(),
@@ -106,15 +91,15 @@ internal class BehandlingsresultatMottakForUtsending(
     }
 
     private data class VedtakUtenforArena(
-        val behandlingId: String,
+        val behandlingId: UUID,
         val søknadId: String,
         val ident: String,
         val sakId: String,
     ) {
-        fun toMap() =
+        fun toMap(): Map<String, String> =
             mapOf(
                 "@event_name" to "vedtak_fattet_utenfor_arena",
-                "behandlingId" to behandlingId,
+                "behandlingId" to behandlingId.toString(),
                 "søknadId" to søknadId,
                 "ident" to ident,
                 "sakId" to sakId,

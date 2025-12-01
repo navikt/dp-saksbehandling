@@ -130,7 +130,7 @@ class BehandlingsresultatMottakTest {
                 "type": "$behandletHendelseType"
               },
               "automatisk": $automatisk,
-              "opplysninger": [ ]
+              "rettighetsperioder": [ ]
                 }
               ]
             }

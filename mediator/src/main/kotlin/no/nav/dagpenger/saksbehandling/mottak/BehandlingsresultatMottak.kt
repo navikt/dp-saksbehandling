@@ -1,63 +1,38 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 private val logger = KotlinLogging.logger {}
 
 internal class BehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
-) : River.PacketListener {
-    companion object {
-        val rapidFilter: River.() -> Unit = {
-            precondition {
-                it.requireValue("@event_name", "behandlingsresultat")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
-            }
-            validate {
-                it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk", "opplysninger")
-            }
-        }
-    }
+) : AbstractBehandlingResultatMottak(rapidsConnection) {
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort")
 
-    init {
-        logger.info { "Starter BehandlingsresultatMottak" }
-        River(rapidsConnection).apply(rapidFilter).register(this)
-    }
+    override val mottakNavn: String = "BehandlingsresultatMottak"
 
-    override fun onPacket(
+    override fun håndter(
+        behandlingResultat: BehandlingResultat,
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
-        val behandlingId = packet["behandlingId"].asUUID()
-
-        withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
-            logger.info { "Mottok behandlingsresultat hendelse" }
-
-            oppgaveMediator.hentOppgaveIdFor(behandlingId)?.let {
-                oppgaveMediator.ferdigstillOppgave(
-                    VedtakFattetHendelse(
-                        behandlingId = behandlingId,
-                        behandletHendelseId = behandletHendelseId,
-                        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
-                        ident = packet["ident"].asText(),
+        oppgaveMediator.hentOppgaveIdFor(behandlingResultat.behandlingId)?.let {
+            oppgaveMediator.ferdigstillOppgave(
+                vedtakFattetHendelse =
+                    packet.vedtakFattetHendelse(
                         sak = null,
-                        automatiskBehandlet = packet["automatisk"].asBoolean(),
+                        behandlingResultat = behandlingResultat,
                     ),
-                )
-            }
+            )
         }
     }
 }
