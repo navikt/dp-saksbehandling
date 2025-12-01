@@ -75,7 +75,7 @@ internal class BehandlingsresultatMottakForSak(
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
         val rettighetsperioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
+        val dagpengerInnvilget = rettighetsperioderNode.any { it["harRett"].asBoolean() }
         return dagpengerInnvilget.also {
             logger.info { "BehandlingsresultatMottakForSak med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
         }

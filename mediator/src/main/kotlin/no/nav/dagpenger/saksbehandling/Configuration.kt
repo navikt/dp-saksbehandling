@@ -75,7 +75,6 @@ object Configuration {
     val meldingOmVedtakMaskinTokenProvider = { clientCredentialsTokenProvider(dpMeldingOmVedtakScope) }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
-    val adminADGruppe by lazy { properties[Key("GRUPPE_ADMIN", stringType)] }
     val beslutterADGruppe by lazy { properties[Key("GRUPPE_BESLUTTER", stringType)] }
     val egneAnsatteADGruppe by lazy { properties[Key("GRUPPE_EGNE_ANSATTE", stringType)] }
     val strengtFortroligADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG", stringType)] }
