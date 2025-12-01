@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingResultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingResultat
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -65,36 +64,6 @@ internal class BehandlingsresultatMottakForUtsending(
             utsendingMediator.startUtsendingForVedtakFattet(
                 vedtakFattetHendelse = vedtakFattetHendelse,
             )
-
-            context.publish(
-                key = packet["ident"].asText(),
-                message =
-                    JsonMessage.newMessage(
-                        map =
-                            VedtakUtenforArena(
-                                behandlingId = behandlingResultat.behandlingId,
-                                søknadId = behandlingResultat.behandletHendelseId,
-                                ident = packet["ident"].asText(),
-                                sakId = sakId,
-                            ).toMap(),
-                    ).toJson(),
-            )
         }
-    }
-
-    private data class VedtakUtenforArena(
-        val behandlingId: UUID,
-        val søknadId: String,
-        val ident: String,
-        val sakId: String,
-    ) {
-        fun toMap(): Map<String, String> =
-            mapOf(
-                "@event_name" to "vedtak_fattet_utenfor_arena",
-                "behandlingId" to behandlingId.toString(),
-                "søknadId" to søknadId,
-                "ident" to ident,
-                "sakId" to sakId,
-            )
     }
 }

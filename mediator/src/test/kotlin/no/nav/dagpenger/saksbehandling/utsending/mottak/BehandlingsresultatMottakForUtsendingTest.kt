@@ -24,8 +24,7 @@ class BehandlingsresultatMottakForUtsendingTest {
     private val sakId = UUIDv7.ny()
 
     @Test
-    @Suppress("ktlint:standard:max-line-length")
-    fun `Skal starte utsending og publisere melding om vedtak fattet utenfor Arena dersom behandling resultat er basert på en søknad og skal tilhøre dp-sak`() {
+    fun `Skal starte utsending behandling resultat er basert på en søknad og skal tilhøre dp-sak`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val utsendingMediatorMock =
             mockk<UtsendingMediator>().also {
@@ -56,15 +55,6 @@ class BehandlingsresultatMottakForUtsendingTest {
             it.kontekst shouldBe "Dagpenger"
         }
         hendelse.captured.automatiskBehandlet shouldBe false
-
-        testRapid.inspektør.size shouldBe 1
-        testRapid.inspektør.message(0).also { message ->
-            message["@event_name"].asText() shouldBe "vedtak_fattet_utenfor_arena"
-            message["behandlingId"].asText() shouldBe behandlingId.toString()
-            message["søknadId"].asText() shouldBe søknadId.toString()
-            message["sakId"].asText() shouldBe sakId.toString()
-            message["ident"].asText() shouldBe ident
-        }
     }
 
     @Test
