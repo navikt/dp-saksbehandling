@@ -39,16 +39,16 @@ internal class BehandlingsresultatMottakForUtsending(
             }
         }
 
-        val skalStarteUtsending = (behandlingResultat.nyDagpengerettInnvilget() || dagpengerSakId != null).also {
-            logger.info {
-                "BehandlingsresultatMottakForUtsending med utfall: $it. Basert på $behandlingResultat".also { msg ->
-                    if (!behandlingResultat.nyDagpengerettInnvilget()) {
-                        msg.plus("DagpengerSakId: $dagpengerSakId")
+        val skalStarteUtsending =
+            (behandlingResultat.nyDagpengerettInnvilget() || dagpengerSakId != null).also {
+                logger.info {
+                    "BehandlingsresultatMottakForUtsending med utfall: $it. Basert på $behandlingResultat".also { msg ->
+                        if (!behandlingResultat.nyDagpengerettInnvilget()) {
+                            msg.plus("DagpengerSakId: $dagpengerSakId")
+                        }
                     }
                 }
             }
-        }
-
 
         if (skalStarteUtsending) {
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingResultat.behandlingId).toString()
