@@ -22,7 +22,8 @@ class BehandlingsresultatMottakForSakTest {
     private val sakId = UUIDv7.ny()
 
     @Test
-    fun `skal oppdatere merket er_dp_sak hvis vedtak gjelder innvilgelse av søknad`() {
+    @Suppress("ktlint:standard:max-line-length")
+    fun `skal oppdatere merket er_dp_sak og  publisere melding om vedtak fattet utenfor Arena hvis vedtak gjelder innvilgelse av søknad`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val sakMediatorMock =
             mockk<SakMediator>().also {
@@ -50,8 +51,16 @@ class BehandlingsresultatMottakForSakTest {
             it.id shouldBe sakId.toString()
             it.kontekst shouldBe "Dagpenger"
         }
-
         hendelse.captured.automatiskBehandlet shouldBe false
+
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).also { message ->
+            message["@event_name"].asText() shouldBe "vedtak_fattet_utenfor_arena"
+            message["behandlingId"].asText() shouldBe behandlingId.toString()
+            message["søknadId"].asText() shouldBe søknadId.toString()
+            message["sakId"].asText() shouldBe sakId.toString()
+            message["ident"].asText() shouldBe ident
+        }
     }
 
     @Test
@@ -65,9 +74,11 @@ class BehandlingsresultatMottakForSakTest {
         )
 
         testRapid.sendTestMessage(behandlingResultat(harRett = false))
+
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
         }
+        testRapid.inspektør.size shouldBe 0
     }
 
     @Test
@@ -81,9 +92,11 @@ class BehandlingsresultatMottakForSakTest {
         )
 
         testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
+
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
         }
+        testRapid.inspektør.size shouldBe 0
     }
 
     private fun behandlingResultat(
@@ -96,7 +109,7 @@ class BehandlingsresultatMottakForSakTest {
         return behandlingResultatEvent(
             ident = ident,
             behandlingId = behandlingId,
-            søknadId = søknadId,
+            behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
         )
