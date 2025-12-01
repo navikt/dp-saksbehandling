@@ -93,7 +93,7 @@ internal data class BehandlingResultat(
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
         basertPåBehandlingId = packet["basertPåBehandling"].uuidOrNull(),
-        behandletHendelseType = packet["behandletHendelseType"].asText(),
+        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
         rettighetsperioder =
             packet["rettighetsperioder"].map {
                 Rettighetsperiode(
