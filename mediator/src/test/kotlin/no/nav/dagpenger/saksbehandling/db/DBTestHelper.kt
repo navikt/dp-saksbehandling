@@ -157,6 +157,25 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             }
         }
 
+        fun opprettSakMedBehandlingOgOppgave(
+            person: Person,
+            sak: Sak,
+            behandling: Behandling,
+            oppgave: Oppgave,
+            merkSomEgenSak: Boolean = false,
+        ) {
+            sak.leggTilBehandling(behandling)
+            this.lagre(person)
+            this.lagre(
+                SakHistorikk(
+                    person = person,
+                    saker = mutableSetOf(sak),
+                ),
+            )
+            this.lagre(oppgave)
+            this.merkSakenSomDpSak(sak.sakId, merkSomEgenSak)
+        }
+
         fun leggTilOppgave(
             id: UUID = UUIDv7.ny(),
             tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,

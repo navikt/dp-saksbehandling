@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkTjeneste
@@ -32,6 +33,7 @@ internal fun Application.installerApis(
     klageDTOMapper: KlageDTOMapper,
     personMediator: PersonMediator,
     sakMediator: SakMediator,
+    innsendingMediator: InnsendingMediator,
 ) {
     this.authConfig()
     install(CallId) {
@@ -74,6 +76,7 @@ internal fun Application.installerApis(
         )
         sakApi(mediator = sakMediator)
         statistikkApi(statistikkTjeneste)
+        innsendingApi(innsendingMediator, applicationCallParser)
         klageApi(
             mediator = klageMediator,
             klageDtoMapper = klageDTOMapper,

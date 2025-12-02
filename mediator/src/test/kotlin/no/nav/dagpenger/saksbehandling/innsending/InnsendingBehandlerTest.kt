@@ -27,10 +27,17 @@ class InnsendingBehandlerTest {
                 behandlingKlient = mockk(),
             )
 
-        innsendingBehandler.utførAksjon(lagHendelse(Aksjon.Avslutt), testInnsending).let {
+        innsendingBehandler.utførAksjon(
+            hendelse =
+                lagHendelse(
+                    aksjon = Aksjon.Avslutt(null),
+                    vurdering = "Dette er en vurdering",
+                ),
+            innsending = testInnsending,
+        ).let {
             it.innsendingId shouldBe testInnsending.innsendingId
-            it.aksjon shouldBe "Avslutt"
-            it.behandlingId shouldBe null
+            it.aksjonType shouldBe Aksjon.Type.AVSLUTT
+            it.opprettetBehandlingId shouldBe null
             it.utførtAv shouldBe saksbehandler
         }
     }
@@ -53,13 +60,17 @@ class InnsendingBehandlerTest {
             )
 
         innsendingBehandler.utførAksjon(
-            hendelse = lagHendelse(Aksjon.OpprettKlage(sakId = testSakId)),
+            hendelse =
+                lagHendelse(
+                    aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
+                    vurdering = "Dette er en vurdering",
+                ),
             innsending = testInnsending,
         )
             .let {
                 it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjon shouldBe "OpprettKlage"
-                it.behandlingId shouldBe testOppgave.behandling.behandlingId
+                it.aksjonType shouldBe Aksjon.Type.OPPRETT_KLAGE
+                it.opprettetBehandlingId shouldBe testOppgave.behandling.behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 
@@ -92,13 +103,21 @@ class InnsendingBehandlerTest {
             )
 
         innsendingBehandler.utførAksjon(
-            hendelse = lagHendelse(Aksjon.OpprettManuellBehandling(saksbehandlerToken = saksbehandlerToken)),
+            hendelse =
+                lagHendelse(
+                    aksjon =
+                        Aksjon.OpprettManuellBehandling(
+                            saksbehandlerToken = saksbehandlerToken,
+                            valgtSakId = UUID.randomUUID(),
+                        ),
+                    vurdering = "Dette er en vurdering",
+                ),
             innsending = testInnsending,
         )
             .let {
                 it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjon shouldBe "OpprettManuellBehandling"
-                it.behandlingId shouldBe behandlingId
+                it.aksjonType shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
+                it.opprettetBehandlingId shouldBe behandlingId
                 it.utførtAv shouldBe saksbehandler
             }
 
@@ -107,10 +126,14 @@ class InnsendingBehandlerTest {
         }
     }
 
-    private fun lagHendelse(aksjon: Aksjon): FerdigstillInnsendingHendelse {
+    private fun lagHendelse(
+        aksjon: Aksjon,
+        vurdering: String,
+    ): FerdigstillInnsendingHendelse {
         return FerdigstillInnsendingHendelse(
             innsendingId = testInnsending.innsendingId,
             aksjon = aksjon,
+            vurdering = vurdering,
             utførtAv = saksbehandler,
         )
     }

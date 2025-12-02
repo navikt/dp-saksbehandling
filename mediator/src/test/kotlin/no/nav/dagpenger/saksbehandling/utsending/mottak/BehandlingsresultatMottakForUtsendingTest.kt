@@ -24,14 +24,12 @@ class BehandlingsresultatMottakForUtsendingTest {
     private val sakId = UUIDv7.ny()
 
     @Test
-    @Suppress("ktlint:standard:max-line-length")
-    fun `Skal starte utsending og publisere melding om vedtak fattet utenfor Arena dersom behandling resultat er basert på en søknad og skal tilhøre dp-sak`() {
+    fun `Skal starte utsending behandling resultat er basert på en søknad og skal tilhøre dp-sak`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val utsendingMediatorMock =
             mockk<UtsendingMediator>().also {
                 every { it.startUtsendingForVedtakFattet(any()) } just Runs
             }
-
         val sakRepositoryMock =
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
@@ -57,15 +55,6 @@ class BehandlingsresultatMottakForUtsendingTest {
             it.kontekst shouldBe "Dagpenger"
         }
         hendelse.captured.automatiskBehandlet shouldBe false
-
-        testRapid.inspektør.size shouldBe 1
-        testRapid.inspektør.message(0).also { message ->
-            message["@event_name"].asText() shouldBe "vedtak_fattet_utenfor_arena"
-            message["behandlingId"].asText() shouldBe behandlingId.toString()
-            message["søknadId"].asText() shouldBe søknadId.toString()
-            message["sakId"].asText() shouldBe sakId.toString()
-            message["ident"].asText() shouldBe ident
-        }
     }
 
     @Test
@@ -86,24 +75,55 @@ class BehandlingsresultatMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
-        val utsendingMediatorMock = mockk<UtsendingMediator>()
-
+    fun `Skal håndtere meldekort-behandling som tilhører dp-sak`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>().also {
+                every { it.startUtsendingForVedtakFattet(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
+                every { it.hentSakIdForBehandlingId(any()) } returns sakId
+            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            sakRepository = mockk<SakRepository>(),
+            sakRepository = sakRepositoryMock,
         )
 
         testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
 
-        verify(exactly = 0) {
+        verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
         }
     }
 
     @Test
-    fun `Skal håndtere behandlinger med flere rettighetsperiioder `() {
+    fun `Skal håndtere manuell behandling som tilhører dp-sak`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>().also {
+                every { it.startUtsendingForVedtakFattet(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
+                every { it.hentSakIdForBehandlingId(any()) } returns sakId
+            }
+        BehandlingsresultatMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository = sakRepositoryMock,
+        )
+
+        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Manuell"))
+
+        verify(exactly = 1) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        }
+    }
+
+    @Test
+    fun `Skal håndtere behandlinger med flere rettighetsperioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
 
         BehandlingsresultatMottakForUtsending(
@@ -170,7 +190,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         return behandlingResultatEvent(
             ident = ident,
             behandlingId = behandlingId,
-            søknadId = søknadId,
+            behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
         )

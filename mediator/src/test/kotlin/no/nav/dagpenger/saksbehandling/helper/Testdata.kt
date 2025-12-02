@@ -8,9 +8,10 @@ import java.util.UUID
 internal fun behandlingResultatEvent(
     ident: String,
     behandlingId: String,
-    søknadId: String,
+    behandletHendelseId: String,
     behandletHendelseType: String = "Søknad",
     harRett: Boolean = true,
+    basertPå: UUID? = null,
 ): String {
     //language=JSON
     return """
@@ -19,10 +20,11 @@ internal fun behandlingResultatEvent(
           "ident": "$ident",
           "behandlingId": "$behandlingId",
           "behandletHendelse": {
-            "id": "$søknadId",
+            "id": "$behandletHendelseId",
             "type": "$behandletHendelseType"
           },
           "automatisk": false,
+            ${basertPå?.let { """"basertPå": "$it",""" } ?: ""}
           "rettighetsperioder": [
             {
               "fraOgMed": "2025-09-09",

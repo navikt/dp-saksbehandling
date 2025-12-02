@@ -22,6 +22,7 @@ data class Søkefilter(
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
+    val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
 ) {
     data class Paginering(

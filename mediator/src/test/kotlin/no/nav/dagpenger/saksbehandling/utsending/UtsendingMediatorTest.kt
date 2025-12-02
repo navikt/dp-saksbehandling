@@ -107,7 +107,7 @@ class UtsendingMediatorTest {
                 behandlingResultatEvent(
                     ident = person.ident,
                     behandlingId = behandling.behandlingId.toString(),
-                    søknadId = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     harRett = true,
                 )
@@ -124,7 +124,7 @@ class UtsendingMediatorTest {
             utsending.sak() shouldBe utsendingSak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
-            rapid.inspektør.size shouldBe 2
+            rapid.inspektør.size shouldBe 1
             val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
                 //language=JSON
@@ -145,18 +145,6 @@ class UtsendingMediatorTest {
                 }
                 """.trimIndent()
 
-            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                   "@event_name": "vedtak_fattet_utenfor_arena",
-                    "behandlingId" : "$behandlingId",
-                    "søknadId" : "$søknadId",
-                    "ident" : "${person.ident}",
-                    "sakId" : "$sakId"
-                }
-                """.trimIndent()
-
             val pdfUrnString = "urn:pdf:123"
             rapid.sendTestMessage(
                 arkiverbartDokumentBehovLøsning(
@@ -168,8 +156,8 @@ class UtsendingMediatorTest {
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
-            rapid.inspektør.size shouldBe 3
-            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJson
+            rapid.inspektør.size shouldBe 2
+            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
                 //language=JSON
                 """
                 {
@@ -195,8 +183,8 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe AvventerDistribuering
             utsending.journalpostId() shouldBe journalpostId
             utsending.sak() shouldBe utsendingSak
-            rapid.inspektør.size shouldBe 4
-            rapid.inspektør.message(3).toString() shouldEqualSpecifiedJson
+            rapid.inspektør.size shouldBe 3
+            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJson
                 //language=JSON
                 """
                 {

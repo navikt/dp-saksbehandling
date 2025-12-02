@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
+import no.nav.dagpenger.saksbehandling.Oppgave.AvbruttMaskinelt
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -21,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -46,10 +48,10 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -411,6 +413,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         JOIN    person_v1       pers ON pers.id = beha.person_id
                         JOIN    hendelse_v1     hend ON beha.id = hend.behandling_id
                         WHERE   pers.ident = :ident
+                        AND     hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse'
                         AND     hend.hendelse_data->>'søknadId' = :soknad_id
                     """.trimMargin(),
                     mapOf(
@@ -480,6 +483,14 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             val behandlingIdClause =
                 søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
 
+            val søknadIdClause =
+                søkeFilter.søknadId?.let {
+                    """
+                    AND hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
+                    AND hend.hendelse_data ->> 'søknadId' = :soknad_id 
+                    """.trimIndent()
+                } ?: ""
+
             val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
             val emneknaggClause =
                 if (søkeFilter.emneknagger.isNotEmpty()) {
@@ -548,6 +559,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppgaveIdClause,
                         behandlingIdClause,
                         emneknaggClause,
+                        søknadIdClause,
                     )
                     .toString()
 
@@ -574,6 +586,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     "person_ident" to søkeFilter.personIdent,
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,
+                    "soknad_id" to søkeFilter.søknadId?.toString(),
                     "emneknagger" to emneknaggerAsText,
                 )
             sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
@@ -602,26 +615,26 @@ private fun rehydrerTilstandsendringHendelse(
     hendelseJson: String,
 ): Hendelse {
     return when (hendelseType) {
-        "SettOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<SettOppgaveAnsvarHendelse>()
+        "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
+        "AvbrytOppgaveHendelse" -> hendelseJson.tilHendelse<AvbrytOppgaveHendelse>()
         "BehandlingAvbruttHendelse" -> hendelseJson.tilHendelse<BehandlingAvbruttHendelse>()
-        "FjernOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<FjernOppgaveAnsvarHendelse>()
-        "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
-        "GodkjennBehandlingMedBrevIArena" -> hendelseJson.tilHendelse<GodkjennBehandlingMedBrevIArena>()
-        "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
-        "GodkjentBehandlingHendelseUtenMeldingOmVedtak" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelseUtenMeldingOmVedtak>()
-        "SendTilKontrollHendelse" -> hendelseJson.tilHendelse<SendTilKontrollHendelse>()
-        "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
         "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
         "BehandlingOpplåstHendelse" -> hendelseJson.tilHendelse<BehandlingOpplåstHendelse>()
         "BehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<BehandlingOpprettetHendelse>()
+        "FjernOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<FjernOppgaveAnsvarHendelse>()
+        "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
+        "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
+        "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
+        "InnsendingMottattHendelse" -> hendelseJson.tilHendelse<InnsendingMottattHendelse>()
+        "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
+        "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
+        "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
+        "SendTilKontrollHendelse" -> hendelseJson.tilHendelse<SendTilKontrollHendelse>()
+        "SettOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<SettOppgaveAnsvarHendelse>()
+        "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
-        "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
-        "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
-        "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
-        "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
-        "AvbrytOppgaveHendelse" -> hendelseJson.tilHendelse<AvbrytOppgaveHendelse>()
         else -> {
             logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
@@ -900,6 +913,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                 FERDIG_BEHANDLET -> FerdigBehandlet
                 AVBRUTT -> Avbrutt
+                AVBRUTT_MASKINELT -> AvbruttMaskinelt
             }
         }.getOrElse { t ->
             throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
@@ -951,6 +965,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
         "ManuellBehandlingOpprettetHendelse" ->
             this.string("hendelse_data")
                 .tilHendelse<ManuellBehandlingOpprettetHendelse>()
+
+        "InnsendingMottattHendelse" ->
+            this.string("hendelse_data")
+                .tilHendelse<InnsendingMottattHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

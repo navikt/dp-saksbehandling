@@ -12,7 +12,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
@@ -87,6 +87,7 @@ class SakApiTest {
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
                     sakMediator = sakMediator,
+                    innsendingMediator = mockk(),
                 )
             }
             test()

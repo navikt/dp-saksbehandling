@@ -95,7 +95,7 @@ class KlageMediator(
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
         return kotlin.runCatching {
-            oppgaveMediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
                 behandlingOpprettetHendelse = behandlingOpprettetHendelse,
             )
         }
@@ -141,7 +141,7 @@ class KlageMediator(
         )
 
         return kotlin.runCatching {
-            oppgaveMediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
                 behandlingOpprettetHendelse = behandlingOpprettetHendelse,
             ).also { oppgave ->
                 oppgaveMediator.tildelOppgave(

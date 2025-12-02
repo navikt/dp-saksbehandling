@@ -1,6 +1,13 @@
 package no.nav.dagpenger.saksbehandling
 
-class Emneknagg(val navn: String) {
+import java.time.LocalDate
+
+object Emneknagg {
+    data class Ettersending(private val mottatt: LocalDate = LocalDate.now()) {
+        val fastTekst = "Ettersending"
+        val visningsnavn = "$fastTekst($mottatt)"
+    }
+
     enum class Regelknagg(val visningsnavn: String) {
         AVSLAG("Avslag"),
         INNVILGELSE("Innvilgelse"),

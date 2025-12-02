@@ -16,7 +16,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
-import no.nav.dagpenger.saksbehandling.innsending.InnsendingTilstandslogg
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDate
@@ -97,9 +96,11 @@ internal object TestHelper {
         mottatt: LocalDateTime = opprettetNå,
         skjemaKode: String = "skjemaKode",
         kategori: Kategori = Kategori.GENERELL,
-        behandlerIdent: String? = saksbehandler.navIdent,
-        tilstand: Innsending.Tilstand = Innsending.Tilstand.KlarTilBehandling,
-        tilstandslogg: InnsendingTilstandslogg = InnsendingTilstandslogg(),
+        søknadId: UUID? = null,
+        tilstand: String = "BEHANDLES",
+        vurdering: String? = null,
+        innsendingResultat: Innsending.InnsendingResultat? = null,
+        valgtSakId: UUID? = null,
     ): Innsending {
         return Innsending.rehydrer(
             innsendingId = innsendingId,
@@ -108,9 +109,11 @@ internal object TestHelper {
             mottatt = mottatt,
             skjemaKode = skjemaKode,
             kategori = kategori,
-            behandlerIdent = behandlerIdent,
+            søknadId = søknadId,
             tilstand = tilstand,
-            tilstandslogg = tilstandslogg,
+            vurdering = vurdering,
+            innsendingResultat = innsendingResultat,
+            valgtSakId = valgtSakId,
         )
     }
 

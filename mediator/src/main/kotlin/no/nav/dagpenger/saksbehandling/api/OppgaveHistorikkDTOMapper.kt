@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -21,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
 internal class OppgaveHistorikkDTOMapper(
@@ -58,17 +60,23 @@ internal class OppgaveHistorikkDTOMapper(
     }
 
     private fun tilstandsendringTittel(tilstandsendring: Tilstandsendring<Oppgave.Tilstand.Type>): String {
-        return when (tilstandsendring.tilstand) {
-            OPPRETTET -> "Opprettet"
-            KLAR_TIL_BEHANDLING -> "Klar til behandling"
-            UNDER_BEHANDLING -> "Under behandling"
-            FERDIG_BEHANDLET -> "Ferdig behandlet"
-            PAA_VENT -> "På vent"
-            KLAR_TIL_KONTROLL -> "Klar til kontroll"
-            UNDER_KONTROLL -> "Under kontroll"
-            AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
-            AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
-            AVBRUTT -> "Avbrutt"
+        if (tilstandsendring.hendelse is InnsendingMottattHendelse) {
+            val innsendingMottattHendelse = tilstandsendring.hendelse as InnsendingMottattHendelse
+            return "Innsending mottatt: ${innsendingMottattHendelse.kategori.visningsnavn}"
+        } else {
+            return when (tilstandsendring.tilstand) {
+                OPPRETTET -> "Opprettet"
+                KLAR_TIL_BEHANDLING -> "Klar til behandling"
+                UNDER_BEHANDLING -> "Under behandling"
+                FERDIG_BEHANDLET -> "Ferdig behandlet"
+                PAA_VENT -> "På vent"
+                KLAR_TIL_KONTROLL -> "Klar til kontroll"
+                UNDER_KONTROLL -> "Under kontroll"
+                AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
+                AVBRUTT -> "Avbrutt"
+                AVBRUTT_MASKINELT -> "Avbrutt maskinelt"
+            }
         }
     }
 

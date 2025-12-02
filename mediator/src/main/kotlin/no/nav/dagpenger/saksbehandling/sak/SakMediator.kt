@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -160,8 +161,11 @@ class SakMediator(
         return sakRepository.finnSisteSakId(ident)
     }
 
-    fun finnSakIdForSøknad(søknadId: UUID): UUID? {
-        return sakRepository.finnSakIdForSøknad(søknadId)
+    fun finnSakIdForSøknad(
+        søknadId: UUID,
+        ident: String,
+    ): UUID? {
+        return sakRepository.finnSakIdForSøknad(søknadId = søknadId, ident = ident)
     }
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID {
@@ -210,6 +214,39 @@ class SakMediator(
                     utvidetFeilMelding = null,
                 )
             }
+        }
+    }
+
+    fun knyttEttersendingTilSammeSakSomSøknad(
+        behandling: Behandling,
+        hendelse: InnsendingMottattHendelse,
+    ) {
+        requireNotNull(hendelse.søknadId) { "Ettersending må ha søknadId for å knyttes til samme sak som søknaden" }
+        val sakId =
+            finnSakIdForSøknad(søknadId = hendelse.søknadId!!, ident = hendelse.ident)
+                ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
+        sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
+            sakHistorikk?.saker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
+                sak.leggTilBehandling(behandling)
+                sakRepository.lagre(sakHistorikk)
+            } ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
+        }
+    }
+
+    fun knyttBehandlingTilSak(
+        behandling: Behandling,
+        hendelse: InnsendingMottattHendelse,
+        sakId: UUID,
+    ) {
+        sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
+            sakHistorikk?.saker()?.find { sak ->
+                sak.sakId == sakId
+            }?.let { sak ->
+                sak.leggTilBehandling(
+                    behandling = behandling,
+                )
+                sakRepository.lagre(sakHistorikk)
+            } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
     }
 }

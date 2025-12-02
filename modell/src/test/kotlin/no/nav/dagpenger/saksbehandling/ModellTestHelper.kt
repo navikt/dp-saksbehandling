@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -43,6 +44,7 @@ object ModellTestHelper {
                 AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> Oppgave.AvventerOpplåsingAvBehandling
                 AVBRUTT -> Oppgave.Avbrutt
+                AVBRUTT_MASKINELT -> Oppgave.AvbruttMaskinelt
             }
         val person =
             lagPerson(

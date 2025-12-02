@@ -3,9 +3,24 @@ package no.nav.dagpenger.saksbehandling.innsending
 import java.util.UUID
 
 sealed class Aksjon {
-    object Avslutt : Aksjon()
+    enum class Type {
+        AVSLUTT,
+        OPPRETT_MANUELL_BEHANDLING,
+        OPPRETT_KLAGE,
+    }
 
-    data class OpprettManuellBehandling(val saksbehandlerToken: String) : Aksjon()
+    abstract val valgtSakId: UUID?
+    abstract val type: Type
 
-    data class OpprettKlage(val sakId: UUID) : Aksjon()
+    data class Avslutt(override val valgtSakId: UUID?) : Aksjon() {
+        override val type: Type = Type.AVSLUTT
+    }
+
+    data class OpprettManuellBehandling(val saksbehandlerToken: String, override val valgtSakId: UUID) : Aksjon() {
+        override val type: Type = Type.OPPRETT_MANUELL_BEHANDLING
+    }
+
+    data class OpprettKlage(override val valgtSakId: UUID) : Aksjon() {
+        override val type: Type = Type.OPPRETT_KLAGE
+    }
 }

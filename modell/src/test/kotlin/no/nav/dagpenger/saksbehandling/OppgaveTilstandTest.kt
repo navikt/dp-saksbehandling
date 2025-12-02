@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -30,6 +31,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -142,9 +145,11 @@ class OppgaveTilstandTest {
                 UNDER_KONTROLL -> {
                     oppgave.tilstand().type shouldBe UNDER_KONTROLL
                 }
+
                 UNDER_BEHANDLING -> {
                     oppgave.tilstand().type shouldBe UNDER_BEHANDLING
                 }
+
                 else -> {
                     oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
                 }
@@ -260,6 +265,7 @@ class OppgaveTilstandTest {
                 KLAR_TIL_KONTROLL,
                 UNDER_KONTROLL,
                 AVBRUTT,
+                AVBRUTT_MASKINELT,
             )
 
         lovligeTilstander.forEach { tilstand ->
@@ -274,7 +280,11 @@ class OppgaveTilstandTest {
                     ),
                 )
             }
-            oppgave.tilstand().type shouldBe AVBRUTT
+            when (tilstand) {
+                OPPRETTET -> oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+                AVBRUTT_MASKINELT -> oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+                else -> oppgave.tilstand().type shouldBe AVBRUTT
+            }
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
@@ -480,10 +490,15 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
+        val ettersendingEmneknagger =
+            setOf(
+                Emneknagg.Ettersending(LocalDate.now()).visningsnavn,
+                Emneknagg.Ettersending(LocalDate.now().minusDays(2)).visningsnavn,
+            )
         val oppgave =
             lagOppgave(
                 KLAR_TIL_BEHANDLING,
-                emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger,
+                emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger + ettersendingEmneknagger,
             )
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
@@ -498,7 +513,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger + ettersendingEmneknagger
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
     }
 
@@ -922,5 +937,69 @@ class OppgaveTilstandTest {
                     utførtAv = beslutter2,
                 ),
         )
+    }
+
+    @Test
+    fun `Default oppgave oppførsel ved ettersending til søknad`() {
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
+                ident = "12345678901",
+                journalpostId = "jp",
+                registrertTidspunkt = LocalDateTime.now(),
+                søknadId = UUIDv7.ny(),
+                skjemaKode = "NAV 04-07.05",
+                kategori = Kategori.ETTERSENDING,
+            )
+
+        val lagEmneknaggTilstander =
+            setOf(UNDER_BEHANDLING, UNDER_KONTROLL, PAA_VENT, KLAR_TIL_BEHANDLING, KLAR_TIL_KONTROLL)
+
+        lagEmneknaggTilstander.forEach { tilstandType ->
+            val oppgave = lagOppgave(tilstandType)
+            oppgave.taImotEttersending(innsendingMottattHendelse)
+
+            oppgave.emneknagger shouldContain "Ettersending(${LocalDate.now()})"
+            if (tilstandType == PAA_VENT) {
+                oppgave.tilstandslogg.size shouldBe 2
+            } else {
+                oppgave.tilstandslogg.size shouldBe 1
+            }
+            oppgave.tilstandslogg.single { it.hendelse is InnsendingMottattHendelse }.hendelse shouldBe
+                innsendingMottattHendelse
+        }
+
+        (Type.values - lagEmneknaggTilstander).forEach {
+            val oppgave = lagOppgave(it)
+            oppgave.taImotEttersending(innsendingMottattHendelse)
+
+            oppgave.emneknagger.size shouldBe 0
+            oppgave.tilstandslogg.size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `Skal endre tilstand ved ettersending til søknad for oppgaver i tilstand Påvent`() {
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
+                ident = "12345678901",
+                journalpostId = "jp",
+                registrertTidspunkt = LocalDateTime.now(),
+                søknadId = UUIDv7.ny(),
+                skjemaKode = "NAV 04-07.05",
+                kategori = Kategori.ETTERSENDING,
+            )
+
+        lagOppgave(PAA_VENT).let {
+            it.taImotEttersending(innsendingMottattHendelse)
+            it.tilstand() shouldBe Oppgave.KlarTilBehandling
+        }
+
+        lagOppgave(
+            tilstandType = PAA_VENT,
+            behandler = saksbehandler,
+        ).let {
+            it.taImotEttersending(innsendingMottattHendelse)
+            it.tilstand() shouldBe Oppgave.UnderBehandling
+        }
     }
 }

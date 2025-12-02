@@ -11,8 +11,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
@@ -20,7 +20,9 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import org.junit.jupiter.api.Test
 
 class StatistikkTestApiTest {
-    private val mockAzure = mockAzure()
+    init {
+        mockAzure()
+    }
 
     @Test
     fun `test public statistikk html response`() {
@@ -38,6 +40,7 @@ class StatistikkTestApiTest {
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
                     sakMediator = mockk(),
+                    innsendingMediator = mockk(),
                 )
             }
 
@@ -67,6 +70,7 @@ class StatistikkTestApiTest {
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
                     sakMediator = mockk(),
+                    innsendingMediator = mockk(),
                 )
             }
 

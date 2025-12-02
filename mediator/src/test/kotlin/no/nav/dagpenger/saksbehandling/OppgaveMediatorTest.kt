@@ -5,6 +5,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -46,8 +47,10 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -57,6 +60,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -65,6 +71,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.innsending.Aksjon
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -73,11 +82,10 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.stream.Stream
 import javax.sql.DataSource
@@ -215,7 +223,7 @@ OppgaveMediatorTest {
             }
 
         shouldThrow<IllegalStateException> {
-            oppgaveMediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),
@@ -226,7 +234,7 @@ OppgaveMediatorTest {
             )
         }
         shouldThrow<IllegalStateException> {
-            oppgaveMediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),
@@ -386,7 +394,7 @@ OppgaveMediatorTest {
 
     companion object {
         @JvmStatic
-        private fun skalEttersendingTilSøknadVarsles(): Stream<Arguments> {
+        private fun oppgaveTilstandForSøknad(): Stream<Arguments> {
             return Stream.of(
                 Arguments.of(Opprettet, false),
                 Arguments.of(KlarTilBehandling, false),
@@ -398,52 +406,6 @@ OppgaveMediatorTest {
                 Arguments.of(Oppgave.UnderKontroll(), true),
                 Arguments.of(FerdigBehandlet, false),
             )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("skalEttersendingTilSøknadVarsles")
-    fun `Finnes det en oppgave til behandling`(
-        tilstand: Oppgave.Tilstand,
-        skalLageGosysOppgave: Boolean,
-    ) {
-        val hendelse =
-            SøknadsbehandlingOpprettetHendelse(
-                søknadId = UUIDv7.ny(),
-                behandlingId = UUIDv7.ny(),
-                ident = "12345678910",
-                opprettet = LocalDateTime.now(),
-            )
-        val person =
-            Person(
-                id = UUIDv7.ny(),
-                ident = hendelse.ident,
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
-        val behandling =
-            Behandling(
-                behandlingId = hendelse.behandlingId,
-                opprettet = LocalDateTime.now(),
-                utløstAv = UtløstAvType.SØKNAD,
-                hendelse = hendelse,
-            )
-        val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = tilstand,
-                behandling = behandling,
-                person = person,
-            )
-
-        settOppOppgaveMediator(hendelse = hendelse) { datasource, oppgaveMediator ->
-            val oppgaveRepository = PostgresOppgaveRepository(datasource)
-
-            oppgaveRepository.lagre(oppgave)
-
-            oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                hendelse.søknadId,
-                hendelse.ident,
-            ) shouldBe skalLageGosysOppgave
         }
     }
 
@@ -639,7 +601,8 @@ OppgaveMediatorTest {
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
             ferdigbehandletOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
-            val utsending = utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId)
+            val utsending =
+                utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId)
             utsending.behandlingId shouldBe ferdigbehandletOppgave.behandling.behandlingId
             utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
         }
@@ -787,6 +750,89 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe AVBRUTT
+        }
+    }
+
+    @Test
+    fun `Håndtering av ettersending for søknad oppgaver`() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = behandlingId
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
+        ) { datasource, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val søknadOppgave = oppgaveMediator.finnOppgaverFor(testIdent).single()
+
+            val ettersendingSomManglerSøknadId =
+                InnsendingMottattHendelse(
+                    ident = søknadOppgave.personIdent(),
+                    journalpostId = "asdf",
+                    registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+                    søknadId = null,
+                    skjemaKode = "NAV 11-12.05",
+                    kategori = Kategori.ETTERSENDING,
+                )
+            oppgaveMediator.taImotEttersending(ettersendingSomManglerSøknadId)
+            oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør) shouldBe søknadOppgave
+
+            val klage =
+                InnsendingMottattHendelse(
+                    ident = søknadOppgave.personIdent(),
+                    journalpostId = "asdf",
+                    registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+                    søknadId = søknadOppgave.soknadId(),
+                    skjemaKode = "NAV 11-12.05",
+                    kategori = Kategori.KLAGE,
+                )
+            oppgaveMediator.taImotEttersending(klage)
+            oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør) shouldBe søknadOppgave
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = søknadOppgave.oppgaveId,
+                    ansvarligIdent = testInspektør.navIdent,
+                    utførtAv = testInspektør,
+                ),
+            )
+
+            oppgaveMediator.utsettOppgave(
+                UtsettOppgaveHendelse(
+                    oppgaveId = søknadOppgave.oppgaveId,
+                    navIdent = testInspektør.navIdent,
+                    utsattTil = LocalDate.now().plusDays(1),
+                    beholdOppgave = false,
+                    utførtAv = testInspektør,
+                ),
+            )
+
+            oppgaveMediator.taImotEttersending(
+                ettersendingSomManglerSøknadId.copy(
+                    søknadId = søknadOppgave.soknadId(),
+                    kategori = Kategori.ETTERSENDING,
+                ),
+            )
+
+            oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør).let { actual ->
+                actual shouldNotBe søknadOppgave
+                actual.emneknagger shouldContain ("Ettersending(${LocalDate.now()})")
+                actual.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+            }
         }
     }
 
@@ -1042,6 +1088,129 @@ OppgaveMediatorTest {
                 saksbehandler = beslutter,
                 saksbehandlerToken = "token",
             )
+        }
+    }
+
+    @Test
+    fun `Livssyklus for behandling av innsending som ferdigstilles`() {
+        val testPerson = DBTestHelper.testPerson
+        val sakId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        val behandlingIdSøknad = UUIDv7.ny()
+        val journalpostId = "journalpostId123"
+        val registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        val personMediatorMock: PersonMediator =
+            mockk<PersonMediator>().also {
+                every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
+            }
+        val sak =
+            Sak(
+                sakId = sakId,
+                søknadId = søknadId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = UtløstAvType.SØKNAD,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = KlarTilKontroll,
+                    ),
+            )
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(it),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                )
+            sakMediator.merkSakenSomDpSak(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = sak.behandlinger().first().behandlingId,
+                        behandletHendelseId = sak.søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = testPerson.ident,
+                        sak =
+                            UtsendingSak(
+                                id = sakId.toString(),
+                                kontekst = "Dagpenger",
+                            ),
+                        automatiskBehandlet = false,
+                    ),
+            )
+            innsendingMediator.taImotInnsending(
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = null,
+                    skjemaKode = "SkjemaKode123",
+                    kategori = Kategori.KLAGE,
+                ),
+            )
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            val innsendingOppgave =
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            innsendingOppgave.tilstand() shouldBe KlarTilBehandling
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = innsendingOppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+            }.tilstand() shouldBe UnderBehandling
+
+            oppgaveMediator.ferdigstillOppgave(
+                InnsendingFerdigstiltHendelse(
+                    innsendingId = innsendingOppgave.behandling.behandlingId,
+                    aksjonType = Aksjon.Type.OPPRETT_KLAGE,
+                    opprettetBehandlingId = UUIDv7.ny(),
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+            }.tilstand() shouldBe FerdigBehandlet
         }
     }
 

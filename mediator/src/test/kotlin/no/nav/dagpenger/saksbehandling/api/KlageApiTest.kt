@@ -24,9 +24,9 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigMaskinToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
@@ -40,10 +40,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class KlageApiTest {
-    init {
-        mockAzure()
-    }
-
     private val klageBehandlingId = UUIDv7.ny()
     private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
@@ -473,6 +469,7 @@ class KlageApiTest {
                     klageDTOMapper = KlageDTOMapper(oppslag = oppslag),
                     personMediator = mockk(),
                     sakMediator = mockk(),
+                    innsendingMediator = mockk(),
                 )
             }
             test()

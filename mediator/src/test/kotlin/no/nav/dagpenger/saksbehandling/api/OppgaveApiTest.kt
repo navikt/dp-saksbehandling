@@ -40,8 +40,8 @@ import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO

@@ -66,6 +66,7 @@ internal class OppgaveDTOMapper(
                                             UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
                                         },
                                     utlostAv =
                                         when (behandling.utløstAv) {
@@ -73,6 +74,7 @@ internal class OppgaveDTOMapper(
                                             UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
                                             UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
                                             UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
+                                            UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
                                         },
                                     opprettet = behandling.opprettet,
                                     oppgaveId = behandling.oppgaveId,
@@ -278,6 +280,7 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
         is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
         is Oppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
+        is Oppgave.AvbruttMaskinelt -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand AvbruttMaskinelt")
     }
 }
 
@@ -295,6 +298,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
+        UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
     }
 }
 
@@ -304,5 +308,6 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
+        UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
     }
 }

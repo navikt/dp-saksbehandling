@@ -13,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
-private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class SøknadBehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -47,8 +46,7 @@ internal class SøknadBehandlingOpprettetMottak(
         val søknadId = packet.søknadId()
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_opprettet hendelse for søknad i SøknadBehandlingOpprettetMottak" }
-
-            innsendingMediator.avbrytInnsending(
+            innsendingMediator.automatiskFerdigstill(
                 hendelse =
                     BehandlingOpprettetForSøknadHendelse(
                         ident = ident,
@@ -61,7 +59,3 @@ internal class SøknadBehandlingOpprettetMottak(
 }
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.manuellId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.meldekortId(): String = this["behandletHendelse"]["id"].asText()

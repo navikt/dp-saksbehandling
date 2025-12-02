@@ -15,15 +15,20 @@ class InnsendingBehandler(
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
         return when (hendelse.aksjon) {
-            Aksjon.Avslutt ->
+            is Aksjon.Avslutt ->
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,
-                    aksjon = hendelse.aksjon.javaClass.simpleName,
-                    behandlingId = null,
+                    aksjonType = hendelse.aksjon.type,
+                    opprettetBehandlingId = null,
                     utførtAv = hendelse.utførtAv,
                 )
 
-            is Aksjon.OpprettKlage -> opprettKlage(hendelse = hendelse, innsending = innsending)
+            is Aksjon.OpprettKlage ->
+                opprettKlage(
+                    hendelse = hendelse,
+                    innsending = innsending,
+                )
+
             is Aksjon.OpprettManuellBehandling ->
                 opprettManuellBehandling(
                     hendelse = hendelse,
@@ -42,8 +47,8 @@ class InnsendingBehandler(
         ).let { result ->
             return InnsendingFerdigstiltHendelse(
                 innsendingId = innsending.innsendingId,
-                aksjon = hendelse.aksjon.javaClass.simpleName,
-                behandlingId = result.getOrThrow(),
+                aksjonType = hendelse.aksjon.type,
+                opprettetBehandlingId = result.getOrThrow(),
                 utførtAv = hendelse.utførtAv,
             )
         }
@@ -60,14 +65,14 @@ class InnsendingBehandler(
                         ident = innsending.person.ident,
                         opprettet = innsending.mottatt,
                         journalpostId = innsending.journalpostId,
-                        sakId = (hendelse.aksjon as Aksjon.OpprettKlage).sakId,
+                        sakId = (hendelse.aksjon as Aksjon.OpprettKlage).valgtSakId,
                         utførtAv = hendelse.utførtAv,
                     ),
             )
         return InnsendingFerdigstiltHendelse(
             innsendingId = innsending.innsendingId,
-            aksjon = hendelse.aksjon.javaClass.simpleName,
-            behandlingId = klageOppgave.behandling.behandlingId,
+            aksjonType = hendelse.aksjon.type,
+            opprettetBehandlingId = klageOppgave.behandling.behandlingId,
             utførtAv = hendelse.utførtAv,
         )
     }

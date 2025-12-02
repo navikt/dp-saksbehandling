@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -27,8 +28,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendel
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -189,7 +191,8 @@ data class Oppgave private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
-        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
+        val ettersendingEmneknagger = this._emneknagger.filter { it.startsWith(Emneknagg.Ettersending().fastTekst) }.toSet()
+        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet() + ettersendingEmneknagger
         this._emneknagger.clear()
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
         this._emneknagger.addAll(beholdEmneknagger)
@@ -211,16 +214,16 @@ data class Oppgave private constructor(
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
-    fun ferdigstill(godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak): FerdigstillBehandling {
-        adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv)
-        egneAnsatteTilgangskontroll(godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv)
-        return tilstand.ferdigstill(this, godkjentBehandlingHendelseUtenMeldingOmVedtak)
-    }
-
     fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
         adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
         egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
         tilstand.ferdigstill(this, avbruttHendelse)
+    }
+
+    fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
+        adressebeskyttelseTilgangskontroll(innsendingFerdigstiltHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(innsendingFerdigstiltHendelse.utførtAv)
+        tilstand.ferdigstill(this, innsendingFerdigstiltHendelse)
     }
 
     fun fjernAnsvar(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
@@ -336,9 +339,21 @@ data class Oppgave private constructor(
             logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
         }.getOrThrow()
 
+    fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
+        tilstand.taImotEttersending(this, hendelse)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
+        override fun avbryt(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(AvbruttMaskinelt, behandlingAvbruttHendelse)
+        }
+
+        // TODO: Bør kunne slettes. Bare innsendingsoppgaver skal være i tilstand OPPRETTET.
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
@@ -347,13 +362,7 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        override fun avbryt(
-            oppgave: Oppgave,
-            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
-        ) {
-            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
-        }
-
+        // TODO: Bør kunne slettes. Bare innsendingsoppgaver skal være i tilstand OPPRETTET.
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
@@ -365,6 +374,14 @@ data class Oppgave private constructor(
 
     object KlarTilBehandling : Tilstand {
         override val type: Type = KLAR_TIL_BEHANDLING
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
 
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
@@ -400,6 +417,14 @@ data class Oppgave private constructor(
 
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
 
         override fun sendTilKontroll(
             oppgave: Oppgave,
@@ -523,15 +548,14 @@ data class Oppgave private constructor(
 
         override fun ferdigstill(
             oppgave: Oppgave,
-            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        ): FerdigstillBehandling {
+            innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse,
+        ) {
             requireEierskapTilOppgave(
                 oppgave = oppgave,
-                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
+                saksbehandler = innsendingFerdigstiltHendelse.utførtAv,
+                hendelseNavn = innsendingFerdigstiltHendelse.javaClass.simpleName,
             )
-            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
-            return FerdigstillBehandling.GODKJENN
+            oppgave.endreTilstand(FerdigBehandlet, innsendingFerdigstiltHendelse)
         }
 
         override fun ferdigstill(
@@ -571,10 +595,6 @@ data class Oppgave private constructor(
         }
     }
 
-    class AlleredeTildeltException(
-        message: String,
-    ) : RuntimeException(message)
-
     object FerdigBehandlet : Tilstand {
         override val type: Type = FERDIG_BEHANDLET
 
@@ -602,12 +622,51 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            logger.info { "Behandling er allerede avbrutt." }
+            logger.info { "Behandling ${behandlingAvbruttHendelse.behandlingId} er allerede avbrutt." }
+        }
+    }
+
+    object AvbruttMaskinelt : Tilstand {
+        override val type: Type = AVBRUTT_MASKINELT
+
+        override fun avbryt(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            logger.info { "Behandling ${behandlingAvbruttHendelse.behandlingId} er allerede avbrutt." }
         }
     }
 
     object PåVent : Tilstand {
         override val type: Type = PAA_VENT
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            if (oppgave.behandlerIdent != null) {
+                oppgave.endreTilstand(
+                    nyTilstand = oppgave.tilstand,
+                    hendelse = hendelse,
+                )
+                oppgave.endreTilstand(
+                    nyTilstand = UnderBehandling,
+                    hendelse = PåVentFristUtgåttHendelse(oppgaveId = oppgave.oppgaveId),
+                )
+            } else {
+                oppgave.endreTilstand(
+                    nyTilstand = oppgave.tilstand,
+                    hendelse = hendelse,
+                )
+                oppgave.endreTilstand(
+                    nyTilstand = KlarTilBehandling,
+                    hendelse = PåVentFristUtgåttHendelse(oppgaveId = oppgave.oppgaveId),
+                )
+            }
+            oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.utsattTil = null
+        }
 
         override fun tildel(
             oppgave: Oppgave,
@@ -669,6 +728,14 @@ data class Oppgave private constructor(
     object KlarTilKontroll : Tilstand {
         override val type: Type = KLAR_TIL_KONTROLL
 
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
+
         override fun tildel(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
@@ -708,6 +775,14 @@ data class Oppgave private constructor(
         private var notat: Notat? = null,
     ) : Tilstand {
         override val type: Type = UNDER_KONTROLL
+
+        override fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
+            oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
+            oppgave.endreTilstand(oppgave.tilstand, hendelse)
+        }
 
         override fun ferdigstill(
             oppgave: Oppgave,
@@ -752,30 +827,6 @@ data class Oppgave private constructor(
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
-            return BESLUTT
-        }
-
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        ): FerdigstillBehandling {
-            requireBeslutterTilgang(
-                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                tilstandType = type,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
-                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-            requireBeslutterUlikSaksbehandler(
-                oppgave = oppgave,
-                beslutter = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
-                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
-            )
-
-            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
             return BESLUTT
         }
 
@@ -898,6 +949,10 @@ data class Oppgave private constructor(
         override fun notat(): Notat? = notat
     }
 
+    class AlleredeTildeltException(
+        message: String,
+    ) : RuntimeException(message)
+
     enum class FerdigstillBehandling {
         BESLUTT,
         GODKJENN,
@@ -939,19 +994,32 @@ data class Oppgave private constructor(
             AVVENTER_LÅS_AV_BEHANDLING,
             AVVENTER_OPPLÅSING_AV_BEHANDLING,
             AVBRUTT,
+            AVBRUTT_MASKINELT,
             ;
 
             companion object {
                 val values
                     get() = entries.toSet()
 
-                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
+                val utgåtteTilstander =
+                    setOf(
+                        AVVENTER_LÅS_AV_BEHANDLING,
+                        AVVENTER_OPPLÅSING_AV_BEHANDLING,
+                    )
+
+                val maskinelleTilstander =
+                    setOf(
+                        OPPRETTET,
+                        AVBRUTT_MASKINELT,
+                    )
+
+                // Tilstander som ikke lenger er i bruk, skal ikke ikke være søkbare.
+                // Tilstander som håndteres maskinelt, skal ikke være søkbare.
                 val søkbareTilstander =
                     entries
                         .toSet()
-                        .minus(OPPRETTET)
-                        .minus(AVVENTER_LÅS_AV_BEHANDLING)
-                        .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
+                        .minus(maskinelleTilstander)
+                        .minus(utgåtteTilstander)
             }
         }
 
@@ -1019,18 +1087,6 @@ data class Oppgave private constructor(
 
         fun ferdigstill(
             oppgave: Oppgave,
-            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        ): FerdigstillBehandling {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName}",
-            )
-        }
-
-        fun ferdigstill(
-            oppgave: Oppgave,
             avbruttHendelse: AvbruttHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1038,6 +1094,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${avbruttHendelse.javaClass.simpleName}",
+            )
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${innsendingFerdigstiltHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1129,6 +1197,12 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sette utgått frist for oppgave på vent i tilstand $type",
             )
+        }
+
+        fun taImotEttersending(
+            oppgave: Oppgave,
+            hendelse: InnsendingMottattHendelse,
+        ) {
         }
 
         private fun ulovligTilstandsendring(

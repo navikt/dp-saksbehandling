@@ -13,7 +13,10 @@ interface SakRepository {
 
     fun finnSisteSakId(ident: String): UUID?
 
-    fun finnSakIdForSøknad(søknadId: UUID): UUID?
+    fun finnSakIdForSøknad(
+        søknadId: UUID,
+        ident: String,
+    ): UUID?
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
 

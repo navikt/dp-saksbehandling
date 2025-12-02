@@ -950,7 +950,7 @@ components:
         vurdering:
           type: string
         nyBehandling:
-          $ref: '#/components/schemas/Behandling'
+          $ref: '#/components/schemas/TynnBehandling'
       required:
         - behandlingId
         - journalpostId
@@ -968,6 +968,19 @@ components:
       required:
         - sakId
         - opprettetDato
+
+    TynnBehandling:
+      type: object
+      properties:
+        behandlingId:
+          type: string
+          format: uuid
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
+      required:
+        - behandlingId
+        - behandlingType
+
     Person:
       type: object
       properties:
@@ -1860,7 +1873,6 @@ components:
         behandlingType:
           $ref: '#/components/schemas/BehandlingType'
       required:
-        - sakId
         - vurdering
 
     HttpProblem:

@@ -14,17 +14,21 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class OppgaveHistorikkDTOMapperTest {
     private val enhet =
@@ -112,12 +116,28 @@ class OppgaveHistorikkDTOMapperTest {
         }
 
     @Test
-    fun `Oppgavhistorikk med statusoverganger`() {
+    fun `Oppgavehistorikk med statusoverganger og ettersending`() {
+        val søknadId = UUIDv7.ny()
+        val oppgaveId = UUIDv7.ny()
         val sistEndretTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
                 TestHelper.lagOppgave(
+                    oppgaveId = oppgaveId,
                     tilstand = Oppgave.KlarTilBehandling,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                                hendelse =
+                                    ForslagTilVedtakHendelse(
+                                        ident = TestHelper.personIdent,
+                                        behandletHendelseId = søknadId.toString(),
+                                        behandletHendelseType = "Søknad",
+                                        behandlingId = UUID.randomUUID(),
+                                    ),
+                            ),
+                        ),
                 )
             val saksbehandler =
                 Saksbehandler(
@@ -136,9 +156,20 @@ class OppgaveHistorikkDTOMapperTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = oppgave.personIdent(),
-                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandling.behandlingId,
+                ),
+            )
+
+            oppgave.taImotEttersending(
+                InnsendingMottattHendelse(
+                    ident = oppgave.personIdent(),
+                    journalpostId = "journalpostId",
+                    registrertTidspunkt = LocalDateTime.now(),
+                    søknadId = søknadId,
+                    skjemaKode = "MAVe 123",
+                    kategori = Kategori.ETTERSENDING,
                 ),
             )
 
@@ -202,7 +233,7 @@ class OppgaveHistorikkDTOMapperTest {
                         tilstandslogg = oppgave.tilstandslogg,
                     )
 
-                historikk.size shouldBe 4
+                historikk.size shouldBe 6
                 historikk.first().tittel shouldBe "Notat"
                 objectMapper.writeValueAsString(historikk) shouldEqualSpecifiedJsonIgnoringOrder """
                 [
@@ -234,6 +265,20 @@ class OppgaveHistorikkDTOMapperTest {
                         "tittel": "Under behandling",
                         "behandler": {
                             "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
+                        }
+                    },
+                    {
+                        "type": "statusendring",
+                        "tittel": "Innsending mottatt: Ettersending",
+                        "behandler": {
+                            "navn": "dp-mottak"
+                        }
+                    },
+                    {
+                        "type": "statusendring",
+                        "tittel": "Klar til behandling",
+                        "behandler": {
+                            "navn": "dp-behandling"
                         }
                     }
                 ]

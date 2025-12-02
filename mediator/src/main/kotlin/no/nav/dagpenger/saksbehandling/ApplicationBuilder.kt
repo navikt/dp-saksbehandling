@@ -71,6 +71,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val personRepository = PostgresPersonRepository(dataSource)
     private val sakRepository = PostgresSakRepository(dataSource = dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
+    private val innsendingRepository = PostgresInnsendingRepository(dataSource)
 
     private val skjermingKlient =
         SkjermingHttpKlient(
@@ -106,6 +107,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     journalpostIdKlient = journalpostIdClient,
                     utsendingRepository = utsendingRepository,
                     klageRepository = klageRepository,
+                    innsendingRepository = innsendingRepository,
                 ),
             saksbehandlerOppslag = saksbehandlerOppslag,
             skjermingKlient = skjermingKlient,
@@ -155,12 +157,13 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             meldingOmVedtakKlient = meldingOmVedtakKlient,
             sakMediator = sakMediator,
         )
+
     private val innsendingMediator =
         InnsendingMediator(
             sakMediator = sakMediator,
             oppgaveMediator = oppgaveMediator,
             personMediator = personMediator,
-            innsendingRepository = PostgresInnsendingRepository(dataSource),
+            innsendingRepository = innsendingRepository,
             innsendingBehandler =
                 InnsendingBehandler(
                     klageMediator = klageMediator,
@@ -191,6 +194,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         klageDTOMapper = KlageDTOMapper(oppslag),
                         personMediator = personMediator,
                         sakMediator = sakMediator,
+                        innsendingMediator = innsendingMediator,
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =

@@ -12,19 +12,11 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
@@ -36,6 +28,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendel
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -53,6 +48,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class OppgaveMediator(
     private val oppgaveRepository: OppgaveRepository,
@@ -66,7 +62,68 @@ class OppgaveMediator(
         this.rapidsConnection = rapidsConnection
     }
 
-    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
+    fun lagOppgaveForInnsendingBehandling(
+        innsendingMottattHendelse: InnsendingMottattHendelse,
+        behandling: Behandling,
+        person: Person,
+    ) {
+        val oppgaveId = UUIDv7.ny()
+
+        // Forventer at søknadsbehandlinger skal opprettes via regelmotor.
+        val tilstand =
+            if (innsendingMottattHendelse.søknadId != null &&
+                innsendingMottattHendelse.kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK)
+            ) {
+                Oppgave.Opprettet
+            } else {
+                Oppgave.KlarTilBehandling
+            }
+
+        val oppgave =
+            Oppgave(
+                oppgaveId = oppgaveId,
+                emneknagger = setOf(),
+                opprettet = innsendingMottattHendelse.registrertTidspunkt,
+                tilstand = tilstand,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = tilstand.type,
+                            hendelse = innsendingMottattHendelse,
+                        ),
+                    ),
+                behandling = behandling,
+                person = person,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            )
+        oppgaveRepository.lagre(oppgave)
+    }
+
+    fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
+        if (!hendelse.erEttersendingMedSøknadId()) {
+            return
+        }
+
+        oppgaveRepository.søk(
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstander = Tilstand.Type.values,
+                personIdent = hendelse.ident,
+                søknadId = hendelse.søknadId,
+            ),
+        ).oppgaver.singleOrNull()?.let { oppgave ->
+            oppgave.taImotEttersending(hendelse)
+            oppgaveRepository.lagre(oppgave)
+        } ?: logger.warn {
+            "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
+        }
+    }
+
+    fun opprettOppgaveForKlageBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
         var oppgave: Oppgave? = null
 
         val sakHistorikk = sakMediator.finnSakHistorikk(behandlingOpprettetHendelse.ident)
@@ -151,7 +208,7 @@ class OppgaveMediator(
 
         if (behandling == null) {
             val feilmelding =
-                "Mottatt hendelse forslag_til_vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
+                "Mottatt forslag til vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
                     "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
@@ -188,14 +245,14 @@ class OppgaveMediator(
                             Handling.LAGRE_OPPGAVE -> {
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
-                                    "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
+                                    "Behandlet forslag til vedtak. Oppgavens tilstand er" +
                                         " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             Handling.INGEN -> {
                                 logger.info {
-                                    "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
+                                    "Mottatt forslag til vedtak. Oppgavens tilstand er uendret." +
                                         " ${oppgave.tilstand().type}"
                                 }
                             }
@@ -384,6 +441,24 @@ class OppgaveMediator(
                     }.onFailure {
                         logger.error { "Feil ved avbryting av oppgave: $it" }
                     }.getOrThrow()
+            }
+        }
+    }
+
+    fun ferdigstillOppgave(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
+        oppgaveRepository.hentOppgaveFor(innsendingFerdigstiltHendelse.innsendingId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt InnsendingFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.ferdigstill(innsendingFerdigstiltHendelse)
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet InnsendingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                }
             }
         }
     }
@@ -582,7 +657,13 @@ class OppgaveMediator(
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
-        oppgaveRepository.finnOppgaveFor(hendelse.behandlingId)?.let { oppgave ->
+        oppgaveRepository.søk(
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstander = Tilstand.Type.values,
+                behandlingId = hendelse.behandlingId,
+            ),
+        ).oppgaver.singleOrNull()?.let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
             ) {
@@ -628,26 +709,10 @@ class OppgaveMediator(
         return oppgaveRepository.tildelOgHentNesteOppgave(nesteOppgaveHendelse, tildelNesteOppgaveFilter)
     }
 
-    fun skalEttersendingTilSøknadVarsles(
+    fun oppgaveTilstandForSøknad(
         søknadId: UUID,
         ident: String,
-    ): Boolean {
-        val tilstand = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
-
-        return when (tilstand) {
-            OPPRETTET -> false
-            KLAR_TIL_BEHANDLING -> false
-            AVBRUTT -> false
-            AVVENTER_LÅS_AV_BEHANDLING -> false
-            AVVENTER_OPPLÅSING_AV_BEHANDLING -> false
-            FERDIG_BEHANDLET -> false
-            UNDER_BEHANDLING -> true
-            PAA_VENT -> true
-            KLAR_TIL_KONTROLL -> true
-            UNDER_KONTROLL -> true
-            null -> false
-        }
-    }
+    ) = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
 
     private fun sendAlertTilRapid(
         feilType: AlertManager.AlertType,

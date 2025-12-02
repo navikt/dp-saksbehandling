@@ -1,164 +1,75 @@
 package no.nav.dagpenger.saksbehandling.db.innsending
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
-import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FjernAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.TildelHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
-import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Avbrutt
-import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.Ferdigbehandlet
-import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.innsending.Innsending.Tilstand.UnderBehandling
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class PostgresInnsendingRepositoryTest {
     @Test
-    fun `Skal lagre endre og hente innsending fra database`() {
-        DBTestHelper.withPerson { ds ->
+    fun `Skal lagre, endre og hente innsending fra database`() {
+        DBTestHelper.withSak(
+            person = testPerson,
+        ) { ds ->
             val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-            val saksbehandler =
-                Saksbehandler(
-                    navIdent = "Z12345",
-                    grupper = emptySet(),
-                    tilganger = emptySet(),
-                )
-            val repository = PostgresInnsendingRepository(ds)
-            val innsendingMottattHendelse =
-                InnsendingMottattHendelse(
-                    ident = testPerson.ident,
-                    journalpostId = "jp12",
-                    registrertTidspunkt = nå,
-                    søknadId = null,
-                    skjemaKode = "skjemaKode",
-                    kategori = Kategori.GENERELL,
-                )
+
             val innsending =
-                Innsending.opprett(
-                    hendelse = innsendingMottattHendelse,
-                    personProvider = { _ -> testPerson },
-                )
-
-            repository.lagre(innsending = innsending)
-
-            repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe KlarTilBehandling
-                dbInnsending shouldBe innsending
-            }
-
-            innsending.tildel(
-                tildelHendelse =
-                    TildelHendelse(
-                        utførtAv = saksbehandler,
-                        ansvarligIdent = saksbehandler.navIdent,
-                        innsendingId = UUIDv7.ny(),
-                    ),
-            )
-            repository.lagre(innsending)
-
-            repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe UnderBehandling
-                dbInnsending shouldBe innsending
-            }
-
-            innsending.leggTilbake(
-                fjernAnsvarHendelse =
-                    FjernAnsvarHendelse(
-                        utførtAv = saksbehandler,
-                    ),
-            )
-            repository.lagre(innsending)
-
-            repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe KlarTilBehandling
-                dbInnsending shouldBe innsending
-            }
-
-            innsending.tildel(
-                tildelHendelse =
-                    TildelHendelse(
-                        utførtAv = saksbehandler,
-                        ansvarligIdent = saksbehandler.navIdent,
-                        innsendingId = UUIDv7.ny(),
-                    ),
-            )
-            repository.lagre(innsending)
-
-            repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe UnderBehandling
-                dbInnsending shouldBe innsending
-            }
-
-            innsending.ferdigstill(
-                innsendingFerdigstiltHendelse =
-                    InnsendingFerdigstiltHendelse(
-                        innsendingId = innsending.innsendingId,
-                        aksjon = "Avslutt",
-                        behandlingId = null,
-                        utførtAv = saksbehandler,
-                    ),
-            )
-            repository.lagre(innsending)
-
-            repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe Ferdigbehandlet
-                dbInnsending shouldBe innsending
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne avbryte innsending fra database`() {
-        DBTestHelper.withPerson { ds ->
-            val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
-            val repository = PostgresInnsendingRepository(ds)
-            val innsendingMottattHendelse =
-                InnsendingMottattHendelse(
-                    ident = testPerson.ident,
-                    journalpostId = "jp12",
-                    registrertTidspunkt = nå,
-                    søknadId = søknadId,
+                Innsending.rehydrer(
+                    innsendingId = UUIDv7.ny(),
+                    person = testPerson,
+                    journalpostId = "jp123",
+                    mottatt = nå,
                     skjemaKode = "skjemaKode",
                     kategori = Kategori.NY_SØKNAD,
+                    søknadId = UUIDv7.ny(),
+                    tilstand = "BEHANDLES",
+                    vurdering = "Dette er en vurdering",
+                    innsendingResultat =
+                        Innsending.InnsendingResultat.RettTilDagpenger(
+                            UUIDv7.ny(),
+                        ),
+                    valgtSakId = null,
                 )
-            val innsending =
-                Innsending.opprett(
-                    hendelse = innsendingMottattHendelse,
-                    personProvider = { _ -> testPerson },
-                )
-
+            val repository = PostgresInnsendingRepository(ds)
             repository.lagre(innsending = innsending)
 
             repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe KlarTilBehandling
                 dbInnsending shouldBe innsending
             }
 
-            innsending.avbryt(
-                behandlingOpprettetForSøknadHendelse =
-                    BehandlingOpprettetForSøknadHendelse(
-                        ident = testPerson.ident,
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                    ),
-            )
-            repository.lagre(innsending)
+            val endretInnsending =
+                Innsending.rehydrer(
+                    innsendingId = innsending.innsendingId,
+                    person = testPerson.copy(ident = "22345678901"),
+                    journalpostId = "nyJp",
+                    mottatt = nå.plusMonths(1),
+                    skjemaKode = "nySkjema",
+                    kategori = Kategori.ETTERSENDING,
+                    søknadId = UUIDv7.ny(),
+                    tilstand = "FERDIGSTILT",
+                    vurdering = "Endret vurdering",
+                    innsendingResultat = Innsending.InnsendingResultat.Klage(UUIDv7.ny()),
+                    valgtSakId = DBTestHelper.sakId,
+                )
 
-            repository.hent(innsending.innsendingId).also { dbInnsending ->
-                dbInnsending.tilstand() shouldBe Avbrutt
-                dbInnsending shouldBe innsending
-                dbInnsending.tilstandslogg.first().hendelse.shouldBeInstanceOf<BehandlingOpprettetForSøknadHendelse>()
+            repository.lagre(innsending = endretInnsending)
+            repository.hent(innsending.innsendingId).also {
+                it.person shouldBe testPerson
+                it.journalpostId shouldBe innsending.journalpostId
+                it.mottatt shouldBe innsending.mottatt
+                it.skjemaKode shouldBe innsending.skjemaKode
+                it.kategori shouldBe innsending.kategori
+                it.søknadId shouldBe innsending.søknadId
+
+                it.tilstand() shouldBe endretInnsending.tilstand()
+                it.vurdering() shouldBe endretInnsending.vurdering()
+                it.innsendingResultat() shouldBe endretInnsending.innsendingResultat()
+                it.valgtSakId() shouldBe endretInnsending.valgtSakId()
             }
         }
     }
