@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -45,6 +46,7 @@ class SakMediator(
     fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
         val sak =
             Sak(
+                sakId = søknadsbehandlingOpprettetHendelse.behandlingskjedeId ?: UUIDv7.ny(),
                 søknadId = søknadsbehandlingOpprettetHendelse.søknadId,
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
             ).also {

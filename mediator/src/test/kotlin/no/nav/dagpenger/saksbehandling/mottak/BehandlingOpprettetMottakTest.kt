@@ -21,12 +21,14 @@ class BehandlingOpprettetMottakTest {
     val behandlingIdNyRett = UUID.randomUUID()
     val behandlingIdGjenopptak = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
+    val behandlingskjedeId = UUIDv7.ny()
     private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingIdNyRett,
             ident = testIdent,
             opprettet = opprettet,
+            behandlingskjedeId = behandlingskjedeId,
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
         SøknadsbehandlingOpprettetHendelse(
@@ -35,6 +37,7 @@ class BehandlingOpprettetMottakTest {
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = behandlingIdNyRett,
+            behandlingskjedeId = behandlingskjedeId,
         )
 
     private val testRapid = TestRapid()
@@ -85,7 +88,7 @@ class BehandlingOpprettetMottakTest {
     @Test
     fun `Skal behandle behandling_opprettet hendelse for manuell`() {
         val basertPåBehandling = UUIDv7.ny()
-        testRapid.sendTestMessage(manuellbehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
+        testRapid.sendTestMessage(manuellBehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 manuellBehandlingOpprettetHendelse =
@@ -107,6 +110,7 @@ class BehandlingOpprettetMottakTest {
             "@event_name": "behandling_opprettet",
             "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$søknadId",
@@ -124,6 +128,7 @@ class BehandlingOpprettetMottakTest {
             "@event_name": "behandling_opprettet",
             "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$søknadId",
@@ -144,6 +149,7 @@ class BehandlingOpprettetMottakTest {
             "@event_name": "behandling_opprettet",
             "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "Long",
                 "id": $meldekortId,
@@ -156,7 +162,7 @@ class BehandlingOpprettetMottakTest {
         """
 
     @Language("JSON")
-    private fun manuellbehandlingOpprettetMelding(
+    private fun manuellBehandlingOpprettetMelding(
         ident: String = testIdent,
         basertPåBehandling: UUID,
     ) = """
@@ -164,6 +170,7 @@ class BehandlingOpprettetMottakTest {
             "@event_name": "behandling_opprettet",
             "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$manuellId",
