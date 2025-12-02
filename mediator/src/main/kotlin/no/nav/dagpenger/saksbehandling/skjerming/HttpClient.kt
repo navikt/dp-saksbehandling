@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
@@ -15,6 +16,7 @@ fun createHttpClient(
     metricsBaseName: String,
     engine: HttpClientEngine,
     expectSuccess: Boolean = true,
+    configure: HttpClientConfig<*>.() -> Unit = {},
 ) = HttpClient(engine) {
     this.expectSuccess = expectSuccess
     install(PrometheusMetricsPlugin) {
@@ -28,4 +30,5 @@ fun createHttpClient(
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
     }
+    configure()
 }

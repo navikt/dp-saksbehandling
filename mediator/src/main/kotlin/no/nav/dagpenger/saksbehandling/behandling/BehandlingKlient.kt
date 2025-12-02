@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -17,6 +18,8 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 private val logger = KotlinLogging.logger {}
 
@@ -66,13 +69,18 @@ internal class BehandlingHttpKlient(
             engine: HttpClientEngine = CIO.create {},
             registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
             metricsBaseName: String = "dp_saksbehandling_behandling_http_klient",
+            timeOut: Duration = 2000.milliseconds,
         ): HttpClient {
             return createHttpClient(
                 engine = engine,
                 metricsBaseName = metricsBaseName,
                 prometheusRegistry = registry,
                 expectSuccess = false,
-            )
+            ) {
+                install(HttpTimeout) {
+                    requestTimeoutMillis = timeOut.inWholeMilliseconds
+                }
+            }
         }
     }
 
@@ -149,18 +157,23 @@ internal class BehandlingHttpKlient(
     ): Result<Unit> {
         val urlString = "$dpBehandlingApiUrl/$behandlingId/$endepunkt"
         return runBlocking {
-            httpClient.post(urlString = urlString) {
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                header(HttpHeaders.ContentType, ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-                setBody(Request(ident))
-            }.let {
-                val statuskode = it.status.value
-                logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
-                when (statuskode) {
-                    in 200..299 -> Result.success(Unit)
-                    else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
+            try {
+                httpClient.post(urlString = urlString) {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(Request(ident))
+                }.let {
+                    val statuskode = it.status.value
+                    logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
+                    when (statuskode) {
+                        in 200..299 -> Result.success(Unit)
+                        else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
+                    }
                 }
+            } catch (e: Exception) {
+                logger.error { "Feil mot dp-behandling for endepunkt: $urlString med ${e.message}" }
+                Result.failure(BehandlingException(e.message, 500))
             }
         }
     }
