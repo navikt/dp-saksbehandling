@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
@@ -1256,13 +1257,19 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(1),
                 )
+            val oppgave3TilOlaSomIkkeErSøkbar =
+                this.leggTilOppgave(
+                    person = ola,
+                    tilstand = Oppgave.AvbruttMaskinelt,
+                    opprettet = opprettetNå.minusDays(1),
+                )
             val oppgave1TilGry =
                 this.leggTilOppgave(
                     person = gry,
                     tilstand = Oppgave.FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(2),
                 )
-
+            repo.finnOppgaverFor(ola.ident) shouldNotContain oppgave3TilOlaSomIkkeErSøkbar
             repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
             repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry)
         }
