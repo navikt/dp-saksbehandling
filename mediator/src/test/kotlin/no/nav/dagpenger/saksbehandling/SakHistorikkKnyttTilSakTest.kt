@@ -51,6 +51,7 @@ class SakHistorikkKnyttTilSakTest {
                 ident = "12345678910",
                 opprettet = now,
                 basertPåBehandling = null,
+                behandlingskjedeId = UUIDv7.ny(),
             )
 
         sakHistorikk.knyttTilSak(hendelse) shouldBe
@@ -62,16 +63,9 @@ class SakHistorikkKnyttTilSakTest {
         sakHistorikk.knyttTilSak(
             hendelse.copy(
                 basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
+                behandlingskjedeId = sakMedBehandling.sakId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
-
-        val sakMedSammeBehandling = sakMedBehandling.copy(sakId = UUIDv7.ny())
-        sakHistorikk.leggTilSak(sakMedSammeBehandling)
-        sakHistorikk.knyttTilSak(
-            hendelse.copy(
-                basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
-            ),
-        ) shouldBe KnyttTilSakResultat.KnyttetTilFlereSaker(sakMedBehandling.sakId, sakMedSammeBehandling.sakId)
     }
 
     @Test

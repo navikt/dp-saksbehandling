@@ -30,9 +30,7 @@ data class Sak(
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return if (this.behandlinger.map { it.behandlingId }
-                .contains(søknadsbehandlingOpprettetHendelse.basertPåBehandling)
-        ) {
+        return if (this.sakId == søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
             behandlinger.add(
                 Behandling(
                     behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,

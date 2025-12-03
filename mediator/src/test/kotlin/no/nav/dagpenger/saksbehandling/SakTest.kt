@@ -30,6 +30,7 @@ class SakTest {
                 ident = "12345678910",
                 opprettet = now,
                 basertPåBehandling = null,
+                behandlingskjedeId = UUIDv7.ny(),
             ),
         ) shouldBe KnyttTilSakResultat.IkkeKnyttetTilSak(sak.sakId)
 
@@ -40,7 +41,8 @@ class SakTest {
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",
                 opprettet = now,
-                basertPåBehandling = behandling.behandlingId,
+                basertPåBehandling = UUIDv7.ny(),
+                behandlingskjedeId = sak.sakId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
     }
