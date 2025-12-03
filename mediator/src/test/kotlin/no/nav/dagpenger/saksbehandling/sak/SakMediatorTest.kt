@@ -40,11 +40,12 @@ import javax.sql.DataSource
 
 class SakMediatorTest {
     private val testIdent = "12345678901"
-    private val søknadIdNyRett = UUID.randomUUID()
-    private val søknadIdGjenopptak = UUID.randomUUID()
-    private val endaEnSøknadId = UUID.randomUUID()
+    private val behandlingskjedeId = UUIDv7.ny()
+    private val søknadIdNyRett = UUIDv7.ny()
+    private val søknadIdGjenopptak = UUIDv7.ny()
+    private val endaEnSøknadId = UUIDv7.ny()
     private val meldekortId = "123L"
-    private val manuellId = UUID.randomUUID()
+    private val manuellId = UUIDv7.ny()
     private val behandlingIdSøknadNyRett = UUIDv7.ny()
     private val behandlingIdSøknadGjenopptak = UUIDv7.ny()
     private val behandlingIdEndaEnSøknad = UUIDv7.ny()
@@ -59,6 +60,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdSøknadNyRett,
             ident = testIdent,
             opprettet = opprettet,
+            behandlingskjedeId = behandlingskjedeId,
         )
     private val endaEnSøknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
@@ -66,6 +68,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdEndaEnSøknad,
             ident = testIdent,
             opprettet = opprettetLittSenere,
+            behandlingskjedeId = UUIDv7.ny(),
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
         SøknadsbehandlingOpprettetHendelse(
@@ -74,6 +77,7 @@ class SakMediatorTest {
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
+            behandlingskjedeId = behandlingskjedeId,
         )
     private val meldekortbehandlingOpprettetHendelse =
         MeldekortbehandlingOpprettetHendelse(

@@ -31,7 +31,7 @@ internal class BehandlingOpprettetMottak(
                 it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
             }
             validate {
-                it.requireKey("ident", "behandlingId", "@opprettet")
+                it.requireKey("ident", "behandlingId", "@opprettet", "behandlingskjedeId")
                 it.interestedIn("behandletHendelse", "basertPåBehandling")
             }
         }
@@ -51,6 +51,7 @@ internal class BehandlingOpprettetMottak(
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
+        val behandlingskjedeId = packet["behandlingskjedeId"].asUUID()
         val basertPåBehandling: UUID? =
             if (packet["basertPåBehandling"].isMissingOrNull()) {
                 null
@@ -75,6 +76,7 @@ internal class BehandlingOpprettetMottak(
                             ident = ident,
                             opprettet = opprettet,
                             basertPåBehandling = basertPåBehandling,
+                            behandlingskjedeId = behandlingskjedeId,
                         )
                     if (basertPåBehandling != null) {
                         sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelse)

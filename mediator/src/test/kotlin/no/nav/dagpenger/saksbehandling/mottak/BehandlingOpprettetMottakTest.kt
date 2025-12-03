@@ -18,6 +18,7 @@ class BehandlingOpprettetMottakTest {
     val søknadId = UUID.randomUUID()
     val meldekortId = "123"
     val manuellId = UUID.randomUUID()
+    val behandlingskjedeId = UUIDv7.ny()
     val behandlingIdNyRett = UUID.randomUUID()
     val behandlingIdGjenopptak = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
@@ -27,6 +28,7 @@ class BehandlingOpprettetMottakTest {
             behandlingId = behandlingIdNyRett,
             ident = testIdent,
             opprettet = opprettet,
+            behandlingskjedeId = behandlingskjedeId,
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
         SøknadsbehandlingOpprettetHendelse(
@@ -35,6 +37,7 @@ class BehandlingOpprettetMottakTest {
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = behandlingIdNyRett,
+            behandlingskjedeId = behandlingskjedeId,
         )
 
     private val testRapid = TestRapid()
@@ -85,7 +88,7 @@ class BehandlingOpprettetMottakTest {
     @Test
     fun `Skal behandle behandling_opprettet hendelse for manuell`() {
         val basertPåBehandling = UUIDv7.ny()
-        testRapid.sendTestMessage(manuellbehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
+        testRapid.sendTestMessage(manuellBehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 manuellBehandlingOpprettetHendelse =
@@ -113,6 +116,7 @@ class BehandlingOpprettetMottakTest {
                 "type": "Søknad"
             },
             "behandlingId": "$behandlingIdNyRett",
+            "behandlingskjedeId": "$behandlingskjedeId",
             "ident": "$ident"
         }
         """
@@ -131,6 +135,7 @@ class BehandlingOpprettetMottakTest {
             },
             "basertPåBehandling": "$behandlingIdNyRett",
             "behandlingId": "$behandlingIdGjenopptak",
+            "behandlingskjedeId": "$behandlingskjedeId",
             "ident": "$ident"
         }
         """
@@ -151,12 +156,13 @@ class BehandlingOpprettetMottakTest {
             },
             "basertPåBehandling": "$basertPåBehandling",
             "behandlingId": "$behandlingIdNyRett",
+            "behandlingskjedeId": "$behandlingskjedeId",
             "ident": "$ident"
         }
         """
 
     @Language("JSON")
-    private fun manuellbehandlingOpprettetMelding(
+    private fun manuellBehandlingOpprettetMelding(
         ident: String = testIdent,
         basertPåBehandling: UUID,
     ) = """
@@ -171,6 +177,7 @@ class BehandlingOpprettetMottakTest {
             },
             "basertPåBehandling": "$basertPåBehandling",
             "behandlingId": "$behandlingIdNyRett",
+            "behandlingskjedeId": "$behandlingskjedeId",
             "ident": "$ident"
         }
         """
