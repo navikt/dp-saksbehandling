@@ -149,7 +149,7 @@ class BehandlingHttpKlientTest {
         runBlocking {
             val behandlingKlient =
                 behandlingKlient(
-                    delay = 20.milliseconds,
+                    delay = 50.milliseconds,
                     timeOut = 10.milliseconds,
                 )
             behandlingKlient.avbryt(behandlingId, ident, saksbehandlerToken).isFailure shouldBe true
