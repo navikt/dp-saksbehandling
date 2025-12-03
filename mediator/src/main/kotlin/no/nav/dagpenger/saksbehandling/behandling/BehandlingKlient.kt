@@ -139,7 +139,7 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
     ): Result<Boolean> {
         return kotlin.runCatching {
-            httpClient.get(urlString = "$dpBehandlingApiUrl/$behandlingId") {
+            httpClient.get(urlString = "$dpBehandlingApiUrl/behandling/$behandlingId") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                 accept(ContentType.Application.Json)
             }.body<BehandlingDTO>().let { behandlingDTO ->
@@ -155,7 +155,7 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
         ident: String,
     ): Result<Unit> {
-        val urlString = "$dpBehandlingApiUrl/$behandlingId/$endepunkt"
+        val urlString = "$dpBehandlingApiUrl/behandling/$behandlingId/$endepunkt"
         return runBlocking {
             try {
                 httpClient.post(urlString = urlString) {
