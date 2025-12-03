@@ -61,6 +61,7 @@ class SakTest {
 
     @Test
     fun `knyttTilSak med MeldekortbehandlingOpprettetHendelse`() {
+        val behandlingskjedeId = UUIDv7.ny()
         val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now)
 
         sak.knyttTilSak(
@@ -83,10 +84,23 @@ class SakTest {
                 meldekortId = "id",
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
+
+        val sak2 = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = behandlingskjedeId)
+        sak2.knyttTilSak(
+            MeldekortbehandlingOpprettetHendelse(
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678910",
+                opprettet = now,
+                basertPåBehandling = UUIDv7.ny(),
+                meldekortId = "id",
+                behandlingskjedeId = behandlingskjedeId,
+            ),
+        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak2)
     }
 
     @Test
     fun `knyttTilSak med ManuellBehandlingOpprettetHendelse`() {
+        val behandlingskjedeId = UUIDv7.ny()
         val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now)
 
         sak.knyttTilSak(
@@ -109,11 +123,24 @@ class SakTest {
                 manuellId = UUIDv7.ny(),
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
+
+        val sak2 = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = behandlingskjedeId)
+        sak2.knyttTilSak(
+            ManuellBehandlingOpprettetHendelse(
+                manuellId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678910",
+                opprettet = now,
+                basertPåBehandling = UUIDv7.ny(),
+                behandlingskjedeId = behandlingskjedeId,
+            ),
+        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak2)
     }
 
     @Test
     fun `knyttTilSak med BehandlingOpprettetHendelse`() {
-        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now)
+        val sakId = UUIDv7.ny()
+        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = sakId)
 
         sak.knyttTilSak(
             BehandlingOpprettetHendelse(
@@ -127,7 +154,7 @@ class SakTest {
 
         sak.knyttTilSak(
             BehandlingOpprettetHendelse(
-                sakId = sak.sakId,
+                sakId = sakId,
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",
                 opprettet = now,

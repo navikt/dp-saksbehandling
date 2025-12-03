@@ -76,7 +76,7 @@ class SakHistorikkKnyttTilSakTest {
                 ident = "12345678910",
                 opprettet = now,
                 meldekortId = "id",
-                basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
+                basertPåBehandling = UUIDv7.ny(),
                 behandlingskjedeId = UUIDv7.ny(),
             )
 
@@ -88,7 +88,15 @@ class SakHistorikkKnyttTilSakTest {
 
         sakHistorikk.knyttTilSak(
             hendelse.copy(
+                basertPåBehandling = UUIDv7.ny(),
                 behandlingskjedeId = sakMedBehandling.sakId,
+            ),
+        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
+
+        sakHistorikk.knyttTilSak(
+            hendelse.copy(
+                behandlingskjedeId = null,
+                basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
     }
@@ -101,7 +109,7 @@ class SakHistorikkKnyttTilSakTest {
                 ident = "12345678910",
                 opprettet = now,
                 manuellId = UUIDv7.ny(),
-                basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
+                basertPåBehandling = UUIDv7.ny(),
                 behandlingskjedeId = UUIDv7.ny(),
             )
 
@@ -113,7 +121,15 @@ class SakHistorikkKnyttTilSakTest {
 
         sakHistorikk.knyttTilSak(
             hendelse.copy(
+                basertPåBehandling = UUIDv7.ny(),
                 behandlingskjedeId = sakMedBehandling.sakId,
+            ),
+        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
+
+        sakHistorikk.knyttTilSak(
+            hendelse.copy(
+                behandlingskjedeId = null,
+                basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
     }
