@@ -56,6 +56,7 @@ class SakTest {
                 opprettet = now,
                 basertPåBehandling = UUIDv7.ny(),
                 meldekortId = "id",
+                behandlingskjedeId = UUIDv7.ny(),
             ),
         ) shouldBe KnyttTilSakResultat.IkkeKnyttetTilSak(sak.sakId)
 
@@ -67,6 +68,7 @@ class SakTest {
                 opprettet = now,
                 basertPåBehandling = behandling.behandlingId,
                 meldekortId = "id",
+                behandlingskjedeId = sak.sakId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
     }
@@ -82,6 +84,7 @@ class SakTest {
                 opprettet = now,
                 basertPåBehandling = UUIDv7.ny(),
                 manuellId = UUIDv7.ny(),
+                behandlingskjedeId = UUIDv7.ny(),
             ),
         ) shouldBe KnyttTilSakResultat.IkkeKnyttetTilSak(sak.sakId)
 
@@ -93,6 +96,7 @@ class SakTest {
                 opprettet = now,
                 basertPåBehandling = behandling.behandlingId,
                 manuellId = UUIDv7.ny(),
+                behandlingskjedeId = sak.sakId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
     }

@@ -70,7 +70,12 @@ class BehandlingOpprettetMottakTest {
     @Test
     fun `Skal behandle behandling_opprettet hendelse for meldekort`() {
         val basertPåBehandling = UUIDv7.ny()
-        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
+        testRapid.sendTestMessage(
+            meldekortbehandlingOpprettetMelding(
+                basertPåBehandling = basertPåBehandling,
+                behandlingskjedeId = behandlingskjedeId,
+            ),
+        )
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 meldekortbehandlingOpprettetHendelse =
@@ -80,6 +85,7 @@ class BehandlingOpprettetMottakTest {
                         ident = testIdent,
                         opprettet = opprettet,
                         basertPåBehandling = basertPåBehandling,
+                        behandlingskjedeId = behandlingskjedeId,
                     ),
             )
         }
@@ -88,7 +94,12 @@ class BehandlingOpprettetMottakTest {
     @Test
     fun `Skal behandle behandling_opprettet hendelse for manuell`() {
         val basertPåBehandling = UUIDv7.ny()
-        testRapid.sendTestMessage(manuellBehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
+        testRapid.sendTestMessage(
+            manuellBehandlingOpprettetMelding(
+                basertPåBehandling = basertPåBehandling,
+                behandlingskjedeId = behandlingskjedeId,
+            ),
+        )
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 manuellBehandlingOpprettetHendelse =
@@ -98,6 +109,7 @@ class BehandlingOpprettetMottakTest {
                         ident = testIdent,
                         opprettet = opprettet,
                         basertPåBehandling = basertPåBehandling,
+                        behandlingskjedeId = behandlingskjedeId,
                     ),
             )
         }
@@ -144,6 +156,7 @@ class BehandlingOpprettetMottakTest {
     private fun meldekortbehandlingOpprettetMelding(
         ident: String = testIdent,
         basertPåBehandling: UUID,
+        behandlingskjedeId: UUID,
     ) = """
         {
             "@event_name": "behandling_opprettet",
@@ -165,6 +178,7 @@ class BehandlingOpprettetMottakTest {
     private fun manuellBehandlingOpprettetMelding(
         ident: String = testIdent,
         basertPåBehandling: UUID,
+        behandlingskjedeId: UUID,
     ) = """
         {
             "@event_name": "behandling_opprettet",

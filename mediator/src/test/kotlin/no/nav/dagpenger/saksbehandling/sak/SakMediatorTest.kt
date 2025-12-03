@@ -68,6 +68,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdEndaEnSøknad,
             ident = testIdent,
             opprettet = opprettetLittSenere,
+            behandlingskjedeId = UUIDv7.ny(),
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
         SøknadsbehandlingOpprettetHendelse(
@@ -85,6 +86,7 @@ class SakMediatorTest {
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = behandlingIdSøknadNyRett,
+            behandlingskjedeId = behandlingskjedeId,
         )
 
     private val manuellBehandlingOpprettetHendelse =
@@ -94,6 +96,7 @@ class SakMediatorTest {
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = behandlingIdSøknadNyRett,
+            behandlingskjedeId = behandlingskjedeId,
         )
 
     private val oppslagMock: Oppslag =

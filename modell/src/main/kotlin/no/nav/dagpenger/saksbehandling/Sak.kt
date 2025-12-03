@@ -30,56 +30,41 @@ data class Sak(
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return when (
-            this.behandlinger.map { it.behandlingId }
+        return if (this.behandlinger.map { it.behandlingId }
                 .contains(søknadsbehandlingOpprettetHendelse.basertPåBehandling)
         ) {
-            true -> {
-                behandlinger.add(
-                    Behandling(
-                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        utløstAv = UtløstAvType.SØKNAD,
-                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                        hendelse = søknadsbehandlingOpprettetHendelse,
-                    ),
-                )
-                KnyttTilSakResultat.KnyttetTilSak(this)
-            }
-
-            else -> {
-                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-            }
+            behandlinger.add(
+                Behandling(
+                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                    utløstAv = UtløstAvType.SØKNAD,
+                    opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                    hendelse = søknadsbehandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return when (
-            this.behandlinger.map { it.behandlingId }
-                .contains(meldekortbehandlingOpprettetHendelse.basertPåBehandling)
-        ) {
-            true -> {
-                behandlinger.add(
-                    Behandling(
-                        behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                        utløstAv = UtløstAvType.MELDEKORT,
-                        opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
-                        hendelse = meldekortbehandlingOpprettetHendelse,
-                    ),
-                )
-                KnyttTilSakResultat.KnyttetTilSak(this)
-            }
-
-            false -> {
-                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-            }
+        return if (this.sakId == meldekortbehandlingOpprettetHendelse.behandlingskjedeId) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
+                    utløstAv = UtløstAvType.MELDEKORT,
+                    opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
+                    hendelse = meldekortbehandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
     }
 
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat {
-        val forrigeBehandling: Behandling? =
-            this.behandlinger.find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandling }
-
-        return if (forrigeBehandling != null) {
+        return if (this.sakId == manuellBehandlingOpprettetHendelse.behandlingskjedeId) {
             behandlinger.add(
                 Behandling(
                     behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
@@ -95,22 +80,18 @@ data class Sak(
     }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return when (this.sakId == behandlingOpprettetHendelse.sakId) {
-            true -> {
-                behandlinger.add(
-                    Behandling(
-                        behandlingId = behandlingOpprettetHendelse.behandlingId,
-                        utløstAv = behandlingOpprettetHendelse.type,
-                        opprettet = behandlingOpprettetHendelse.opprettet,
-                        hendelse = behandlingOpprettetHendelse,
-                    ),
-                )
-                KnyttTilSakResultat.KnyttetTilSak(this)
-            }
-
-            else -> {
-                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-            }
+        return if (this.sakId == behandlingOpprettetHendelse.sakId) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = behandlingOpprettetHendelse.behandlingId,
+                    utløstAv = behandlingOpprettetHendelse.type,
+                    opprettet = behandlingOpprettetHendelse.opprettet,
+                    hendelse = behandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
     }
 

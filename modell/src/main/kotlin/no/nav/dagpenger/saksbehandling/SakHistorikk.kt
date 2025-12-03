@@ -42,18 +42,18 @@ data class SakHistorikk(
     }
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
-        val sakerTilKnyttet: List<KnyttTilSakResultat.KnyttetTilSak> = this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
-        return when (sakerTilKnyttet.size) {
+        val sakerTilknyttet: List<KnyttTilSakResultat.KnyttetTilSak> = this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
+        return when (sakerTilknyttet.size) {
             0 -> {
                 KnyttTilSakResultat.IkkeKnyttetTilSak(*saker.map { it.sakId }.toTypedArray())
             }
 
             1 -> {
-                KnyttTilSakResultat.KnyttetTilSak(sakerTilKnyttet.single().sak)
+                KnyttTilSakResultat.KnyttetTilSak(sakerTilknyttet.single().sak)
             }
 
             else -> {
-                KnyttTilSakResultat.KnyttetTilFlereSaker(*sakerTilKnyttet.map { it.sak.sakId }.toTypedArray())
+                KnyttTilSakResultat.KnyttetTilFlereSaker(*sakerTilknyttet.map { it.sak.sakId }.toTypedArray())
             }
         }
     }

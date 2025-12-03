@@ -98,6 +98,7 @@ internal class BehandlingOpprettetMottak(
                                 ident = ident,
                                 opprettet = opprettet,
                                 basertPåBehandling = basertPåBehandling,
+                                behandlingskjedeId = behandlingskjedeId,
                             ),
                         )
                     } else {
@@ -118,6 +119,7 @@ internal class BehandlingOpprettetMottak(
                                 ident = ident,
                                 opprettet = opprettet,
                                 basertPåBehandling = basertPåBehandling,
+                                behandlingskjedeId = behandlingskjedeId,
                             ),
                         )
                     } else {
