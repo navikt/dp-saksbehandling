@@ -14,7 +14,7 @@ import java.util.UUID
 class BehandlingHttpKlientKreverTotrinnskontrollTest {
     val saksbehandlerToken = "token"
     val behandlingId = UUID.fromString("019145eb-6fbb-769f-b1b1-d2450b383a98")
-    val dpBehandlingApiUrl = "https://dp-behandling.intern.dev.nav.no/behandling"
+    val dpBehandlingApiUrl = "https://dp-behandling.intern.dev.nav.no"
 
     @Test
     fun `Test av request og parsing av response av behandling som krever totrinnskontroll`() {
@@ -23,7 +23,7 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
         val mockEngine =
             MockEngine { request ->
                 request.headers["Authorization"] shouldBe "Bearer tulleToken"
-                request.url.toString() shouldBe "$dpBehandlingApiUrl/$behandlingId"
+                request.url.toString() shouldBe "$dpBehandlingApiUrl/behandling/$behandlingId"
                 respond(
                     content = responseJson,
                     headers = headersOf("Content-Type", "application/json"),
@@ -58,7 +58,7 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
         val mockEngine =
             MockEngine { request ->
                 request.headers["Authorization"] shouldBe "Bearer tulleToken"
-                request.url.toString() shouldBe "$dpBehandlingApiUrl/$behandlingId"
+                request.url.toString() shouldBe "$dpBehandlingApiUrl/behandling/$behandlingId"
                 respond(responseJson, headers = headersOf("Content-Type", "application/json"))
             }
         val klient =

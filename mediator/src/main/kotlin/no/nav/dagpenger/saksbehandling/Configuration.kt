@@ -31,7 +31,7 @@ object Configuration {
                 "DP_MOTTAK_API_URL" to "http://dp-mottak",
                 "DP_MOTTAK_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-mottak/.default",
                 "DP_BEHANDLING_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-behandling/.default",
-                "DP_BEHANDLING_API_URL" to "http://dp-behandling/behandling",
+                "DP_BEHANDLING_API_URL" to "http://dp-behandling",
                 "NORG2_API_URL" to "http://norg2.org/norg2",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",

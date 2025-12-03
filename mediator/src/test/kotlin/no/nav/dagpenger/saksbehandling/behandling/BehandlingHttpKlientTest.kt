@@ -70,10 +70,10 @@ class BehandlingHttpKlientTest {
 
                             in
                             setOf(
-                                "/$behandlingId/avbryt",
-                                "/$behandlingId/godkjenn",
-                                "/$behandlingId/beslutt",
-                                "/$behandlingId/send-tilbake",
+                                "/behandling/$behandlingId/avbryt",
+                                "/behandling/$behandlingId/godkjenn",
+                                "/behandling/$behandlingId/beslutt",
+                                "/behandling/$behandlingId/send-tilbake",
                             ),
                             -> {
                                 respond(
