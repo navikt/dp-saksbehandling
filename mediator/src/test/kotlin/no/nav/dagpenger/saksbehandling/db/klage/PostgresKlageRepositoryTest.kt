@@ -66,6 +66,7 @@ class PostgresKlageRepositoryTest {
                             behandlingId = UUIDv7.ny(),
                             søknadId = UUIDv7.ny(),
                             opprettet = LocalDateTime.now(),
+                            behandlingskjedeId = UUIDv7.ny(),
                         ),
                 )
             sakMediator.knyttTilSak(

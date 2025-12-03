@@ -19,7 +19,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
 import java.util.UUID
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
@@ -69,7 +69,7 @@ internal class BehandlingHttpKlient(
             engine: HttpClientEngine = CIO.create {},
             registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
             metricsBaseName: String = "dp_saksbehandling_behandling_http_klient",
-            timeOut: Duration = 2000.milliseconds,
+            timeOut: Duration = 15.seconds,
         ): HttpClient {
             return createHttpClient(
                 engine = engine,
@@ -139,7 +139,7 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
     ): Result<Boolean> {
         return kotlin.runCatching {
-            httpClient.get(urlString = "$dpBehandlingApiUrl/$behandlingId") {
+            httpClient.get(urlString = "$dpBehandlingApiUrl/behandling/$behandlingId") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                 accept(ContentType.Application.Json)
             }.body<BehandlingDTO>().let { behandlingDTO ->
@@ -155,7 +155,7 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
         ident: String,
     ): Result<Unit> {
-        val urlString = "$dpBehandlingApiUrl/$behandlingId/$endepunkt"
+        val urlString = "$dpBehandlingApiUrl/behandling/$behandlingId/$endepunkt"
         return runBlocking {
             try {
                 httpClient.post(urlString = urlString) {

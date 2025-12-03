@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.sak
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.fail
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -138,6 +139,23 @@ class SakMediatorTest {
                     sak.behandlinger().single().utløstAv shouldBe UtløstAvType.SØKNAD
                 }
             }
+        }
+    }
+
+    @Test
+    fun `Skal feile ved opprette sak dersom søknadsbehandlingOpprettetHendelse mangler behandlingskjedeId`() {
+        shouldThrow<IllegalArgumentException> {
+            SakMediator(
+                sakRepository = mockk(),
+                personMediator = mockk(),
+            ).opprettSak(
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadIdNyRett,
+                    behandlingId = behandlingIdSøknadNyRett,
+                    ident = testIdent,
+                    opprettet = opprettet,
+                ),
+            )
         }
     }
 

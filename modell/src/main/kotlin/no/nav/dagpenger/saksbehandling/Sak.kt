@@ -29,19 +29,33 @@ data class Sak(
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
 
+    private fun basertPåBehandlingErKnyttetTilSak(basertPåBehandlingId: UUID?): Boolean {
+        return this.behandlinger.map { it.behandlingId }
+            .contains(basertPåBehandlingId)
+    }
+
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return if (this.sakId == søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.SØKNAD,
-                    opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                    hendelse = søknadsbehandlingOpprettetHendelse,
-                ),
-            )
-            KnyttTilSakResultat.KnyttetTilSak(this)
-        } else {
-            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+        return when (
+            this.sakId == søknadsbehandlingOpprettetHendelse.behandlingskjedeId ||
+                this.basertPåBehandlingErKnyttetTilSak(
+                    søknadsbehandlingOpprettetHendelse.basertPåBehandling,
+                )
+        ) {
+            true -> {
+                behandlinger.add(
+                    Behandling(
+                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                        utløstAv = UtløstAvType.SØKNAD,
+                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                        hendelse = søknadsbehandlingOpprettetHendelse,
+                    ),
+                )
+                KnyttTilSakResultat.KnyttetTilSak(this)
+            }
+
+            else -> {
+                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+            }
         }
     }
 
@@ -99,7 +113,7 @@ data class Sak(
 
         if (sakId != other.sakId) return false
         if (søknadId != other.søknadId) return false
-        if (opprettet != other.opprettet) return false
+        if (!opprettet.isEqual(other.opprettet)) return false
         if (this.behandlinger().sortedBy { it.behandlingId } !=
             other.behandlinger()
                 .sortedBy { it.behandlingId }

@@ -856,6 +856,7 @@ class KlageMediatorTest {
                         behandlingId = UUIDv7.ny(),
                         ident = testPersonIdent,
                         opprettet = LocalDateTime.now(),
+                        behandlingskjedeId = UUIDv7.ny(),
                     ),
                 )
 

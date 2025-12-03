@@ -44,9 +44,16 @@ class SakMediator(
     }
 
     fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
+        val sakId =
+            requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
+                logger.error {
+                    "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
+                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
+                }
+            }
         val sak =
             Sak(
-                sakId = søknadsbehandlingOpprettetHendelse.behandlingskjedeId ?: UUIDv7.ny(),
+                sakId = sakId,
                 søknadId = søknadsbehandlingOpprettetHendelse.søknadId,
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
             ).also {

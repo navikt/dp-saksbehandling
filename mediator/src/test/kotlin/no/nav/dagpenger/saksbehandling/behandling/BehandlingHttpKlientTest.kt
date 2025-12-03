@@ -70,10 +70,10 @@ class BehandlingHttpKlientTest {
 
                             in
                             setOf(
-                                "/$behandlingId/avbryt",
-                                "/$behandlingId/godkjenn",
-                                "/$behandlingId/beslutt",
-                                "/$behandlingId/send-tilbake",
+                                "/behandling/$behandlingId/avbryt",
+                                "/behandling/$behandlingId/godkjenn",
+                                "/behandling/$behandlingId/beslutt",
+                                "/behandling/$behandlingId/send-tilbake",
                             ),
                             -> {
                                 respond(
@@ -149,7 +149,7 @@ class BehandlingHttpKlientTest {
         runBlocking {
             val behandlingKlient =
                 behandlingKlient(
-                    delay = 20.milliseconds,
+                    delay = 50.milliseconds,
                     timeOut = 10.milliseconds,
                 )
             behandlingKlient.avbryt(behandlingId, ident, saksbehandlerToken).isFailure shouldBe true

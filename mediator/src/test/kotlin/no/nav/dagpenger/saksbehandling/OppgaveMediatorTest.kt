@@ -764,6 +764,7 @@ OppgaveMediatorTest {
                     behandlingId = behandlingId,
                     ident = testIdent,
                     opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
                 ),
         ) { datasource, oppgaveMediator ->
 
@@ -1094,7 +1095,8 @@ OppgaveMediatorTest {
     @Test
     fun `Livssyklus for behandling av innsending som ferdigstilles`() {
         val testPerson = DBTestHelper.testPerson
-        val sakId = UUIDv7.ny()
+        val behandlingskjedeId = UUIDv7.ny()
+        val sakId = behandlingskjedeId
         val søknadId = UUIDv7.ny()
         val behandlingIdSøknad = UUIDv7.ny()
         val journalpostId = "journalpostId123"
@@ -1105,7 +1107,7 @@ OppgaveMediatorTest {
             }
         val sak =
             Sak(
-                sakId = sakId,
+                sakId = behandlingskjedeId,
                 søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
@@ -1121,6 +1123,7 @@ OppgaveMediatorTest {
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
+                            behandlingskjedeId = behandlingskjedeId,
                         ),
                     utløstAv = UtløstAvType.SØKNAD,
                 )
@@ -1249,6 +1252,7 @@ OppgaveMediatorTest {
                     behandlingId = behandlingId,
                     ident = testIdent,
                     opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = UUIDv7.ny(),
                     utførtAv = Applikasjon(navn = ""),
                 ),
         )
