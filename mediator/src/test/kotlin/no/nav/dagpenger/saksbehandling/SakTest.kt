@@ -21,8 +21,8 @@ class SakTest {
 
     @Test
     fun `knyttTilSak med SøknadsbehandlingOpprettetHendelse`() {
-        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now)
-
+        val behandlingskjedeId = UUIDv7.ny()
+        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = UUIDv7.ny())
         sak.knyttTilSak(
             SøknadsbehandlingOpprettetHendelse(
                 søknadId = UUIDv7.ny(),
@@ -30,6 +30,7 @@ class SakTest {
                 ident = "12345678910",
                 opprettet = now,
                 basertPåBehandling = null,
+                behandlingskjedeId = behandlingskjedeId,
             ),
         ) shouldBe KnyttTilSakResultat.IkkeKnyttetTilSak(sak.sakId)
 
@@ -43,6 +44,19 @@ class SakTest {
                 basertPåBehandling = behandling.behandlingId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
+
+        val sak2 = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = behandlingskjedeId)
+        sak2.knyttTilSak(
+            søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                    ident = "12345678910",
+                    opprettet = now,
+                    basertPåBehandling = null,
+                    behandlingskjedeId = behandlingskjedeId,
+                ),
+        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak2)
     }
 
     @Test
