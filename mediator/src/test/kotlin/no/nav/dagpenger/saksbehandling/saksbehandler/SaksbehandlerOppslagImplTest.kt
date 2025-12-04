@@ -64,7 +64,7 @@ class SaksbehandlerOppslagImplTest {
                 "/api/v1/enhet/1234/kontaktinformasjon" ->
                     respond(
                         content =
-                            """{"postadresse": {"postnummer": "1234", "poststed": "Oslo", "type": "B",
+                            """{"postadresse": {"postnummer": "1234", "poststed": "Oslo", "type": "postboksadresse",
                             | "postboksnummer": "5678", "postboksanlegg": "Test"}}
                             """.trimMargin(),
                         status = HttpStatusCode.OK,
