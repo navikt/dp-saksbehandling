@@ -22,6 +22,27 @@ object AlertManager {
         override val type: String = "KNYTNING_TIL_SAK_FEIL"
     }
 
+    data class InnsendingIkkeFerdigstilt(
+        val innsendingId: UUID,
+        val tilstand: String,
+        val sistEndret: LocalDateTime,
+        val journalPostId: String,
+        val personId: UUID,
+    ) : AlertType {
+        override val feilMelding by lazy {
+            """
+            Innsending ikke fullført for innsendingId: $innsendingId.
+            Den har vært i tilstand $tilstand i ${timerSiden()} timer (sist endret: $sistEndret)
+            JournalpostId: $journalPostId
+            PersonId: $personId
+            """.trimIndent()
+        }
+
+        private fun timerSiden(): String = ChronoUnit.HOURS.between(sistEndret, LocalDateTime.now()).toString()
+
+        override val type: String = "INNSENDING_IKKE_FULLFØRT"
+    }
+
     data class UtsendingIkkeFullført(
         val utsendingId: UUID,
         val tilstand: String,
@@ -50,7 +71,7 @@ object AlertManager {
     ) : AlertType {
         override val feilMelding =
             "Oversendelse til klageinstans ikke fullført for klagebehandling $behandlingId. " +
-                "Den har vært i tilstand $tilstand siden $sistEndret"
+                    "Den har vært i tilstand $tilstand siden $sistEndret"
         override val type: String = "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
     }
 
