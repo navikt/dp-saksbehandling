@@ -12,6 +12,25 @@ object AlertManager {
         val type: String
     }
 
+    fun LocalDateTime.timserSiden(): String = ChronoUnit.HOURS.between(this, LocalDateTime.now()).toString()
+
+    internal class OppgaveOpprettetTilstandAlert(
+        private val oppgaveId: UUID,
+        private val sistEndret: LocalDateTime,
+        private val utløstAvType: UtløstAvType,
+    ) : AlertType {
+        override val feilMelding: String
+            get() {
+                return """
+                    OppgaveId: $oppgaveId
+                    Utløst av: $utløstAvType
+                    Oppgave har vært i tilstand: Opprettet i ${sistEndret.timserSiden()} timer.
+                    Sist endret: $sistEndret)
+                    """.trimIndent()
+            }
+        override val type: String = "OPPGAVE_OPPRETTET_TILSTAND_ALERT"
+    }
+
     data class KnytningTilSakFeil(
         val behandlingId: UUID,
         val hendelseType: String,

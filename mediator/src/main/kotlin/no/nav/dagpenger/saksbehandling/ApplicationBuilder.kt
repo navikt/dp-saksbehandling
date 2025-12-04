@@ -45,6 +45,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -183,6 +184,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val oversendKlageinstansAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
+    private val oppgaveTilstandAlertJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
@@ -268,6 +270,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 ).startJob(
                     period = 1.Dag,
                 )
+            oppgaveTilstandAlertJob =
+                OppgaveTilstandAlertJob(
+                    rapidsConnection = rapidsConnection,
+                    oppgaveMediator = oppgaveMediator,
+                ).startJob(
+                    period = 1.Dag,
+                )
+
             oversendKlageinstansAlarmJob =
                 OversendKlageinstansAlarmJob(
                     rapidsConnection = rapidsConnection,
@@ -306,6 +316,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         oversendKlageinstansAlarmJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
+        oppgaveTilstandAlertJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 
