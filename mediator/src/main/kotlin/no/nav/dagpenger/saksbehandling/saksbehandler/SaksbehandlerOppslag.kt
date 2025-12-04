@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import java.util.concurrent.TimeUnit
 
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger { }
 
 interface SaksbehandlerOppslag {
@@ -51,6 +52,7 @@ internal class CachedSaksbehandlerOppslag(
             treff = false
             saksbehandlerOppslag.hentSaksbehandler(navIdent)
         }.also {
+            sikkerlogg.info { "Hentet saksbehandler: $it" }
             when (treff) {
                 true -> counter.hit()
                 false -> counter.miss()
@@ -97,6 +99,7 @@ internal class SaksbehandlerOppslagImpl(
 
     override suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO {
         return coroutineScope {
+            sikkerlogg.info { "Henter saksbehandler for navIdent: $navIdent" }
             val timer = histogram.startTimer()
             val user =
                 httpClient.get(urlString = "$msGraphBaseUrl/v1.0/users") {
