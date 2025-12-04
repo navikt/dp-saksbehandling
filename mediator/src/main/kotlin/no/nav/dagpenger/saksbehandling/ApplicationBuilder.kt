@@ -64,6 +64,8 @@ import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMo
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val klageRepository = PostgresKlageRepository(dataSource)
@@ -176,6 +178,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
             sakMediator = sakMediator,
         )
+    private val innsendingAlarmJob: Timer
     private val utsendingAlarmJob: Timer
     private val oversendKlageinstansAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
@@ -257,6 +260,13 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
                 ).startJob(
                     period = 60.Minutt,
+                )
+            innsendingAlarmJob =
+                InnsendingAlarmJob(
+                    rapidsConnection = rapidsConnection,
+                    innsendingAlarmRepository = InnsendingAlarmRepository(dataSource)
+                ).startJob(
+                    period = 1.Dag,
                 )
             oversendKlageinstansAlarmJob =
                 OversendKlageinstansAlarmJob(

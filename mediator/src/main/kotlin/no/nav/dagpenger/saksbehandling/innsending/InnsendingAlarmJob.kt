@@ -7,39 +7,45 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.job.Job
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import javax.sql.DataSource
+import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 
 internal class InnsendingAlarmJob(
     private val rapidsConnection: RapidsConnection,
-    private val utsendingAlarmRepository: InnsendingAlermRepository,
+    private val innsendingAlarmRepository: InnsendingAlarmRepository,
 ) : Job() {
     override val jobName: String = "InnsendingAlarmJob"
 
     override suspend fun executeJob() {
-        TODO("Not yet implemented")
+        innsendingAlarmRepository.hentInnsendingerSomIkkeErFerdigstilt(24).also {
+            logger.info { "Fant ${it.size} ventende innsendinger: $it" }
+        }.forEach {
+            rapidsConnection.sendAlertTilRapid(
+                feilType = it,
+                utvidetFeilMelding = null,
+            )
+        }
     }
 
     override val logger: KLogger = KotlinLogging.logger {}
 
 }
 
-internal class InnsendingAlermRepository(private val dataSource: DataSource) {
+internal class InnsendingAlarmRepository(private val dataSource: DataSource) {
     fun hentInnsendingerSomIkkeErFerdigstilt(intervallAntallTimer: Int): List<AlertManager.InnsendingIkkeFerdigstilt> {
-        return sessionOf(d).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  inns.person_id         AS  person_id,
+                        SELECT  inns.person_id        AS person_id,
                                 inns.id               AS innsending_id,
                                 inns.tilstand         AS innsending_tilstand,
                                 inns.endret_tidspunkt AS innsending_endret_tidspunkt,
-                                inns.journalpost_id AS journalpost_id
+                                inns.journalpost_id   AS journalpost_id
                         FROM    innsending_v1 inns
-                        WHERE   inns.tilstand =  'FERDIGSTILL_STARTET'
+                        WHERE   inns.tilstand = 'FERDIGSTILL_STARTET'
                         AND     inns.endret_tidspunkt < NOW() - INTERVAL '$intervallAntallTimer hours'
                         """.trimIndent(),
                     paramMap = mapOf(),
@@ -48,7 +54,7 @@ internal class InnsendingAlermRepository(private val dataSource: DataSource) {
                         innsendingId = row.uuid("innsending_id"),
                         tilstand = row.string("innsending_tilstand"),
                         sistEndret = row.localDateTime("innsending_endret_tidspunkt"),
-                        journalPostId = row.string("journalpost_id"),
+                        journalpostId = row.string("journalpost_id"),
                         personId = row.uuid("person_id"),
                     )
                 }.asList,

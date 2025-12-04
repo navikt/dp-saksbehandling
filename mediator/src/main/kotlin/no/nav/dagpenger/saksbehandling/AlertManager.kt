@@ -26,14 +26,14 @@ object AlertManager {
         val innsendingId: UUID,
         val tilstand: String,
         val sistEndret: LocalDateTime,
-        val journalPostId: String,
+        val journalpostId: String,
         val personId: UUID,
     ) : AlertType {
         override val feilMelding by lazy {
             """
             Innsending ikke fullført for innsendingId: $innsendingId.
             Den har vært i tilstand $tilstand i ${timerSiden()} timer (sist endret: $sistEndret)
-            JournalpostId: $journalPostId
+            JournalpostId: $journalpostId
             PersonId: $personId
             """.trimIndent()
         }
