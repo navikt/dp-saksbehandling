@@ -317,6 +317,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         oppgaveTilstandAlertJob.cancel()
+        innsendingAlarmJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 
