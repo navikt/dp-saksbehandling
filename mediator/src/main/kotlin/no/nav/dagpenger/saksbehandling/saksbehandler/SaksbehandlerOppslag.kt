@@ -143,33 +143,6 @@ internal class SaksbehandlerOppslagImpl(
         val navn: String,
     )
 
-    private data class KontaktInformasjon(
-        val postadresse: PostAdresse?,
-    ) {
-        fun formatertPostAdresse(): String {
-            return postadresse?.formatertPostAdresse() ?: ""
-        }
-
-        data class PostAdresse(
-            val postnummer: String,
-            val poststed: String,
-            val type: String,
-            val postboksnummer: String,
-            val postboksanlegg: String?,
-        ) {
-            fun postboksAnlegg(): String {
-                return when (postboksanlegg) {
-                    null -> ""
-                    else -> "$postboksanlegg,"
-                }
-            }
-
-            fun formatertPostAdresse(): String {
-                return "Postboks $postboksnummer, ${postboksAnlegg()} $postnummer $poststed"
-            }
-        }
-    }
-
     private data class UserResponse(
         val value: List<User>,
     )
