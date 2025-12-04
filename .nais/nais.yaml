@@ -101,6 +101,8 @@ spec:
           namespace: nom
         - application: norg2
           namespace: org
+        - application: logging
+          namespace: nais-system
       external:
         - host: "{{pdl.host}}"
         - host: graph.microsoft.com
