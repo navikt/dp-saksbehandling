@@ -24,6 +24,8 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
+import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
@@ -64,8 +66,6 @@ import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMo
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
-import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
-import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val klageRepository = PostgresKlageRepository(dataSource)
@@ -264,7 +264,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             innsendingAlarmJob =
                 InnsendingAlarmJob(
                     rapidsConnection = rapidsConnection,
-                    innsendingAlarmRepository = InnsendingAlarmRepository(dataSource)
+                    innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
                 ).startJob(
                     period = 1.Dag,
                 )

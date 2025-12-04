@@ -6,9 +6,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AlertManager
+import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.job.Job
 import javax.sql.DataSource
-import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 
 internal class InnsendingAlarmJob(
     private val rapidsConnection: RapidsConnection,
@@ -28,7 +28,6 @@ internal class InnsendingAlarmJob(
     }
 
     override val logger: KLogger = KotlinLogging.logger {}
-
 }
 
 internal class InnsendingAlarmRepository(private val dataSource: DataSource) {

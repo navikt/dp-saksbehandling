@@ -71,15 +71,11 @@ object AlertManager {
     ) : AlertType {
         override val feilMelding =
             "Oversendelse til klageinstans ikke fullført for klagebehandling $behandlingId. " +
-                    "Den har vært i tilstand $tilstand siden $sistEndret"
+                "Den har vært i tilstand $tilstand siden $sistEndret"
         override val type: String = "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
     }
 
     enum class OppgaveAlertType : AlertType {
-        OPPGAVE_IKKE_FUNNET {
-            override val feilMelding = "Oppgave ikke funnet"
-            override val type: String = name
-        },
         BEHANDLING_IKKE_FUNNET {
             override val feilMelding = "Behandling ikke funnet"
             override val type: String = name
