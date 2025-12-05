@@ -193,8 +193,8 @@ class PostgresSakRepositoryTest {
         }
     }
 
-    private fun DataSource.avbrytOppgave(behandlingId: UUID) {
-        return sessionOf(this).use { session ->
+    private fun DataSource.avbrytOppgave(behandlingId: UUID) =
+        sessionOf(this).use { session ->
             session.run(
                 action =
                     queryOf(
@@ -212,32 +212,29 @@ class PostgresSakRepositoryTest {
                     ).asUpdate,
             )
         }
-    }
 
     private fun DataSource.opprettOppgaveForBehandling(
         behandlingId: UUID,
         tilstand: String = "KLAR_TIL_BEHANDLING",
-    ) {
-        return sessionOf(this).use { session ->
-            session.run(
-                action =
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            INSERT INTO oppgave_v1
-                            ( id, behandling_id, opprettet, tilstand, melding_om_vedtak_kilde, kontrollert_brev )
-                            VALUES
-                            ( gen_random_uuid(), :behandling_id, now(), :tilstand, 'DP_SAK', 'IKKE_RELEVANT')
-                            ON CONFLICT (id) DO NOTHING 
-                            """.trimIndent(),
-                        paramMap =
-                            mapOf(
-                                "behandling_id" to behandlingId,
-                                "tilstand" to tilstand,
-                            ),
-                    ).asUpdate,
-            )
-        }
+    ) = sessionOf(this).use { session ->
+        session.run(
+            action =
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO oppgave_v1
+                        ( id, behandling_id, opprettet, tilstand, melding_om_vedtak_kilde, kontrollert_brev )
+                        VALUES
+                        ( gen_random_uuid(), :behandling_id, now(), :tilstand, 'DP_SAK', 'IKKE_RELEVANT')
+                        ON CONFLICT (id) DO NOTHING 
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                            "tilstand" to tilstand,
+                        ),
+                ).asUpdate,
+        )
     }
 }

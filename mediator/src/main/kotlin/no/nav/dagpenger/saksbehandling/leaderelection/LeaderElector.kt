@@ -35,10 +35,12 @@ object LeaderElector {
             }
         }
 
-    private data class Leader(val name: String)
+    private data class Leader(
+        val name: String,
+    )
 
-    suspend fun isLeader(): Result<Boolean> {
-        return kotlin.runCatching {
+    suspend fun isLeader(): Result<Boolean> =
+        kotlin.runCatching {
             val url = Configuration.properties[Key("ELECTOR_GET_URL", stringType)]
             val hostName = Configuration.properties[Key("HOSTNAME", stringType)]
             httpClient.get(url).body<Leader>().let {
@@ -48,5 +50,4 @@ object LeaderElector {
                 it.name == hostName
             }
         }
-    }
 }

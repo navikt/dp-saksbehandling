@@ -12,8 +12,8 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.utfallOpplysningTy
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 
 object KlageView {
-    fun finnGruppe(opplysningType: OpplysningType): KlageGruppeDTO {
-        return when (opplysningType) {
+    fun finnGruppe(opplysningType: OpplysningType): KlageGruppeDTO =
+        when (opplysningType) {
             in klagenGjelderOpplysningTyper -> KlageGruppeDTO.KLAGESAK
             in fristvurderingOpplysningTyper + oversittetFristOpplysningTyper -> KlageGruppeDTO.FRIST
             in formkravOpplysningTyper -> KlageGruppeDTO.FORMKRAV
@@ -24,7 +24,6 @@ object KlageView {
                 throw IllegalStateException("KlageGruppeOpplysningType $opplysningType ikke støttet")
             }
         }
-    }
 
     fun behandlingOpplysninger(opplysninger: List<Opplysning>): List<Opplysning> {
         val behandlingOpplysninger =

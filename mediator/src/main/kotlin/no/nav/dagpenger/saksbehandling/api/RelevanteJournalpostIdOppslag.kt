@@ -43,9 +43,11 @@ class RelevanteJournalpostIdOppslag(
         }
     }
 
-    private suspend fun JournalpostIdKlient.hentJournalPostIder(oppgave: Oppgave): Set<String> {
-        return oppgave.soknadId()?.let {
-            this.hentJournalpostIder(it, oppgave.personIdent())
-        }?.getOrNull()?.toSortedSet() ?: emptySet()
-    }
+    private suspend fun JournalpostIdKlient.hentJournalPostIder(oppgave: Oppgave): Set<String> =
+        oppgave
+            .soknadId()
+            ?.let {
+                this.hentJournalpostIder(it, oppgave.personIdent())
+            }?.getOrNull()
+            ?.toSortedSet() ?: emptySet()
 }

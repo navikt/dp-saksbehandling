@@ -108,17 +108,20 @@ class OppgaveMediator(
             return
         }
 
-        oppgaveRepository.søk(
-            Søkefilter(
-                periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = Tilstand.Type.values,
-                personIdent = hendelse.ident,
-                søknadId = hendelse.søknadId,
-            ),
-        ).oppgaver.singleOrNull()?.let { oppgave ->
-            oppgave.taImotEttersending(hendelse)
-            oppgaveRepository.lagre(oppgave)
-        } ?: logger.warn {
+        oppgaveRepository
+            .søk(
+                Søkefilter(
+                    periode = Periode.UBEGRENSET_PERIODE,
+                    tilstander = Tilstand.Type.values,
+                    personIdent = hendelse.ident,
+                    søknadId = hendelse.søknadId,
+                ),
+            ).oppgaver
+            .singleOrNull()
+            ?.let { oppgave ->
+                oppgave.taImotEttersending(hendelse)
+                oppgaveRepository.lagre(oppgave)
+            } ?: logger.warn {
             "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
         }
     }
@@ -657,22 +660,25 @@ class OppgaveMediator(
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
-        oppgaveRepository.søk(
-            Søkefilter(
-                periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = Tilstand.Type.values,
-                behandlingId = hendelse.behandlingId,
-            ),
-        ).oppgaver.singleOrNull()?.let { oppgave ->
-            withLoggingContext(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-            ) {
-                logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
-                oppgave.avbryt(hendelse)
-                oppgaveRepository.lagre(oppgave)
-                logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
+        oppgaveRepository
+            .søk(
+                Søkefilter(
+                    periode = Periode.UBEGRENSET_PERIODE,
+                    tilstander = Tilstand.Type.values,
+                    behandlingId = hendelse.behandlingId,
+                ),
+            ).oppgaver
+            .singleOrNull()
+            ?.let { oppgave ->
+                withLoggingContext(
+                    "oppgaveId" to oppgave.oppgaveId.toString(),
+                ) {
+                    logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
+                    oppgave.avbryt(hendelse)
+                    oppgaveRepository.lagre(oppgave)
+                    logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
+                }
             }
-        }
     }
 
     fun utsettOppgave(utsettOppgaveHendelse: UtsettOppgaveHendelse) {

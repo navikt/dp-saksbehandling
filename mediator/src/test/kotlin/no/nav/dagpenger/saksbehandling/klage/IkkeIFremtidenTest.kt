@@ -35,11 +35,10 @@ class IkkeIFremtidenTest {
         }
     }
 
-    private fun lagOpplysning(dato: LocalDate?): Opplysning {
-        return Opplysning(
+    private fun lagOpplysning(dato: LocalDate?): Opplysning =
+        Opplysning(
             type = OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO,
             verdi = dato?.let { Verdi.Dato(it) } ?: Verdi.TomVerdi,
             regler = setOf(IkkeIFremtiden),
         )
-    }
 }

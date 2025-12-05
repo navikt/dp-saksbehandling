@@ -12,38 +12,39 @@ import java.time.LocalDate
 class SøkefilterTest {
     @Test
     fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
-        Parameters.Companion.build {
-            this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
-            this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
-            this.appendAll("emneknagg", listOf("Permittert", "Permittert fisk"))
-            this["fom"] = "2021-01-01"
-            this["tom"] = "2023-01-01"
-            this["mineOppgaver"] = "true"
-            this["antallOppgaver"] = "10"
-            this["side"] = "1"
-        }.let {
-            Søkefilter.fra(it, "testIdent") shouldBe
-                Søkefilter(
-                    periode =
-                        Periode(
-                            fom = LocalDate.of(2021, 1, 1),
-                            tom = LocalDate.of(2023, 1, 1),
-                        ),
-                    tilstander =
-                        setOf(
-                            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                            Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                        ),
-                    utløstAvTyper =
-                        setOf(
-                            UtløstAvType.SØKNAD,
-                            UtløstAvType.KLAGE,
-                        ),
-                    emneknagger = setOf("Permittert", "Permittert fisk"),
-                    saksbehandlerIdent = "testIdent",
-                    paginering = Søkefilter.Paginering(10, 0),
-                )
-        }
+        Parameters.Companion
+            .build {
+                this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
+                this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
+                this.appendAll("emneknagg", listOf("Permittert", "Permittert fisk"))
+                this["fom"] = "2021-01-01"
+                this["tom"] = "2023-01-01"
+                this["mineOppgaver"] = "true"
+                this["antallOppgaver"] = "10"
+                this["side"] = "1"
+            }.let {
+                Søkefilter.fra(it, "testIdent") shouldBe
+                    Søkefilter(
+                        periode =
+                            Periode(
+                                fom = LocalDate.of(2021, 1, 1),
+                                tom = LocalDate.of(2023, 1, 1),
+                            ),
+                        tilstander =
+                            setOf(
+                                Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                                Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            ),
+                        utløstAvTyper =
+                            setOf(
+                                UtløstAvType.SØKNAD,
+                                UtløstAvType.KLAGE,
+                            ),
+                        emneknagger = setOf("Permittert", "Permittert fisk"),
+                        saksbehandlerIdent = "testIdent",
+                        paginering = Søkefilter.Paginering(10, 0),
+                    )
+            }
     }
 
     @Test

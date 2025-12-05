@@ -39,7 +39,8 @@ internal class CachedSaksbehandlerOppslag(
     registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
 ) : SaksbehandlerOppslag {
     private val cache: CoroutineCache<String, BehandlerDTO> =
-        Caffeine.newBuilder()
+        Caffeine
+            .newBuilder()
             .maximumSize(500)
             .expireAfterWrite(1, TimeUnit.DAYS)
             .buildCoroutine()
@@ -48,16 +49,17 @@ internal class CachedSaksbehandlerOppslag(
 
     override suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO {
         var treff = true
-        return cache.get(navIdent) {
-            treff = false
-            saksbehandlerOppslag.hentSaksbehandler(navIdent)
-        }.also {
-            sikkerlogg.info { "Hentet saksbehandler: $it" }
-            when (treff) {
-                true -> counter.hit()
-                false -> counter.miss()
-            }
-        } ?: throw RuntimeException("Kunne ikke hente saksbehandler")
+        return cache
+            .get(navIdent) {
+                treff = false
+                saksbehandlerOppslag.hentSaksbehandler(navIdent)
+            }.also {
+                sikkerlogg.info { "Hentet saksbehandler: $it" }
+                when (treff) {
+                    true -> counter.hit()
+                    false -> counter.miss()
+                }
+            } ?: throw RuntimeException("Kunne ikke hente saksbehandler")
     }
 
     private fun Counter.hit() = this.labelValues("hit").inc()
@@ -65,7 +67,8 @@ internal class CachedSaksbehandlerOppslag(
     private fun Counter.miss() = this.labelValues("miss").inc()
 
     private fun PrometheusRegistry.lagCounter(): Counter =
-        Counter.builder()
+        Counter
+            .builder()
             .name("dp_saksbehandling_saksbehandler_oppslag_cache")
             .labelNames("treff")
             .help("Cache treff på saksbehandler oppslag")
@@ -92,35 +95,41 @@ internal class SaksbehandlerOppslagImpl(
         }
 
     private val histogram =
-        Histogram.builder()
+        Histogram
+            .builder()
             .name("dp_saksbehandling_saksbehandler_oppslag_duration")
             .help("Tid brukt på oppslag av saksbehandler")
             .register(prometheusRegistry)
 
-    override suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO {
-        return coroutineScope {
+    override suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO =
+        coroutineScope {
             sikkerlogg.info { "Henter saksbehandler for navIdent: $navIdent" }
             val timer = histogram.startTimer()
             val user =
-                httpClient.get(urlString = "$msGraphBaseUrl/v1.0/users") {
-                    parameter("\$count", true)
-                    parameter("\$filter", "onPremisesSamAccountName eq '$navIdent'")
-                    parameter("\$select", "streetAddress,givenName,surname")
-                    header("Authorization", "Bearer ${tokenProvider.invoke()}")
-                    header("ConsistencyLevel", "eventual")
-                }.body<UserResponse>().value.single()
+                httpClient
+                    .get(urlString = "$msGraphBaseUrl/v1.0/users") {
+                        parameter("\$count", true)
+                        parameter("\$filter", "onPremisesSamAccountName eq '$navIdent'")
+                        parameter("\$select", "streetAddress,givenName,surname")
+                        header("Authorization", "Bearer ${tokenProvider.invoke()}")
+                        header("ConsistencyLevel", "eventual")
+                    }.body<UserResponse>()
+                    .value
+                    .single()
 
             val enhetsNr = user.streetAddress
             val enhet =
                 async(Dispatchers.IO) {
-                    httpClient.get(urlString = "$norgBaseUrl/api/v1/enhet/$enhetsNr") {
-                    }.body<Enhet>()
+                    httpClient
+                        .get(urlString = "$norgBaseUrl/api/v1/enhet/$enhetsNr") {
+                        }.body<Enhet>()
                 }
 
             val kontaktInformasjon =
                 async(Dispatchers.IO) {
-                    httpClient.get(urlString = "$norgBaseUrl/api/v1/enhet/$enhetsNr/kontaktinformasjon") {
-                    }.body<KontaktInformasjon>()
+                    httpClient
+                        .get(urlString = "$norgBaseUrl/api/v1/enhet/$enhetsNr/kontaktinformasjon") {
+                        }.body<KontaktInformasjon>()
                 }
 
             BehandlerDTO(
@@ -137,7 +146,6 @@ internal class SaksbehandlerOppslagImpl(
                 logger.info { "Hentet saksbehandler $it på ${timer.observeDuration()} nanosekunder" }
             }
         }
-    }
 
     private data class Enhet(
         val navn: String,

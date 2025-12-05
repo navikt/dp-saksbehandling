@@ -8,7 +8,9 @@ interface Regel {
     sealed class Resultat {
         data object Oppfylt : Resultat()
 
-        data class IkkeOppfylt(val begrunnelse: String) : Resultat()
+        data class IkkeOppfylt(
+            val begrunnelse: String,
+        ) : Resultat()
     }
 }
 

@@ -22,19 +22,19 @@ class TilgangMapper(
     private val strengtFortroligAdresseGruppe: String,
     private val strengtFortroligAdresseUtlandGruppe: String,
 ) {
-    fun map(grupper: List<String>): Set<TilgangType> {
-        return grupper.mapNotNull {
-            when (it) {
-                saksbehandlerGruppe -> TilgangType.SAKSBEHANDLER
-                beslutteGruppe -> TilgangType.BESLUTTER
-                egneAnsatteGruppe -> TilgangType.EGNE_ANSATTE
-                fortroligAdresseGruppe -> TilgangType.FORTROLIG_ADRESSE
-                strengtFortroligAdresseGruppe -> TilgangType.STRENGT_FORTROLIG_ADRESSE
-                strengtFortroligAdresseUtlandGruppe -> TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
-                else -> null
-            }
-        }.toSet()
-    }
+    fun map(grupper: List<String>): Set<TilgangType> =
+        grupper
+            .mapNotNull {
+                when (it) {
+                    saksbehandlerGruppe -> TilgangType.SAKSBEHANDLER
+                    beslutteGruppe -> TilgangType.BESLUTTER
+                    egneAnsatteGruppe -> TilgangType.EGNE_ANSATTE
+                    fortroligAdresseGruppe -> TilgangType.FORTROLIG_ADRESSE
+                    strengtFortroligAdresseGruppe -> TilgangType.STRENGT_FORTROLIG_ADRESSE
+                    strengtFortroligAdresseUtlandGruppe -> TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+                    else -> null
+                }
+            }.toSet()
 }
 
 fun Saksbehandler.adressebeskyttelseTilganger(): Set<AdressebeskyttelseGradering> {

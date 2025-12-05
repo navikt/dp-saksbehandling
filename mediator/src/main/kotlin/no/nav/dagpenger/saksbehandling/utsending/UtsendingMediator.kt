@@ -93,7 +93,8 @@ class UtsendingMediator(
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
-        utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
+        utsendingRepository
+            .finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
                 runCatching {
                     val brev =
@@ -129,8 +130,8 @@ class UtsendingMediator(
             ident: String,
             behandlingId: UUID,
             sakId: String,
-        ): String {
-            return coroutineScope {
+        ): String =
+            coroutineScope {
                 val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
                 val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
 
@@ -148,16 +149,16 @@ class UtsendingMediator(
                         }
                     }
 
-                meldingOmVedtakKlient.lagOgHentMeldingOmVedtakM2M(
-                    person = person.await(),
-                    saksbehandler = saksbehandler.await(),
-                    beslutter = beslutter.await(),
-                    behandlingId = behandlingId,
-                    maskinToken = tokenProvider.invoke(),
-                    utløstAv = oppgave.behandling.utløstAv,
-                    sakId = sakId,
-                ).getOrThrow()
+                meldingOmVedtakKlient
+                    .lagOgHentMeldingOmVedtakM2M(
+                        person = person.await(),
+                        saksbehandler = saksbehandler.await(),
+                        beslutter = beslutter.await(),
+                        behandlingId = behandlingId,
+                        maskinToken = tokenProvider.invoke(),
+                        utløstAv = oppgave.behandling.utløstAv,
+                        sakId = sakId,
+                    ).getOrThrow()
             }
-        }
     }
 }

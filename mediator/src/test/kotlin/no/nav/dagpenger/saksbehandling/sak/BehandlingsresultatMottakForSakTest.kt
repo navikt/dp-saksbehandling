@@ -125,8 +125,8 @@ class BehandlingsresultatMottakForSakTest {
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
         basertPå: UUID? = null,
-    ): String {
-        return behandlingResultatEvent(
+    ): String =
+        behandlingResultatEvent(
             ident = ident,
             behandlingId = behandlingId,
             behandletHendelseId = søknadId,
@@ -134,5 +134,4 @@ class BehandlingsresultatMottakForSakTest {
             harRett = harRett,
             basertPå = basertPå,
         )
-    }
 }

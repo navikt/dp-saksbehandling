@@ -24,8 +24,8 @@ import java.util.stream.Stream
 class OppgaveMediatorTilgangskontrollTest {
     companion object {
         @JvmStatic
-        private fun adressebeskyttelseTester(): Stream<Arguments> {
-            return Stream.of(
+        private fun adressebeskyttelseTester(): Stream<Arguments> =
+            Stream.of(
                 // oppgavens gradering, saksbehandlers tilgang, forventet tilgang
                 Arguments.of(UGRADERT, SAKSBEHANDLER, true),
                 Arguments.of(FORTROLIG, SAKSBEHANDLER, false),
@@ -44,7 +44,6 @@ class OppgaveMediatorTilgangskontrollTest {
                 Arguments.of(STRENGT_FORTROLIG, STRENGT_FORTROLIG_ADRESSE_UTLAND, false),
                 Arguments.of(STRENGT_FORTROLIG_UTLAND, STRENGT_FORTROLIG_ADRESSE_UTLAND, true),
             )
-        }
     }
 
     @ParameterizedTest

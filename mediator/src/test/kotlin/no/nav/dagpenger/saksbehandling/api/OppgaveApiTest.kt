@@ -102,8 +102,8 @@ class OppgaveApiTest {
 
     companion object {
         @JvmStatic
-        private fun endepunktOgHttpMetodeProvider(): Stream<Arguments> {
-            return Stream.of(
+        private fun endepunktOgHttpMetodeProvider(): Stream<Arguments> =
+            Stream.of(
                 Arguments.of("/oppgave", HttpMethod.Get),
                 Arguments.of("/oppgave/neste", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId", HttpMethod.Get),
@@ -121,7 +121,6 @@ class OppgaveApiTest {
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
-        }
     }
 
     @ParameterizedTest
@@ -131,10 +130,11 @@ class OppgaveApiTest {
         httpMethod: HttpMethod,
     ) {
         withOppgaveApi {
-            client.request(endepunkt) {
-                method = httpMethod
-                autentisert(token = ugyldigToken)
-            }.status shouldBe HttpStatusCode.Unauthorized
+            client
+                .request(endepunkt) {
+                    method = httpMethod
+                    autentisert(token = ugyldigToken)
+                }.status shouldBe HttpStatusCode.Unauthorized
         }
     }
 
@@ -234,7 +234,8 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING") { autentisert() }
+            client
+                .get("/oppgave?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
@@ -273,7 +274,8 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&emneknagg=TULLBALL&emneknagg=KLAGE") { autentisert() }
+            client
+                .get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&emneknagg=TULLBALL&emneknagg=KLAGE") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
@@ -315,7 +317,8 @@ class OppgaveApiTest {
                 } returns søkResultat
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave?tilstand=$UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true") { autentisert() }
+            client
+                .get("/oppgave?tilstand=$UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
@@ -354,20 +357,21 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveId/notat") {
-                autentisert(token = beslutterToken)
-                header(HttpHeaders.ContentType, "application/json")
-                setBody(notatJson)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson
-                    """
-                    {
-                       "sistEndretTidspunkt" : "2021-01-01T12:00:00"
-                    }
-                    """.trimIndent()
-            }
+            client
+                .put("/oppgave/$oppgaveId/notat") {
+                    autentisert(token = beslutterToken)
+                    header(HttpHeaders.ContentType, "application/json")
+                    setBody(notatJson)
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    response.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                           "sistEndretTidspunkt" : "2021-01-01T12:00:00"
+                        }
+                        """.trimIndent()
+                }
         }
     }
 
@@ -389,18 +393,19 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.delete("/oppgave/$oppgaveId/notat") {
-                autentisert(token = beslutterToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson
-                    """
-                    {
-                       "sistEndretTidspunkt" : "2021-01-01T12:00:00"
-                    }
-                    """.trimIndent()
-            }
+            client
+                .delete("/oppgave/$oppgaveId/notat") {
+                    autentisert(token = beslutterToken)
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    response.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                           "sistEndretTidspunkt" : "2021-01-01T12:00:00"
+                        }
+                        """.trimIndent()
+                }
         }
         verify(exactly = 1) { oppgaveMediatorMock.slettNotat(slettNotatHendelse) }
     }
@@ -425,12 +430,13 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
-                autentisert(token = saksbehandlerToken)
-                contentType(ContentType.Application.Json)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
+                    autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
 
             coVerify(exactly = 1) {
                 oppgaveMediatorMock.ferdigstillOppgave(
@@ -456,11 +462,12 @@ class OppgaveApiTest {
                 every { it.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
-                autentisert(token = saksbehandlerToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
+                    autentisert(token = saksbehandlerToken)
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
 
             verify(exactly = 1) {
                 oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
@@ -487,11 +494,12 @@ class OppgaveApiTest {
                 } throws BehandlingKreverIkkeTotrinnskontrollException("Testmelding")
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
-                autentisert(token = saksbehandlerToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Conflict
-            }
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
+                    autentisert(token = saksbehandlerToken)
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Conflict
+                }
 
             verify(exactly = 1) {
                 oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
@@ -518,11 +526,12 @@ class OppgaveApiTest {
                 every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, any()) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/returner-til-saksbehandler") {
-                autentisert(token = beslutterToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/returner-til-saksbehandler") {
+                    autentisert(token = beslutterToken)
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
             verify(exactly = 1) {
                 oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, beslutterToken)
             }
@@ -559,39 +568,40 @@ class OppgaveApiTest {
         coEvery { pdlMock.person(any()) } returns Result.success(TestHelper.pdlPerson)
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
-            client.put("/oppgave/neste") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
+            client
+                .put("/oppgave/neste") {
+                    autentisert()
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """
                         {"queryParams":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
-                    """.trimMargin(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val json = response.bodyAsText()
-                //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder
-                    """
-                    {
-                      "behandlingId": "${oppgave.behandling.behandlingId}",
-                      "person": {
-                        "ident": "${oppgave.personIdent()}",
-                        "fornavn": "PETTER",
-                        "etternavn": "SMART",
-                        "fodselsdato": "2000-01-01",
-                        "kjonn": "UKJENT",
-                        "statsborgerskap": "NOR",
-                        "skjermesSomEgneAnsatte": ${oppgave.person.skjermesSomEgneAnsatte}
-                      },
-                      "emneknagger": [],
-                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
-                      "soknadId": "${TestHelper.søknadId}"
-                    }
-                    """.trimIndent()
-            }
+                        """.trimMargin(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val json = response.bodyAsText()
+                    //language=JSON
+                    json shouldEqualSpecifiedJsonIgnoringOrder
+                        """
+                        {
+                          "behandlingId": "${oppgave.behandling.behandlingId}",
+                          "person": {
+                            "ident": "${oppgave.personIdent()}",
+                            "fornavn": "PETTER",
+                            "etternavn": "SMART",
+                            "fodselsdato": "2000-01-01",
+                            "kjonn": "UKJENT",
+                            "statsborgerskap": "NOR",
+                            "skjermesSomEgneAnsatte": ${oppgave.person.skjermesSomEgneAnsatte}
+                          },
+                          "emneknagger": [],
+                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                          "soknadId": "${TestHelper.søknadId}"
+                        }
+                        """.trimIndent()
+                }
         }
     }
 
@@ -604,16 +614,17 @@ class OppgaveApiTest {
         val pdlMock = mockk<PDLKlient>()
 
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock) {
-            client.put("/oppgave/neste") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
+            client
+                .put("/oppgave/neste") {
+                    autentisert()
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """
                         {"queryParams":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
-                    """.trimMargin(),
-                )
-            }.status shouldBe HttpStatusCode.NotFound
+                        """.trimMargin(),
+                    )
+                }.status shouldBe HttpStatusCode.NotFound
         }
         coVerify(exactly = 0) { pdlMock.person(any()) }
     }
@@ -675,11 +686,13 @@ class OppgaveApiTest {
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveSomIkkeFinnes/tildel") { autentisert() }
+            client
+                .put("/oppgave/$oppgaveSomIkkeFinnes/tildel") { autentisert() }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.NotFound
                 }
-            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/tildel") { autentisert() }
+            client
+                .put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/tildel") { autentisert() }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.Conflict
                 }
@@ -744,22 +757,23 @@ class OppgaveApiTest {
         } just runs
 
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
-            client.put("oppgave/${oppgave.oppgaveId}/utsett") {
-                autentisert(token = gyldigSaksbehandlerToken())
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
+            client
+                .put("oppgave/${oppgave.oppgaveId}/utsett") {
+                    autentisert(token = gyldigSaksbehandlerToken())
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """
                         {
                           "utsettTilDato":"$utsettTilDato",
                           "beholdOppgave":"true",
                           "aarsak":"AVVENT_RAPPORTERINGSFRIST"
                         }
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+                        """.trimMargin(),
+                    )
+                }.also { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
         }
 
         verify(exactly = 1) {
@@ -793,20 +807,21 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/avbryt") {
-                autentisert(token = saksbehandlerToken)
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/avbryt") {
+                    autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """
                         {
                           "aarsak": "ANNET"
                         }
-                    """.trimMargin(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+                        """.trimMargin(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
 
             coVerify(exactly = 1) {
                 oppgaveMediatorMock.avbryt(
@@ -843,26 +858,27 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/avbryt") {
-                autentisert(token = saksbehandlerToken)
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/avbryt") {
+                    autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """
                         {
                           "aarsak": "ANNET"
                         }
-                    """.trimMargin(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NotFound
-                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                        """.trimMargin(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NotFound
+                    response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
                     "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
                     "title" : "Ressurs ikke funnet",
                     "status" : 404,
                     "detail" : "Fant ikke oppgave med id ${oppgave.oppgaveId}"
                 }"""
-            }
+                }
 
             coVerify(exactly = 1) {
                 oppgaveMediatorMock.avbryt(
@@ -907,8 +923,14 @@ class OppgaveApiTest {
                                 sikkerhetstiltak =
                                     listOf(
                                         SikkerhetstiltakDTO(
-                                            beskrivelse = TestHelper.pdlPerson.sikkerhetstiltak.first().beskrivelse,
-                                            gyldigTom = TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom,
+                                            beskrivelse =
+                                                TestHelper.pdlPerson.sikkerhetstiltak
+                                                    .first()
+                                                    .beskrivelse,
+                                            gyldigTom =
+                                                TestHelper.pdlPerson.sikkerhetstiltak
+                                                    .first()
+                                                    .gyldigTom,
                                         ),
                                     ),
                             ),
@@ -1199,23 +1221,24 @@ class OppgaveApiTest {
                     )
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client.post("/person/oppgaver") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": ${TestHelper.personIdent}}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val oppgaver =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
+            client
+                .post("/person/oppgaver") {
+                    autentisert()
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """{"ident": ${TestHelper.personIdent}}""",
                     )
-                oppgaver.size shouldBe 2
-            }
+                }.also { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val oppgaver =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                        )
+                    oppgaver.size shouldBe 2
+                }
         }
     }
 
@@ -1299,7 +1322,8 @@ class OppgaveApiTest {
             personMediator = personMediatorMock,
             oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
-            client.get("/person/${person.id}") { autentisert() }
+            client
+                .get("/person/${person.id}") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
@@ -1328,29 +1352,30 @@ class OppgaveApiTest {
             personMediator = personMediator,
             oppgaveDTOMapper = mockk<OppgaveDTOMapper>(),
         ) {
-            client.post("/person/personId") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "${person.ident}"}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson
-                    """
-                    {
-                        "id": "${person.id}"
-                    }
-                    """.trimIndent()
-                val personIdDTO =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<PersonIdDTO>() {},
+            client
+                .post("/person/personId") {
+                    autentisert()
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """{"ident": "${person.ident}"}""",
                     )
-                personIdDTO shouldBe forventetPersonIdDTO
-            }
+                }.also { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    response.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                            "id": "${person.id}"
+                        }
+                        """.trimIndent()
+                    val personIdDTO =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<PersonIdDTO>() {},
+                        )
+                    personIdDTO shouldBe forventetPersonIdDTO
+                }
         }
     }
 
@@ -1364,24 +1389,26 @@ class OppgaveApiTest {
         withOppgaveApi(
             personMediator = personMediator,
         ) {
-            client.post("/person/personId") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "123123"}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.NotFound
-                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+            client
+                .post("/person/personId") {
+                    autentisert()
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """{"ident": "123123"}""",
+                    )
+                }.also { response ->
+                    response.status shouldBe HttpStatusCode.NotFound
+                    response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
                     "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
                     "title" : "Ressurs ikke funnet",
                     "status" : 404,
                     "detail" : "Fant ikke person"
                 }"""
-            }
+                }
 
-            client.get("/person/${UUIDv7.ny()}") { autentisert() }
+            client
+                .get("/person/${UUIDv7.ny()}") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.NotFound
                     response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{

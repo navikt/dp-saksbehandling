@@ -29,19 +29,20 @@ fun Route.klageApi(
         route("klage/opprett") {
             post {
                 val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
-                mediator.opprettKlage(
-                    klageMottattHendelse =
-                        KlageMottattHendelse(
-                            opprettet = klage.opprettet,
-                            journalpostId = klage.journalpostId,
-                            utførtAv = Applikasjon("dp-mottak"),
-                            ident = klage.personIdent.ident,
-                            sakId = klage.sakId,
-                        ),
-                ).let { oppgave ->
+                mediator
+                    .opprettKlage(
+                        klageMottattHendelse =
+                            KlageMottattHendelse(
+                                opprettet = klage.opprettet,
+                                journalpostId = klage.journalpostId,
+                                utførtAv = Applikasjon("dp-mottak"),
+                                ident = klage.personIdent.ident,
+                                sakId = klage.sakId,
+                            ),
+                    ).let { oppgave ->
 
-                    call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
-                }
+                        call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
+                    }
             }
         }
     }
@@ -51,19 +52,20 @@ fun Route.klageApi(
             post {
                 val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
                 val saksbehandler = applicationCallParser.saksbehandler(this.call)
-                mediator.opprettManuellKlage(
-                    manuellKlageMottattHendelse =
-                        ManuellKlageMottattHendelse(
-                            ident = klage.personIdent.ident,
-                            sakId = klage.sakId,
-                            opprettet = klage.opprettet,
-                            journalpostId = klage.journalpostId,
-                            utførtAv = saksbehandler,
-                        ),
-                ).let { oppgave ->
+                mediator
+                    .opprettManuellKlage(
+                        manuellKlageMottattHendelse =
+                            ManuellKlageMottattHendelse(
+                                ident = klage.personIdent.ident,
+                                sakId = klage.sakId,
+                                opprettet = klage.opprettet,
+                                journalpostId = klage.journalpostId,
+                                utførtAv = saksbehandler,
+                            ),
+                    ).let { oppgave ->
 
-                    call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
-                }
+                        call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
+                    }
             }
         }
     }

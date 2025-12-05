@@ -35,7 +35,7 @@ class SkjermetPersonStatusTopologyTest {
         }
     }
 
-    private class TestHandler() {
+    private class TestHandler {
         val mutableMap = mutableMapOf<String, Boolean>()
 
         fun handle(

@@ -250,7 +250,8 @@ class InnsendingMediatorTest {
                     ),
             )
 
-            oppgaveMediator.hentOppgave(innsendingOppgave.oppgaveId, saksbehandler)
+            oppgaveMediator
+                .hentOppgave(innsendingOppgave.oppgaveId, saksbehandler)
                 .tilstand() shouldBe Oppgave.FerdigBehandlet
 
             innsendingMediator.hentInnsending(innsending.innsendingId, saksbehandler).let { innsending ->
@@ -579,13 +580,13 @@ class InnsendingMediatorTest {
         }
     }
 
-    private fun OppgaveMediator.finnAlleOppgaverFor(ident: String): List<Oppgave> {
-        return this.søk(
-            Søkefilter(
-                periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = Oppgave.Tilstand.Type.values,
-                personIdent = ident,
-            ),
-        ).oppgaver
-    }
+    private fun OppgaveMediator.finnAlleOppgaverFor(ident: String): List<Oppgave> =
+        this
+            .søk(
+                Søkefilter(
+                    periode = Periode.UBEGRENSET_PERIODE,
+                    tilstander = Oppgave.Tilstand.Type.values,
+                    personIdent = ident,
+                ),
+            ).oppgaver
 }

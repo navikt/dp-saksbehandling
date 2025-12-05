@@ -21,9 +21,8 @@ data class Person(
         require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
     }
 
-    override fun toString(): String {
-        return "Person(id=$id, skjermesSomEgneAnsatte=$skjermesSomEgneAnsatte, adressebeskyttelseGradering=$adressebeskyttelseGradering)"
-    }
+    override fun toString(): String =
+        "Person(id=$id, skjermesSomEgneAnsatte=$skjermesSomEgneAnsatte, adressebeskyttelseGradering=$adressebeskyttelseGradering)"
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
         if (!this.skjermesSomEgneAnsatte) {

@@ -85,8 +85,8 @@ object KlageOpplysningerMapper {
         }
     }
 
-    fun Set<Opplysning>.tilJson(): String {
-        return objectMapper.writeValueAsString(
+    fun Set<Opplysning>.tilJson(): String =
+        objectMapper.writeValueAsString(
             this.map { opplysning ->
                 mapOf(
                     "opplysningId" to opplysning.opplysningId.toString(),
@@ -96,18 +96,18 @@ object KlageOpplysningerMapper {
                 )
             },
         )
-    }
 
-    fun String.tilKlageOpplysninger(): Set<Opplysning> {
-        return objectMapper.readTree(this).map { jsonNode ->
-            val type = OpplysningType.valueOf(jsonNode.get("type").asText())
-            Opplysning(
-                opplysningId = jsonNode.get("opplysningId").asText().let { UUID.fromString(it) },
-                type = type,
-                verdi = objectMapper.convertValue(jsonNode["verdi"], Verdi::class.java),
-                valgmuligheter = jsonNode.get("valgmuligheter").map { it.asText() },
-                regler = type.regler,
-            )
-        }.toSet()
-    }
+    fun String.tilKlageOpplysninger(): Set<Opplysning> =
+        objectMapper
+            .readTree(this)
+            .map { jsonNode ->
+                val type = OpplysningType.valueOf(jsonNode.get("type").asText())
+                Opplysning(
+                    opplysningId = jsonNode.get("opplysningId").asText().let { UUID.fromString(it) },
+                    type = type,
+                    verdi = objectMapper.convertValue(jsonNode["verdi"], Verdi::class.java),
+                    valgmuligheter = jsonNode.get("valgmuligheter").map { it.asText() },
+                    regler = type.regler,
+                )
+            }.toSet()
 }

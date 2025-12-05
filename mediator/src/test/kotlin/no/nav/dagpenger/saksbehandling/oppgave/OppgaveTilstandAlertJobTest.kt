@@ -23,7 +23,8 @@ class OppgaveTilstandAlertJobTest {
                     mockk<OppgaveMediator>().also {
                         every { it.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.OPPRETTET) } returns
                             listOf(
-                                oppgave, oppgave,
+                                oppgave,
+                                oppgave,
                             )
                     },
             ).executeJob()

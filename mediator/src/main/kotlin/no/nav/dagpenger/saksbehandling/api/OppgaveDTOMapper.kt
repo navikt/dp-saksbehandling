@@ -49,8 +49,8 @@ internal class OppgaveDTOMapper(
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
     private val sakMediator: SakMediator,
 ) {
-    private fun SakHistorikk?.saker(): List<SakDTO> {
-        return when (this) {
+    private fun SakHistorikk?.saker(): List<SakDTO> =
+        when (this) {
             null -> emptyList()
             else ->
                 this.saker().map { sak ->
@@ -83,7 +83,6 @@ internal class OppgaveDTOMapper(
                     )
                 }
         }
-    }
 
     suspend fun lagPersonDTO(person: Person): PersonDTO {
         val pdlPerson = oppslag.hentPerson(person.ident)
@@ -102,8 +101,8 @@ internal class OppgaveDTOMapper(
         )
     }
 
-    suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
-        return coroutineScope {
+    suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO =
+        coroutineScope {
             val person = async { oppslag.hentPerson(oppgave.personIdent()) }
             val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
@@ -129,7 +128,6 @@ internal class OppgaveDTOMapper(
                 soknadId = oppgave.soknadId(),
             )
         }
-    }
 
     private fun lagOppgaveDTO(
         oppgave: Oppgave,
@@ -190,24 +188,25 @@ internal class OppgaveDTOMapper(
                 },
         )
 
-    private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {
-        return person.sikkerhetstiltak.map { sikkerhetstiltakDto ->
-            SikkerhetstiltakIntern(
-                type = sikkerhetstiltakDto.type,
-                beskrivelse = sikkerhetstiltakDto.beskrivelse,
-                gyldigFom = sikkerhetstiltakDto.gyldigFom,
-                gyldigTom = sikkerhetstiltakDto.gyldigTom,
-            )
-        }.filter { sikkerhetstiltakIntern -> sikkerhetstiltakIntern.erGyldig(LocalDate.now()) }.map {
-            SikkerhetstiltakDTO(beskrivelse = it.beskrivelse, gyldigTom = it.gyldigTom)
-        }
-    }
+    private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> =
+        person.sikkerhetstiltak
+            .map { sikkerhetstiltakDto ->
+                SikkerhetstiltakIntern(
+                    type = sikkerhetstiltakDto.type,
+                    beskrivelse = sikkerhetstiltakDto.beskrivelse,
+                    gyldigFom = sikkerhetstiltakDto.gyldigFom,
+                    gyldigTom = sikkerhetstiltakDto.gyldigTom,
+                )
+            }.filter { sikkerhetstiltakIntern -> sikkerhetstiltakIntern.erGyldig(LocalDate.now()) }
+            .map {
+                SikkerhetstiltakDTO(beskrivelse = it.beskrivelse, gyldigTom = it.gyldigTom)
+            }
 
     private fun lagPersonDTO(
         person: Person,
         pdlPersonIntern: PDLPersonIntern,
-    ): PersonDTO {
-        return PersonDTO(
+    ): PersonDTO =
+        PersonDTO(
             ident = person.ident,
             id = person.id,
             fornavn = pdlPersonIntern.fornavn,
@@ -232,7 +231,6 @@ internal class OppgaveDTOMapper(
                     AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                 },
         )
-    }
 }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =
@@ -257,19 +255,16 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         utsattTilDato = this.utsattTil(),
     )
 
-internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> {
-    return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
-}
+internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> = this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 
-internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO {
-    return OppgaveOversiktResultatDTO(
+internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO =
+    OppgaveOversiktResultatDTO(
         oppgaver = this.oppgaver.tilOppgaveOversiktDTOListe(),
         totaltAntallOppgaver = this.totaltAntallOppgaver,
     )
-}
 
-internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
-    return when (this) {
+internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO =
+    when (this) {
         is Oppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
         is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
         is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
@@ -282,32 +277,28 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
         is Oppgave.AvbruttMaskinelt -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand AvbruttMaskinelt")
     }
-}
 
-internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
-    return TildeltOppgaveDTO(
+internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
+    TildeltOppgaveDTO(
         nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
     )
-}
 
-internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
-    return when (this.behandling.utløstAv) {
+internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
+    when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
         UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
     }
-}
 
-internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
-    return when (this.behandling.utløstAv) {
+internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
+    when (this.behandling.utløstAv) {
         UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
     }
-}

@@ -103,15 +103,16 @@ internal class InnsendingBehovløser(
                 }
             }
             packet["@final"] = true
-            context.publish(
-                key = ident,
-                message =
-                    packet.toJson().also {
-                        sikkerlogg.info { "Publiserte løsning for behov $behovNavn: $it" }
-                    },
-            ).also {
-                logger.info { "Løste behov $behovNavn for journalpostId $journalpostId og kategori $kategori" }
-            }
+            context
+                .publish(
+                    key = ident,
+                    message =
+                        packet.toJson().also {
+                            sikkerlogg.info { "Publiserte løsning for behov $behovNavn: $it" }
+                        },
+                ).also {
+                    logger.info { "Løste behov $behovNavn for journalpostId $journalpostId og kategori $kategori" }
+                }
         }
     }
 }

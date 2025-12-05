@@ -4,7 +4,5 @@ data class UtsendingSak(
     val id: String,
     val kontekst: String = "Arena",
 ) {
-    fun toMap(): Map<String, String> {
-        return mapOf("id" to id, "kontekst" to kontekst)
-    }
+    fun toMap(): Map<String, String> = mapOf("id" to id, "kontekst" to kontekst)
 }

@@ -85,18 +85,20 @@ class KlageBehandlingTest {
         } shouldBe emptySet()
 
         // Besvarer alle opplysninger som er synlige, unntatt formkrav
-        klageBehandling.synligeOpplysninger().filter { opplysning ->
-            opplysning.type in klagenGjelderOpplysningTyper +
-                fristvurderingOpplysningTyper +
-                oversittetFristOpplysningTyper
-        }.forEach {
-            when (it.type.datatype) {
-                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
-                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi("String"))
-                Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
-                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
+        klageBehandling
+            .synligeOpplysninger()
+            .filter { opplysning ->
+                opplysning.type in klagenGjelderOpplysningTyper +
+                    fristvurderingOpplysningTyper +
+                    oversittetFristOpplysningTyper
+            }.forEach {
+                when (it.type.datatype) {
+                    Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
+                    Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi("String"))
+                    Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
+                    Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
+                }
             }
-        }
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
@@ -104,11 +106,13 @@ class KlageBehandlingTest {
         } shouldBe emptySet()
 
         // Besvarer formkrav
-        klageBehandling.synligeOpplysninger().filter { opplysning ->
-            opplysning.type in formkravOpplysningTyper
-        }.forEach {
-            klageBehandling.svar(it.opplysningId, Boolsk(true))
-        }
+        klageBehandling
+            .synligeOpplysninger()
+            .filter { opplysning ->
+                opplysning.type in formkravOpplysningTyper
+            }.forEach {
+                klageBehandling.svar(it.opplysningId, Boolsk(true))
+            }
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
@@ -319,22 +323,24 @@ class KlageBehandlingTest {
         }
     }
 
-    private fun KlageBehandling.finnEnBoolskOpplysningId(): UUID {
-        return this.synligeOpplysninger()
-            .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
-    }
+    private fun KlageBehandling.finnEnBoolskOpplysningId(): UUID =
+        this
+            .synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }
+            .opplysningId
 
-    private fun KlageBehandling.finnEnTekstOpplysningId(): UUID {
-        return this.synligeOpplysninger()
-            .first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.opplysningId
-    }
+    private fun KlageBehandling.finnEnTekstOpplysningId(): UUID =
+        this
+            .synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.TEKST }
+            .opplysningId
 
-    private fun KlageBehandling.finnEnDatoOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
-    }
+    private fun KlageBehandling.finnEnDatoOpplysningId(): UUID =
+        this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
 
-    private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.synligeOpplysninger()
-            .first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.opplysningId
-    }
+    private fun KlageBehandling.finnEnListeOpplysningId(): UUID =
+        this
+            .synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }
+            .opplysningId
 }

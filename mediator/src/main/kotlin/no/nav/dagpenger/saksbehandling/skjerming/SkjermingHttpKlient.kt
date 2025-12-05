@@ -25,25 +25,28 @@ internal class SkjermingHttpKlient(
         fun lagSkjermingHttpKlient(
             engine: HttpClientEngine = CIO.create {},
             registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
-        ): HttpClient {
-            return createHttpClient(
+        ): HttpClient =
+            createHttpClient(
                 engine = engine,
                 metricsBaseName = "dp_saksbehandling_skjerming_http_klient",
                 prometheusRegistry = registry,
             )
-        }
     }
 
-    override suspend fun erSkjermetPerson(ident: String): Result<Boolean> {
-        return kotlin.runCatching {
-            httpClient.post(urlString = skjermingApiUrl) {
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Text.Plain)
-                setBody(SkjermingRequest(ident))
-            }.bodyAsText().toBoolean()
-        }.onFailure { throwable -> logger.error(throwable) { "Kall til skjerming feilet" } }
-    }
+    override suspend fun erSkjermetPerson(ident: String): Result<Boolean> =
+        kotlin
+            .runCatching {
+                httpClient
+                    .post(urlString = skjermingApiUrl) {
+                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                        contentType(ContentType.Application.Json)
+                        accept(ContentType.Text.Plain)
+                        setBody(SkjermingRequest(ident))
+                    }.bodyAsText()
+                    .toBoolean()
+            }.onFailure { throwable -> logger.error(throwable) { "Kall til skjerming feilet" } }
 
-    private data class SkjermingRequest(val personident: String)
+    private data class SkjermingRequest(
+        val personident: String,
+    )
 }

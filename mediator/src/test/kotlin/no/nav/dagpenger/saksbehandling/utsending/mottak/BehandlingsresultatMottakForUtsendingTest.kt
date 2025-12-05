@@ -186,13 +186,12 @@ class BehandlingsresultatMottakForUtsendingTest {
         søknadId: String = this.søknadId.toString(),
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
-    ): String {
-        return behandlingResultatEvent(
+    ): String =
+        behandlingResultatEvent(
             ident = ident,
             behandlingId = behandlingId,
             behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
         )
-    }
 }

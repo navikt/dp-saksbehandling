@@ -92,24 +92,21 @@ class UtsendingBehovLøsningMottak(
     }
 }
 
-private fun JsonMessage.journalførtLøsning(): JournalførtHendelse {
-    return JournalførtHendelse(
+private fun JsonMessage.journalførtLøsning(): JournalførtHendelse =
+    JournalførtHendelse(
         behandlingId = this["behandlingId"].asUUID(),
         journalpostId = this["@løsning"][JournalføringBehov.BEHOV_NAVN]["journalpostId"].asText(),
     )
-}
 
-private fun JsonMessage.distribuertLøsning(): DistribuertHendelse {
-    return DistribuertHendelse(
+private fun JsonMessage.distribuertLøsning(): DistribuertHendelse =
+    DistribuertHendelse(
         behandlingId = this["behandlingId"].asUUID(),
         distribusjonId = this["@løsning"][DistribueringBehov.BEHOV_NAVN]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
     )
-}
 
-private fun JsonMessage.arkiverbartDokumentLøsning(): ArkiverbartBrevHendelse {
-    return ArkiverbartBrevHendelse(
+private fun JsonMessage.arkiverbartDokumentLøsning(): ArkiverbartBrevHendelse =
+    ArkiverbartBrevHendelse(
         behandlingId = this["behandlingId"].asUUID(),
         pdfUrn = this["@løsning"][ArkiverbartBrevBehov.BEHOV_NAVN]["urn"].asText().toUrn(),
     )
-}

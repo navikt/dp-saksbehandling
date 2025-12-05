@@ -91,8 +91,9 @@ class SaksbehandlerOppslagImplTest {
         runBlocking {
             val result: BehandlerDTO = saksbehandlerOppslag.hentSaksbehandler(saksbehandler.ident)
             result shouldBe saksbehandler
-            registry.getSnapShot<HistogramSnapshot> {
-                it == "dp_saksbehandling_saksbehandler_oppslag_duration"
-            }.dataPoints.size shouldBe 1
+            registry
+                .getSnapShot<HistogramSnapshot> {
+                    it == "dp_saksbehandling_saksbehandler_oppslag_duration"
+                }.dataPoints.size shouldBe 1
         }
 }

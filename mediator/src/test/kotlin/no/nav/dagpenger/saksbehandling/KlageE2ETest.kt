@@ -25,21 +25,22 @@ class KlageE2ETest {
     @Disabled
     fun `KlageE2ETest`() {
         runBlocking {
-            plainHttpClient.post("https://dp-saksbehandling.intern.dev.nav.no/klage/opprett") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-                header(HttpHeaders.ContentType, "application/json")
-                //language=json
-                setBody(
-                    """
-                    {
-                        "journalpostId": "1234",
-                        "opprettet": "${LocalDateTime.now()}",
-                        "sakId": "sakId",
-                        "personIdent": {"ident":  "20885598405"}
-                    }
-                    """.trimIndent(),
-                )
-            }.also { println(it.bodyAsText()) }
+            plainHttpClient
+                .post("https://dp-saksbehandling.intern.dev.nav.no/klage/opprett") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "journalpostId": "1234",
+                            "opprettet": "${LocalDateTime.now()}",
+                            "sakId": "sakId",
+                            "personIdent": {"ident":  "20885598405"}
+                        }
+                        """.trimIndent(),
+                    )
+                }.also { println(it.bodyAsText()) }
         }
     }
 }

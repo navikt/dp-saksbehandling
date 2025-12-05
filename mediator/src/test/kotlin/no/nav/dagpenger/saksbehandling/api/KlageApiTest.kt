@@ -51,13 +51,14 @@ class KlageApiTest {
         val mediator = mockk<KlageMediator>()
         withKlageApi(mediator) {
             client.get("klage/$klageBehandlingId").status shouldBe HttpStatusCode.Unauthorized
-            client.post("klage/opprett") {
-                headers[HttpHeaders.ContentType] = "application/json"
-                //language=json
-                setBody("""{ "tullebody": "tull" }""".trimIndent())
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
+            client
+                .post("klage/opprett") {
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "tullebody": "tull" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Unauthorized
+                }
         }
     }
 
@@ -112,35 +113,36 @@ class KlageApiTest {
             }
 
         withKlageApi(mediator) {
-            client.post("klage/opprett") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-                header(HttpHeaders.ContentType, "application/json")
-                //language=json
-                setBody(
-                    """
-                    {
-                        "journalpostId": "journalpostId",
-                        "opprettet": "$dato",
-                        "sakId": "$sakId",
-                        "personIdent": {"ident":  "$ident"}
-                    }
-                    """.trimIndent(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Created
-                "${response.contentType()}" shouldContain "application/json"
-                val json = response.bodyAsText()
-                json shouldEqualSpecifiedJsonIgnoringOrder //language=json
-                    """
-                    {
-                       "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandling.behandlingId}",
-                       "personIdent": "$ident",
-                       "tidspunktOpprettet": "2025-01-01T01:01:00",
-                       "utlostAv": "KLAGE"
-                    }
-                    """.trimIndent()
-            }
+            client
+                .post("klage/opprett") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "journalpostId": "journalpostId",
+                            "opprettet": "$dato",
+                            "sakId": "$sakId",
+                            "personIdent": {"ident":  "$ident"}
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Created
+                    "${response.contentType()}" shouldContain "application/json"
+                    val json = response.bodyAsText()
+                    json shouldEqualSpecifiedJsonIgnoringOrder //language=json
+                        """
+                        {
+                           "oppgaveId": "${oppgave.oppgaveId}",
+                           "behandlingId": "${oppgave.behandling.behandlingId}",
+                           "personIdent": "$ident",
+                           "tidspunktOpprettet": "2025-01-01T01:01:00",
+                           "utlostAv": "KLAGE"
+                        }
+                        """.trimIndent()
+                }
         }
 
         verify(exactly = 1) {
@@ -179,35 +181,36 @@ class KlageApiTest {
             }
 
         withKlageApi(mediator) {
-            client.post("klage/opprett-manuelt") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-                header(HttpHeaders.ContentType, "application/json")
-                //language=json
-                setBody(
-                    """
-                    {
-                        "journalpostId": "journalpostId",
-                        "opprettet": "$dato",
-                        "sakId": "$sakId",
-                        "personIdent": {"ident":  "$ident"}
-                    }
-                    """.trimIndent(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Created
-                "${response.contentType()}" shouldContain "application/json"
-                val json = response.bodyAsText()
-                json shouldEqualSpecifiedJsonIgnoringOrder //language=json
-                    """
-                    {
-                       "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandling.behandlingId}",
-                       "personIdent": "$ident",
-                       "tidspunktOpprettet": "2025-01-01T01:01:00",
-                       "utlostAv": "KLAGE"
-                    }
-                    """.trimIndent()
-            }
+            client
+                .post("klage/opprett-manuelt") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "journalpostId": "journalpostId",
+                            "opprettet": "$dato",
+                            "sakId": "$sakId",
+                            "personIdent": {"ident":  "$ident"}
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Created
+                    "${response.contentType()}" shouldContain "application/json"
+                    val json = response.bodyAsText()
+                    json shouldEqualSpecifiedJsonIgnoringOrder //language=json
+                        """
+                        {
+                           "oppgaveId": "${oppgave.oppgaveId}",
+                           "behandlingId": "${oppgave.behandling.behandlingId}",
+                           "personIdent": "$ident",
+                           "tidspunktOpprettet": "2025-01-01T01:01:00",
+                           "utlostAv": "KLAGE"
+                        }
+                        """.trimIndent()
+                }
         }
 
         verify(exactly = 1) {
@@ -232,34 +235,36 @@ class KlageApiTest {
         val mediatorMock = mockk<KlageMediator>()
 
         withKlageApi(mediatorMock) {
-            client.post("klage/opprett") {
-                header(HttpHeaders.Authorization, "Bearer $saksbehandlerToken")
-                header(HttpHeaders.ContentType, "application/json")
-                //language=json
-                setBody(
-                    """
-                    {
-                        "ikke": "så viktig"
-                    }
-                    """.trimIndent(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
-            client.post("klage/opprett-manuelt") {
-                header(HttpHeaders.Authorization, "Bearer $maskinToken")
-                header(HttpHeaders.ContentType, "application/json")
-                //language=json
-                setBody(
-                    """
-                    {
-                        "ikke": "så viktig"
-                    }
-                    """.trimIndent(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
+            client
+                .post("klage/opprett") {
+                    header(HttpHeaders.Authorization, "Bearer $saksbehandlerToken")
+                    header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "ikke": "så viktig"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Unauthorized
+                }
+            client
+                .post("klage/opprett-manuelt") {
+                    header(HttpHeaders.Authorization, "Bearer $maskinToken")
+                    header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "ikke": "så viktig"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Unauthorized
+                }
         }
     }
 
@@ -306,7 +311,8 @@ class KlageApiTest {
             }
 
         withKlageApi(mediator) {
-            client.put("klage/$klageBehandlingId/ferdigstill") { autentisert(token = saksbehandlerToken) }
+            client
+                .put("klage/$klageBehandlingId/ferdigstill") { autentisert(token = saksbehandlerToken) }
                 .status shouldBe HttpStatusCode.NoContent
         }
 
@@ -332,22 +338,23 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
-                autentisert()
-                headers[HttpHeaders.ContentType] = "application/json"
-                //language=json
-                setBody("""{ "verdi" : [ "tekst1", "tekst2" ], "type" : "FLER_LISTEVALG" }""".trimIndent())
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-                verify(exactly = 1) {
-                    mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageBehandlingId,
-                        opplysningId = opplysningId,
-                        verdi = tekstListe,
-                        saksbehandler = TestHelper.saksbehandler,
-                    )
+            client
+                .put("klage/$klageBehandlingId/opplysning/$opplysningId") {
+                    autentisert()
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "verdi" : [ "tekst1", "tekst2" ], "type" : "FLER_LISTEVALG" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    verify(exactly = 1) {
+                        mediator.oppdaterKlageOpplysning(
+                            behandlingId = klageBehandlingId,
+                            opplysningId = opplysningId,
+                            verdi = tekstListe,
+                            saksbehandler = TestHelper.saksbehandler,
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -361,22 +368,23 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
-                autentisert()
-                headers[HttpHeaders.ContentType] = "application/json"
-                //language=json
-                setBody("""{ "verdi" : "tekst", "type" : "TEKST" }""".trimIndent())
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-                verify(exactly = 1) {
-                    mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageBehandlingId,
-                        opplysningId = opplysningId,
-                        verdi = tekst,
-                        saksbehandler = TestHelper.saksbehandler,
-                    )
+            client
+                .put("klage/$klageBehandlingId/opplysning/$opplysningId") {
+                    autentisert()
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "verdi" : "tekst", "type" : "TEKST" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    verify(exactly = 1) {
+                        mediator.oppdaterKlageOpplysning(
+                            behandlingId = klageBehandlingId,
+                            opplysningId = opplysningId,
+                            verdi = tekst,
+                            saksbehandler = TestHelper.saksbehandler,
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -390,22 +398,23 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
-                autentisert()
-                headers[HttpHeaders.ContentType] = "application/json"
-                //language=json
-                setBody("""{ "verdi" : ${boolsk.value}, "type" : "BOOLSK" }""".trimIndent())
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-                verify(exactly = 1) {
-                    mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageBehandlingId,
-                        opplysningId = opplysningId,
-                        verdi = boolsk,
-                        saksbehandler = TestHelper.saksbehandler,
-                    )
+            client
+                .put("klage/$klageBehandlingId/opplysning/$opplysningId") {
+                    autentisert()
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "verdi" : ${boolsk.value}, "type" : "BOOLSK" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    verify(exactly = 1) {
+                        mediator.oppdaterKlageOpplysning(
+                            behandlingId = klageBehandlingId,
+                            opplysningId = opplysningId,
+                            verdi = boolsk,
+                            saksbehandler = TestHelper.saksbehandler,
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -419,22 +428,23 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
-                autentisert()
-                headers[HttpHeaders.ContentType] = "application/json"
-                //language=json
-                setBody("""{ "verdi" : "2021-01-01", "type" : "DATO" }""".trimIndent())
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-                verify(exactly = 1) {
-                    mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageBehandlingId,
-                        opplysningId = opplysningId,
-                        verdi = dato,
-                        saksbehandler = TestHelper.saksbehandler,
-                    )
+            client
+                .put("klage/$klageBehandlingId/opplysning/$opplysningId") {
+                    autentisert()
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "verdi" : "2021-01-01", "type" : "DATO" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    verify(exactly = 1) {
+                        mediator.oppdaterKlageOpplysning(
+                            behandlingId = klageBehandlingId,
+                            opplysningId = opplysningId,
+                            verdi = dato,
+                            saksbehandler = TestHelper.saksbehandler,
+                        )
+                    }
                 }
-            }
         }
     }
 

@@ -32,9 +32,7 @@ open class Tilstandslogg<T : Enum<T>>(
         return tilstandsendringer == other.tilstandsendringer
     }
 
-    override fun hashCode(): Int {
-        return tilstandsendringer.hashCode()
-    }
+    override fun hashCode(): Int = tilstandsendringer.hashCode()
 }
 
 data class Tilstandsendring<T : Enum<T>>(

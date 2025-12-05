@@ -32,17 +32,18 @@ fun Route.innsendingApi(
         authenticate("azureAd") {
             route("{behandlingId}") {
                 get {
-                    mediator.hentInnsending(
-                        innsendingId = call.behandlingId(),
-                        saksbehandler = applicationCallParser.saksbehandler(call),
-                    ).let {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            it.tilInnsendingDTO(
-                                mediator.hentLovligeSaker(it.person.ident),
-                            ),
-                        )
-                    }
+                    mediator
+                        .hentInnsending(
+                            innsendingId = call.behandlingId(),
+                            saksbehandler = applicationCallParser.saksbehandler(call),
+                        ).let {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                it.tilInnsendingDTO(
+                                    mediator.hentLovligeSaker(it.person.ident),
+                                ),
+                            )
+                        }
                 }
                 route("ferdigstill") {
                     put {
@@ -88,8 +89,8 @@ fun Route.innsendingApi(
     }
 }
 
-private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO {
-    return InnsendingDTO(
+private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO =
+    InnsendingDTO(
         behandlingId = this.innsendingId,
         journalpostId = this.journalpostId,
         lovligeSaker =
@@ -103,10 +104,9 @@ private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO 
         vurdering = this.vurdering(),
         nyBehandling = this.toBehandling(),
     )
-}
 
-private fun Innsending.toBehandling(): TynnBehandlingDTO? {
-    return when (val resultat = this.innsendingResultat()) {
+private fun Innsending.toBehandling(): TynnBehandlingDTO? =
+    when (val resultat = this.innsendingResultat()) {
         is Innsending.InnsendingResultat.Klage ->
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
@@ -121,8 +121,5 @@ private fun Innsending.toBehandling(): TynnBehandlingDTO? {
 
         else -> null
     }
-}
 
-private fun ApplicationCall.behandlingId(): UUID {
-    return this.finnUUID("behandlingId")
-}
+private fun ApplicationCall.behandlingId(): UUID = this.finnUUID("behandlingId")

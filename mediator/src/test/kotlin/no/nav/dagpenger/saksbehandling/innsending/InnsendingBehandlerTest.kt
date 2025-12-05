@@ -27,19 +27,20 @@ class InnsendingBehandlerTest {
                 behandlingKlient = mockk(),
             )
 
-        innsendingBehandler.utførAksjon(
-            hendelse =
-                lagHendelse(
-                    aksjon = Aksjon.Avslutt(null),
-                    vurdering = "Dette er en vurdering",
-                ),
-            innsending = testInnsending,
-        ).let {
-            it.innsendingId shouldBe testInnsending.innsendingId
-            it.aksjonType shouldBe Aksjon.Type.AVSLUTT
-            it.opprettetBehandlingId shouldBe null
-            it.utførtAv shouldBe saksbehandler
-        }
+        innsendingBehandler
+            .utførAksjon(
+                hendelse =
+                    lagHendelse(
+                        aksjon = Aksjon.Avslutt(null),
+                        vurdering = "Dette er en vurdering",
+                    ),
+                innsending = testInnsending,
+            ).let {
+                it.innsendingId shouldBe testInnsending.innsendingId
+                it.aksjonType shouldBe Aksjon.Type.AVSLUTT
+                it.opprettetBehandlingId shouldBe null
+                it.utførtAv shouldBe saksbehandler
+            }
     }
 
     @Test
@@ -59,15 +60,15 @@ class InnsendingBehandlerTest {
                 behandlingKlient = mockk(),
             )
 
-        innsendingBehandler.utførAksjon(
-            hendelse =
-                lagHendelse(
-                    aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
-                    vurdering = "Dette er en vurdering",
-                ),
-            innsending = testInnsending,
-        )
-            .let {
+        innsendingBehandler
+            .utførAksjon(
+                hendelse =
+                    lagHendelse(
+                        aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
+                        vurdering = "Dette er en vurdering",
+                    ),
+                innsending = testInnsending,
+            ).let {
                 it.innsendingId shouldBe testInnsending.innsendingId
                 it.aksjonType shouldBe Aksjon.Type.OPPRETT_KLAGE
                 it.opprettetBehandlingId shouldBe testOppgave.behandling.behandlingId
@@ -102,19 +103,19 @@ class InnsendingBehandlerTest {
                 behandlingKlient = behandlingKlient,
             )
 
-        innsendingBehandler.utførAksjon(
-            hendelse =
-                lagHendelse(
-                    aksjon =
-                        Aksjon.OpprettManuellBehandling(
-                            saksbehandlerToken = saksbehandlerToken,
-                            valgtSakId = UUID.randomUUID(),
-                        ),
-                    vurdering = "Dette er en vurdering",
-                ),
-            innsending = testInnsending,
-        )
-            .let {
+        innsendingBehandler
+            .utførAksjon(
+                hendelse =
+                    lagHendelse(
+                        aksjon =
+                            Aksjon.OpprettManuellBehandling(
+                                saksbehandlerToken = saksbehandlerToken,
+                                valgtSakId = UUID.randomUUID(),
+                            ),
+                        vurdering = "Dette er en vurdering",
+                    ),
+                innsending = testInnsending,
+            ).let {
                 it.innsendingId shouldBe testInnsending.innsendingId
                 it.aksjonType shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
                 it.opprettetBehandlingId shouldBe behandlingId
@@ -129,12 +130,11 @@ class InnsendingBehandlerTest {
     private fun lagHendelse(
         aksjon: Aksjon,
         vurdering: String,
-    ): FerdigstillInnsendingHendelse {
-        return FerdigstillInnsendingHendelse(
+    ): FerdigstillInnsendingHendelse =
+        FerdigstillInnsendingHendelse(
             innsendingId = testInnsending.innsendingId,
             aksjon = aksjon,
             vurdering = vurdering,
             utførtAv = saksbehandler,
         )
-    }
 }

@@ -99,7 +99,8 @@ class BehandlingHttpKlientTest {
         runBlocking {
             val behandlingKlient = behandlingKlient()
 
-            behandlingKlient.opprettManuellBehandling(ident, saksbehandlerToken)
+            behandlingKlient
+                .opprettManuellBehandling(ident, saksbehandlerToken)
                 .getOrThrow() shouldBe behandlingId
 
             requireNotNull(requestData).let {

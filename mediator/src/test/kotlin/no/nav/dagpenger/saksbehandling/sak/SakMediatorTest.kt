@@ -296,8 +296,8 @@ class SakMediatorTest {
         }
     }
 
-    private fun DataSource.finnArenaSakId(sakId: UUID): String? {
-        return sessionOf(this).use { session ->
+    private fun DataSource.finnArenaSakId(sakId: UUID): String? =
+        sessionOf(this).use { session ->
             session.run(
                 queryOf(
                     statement = """ SELECT arena_sak_id  FROM sak_v2 WHERE  id = :sak_id """,
@@ -307,7 +307,6 @@ class SakMediatorTest {
                 }.asSingle,
             )
         }
-    }
 
     @Test
     fun `Skal merke sak som DP-sak samt hente sakId for siste DP-sak og sakId for søknad hvis DP-sak`() {
@@ -347,8 +346,8 @@ class SakMediatorTest {
         }
     }
 
-    private fun DataSource.finnMerkeForDpSak(sakId: UUID): Boolean {
-        return sessionOf(this).use { session ->
+    private fun DataSource.finnMerkeForDpSak(sakId: UUID): Boolean =
+        sessionOf(this).use { session ->
             session.run(
                 queryOf(
                     statement = """ SELECT er_dp_sak FROM sak_v2 WHERE id = :sak_id """,
@@ -358,7 +357,6 @@ class SakMediatorTest {
                 }.asSingle,
             ) as Boolean
         }
-    }
 
     @Test
     fun `Skal sende avbrytBehandling ved adressebeskyttet person`() {

@@ -20,20 +20,24 @@ internal class UtsendingAlarmJob(
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        utsendingAlarmRepository.hentVentendeUtsendinger(4).also {
-            logger.info { "Fant ${it.size} ventende utsendinger: $it" }
-        }.forEach {
-            rapidsConnection.sendAlertTilRapid(
-                feilType = it,
-                utvidetFeilMelding = null,
-            )
-        }
+        utsendingAlarmRepository
+            .hentVentendeUtsendinger(4)
+            .also {
+                logger.info { "Fant ${it.size} ventende utsendinger: $it" }
+            }.forEach {
+                rapidsConnection.sendAlertTilRapid(
+                    feilType = it,
+                    utvidetFeilMelding = null,
+                )
+            }
     }
 }
 
-internal class UtsendingAlarmRepository(private val ds: DataSource) {
-    fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<AlertManager.UtsendingIkkeFullført> {
-        return sessionOf(ds).use { session ->
+internal class UtsendingAlarmRepository(
+    private val ds: DataSource,
+) {
+    fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<AlertManager.UtsendingIkkeFullført> =
+        sessionOf(ds).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -67,5 +71,4 @@ internal class UtsendingAlarmRepository(private val ds: DataSource) {
                 }.asList,
             )
         }
-    }
 }

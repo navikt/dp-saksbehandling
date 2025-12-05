@@ -15,8 +15,9 @@ import javax.sql.DataSource
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-class PostgresPersonRepository(private val dataSource: DataSource) :
-    PersonRepository,
+class PostgresPersonRepository(
+    private val dataSource: DataSource,
+) : PersonRepository,
     SkjermingRepository,
     AdressebeskyttelseRepository {
     override fun finnPerson(ident: String): Person? {
@@ -89,14 +90,13 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
         }
     }
 
-    private fun Row.tilPerson(): Person {
-        return Person(
+    private fun Row.tilPerson(): Person =
+        Person(
             id = this.uuid("id"),
             ident = this.string("ident"),
             skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
             adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
         )
-    }
 
     override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
@@ -116,8 +116,8 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
     override fun oppdaterSkjermingStatus(
         fnr: String,
         skjermet: Boolean,
-    ): Int {
-        return sessionOf(dataSource).use { session ->
+    ): Int =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -135,13 +135,12 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
                 ).asUpdate,
             )
         }
-    }
 
     override fun oppdaterAdressebeskyttelseGradering(
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
-    ): Int {
-        return sessionOf(dataSource).use { session ->
+    ): Int =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -159,24 +158,24 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
                 ).asUpdate,
             )
         }
-    }
 
     override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
         val identer = fnrs.joinToString { "'$it'" }
         return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT ident
-                        FROM   person_v1
-                        WHERE  ident IN ($identer)
-                        """.trimIndent(),
-                ).map { row ->
-                    row.string("ident")
-                }.asList,
-            ).toSet()
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT ident
+                            FROM   person_v1
+                            WHERE  ident IN ($identer)
+                            """.trimIndent(),
+                    ).map { row ->
+                        row.string("ident")
+                    }.asList,
+                ).toSet()
         }
     }
 }
@@ -204,6 +203,5 @@ private fun TransactionalSession.lagre(person: Person) {
     )
 }
 
-private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
-    return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
-}
+private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering =
+    AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))

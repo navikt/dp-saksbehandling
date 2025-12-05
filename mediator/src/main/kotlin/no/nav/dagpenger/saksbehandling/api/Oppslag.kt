@@ -17,28 +17,19 @@ class Oppslag(
     private val saksbehandlerOppslag: SaksbehandlerOppslag,
     private val skjermingKlient: SkjermingKlient,
 ) {
-    suspend fun hentPerson(ident: String): PDLPersonIntern {
-        return pdlKlient.person(ident).getOrThrow()
-    }
+    suspend fun hentPerson(ident: String): PDLPersonIntern = pdlKlient.person(ident).getOrThrow()
 
-    suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
-        return relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave)
-    }
+    suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> = relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave)
 
-    suspend fun hentBehandler(ident: String): BehandlerDTO {
-        return saksbehandlerOppslag.hentSaksbehandler(ident)
-    }
+    suspend fun hentBehandler(ident: String): BehandlerDTO = saksbehandlerOppslag.hentSaksbehandler(ident)
 
-    suspend fun erSkjermetPerson(ident: String): Boolean {
-        return skjermingKlient.erSkjermetPerson(ident).getOrThrow()
-    }
+    suspend fun erSkjermetPerson(ident: String): Boolean = skjermingKlient.erSkjermetPerson(ident).getOrThrow()
 
-    suspend fun adressebeskyttelseGradering(ident: String): AdressebeskyttelseGradering {
-        return pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
-    }
+    suspend fun adressebeskyttelseGradering(ident: String): AdressebeskyttelseGradering =
+        pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
 
-    suspend fun hentPersonMedSkjermingOgAdressebeskyttelse(ident: String): Person {
-        return coroutineScope {
+    suspend fun hentPersonMedSkjermingOgAdressebeskyttelse(ident: String): Person =
+        coroutineScope {
             val skjermesSomEgneAnsatte =
                 async {
                     erSkjermetPerson(ident)
@@ -55,5 +46,4 @@ class Oppslag(
                 adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
             )
         }
-    }
 }

@@ -16,9 +16,11 @@ interface StatistikkTjeneste {
     fun hentAntallBrevSendt(): Int
 }
 
-class PostgresStatistikkTjeneste(private val dataSource: DataSource) : StatistikkTjeneste {
-    override fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO {
-        return sessionOf(dataSource = dataSource).use { session ->
+class PostgresStatistikkTjeneste(
+    private val dataSource: DataSource,
+) : StatistikkTjeneste {
+    override fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO =
+        sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -54,10 +56,9 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                 }.asSingle,
             )
         } ?: StatistikkDTO(0, 0, 0)
-    }
 
-    override fun hentAntallVedtakGjort(): StatistikkDTO {
-        return sessionOf(dataSource = dataSource).use { session ->
+    override fun hentAntallVedtakGjort(): StatistikkDTO =
+        sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -93,7 +94,6 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                 }.asSingle,
             )
         } ?: StatistikkDTO(0, 0, 0)
-    }
 
     override fun hentBeholdningsInfo(): BeholdningsInfoDTO {
         sessionOf(dataSource = dataSource).use { session ->
@@ -129,8 +129,8 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
         }
     }
 
-    override fun hentAntallBrevSendt(): Int {
-        return sessionOf(dataSource = dataSource).use { session ->
+    override fun hentAntallBrevSendt(): Int =
+        sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -143,5 +143,4 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                 }.asSingle,
             )
         } ?: 0
-    }
 }

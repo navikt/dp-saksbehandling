@@ -61,7 +61,8 @@ class KlageViewTest {
 
     @Test
     fun `Riktig  rekkefølge på behandling opplysninger`() {
-        KlageView.behandlingOpplysninger(opplysninger.shuffled())
+        KlageView
+            .behandlingOpplysninger(opplysninger.shuffled())
             .map { opplysning -> opplysning.type } shouldBe
             listOf(
                 KLAGEN_GJELDER,
@@ -81,7 +82,8 @@ class KlageViewTest {
 
     @Test
     fun `Riktig rekkefølge på utfallsopplysninger`() {
-        KlageView.utfallOpplysninger(opplysninger.shuffled())
+        KlageView
+            .utfallOpplysninger(opplysninger.shuffled())
             .map { opplysning -> opplysning.type } shouldBe
             listOf(
                 UTFALL,

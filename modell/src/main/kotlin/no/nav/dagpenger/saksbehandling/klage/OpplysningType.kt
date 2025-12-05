@@ -139,7 +139,9 @@ enum class Datatype {
     FLERVALG,
 }
 
-enum class UtfallType(val tekst: String) {
+enum class UtfallType(
+    val tekst: String,
+) {
     OPPRETTHOLDELSE("Opprettholdelse"),
     MEDHOLD("Medhold"),
     DELVIS_MEDHOLD("Delvis medhold"),
@@ -147,44 +149,48 @@ enum class UtfallType(val tekst: String) {
     ;
 
     companion object {
-        fun Verdi.toUtfallType(): UtfallType? {
-            return when (this) {
+        fun Verdi.toUtfallType(): UtfallType? =
+            when (this) {
                 is Verdi.TekstVerdi -> {
                     UtfallType.entries.singleOrNull { it.tekst == this.value } ?: UtfallType.valueOf(this.value)
                 }
                 is Verdi.TomVerdi -> null
                 else -> throw IllegalArgumentException("Kan ikke konvertere verdi av type ${this::class.simpleName} til UtfallType")
             }
-        }
     }
 }
 
-enum class HvemKlagerType(val tekst: String) {
+enum class HvemKlagerType(
+    val tekst: String,
+) {
     BRUKER("Bruker"),
     FULLMEKTIG("Fullmektig"),
     ;
 
     companion object {
-        fun Verdi.toHvemKlagerType(): HvemKlagerType? {
-            return when (this) {
+        fun Verdi.toHvemKlagerType(): HvemKlagerType? =
+            when (this) {
                 is Verdi.TekstVerdi -> {
                     HvemKlagerType.entries.singleOrNull { it.tekst == this.value } ?: HvemKlagerType.valueOf(this.value)
                 }
                 is Verdi.TomVerdi -> null
                 else -> throw IllegalArgumentException("Kan ikke konvertere verdi av type ${this::class.simpleName} til HvemKlagerType")
             }
-        }
     }
 }
 
-enum class KlagenGjelderType(val tekst: String) {
+enum class KlagenGjelderType(
+    val tekst: String,
+) {
     AVSLAG_PÅ_SØKNAD("Avslag på søknad"),
     FOR_LITE_UTBETALT("For lite utbetalt"),
     VEDTAK_OM_TILBAKEBETALING("Vedtak om tilbakebetaling"),
     ANNET("Annet"),
 }
 
-enum class Hjemler(val tittel: String) {
+enum class Hjemler(
+    val tittel: String,
+) {
     FTRL_4_2("§ 4-2 Krav til opphold i Norge"),
     FTRL_4_3_2("§ 4-3 Krav til tap av arbeidstid"),
     FTRL_4_3_1("§ 4-3 Krav til tap av arbeidsinntekt"),
@@ -235,7 +241,9 @@ enum class Hjemler(val tittel: String) {
 
 // TODO: Vurder om vi burde importere et bibliotek/kodeverk som dekker behovet vårt her.
 // det blir for mye styr å opprettholde dette når det er mange nye land :)
-enum class Land(val land: String) {
+enum class Land(
+    val land: String,
+) {
     UKJENT("Uoppgitt/Ukjent"),
     AD("Andorra"),
     AE("De forente arabiske emirater"),

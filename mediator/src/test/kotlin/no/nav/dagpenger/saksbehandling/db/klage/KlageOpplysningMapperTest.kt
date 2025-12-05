@@ -81,13 +81,16 @@ class KlageOpplysningMapperTest {
         json.tilKlageOpplysninger().let { deserialiserteOpplysninger ->
             deserialiserteOpplysninger shouldContainExactly opplysninger
 
-            deserialiserteOpplysninger.single { it.type == OPPREISNING_OVERSITTET_FRIST }
+            deserialiserteOpplysninger
+                .single { it.type == OPPREISNING_OVERSITTET_FRIST }
                 .verdi() shouldBe Verdi.Boolsk(false)
 
-            deserialiserteOpplysninger.single { it.type == OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE }
+            deserialiserteOpplysninger
+                .single { it.type == OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE }
                 .verdi() shouldBe Verdi.TekstVerdi("Test")
 
-            deserialiserteOpplysninger.single { it.type == KLAGE_MOTTATT }
+            deserialiserteOpplysninger
+                .single { it.type == KLAGE_MOTTATT }
                 .verdi() shouldBe Verdi.Dato(LocalDate.MIN)
 
             val klagenGjelder = deserialiserteOpplysninger.single { it.type == KLAGEN_GJELDER }
@@ -98,7 +101,8 @@ class KlageOpplysningMapperTest {
                 )
             klagenGjelder.valgmuligheter shouldBe KlagenGjelderType.entries.map { it.name }
 
-            deserialiserteOpplysninger.single { it.type == KLAGEN_NEVNER_ENDRING }
+            deserialiserteOpplysninger
+                .single { it.type == KLAGEN_NEVNER_ENDRING }
                 .verdi() shouldBe Verdi.TomVerdi
         }
     }

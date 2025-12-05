@@ -80,8 +80,8 @@ internal class OppgaveHistorikkDTOMapper(
         }
     }
 
-    private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkDTOBehandlerDTO {
-        return when (behandler) {
+    private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkDTOBehandlerDTO =
+        when (behandler) {
             is Saksbehandler ->
                 OppgaveHistorikkDTOBehandlerDTO(
                     navn = hentNavn(behandler.navIdent),
@@ -94,11 +94,9 @@ internal class OppgaveHistorikkDTOMapper(
                     rolle = BehandlerDTORolleDTO.SYSTEM,
                 )
         }
-    }
 
-    private suspend fun hentNavn(ident: String): String {
-        return saksbehandlerOppslag.hentSaksbehandler(ident).let {
+    private suspend fun hentNavn(ident: String): String =
+        saksbehandlerOppslag.hentSaksbehandler(ident).let {
             "${it.fornavn} ${it.etternavn}"
         }
-    }
 }

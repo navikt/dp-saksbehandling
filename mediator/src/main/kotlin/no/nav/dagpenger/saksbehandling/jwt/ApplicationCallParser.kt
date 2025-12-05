@@ -13,8 +13,8 @@ import no.nav.dagpenger.saksbehandling.TilgangMapper
 class ApplicationCallParser(
     private val tilgangMapper: TilgangMapper,
 ) {
-    fun saksbehandler(call: ApplicationCall): Saksbehandler {
-        return requireNotNull(call.authentication.principal<JWTPrincipal>()) {
+    fun saksbehandler(call: ApplicationCall): Saksbehandler =
+        requireNotNull(call.authentication.principal<JWTPrincipal>()) {
             "Ikke autentisert"
         }.let {
             val adGrupper = it.payload.claims["groups"]?.asList(String::class.java) ?: emptyList()
@@ -24,7 +24,6 @@ class ApplicationCallParser(
                 tilganger = tilgangMapper.map(adGrupper),
             )
         }
-    }
 }
 
 internal val JWTPrincipal.navIdent get(): String = requireNavIdent(this)

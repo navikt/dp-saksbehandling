@@ -6,9 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 data class KontaktInformasjon(
     val postadresse: PostAdresse?,
 ) {
-    fun formatertPostAdresse(): String {
-        return postadresse?.formatertPostAdresse() ?: ""
-    }
+    fun formatertPostAdresse(): String = postadresse?.formatertPostAdresse() ?: ""
 
     @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -34,9 +32,7 @@ data class KontaktInformasjon(
         val gatenavn: String,
         val husnummer: String,
     ) : PostAdresse(postnummer, poststed) {
-        override fun formatertPostAdresse(): String {
-            return "$gatenavn $husnummer, $postnummer $poststed"
-        }
+        override fun formatertPostAdresse(): String = "$gatenavn $husnummer, $postnummer $poststed"
 
         override val type: String = "stedsadresse"
     }
@@ -49,15 +45,12 @@ data class KontaktInformasjon(
     ) : PostAdresse(postnummer, poststed) {
         override val type: String = "postboksadresse"
 
-        fun postboksAnlegg(): String {
-            return when (postboksanlegg) {
+        fun postboksAnlegg(): String =
+            when (postboksanlegg) {
                 null -> ""
                 else -> "$postboksanlegg,"
             }
-        }
 
-        override fun formatertPostAdresse(): String {
-            return "Postboks $postboksnummer, ${postboksAnlegg()} $postnummer $poststed"
-        }
+        override fun formatertPostAdresse(): String = "Postboks $postboksnummer, ${postboksAnlegg()} $postnummer $poststed"
     }
 }

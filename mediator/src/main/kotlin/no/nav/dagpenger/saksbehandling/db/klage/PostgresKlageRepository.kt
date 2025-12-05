@@ -32,7 +32,9 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresKlageRepository(private val datasource: DataSource) : KlageRepository {
+class PostgresKlageRepository(
+    private val datasource: DataSource,
+) : KlageRepository {
     override fun lagre(klageBehandling: KlageBehandling) {
         sessionOf(datasource).use { session ->
             session.transaction { tx ->
@@ -41,9 +43,8 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
         }
     }
 
-    override fun hentKlageBehandling(behandlingId: UUID): KlageBehandling {
-        return finnKlageBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke klage med id $behandlingId")
-    }
+    override fun hentKlageBehandling(behandlingId: UUID): KlageBehandling =
+        finnKlageBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke klage med id $behandlingId")
 
     private fun finnKlageBehandling(behandlingId: UUID): KlageBehandling? {
         val klageBehandling =
@@ -185,39 +186,39 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
     private fun hentKlageTilstandslogg(
         behandlingId: UUID,
         dataSource: DataSource,
-    ): KlageTilstandslogg {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT id, klage_id, tilstand, hendelse_type, hendelse, tidspunkt
-                        FROM   klage_tilstand_logg_v1
-                        WHERE  klage_id = :behandling_id
-                        """.trimIndent(),
-                    paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row ->
-                    Tilstandsendring(
-                        id = row.uuid("id"),
-                        tilstand = KlageTilstand.Type.valueOf(row.string("tilstand")),
-                        hendelse =
-                            rehydrerKlageTilstandsendringHendelse(
-                                hendelseType = row.string("hendelse_type"),
-                                hendelseJson = row.string("hendelse"),
-                            ),
-                        tidspunkt = row.localDateTime("tidspunkt"),
-                    )
-                }.asList,
-            ).let { KlageTilstandslogg(it) }
+    ): KlageTilstandslogg =
+        sessionOf(dataSource).use { session ->
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id, klage_id, tilstand, hendelse_type, hendelse, tidspunkt
+                            FROM   klage_tilstand_logg_v1
+                            WHERE  klage_id = :behandling_id
+                            """.trimIndent(),
+                        paramMap = mapOf("behandling_id" to behandlingId),
+                    ).map { row ->
+                        Tilstandsendring(
+                            id = row.uuid("id"),
+                            tilstand = KlageTilstand.Type.valueOf(row.string("tilstand")),
+                            hendelse =
+                                rehydrerKlageTilstandsendringHendelse(
+                                    hendelseType = row.string("hendelse_type"),
+                                    hendelseJson = row.string("hendelse"),
+                                ),
+                            tidspunkt = row.localDateTime("tidspunkt"),
+                        )
+                    }.asList,
+                ).let { KlageTilstandslogg(it) }
         }
-    }
 
     private fun rehydrerKlageTilstandsendringHendelse(
         hendelseType: String,
         hendelseJson: String,
-    ): Hendelse {
-        return when (hendelseType) {
+    ): Hendelse =
+        when (hendelseType) {
             "KlageMottattHendelse" -> hendelseJson.tilHendelse<KlageMottattHendelse>()
             "ManuellKlageMottattHendelse" -> hendelseJson.tilHendelse<ManuellKlageMottattHendelse>()
             "OversendtKlageinstansHendelse" -> hendelseJson.tilHendelse<OversendtKlageinstansHendelse>()
@@ -229,5 +230,4 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 throw IllegalArgumentException("Ukjent hendelsetype $hendelseType")
             }
         }
-    }
 }

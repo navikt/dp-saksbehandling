@@ -19,20 +19,24 @@ internal class OversendKlageinstansAlarmJob(
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        repository.hentVentendeOversendelser(4).also {
-            logger.info { "Fant ${it.size} ventende oversendelser til klageinstans: $it" }
-        }.forEach {
-            rapidsConnection.sendAlertTilRapid(
-                it,
-                it.feilMelding,
-            )
-        }
+        repository
+            .hentVentendeOversendelser(4)
+            .also {
+                logger.info { "Fant ${it.size} ventende oversendelser til klageinstans: $it" }
+            }.forEach {
+                rapidsConnection.sendAlertTilRapid(
+                    it,
+                    it.feilMelding,
+                )
+            }
     }
 }
 
-internal class OversendKlageinstansAlarmRepository(private val ds: DataSource) {
-    fun hentVentendeOversendelser(intervallAntallTimer: Int): List<AlertManager.OversendKlageinstansIkkeFullført> {
-        return sessionOf(ds).use { session ->
+internal class OversendKlageinstansAlarmRepository(
+    private val ds: DataSource,
+) {
+    fun hentVentendeOversendelser(intervallAntallTimer: Int): List<AlertManager.OversendKlageinstansIkkeFullført> =
+        sessionOf(ds).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -56,5 +60,4 @@ internal class OversendKlageinstansAlarmRepository(private val ds: DataSource) {
                 }.asList,
             )
         }
-    }
 }

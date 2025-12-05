@@ -17,22 +17,26 @@ internal class InnsendingAlarmJob(
     override val jobName: String = "InnsendingAlarmJob"
 
     override suspend fun executeJob() {
-        innsendingAlarmRepository.hentInnsendingerSomIkkeErFerdigstilt(24).also {
-            logger.info { "Fant ${it.size} ventende innsendinger: $it" }
-        }.forEach {
-            rapidsConnection.sendAlertTilRapid(
-                feilType = it,
-                utvidetFeilMelding = null,
-            )
-        }
+        innsendingAlarmRepository
+            .hentInnsendingerSomIkkeErFerdigstilt(24)
+            .also {
+                logger.info { "Fant ${it.size} ventende innsendinger: $it" }
+            }.forEach {
+                rapidsConnection.sendAlertTilRapid(
+                    feilType = it,
+                    utvidetFeilMelding = null,
+                )
+            }
     }
 
     override val logger: KLogger = KotlinLogging.logger {}
 }
 
-internal class InnsendingAlarmRepository(private val dataSource: DataSource) {
-    fun hentInnsendingerSomIkkeErFerdigstilt(intervallAntallTimer: Int): List<AlertManager.InnsendingIkkeFerdigstilt> {
-        return sessionOf(dataSource).use { session ->
+internal class InnsendingAlarmRepository(
+    private val dataSource: DataSource,
+) {
+    fun hentInnsendingerSomIkkeErFerdigstilt(intervallAntallTimer: Int): List<AlertManager.InnsendingIkkeFerdigstilt> =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -59,5 +63,4 @@ internal class InnsendingAlarmRepository(private val dataSource: DataSource) {
                 }.asList,
             )
         }
-    }
 }

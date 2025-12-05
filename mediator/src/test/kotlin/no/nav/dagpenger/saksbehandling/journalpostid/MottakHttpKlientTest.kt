@@ -104,11 +104,12 @@ class MottakHttpKlientTest {
             }
         }
 
-        collectorRegistry.getSnapShot<CounterSnapshot> {
-            it == "dp_saksbehandling_dp_mottak_http_klient_status"
-        }.let { counterSnapshot ->
-            counterSnapshot.dataPoints.single { it.labels["status"] == "400" }.value shouldBe 5.0
-        }
+        collectorRegistry
+            .getSnapShot<CounterSnapshot> {
+                it == "dp_saksbehandling_dp_mottak_http_klient_status"
+            }.let { counterSnapshot ->
+                counterSnapshot.dataPoints.single { it.labels["status"] == "400" }.value shouldBe 5.0
+            }
 
         shouldNotThrowAny {
             collectorRegistry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_dp_mottak_http_klient_duration" }

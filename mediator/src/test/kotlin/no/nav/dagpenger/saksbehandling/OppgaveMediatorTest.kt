@@ -394,8 +394,8 @@ OppgaveMediatorTest {
 
     companion object {
         @JvmStatic
-        private fun oppgaveTilstandForSøknad(): Stream<Arguments> {
-            return Stream.of(
+        private fun oppgaveTilstandForSøknad(): Stream<Arguments> =
+            Stream.of(
                 Arguments.of(Opprettet, false),
                 Arguments.of(KlarTilBehandling, false),
                 Arguments.of(AvventerOpplåsingAvBehandling, false),
@@ -406,7 +406,6 @@ OppgaveMediatorTest {
                 Arguments.of(Oppgave.UnderKontroll(), true),
                 Arguments.of(FerdigBehandlet, false),
             )
-        }
     }
 
     @Test
@@ -896,8 +895,10 @@ OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT)
-                .single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
+            oppgaveMediator
+                .hentAlleOppgaverMedTilstand(PAA_VENT)
+                .single()
+                .emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
         }
     }
 
@@ -1199,9 +1200,11 @@ OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
-                oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
-            }.tilstand() shouldBe UnderBehandling
+            oppgaveMediator
+                .finnOppgaverFor(ident = testPerson.ident)
+                .single { oppgave ->
+                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                }.tilstand() shouldBe UnderBehandling
 
             oppgaveMediator.ferdigstillOppgave(
                 InnsendingFerdigstiltHendelse(
@@ -1211,9 +1214,11 @@ OppgaveMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
-                oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
-            }.tilstand() shouldBe FerdigBehandlet
+            oppgaveMediator
+                .finnOppgaverFor(ident = testPerson.ident)
+                .single { oppgave ->
+                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                }.tilstand() shouldBe FerdigBehandlet
         }
     }
 

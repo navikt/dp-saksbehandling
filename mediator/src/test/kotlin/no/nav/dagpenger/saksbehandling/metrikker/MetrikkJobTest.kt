@@ -89,7 +89,8 @@ class MetrikkJobTest {
             forventetDistribusjon.forEach { (tilstand, forventetAntall) ->
                 val faktiskAntall =
                     oppgaveTilstandDistribusjon
-                        .find { it.oppgaveTilstand == tilstand.name }?.antall
+                        .find { it.oppgaveTilstand == tilstand.name }
+                        ?.antall
 
                 faktiskAntall shouldBe forventetAntall
             }
@@ -202,7 +203,8 @@ class MetrikkJobTest {
             forventetDistribusjon.forEach { (tilstand, forventetAntall) ->
                 val faktiskAntall =
                     utsendingTilstandDistribusjon
-                        .find { it.utsendingTilstand == tilstand.name }?.antall
+                        .find { it.utsendingTilstand == tilstand.name }
+                        ?.antall
 
                 faktiskAntall shouldBe forventetAntall
             }

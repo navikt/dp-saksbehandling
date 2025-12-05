@@ -19,27 +19,35 @@ data class SakHistorikk(
         }
     }
 
-    fun finnBehandling(behandlingId: UUID): Behandling? {
-        return saker.asSequence()
+    fun finnBehandling(behandlingId: UUID): Behandling? =
+        saker
+            .asSequence()
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
-    }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return saker.map { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }.knyttTilSakResultat()
-    }
+    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
 
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return saker.map { it.knyttTilSak(manuellBehandlingOpprettetHendelse) }.knyttTilSakResultat()
-    }
+    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(manuellBehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
 
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return saker.map { it.knyttTilSak(behandlingOpprettetHendelse) }.knyttTilSakResultat()
-    }
+    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(behandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
 
-    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat {
-        return saker.map { it.knyttTilSak(søknadsbehandlingOpprettetHendelse) }.knyttTilSakResultat()
-    }
+    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
         val sakerTilknyttet: List<KnyttTilSakResultat.KnyttetTilSak> = this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
@@ -71,7 +79,5 @@ data class SakHistorikk(
         return true
     }
 
-    fun finnSak(function: (Sak) -> Boolean): Sak? {
-        return saker.firstOrNull(function)
-    }
+    fun finnSak(function: (Sak) -> Boolean): Sak? = saker.firstOrNull(function)
 }

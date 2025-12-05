@@ -64,12 +64,14 @@ internal class LeesahTopologyTest {
         opplysningstype: String = "ADRESSEBESKYTTELSE_V1",
         historiskeIdenter: List<String>,
     ): Personhendelse? =
-        Personhendelse.newBuilder()
+        Personhendelse
+            .newBuilder()
             .setHendelseId("123")
             .setPersonidenter(historiskeIdenter)
             .setMaster("PDL")
             .setOpprettet(Instant.now())
             .setOpplysningstype(opplysningstype)
             .setEndringstype(Endringstype.ANNULLERT)
-            .setAdressebeskyttelse(Adressebeskyttelse(STRENGT_FORTROLIG_UTLAND)).build()
+            .setAdressebeskyttelse(Adressebeskyttelse(STRENGT_FORTROLIG_UTLAND))
+            .build()
 }

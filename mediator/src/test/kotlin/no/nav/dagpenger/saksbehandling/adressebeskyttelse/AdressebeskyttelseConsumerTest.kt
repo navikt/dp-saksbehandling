@@ -55,8 +55,8 @@ internal class AdressebeskyttelseConsumerTest {
     private fun testPersonResultat(
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
-    ): Result<PDLPersonIntern> {
-        return Result.success(
+    ): Result<PDLPersonIntern> =
+        Result.success(
             PDLPersonIntern(
                 ident = fnr,
                 fornavn = "Ola",
@@ -78,5 +78,4 @@ internal class AdressebeskyttelseConsumerTest {
                     ),
             ),
         )
-    }
 }

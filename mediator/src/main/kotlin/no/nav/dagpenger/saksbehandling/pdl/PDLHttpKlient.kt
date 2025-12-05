@@ -36,8 +36,8 @@ internal class PDLHttpKlient(
             httpClient = httpClient,
         )
 
-    override suspend fun erAdressebeskyttet(ident: String): Result<Boolean> {
-        return hentPerson(ident)
+    override suspend fun erAdressebeskyttet(ident: String): Result<Boolean> =
+        hentPerson(ident)
             .map {
                 when (it.adresseBeskyttelse) {
                     FORTROLIG -> true
@@ -46,10 +46,9 @@ internal class PDLHttpKlient(
                     UGRADERT -> false
                 }
             }
-    }
 
-    override suspend fun person(ident: String): Result<PDLPersonIntern> {
-        return hentPerson(ident)
+    override suspend fun person(ident: String): Result<PDLPersonIntern> =
+        hentPerson(ident)
             .map { pdlPerson ->
                 PDLPersonIntern(
                     ident = pdlPerson.fodselnummer,
@@ -72,7 +71,6 @@ internal class PDLHttpKlient(
                         },
                 )
             }
-    }
 
     private fun PDLPerson.adresseBeskyttelseGradering() =
         when (this.adresseBeskyttelse) {
@@ -82,22 +80,22 @@ internal class PDLHttpKlient(
             UGRADERT -> AdressebeskyttelseGradering.UGRADERT
         }
 
-    private suspend fun hentPerson(ident: String): Result<PDLPerson> {
-        return kotlin.runCatching {
-            hentPersonClient.hentPerson(
-                ident,
-                mapOf(
-                    HttpHeaders.Authorization to "Bearer ${tokenSupplier.invoke()}",
-                    // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                    "behandlingsnummer" to "B286",
-                    "TEMA" to "DAG",
-                ),
-            )
-        }.onFailure { e ->
-            logger.error { "Feil ved henting av personopplysninger fra PDL. Se sikkerlogg" }
-            sikkerLogg.error(e) { "Feil ved henting av personopplysninger for ident $ident" }
-        }
-    }
+    private suspend fun hentPerson(ident: String): Result<PDLPerson> =
+        kotlin
+            .runCatching {
+                hentPersonClient.hentPerson(
+                    ident,
+                    mapOf(
+                        HttpHeaders.Authorization to "Bearer ${tokenSupplier.invoke()}",
+                        // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                        "behandlingsnummer" to "B286",
+                        "TEMA" to "DAG",
+                    ),
+                )
+            }.onFailure { e ->
+                logger.error { "Feil ved henting av personopplysninger fra PDL. Se sikkerlogg" }
+                sikkerLogg.error(e) { "Feil ved henting av personopplysninger for ident $ident" }
+            }
 }
 
 internal fun defaultHttpClient(

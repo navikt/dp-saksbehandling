@@ -175,8 +175,8 @@ class PostgresSakRepository(
             ) ?: throw DataNotFoundException("Kan ikke finne sak for behandlingId $behandlingId")
         }
 
-    override fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID {
-        return sessionOf(dataSource).use { session ->
+    override fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -197,7 +197,6 @@ class PostgresSakRepository(
                 }.asSingle,
             ) ?: throw DataNotFoundException("Kan ikke finne dagpenger sak for behandlingId $behandlingId")
         }
-    }
 
     private fun TransactionalSession.lagreSakHistorikk(
         personId: UUID,
@@ -425,20 +424,24 @@ class PostgresSakRepository(
         return when (val hendelseType = this.string("hendelse_type")) {
             "TomHendelse" -> return TomHendelse
             "SøknadsbehandlingOpprettetHendelse" ->
-                this.string("hendelse_data")
+                this
+                    .string("hendelse_data")
                     .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
 
             "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
             "MeldekortbehandlingOpprettetHendelse" ->
-                this.string("hendelse_data")
+                this
+                    .string("hendelse_data")
                     .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
 
             "ManuellBehandlingOpprettetHendelse" ->
-                this.string("hendelse_data")
+                this
+                    .string("hendelse_data")
                     .tilHendelse<ManuellBehandlingOpprettetHendelse>()
 
             "InnsendingMottattHendelse" ->
-                this.string("hendelse_data")
+                this
+                    .string("hendelse_data")
                     .tilHendelse<InnsendingMottattHendelse>()
 
             else -> {

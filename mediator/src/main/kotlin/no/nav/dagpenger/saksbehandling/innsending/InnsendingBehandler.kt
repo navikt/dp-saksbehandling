@@ -13,8 +13,8 @@ class InnsendingBehandler(
     fun utførAksjon(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
-    ): InnsendingFerdigstiltHendelse {
-        return when (hendelse.aksjon) {
+    ): InnsendingFerdigstiltHendelse =
+        when (hendelse.aksjon) {
             is Aksjon.Avslutt ->
                 InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,
@@ -35,23 +35,23 @@ class InnsendingBehandler(
                     innsending = innsending,
                 )
         }
-    }
 
     private fun opprettManuellBehandling(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
-        behandlingKlient.opprettManuellBehandling(
-            personIdent = innsending.person.ident,
-            saksbehandlerToken = (hendelse.aksjon as Aksjon.OpprettManuellBehandling).saksbehandlerToken,
-        ).let { result ->
-            return InnsendingFerdigstiltHendelse(
-                innsendingId = innsending.innsendingId,
-                aksjonType = hendelse.aksjon.type,
-                opprettetBehandlingId = result.getOrThrow(),
-                utførtAv = hendelse.utførtAv,
-            )
-        }
+        behandlingKlient
+            .opprettManuellBehandling(
+                personIdent = innsending.person.ident,
+                saksbehandlerToken = (hendelse.aksjon as Aksjon.OpprettManuellBehandling).saksbehandlerToken,
+            ).let { result ->
+                return InnsendingFerdigstiltHendelse(
+                    innsendingId = innsending.innsendingId,
+                    aksjonType = hendelse.aksjon.type,
+                    opprettetBehandlingId = result.getOrThrow(),
+                    utførtAv = hendelse.utførtAv,
+                )
+            }
     }
 
     private fun opprettKlage(

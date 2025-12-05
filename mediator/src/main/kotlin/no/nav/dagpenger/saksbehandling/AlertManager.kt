@@ -106,17 +106,18 @@ object AlertManager {
         utvidetFeilMelding: String?,
     ) {
         this.publish(
-            JsonMessage.newMessage(
-                eventName = "saksbehandling_alert",
-                mutableMapOf(
-                    "alertType" to feilType.type,
-                    "feilMelding" to feilType.feilMelding,
-                ).also {
-                    utvidetFeilMelding?.let { feilMelding ->
-                        it["utvidetFeilMelding"] = feilMelding
-                    }
-                },
-            ).toJson(),
+            JsonMessage
+                .newMessage(
+                    eventName = "saksbehandling_alert",
+                    mutableMapOf(
+                        "alertType" to feilType.type,
+                        "feilMelding" to feilType.feilMelding,
+                    ).also {
+                        utvidetFeilMelding?.let { feilMelding ->
+                            it["utvidetFeilMelding"] = feilMelding
+                        }
+                    },
+                ).toJson(),
         )
     }
 }

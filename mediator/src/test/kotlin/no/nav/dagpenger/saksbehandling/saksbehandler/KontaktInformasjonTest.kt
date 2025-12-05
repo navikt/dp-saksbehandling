@@ -14,48 +14,48 @@ class KontaktInformasjonTest {
                 it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
 
-        objectMapper.readValue<KontaktInformasjon>(
-            // language="JSON"
-            """
-            {
-                "postadresse": {
-                    "postnummer": "1234",
-                    "poststed": "Oslo",
-                    "type": "postboksadresse",
-                    "postboksnummer": "5678",
-                    "postboksanlegg": "Test"
+        objectMapper
+            .readValue<KontaktInformasjon>(
+                // language="JSON"
+                """
+                {
+                    "postadresse": {
+                        "postnummer": "1234",
+                        "poststed": "Oslo",
+                        "type": "postboksadresse",
+                        "postboksnummer": "5678",
+                        "postboksanlegg": "Test"
+                    }
                 }
-            }
-            """.trimIndent(),
-        )
-            .formatertPostAdresse() shouldBe "Postboks 5678, Test, 1234 Oslo"
+                """.trimIndent(),
+            ).formatertPostAdresse() shouldBe "Postboks 5678, Test, 1234 Oslo"
 
-        objectMapper.readValue<KontaktInformasjon>(
-            // language="JSON"
-            """
-            {
-              "postadresse": {
-                "type": "stedsadresse",
-                "postnummer": "7713",
-                "poststed": "STEINKJER",
-                "gatenavn": "Ogndalsvegen",
-                "husnummer": "2",
-                "husbokstav": null,
-                "adresseTilleggsnavn": null
-              }
-              }
-            """.trimIndent(),
-        )
-            .formatertPostAdresse() shouldBe "Ogndalsvegen 2, 7713 STEINKJER"
+        objectMapper
+            .readValue<KontaktInformasjon>(
+                // language="JSON"
+                """
+                {
+                  "postadresse": {
+                    "type": "stedsadresse",
+                    "postnummer": "7713",
+                    "poststed": "STEINKJER",
+                    "gatenavn": "Ogndalsvegen",
+                    "husnummer": "2",
+                    "husbokstav": null,
+                    "adresseTilleggsnavn": null
+                  }
+                  }
+                """.trimIndent(),
+            ).formatertPostAdresse() shouldBe "Ogndalsvegen 2, 7713 STEINKJER"
 
-        objectMapper.readValue<KontaktInformasjon>(
-            // language="JSON"
-            """
-            {
-              "postadresse": null
-              }
-            """.trimIndent(),
-        )
-            .formatertPostAdresse() shouldBe ""
+        objectMapper
+            .readValue<KontaktInformasjon>(
+                // language="JSON"
+                """
+                {
+                  "postadresse": null
+                  }
+                """.trimIndent(),
+            ).formatertPostAdresse() shouldBe ""
     }
 }

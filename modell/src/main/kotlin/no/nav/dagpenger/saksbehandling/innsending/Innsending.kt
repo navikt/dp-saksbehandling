@@ -30,8 +30,8 @@ class Innsending private constructor(
         fun opprett(
             hendelse: InnsendingMottattHendelse,
             personProvider: (ident: String) -> Person,
-        ): Innsending {
-            return Innsending(
+        ): Innsending =
+            Innsending(
                 person = personProvider.invoke(hendelse.ident),
                 journalpostId = hendelse.journalpostId,
                 mottatt = hendelse.registrertTidspunkt,
@@ -39,7 +39,6 @@ class Innsending private constructor(
                 kategori = hendelse.kategori,
                 søknadId = hendelse.søknadId,
             )
-        }
 
         fun rehydrer(
             innsendingId: UUID = UUIDv7.ny(),
@@ -53,8 +52,8 @@ class Innsending private constructor(
             vurdering: String?,
             innsendingResultat: InnsendingResultat?,
             valgtSakId: UUID?,
-        ): Innsending {
-            return Innsending(
+        ): Innsending =
+            Innsending(
                 innsendingId = innsendingId,
                 person = person,
                 journalpostId = journalpostId,
@@ -67,7 +66,6 @@ class Innsending private constructor(
                 innsendingResultat = innsendingResultat,
                 valgtSakId = valgtSakId,
             )
-        }
     }
 
     fun vurdering(): String? = vurdering
@@ -90,18 +88,21 @@ class Innsending private constructor(
         object Ingen : InnsendingResultat()
 
         // val oppgaveId: UUID
-        data class Klage(val behandlingId: UUID) : InnsendingResultat()
+        data class Klage(
+            val behandlingId: UUID,
+        ) : InnsendingResultat()
 
-        data class RettTilDagpenger(val behandlingId: UUID) : InnsendingResultat()
+        data class RettTilDagpenger(
+            val behandlingId: UUID,
+        ) : InnsendingResultat()
     }
 
     fun gjelderSøknadMedId(søknadId: UUID): Boolean =
         kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK) && this.søknadId == søknadId
 
-    override fun toString(): String {
-        return "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
+    override fun toString(): String =
+        "Innsending(innsendingId=$innsendingId, person=$person, journalpostId='$journalpostId', " +
             "mottatt=$mottatt, skjemaKode='$skjemaKode', kategori=$kategori, søknadId=$søknadId"
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

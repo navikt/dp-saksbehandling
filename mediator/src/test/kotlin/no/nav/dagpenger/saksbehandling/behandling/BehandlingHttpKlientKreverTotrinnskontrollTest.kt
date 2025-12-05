@@ -43,7 +43,8 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
             )
 
         runBlocking {
-            klient.kreverTotrinnskontroll(behandlingId = behandlingId, saksbehandlerToken = saksbehandlerToken)
+            klient
+                .kreverTotrinnskontroll(behandlingId = behandlingId, saksbehandlerToken = saksbehandlerToken)
                 .getOrThrow()
                 .let { kreverTotrinnskontroll ->
                     kreverTotrinnskontroll shouldBe false
@@ -73,7 +74,8 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
             )
 
         runBlocking {
-            klient.kreverTotrinnskontroll(behandlingId = behandlingId, saksbehandlerToken = saksbehandlerToken)
+            klient
+                .kreverTotrinnskontroll(behandlingId = behandlingId, saksbehandlerToken = saksbehandlerToken)
                 .getOrThrow()
                 .let { kreverTotrinnskontroll ->
                     kreverTotrinnskontroll shouldBe false
@@ -106,10 +108,11 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
             )
 
         runBlocking {
-            klient.kreverTotrinnskontroll(
-                behandlingId = behandlingIdSomFeiler,
-                saksbehandlerToken = saksbehandlerToken,
-            ).isFailure shouldBe true
+            klient
+                .kreverTotrinnskontroll(
+                    behandlingId = behandlingIdSomFeiler,
+                    saksbehandlerToken = saksbehandlerToken,
+                ).isFailure shouldBe true
         }
     }
 }

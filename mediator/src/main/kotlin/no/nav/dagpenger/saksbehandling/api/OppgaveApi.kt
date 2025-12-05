@@ -80,7 +80,8 @@ internal fun Route.oppgaveApi(
                 sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
                 val person = personMediator.hentPerson(personId)
                 val oppgaver =
-                    oppgaveMediator.finnOppgaverFor(person.ident)
+                    oppgaveMediator
+                        .finnOppgaverFor(person.ident)
                         .tilOppgaveOversiktDTOListe()
                 val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)
@@ -89,7 +90,8 @@ internal fun Route.oppgaveApi(
         route("person/oppgaver") {
             post {
                 val oppgaver =
-                    oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident)
+                    oppgaveMediator
+                        .finnOppgaverFor(call.receive<PersonIdentDTO>().ident)
                         .tilOppgaveOversiktDTOListe()
                 call.respond(status = HttpStatusCode.OK, oppgaver)
             }
@@ -131,7 +133,8 @@ internal fun Route.oppgaveApi(
                                         instance = call.request.path(),
                                         detail = "Ingen oppgave funnet for søket",
                                         type =
-                                            URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet")
+                                            URI
+                                                .create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet")
                                                 .toString(),
                                     ),
                             )
@@ -265,9 +268,10 @@ internal fun Route.oppgaveApi(
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val tildeltOppgave: TildeltOppgaveDTO =
-                                oppgaveMediator.tildelOppgave(
-                                    oppgaveAnsvarHendelse,
-                                ).tilTildeltOppgaveDTO()
+                                oppgaveMediator
+                                    .tildelOppgave(
+                                        oppgaveAnsvarHendelse,
+                                    ).tilTildeltOppgaveDTO()
                             call.respond(
                                 status = HttpStatusCode.OK,
                                 message = tildeltOppgave,
@@ -376,7 +380,8 @@ internal fun Route.oppgaveApi(
                                     instance = call.request.path(),
                                     detail = "Ingen oppgaveId funnet for behandlingId: $behandlingId",
                                     type =
-                                        URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgaveId-funnet")
+                                        URI
+                                            .create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgaveId-funnet")
                                             .toString(),
                                 ),
                         )
@@ -429,36 +434,34 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbeh
     )
 }
 
-private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): SettOppgaveAnsvarHendelse {
-    return SettOppgaveAnsvarHendelse(
+private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): SettOppgaveAnsvarHendelse =
+    SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = saksbehandler.navIdent,
         utførtAv = saksbehandler,
     )
-}
 
-private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): FjernOppgaveAnsvarHendelse {
-    return FjernOppgaveAnsvarHendelse(
+private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): FjernOppgaveAnsvarHendelse =
+    FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
     )
-}
 
-private fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse {
-    return SendTilKontrollHendelse(
+private fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse =
+    SendTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
     )
-}
 
-private fun ApplicationCall.returnerTilSaksbehandlingHendelse(saksbehandler: Saksbehandler): ReturnerTilSaksbehandlingHendelse {
-    return ReturnerTilSaksbehandlingHendelse(
+private fun ApplicationCall.returnerTilSaksbehandlingHendelse(saksbehandler: Saksbehandler): ReturnerTilSaksbehandlingHendelse =
+    ReturnerTilSaksbehandlingHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
     )
-}
 
-class InternDataException(message: String) : RuntimeException(message)
+class InternDataException(
+    message: String,
+) : RuntimeException(message)
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {

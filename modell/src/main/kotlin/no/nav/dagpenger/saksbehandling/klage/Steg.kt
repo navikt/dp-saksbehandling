@@ -23,11 +23,13 @@ object FristvurderingSteg : Steg {
     override fun evaluerSynlighet(opplysninger: Collection<Opplysning>) {
         when (klagefristOppfylt(opplysninger)) {
             true ->
-                opplysninger.filter { it.type in oversittetFristOpplysningTyper }
+                opplysninger
+                    .filter { it.type in oversittetFristOpplysningTyper }
                     .forEach { it.settSynlighet(false) }
 
             false ->
-                opplysninger.filter { it.type in oversittetFristOpplysningTyper }
+                opplysninger
+                    .filter { it.type in oversittetFristOpplysningTyper }
                     .forEach { it.settSynlighet(true) }
         }
     }
@@ -60,11 +62,13 @@ object VurderUtfallSteg : Steg {
             }
         when (skjulUtfallOpplysninger) {
             true ->
-                opplysninger.filter { it.type in utfallOpplysningTyper }
+                opplysninger
+                    .filter { it.type in utfallOpplysningTyper }
                     .forEach { it.settSynlighet(false) }
 
             false ->
-                opplysninger.filter { it.type in utfallOpplysningTyper }
+                opplysninger
+                    .filter { it.type in utfallOpplysningTyper }
                     .forEach { it.settSynlighet(true) }
         }
     }
@@ -78,10 +82,12 @@ object OversendKlageinstansSteg : Steg {
             }
         when (visOversendelseKlageinstans) {
             true ->
-                opplysninger.filter { it.type in tilKlageinstansOpplysningTyper }
+                opplysninger
+                    .filter { it.type in tilKlageinstansOpplysningTyper }
                     .forEach { it.settSynlighet(true) }
             false ->
-                opplysninger.filter { it.type in tilKlageinstansOpplysningTyper }
+                opplysninger
+                    .filter { it.type in tilKlageinstansOpplysningTyper }
                     .forEach { it.settSynlighet(false) }
         }
     }
@@ -97,11 +103,13 @@ object FullmektigSteg : Steg {
 
         when (fullmektigKlager) {
             true ->
-                opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
+                opplysninger
+                    .filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
                     .forEach { it.settSynlighet(true) }
 
             false ->
-                opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
+                opplysninger
+                    .filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
                     .forEach { it.settSynlighet(false) }
         }
     }

@@ -10,7 +10,8 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 
 private val oppgaveTilstandSiste24TimerGauge: Gauge =
-    Gauge.builder()
+    Gauge
+        .builder()
         .name("dp_saksbehandling_oppgave_tilstand_siste_24_t_gauge")
         .help("Antall oppgaver i hver tilstand siste 24t")
         .labelNames("tilstand")
@@ -28,7 +29,10 @@ fun oppdaterOppgaveTilstandSiste24TimerMetrikker(dataSource: DataSource) {
     }
 }
 
-data class OppgaveTilstandSiste24TimerDistribusjon(val oppgaveTilstand: String, val antall: Int)
+data class OppgaveTilstandSiste24TimerDistribusjon(
+    val oppgaveTilstand: String,
+    val antall: Int,
+)
 
 fun hentOppgaveTilstandSiste24TimerDistribusjon(dataSource: DataSource): List<OppgaveTilstandSiste24TimerDistribusjon> {
     //language=PostgreSQL
@@ -42,12 +46,13 @@ fun hentOppgaveTilstandSiste24TimerDistribusjon(dataSource: DataSource): List<Op
 
     return sessionOf(dataSource).use { session ->
         session.run(
-            queryOf(query).map { row ->
-                OppgaveTilstandSiste24TimerDistribusjon(
-                    oppgaveTilstand = row.string("tilstand"),
-                    antall = row.int("antall"),
-                )
-            }.asList,
+            queryOf(query)
+                .map { row ->
+                    OppgaveTilstandSiste24TimerDistribusjon(
+                        oppgaveTilstand = row.string("tilstand"),
+                        antall = row.int("antall"),
+                    )
+                }.asList,
         )
     }
 }

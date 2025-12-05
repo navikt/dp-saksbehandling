@@ -158,14 +158,15 @@ class KlageMediatorTest {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
-                klageMediator.opprettKlage(
-                    KlageMottattHendelse(
-                        ident = testPersonIdent,
-                        sakId = sakId,
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = "journalpostId",
-                    ),
-                ).behandling.behandlingId
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = LocalDateTime.now(),
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -242,13 +243,17 @@ class KlageMediatorTest {
                 message = løsningPåBehovForOversendelseTilKA,
             )
 
-            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand().type shouldBe FERDIGSTILT
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIGSTILT
 
-            oppgaveMediator.hentOppgaveFor(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe FERDIG_BEHANDLET
+            oppgaveMediator
+                .hentOppgaveFor(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe FERDIG_BEHANDLET
 
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
@@ -267,15 +272,16 @@ class KlageMediatorTest {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
-                klageMediator.opprettManuellKlage(
-                    ManuellKlageMottattHendelse(
-                        ident = testPersonIdent,
-                        sakId = sakId,
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = "journalpostId",
-                        utførtAv = saksbehandler,
-                    ),
-                ).behandling.behandlingId
+                klageMediator
+                    .opprettManuellKlage(
+                        ManuellKlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = LocalDateTime.now(),
+                            journalpostId = "journalpostId",
+                            utførtAv = saksbehandler,
+                        ),
+                    ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -342,12 +348,16 @@ class KlageMediatorTest {
                 message = løsningPåBehovForOversendelseTilKA,
             )
 
-            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand().type shouldBe FERDIGSTILT
-            oppgaveMediator.hentOppgaveFor(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe FERDIG_BEHANDLET
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIGSTILT
+            oppgaveMediator
+                .hentOppgaveFor(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe FERDIG_BEHANDLET
 
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
@@ -360,14 +370,15 @@ class KlageMediatorTest {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
-                klageMediator.opprettKlage(
-                    KlageMottattHendelse(
-                        ident = testPersonIdent,
-                        sakId = sakId,
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = "journalpostId",
-                    ),
-                ).behandling.behandlingId
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = LocalDateTime.now(),
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -420,19 +431,22 @@ class KlageMediatorTest {
     fun `Livssyklus til en klage som avbrytes`() {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
-                klageMediator.opprettKlage(
-                    KlageMottattHendelse(
-                        ident = testPersonIdent,
-                        sakId = sakId,
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = "journalpostId",
-                    ),
-                ).behandling.behandlingId
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = LocalDateTime.now(),
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe BEHANDLES
+            klageMediator
+                .hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -455,13 +469,17 @@ class KlageMediatorTest {
                     ),
             )
 
-            klageMediator.hentKlageBehandling(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe AVBRUTT
+            klageMediator
+                .hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe AVBRUTT
 
-            oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand().type shouldBe FERDIG_BEHANDLET
+            oppgaveMediator
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIG_BEHANDLET
             testRapid.inspektør.size shouldBe 0
         }
     }
@@ -470,19 +488,22 @@ class KlageMediatorTest {
     fun `Kan ikke ferdigstille en klage med medhold`() {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
-                klageMediator.opprettKlage(
-                    KlageMottattHendelse(
-                        ident = testPersonIdent,
-                        sakId = sakId,
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = "journalpostId",
-                    ),
-                ).behandling.behandlingId
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = LocalDateTime.now(),
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe BEHANDLES
+            klageMediator
+                .hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -510,10 +531,12 @@ class KlageMediatorTest {
                 )
             }
 
-            oppgaveMediator.hentOppgaveFor(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe UNDER_BEHANDLING
+            oppgaveMediator
+                .hentOppgaveFor(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe UNDER_BEHANDLING
             testRapid.inspektør.size shouldBe 0
         }
     }
@@ -522,19 +545,22 @@ class KlageMediatorTest {
     fun `Kan ikke ferdigstille en klage med delvis medhold`() {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
-                klageMediator.opprettKlage(
-                    KlageMottattHendelse(
-                        ident = testPersonIdent,
-                        sakId = sakId,
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = "journalpostId",
-                    ),
-                ).behandling.behandlingId
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = LocalDateTime.now(),
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe BEHANDLES
+            klageMediator
+                .hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -562,10 +588,12 @@ class KlageMediatorTest {
                 )
             }
 
-            oppgaveMediator.hentOppgaveFor(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
-            ).tilstand().type shouldBe UNDER_BEHANDLING
+            oppgaveMediator
+                .hentOppgaveFor(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).tilstand()
+                .type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -576,66 +604,76 @@ class KlageMediatorTest {
         fun oppdaterOpplysning(
             opplysningId: UUID,
             svar: Verdi,
-        ) {
-            return oppdaterKlageOpplysning(
-                behandlingId = behandlingId,
-                opplysningId = opplysningId,
-                verdi = svar,
-                saksbehandler = saksbehandler,
-            )
-        }
+        ) = oppdaterKlageOpplysning(
+            behandlingId = behandlingId,
+            opplysningId = opplysningId,
+            verdi = svar,
+            saksbehandler = saksbehandler,
+        )
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == KLAGEN_GJELDER_VEDTAK }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == KLAGEN_GJELDER_VEDTAK }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Vedtak 1"),
         )
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == KLAGEN_GJELDER_VEDTAKSDATO }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == KLAGEN_GJELDER_VEDTAKSDATO }
+                    .opplysningId,
             svar = Verdi.Dato(LocalDate.MIN),
         )
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == KLAGEFRIST }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == KLAGEFRIST }
+                    .opplysningId,
             svar = Verdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == KLAGE_MOTTATT }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == KLAGE_MOTTATT }
+                    .opplysningId,
             svar = Verdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == KLAGEFRIST_OPPFYLT }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == KLAGEFRIST_OPPFYLT }
+                    .opplysningId,
             svar = Verdi.Boolsk(true),
         )
-        this.hentKlageBehandling(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
-        ).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
+        this
+            .hentKlageBehandling(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            ).synligeOpplysninger()
+            .filter { it.type in formkravOpplysningTyper }
             .forEach {
                 oppdaterOpplysning(opplysningId = it.opplysningId, svar = Verdi.Boolsk(true))
             }
@@ -649,30 +687,33 @@ class KlageMediatorTest {
         fun oppdaterOpplysning(
             opplysningId: UUID,
             svar: Verdi,
-        ) {
-            return oppdaterKlageOpplysning(
-                behandlingId = behandlingId,
-                opplysningId = opplysningId,
-                verdi = svar,
-                saksbehandler = saksbehandler,
-            )
-        }
+        ) = oppdaterKlageOpplysning(
+            behandlingId = behandlingId,
+            opplysningId = opplysningId,
+            verdi = svar,
+            saksbehandler = saksbehandler,
+        )
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == UTFALL }
+                    .opplysningId,
             svar = Verdi.TekstVerdi(utfall.tekst),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == VURDERING_AV_KLAGEN }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == VURDERING_AV_KLAGEN }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Dette er en vurdering."),
         )
     }
@@ -684,47 +725,54 @@ class KlageMediatorTest {
         fun oppdaterOpplysning(
             opplysningId: UUID,
             svar: Verdi,
-        ) {
-            return oppdaterKlageOpplysning(
-                behandlingId = behandlingId,
-                opplysningId = opplysningId,
-                verdi = svar,
-                saksbehandler = saksbehandler,
-            )
-        }
+        ) = oppdaterKlageOpplysning(
+            behandlingId = behandlingId,
+            opplysningId = opplysningId,
+            verdi = svar,
+            saksbehandler = saksbehandler,
+        )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == UTFALL }
+                    .opplysningId,
             svar = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.tekst),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == VURDERING_AV_KLAGEN }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == VURDERING_AV_KLAGEN }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Vi opprettholder vedtaket."),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == HVEM_KLAGER }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == HVEM_KLAGER }
+                    .opplysningId,
             svar = Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.tekst),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == HJEMLER }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == HJEMLER }
+                    .opplysningId,
             svar =
                 Verdi.Flervalg(
                     "§ 4-5 Krav til å være registrert som arbeidssøker for å være reell arbeidssøker",
@@ -733,74 +781,90 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == INTERN_MELDING }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == INTERN_MELDING }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("nice"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_NAVN }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_NAVN }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Djevelens Advokat"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_ADRESSE_1 }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_ADRESSE_1 }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Sydenveien 1"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_ADRESSE_2 }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_ADRESSE_2 }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Poste restante"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_ADRESSE_3 }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_ADRESSE_3 }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Teisen postkontor"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_POSTNR }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_POSTNR }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("0666"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_POSTSTED }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_POSTSTED }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Oslo"),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).synligeOpplysninger()
-                    .single { it.type == FULLMEKTIG_LAND }.opplysningId,
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_LAND }
+                    .opplysningId,
             svar = Verdi.TekstVerdi("Norge"),
         )
     }

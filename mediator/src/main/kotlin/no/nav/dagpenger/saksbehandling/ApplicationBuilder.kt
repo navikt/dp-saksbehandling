@@ -68,7 +68,9 @@ import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
 
-internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
+internal class ApplicationBuilder(
+    configuration: Map<String, String>,
+) : RapidsConnection.StatusListener {
     private val klageRepository = PostgresKlageRepository(dataSource)
     private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
     private val personRepository = PostgresPersonRepository(dataSource)
@@ -187,115 +189,116 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val oppgaveTilstandAlertJob: Timer
 
     private val rapidsConnection: RapidsConnection =
-        RapidApplication.create(
-            env = configuration,
-            builder = {
-                withKtorModule {
-                    installerApis(
-                        oppgaveMediator = oppgaveMediator,
-                        oppgaveDTOMapper = oppgaveDTOMapper,
-                        statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                        klageMediator = klageMediator,
-                        klageDTOMapper = KlageDTOMapper(oppslag),
-                        personMediator = personMediator,
-                        sakMediator = sakMediator,
-                        innsendingMediator = innsendingMediator,
-                    )
-                    this.install(KafkaStreamsPlugin) {
-                        kafkaStreams =
-                            kafkaStreams(Configuration.kafkaStreamProperties) {
-                                skjermetPersonStatus(
-                                    Configuration.skjermingPersonStatusTopic,
-                                    skjermingConsumer::oppdaterSkjermetStatus,
-                                )
-                                adressebeskyttetStream(
-                                    Configuration.leesahTopic,
-                                    adressebeskyttelseConsumer::oppdaterAdressebeskyttelseGradering,
-                                )
-                            }
+        RapidApplication
+            .create(
+                env = configuration,
+                builder = {
+                    withKtorModule {
+                        installerApis(
+                            oppgaveMediator = oppgaveMediator,
+                            oppgaveDTOMapper = oppgaveDTOMapper,
+                            statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
+                            klageMediator = klageMediator,
+                            klageDTOMapper = KlageDTOMapper(oppslag),
+                            personMediator = personMediator,
+                            sakMediator = sakMediator,
+                            innsendingMediator = innsendingMediator,
+                        )
+                        this.install(KafkaStreamsPlugin) {
+                            kafkaStreams =
+                                kafkaStreams(Configuration.kafkaStreamProperties) {
+                                    skjermetPersonStatus(
+                                        Configuration.skjermingPersonStatusTopic,
+                                        skjermingConsumer::oppdaterSkjermetStatus,
+                                    )
+                                    adressebeskyttetStream(
+                                        Configuration.leesahTopic,
+                                        adressebeskyttelseConsumer::oppdaterAdressebeskyttelseGradering,
+                                    )
+                                }
+                        }
                     }
-                }
-            },
-        ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
-        }.also { rapidsConnection ->
-            sakMediator.setRapidsConnection(rapidsConnection)
-            utsendingMediator.setRapidsConnection(rapidsConnection)
-            oppgaveMediator.setRapidsConnection(rapidsConnection)
-            klageMediator.setRapidsConnection(rapidsConnection)
-            klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
-            BehandlingOpprettetMottak(rapidsConnection, sakMediator)
-            SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
-            BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
-            BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
-            ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
-            UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
-            InnsendingBehovløser(
-                rapidsConnection = rapidsConnection,
-                innsendingMediator = innsendingMediator,
-            )
-
-            BehandlingsresultatMottakForUtsending(
-                rapidsConnection = rapidsConnection,
-                utsendingMediator = utsendingMediator,
-                sakRepository = sakRepository,
-            )
-            BehandlingsresultatMottakForSak(
-                rapidsConnection = rapidsConnection,
-                sakRepository = sakRepository,
-                sakMediator = sakMediator,
-            )
-
-            ArenaSinkVedtakOpprettetMottak(
-                rapidsConnection = rapidsConnection,
-                personRepository = personRepository,
-                utsendingMediator = utsendingMediator,
-                sakMediator = sakMediator,
-            )
-            MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-            OversendtKlageinstansMottak(
-                rapidsConnection = rapidsConnection,
-                klageMediator = klageMediator,
-            )
-            utsendingAlarmJob =
-                UtsendingAlarmJob(
+                },
+            ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
+            }.also { rapidsConnection ->
+                sakMediator.setRapidsConnection(rapidsConnection)
+                utsendingMediator.setRapidsConnection(rapidsConnection)
+                oppgaveMediator.setRapidsConnection(rapidsConnection)
+                klageMediator.setRapidsConnection(rapidsConnection)
+                klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
+                BehandlingOpprettetMottak(rapidsConnection, sakMediator)
+                SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
+                BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
+                BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
+                ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
+                UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
+                InnsendingBehovløser(
                     rapidsConnection = rapidsConnection,
-                    utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
-                ).startJob(
-                    period = 60.Minutt,
-                )
-            innsendingAlarmJob =
-                InnsendingAlarmJob(
-                    rapidsConnection = rapidsConnection,
-                    innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
-                ).startJob(
-                    period = 1.Dag,
-                )
-            oppgaveTilstandAlertJob =
-                OppgaveTilstandAlertJob(
-                    rapidsConnection = rapidsConnection,
-                    oppgaveMediator = oppgaveMediator,
-                ).startJob(
-                    period = 1.Dag,
+                    innsendingMediator = innsendingMediator,
                 )
 
-            oversendKlageinstansAlarmJob =
-                OversendKlageinstansAlarmJob(
+                BehandlingsresultatMottakForUtsending(
                     rapidsConnection = rapidsConnection,
-                    repository = OversendKlageinstansAlarmRepository(dataSource),
-                ).startJob(
-                    period = 60.Minutt,
+                    utsendingMediator = utsendingMediator,
+                    sakRepository = sakRepository,
                 )
-            oppgaveFristUtgåttJob =
-                OppgaveFristUtgåttJob(oppgaveMediator).startJob(
-                    startAt = getNextOccurrence(3, 0),
-                    period = 1.Dag,
+                BehandlingsresultatMottakForSak(
+                    rapidsConnection = rapidsConnection,
+                    sakRepository = sakRepository,
+                    sakMediator = sakMediator,
                 )
-            metrikkJob =
-                MetrikkJob().startJob(
-                    startAt = now,
-                    period = 5.Minutt,
+
+                ArenaSinkVedtakOpprettetMottak(
+                    rapidsConnection = rapidsConnection,
+                    personRepository = personRepository,
+                    utsendingMediator = utsendingMediator,
+                    sakMediator = sakMediator,
                 )
-        }
+                MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
+                OversendtKlageinstansMottak(
+                    rapidsConnection = rapidsConnection,
+                    klageMediator = klageMediator,
+                )
+                utsendingAlarmJob =
+                    UtsendingAlarmJob(
+                        rapidsConnection = rapidsConnection,
+                        utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
+                    ).startJob(
+                        period = 60.Minutt,
+                    )
+                innsendingAlarmJob =
+                    InnsendingAlarmJob(
+                        rapidsConnection = rapidsConnection,
+                        innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
+                    ).startJob(
+                        period = 1.Dag,
+                    )
+                oppgaveTilstandAlertJob =
+                    OppgaveTilstandAlertJob(
+                        rapidsConnection = rapidsConnection,
+                        oppgaveMediator = oppgaveMediator,
+                    ).startJob(
+                        period = 1.Dag,
+                    )
+
+                oversendKlageinstansAlarmJob =
+                    OversendKlageinstansAlarmJob(
+                        rapidsConnection = rapidsConnection,
+                        repository = OversendKlageinstansAlarmRepository(dataSource),
+                    ).startJob(
+                        period = 60.Minutt,
+                    )
+                oppgaveFristUtgåttJob =
+                    OppgaveFristUtgåttJob(oppgaveMediator).startJob(
+                        startAt = getNextOccurrence(3, 0),
+                        period = 1.Dag,
+                    )
+                metrikkJob =
+                    MetrikkJob().startJob(
+                        startAt = now,
+                        period = 5.Minutt,
+                    )
+            }
 
     init {
         rapidsConnection.register(this)

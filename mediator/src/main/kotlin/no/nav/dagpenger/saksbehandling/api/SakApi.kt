@@ -24,12 +24,11 @@ fun Route.sakApi(mediator: SakMediator) {
     }
 }
 
-private fun ApplicationCall.behandlingId(): UUID {
-    return this.parameters["behandlingId"]?.let {
+private fun ApplicationCall.behandlingId(): UUID =
+    this.parameters["behandlingId"]?.let {
         runCatching {
             UUID.fromString(it)
         }.onFailure { t ->
             logger.error(t) { "Kunne ikke parse behandlingId: $it" }
         }.getOrThrow()
     } ?: throw IllegalArgumentException("BehandlingId mangler i path")
-}

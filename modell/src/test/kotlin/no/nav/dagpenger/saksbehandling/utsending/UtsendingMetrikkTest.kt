@@ -24,15 +24,15 @@ class UtsendingMetrikkTest {
             ),
         )
 
-        PrometheusRegistry.defaultRegistry.getSnapShot<CounterSnapshot> {
-            it == "dp_saksbehandling_utsending_vedtaksbrev"
-        }.let { snapshot ->
-            snapshot.dataPoints.single { it.labels["type"] == "avslagMinsteinntekt" }.value shouldBe 1.0
-        }
+        PrometheusRegistry.defaultRegistry
+            .getSnapShot<CounterSnapshot> {
+                it == "dp_saksbehandling_utsending_vedtaksbrev"
+            }.let { snapshot ->
+                snapshot.dataPoints.single { it.labels["type"] == "avslagMinsteinntekt" }.value shouldBe 1.0
+            }
     }
 }
 
-inline fun <reified T : MetricSnapshot> PrometheusRegistry.getSnapShot(noinline metriceNamePredicate: (String) -> Boolean): T {
-    return this.scrape(metriceNamePredicate).singleOrNull()?.let { it as T }
+inline fun <reified T : MetricSnapshot> PrometheusRegistry.getSnapShot(noinline metriceNamePredicate: (String) -> Boolean): T =
+    this.scrape(metriceNamePredicate).singleOrNull()?.let { it as T }
         ?: throw NoSuchElementException()
-}

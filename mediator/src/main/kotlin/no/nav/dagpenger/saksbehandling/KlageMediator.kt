@@ -94,16 +94,15 @@ class KlageMediator(
                 utførtAv = klageMottattHendelse.utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
-        return kotlin.runCatching {
-            oppgaveMediator.opprettOppgaveForKlageBehandling(
-                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
-            )
-        }
-            .onFailure { e ->
+        return kotlin
+            .runCatching {
+                oppgaveMediator.opprettOppgaveForKlageBehandling(
+                    behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+                )
+            }.onFailure { e ->
                 logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
                 throw e
-            }
-            .getOrThrow()
+            }.getOrThrow()
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
@@ -140,24 +139,24 @@ class KlageMediator(
             utførtAv.navIdent,
         )
 
-        return kotlin.runCatching {
-            oppgaveMediator.opprettOppgaveForKlageBehandling(
-                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
-            ).also { oppgave ->
-                oppgaveMediator.tildelOppgave(
-                    SettOppgaveAnsvarHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        ansvarligIdent = utførtAv.navIdent,
-                        utførtAv = utførtAv,
-                    ),
-                )
-            }
-        }
-            .onFailure { e ->
+        return kotlin
+            .runCatching {
+                oppgaveMediator
+                    .opprettOppgaveForKlageBehandling(
+                        behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+                    ).also { oppgave ->
+                        oppgaveMediator.tildelOppgave(
+                            SettOppgaveAnsvarHendelse(
+                                oppgaveId = oppgave.oppgaveId,
+                                ansvarligIdent = utførtAv.navIdent,
+                                utførtAv = utførtAv,
+                            ),
+                        )
+                    }
+            }.onFailure { e ->
                 logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
                 throw e
-            }
-            .getOrThrow()
+            }.getOrThrow()
     }
 
     fun oppdaterKlageOpplysning(
@@ -270,7 +269,8 @@ class KlageMediator(
                         "opprettet" to oppgave.opprettet.toLocalDate().toString(),
                     )
 
-                klageBehandling.synligeOpplysninger()
+                klageBehandling
+                    .synligeOpplysninger()
                     .filter { OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper.contains(it.type) && it.verdi() != Verdi.TomVerdi }
                     .forEach {
                         val verdi = (it.verdi() as Verdi.TekstVerdi).value
@@ -286,7 +286,8 @@ class KlageMediator(
                         }
                     }
 
-                klageBehandling.synligeOpplysninger()
+                klageBehandling
+                    .synligeOpplysninger()
                     .singleOrNull { it.type == INTERN_MELDING && it.verdi() != Verdi.TomVerdi }
                     ?.let {
                         val verdi = (it.verdi() as Verdi.TekstVerdi).value
@@ -294,12 +295,14 @@ class KlageMediator(
                     }
 
                 val message =
-                    JsonMessage.newNeed(
-                        behov = setOf("OversendelseKlageinstans"),
-                        map = body,
-                    ).toJson().also {
-                        sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
-                    }
+                    JsonMessage
+                        .newNeed(
+                            behov = setOf("OversendelseKlageinstans"),
+                            map = body,
+                        ).toJson()
+                        .also {
+                            sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
+                        }
                 logger.info { "Publiserer behov OversendelseKlageinstans for klagebehandling ${klageBehandling.behandlingId}" }
                 rapidsConnection.publish(key = oppgave.personIdent(), message = message)
             }
@@ -315,11 +318,12 @@ class KlageMediator(
             saksbehandler = hendelse.utførtAv,
         )
         val klageBehandling =
-            klageRepository.hentKlageBehandling(
-                behandlingId = hendelse.behandlingId,
-            ).also { klageBehandling ->
-                klageBehandling.avbryt(hendelse = hendelse)
-            }
+            klageRepository
+                .hentKlageBehandling(
+                    behandlingId = hendelse.behandlingId,
+                ).also { klageBehandling ->
+                    klageBehandling.avbryt(hendelse = hendelse)
+                }
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
@@ -337,31 +341,33 @@ class KlageMediator(
     private fun sjekkTilgangTilOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
-        return oppgaveMediator.hentOppgaveHvisTilgang(
+    ): Oppgave =
+        oppgaveMediator.hentOppgaveHvisTilgang(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
-    }
 
     private fun sjekkTilgangOgEierAvOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
-        return sjekkTilgangTilOppgave(
+    ): Oppgave =
+        sjekkTilgangTilOppgave(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         ).also {
             requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
         }
-    }
 }
 
 fun KlageBehandling.hjemler(): List<String> {
     val verdi =
-        this.synligeOpplysninger()
-            .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?
-    return verdi?.value?.mapNotNull {
-        Hjemler.entries.find { hjemmel -> hjemmel.tittel == it }?.name
-    }.orEmpty()
+        this
+            .synligeOpplysninger()
+            .singleOrNull { it.type == OpplysningType.HJEMLER }
+            ?.verdi() as Verdi.Flervalg?
+    return verdi
+        ?.value
+        ?.mapNotNull {
+            Hjemler.entries.find { hjemmel -> hjemmel.tittel == it }?.name
+        }.orEmpty()
 }

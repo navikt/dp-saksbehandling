@@ -78,14 +78,14 @@ object OpplysningBygger {
             FULLMEKTIG_LAND,
         )
 
-    fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {
-        return opplysninger.map {
-            Opplysning(
-                type = it,
-                verdi = Verdi.TomVerdi,
-                valgmuligheter = it.valgmuligheter,
-                regler = it.regler,
-            )
-        }.toSet()
-    }
+    fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> =
+        opplysninger
+            .map {
+                Opplysning(
+                    type = it,
+                    verdi = Verdi.TomVerdi,
+                    valgmuligheter = it.valgmuligheter,
+                    regler = it.regler,
+                )
+            }.toSet()
 }

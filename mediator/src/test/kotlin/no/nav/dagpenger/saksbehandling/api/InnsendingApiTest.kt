@@ -36,13 +36,14 @@ class InnsendingApiTest {
         val mediator = mockk<InnsendingMediator>()
         withInnsendingApi(mediator) {
             client.get("innsending/$innsendingId").status shouldBe HttpStatusCode.Unauthorized
-            client.put("innsending/$innsendingId/ferdigstill") {
-                headers[HttpHeaders.ContentType] = "application/json"
-                //language=json
-                setBody("""{ "tullebody": "tull" }""".trimIndent())
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
+            client
+                .put("innsending/$innsendingId/ferdigstill") {
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "tullebody": "tull" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Unauthorized
+                }
         }
     }
 
@@ -70,10 +71,11 @@ class InnsendingApiTest {
                     )
             }
         withInnsendingApi(mediator) {
-            client.get("innsending/$innsendingId") {
-                autentisert()
-                this.header(HttpHeaders.Accept, "application/json")
-            }.bodyAsText() shouldEqualSpecifiedJson
+            client
+                .get("innsending/$innsendingId") {
+                    autentisert()
+                    this.header(HttpHeaders.Accept, "application/json")
+                }.bodyAsText() shouldEqualSpecifiedJson
                 """
                 {
                   "behandlingId": "${innsending.innsendingId}",
@@ -104,28 +106,29 @@ class InnsendingApiTest {
                 every { it.ferdigstill(capture(slot)) } returns Unit
             }
         withInnsendingApi(mediator) {
-            client.put("innsending/$innsendingId/ferdigstill") {
-                autentisert()
-                this.header(HttpHeaders.ContentType, "application/json")
-                //language=json
-                setBody(
-                    """
-                    {
-                        "sakId": "$sakId",
-                        "vurdering": "Hubba Bubba",
-                        "behandlingType": "RETT_TIL_DAGPENGER"
+            client
+                .put("innsending/$innsendingId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Hubba Bubba",
+                            "behandlingType": "RETT_TIL_DAGPENGER"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.innsendingId shouldBe innsendingId
+                        it.valgtSakId() shouldBe sakId
+                        it.vurdering shouldBe "Hubba Bubba"
+                        it.aksjon.type shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
                     }
-                    """.trimIndent(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-                slot.captured.let {
-                    it.innsendingId shouldBe innsendingId
-                    it.valgtSakId() shouldBe sakId
-                    it.vurdering shouldBe "Hubba Bubba"
-                    it.aksjon.type shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
                 }
-            }
         }
     }
 

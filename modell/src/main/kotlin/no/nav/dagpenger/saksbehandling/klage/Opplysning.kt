@@ -17,9 +17,7 @@ class Opplysning(
         requireReglerOppfylt()
     }
 
-    fun verdi(): Verdi {
-        return this.verdi
-    }
+    fun verdi(): Verdi = this.verdi
 
     fun settSynlighet(synlig: Boolean) {
         when (synlig) {
@@ -31,9 +29,7 @@ class Opplysning(
         }
     }
 
-    fun synlighet(): Boolean {
-        return this.synlig
-    }
+    fun synlighet(): Boolean = this.synlig
 
     fun svar(verdi: Verdi) {
         requireRiktigDatatype(verdi).also { this.verdi = it }
@@ -103,9 +99,7 @@ class Opplysning(
         return opplysningId == other.opplysningId && type == other.type
     }
 
-    override fun hashCode(): Int {
-        return 31 * opplysningId.hashCode() + type.hashCode()
-    }
+    override fun hashCode(): Int = 31 * opplysningId.hashCode() + type.hashCode()
 }
 
 private inline fun Opplysning.require(
@@ -128,13 +122,21 @@ class UgyldigOpplysningException(
 sealed class Verdi {
     data object TomVerdi : Verdi()
 
-    data class TekstVerdi(val value: String) : Verdi()
+    data class TekstVerdi(
+        val value: String,
+    ) : Verdi()
 
-    data class Dato(val value: LocalDate) : Verdi()
+    data class Dato(
+        val value: LocalDate,
+    ) : Verdi()
 
-    data class Boolsk(val value: Boolean) : Verdi()
+    data class Boolsk(
+        val value: Boolean,
+    ) : Verdi()
 
-    data class Flervalg(val value: List<String>) : Verdi() {
+    data class Flervalg(
+        val value: List<String>,
+    ) : Verdi() {
         constructor(vararg value: String) : this(value.toList())
     }
 }

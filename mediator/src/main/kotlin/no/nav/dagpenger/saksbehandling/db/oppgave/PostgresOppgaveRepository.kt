@@ -75,8 +75,9 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresOppgaveRepository(private val dataSource: DataSource) :
-    OppgaveRepository {
+class PostgresOppgaveRepository(
+    private val dataSource: DataSource,
+) : OppgaveRepository {
     override fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
@@ -88,8 +89,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     private fun tildelNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
-    ): UUID? {
-        return sessionOf(dataSource).use { session ->
+    ): UUID? =
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val emneknagger = filter.emneknagger.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
@@ -250,7 +251,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 oppgaveIdOgTilstandType?.first
             }
         }
-    }
 
     override fun lagre(oppgave: Oppgave) {
         sessionOf(dataSource).use { session ->
@@ -270,8 +270,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 ),
         ).oppgaver
 
-    override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
-        return sessionOf(dataSource).use { session ->
+    override fun hentOppgaveIdFor(behandlingId: UUID): UUID? =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -287,7 +287,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }.asSingle,
             )
         }
-    }
 
     override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
         finnOppgaveFor(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
@@ -302,8 +301,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 ),
         ).oppgaver.singleOrNull()
 
-    override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
-        return sessionOf(dataSource).use { session ->
+    override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -320,10 +319,9 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }.asSingle,
             )
         }
-    }
 
-    override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering {
-        return sessionOf(dataSource).use { session ->
+    override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -340,12 +338,11 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }.asSingle,
             )
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
-    }
 
     override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, dataSource)
 
-    override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime {
-        return when (val notat = oppgave.tilstand().notat()) {
+    override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime =
+        when (val notat = oppgave.tilstand().notat()) {
             null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
             else -> {
                 sessionOf(dataSource).use { session ->
@@ -358,7 +355,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }
             }
         }
-    }
 
     override fun slettNotatFor(oppgave: Oppgave) {
         val tilstandsloggId = oppgave.tilstandslogg.first().id
@@ -374,8 +370,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> {
-        return sessionOf(dataSource).use { session ->
+    override fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -396,13 +392,12 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }.asList,
             )
         }
-    }
 
     override fun oppgaveTilstandForSøknad(
         ident: String,
         søknadId: UUID,
-    ): Type? {
-        return sessionOf(dataSource).use { session ->
+    ): Type? =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -425,7 +420,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }.asSingle,
             )
         }
-    }
 
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
@@ -458,8 +452,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         val totaltAntallOppgaver: Int,
     )
 
-    override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
-        return sessionOf(dataSource).use { session ->
+    override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat =
+        sessionOf(dataSource).use { session ->
             val tilstanderAsText = søkeFilter.tilstander.joinToString { "'$it'" }
             val tilstandClause =
                 when (søkeFilter.tilstander.isNotEmpty()) {
@@ -550,18 +544,16 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     WHERE     oppg.opprettet >= :fom
                     AND       oppg.opprettet <  :tom_pluss_1_dag
                     """.trimIndent(),
-                )
-                    .append(
-                        tilstandClause,
-                        utløstAvTypeClause,
-                        saksbehandlerClause,
-                        personIdentClause,
-                        oppgaveIdClause,
-                        behandlingIdClause,
-                        emneknaggClause,
-                        søknadIdClause,
-                    )
-                    .toString()
+                ).append(
+                    tilstandClause,
+                    utløstAvTypeClause,
+                    saksbehandlerClause,
+                    personIdentClause,
+                    oppgaveIdClause,
+                    behandlingIdClause,
+                    emneknaggClause,
+                    søknadIdClause,
+                ).toString()
 
             //language=PostgreSQL
             val oppgaverQuery =
@@ -601,20 +593,20 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
 
             val oppgaver =
                 session.run(
-                    queryOf(statement = oppgaverQuery, paramMap = paramMap).map { row ->
-                        row.rehydrerOppgave(dataSource)
-                    }.asList,
+                    queryOf(statement = oppgaverQuery, paramMap = paramMap)
+                        .map { row ->
+                            row.rehydrerOppgave(dataSource)
+                        }.asList,
                 )
             OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
-    }
 }
 
 private fun rehydrerTilstandsendringHendelse(
     hendelseType: String,
     hendelseJson: String,
-): Hendelse {
-    return when (hendelseType) {
+): Hendelse =
+    when (hendelseType) {
         "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
         "AvbrytOppgaveHendelse" -> hendelseJson.tilHendelse<AvbrytOppgaveHendelse>()
         "BehandlingAvbruttHendelse" -> hendelseJson.tilHendelse<BehandlingAvbruttHendelse>()
@@ -641,35 +633,34 @@ private fun rehydrerTilstandsendringHendelse(
             throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
         }
     }
-}
 
 private fun hentEmneknaggerForOppgave(
     oppgaveId: UUID,
     dataSource: DataSource,
-): Set<String> {
-    return sessionOf(dataSource).use { session ->
-        session.run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    SELECT emneknagg
-                    FROM   emneknagg_v1
-                    WHERE  oppgave_id = :oppgave_id
-                    """.trimIndent(),
-                paramMap = mapOf("oppgave_id" to oppgaveId),
-            ).map { row ->
-                row.string("emneknagg")
-            }.asList,
-        )
-    }.toSet()
-}
+): Set<String> =
+    sessionOf(dataSource)
+        .use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT emneknagg
+                        FROM   emneknagg_v1
+                        WHERE  oppgave_id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.string("emneknagg")
+                }.asList,
+            )
+        }.toSet()
 
 private fun finnNotat(
     oppgaveTilstandLoggId: UUID,
     dataSource: DataSource,
-): Notat? {
-    return sessionOf(dataSource).use { session ->
+): Notat? =
+    sessionOf(dataSource).use { session ->
         session.run(
             queryOf(
                 //language=PostgreSQL
@@ -690,38 +681,37 @@ private fun finnNotat(
             }.asSingle,
         )
     }
-}
 
 private fun hentTilstandsloggForOppgave(
     oppgaveId: UUID,
     dataSource: DataSource,
-): OppgaveTilstandslogg {
-    return sessionOf(dataSource).use { session ->
-        session.run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    SELECT id, oppgave_id, tilstand,hendelse_type, hendelse, tidspunkt
-                    FROM   oppgave_tilstand_logg_v1
-                    WHERE  oppgave_id = :oppgave_id
-                    """.trimIndent(),
-                paramMap = mapOf("oppgave_id" to oppgaveId),
-            ).map { row ->
-                Tilstandsendring<Type>(
-                    id = row.uuid("id"),
-                    tilstand = Type.valueOf(row.string("tilstand")),
-                    hendelse =
-                        rehydrerTilstandsendringHendelse(
-                            hendelseType = row.string("hendelse_type"),
-                            hendelseJson = row.string("hendelse"),
-                        ),
-                    tidspunkt = row.localDateTime("tidspunkt"),
-                )
-            }.asList,
-        ).let { OppgaveTilstandslogg(it) }
+): OppgaveTilstandslogg =
+    sessionOf(dataSource).use { session ->
+        session
+            .run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT id, oppgave_id, tilstand,hendelse_type, hendelse, tidspunkt
+                        FROM   oppgave_tilstand_logg_v1
+                        WHERE  oppgave_id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    Tilstandsendring<Type>(
+                        id = row.uuid("id"),
+                        tilstand = Type.valueOf(row.string("tilstand")),
+                        hendelse =
+                            rehydrerTilstandsendringHendelse(
+                                hendelseType = row.string("hendelse_type"),
+                                hendelseJson = row.string("hendelse"),
+                            ),
+                        tidspunkt = row.localDateTime("tidspunkt"),
+                    )
+                }.asList,
+            ).let { OppgaveTilstandslogg(it) }
     }
-}
 
 private fun TransactionalSession.lagre(oppgave: Oppgave) {
     run(
@@ -788,8 +778,8 @@ private fun Session.lagreNotat(
     tilstandsendringId: UUID,
     tekst: String,
     skrevetAv: String,
-): LocalDateTime {
-    return run(
+): LocalDateTime =
+    run(
         queryOf(
             //language=PostgreSQL
             statement =
@@ -812,7 +802,6 @@ private fun Session.lagreNotat(
     ) ?: throw KanIkkeLagreNotatException(
         "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
     )
-}
 
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
@@ -943,9 +932,8 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
     )
 }
 
-private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
-    return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
-}
+private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering =
+    AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
 
 private fun Row.rehydrerHendelse(): Hendelse {
     val hendelseType = this.stringOrNull("hendelse_type")
@@ -954,20 +942,24 @@ private fun Row.rehydrerHendelse(): Hendelse {
         null -> TomHendelse
         "TomHendelse" -> TomHendelse
         "SøknadsbehandlingOpprettetHendelse" ->
-            this.string("hendelse_data")
+            this
+                .string("hendelse_data")
                 .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
 
         "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
         "MeldekortbehandlingOpprettetHendelse" ->
-            this.string("hendelse_data")
+            this
+                .string("hendelse_data")
                 .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
 
         "ManuellBehandlingOpprettetHendelse" ->
-            this.string("hendelse_data")
+            this
+                .string("hendelse_data")
                 .tilHendelse<ManuellBehandlingOpprettetHendelse>()
 
         "InnsendingMottattHendelse" ->
-            this.string("hendelse_data")
+            this
+                .string("hendelse_data")
                 .tilHendelse<InnsendingMottattHendelse>()
 
         else -> {
@@ -978,6 +970,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
     }
 }
 
-class DataNotFoundException(message: String) : RuntimeException(message)
+class DataNotFoundException(
+    message: String,
+) : RuntimeException(message)
 
-class KanIkkeLagreNotatException(message: String) : RuntimeException(message)
+class KanIkkeLagreNotatException(
+    message: String,
+) : RuntimeException(message)

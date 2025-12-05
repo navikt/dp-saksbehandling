@@ -3,12 +3,16 @@ package no.nav.dagpenger.saksbehandling
 import java.time.LocalDate
 
 object Emneknagg {
-    data class Ettersending(private val mottatt: LocalDate = LocalDate.now()) {
+    data class Ettersending(
+        private val mottatt: LocalDate = LocalDate.now(),
+    ) {
         val fastTekst = "Ettersending"
         val visningsnavn = "$fastTekst($mottatt)"
     }
 
-    enum class Regelknagg(val visningsnavn: String) {
+    enum class Regelknagg(
+        val visningsnavn: String,
+    ) {
         AVSLAG("Avslag"),
         INNVILGELSE("Innvilgelse"),
         GJENOPPTAK("Gjenopptak"),
@@ -31,7 +35,9 @@ object Emneknagg {
         RETTIGHET_KONKURS("Konkurs"),
     }
 
-    enum class PåVent(val visningsnavn: String) {
+    enum class PåVent(
+        val visningsnavn: String,
+    ) {
         AVVENT_SVAR("Avvent svar"),
         AVVENT_DOKUMENTASJON("Avvent dokumentasjon"),
         AVVENT_MELDEKORT("Avvent meldekort"),
@@ -43,7 +49,9 @@ object Emneknagg {
         TIDLIGERE_UTSATT("Tidligere utsatt"),
     }
 
-    enum class AvbrytBehandling(val visningsnavn: String) {
+    enum class AvbrytBehandling(
+        val visningsnavn: String,
+    ) {
         AVBRUTT_BEHANDLES_I_ARENA("Behandles i Arena"),
         AVBRUTT_FLERE_SØKNADER("Flere søknader"),
         AVBRUTT_TRUKKET_SØKNAD("Trukket søknad"),

@@ -36,19 +36,18 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class EmneknaggBuilder(
     json: String,
 ) {
-    fun bygg(): Set<String> {
-        return buildSet {
+    fun bygg(): Set<String> =
+        buildSet {
             addAll(rettighetEmneknagger())
             addAll(søknadEmneknagger())
         }
-    }
 
-    private fun rettighetEmneknagger(): Set<String> {
-        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
+    private fun rettighetEmneknagger(): Set<String> =
+        opplysningerNode
+            .filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
             .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
             .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
             .toSet()
-    }
 
     private fun søknadEmneknagger(): Set<String> {
         val emneknagger = mutableSetOf<String>()
@@ -144,16 +143,14 @@ class EmneknaggBuilder(
 
     private val avslåtteVilkårOpplysningIder = avslåtteVilkårTilEmneknagger.keys
 
-    private fun avslåtteVilkårEmneknagger(): Set<String> {
-        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in avslåtteVilkårOpplysningIder }
+    private fun avslåtteVilkårEmneknagger(): Set<String> =
+        opplysningerNode
+            .filter { it["opplysningTypeId"].asUUID() in avslåtteVilkårOpplysningIder }
             .filter { it["perioder"].any { periode -> !periode["verdi"].boolskVerdi() } }
             .mapNotNull { avslåtteVilkårTilEmneknagger[it["opplysningTypeId"].asUUID()] }
             .toSet()
-    }
 
-    private fun JsonNode.boolskVerdi(): Boolean {
-        return this["datatype"].asText() == "boolsk" && this["verdi"].asBoolean()
-    }
+    private fun JsonNode.boolskVerdi(): Boolean = this["datatype"].asText() == "boolsk" && this["verdi"].asBoolean()
 
     private fun JsonNode?.finnesMedVerdi(): Boolean {
         if (this == null) return false

@@ -21,9 +21,10 @@ class StegTest {
             lagOpplysninger(klagenGjelderOpplysningTyper)
         steg.evaluerSynlighet(opplysninger)
 
-        opplysninger.filter { opplysning ->
-            opplysning.type in klagenGjelderOpplysningTyper
-        }.forEach { it.synlighet() shouldBe true }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in klagenGjelderOpplysningTyper
+            }.forEach { it.synlighet() shouldBe true }
     }
 
     @Test
@@ -36,25 +37,28 @@ class StegTest {
         val klagefristOppfylt = opplysninger.single { it.type == KLAGEFRIST_OPPFYLT }
 
         steg.evaluerSynlighet(opplysninger.toList())
-        opplysninger.filter { opplysning ->
-            opplysning.type in oversittetFristOpplysningTyper
-        }.forEach { it.synlighet() shouldBe false }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in oversittetFristOpplysningTyper
+            }.forEach { it.synlighet() shouldBe false }
 
         klagefristOppfylt.svar(verdi = Verdi.Boolsk(true))
         steg.evaluerSynlighet(opplysninger.toList())
 
         (klagefristOppfylt.verdi() as Verdi.Boolsk).value shouldBe true
-        opplysninger.filter { opplysning ->
-            opplysning.type in oversittetFristOpplysningTyper
-        }.forEach { it.synlighet() shouldBe false }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in oversittetFristOpplysningTyper
+            }.forEach { it.synlighet() shouldBe false }
 
         klagefristOppfylt.svar(verdi = Verdi.Boolsk(false))
         steg.evaluerSynlighet(opplysninger.toList())
 
         (klagefristOppfylt.verdi() as Verdi.Boolsk).value shouldBe false
-        opplysninger.filter { opplysning ->
-            opplysning.type in oversittetFristOpplysningTyper
-        }.forEach { it.synlighet() shouldBe true }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in oversittetFristOpplysningTyper
+            }.forEach { it.synlighet() shouldBe true }
     }
 
     @Test
@@ -68,9 +72,10 @@ class StegTest {
                     formkravOpplysningTyper,
             )
         steg.evaluerSynlighet(opplysninger.toList())
-        opplysninger.filter { opplysning ->
-            opplysning.type in formkravOpplysningTyper
-        }.forEach { it.synlighet() shouldBe true }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in formkravOpplysningTyper
+            }.forEach { it.synlighet() shouldBe true }
     }
 
     @Test
@@ -83,18 +88,21 @@ class StegTest {
             )
 
         steg.evaluerSynlighet(opplysninger.toList())
-        opplysninger.filter { opplysning ->
-            opplysning.type in utfallOpplysningTyper
-        }.forEach { it.synlighet() shouldBe false }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in utfallOpplysningTyper
+            }.forEach { it.synlighet() shouldBe false }
 
-        opplysninger.filter { opplysning ->
-            opplysning.type in formkravOpplysningTyper
-        }.forEach { it.svar(verdi = Verdi.Boolsk(true)) }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in formkravOpplysningTyper
+            }.forEach { it.svar(verdi = Verdi.Boolsk(true)) }
         steg.evaluerSynlighet(opplysninger.toList())
 
-        opplysninger.filter { opplysning ->
-            opplysning.type in utfallOpplysningTyper
-        }.forEach { it.synlighet() shouldBe true }
+        opplysninger
+            .filter { opplysning ->
+                opplysning.type in utfallOpplysningTyper
+            }.forEach { it.synlighet() shouldBe true }
     }
 
     @Test

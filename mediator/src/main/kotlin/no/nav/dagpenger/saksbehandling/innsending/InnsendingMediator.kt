@@ -19,7 +19,9 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 sealed class HåndterInnsendingResultat {
-    data class HåndtertInnsending(val sakId: UUID) : HåndterInnsendingResultat()
+    data class HåndtertInnsending(
+        val sakId: UUID,
+    ) : HåndterInnsendingResultat()
 
     object UhåndtertInnsending : HåndterInnsendingResultat()
 }
@@ -126,35 +128,33 @@ class InnsendingMediator(
 
     fun automatiskFerdigstill(hendelse: BehandlingOpprettetForSøknadHendelse) {
         val innsendinger = innsendingRepository.finnInnsendingerForPerson(ident = hendelse.ident)
-        innsendinger.singleOrNull {
-            it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
-        }?.let { innsending ->
-            innsending.automatiskFerdigstill(hendelse)
-            innsendingRepository.lagre(innsending)
-            oppgaveMediator.avbrytOppgave(
-                hendelse =
-                    BehandlingAvbruttHendelse(
-                        behandlingId = innsending.innsendingId,
-                        behandletHendelseId = hendelse.søknadId.toString(),
-                        behandletHendelseType = "Søknad",
-                        ident = hendelse.ident,
-                        utførtAv = hendelse.utførtAv,
-                    ),
-            )
-        }
+        innsendinger
+            .singleOrNull {
+                it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
+            }?.let { innsending ->
+                innsending.automatiskFerdigstill(hendelse)
+                innsendingRepository.lagre(innsending)
+                oppgaveMediator.avbrytOppgave(
+                    hendelse =
+                        BehandlingAvbruttHendelse(
+                            behandlingId = innsending.innsendingId,
+                            behandletHendelseId = hendelse.søknadId.toString(),
+                            behandletHendelseType = "Søknad",
+                            ident = hendelse.ident,
+                            utførtAv = hendelse.utførtAv,
+                        ),
+                )
+            }
     }
 
     fun hentInnsending(
         innsendingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Innsending {
-        return innsendingRepository.hent(innsendingId = innsendingId).let { innsending ->
+    ): Innsending =
+        innsendingRepository.hent(innsendingId = innsendingId).let { innsending ->
             innsending.harTilgang(saksbehandler)
             innsending
         }
-    }
 
-    fun hentLovligeSaker(ident: String): List<Sak> {
-        return sakMediator.finnSakHistorikk(ident)?.saker() ?: emptyList()
-    }
+    fun hentLovligeSaker(ident: String): List<Sak> = sakMediator.finnSakHistorikk(ident)?.saker() ?: emptyList()
 }

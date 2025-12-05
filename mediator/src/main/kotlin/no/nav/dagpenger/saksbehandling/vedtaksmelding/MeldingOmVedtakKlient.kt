@@ -30,15 +30,14 @@ class MeldingOmVedtakKlient(
             engine: HttpClientEngine = CIO.create {},
             registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
             metricsBaseName: String = "dp_saksbehandling_melding_om_vedtak_httpklient",
-        ): HttpClient {
-            return HttpClient(engine = engine) {
+        ): HttpClient =
+            HttpClient(engine = engine) {
                 expectSuccess = true
                 install(PrometheusMetricsPlugin) {
                     baseName = metricsBaseName
                     this.registry = registry
                 }
             }
-        }
     }
 
     suspend fun lagOgHentMeldingOmVedtak(
@@ -69,16 +68,18 @@ class MeldingOmVedtakKlient(
                 behandlingstype = utløstAvTypeString,
                 sakId = sakId,
             )
-        return kotlin.runCatching {
-            httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
-                header("Authorization", "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                header(HttpHeaders.ContentType, ContentType.Application.Json)
-                setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
-            }.bodyAsText()
-        }.onFailure {
-            logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: $behandlingId" }
-            throw KanIkkeLageMeldingOmVedtak("Kan ikke lage melding om vedtak for behandlingId: $behandlingId")
-        }
+        return kotlin
+            .runCatching {
+                httpClient
+                    .post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
+                        header("Authorization", "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
+                    }.bodyAsText()
+            }.onFailure {
+                logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: $behandlingId" }
+                throw KanIkkeLageMeldingOmVedtak("Kan ikke lage melding om vedtak for behandlingId: $behandlingId")
+            }
     }
 
     suspend fun lagOgHentMeldingOmVedtakM2M(
@@ -100,19 +101,23 @@ class MeldingOmVedtakKlient(
                 behandlingstype = utløstAv.name,
                 sakId = sakId,
             )
-        return kotlin.runCatching {
-            httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
-                header("Authorization", "Bearer $maskinToken")
-                header(HttpHeaders.ContentType, ContentType.Application.Json)
-                setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
-            }.bodyAsText()
-        }.onFailure {
-            logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: $behandlingId" }
-            throw KanIkkeLageMeldingOmVedtak("Kan ikke lage melding om vedtak for behandlingId: $behandlingId")
-        }
+        return kotlin
+            .runCatching {
+                httpClient
+                    .post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
+                        header("Authorization", "Bearer $maskinToken")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
+                    }.bodyAsText()
+            }.onFailure {
+                logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: $behandlingId" }
+                throw KanIkkeLageMeldingOmVedtak("Kan ikke lage melding om vedtak for behandlingId: $behandlingId")
+            }
     }
 
-    class KanIkkeLageMeldingOmVedtak(message: String) : RuntimeException(message)
+    class KanIkkeLageMeldingOmVedtak(
+        message: String,
+    ) : RuntimeException(message)
 }
 
 private data class MeldingOmVedtakDataDTO(

@@ -19,7 +19,13 @@ abstract class Job(
     companion object {
         val now = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
         val omFemMinutter =
-            Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant().plus(Duration.ofMinutes(10)))
+            Date.from(
+                Instant
+                    .now()
+                    .atZone(ZoneId.of("Europe/Oslo"))
+                    .toInstant()
+                    .plus(Duration.ofMinutes(10)),
+            )
         val Int.Dag get() = this * 1000L * 60L * 60L * 24L
         val Int.Minutt get() = this * 1000L * 60L
 
@@ -75,8 +81,7 @@ abstract class Job(
 
                         false -> logger.info { "Er ikke leder, kjører ikke jobb: $jobName" }
                     }
-                }
-                .onFailure {
+                }.onFailure {
                     logger.error(it) { "Kunne ikke avgjøre om jeg er leder for jobb: $jobName" }
                 }
         }

@@ -120,11 +120,12 @@ class SkjermingKlientTest {
             }
         }
 
-        collectorRegistry.getSnapShot<CounterSnapshot> {
-            it == "dp_saksbehandling_skjerming_http_klient_status"
-        }.let { counterSnapshot ->
-            counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 5.0
-        }
+        collectorRegistry
+            .getSnapShot<CounterSnapshot> {
+                it == "dp_saksbehandling_skjerming_http_klient_status"
+            }.let { counterSnapshot ->
+                counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 5.0
+            }
 
         shouldNotThrowAny {
             collectorRegistry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_skjerming_http_klient_duration" }

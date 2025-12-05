@@ -34,13 +34,9 @@ class SakMediator(
         this.rapidsConnection = rapidsConnection
     }
 
-    fun hentSakHistorikk(ident: String): SakHistorikk {
-        return sakRepository.hentSakHistorikk(ident)
-    }
+    fun hentSakHistorikk(ident: String): SakHistorikk = sakRepository.hentSakHistorikk(ident)
 
-    fun finnSakHistorikk(ident: String): SakHistorikk? {
-        return sakRepository.finnSakHistorikk(ident)
-    }
+    fun finnSakHistorikk(ident: String): SakHistorikk? = sakRepository.finnSakHistorikk(ident)
 
     fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
         val sakId =
@@ -117,8 +113,7 @@ class SakMediator(
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also {
-                    resultat ->
+            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
                 sjekkResultat(
                     behandlingOpprettetHendelse.behandlingId,
                     behandlingOpprettetHendelse.javaClass.simpleName,
@@ -165,38 +160,31 @@ class SakMediator(
         }
     }
 
-    fun finnSisteSakId(ident: String): UUID? {
-        return sakRepository.finnSisteSakId(ident)
-    }
+    fun finnSisteSakId(ident: String): UUID? = sakRepository.finnSisteSakId(ident)
 
     fun finnSakIdForSøknad(
         søknadId: UUID,
         ident: String,
-    ): UUID? {
-        return sakRepository.finnSakIdForSøknad(søknadId = søknadId, ident = ident)
-    }
+    ): UUID? = sakRepository.finnSakIdForSøknad(søknadId = søknadId, ident = ident)
 
-    fun hentSakIdForBehandlingId(behandlingId: UUID): UUID {
-        return sakRepository.hentSakIdForBehandlingId(behandlingId)
-    }
+    fun hentSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentSakIdForBehandlingId(behandlingId)
 
-    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID {
-        return sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
-    }
+    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
     private fun sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         rapidsConnection.publish(
             key = søknadsbehandlingOpprettetHendelse.ident,
             message =
-                JsonMessage.newMessage(
-                    eventName = "avbryt_behandling",
-                    map =
-                        mapOf(
-                            "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
-                            "søknadId" to søknadsbehandlingOpprettetHendelse.søknadId,
-                            "ident" to søknadsbehandlingOpprettetHendelse.ident,
-                        ),
-                ).toJson(),
+                JsonMessage
+                    .newMessage(
+                        eventName = "avbryt_behandling",
+                        map =
+                            mapOf(
+                                "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
+                                "søknadId" to søknadsbehandlingOpprettetHendelse.søknadId,
+                                "ident" to søknadsbehandlingOpprettetHendelse.ident,
+                            ),
+                    ).toJson(),
         )
         logger.info { "Publiserte avbryt_behandling hendelse" }
     }
@@ -247,14 +235,16 @@ class SakMediator(
         sakId: UUID,
     ) {
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
-            sakHistorikk?.saker()?.find { sak ->
-                sak.sakId == sakId
-            }?.let { sak ->
-                sak.leggTilBehandling(
-                    behandling = behandling,
-                )
-                sakRepository.lagre(sakHistorikk)
-            } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
+            sakHistorikk
+                ?.saker()
+                ?.find { sak ->
+                    sak.sakId == sakId
+                }?.let { sak ->
+                    sak.leggTilBehandling(
+                        behandling = behandling,
+                    )
+                    sakRepository.lagre(sakHistorikk)
+                } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
     }
 }

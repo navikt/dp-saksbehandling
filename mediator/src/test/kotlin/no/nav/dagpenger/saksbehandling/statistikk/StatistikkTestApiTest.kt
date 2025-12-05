@@ -74,27 +74,28 @@ class StatistikkTestApiTest {
                 )
             }
 
-            client.get("statistikk") {
-                autentisert(token = gyldigSaksbehandlerToken())
-            }.let { httpResponse ->
-                httpResponse.status.value shouldBe 200
-                val json = httpResponse.bodyAsText()
-                val jsonElement = Json.parseToJsonElement(json).jsonObject
-                val individuellStatistikk = jsonElement["individuellStatistikk"]!!.jsonObject
-                val generellStatistikk = jsonElement["generellStatistikk"]!!.jsonObject
-                val beholdningsinfo = jsonElement["beholdningsinfo"]!!.jsonObject
+            client
+                .get("statistikk") {
+                    autentisert(token = gyldigSaksbehandlerToken())
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 200
+                    val json = httpResponse.bodyAsText()
+                    val jsonElement = Json.parseToJsonElement(json).jsonObject
+                    val individuellStatistikk = jsonElement["individuellStatistikk"]!!.jsonObject
+                    val generellStatistikk = jsonElement["generellStatistikk"]!!.jsonObject
+                    val beholdningsinfo = jsonElement["beholdningsinfo"]!!.jsonObject
 
-                individuellStatistikk["dag"]!!.jsonPrimitive.int shouldBe 1
-                individuellStatistikk["uke"]!!.jsonPrimitive.int shouldBe 2
-                individuellStatistikk["totalt"]!!.jsonPrimitive.int shouldBe 3
+                    individuellStatistikk["dag"]!!.jsonPrimitive.int shouldBe 1
+                    individuellStatistikk["uke"]!!.jsonPrimitive.int shouldBe 2
+                    individuellStatistikk["totalt"]!!.jsonPrimitive.int shouldBe 3
 
-                generellStatistikk["dag"]!!.jsonPrimitive.int shouldBe 4
-                generellStatistikk["uke"]!!.jsonPrimitive.int shouldBe 5
-                generellStatistikk["totalt"]!!.jsonPrimitive.int shouldBe 6
+                    generellStatistikk["dag"]!!.jsonPrimitive.int shouldBe 4
+                    generellStatistikk["uke"]!!.jsonPrimitive.int shouldBe 5
+                    generellStatistikk["totalt"]!!.jsonPrimitive.int shouldBe 6
 
-                beholdningsinfo["antallOppgaverKlarTilBehandling"]!!.jsonPrimitive.int shouldBe 2
-                beholdningsinfo["antallOppgaverKlarTilKontroll"]!!.jsonPrimitive.int shouldBe 3
-            }
+                    beholdningsinfo["antallOppgaverKlarTilBehandling"]!!.jsonPrimitive.int shouldBe 2
+                    beholdningsinfo["antallOppgaverKlarTilKontroll"]!!.jsonPrimitive.int shouldBe 3
+                }
         }
     }
 }

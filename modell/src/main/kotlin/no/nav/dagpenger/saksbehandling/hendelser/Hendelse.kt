@@ -3,7 +3,9 @@ package no.nav.dagpenger.saksbehandling.hendelser
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 
-sealed class Hendelse(open val utførtAv: Behandler) {
+sealed class Hendelse(
+    open val utførtAv: Behandler,
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -13,12 +15,13 @@ sealed class Hendelse(open val utførtAv: Behandler) {
         return utførtAv == other.utførtAv
     }
 
-    override fun hashCode(): Int {
-        return utførtAv.hashCode()
-    }
+    override fun hashCode(): Int = utførtAv.hashCode()
 }
 
-sealed class AnsvarHendelse(utførtAv: Behandler, open val ansvarligIdent: String?) : Hendelse(utførtAv) {
+sealed class AnsvarHendelse(
+    utførtAv: Behandler,
+    open val ansvarligIdent: String?,
+) : Hendelse(utførtAv) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -28,9 +31,7 @@ sealed class AnsvarHendelse(utførtAv: Behandler, open val ansvarligIdent: Strin
         return (ansvarligIdent == other.ansvarligIdent && super.equals(other))
     }
 
-    override fun hashCode(): Int {
-        return (ansvarligIdent?.hashCode() ?: 0) + super.hashCode()
-    }
+    override fun hashCode(): Int = (ansvarligIdent?.hashCode() ?: 0) + super.hashCode()
 }
 
 data object TomHendelse : Hendelse(utførtAv = Applikasjon("dp-saksbehandling")) {

@@ -57,12 +57,21 @@ class JobTest {
 
         Job.getNextOccurrence(14, 0, now) shouldBe
             Date.from(
-                now.toLocalDate().atTime(14, 0).atZone(ZoneId.systemDefault()).toInstant(),
+                now
+                    .toLocalDate()
+                    .atTime(14, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant(),
             )
 
         Job.getNextOccurrence(12, 0, now) shouldBe
             Date.from(
-                now.toLocalDate().plusDays(1).atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant(),
+                now
+                    .toLocalDate()
+                    .plusDays(1)
+                    .atTime(12, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant(),
             )
     }
 

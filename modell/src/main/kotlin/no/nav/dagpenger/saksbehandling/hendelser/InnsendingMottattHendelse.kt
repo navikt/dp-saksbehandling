@@ -17,7 +17,9 @@ data class InnsendingMottattHendelse(
     fun erEttersendingMedSøknadId() = kategori == Kategori.ETTERSENDING && søknadId != null
 }
 
-enum class Kategori(val visningsnavn: String) {
+enum class Kategori(
+    val visningsnavn: String,
+) {
     NY_SØKNAD("Søknad"),
     GJENOPPTAK("Søknad"),
     GENERELL("Generell innsending"),

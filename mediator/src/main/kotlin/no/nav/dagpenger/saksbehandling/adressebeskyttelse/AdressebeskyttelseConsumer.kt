@@ -38,7 +38,8 @@ internal class AdressebeskyttelseConsumer(
     private fun Counter.inc(status: String) = this.labelValues(status).inc()
 
     private fun PrometheusRegistry.lagCounter(): Counter =
-        Counter.builder()
+        Counter
+            .builder()
             .name("dp_saksbehandling_adressebeskyttelse_oppdateringer")
             .labelNames("status")
             .help("Antall oppdateringer av adressebeskyttelsestatus")

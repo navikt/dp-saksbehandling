@@ -15,7 +15,9 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresInnsendingRepository(private val dataSource: DataSource) : InnsendingRepository {
+class PostgresInnsendingRepository(
+    private val dataSource: DataSource,
+) : InnsendingRepository {
     override fun lagre(innsending: Innsending) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
@@ -88,10 +90,9 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
         }
     }
 
-    override fun hent(innsendingId: UUID): Innsending {
-        return finnInnsending(innsendingId)
+    override fun hent(innsendingId: UUID): Innsending =
+        finnInnsending(innsendingId)
             ?: throw DataNotFoundException("Kan ikke finne innsending med id $innsendingId")
-    }
 
     override fun finnInnsendingerForPerson(ident: String): List<Innsending> {
         sessionOf(dataSource).use { session ->
@@ -167,8 +168,8 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
         }
     }
 
-    private fun Row.innsending(): Innsending {
-        return Innsending.rehydrer(
+    private fun Row.innsending(): Innsending =
+        Innsending.rehydrer(
             innsendingId = this.uuid("innsending_id"),
             person =
                 Person(
@@ -193,5 +194,4 @@ class PostgresInnsendingRepository(private val dataSource: DataSource) : Innsend
                     else -> null
                 },
         )
-    }
 }

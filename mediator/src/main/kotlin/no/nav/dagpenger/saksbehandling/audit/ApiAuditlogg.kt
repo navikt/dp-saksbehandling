@@ -72,9 +72,7 @@ internal class ApiAuditlogg(
             rapid.publish(ident, message)
         }
 
-        override fun publish(messages: List<OutgoingMessage>): Pair<List<SentMessage>, List<FailedMessage>> {
-            return rapid.publish(messages)
-        }
+        override fun publish(messages: List<OutgoingMessage>): Pair<List<SentMessage>, List<FailedMessage>> = rapid.publish(messages)
 
         override fun rapidName() = "apiAuditlogg"
     }

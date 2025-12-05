@@ -51,15 +51,16 @@ internal class BehandlingsresultatMottakForSak(
             context.publish(
                 key = packet["ident"].asText(),
                 message =
-                    JsonMessage.newMessage(
-                        map =
-                            VedtakUtenforArena(
-                                behandlingId = behandlingResultat.behandlingId,
-                                søknadId = behandlingResultat.behandletHendelseId,
-                                ident = packet["ident"].asText(),
-                                sakId = sakId,
-                            ).toMap(),
-                    ).toJson(),
+                    JsonMessage
+                        .newMessage(
+                            map =
+                                VedtakUtenforArena(
+                                    behandlingId = behandlingResultat.behandlingId,
+                                    søknadId = behandlingResultat.behandletHendelseId,
+                                    ident = packet["ident"].asText(),
+                                    sakId = sakId,
+                                ).toMap(),
+                        ).toJson(),
             )
         }
     }

@@ -28,8 +28,8 @@ class PostgresTriggerTest {
     }
 }
 
-private fun DataSource.hentEndretTidspunkt(oppgaveId: UUID): Timestamp {
-    return sessionOf(this).use { session ->
+private fun DataSource.hentEndretTidspunkt(oppgaveId: UUID): Timestamp =
+    sessionOf(this).use { session ->
         session.run(
             queryOf(
                 //language=PostgreSQL
@@ -45,4 +45,3 @@ private fun DataSource.hentEndretTidspunkt(oppgaveId: UUID): Timestamp {
             }.asSingle,
         )
     }!!
-}

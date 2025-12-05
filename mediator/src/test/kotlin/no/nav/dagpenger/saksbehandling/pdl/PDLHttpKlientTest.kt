@@ -84,8 +84,10 @@ class PDLHttpKlientTest {
                         ),
                 )
             pdlHttpKlient.erAdressebeskyttet(ident).getOrThrow() shouldBe forventet
-            pdlHttpKlient.person(ident)
-                .getOrThrow().adresseBeskyttelseGradering shouldBe AdressebeskyttelseGradering.valueOf(gradering)
+            pdlHttpKlient
+                .person(ident)
+                .getOrThrow()
+                .adresseBeskyttelseGradering shouldBe AdressebeskyttelseGradering.valueOf(gradering)
         }
     }
 
@@ -158,11 +160,12 @@ class PDLHttpKlientTest {
             repeat(5) {
                 pdlHttpKlient.person("12345612345")
             }
-            registry.getSnapShot<CounterSnapshot> {
-                it == "dp_saksbehandling_pdl_http_klient_status"
-            }.let { counterSnapshot ->
-                counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 5.0
-            }
+            registry
+                .getSnapShot<CounterSnapshot> {
+                    it == "dp_saksbehandling_pdl_http_klient_status"
+                }.let { counterSnapshot ->
+                    counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 5.0
+                }
 
             shouldNotThrowAny {
                 registry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_pdl_http_klient_duration" }

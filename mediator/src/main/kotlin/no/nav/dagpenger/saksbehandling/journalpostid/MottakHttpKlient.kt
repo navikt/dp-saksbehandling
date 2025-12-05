@@ -28,22 +28,24 @@ class MottakHttpKlient(
     override suspend fun hentJournalpostIder(
         søknadId: UUID,
         ident: String,
-    ): Result<List<String>> {
-        return kotlin.runCatching {
-            httpClient.post(urlString = "$dpMottakApiUrl/v1/journalpost/sok") {
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
-                header(HttpHeaders.ContentType, ContentType.Application.Json)
-                setBody(
-                    JournalpostSok(
-                        soknadId = søknadId.toString(),
-                        ident = ident,
-                    ),
-                )
-            }.body<JournalpostIder>().journalpostIder
-        }.onFailure { throwable ->
-            logger.error(throwable) { "Kall til dp-mottak api feilet for søknad med id: $søknadId" }
-        }
-    }
+    ): Result<List<String>> =
+        kotlin
+            .runCatching {
+                httpClient
+                    .post(urlString = "$dpMottakApiUrl/v1/journalpost/sok") {
+                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(
+                            JournalpostSok(
+                                soknadId = søknadId.toString(),
+                                ident = ident,
+                            ),
+                        )
+                    }.body<JournalpostIder>()
+                    .journalpostIder
+            }.onFailure { throwable ->
+                logger.error(throwable) { "Kall til dp-mottak api feilet for søknad med id: $søknadId" }
+            }
 }
 
 private data class JournalpostSok(

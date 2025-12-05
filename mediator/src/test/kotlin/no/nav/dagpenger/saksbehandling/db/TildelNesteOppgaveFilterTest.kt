@@ -51,31 +51,32 @@ class TildelNesteOppgaveFilterTest {
 
     @Test
     fun `Skal sette adressebeskyttelse-tilganger korrekt på filter`() {
-        TildelNesteOppgaveFilter.fra(
-            queryString,
-            saksbehandler =
-                Saksbehandler(
-                    navIdent = "saksbehandler",
-                    grupper = setOf(),
-                    tilganger =
-                        setOf(
-                            TilgangType.SAKSBEHANDLER,
-                            TilgangType.EGNE_ANSATTE,
-                            TilgangType.FORTROLIG_ADRESSE,
-                            TilgangType.STRENGT_FORTROLIG_ADRESSE,
-                            TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND,
-                        ),
-                ),
-        ).let { filter ->
-            filter.egneAnsatteTilgang shouldBe true
-            filter.adressebeskyttelseTilganger shouldBe
-                setOf(
-                    UGRADERT,
-                    FORTROLIG,
-                    STRENGT_FORTROLIG,
-                    STRENGT_FORTROLIG_UTLAND,
-                )
-        }
+        TildelNesteOppgaveFilter
+            .fra(
+                queryString,
+                saksbehandler =
+                    Saksbehandler(
+                        navIdent = "saksbehandler",
+                        grupper = setOf(),
+                        tilganger =
+                            setOf(
+                                TilgangType.SAKSBEHANDLER,
+                                TilgangType.EGNE_ANSATTE,
+                                TilgangType.FORTROLIG_ADRESSE,
+                                TilgangType.STRENGT_FORTROLIG_ADRESSE,
+                                TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND,
+                            ),
+                    ),
+            ).let { filter ->
+                filter.egneAnsatteTilgang shouldBe true
+                filter.adressebeskyttelseTilganger shouldBe
+                    setOf(
+                        UGRADERT,
+                        FORTROLIG,
+                        STRENGT_FORTROLIG,
+                        STRENGT_FORTROLIG_UTLAND,
+                    )
+            }
     }
 
     @Test

@@ -17,7 +17,10 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-enum class UtsendingType(val brevTittel: String, val skjemaKode: String) {
+enum class UtsendingType(
+    val brevTittel: String,
+    val skjemaKode: String,
+) {
     VEDTAK_DAGPENGER("Vedtak om dagpenger", "NAV-DAGPENGER-VEDTAK"),
     KLAGEMELDING("Klagebrev", "NAV-DAGPENGER-KLAGE"),
 }
@@ -46,16 +49,16 @@ data class Utsending(
 
     fun sak() = utsendingSak
 
-    override fun toString(): String {
-        return """
-            Utsending(id=$id, behandlingId=$behandlingId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
-            distribusjonId=$distribusjonId , tilstand=${tilstand.type}, type = $type, sak=$utsendingSak)
-            """.trimIndent()
-    }
+    override fun toString(): String =
+        """
+        Utsending(id=$id, behandlingId=$behandlingId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
+        distribusjonId=$distribusjonId , tilstand=${tilstand.type}, type = $type, sak=$utsendingSak)
+        """.trimIndent()
 
     companion object {
         private val counter =
-            Counter.builder()
+            Counter
+                .builder()
                 .name("dp_saksbehandling_utsending_vedtaksbrev")
                 .labelNames("type")
                 .help("Antall vedtaksbrev sendt ut av type")
@@ -72,8 +75,8 @@ data class Utsending(
             distribusjonId: String?,
             utsendingSak: UtsendingSak?,
             type: UtsendingType,
-        ): Utsending {
-            return Utsending(
+        ): Utsending =
+            Utsending(
                 id = id,
                 behandlingId = behandlingId,
                 ident = ident,
@@ -85,7 +88,6 @@ data class Utsending(
                 utsendingSak = utsendingSak,
                 type = type,
             )
-        }
     }
 
     fun startUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
@@ -168,15 +170,14 @@ data class Utsending(
     object AvventerJournalføring : Tilstand {
         override val type = Tilstand.Type.AvventerJournalføring
 
-        override fun behov(utsending: Utsending): Behov {
-            return JournalføringBehov(
+        override fun behov(utsending: Utsending): Behov =
+            JournalføringBehov(
                 behandlingId = utsending.behandlingId,
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
                 ident = utsending.ident,
                 utsendingSak = utsending.utsendingSak ?: throw IllegalStateException("Sak mangler"),
                 utsendingType = utsending.type,
             )
-        }
 
         override fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
@@ -265,30 +266,22 @@ data class Utsending(
         fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
-        ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta urn til arkiverbart brev i tilstand: ${this.type}")
-        }
+        ): Unit = throw UlovligUtsendingTilstandsendring("Kan ikke motta urn til arkiverbart brev i tilstand: ${this.type}")
 
         fun mottaJournalførtKvittering(
             utsending: Utsending,
             journalførtHendelse: JournalførtHendelse,
-        ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på journalføring i tilstand: ${this.type}")
-        }
+        ): Unit = throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på journalføring i tilstand: ${this.type}")
 
         fun mottaDistribuertKvittering(
             utsending: Utsending,
             distribuertHendelse: DistribuertHendelse,
-        ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på distribusjon i tilstand: ${this.type}")
-        }
+        ): Unit = throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på distribusjon i tilstand: ${this.type}")
 
         fun mottaStartUtsendingHendelse(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
-        ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke starte utsending i tilstand: ${this.type}")
-        }
+        ): Unit = throw UlovligUtsendingTilstandsendring("Kan ikke starte utsending i tilstand: ${this.type}")
 
         val type: Type
 
@@ -301,6 +294,8 @@ data class Utsending(
             Avbrutt,
         }
 
-        class UlovligUtsendingTilstandsendring(message: String) : RuntimeException(message)
+        class UlovligUtsendingTilstandsendring(
+            message: String,
+        ) : RuntimeException(message)
     }
 }

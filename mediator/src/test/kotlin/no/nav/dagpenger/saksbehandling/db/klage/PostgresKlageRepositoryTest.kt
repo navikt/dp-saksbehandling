@@ -134,9 +134,11 @@ class PostgresKlageRepositoryTest {
                 }
 
             val boolskOpplysningMedTomVerdi =
-                klageBehandling.synligeOpplysninger().first {
-                    it.type.datatype == Datatype.BOOLSK && it.verdi() is Verdi.TomVerdi
-                }.opplysningId
+                klageBehandling
+                    .synligeOpplysninger()
+                    .first {
+                        it.type.datatype == Datatype.BOOLSK && it.verdi() is Verdi.TomVerdi
+                    }.opplysningId
 
             klageRepository.lagre(klageBehandling)
 
@@ -153,7 +155,8 @@ class PostgresKlageRepositoryTest {
                 Verdi.Flervalg(
                     listeOpplysning.valgmuligheter,
                 )
-            hentetKlageBehandling.finnEnOpplysning(tekstOpplysningUtenValg.opplysningId)
+            hentetKlageBehandling
+                .finnEnOpplysning(tekstOpplysningUtenValg.opplysningId)
                 .verdi() shouldBe Verdi.TekstVerdi("String")
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
 
@@ -161,26 +164,23 @@ class PostgresKlageRepositoryTest {
         }
     }
 
-    private fun KlageBehandling.finnEnOpplysning(id: UUID): Opplysning {
-        return this.alleOpplysninger().single { opplysning -> opplysning.opplysningId == id }
-    }
+    private fun KlageBehandling.finnEnOpplysning(id: UUID): Opplysning =
+        this.alleOpplysninger().single { opplysning -> opplysning.opplysningId == id }
 
-    private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.synligeOpplysninger()
-            .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
-    }
+    private fun KlageBehandling.finnEnBoolskOpplysning(): UUID =
+        this
+            .synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }
+            .opplysningId
 
-    private fun KlageBehandling.finnEnStringOpplysningUtenValg(): Opplysning {
-        return this.synligeOpplysninger().first { opplysning ->
+    private fun KlageBehandling.finnEnStringOpplysningUtenValg(): Opplysning =
+        this.synligeOpplysninger().first { opplysning ->
             opplysning.type.datatype == Datatype.TEKST && opplysning.valgmuligheter.isEmpty()
         }
-    }
 
-    private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
-    }
+    private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID =
+        this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
 
-    private fun KlageBehandling.finnEnListeOpplysning(): Opplysning {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }
-    }
+    private fun KlageBehandling.finnEnListeOpplysning(): Opplysning =
+        this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }
 }

@@ -533,29 +533,30 @@ class PostgresOppgaveRepositoryTest {
                     ),
             ) shouldBe null
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = annenBeslutter.navIdent,
-                        utførtAv = annenBeslutter,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = annenBeslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = annenBeslutter.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = annenBeslutter.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = annenBeslutter.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe oppgave.oppgaveId
-                    it.behandlerIdent shouldBe annenBeslutter.navIdent
-                    it.tilstand() shouldBe Oppgave.UnderKontroll()
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = annenBeslutter.navIdent,
+                            utførtAv = annenBeslutter,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = annenBeslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = annenBeslutter.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = annenBeslutter.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = annenBeslutter.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe oppgave.oppgaveId
+                        it.behandlerIdent shouldBe annenBeslutter.navIdent
+                        it.tilstand() shouldBe Oppgave.UnderKontroll()
+                    }
                 }
-            }
         }
     }
 
@@ -747,213 +748,222 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = testSaksbehandler.navIdent,
-                        utførtAv = testSaksbehandler,
-                    ),
-                filter = emneknaggFilterForTestSaksbehandler,
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe oppgaveMedEmneknagg.oppgaveId
-                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
-                    it.tilstand() shouldBe Oppgave.UnderBehandling
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = testSaksbehandler.navIdent,
+                            utførtAv = testSaksbehandler,
+                        ),
+                    filter = emneknaggFilterForTestSaksbehandler,
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe oppgaveMedEmneknagg.oppgaveId
+                        it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                        it.tilstand() shouldBe Oppgave.UnderBehandling
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = testSaksbehandler.navIdent,
-                        utførtAv = testSaksbehandler,
-                    ),
-                filter = opprettetIDagFilterForTestSaksbehandler,
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe yngsteLedigeOppgaveOpprettetIDag.oppgaveId
-                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
-                    it.tilstand() shouldBe Oppgave.UnderBehandling
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = testSaksbehandler.navIdent,
+                            utførtAv = testSaksbehandler,
+                        ),
+                    filter = opprettetIDagFilterForTestSaksbehandler,
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe yngsteLedigeOppgaveOpprettetIDag.oppgaveId
+                        it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                        it.tilstand() shouldBe Oppgave.UnderBehandling
+                    }
                 }
-            }
 
             // Skal ikke hente beslutter-oppgaver
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = testSaksbehandler.navIdent,
-                        utførtAv = testSaksbehandler,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = testSaksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = testSaksbehandler.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = testSaksbehandler.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteLedigeOppgaveKlarTilBehandling.oppgaveId
-                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
-                    it.tilstand() shouldBe Oppgave.UnderBehandling
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = testSaksbehandler.navIdent,
+                            utførtAv = testSaksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = testSaksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = testSaksbehandler.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = testSaksbehandler.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteLedigeOppgaveKlarTilBehandling.oppgaveId
+                        it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                        it.tilstand() shouldBe Oppgave.UnderBehandling
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = vanligBeslutter.navIdent,
-                        utførtAv = vanligBeslutter,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = beslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = beslutter.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = beslutter.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
-                    it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                    it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = vanligBeslutter.navIdent,
+                            utførtAv = vanligBeslutter,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = beslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = beslutter.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = beslutter.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
+                        it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                        it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = beslutterEgneAnsatte.navIdent,
-                        utførtAv = beslutterEgneAnsatte,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = beslutterEgneAnsatte.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = beslutterEgneAnsatte.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                    it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutterEgneAnsatte.navIdent,
+                            utførtAv = beslutterEgneAnsatte,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = beslutterEgneAnsatte.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = beslutterEgneAnsatte.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
+                        it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                        it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = beslutterFortroligAdresse.navIdent,
-                        utførtAv = beslutterFortroligAdresse,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = beslutterFortroligAdresse.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = beslutterFortroligAdresse.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
-                    it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                    it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutterFortroligAdresse.navIdent,
+                            utførtAv = beslutterFortroligAdresse,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = beslutterFortroligAdresse.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = beslutterFortroligAdresse.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
+                        it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                        it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = beslutterStrengtFortroligAdresse.navIdent,
-                        utførtAv = beslutterStrengtFortroligAdresse,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = beslutterStrengtFortroligAdresse.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
-                    it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                    it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
-                    it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutterStrengtFortroligAdresse.navIdent,
+                            utførtAv = beslutterStrengtFortroligAdresse,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = beslutterStrengtFortroligAdresse.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
+                        it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                        it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
+                        it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = beslutterStrengtFortroligAdresseUtland.navIdent,
-                        utførtAv = beslutterStrengtFortroligAdresseUtland,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                        adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
-                        harBeslutterRolle = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.BESLUTTER),
-                        navIdent = beslutterStrengtFortroligAdresseUtland.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
-                    it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                    it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutterStrengtFortroligAdresseUtland.navIdent,
+                            utførtAv = beslutterStrengtFortroligAdresseUtland,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = beslutterStrengtFortroligAdresseUtland.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
+                        it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                        it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
+                    }
                 }
-            }
 
-            repo.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = beslutterStrengtFortroligOgEgneAnsatte.navIdent,
-                        utførtAv = beslutterStrengtFortroligOgEgneAnsatte,
-                    ),
-                filter =
-                    TildelNesteOppgaveFilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        egneAnsatteTilgang =
-                            beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
-                                TilgangType.EGNE_ANSATTE,
-                            ),
-                        adressebeskyttelseTilganger = beslutterStrengtFortroligOgEgneAnsatte.adressebeskyttelseTilganger(),
-                        harBeslutterRolle =
-                            beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
-                                TilgangType.BESLUTTER,
-                            ),
-                        navIdent = beslutterStrengtFortroligOgEgneAnsatte.navIdent,
-                    ),
-            ).let {
-                assertSoftly {
-                    require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                    it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutterStrengtFortroligOgEgneAnsatte.navIdent,
+                            utførtAv = beslutterStrengtFortroligOgEgneAnsatte,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            egneAnsatteTilgang =
+                                beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
+                                    TilgangType.EGNE_ANSATTE,
+                                ),
+                            adressebeskyttelseTilganger = beslutterStrengtFortroligOgEgneAnsatte.adressebeskyttelseTilganger(),
+                            harBeslutterRolle =
+                                beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
+                                    TilgangType.BESLUTTER,
+                                ),
+                            navIdent = beslutterStrengtFortroligOgEgneAnsatte.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
+                        it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                        it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
+                    }
                 }
-            }
         }
     }
 
@@ -1225,15 +1235,18 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.søk(
-                søkeFilter =
-                    Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
-                        utløstAvTyper = setOf(UtløstAvType.KLAGE),
-                    ),
-            ).oppgaver shouldBe listOf(klageOppgave)
+            repo
+                .søk(
+                    søkeFilter =
+                        Søkefilter(
+                            tilstander =
+                                Oppgave.Tilstand.Type.entries
+                                    .toSet(),
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            utløstAvTyper = setOf(UtløstAvType.KLAGE),
+                        ),
+                ).oppgaver shouldBe listOf(klageOppgave)
         }
     }
 
@@ -1309,13 +1322,14 @@ class PostgresOppgaveRepositoryTest {
                     person = testPerson,
                 )
             repo.lagre(oppgave = oppgave)
-            repo.søk(
-                Søkefilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = Oppgave.Tilstand.Type.values,
-                    søknadId = søknadId,
-                ),
-            ).oppgaver.size shouldBe 1
+            repo
+                .søk(
+                    Søkefilter(
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.values,
+                        søknadId = søknadId,
+                    ),
+                ).oppgaver.size shouldBe 1
         }
     }
 
@@ -1396,37 +1410,49 @@ class PostgresOppgaveRepositoryTest {
             val oppgave3 = this.leggTilOppgave(emneknagger = emptySet(), opprettet = opprettetNå)
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    emneknagger = emptySet(),
-                ),
-            ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3)
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        emneknagger = emptySet(),
+                    ),
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3)
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    emneknagger = setOf("hubba"),
-                ),
-            ).oppgaver shouldBe listOf(oppgave1, oppgave2)
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        emneknagger = setOf("hubba"),
+                    ),
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    emneknagger = setOf("bubba"),
-                ),
-            ).oppgaver shouldBe listOf(oppgave1)
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        emneknagger = setOf("bubba"),
+                    ),
+                ).oppgaver shouldBe listOf(oppgave1)
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    emneknagger = setOf("bubba", "hubba"),
-                ),
-            ).oppgaver shouldBe listOf(oppgave1, oppgave2)
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        emneknagger = setOf("bubba", "hubba"),
+                    ),
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
         }
     }
 
@@ -1460,38 +1486,50 @@ class PostgresOppgaveRepositoryTest {
             )
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = saksbehandler1,
-                ),
-            ).oppgaver.size shouldBe 1
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        saksbehandlerIdent = saksbehandler1,
+                    ),
+                ).oppgaver.size shouldBe 1
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = saksbehandler2,
-                ),
-            ).oppgaver.size shouldBe 2
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        saksbehandlerIdent = saksbehandler2,
+                    ),
+                ).oppgaver.size shouldBe 2
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = null,
-                ),
-            ).oppgaver.size shouldBe 4
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        saksbehandlerIdent = null,
+                    ),
+                ).oppgaver.size shouldBe 4
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
-                ),
-            ).oppgaver.size shouldBe 1
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        saksbehandlerIdent = saksbehandler2,
+                        emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                    ),
+                ).oppgaver.size shouldBe 1
         }
     }
 
@@ -1504,67 +1542,74 @@ class PostgresOppgaveRepositoryTest {
             val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    paginering = null,
-                ),
-            ).let {
-                it.oppgaver.size shouldBe 4
-                it.totaltAntallOppgaver shouldBe 4
-            }
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        paginering = null,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 4
+                    it.totaltAntallOppgaver shouldBe 4
+                }
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    paginering = Søkefilter.Paginering(2, 0),
-                ),
-            ).let {
-                it.oppgaver.size shouldBe 2
-                it.oppgaver[0] shouldBe eldsteOppgave
-                it.oppgaver[1] shouldBe nestEldsteOppgave
-                it.totaltAntallOppgaver shouldBe 4
-            }
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(2, 0),
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe eldsteOppgave
+                    it.oppgaver[1] shouldBe nestEldsteOppgave
+                    it.totaltAntallOppgaver shouldBe 4
+                }
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
-                    paginering = Søkefilter.Paginering(2, 1),
-                ),
-            ).let {
-                it.oppgaver.size shouldBe 2
-                it.oppgaver[0] shouldBe nestNyesteOppgave
-                it.oppgaver[1] shouldBe nyesteOppgave
-                it.totaltAntallOppgaver shouldBe 4
-            }
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(2, 1),
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe nestNyesteOppgave
+                    it.oppgaver[1] shouldBe nyesteOppgave
+                    it.totaltAntallOppgaver shouldBe 4
+                }
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
-                    paginering = Søkefilter.Paginering(10, 0),
-                ),
-            ).let {
-                it.oppgaver.size shouldBe 4
-                it.oppgaver[0] shouldBe eldsteOppgave
-                it.oppgaver[1] shouldBe nestEldsteOppgave
-                it.oppgaver[2] shouldBe nestNyesteOppgave
-                it.oppgaver[3] shouldBe nyesteOppgave
-                it.totaltAntallOppgaver shouldBe 4
-            }
-            repo.søk(
-                Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
-                    paginering = Søkefilter.Paginering(10, 1),
-                ),
-            ).let {
-                it.oppgaver.size shouldBe 0
-                it.totaltAntallOppgaver shouldBe 4
-            }
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(10, 0),
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe eldsteOppgave
+                    it.oppgaver[1] shouldBe nestEldsteOppgave
+                    it.oppgaver[2] shouldBe nestNyesteOppgave
+                    it.oppgaver[3] shouldBe nyesteOppgave
+                    it.totaltAntallOppgaver shouldBe 4
+                }
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(10, 1),
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 0
+                    it.totaltAntallOppgaver shouldBe 4
+                }
         }
     }
 
@@ -1589,85 +1634,93 @@ class PostgresOppgaveRepositoryTest {
             )
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.søk(
-                Søkefilter(
-                    tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                ),
-            ).oppgaver.single() shouldBe oppgaveUnderBehandlingEnUkeGammel
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                    ),
+                ).oppgaver
+                .single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
-            repo.søk(
-                Søkefilter(
-                    tilstander =
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            setOf(
+                                Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                                Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            ),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                    ),
+                ).oppgaver.size shouldBe 3
+
+            repo
+                .søk(
+                    Søkefilter(
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        saksbehandlerIdent = null,
+                        personIdent = null,
+                        oppgaveId = null,
+                        behandlingId = null,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 3
+                    it.oppgaver.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
                         setOf(
-                            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                        ),
-                    periode = Periode.UBEGRENSET_PERIODE,
-                ),
-            ).oppgaver.size shouldBe 3
+                            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                        )
+                }
 
-            repo.søk(
-                Søkefilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
-                    saksbehandlerIdent = null,
-                    personIdent = null,
-                    oppgaveId = null,
-                    behandlingId = null,
-                ),
-            ).let {
-                it.oppgaver.size shouldBe 3
-                it.oppgaver.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
-                    setOf(
-                        Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                    )
-            }
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                        periode =
+                            Periode(
+                                fom = enUkeSiden.plusDays(1).toLocalDate(),
+                                tom = enUkeSiden.plusDays(2).toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 0
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
-                    periode =
-                        Periode(
-                            fom = enUkeSiden.plusDays(1).toLocalDate(),
-                            tom = enUkeSiden.plusDays(2).toLocalDate(),
-                        ),
-                ),
-            ).oppgaver.size shouldBe 0
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
+                        periode =
+                            Periode(
+                                fom = enUkeSiden.minusDays(1).toLocalDate(),
+                                tom = enUkeSiden.plusDays(2).toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 1
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
-                    periode =
-                        Periode(
-                            fom = enUkeSiden.minusDays(1).toLocalDate(),
-                            tom = enUkeSiden.plusDays(2).toLocalDate(),
-                        ),
-                ),
-            ).oppgaver.size shouldBe 1
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                        periode =
+                            Periode(
+                                fom = opprettetNå.toLocalDate(),
+                                tom = opprettetNå.toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 1
 
-            repo.søk(
-                Søkefilter(
-                    tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
-                    periode =
-                        Periode(
-                            fom = opprettetNå.toLocalDate(),
-                            tom = opprettetNå.toLocalDate(),
-                        ),
-                ),
-            ).oppgaver.size shouldBe 1
-
-            repo.søk(
-                Søkefilter(
-                    tilstander = emptySet(),
-                    periode =
-                        Periode(
-                            fom = opprettetNå.toLocalDate(),
-                            tom = opprettetNå.toLocalDate(),
-                        ),
-                ),
-            ).oppgaver.size shouldBe 1
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = emptySet(),
+                        periode =
+                            Periode(
+                                fom = opprettetNå.toLocalDate(),
+                                tom = opprettetNå.toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 1
         }
     }
 

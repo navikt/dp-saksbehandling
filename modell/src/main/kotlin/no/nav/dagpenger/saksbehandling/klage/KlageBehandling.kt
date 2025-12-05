@@ -87,39 +87,28 @@ data class KlageBehandling private constructor(
     val tilstandslogg: KlageTilstandslogg
         get() = _tilstandslogg
 
-    fun tilstand(): KlageTilstand {
-        return tilstand
-    }
+    fun tilstand(): KlageTilstand = tilstand
 
-    fun journalpostId(): String? {
-        return journalpostId
-    }
+    fun journalpostId(): String? = journalpostId
 
-    fun behandlendeEnhet(): String? {
-        return behandlendeEnhet
-    }
+    fun behandlendeEnhet(): String? = behandlendeEnhet
 
-    fun utfall(): UtfallType? {
-        return opplysninger
+    fun utfall(): UtfallType? =
+        opplysninger
             .single { it.type == UTFALL }
-            .verdi().toUtfallType()
-    }
+            .verdi()
+            .toUtfallType()
 
-    fun hentOpplysning(opplysningId: UUID): Opplysning {
-        return opplysninger.singleOrNull { it.opplysningId == opplysningId }
+    fun hentOpplysning(opplysningId: UUID): Opplysning =
+        opplysninger.singleOrNull { it.opplysningId == opplysningId }
             ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
-    }
 
-    fun alleOpplysninger(): Set<Opplysning> {
-        return opplysninger
-    }
+    fun alleOpplysninger(): Set<Opplysning> = opplysninger
 
-    fun synligeOpplysninger(): Set<Opplysning> {
-        return opplysninger.filter { it.synlighet() }.toSet()
-    }
+    fun synligeOpplysninger(): Set<Opplysning> = opplysninger.filter { it.synlighet() }.toSet()
 
-    fun personIdent(): String {
-        return runCatching {
+    fun personIdent(): String =
+        runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is KlageMottattHendelse || it.hendelse is ManuellKlageMottattHendelse }?.let {
                 if (it.hendelse is KlageMottattHendelse) {
                     (it.hendelse).ident
@@ -127,10 +116,8 @@ data class KlageBehandling private constructor(
                     (it.hendelse as ManuellKlageMottattHendelse).ident
                 }
             }
-        }
-            .onFailure { e -> logger.error(e) { "Feil ved henting av personident for klagebehandling: ${this.behandlingId}" } }
+        }.onFailure { e -> logger.error(e) { "Feil ved henting av personident for klagebehandling: ${this.behandlingId}" } }
             .getOrThrow()!!
-    }
 
     fun svar(
         opplysningId: UUID,
@@ -258,23 +245,17 @@ data class KlageBehandling private constructor(
         fun saksbehandlingFerdig(
             klageBehandling: KlageBehandling,
             hendelse: KlageFerdigbehandletHendelse,
-        ) {
-            throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
-        }
+        ): Unit = throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
 
         fun avbryt(
             klageBehandling: KlageBehandling,
             hendelse: AvbruttHendelse,
-        ) {
-            throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $type")
-        }
+        ): Unit = throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $type")
 
         fun oversendtKlageinstans(
             klageBehandling: KlageBehandling,
             hendelse: OversendtKlageinstansHendelse,
-        ) {
-            throw IllegalStateException("Kan ikke motta hendelse om oversendt klageinstans i tilstand $type")
-        }
+        ): Unit = throw IllegalStateException("Kan ikke motta hendelse om oversendt klageinstans i tilstand $type")
 
         enum class Type {
             BEHANDLES,

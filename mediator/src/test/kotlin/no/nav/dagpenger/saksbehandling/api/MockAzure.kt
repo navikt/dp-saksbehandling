@@ -6,7 +6,9 @@ import io.ktor.http.HttpHeaders
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.security.mock.oauth2.MockOAuth2Server
 
-class MockAzure(private val config: MockConfig) {
+class MockAzure(
+    private val config: MockConfig,
+) {
     companion object {
         private const val AZURE_APP_CLIENT_ID = "test_client_id"
         private const val AZURE_OPENID_CONFIG_ISSUER = "test_issuer"
@@ -19,13 +21,13 @@ class MockAzure(private val config: MockConfig) {
             }
         }
 
-        fun lagTokenMedClaims(claims: Map<String, Any>): String {
-            return mockOAuth2Server.issueToken(
-                audience = AZURE_APP_CLIENT_ID,
-                issuerId = AZURE_OPENID_CONFIG_ISSUER,
-                claims = claims,
-            ).serialize()
-        }
+        fun lagTokenMedClaims(claims: Map<String, Any>): String =
+            mockOAuth2Server
+                .issueToken(
+                    audience = AZURE_APP_CLIENT_ID,
+                    issuerId = AZURE_OPENID_CONFIG_ISSUER,
+                    claims = claims,
+                ).serialize()
 
         fun HttpRequestBuilder.autentisert(token: String = gyldigSaksbehandlerToken()) {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -34,14 +36,13 @@ class MockAzure(private val config: MockConfig) {
         fun gyldigSaksbehandlerToken(
             adGrupper: List<String> = emptyList(),
             navIdent: String = TestHelper.saksbehandler.navIdent,
-        ): String {
-            return MockAzure.lagTokenMedClaims(
+        ): String =
+            MockAzure.lagTokenMedClaims(
                 mapOf(
                     "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
                     "NAVident" to navIdent,
                 ),
             )
-        }
 
         fun gyldigMaskinToken(): String = lagTokenMedClaims(mapOf("idtyp" to "app"))
     }
@@ -52,9 +53,7 @@ class MockAzure(private val config: MockConfig) {
         System.setProperty("AZURE_OPENID_CONFIG_JWKS_URI", "${mockOAuth2Server.jwksUrl(AZURE_OPENID_CONFIG_ISSUER)}")
     }
 
-    fun lagTokenMedClaims(claims: Map<String, Any>): String {
-        return MockAzure.lagTokenMedClaims(claims)
-    }
+    fun lagTokenMedClaims(claims: Map<String, Any>): String = MockAzure.lagTokenMedClaims(claims)
 }
 
 fun mockAzure(verifierConfig: MockConfig.() -> Unit = {}): MockAzure {
@@ -62,4 +61,6 @@ fun mockAzure(verifierConfig: MockConfig.() -> Unit = {}): MockAzure {
     return MockAzure(config)
 }
 
-data class MockConfig(var claims: Map<String, Any> = emptyMap())
+data class MockConfig(
+    var claims: Map<String, Any> = emptyMap(),
+)

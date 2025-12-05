@@ -24,15 +24,16 @@ import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
-class KlageDTOMapper(private val oppslag: Oppslag) {
-    fun tilVerdi(oppdaterKlageOpplysningDTO: OppdaterKlageOpplysningDTO): Verdi {
-        return when (oppdaterKlageOpplysningDTO) {
+class KlageDTOMapper(
+    private val oppslag: Oppslag,
+) {
+    fun tilVerdi(oppdaterKlageOpplysningDTO: OppdaterKlageOpplysningDTO): Verdi =
+        when (oppdaterKlageOpplysningDTO) {
             is BoolskVerdiDTO -> Verdi.Boolsk(oppdaterKlageOpplysningDTO.verdi)
             is DatoVerdiDTO -> Verdi.Dato(oppdaterKlageOpplysningDTO.verdi)
             is ListeVerdiDTO -> Verdi.Flervalg(oppdaterKlageOpplysningDTO.verdi)
             is TekstVerdiDTO -> Verdi.TekstVerdi(oppdaterKlageOpplysningDTO.verdi)
         }
-    }
 
     suspend fun tilDto(
         klageBehandling: KlageBehandling,

@@ -165,11 +165,7 @@ class FilterBuilder {
         }
     }
 
-    fun tilstander(): Set<Tilstand.Type>? {
-        return stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
-    }
+    fun tilstander(): Set<Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
 
-    fun utløstAvTyper(): Set<UtløstAvType>? {
-        return stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
-    }
+    fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
 }

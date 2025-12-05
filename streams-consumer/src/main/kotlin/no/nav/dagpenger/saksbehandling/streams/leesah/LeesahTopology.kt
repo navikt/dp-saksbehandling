@@ -14,11 +14,11 @@ fun StreamsBuilder.adressebeskyttetStream(
     topic: String,
     håndter: (Set<String>) -> Unit,
 ): Unit =
-    this.stream(topic, Consumed.with(stringSerde, specificAvroSerde<Personhendelse>()))
+    this
+        .stream(topic, Consumed.with(stringSerde, specificAvroSerde<Personhendelse>()))
         .filter { _, personhendelse -> personhendelse.opplysningstype == "ADRESSEBESKYTTELSE_V1" }
         .peek { _, personhendelse ->
             sikkerLogger.info { "Personhendelse: $personhendelse" }
             logger.info { "Mottok personhendelse til prosessering, ${personhendelse.opplysningstype}" }
-        }
-        .mapValues { _, personhendelse -> personhendelse.personidenter.toSet() }
+        }.mapValues { _, personhendelse -> personhendelse.personidenter.toSet() }
         .foreach { _, personidenter -> håndter(personidenter) }

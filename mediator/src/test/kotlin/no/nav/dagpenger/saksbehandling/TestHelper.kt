@@ -101,8 +101,8 @@ internal object TestHelper {
         vurdering: String? = null,
         innsendingResultat: Innsending.InnsendingResultat? = null,
         valgtSakId: UUID? = null,
-    ): Innsending {
-        return Innsending.rehydrer(
+    ): Innsending =
+        Innsending.rehydrer(
             innsendingId = innsendingId,
             person = person,
             journalpostId = journalpostId,
@@ -115,7 +115,6 @@ internal object TestHelper {
             innsendingResultat = innsendingResultat,
             valgtSakId = valgtSakId,
         )
-    }
 
     fun lagPerson(
         ident: String = randomFnr(),
@@ -138,8 +137,8 @@ internal object TestHelper {
 
     val søknadId = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
 
-    fun lagTilstandLogg(): OppgaveTilstandslogg {
-        return OppgaveTilstandslogg(
+    fun lagTilstandLogg(): OppgaveTilstandslogg =
+        OppgaveTilstandslogg(
             Tilstandsendring(
                 tilstand = KLAR_TIL_BEHANDLING,
                 hendelse =
@@ -172,7 +171,6 @@ internal object TestHelper {
                 tidspunkt = opprettetNå.minusDays(1),
             ),
         )
-    }
 
     fun lagOppgave(
         tilstand: Oppgave.Tilstand = KlarTilBehandling,
@@ -184,8 +182,8 @@ internal object TestHelper {
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
-    ): Oppgave {
-        return Oppgave.rehydrer(
+    ): Oppgave =
+        Oppgave.rehydrer(
             oppgaveId = oppgaveId,
             behandlerIdent = saksbehandlerIdent,
             opprettet = opprettet,
@@ -201,21 +199,19 @@ internal object TestHelper {
                     kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                 ),
         )
-    }
 
     fun lagBehandling(
         behandlingId: UUID = UUIDv7.ny(),
         opprettet: LocalDateTime = opprettetNå,
         hendelse: Hendelse = TomHendelse,
         utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
-    ): Behandling {
-        return Behandling(
+    ): Behandling =
+        Behandling(
             behandlingId = behandlingId,
             opprettet = opprettet,
             hendelse = hendelse,
             utløstAv = utløstAvType,
         )
-    }
 
     fun lagUtsending(
         tilstand: Utsending.Tilstand,

@@ -444,7 +444,10 @@ class EmneknaggBuilderTest {
             it.registerModule(JavaTimeModule())
         }
 
-    private data class ForenkletOpplysning(val id: UUID, val verdi: Boolean)
+    private data class ForenkletOpplysning(
+        val id: UUID,
+        val verdi: Boolean,
+    )
 
     private fun lagBehandlingResultat(
         behandletHendelseType: String = "Søknad",
@@ -491,11 +494,13 @@ class EmneknaggBuilderTest {
                     add(opplysningObject)
                 }
             }
-        return objectMapper.createObjectNode().apply {
-            put("behandlingId", UUID.randomUUID().toString())
-            set<ObjectNode>("behandletHendelse", behandletHendelseObject)
-            set<ArrayNode>("rettighetsperioder", rettighetsperioderArray)
-            set<ArrayNode>("opplysninger", opplysningArray)
-        }.toString()
+        return objectMapper
+            .createObjectNode()
+            .apply {
+                put("behandlingId", UUID.randomUUID().toString())
+                set<ObjectNode>("behandletHendelse", behandletHendelseObject)
+                set<ArrayNode>("rettighetsperioder", rettighetsperioderArray)
+                set<ArrayNode>("opplysninger", opplysningArray)
+            }.toString()
     }
 }

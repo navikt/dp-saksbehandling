@@ -40,9 +40,10 @@ class SakApiTest {
             }
         val token = gyldigMaskinToken()
         withSakApi(sakMediator) {
-            client.get("behandling/$behandlingId/sakId") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-            }.bodyAsText() shouldBe sakId.toString()
+            client
+                .get("behandling/$behandlingId/sakId") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }.bodyAsText() shouldBe sakId.toString()
         }
     }
 
@@ -54,22 +55,23 @@ class SakApiTest {
             }
         val token = gyldigMaskinToken()
         withSakApi(sakMediator) {
-            client.get("behandling/$behandlingId/sakId") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-            }.let {
-                it.status shouldBe HttpStatusCode.NotFound
-                //language=Json
-                it.bodyAsText() shouldEqualSpecifiedJson
-                    """
-                    {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
-                      "title": "Ressurs ikke funnet",
-                      "status": 404,
-                      "detail": "Fant ikke sakId for behandling",
-                      "instance": "/behandling/$behandlingId/sakId"
-                    }
-                    """.trimIndent()
-            }
+            client
+                .get("behandling/$behandlingId/sakId") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }.let {
+                    it.status shouldBe HttpStatusCode.NotFound
+                    //language=Json
+                    it.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                          "type": "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                          "title": "Ressurs ikke funnet",
+                          "status": 404,
+                          "detail": "Fant ikke sakId for behandling",
+                          "instance": "/behandling/$behandlingId/sakId"
+                        }
+                        """.trimIndent()
+                }
         }
     }
 
