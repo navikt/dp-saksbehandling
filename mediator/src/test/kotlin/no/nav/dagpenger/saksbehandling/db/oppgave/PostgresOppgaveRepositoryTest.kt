@@ -1189,14 +1189,19 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på tilstand`() {
         DBTestHelper.withMigratedDb { ds ->
+            val oppgaveOpprettet = this.leggTilOppgave(tilstand = Oppgave.Opprettet, type = UtløstAvType.INNSENDING)
             val oppgaveKlarTilBehandling = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling)
             val oppgaveFerdigBehandlet = this.leggTilOppgave(tilstand = Oppgave.FerdigBehandlet)
             val repo = PostgresOppgaveRepository(ds)
+
+            repo.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.OPPRETTET).let { oppgaver ->
+                oppgaver.size shouldBe 1
+                oppgaver.single().oppgaveId shouldBe oppgaveOpprettet.oppgaveId
+            }
             repo.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.FERDIG_BEHANDLET).let { oppgaver ->
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveFerdigBehandlet.oppgaveId
             }
-
             repo.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).let { oppgaver ->
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveKlarTilBehandling.oppgaveId
