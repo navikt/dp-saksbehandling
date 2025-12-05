@@ -44,6 +44,9 @@ class InnsendingBehandler(
             .opprettManuellBehandling(
                 personIdent = innsending.person.ident,
                 saksbehandlerToken = (hendelse.aksjon as Aksjon.OpprettManuellBehandling).saksbehandlerToken,
+                hendelseRegistrert = innsending.mottatt,
+                hendelseId = innsending.innsendingId.toString(),
+                begrunnelse = innsending.vurdering(),
             ).let { result ->
                 return InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,

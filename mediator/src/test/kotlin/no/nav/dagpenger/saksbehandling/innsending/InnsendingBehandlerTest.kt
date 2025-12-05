@@ -65,7 +65,7 @@ class InnsendingBehandlerTest {
                 hendelse =
                     lagHendelse(
                         aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
-                        vurdering = "Dette er en vurdering",
+                        vurdering = "Dette er min vurdering",
                     ),
                 innsending = testInnsending,
             ).let {
@@ -94,6 +94,9 @@ class InnsendingBehandlerTest {
                     it.opprettManuellBehandling(
                         personIdent = testInnsending.person.ident,
                         saksbehandlerToken = saksbehandlerToken,
+                        hendelseRegistrert = testInnsending.mottatt,
+                        hendelseId = testInnsending.innsendingId.toString(),
+                        begrunnelse = testInnsending.vurdering(),
                     )
                 } returns Result.success(behandlingId)
             }
@@ -123,7 +126,13 @@ class InnsendingBehandlerTest {
             }
 
         verify(exactly = 1) {
-            behandlingKlient.opprettManuellBehandling(testInnsending.person.ident, saksbehandlerToken)
+            behandlingKlient.opprettManuellBehandling(
+                personIdent = testInnsending.person.ident,
+                saksbehandlerToken = saksbehandlerToken,
+                hendelseRegistrert = testInnsending.mottatt,
+                hendelseId = testInnsending.innsendingId.toString(),
+                begrunnelse = testInnsending.vurdering(),
+            )
         }
     }
 
