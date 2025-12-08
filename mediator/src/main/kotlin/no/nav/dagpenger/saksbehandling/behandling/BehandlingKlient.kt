@@ -17,7 +17,7 @@ import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -57,7 +57,7 @@ interface BehandlingKlient {
     fun opprettManuellBehandling(
         personIdent: String,
         saksbehandlerToken: String,
-        hendelseRegistrert: LocalDateTime,
+        hendelseDato: LocalDate,
         hendelseId: String,
         begrunnelse: String? = null,
     ): Result<UUID>
@@ -114,7 +114,7 @@ internal class BehandlingHttpKlient(
     override fun opprettManuellBehandling(
         personIdent: String,
         saksbehandlerToken: String,
-        hendelseRegistrert: LocalDateTime,
+        hendelseDato: LocalDate,
         hendelseId: String,
         begrunnelse: String?,
     ): Result<UUID> =
@@ -123,7 +123,7 @@ internal class BehandlingHttpKlient(
                 val utløsendeHendelse =
                     DpBehandlingHendelse(
                         id = hendelseId,
-                        skjedde = hendelseRegistrert,
+                        skjedde = hendelseDato,
                     )
                 httpClient
                     .post("$dpBehandlingApiUrl/person/behandling") {
@@ -213,10 +213,10 @@ private data class NyBehandlingRequest(
 )
 
 private data class DpBehandlingHendelse(
-    val datatype: String = "String",
+    val datatype: String = "UUID",
     val type: String = "Manuell",
     val id: String,
-    val skjedde: LocalDateTime,
+    val skjedde: LocalDate,
 )
 
 private data class BehandlingDTO(

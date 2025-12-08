@@ -94,7 +94,7 @@ class InnsendingBehandlerTest {
                     it.opprettManuellBehandling(
                         personIdent = testInnsending.person.ident,
                         saksbehandlerToken = saksbehandlerToken,
-                        hendelseRegistrert = testInnsending.mottatt,
+                        hendelseDato = testInnsending.mottatt.toLocalDate(),
                         hendelseId = testInnsending.innsendingId.toString(),
                         begrunnelse = testInnsending.vurdering(),
                     )
@@ -129,7 +129,7 @@ class InnsendingBehandlerTest {
             behandlingKlient.opprettManuellBehandling(
                 personIdent = testInnsending.person.ident,
                 saksbehandlerToken = saksbehandlerToken,
-                hendelseRegistrert = testInnsending.mottatt,
+                hendelseDato = testInnsending.mottatt.toLocalDate(),
                 hendelseId = testInnsending.innsendingId.toString(),
                 begrunnelse = testInnsending.vurdering(),
             )

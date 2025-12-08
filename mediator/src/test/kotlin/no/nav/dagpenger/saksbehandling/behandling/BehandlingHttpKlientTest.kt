@@ -14,8 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -101,12 +100,12 @@ class BehandlingHttpKlientTest {
         runBlocking {
             val behandlingKlient = behandlingKlient()
             val hendelseId = UUIDv7.ny().toString()
-            val registrertTidspunkt = LocalDateTime.now().minusSeconds(20).truncatedTo(ChronoUnit.SECONDS)
+            val hendelseDato = LocalDate.now()
             behandlingKlient
                 .opprettManuellBehandling(
                     personIdent = ident,
                     saksbehandlerToken = saksbehandlerToken,
-                    hendelseRegistrert = registrertTidspunkt,
+                    hendelseDato = hendelseDato,
                     hendelseId = hendelseId,
                     begrunnelse = "begrunnelse",
                 ).getOrThrow() shouldBe behandlingId
@@ -118,10 +117,10 @@ class BehandlingHttpKlientTest {
                     {
                     "ident":"$ident",
                     "hendelse": {
-                        "datatype": "String",
+                        "datatype": "UUID",
                         "type": "Manuell",
                         "id": "$hendelseId",
-                        "skjedde": "$registrertTidspunkt"
+                        "skjedde": "$hendelseDato"
                     },
                     "begrunnelse": "begrunnelse"
                     }
@@ -136,7 +135,7 @@ class BehandlingHttpKlientTest {
             ).opprettManuellBehandling(
                 personIdent = ident,
                 saksbehandlerToken = saksbehandlerToken,
-                hendelseRegistrert = LocalDateTime.now(),
+                hendelseDato = hendelseDato,
                 hendelseId = UUIDv7.ny().toString(),
             ).isFailure
         }
