@@ -40,10 +40,15 @@ class InnsendingBehandler(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
+        val vurdering =
+            requireNotNull(innsending.vurdering()) { "Vurdering av innsending må være satt ved opprettelse av manuell behandling" }
         behandlingKlient
             .opprettManuellBehandling(
                 personIdent = innsending.person.ident,
                 saksbehandlerToken = (hendelse.aksjon as Aksjon.OpprettManuellBehandling).saksbehandlerToken,
+                hendelseDato = innsending.mottatt.toLocalDate(),
+                hendelseId = innsending.innsendingId.toString(),
+                begrunnelse = vurdering,
             ).let { result ->
                 return InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,

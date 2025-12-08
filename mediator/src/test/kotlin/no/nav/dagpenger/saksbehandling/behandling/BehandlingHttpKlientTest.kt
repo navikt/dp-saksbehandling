@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -95,17 +96,35 @@ class BehandlingHttpKlientTest {
     )
 
     @Test
-    fun `kall mot dp-behandling opprett manuelt behandling `() {
+    fun `kall mot dp-behandling opprett behandling manuelt`() {
         runBlocking {
             val behandlingKlient = behandlingKlient()
-
+            val hendelseId = UUIDv7.ny().toString()
+            val hendelseDato = LocalDate.now()
             behandlingKlient
-                .opprettManuellBehandling(ident, saksbehandlerToken)
-                .getOrThrow() shouldBe behandlingId
+                .opprettManuellBehandling(
+                    personIdent = ident,
+                    saksbehandlerToken = saksbehandlerToken,
+                    hendelseDato = hendelseDato,
+                    hendelseId = hendelseId,
+                    begrunnelse = "begrunnelse",
+                ).getOrThrow() shouldBe behandlingId
 
             requireNotNull(requestData).let {
                 it.body.contentType.toString() shouldBe "application/json"
-                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                    "ident":"$ident",
+                    "hendelse": {
+                        "datatype": "UUID",
+                        "type": "Manuell",
+                        "id": "$hendelseId",
+                        "skjedde": "$hendelseDato"
+                    },
+                    "begrunnelse": "begrunnelse"
+                    }
+                    """.trimIndent()
                 it.headers[HttpHeaders.Authorization] shouldBe "Bearer $saksbehandlerToken"
                 it.headers[HttpHeaders.Accept] shouldBe "application/json"
             }
@@ -113,7 +132,13 @@ class BehandlingHttpKlientTest {
             behandlingKlient(
                 delay = 20.milliseconds,
                 timeOut = 10.milliseconds,
-            ).opprettManuellBehandling(ident, saksbehandlerToken).isFailure
+            ).opprettManuellBehandling(
+                personIdent = ident,
+                saksbehandlerToken = saksbehandlerToken,
+                hendelseDato = hendelseDato,
+                hendelseId = UUIDv7.ny().toString(),
+                begrunnelse = "begrunnelse",
+            ).isFailure
         }
     }
 

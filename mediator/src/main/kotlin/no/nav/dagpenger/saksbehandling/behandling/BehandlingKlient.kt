@@ -17,6 +17,7 @@ import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
+import java.time.LocalDate
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -56,6 +57,9 @@ interface BehandlingKlient {
     fun opprettManuellBehandling(
         personIdent: String,
         saksbehandlerToken: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
     ): Result<UUID>
 }
 
@@ -110,15 +114,29 @@ internal class BehandlingHttpKlient(
     override fun opprettManuellBehandling(
         personIdent: String,
         saksbehandlerToken: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
     ): Result<UUID> =
         runBlocking {
             runCatching {
+                val utløsendeHendelse =
+                    DpBehandlingHendelse(
+                        id = hendelseId,
+                        skjedde = hendelseDato,
+                    )
                 httpClient
                     .post("$dpBehandlingApiUrl/person/behandling") {
                         header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                         header(HttpHeaders.ContentType, ContentType.Application.Json)
                         accept(ContentType.Application.Json)
-                        setBody(Request(personIdent))
+                        setBody(
+                            NyBehandlingRequest(
+                                ident = personIdent,
+                                hendelse = utløsendeHendelse,
+                                begrunnelse = begrunnelse,
+                            ),
+                        )
                     }.body<BehandlingDTO>()
                     .behandlingId
                     .let { UUID.fromString(it) }
@@ -131,17 +149,16 @@ internal class BehandlingHttpKlient(
         behandlingId: UUID,
         saksbehandlerToken: String,
     ): Result<Boolean> =
-        kotlin
-            .runCatching {
-                httpClient
-                    .get(urlString = "$dpBehandlingApiUrl/behandling/$behandlingId") {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                        accept(ContentType.Application.Json)
-                    }.body<BehandlingDTO>()
-                    .let { behandlingDTO ->
-                        behandlingDTO.kreverTotrinnskontroll
-                    }
-            }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
+        runCatching {
+            httpClient
+                .get(urlString = "$dpBehandlingApiUrl/behandling/$behandlingId") {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    accept(ContentType.Application.Json)
+                }.body<BehandlingDTO>()
+                .let { behandlingDTO ->
+                    behandlingDTO.kreverTotrinnskontroll
+                }
+        }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
 
     private fun kallBehandling(
         endepunkt: String,
@@ -157,7 +174,7 @@ internal class BehandlingHttpKlient(
                         header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                         header(HttpHeaders.ContentType, ContentType.Application.Json)
                         accept(ContentType.Application.Json)
-                        setBody(Request(ident))
+                        setBody(DpBehandlingIdentRequest(ident))
                     }.let {
                         val statuskode = it.status.value
                         logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
@@ -185,8 +202,21 @@ class BehandlingKreverIkkeTotrinnskontrollException(
     message: String,
 ) : RuntimeException(message)
 
-private data class Request(
+private data class DpBehandlingIdentRequest(
     val ident: String,
+)
+
+private data class NyBehandlingRequest(
+    val ident: String,
+    val hendelse: DpBehandlingHendelse?,
+    val begrunnelse: String,
+)
+
+private data class DpBehandlingHendelse(
+    val datatype: String = "UUID",
+    val type: String = "Manuell",
+    val id: String,
+    val skjedde: LocalDate,
 )
 
 private data class BehandlingDTO(

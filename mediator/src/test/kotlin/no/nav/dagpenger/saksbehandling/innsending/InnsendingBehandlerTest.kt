@@ -16,7 +16,7 @@ import java.util.UUID
 
 class InnsendingBehandlerTest {
     private val saksbehandler = Saksbehandler("Z123456", emptySet())
-    private val testInnsending = TestHelper.testInnsending
+    private val testInnsending = TestHelper.lagInnsending(vurdering = "Test vurdering")
     private val testOppgave = TestHelper.testOppgave
 
     @Test
@@ -65,7 +65,7 @@ class InnsendingBehandlerTest {
                 hendelse =
                     lagHendelse(
                         aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
-                        vurdering = "Dette er en vurdering",
+                        vurdering = "Dette er min vurdering",
                     ),
                 innsending = testInnsending,
             ).let {
@@ -94,6 +94,9 @@ class InnsendingBehandlerTest {
                     it.opprettManuellBehandling(
                         personIdent = testInnsending.person.ident,
                         saksbehandlerToken = saksbehandlerToken,
+                        hendelseDato = testInnsending.mottatt.toLocalDate(),
+                        hendelseId = testInnsending.innsendingId.toString(),
+                        begrunnelse = testInnsending.vurdering()!!,
                     )
                 } returns Result.success(behandlingId)
             }
@@ -123,7 +126,13 @@ class InnsendingBehandlerTest {
             }
 
         verify(exactly = 1) {
-            behandlingKlient.opprettManuellBehandling(testInnsending.person.ident, saksbehandlerToken)
+            behandlingKlient.opprettManuellBehandling(
+                personIdent = testInnsending.person.ident,
+                saksbehandlerToken = saksbehandlerToken,
+                hendelseDato = testInnsending.mottatt.toLocalDate(),
+                hendelseId = testInnsending.innsendingId.toString(),
+                begrunnelse = testInnsending.vurdering()!!,
+            )
         }
     }
 
