@@ -59,7 +59,7 @@ interface BehandlingKlient {
         saksbehandlerToken: String,
         hendelseDato: LocalDate,
         hendelseId: String,
-        begrunnelse: String? = null,
+        begrunnelse: String,
     ): Result<UUID>
 }
 
@@ -116,7 +116,7 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
         hendelseDato: LocalDate,
         hendelseId: String,
-        begrunnelse: String?,
+        begrunnelse: String,
     ): Result<UUID> =
         runBlocking {
             runCatching {
@@ -209,7 +209,7 @@ private data class DpBehandlingIdentRequest(
 private data class NyBehandlingRequest(
     val ident: String,
     val hendelse: DpBehandlingHendelse?,
-    val begrunnelse: String? = null,
+    val begrunnelse: String,
 )
 
 private data class DpBehandlingHendelse(

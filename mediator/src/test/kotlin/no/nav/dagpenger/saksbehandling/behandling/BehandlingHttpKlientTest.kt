@@ -137,6 +137,7 @@ class BehandlingHttpKlientTest {
                 saksbehandlerToken = saksbehandlerToken,
                 hendelseDato = hendelseDato,
                 hendelseId = UUIDv7.ny().toString(),
+                begrunnelse = "begrunnelse",
             ).isFailure
         }
     }
