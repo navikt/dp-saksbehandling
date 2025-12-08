@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
@@ -48,9 +48,9 @@ internal class BehandlingOpprettetMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
+        val behandletHendelseSkjedde = packet["behandletHendelse"]["skjedde"].asLocalDate()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
-        val opprettet = packet["@opprettet"].asLocalDateTime()
         val behandlingskjedeId = packet["behandlingskjedeId"].asUUID()
         val basertPåBehandling: UUID? =
             if (packet["basertPåBehandling"].isMissingOrNull()) {
@@ -74,7 +74,7 @@ internal class BehandlingOpprettetMottak(
                             søknadId = søknadId,
                             behandlingId = behandlingId,
                             ident = ident,
-                            opprettet = opprettet,
+                            opprettet = behandletHendelseSkjedde.atStartOfDay(),
                             basertPåBehandling = basertPåBehandling,
                             behandlingskjedeId = behandlingskjedeId,
                         )
@@ -96,7 +96,7 @@ internal class BehandlingOpprettetMottak(
                                 meldekortId = meldekortId,
                                 behandlingId = behandlingId,
                                 ident = ident,
-                                opprettet = opprettet,
+                                opprettet = behandletHendelseSkjedde.atStartOfDay(),
                                 basertPåBehandling = basertPåBehandling,
                                 behandlingskjedeId = behandlingskjedeId,
                             ),
@@ -117,7 +117,7 @@ internal class BehandlingOpprettetMottak(
                                 manuellId = manuellId,
                                 behandlingId = behandlingId,
                                 ident = ident,
-                                opprettet = opprettet,
+                                opprettet = behandletHendelseSkjedde.atStartOfDay(),
                                 basertPåBehandling = basertPåBehandling,
                                 behandlingskjedeId = behandlingskjedeId,
                             ),

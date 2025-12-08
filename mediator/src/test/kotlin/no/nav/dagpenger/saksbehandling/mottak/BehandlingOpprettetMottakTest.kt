@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -21,13 +22,14 @@ class BehandlingOpprettetMottakTest {
     val behandlingIdNyRett = UUID.randomUUID()
     val behandlingIdGjenopptak = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
+    val behandletHendelseSkjedde = LocalDate.parse("2024-02-27")
     val behandlingskjedeId = UUIDv7.ny()
     private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingIdNyRett,
             ident = testIdent,
-            opprettet = opprettet,
+            opprettet = behandletHendelseSkjedde.atStartOfDay(),
             behandlingskjedeId = behandlingskjedeId,
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
@@ -35,7 +37,7 @@ class BehandlingOpprettetMottakTest {
             søknadId = søknadId,
             behandlingId = behandlingIdGjenopptak,
             ident = testIdent,
-            opprettet = opprettet,
+            opprettet = behandletHendelseSkjedde.atStartOfDay(),
             basertPåBehandling = behandlingIdNyRett,
             behandlingskjedeId = behandlingskjedeId,
         )
@@ -83,7 +85,7 @@ class BehandlingOpprettetMottakTest {
                         meldekortId = meldekortId,
                         behandlingId = behandlingIdNyRett,
                         ident = testIdent,
-                        opprettet = opprettet,
+                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
                     ),
@@ -107,7 +109,7 @@ class BehandlingOpprettetMottakTest {
                         manuellId = manuellId,
                         behandlingId = behandlingIdNyRett,
                         ident = testIdent,
-                        opprettet = opprettet,
+                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
                     ),
@@ -126,6 +128,7 @@ class BehandlingOpprettetMottakTest {
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$søknadId",
+                "skjedde": "$behandletHendelseSkjedde",
                 "type": "Søknad"
             },
             "behandlingId": "$behandlingIdNyRett",
@@ -144,6 +147,7 @@ class BehandlingOpprettetMottakTest {
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$søknadId",
+                "skjedde": "$behandletHendelseSkjedde",
                 "type": "Søknad"
             },
             "basertPåBehandling": "$behandlingIdNyRett",
@@ -166,6 +170,7 @@ class BehandlingOpprettetMottakTest {
             "behandletHendelse": {
                 "datatype": "Long",
                 "id": $meldekortId,
+                "skjedde": "$behandletHendelseSkjedde",
                 "type": "Meldekort"
             },
             "basertPåBehandling": "$basertPåBehandling",
@@ -188,6 +193,7 @@ class BehandlingOpprettetMottakTest {
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$manuellId",
+                "skjedde": "$behandletHendelseSkjedde",
                 "type": "Manuell"
             },
             "basertPåBehandling": "$basertPåBehandling",
