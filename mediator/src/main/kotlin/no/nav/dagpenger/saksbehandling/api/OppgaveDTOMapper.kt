@@ -251,6 +251,19 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        lovligeEndringer =
+            LovligeEndringerDTO(
+                paaVentAarsaker =
+                    when (this.tilstand().type) {
+                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
+                        else -> emptyList()
+                    },
+                avbrytAarsaker =
+                    when (this.tilstand().type) {
+                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
+                        else -> emptyList()
+                    },
+            ),
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
     )

@@ -1121,6 +1121,8 @@ components:
           $ref: '#/components/schemas/AdressebeskyttelseGradering'
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
+        lovligeEndringer:
+          $ref: '#/components/schemas/LovligeEndringer'
         utsattTilDato:
           type: string
           format: date
