@@ -156,6 +156,11 @@ class OppgaveApiTest {
                         skjermesSomEgneAnsatte = true,
                     ),
             )
+        val oppgave3 =
+            TestHelper.lagOppgave(
+                tilstand = Oppgave.UnderBehandling,
+                person = TestHelper.testPerson,
+            )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
@@ -169,7 +174,7 @@ class OppgaveApiTest {
                             behandlingId = null,
                         ),
                     )
-                } returns PostgresOppgaveRepository.OppgaveSøkResultat(listOf(oppgave1, oppgave2), 2)
+                } returns PostgresOppgaveRepository.OppgaveSøkResultat(listOf(oppgave1, oppgave2, oppgave3), 3)
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -181,29 +186,63 @@ class OppgaveApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
-                      "oppgaver": [
-                        {
-                          "oppgaveId": "${oppgave1.oppgaveId}",
-                          "behandlingId": "${oppgave1.behandling.behandlingId}",
-                          "personIdent": "${oppgave1.personIdent()}",
-                          "emneknagger": [],
-                          "skjermesSomEgneAnsatte": ${oppgave1.person.skjermesSomEgneAnsatte},
-                          "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
-                          "behandlerIdent": "${oppgave1.behandlerIdent}",
-                          "utsattTilDato": "${oppgave1.utsattTil()}"
-                        },
-                        {
-                          "oppgaveId": "${oppgave2.oppgaveId}",
-                          "behandlingId": "${oppgave2.behandling.behandlingId}",
-                          "personIdent": "${oppgave2.personIdent()}",
-                          "emneknagger": [],
-                          "skjermesSomEgneAnsatte": ${oppgave2.person.skjermesSomEgneAnsatte},
-                          "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}"
-                        }
-                      ],
-                      "totaltAntallOppgaver" : 2
+                        "oppgaver": [
+                            {
+                                "oppgaveId": "${oppgave1.oppgaveId}",
+                                "behandlingId": "${oppgave1.behandling.behandlingId}",
+                                "personIdent": "${oppgave1.personIdent()}",
+                                "emneknagger": [],
+                                "skjermesSomEgneAnsatte": ${oppgave1.person.skjermesSomEgneAnsatte},
+                                "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                                "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                                "lovligeEndringer": {
+                                    "paaVentAarsaker": [],
+                                    "avbrytAarsaker": []
+                                },
+                                "behandlerIdent": "${oppgave1.behandlerIdent}",
+                                "utsattTilDato": "${oppgave1.utsattTil()}"
+                            },
+                            {
+                                "oppgaveId": "${oppgave2.oppgaveId}",
+                                "behandlingId": "${oppgave2.behandling.behandlingId}",
+                                "personIdent": "${oppgave2.personIdent()}",
+                                "emneknagger": [],
+                                "skjermesSomEgneAnsatte": ${oppgave2.person.skjermesSomEgneAnsatte},
+                                "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                                "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                                "lovligeEndringer": {
+                                    "paaVentAarsaker": [],
+                                    "avbrytAarsaker": []
+                                }
+                            },
+                            {
+                                "oppgaveId": "${oppgave3.oppgaveId}",
+                                "behandlingId": "${oppgave3.behandling.behandlingId}",
+                                "personIdent": "${oppgave3.personIdent()}",
+                                "emneknagger": [],
+                                "skjermesSomEgneAnsatte": ${oppgave3.person.skjermesSomEgneAnsatte},
+                                "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                                "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                                "lovligeEndringer": {
+                                    "paaVentAarsaker": [
+                                        "AVVENT_SVAR",
+                                        "AVVENT_DOKUMENTASJON",
+                                        "AVVENT_MELDEKORT",
+                                        "AVVENT_PERMITTERINGSÅRSAK",
+                                        "AVVENT_RAPPORTERINGSFRIST",
+                                        "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                                        "ANNET"
+                                        ],
+                                    "avbrytAarsaker": [
+                                        "BEHANDLES_I_ARENA",
+                                        "FLERE_SØKNADER",
+                                        "TRUKKET_SØKNAD",
+                                        "ANNET"
+                                        ]
+                                }
+                            }
+                        ],
+                        "totaltAntallOppgaver" : 3
                     }
                     """.trimIndent()
             }
