@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
-import io.kotest.assertions.throwables.shouldNotThrow
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -520,7 +520,7 @@ class UtsendingMediatorTest {
     }
 
     @Test
-    fun `Skal ikke feile selv om lag-brev feiler`() {
+    fun `Skal feile hvis lag-brev feiler`() {
         var utsending =
             Utsending(
                 id = UUIDv7.ny(),
@@ -554,7 +554,7 @@ class UtsendingMediatorTest {
                     ),
                 automatiskBehandlet = false,
             )
-        shouldNotThrow<RuntimeException> {
+        shouldThrow<RuntimeException> {
             utsendingMediatorMock.startUtsendingForVedtakFattet(vedtakFattetHendelse = vedtakFattetHendelse)
         }
         coVerify(exactly = 1) {

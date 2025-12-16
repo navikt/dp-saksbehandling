@@ -117,6 +117,7 @@ class UtsendingMediator(
                     )
                     lagreOgPubliserBehov(utsending = utsending)
                 }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
+                    .getOrThrow()
             }
     }
 
