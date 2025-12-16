@@ -15,6 +15,8 @@ import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class BehandlingsresultatMottakForUtsendingTest {
     private val testRapid = TestRapid()
@@ -23,8 +25,9 @@ class BehandlingsresultatMottakForUtsendingTest {
     private val ident = "12345612345"
     private val sakId = UUIDv7.ny()
 
-    @Test
-    fun `Skal starte utsending behandling resultat er basert på en søknad og skal tilhøre dp-sak`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry"])
+    fun `Skal starte utsending behandling resultat er basert på en søknad og skal tilhøre dp-sak`(eventNavn: String) {
         val hendelse = slot<VedtakFattetHendelse>()
         val utsendingMediatorMock =
             mockk<UtsendingMediator>().also {
@@ -41,7 +44,11 @@ class BehandlingsresultatMottakForUtsendingTest {
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultat())
+        testRapid.sendTestMessage(
+            behandlingResultat(
+                eventNavn = eventNavn,
+            ),
+        )
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(capture(hendelse))
         }
@@ -186,6 +193,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         søknadId: String = this.søknadId.toString(),
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
+        eventNavn: String = "behandlingsresultat",
     ): String =
         behandlingResultatEvent(
             ident = ident,
@@ -193,5 +201,6 @@ class BehandlingsresultatMottakForUtsendingTest {
             behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
+            eventNavn = eventNavn,
         )
 }

@@ -12,11 +12,12 @@ internal fun behandlingResultatEvent(
     behandletHendelseType: String = "Søknad",
     harRett: Boolean = true,
     basertPå: UUID? = null,
+    eventNavn: String = "behandlingsresultat",
 ): String {
     //language=JSON
     return """
         {
-          "@event_name": "behandlingsresultat",
+          "@event_name": "$eventNavn",
           "ident": "$ident",
           "behandlingId": "$behandlingId",
           "behandletHendelse": {
