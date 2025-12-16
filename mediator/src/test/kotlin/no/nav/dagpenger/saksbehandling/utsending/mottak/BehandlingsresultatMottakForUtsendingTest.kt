@@ -26,7 +26,7 @@ class BehandlingsresultatMottakForUtsendingTest {
     private val sakId = UUIDv7.ny()
 
     @ParameterizedTest
-    @ValueSource(strings = ["behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry"]) // six numbers
+    @ValueSource(strings = ["behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry"])
     fun `Skal starte utsending behandling resultat er basert på en søknad og skal tilhøre dp-sak`(eventNavn: String) {
         val hendelse = slot<VedtakFattetHendelse>()
         val utsendingMediatorMock =
