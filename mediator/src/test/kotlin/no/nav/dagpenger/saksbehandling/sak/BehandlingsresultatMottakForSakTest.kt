@@ -39,7 +39,9 @@ class BehandlingsresultatMottakForSakTest {
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,
         )
-        testRapid.sendTestMessage(behandlingResultat())
+        testRapid.sendTestMessage(
+            behandlingResultat(),
+        )
         verify(exactly = 1) {
             sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
         }
