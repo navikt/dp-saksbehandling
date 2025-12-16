@@ -23,6 +23,8 @@ internal class BehandlingsresultatMottakForUtsending(
 
     override val mottakNavn: String = "BehandlingsresultatMottakForUtsending"
 
+    override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry")
+
     override fun håndter(
         behandlingResultat: BehandlingResultat,
         packet: JsonMessage,

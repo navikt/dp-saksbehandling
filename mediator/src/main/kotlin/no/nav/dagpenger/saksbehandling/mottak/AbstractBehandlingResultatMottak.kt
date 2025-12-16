@@ -25,7 +25,7 @@ internal abstract class AbstractBehandlingResultatMottak(
     fun rapidFilter(): River.() -> Unit =
         {
             precondition {
-                it.requireValue("@event_name", "behandlingsresultat")
+                it.requireAny("@event_name", requiredEventNames())
                 it.requireAny("behandletHendelse.type", requiredBehandletHendelseType())
                 it.requireKey("rettighetsperioder")
             }
@@ -34,6 +34,8 @@ internal abstract class AbstractBehandlingResultatMottak(
                 it.interestedIn("basertPå")
             }
         }
+
+    protected open fun requiredEventNames(): List<String> = listOf("behandlingsresultat")
 
     protected abstract fun requiredBehandletHendelseType(): List<String>
 
