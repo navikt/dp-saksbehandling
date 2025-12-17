@@ -20,7 +20,7 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
-import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
+import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -104,7 +104,7 @@ class UtsendingMediatorTest {
             utsending.brev() shouldBe null
 
             val message =
-                behandlingResultatEvent(
+                behandlingsresultatEvent(
                     ident = person.ident,
                     behandlingId = behandling.behandlingId.toString(),
                     behandletHendelseId = søknadId.toString(),

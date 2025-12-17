@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import java.util.UUID
 
-internal fun behandlingResultatEvent(
+internal fun behandlingsresultatEvent(
     ident: String,
     behandlingId: String,
     behandletHendelseId: String,

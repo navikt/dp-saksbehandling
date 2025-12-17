@@ -73,7 +73,7 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `Riktig håndtering av emneknagger der det finnes flere opplysninger av samme type`() {
-        lagBehandlingResultat(
+        lagBehandlingsresultat(
             behandletHendelseType = "Søknad",
             harRettighet = true,
             ForenkletOpplysning(
@@ -88,7 +88,7 @@ class EmneknaggBuilderTest {
             EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn)
         }
 
-        lagBehandlingResultat(
+        lagBehandlingsresultat(
             behandletHendelseType = "Søknad",
             harRettighet = true,
             ForenkletOpplysning(
@@ -216,8 +216,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `Emneknagger ved avslag på minsteinntekt og rettighet permittering`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = false,
                 ForenkletOpplysning(
@@ -230,7 +230,7 @@ class EmneknaggBuilderTest {
                 ),
             )
 
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(json = behandlingsresultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn,
                 AVSLAG_MINSTEINNTEKT.visningsnavn,
@@ -240,8 +240,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `emneknagger ved avslag pga alder og rettighet ordinær`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = false,
                 ForenkletOpplysning(
@@ -254,7 +254,7 @@ class EmneknaggBuilderTest {
                 ),
             )
 
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(json = behandlingsresultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn,
                 AVSLAG_ALDER.visningsnavn,
@@ -264,8 +264,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `Emneknagger ved avslag når flere vilkår ikke er oppfylt`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = false,
                 ForenkletOpplysning(
@@ -317,7 +317,7 @@ class EmneknaggBuilderTest {
                     verdi = false,
                 ),
             )
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(json = behandlingsresultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn,
                 AVSLAG_MINSTEINNTEKT.visningsnavn,
@@ -337,8 +337,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `emneknagger ved innvigelse av dagpenger etter verneplikt`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
@@ -346,7 +346,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(json = behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_VERNEPLIKT.visningsnavn,
@@ -355,8 +355,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `emneknagger ved innvilgelse av ordinære dagpenger`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
@@ -364,7 +364,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(json = behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_ORDINÆR.visningsnavn,
@@ -373,8 +373,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `emneknagger ved innvilgelse av dagpenger under permittering`() {
-        val behanldingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
@@ -382,7 +382,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behanldingResultat).bygg() shouldBe
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_PERMITTERT.visningsnavn,
@@ -391,8 +391,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `emneknagger ved innvilgelse av dagpenger under permittering fra fiskeindustri`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
@@ -400,7 +400,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
@@ -409,8 +409,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `emneknagger ved innvilgelse av dagpenger etter konkurs`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
@@ -418,7 +418,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 Regelknagg.RETTIGHET_KONKURS.visningsnavn,
@@ -427,8 +427,8 @@ class EmneknaggBuilderTest {
 
     @Test
     fun `Skal kunne motta forslag_til_behandlingsresultat med innvilget ukjent rettighet - regelmotor har laget noe vi ikke kjenner`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
+        val behandlingsresultat =
+            lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
@@ -436,7 +436,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
     }
 
     private val objectMapper =
@@ -449,7 +449,7 @@ class EmneknaggBuilderTest {
         val verdi: Boolean,
     )
 
-    private fun lagBehandlingResultat(
+    private fun lagBehandlingsresultat(
         behandletHendelseType: String = "Søknad",
         harRettighet: Boolean,
         vararg opplysninger: ForenkletOpplysning,

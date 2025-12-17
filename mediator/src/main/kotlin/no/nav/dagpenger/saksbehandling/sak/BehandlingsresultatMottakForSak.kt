@@ -8,10 +8,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
-import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingResultatMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingResultat
+import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingsresultatMottak
+import no.nav.dagpenger.saksbehandling.mottak.Behandlingsresultat
 import java.util.UUID
-import kotlin.collections.toMap
 
 private val logger = KotlinLogging.logger {}
 
@@ -19,23 +18,23 @@ internal class BehandlingsresultatMottakForSak(
     rapidsConnection: RapidsConnection,
     private val sakRepository: SakRepository,
     private val sakMediator: SakMediator,
-) : AbstractBehandlingResultatMottak(rapidsConnection) {
+) : AbstractBehandlingsresultatMottak(rapidsConnection) {
     override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
 
     override val mottakNavn: String = "BehandlingsresultatMottakForSak"
 
     override fun håndter(
-        behandlingResultat: BehandlingResultat,
+        behandlingsresultat: Behandlingsresultat,
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        if (behandlingResultat.nyDagpengerettInnvilget().also {
-                logger.info { "BehandlingsresultatMottakForSak med utfall: $it. Basert på $behandlingResultat" }
+        if (behandlingsresultat.nyDagpengerettInnvilget().also {
+                logger.info { "BehandlingsresultatMottakForSak med utfall: $it. Basert på $behandlingsresultat" }
             }
         ) {
-            val sakId = sakRepository.hentSakIdForBehandlingId(behandlingResultat.behandlingId).toString()
+            val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
             logger.info { "Vedtak skal tilhøre dp-sak " }
             val vedtakFattetHendelse =
                 packet.vedtakFattetHendelse(
@@ -44,7 +43,7 @@ internal class BehandlingsresultatMottakForSak(
                             id = sakId,
                             kontekst = "Dagpenger",
                         ),
-                    behandlingResultat = behandlingResultat,
+                    behandlingsresultat = behandlingsresultat,
                 )
 
             sakMediator.merkSakenSomDpSak(vedtakFattetHendelse = vedtakFattetHendelse)
@@ -55,8 +54,8 @@ internal class BehandlingsresultatMottakForSak(
                         .newMessage(
                             map =
                                 VedtakUtenforArena(
-                                    behandlingId = behandlingResultat.behandlingId,
-                                    søknadId = behandlingResultat.behandletHendelseId,
+                                    behandlingId = behandlingsresultat.behandlingId,
+                                    søknadId = behandlingsresultat.behandletHendelseId,
                                     ident = packet["ident"].asText(),
                                     sakId = sakId,
                                 ).toMap(),

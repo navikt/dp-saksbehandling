@@ -38,7 +38,7 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for søknad og automatisk behandlet`() {
-        testRapid.sendTestMessage(behandlingResultatEvent(behandletHendelseType = "Søknad"))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Søknad"))
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(
                 VedtakFattetHendelse(
@@ -55,7 +55,7 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for søknad og ikke automatisk `() {
-        testRapid.sendTestMessage(behandlingResultatEvent(behandletHendelseType = "Søknad", automatisk = false))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Søknad", automatisk = false))
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(
                 VedtakFattetHendelse(
@@ -72,7 +72,7 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for meldekort`() {
-        testRapid.sendTestMessage(behandlingResultatEvent(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Meldekort"))
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(
                 VedtakFattetHendelse(
@@ -89,7 +89,7 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for manuell`() {
-        testRapid.sendTestMessage(behandlingResultatEvent(behandletHendelseType = "Manuell"))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Manuell"))
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(
                 VedtakFattetHendelse(
@@ -106,13 +106,13 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `Skal ignorere hendelsen hvis det ikke finnes noen oppgave for behandlingen`() {
-        testRapid.sendTestMessage(behandlingResultatEvent(behandlingId = behandlingIdUtenOppgave.toString()))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandlingId = behandlingIdUtenOppgave.toString()))
 
         verify(exactly = 1) { oppgaveMediatorMock.hentOppgaveIdFor(behandlingIdUtenOppgave) }
         verify(exactly = 0) { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) }
     }
 
-    private fun behandlingResultatEvent(
+    private fun behandlingsresultatEvent(
         ident: String = TestHelper.testPerson.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),

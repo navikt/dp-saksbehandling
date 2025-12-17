@@ -14,7 +14,7 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-internal abstract class AbstractBehandlingResultatMottak(
+internal abstract class AbstractBehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
 ) : River.PacketListener {
     init {
@@ -42,7 +42,7 @@ internal abstract class AbstractBehandlingResultatMottak(
     protected abstract val mottakNavn: String
 
     protected abstract fun håndter(
-        behandlingResultat: BehandlingResultat,
+        behandlingsresultat: Behandlingsresultat,
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
@@ -51,17 +51,17 @@ internal abstract class AbstractBehandlingResultatMottak(
 
     protected fun JsonMessage.vedtakFattetHendelse(
         sak: UtsendingSak?,
-        behandlingResultat: BehandlingResultat,
+        behandlingsresultat: Behandlingsresultat,
     ): VedtakFattetHendelse {
         val ident = this["ident"].asText()
 
         return VedtakFattetHendelse(
-            behandlingId = behandlingResultat.behandlingId,
-            behandletHendelseId = behandlingResultat.behandletHendelseId,
-            behandletHendelseType = behandlingResultat.behandletHendelseType,
+            behandlingId = behandlingsresultat.behandlingId,
+            behandletHendelseId = behandlingsresultat.behandletHendelseId,
+            behandletHendelseType = behandlingsresultat.behandletHendelseType,
             ident = ident,
             sak = sak,
-            automatiskBehandlet = behandlingResultat.automatiskBehandlet,
+            automatiskBehandlet = behandlingsresultat.automatiskBehandlet,
         )
     }
 
@@ -71,19 +71,19 @@ internal abstract class AbstractBehandlingResultatMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingResultat = BehandlingResultat(packet)
+        val behandlingsresultat = Behandlingsresultat(packet)
         withLoggingContext(
-            "behandletHendelseId" to behandlingResultat.behandletHendelseId,
-            "behandlingId" to "${behandlingResultat.behandlingId}",
+            "behandletHendelseId" to behandlingsresultat.behandletHendelseId,
+            "behandlingId" to "${behandlingsresultat.behandlingId}",
         ) {
-            logger.info { "Mottok behandlingresultat hendelse i $mottakNavn" }
-            håndter(behandlingResultat, packet, context, metadata, meterRegistry)
+            logger.info { "Mottok behandlingsresultat hendelse i $mottakNavn" }
+            håndter(behandlingsresultat, packet, context, metadata, meterRegistry)
         }
     }
 }
 
 // todo flytt til en egen klasse
-internal data class BehandlingResultat(
+internal data class Behandlingsresultat(
     val behandlingId: UUID,
     val basertPåBehandlingId: UUID? = null,
     val behandletHendelseType: String,

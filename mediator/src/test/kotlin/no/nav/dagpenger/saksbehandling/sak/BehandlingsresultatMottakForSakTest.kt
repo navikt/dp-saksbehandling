@@ -10,7 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
-import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
+import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -40,7 +40,7 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
         testRapid.sendTestMessage(
-            behandlingResultat(),
+            behandlingsresultatJson(),
         )
         verify(exactly = 1) {
             sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
@@ -76,7 +76,7 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultat(harRett = true, basertPå = UUIDv7.ny()))
+        testRapid.sendTestMessage(behandlingsresultatJson(harRett = true, basertPå = UUIDv7.ny()))
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
@@ -94,7 +94,7 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultat(harRett = false))
+        testRapid.sendTestMessage(behandlingsresultatJson(harRett = false))
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
@@ -112,7 +112,7 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingsresultatJson(behandletHendelseType = "Meldekort"))
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
@@ -120,7 +120,7 @@ class BehandlingsresultatMottakForSakTest {
         testRapid.inspektør.size shouldBe 0
     }
 
-    private fun behandlingResultat(
+    private fun behandlingsresultatJson(
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
@@ -128,7 +128,7 @@ class BehandlingsresultatMottakForSakTest {
         harRett: Boolean = true,
         basertPå: UUID? = null,
     ): String =
-        behandlingResultatEvent(
+        behandlingsresultatEvent(
             ident = ident,
             behandlingId = behandlingId,
             behandletHendelseId = søknadId,

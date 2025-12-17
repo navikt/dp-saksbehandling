@@ -13,24 +13,24 @@ private val logger = KotlinLogging.logger {}
 internal class BehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
-) : AbstractBehandlingResultatMottak(rapidsConnection) {
+) : AbstractBehandlingsresultatMottak(rapidsConnection) {
     override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort")
 
     override val mottakNavn: String = "BehandlingsresultatMottak"
 
     override fun håndter(
-        behandlingResultat: BehandlingResultat,
+        behandlingsresultat: Behandlingsresultat,
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        oppgaveMediator.hentOppgaveIdFor(behandlingResultat.behandlingId)?.let {
+        oppgaveMediator.hentOppgaveIdFor(behandlingsresultat.behandlingId)?.let {
             oppgaveMediator.ferdigstillOppgave(
                 vedtakFattetHendelse =
                     packet.vedtakFattetHendelse(
                         sak = null,
-                        behandlingResultat = behandlingResultat,
+                        behandlingsresultat = behandlingsresultat,
                     ),
             )
         }

@@ -11,7 +11,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
-import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
+import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
@@ -45,7 +45,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         )
 
         testRapid.sendTestMessage(
-            behandlingResultat(
+            behandlingsresultat(
                 eventNavn = eventNavn,
             ),
         )
@@ -74,7 +74,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             sakRepository = mockk<SakRepository>(),
         )
 
-        testRapid.sendTestMessage(behandlingResultat(harRett = false))
+        testRapid.sendTestMessage(behandlingsresultat(harRett = false))
 
         verify(exactly = 0) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -98,7 +98,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingsresultat(behandletHendelseType = "Meldekort"))
 
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -122,7 +122,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Manuell"))
+        testRapid.sendTestMessage(behandlingsresultat(behandletHendelseType = "Manuell"))
 
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -187,7 +187,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         }
     }
 
-    private fun behandlingResultat(
+    private fun behandlingsresultat(
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
@@ -195,7 +195,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         harRett: Boolean = true,
         eventNavn: String = "behandlingsresultat",
     ): String =
-        behandlingResultatEvent(
+        behandlingsresultatEvent(
             ident = ident,
             behandlingId = behandlingId,
             behandletHendelseId = søknadId,
