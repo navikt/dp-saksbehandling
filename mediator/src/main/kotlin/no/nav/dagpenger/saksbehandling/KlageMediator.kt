@@ -267,6 +267,7 @@ class KlageMediator(
                         "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
                         "hjemler" to klageBehandling.hjemler(),
                         "opprettet" to oppgave.opprettet.toLocalDate().toString(),
+                        "tilknyttedeJournalposter" to klageBehandling.journalposterTilKA(utsendingMediator),
                     )
 
                 klageBehandling
@@ -371,3 +372,55 @@ fun KlageBehandling.hjemler(): List<String> {
             Hjemler.entries.find { hjemmel -> hjemmel.tittel == it }?.name
         }.orEmpty()
 }
+
+private fun KlageBehandling.journalpostIdPåklagetVedtak(utsendingMediator: UtsendingMediator): String? {
+    val behandlingIdPåklagetVedtakAsText =
+        this
+            .synligeOpplysninger()
+            .singleOrNull { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }
+            ?.verdi() as Verdi.TekstVerdi?
+    if (behandlingIdPåklagetVedtakAsText != null) {
+        val behandlingIdPåklagetVedtak = UUID.fromString(behandlingIdPåklagetVedtakAsText.value)
+        return utsendingMediator.finnUtsendingForBehandlingId(behandlingId = behandlingIdPåklagetVedtak)?.journalpostId()
+    } else {
+        return null
+    }
+}
+
+private fun KlageBehandling.journalpostIdKlageVedtak(utsendingMediator: UtsendingMediator): String? {
+    return return utsendingMediator.finnUtsendingForBehandlingId(behandlingId = this.behandlingId)?.journalpostId()
+}
+
+fun KlageBehandling.journalposterTilKA(utsendingMediator: UtsendingMediator): List<JournalpostTilKA> {
+    val journalposter = mutableListOf<JournalpostTilKA>()
+    this.journalpostIdKlageVedtak(utsendingMediator)?.let {
+        journalposter.add(
+            JournalpostTilKA(
+                type = "KLAGE_VEDTAK",
+                journalpostId = it,
+            ),
+        )
+    }
+    this.journalpostIdPåklagetVedtak(utsendingMediator)?.let {
+        journalposter.add(
+            JournalpostTilKA(
+                type = "OPPRINNELIG_VEDTAK",
+                journalpostId = it,
+            ),
+        )
+    }
+    this.journalpostId()?.let {
+        journalposter.add(
+            JournalpostTilKA(
+                type = "BRUKERS_KLAGE",
+                journalpostId = it,
+            ),
+        )
+    }
+    return journalposter
+}
+
+data class JournalpostTilKA(
+    val type: String,
+    val journalpostId: String,
+)

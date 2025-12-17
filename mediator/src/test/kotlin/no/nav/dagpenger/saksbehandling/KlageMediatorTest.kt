@@ -155,7 +155,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en digitalt mottatt klage som ferdigstilles med opprettholdelse`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator
@@ -222,6 +222,8 @@ class KlageMediatorTest {
                 klageMediator = klageMediator,
             )
 
+            // TODO hvordan fange opp behovet og sjekke at det er korrekt? tilknyttedeJournalposter er ikke riktig her
+
             val løsningPåBehovForOversendelseTilKA =
                 """
                 {
@@ -232,6 +234,7 @@ class KlageMediatorTest {
                   "fagsakId" : "$sakId",
                   "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
                   "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
+                  "tilknyttedeJournalposter": ${klageBehandling.journalposterTilKA(utsendingMediator).map { "\"$it\"" }},
                   "@løsning": {
                     "OversendelseKlageinstans": "OK"
                   }
@@ -269,7 +272,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en manuell klage som ferdigstilles med opprettholdelse`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator
@@ -367,7 +370,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som ferdigstilles med avvisning`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator
@@ -429,7 +432,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som avbrytes`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettKlage(
@@ -486,7 +489,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Kan ikke ferdigstille en klage med medhold`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettKlage(
@@ -543,7 +546,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Kan ikke ferdigstille en klage med delvis medhold`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettKlage(
@@ -620,7 +623,7 @@ class KlageMediatorTest {
                     ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }
                     .opplysningId,
-            svar = Verdi.TekstVerdi("Vedtak 1"),
+            svar = Verdi.TekstVerdi("01985af4-2de4-7d02-9b7f-a113696dbf1b"),
         )
 
         oppdaterOpplysning(
@@ -869,7 +872,7 @@ class KlageMediatorTest {
         )
     }
 
-    private fun setupMediatorerOgSak(test: (KlageMediator, OppgaveMediator, UUID) -> Unit) {
+    private fun setupMediatorerOgSak(test: (KlageMediator, UtsendingMediator, OppgaveMediator, UUID) -> Unit) {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
@@ -924,7 +927,7 @@ class KlageMediatorTest {
                     ),
                 )
 
-            test(klageMediator, oppgaveMediator, sak.sakId)
+            test(klageMediator, utsendingMediator, oppgaveMediator, sak.sakId)
         }
     }
 
