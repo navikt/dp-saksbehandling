@@ -387,9 +387,8 @@ private fun KlageBehandling.journalpostIdPåklagetVedtak(utsendingMediator: Utse
     }
 }
 
-private fun KlageBehandling.journalpostIdKlageVedtak(utsendingMediator: UtsendingMediator): String? {
-    return return utsendingMediator.finnUtsendingForBehandlingId(behandlingId = this.behandlingId)?.journalpostId()
-}
+private fun KlageBehandling.journalpostIdKlageVedtak(utsendingMediator: UtsendingMediator): String? =
+    utsendingMediator.finnUtsendingForBehandlingId(behandlingId = this.behandlingId)?.journalpostId()
 
 fun KlageBehandling.journalposterTilKA(utsendingMediator: UtsendingMediator): List<JournalpostTilKA> {
     val journalposter = mutableListOf<JournalpostTilKA>()
