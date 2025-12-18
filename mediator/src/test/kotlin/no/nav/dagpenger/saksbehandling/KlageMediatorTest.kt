@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling
 
 import PersonMediator
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -164,7 +166,7 @@ class KlageMediatorTest {
                             ident = testPersonIdent,
                             sakId = sakId,
                             opprettet = LocalDateTime.now(),
-                            journalpostId = "journalpostId",
+                            journalpostId = "JP-klage",
                         ),
                     ).behandling.behandlingId
 
@@ -222,24 +224,19 @@ class KlageMediatorTest {
                 klageMediator = klageMediator,
             )
 
-            // TODO hvordan fange opp behovet og sjekke at det er korrekt? tilknyttedeJournalposter er ikke riktig her
+            testRapid.inspektør.size shouldBe 2
+            val behovSendTilKAJsonNode = testRapid.inspektør.message(1)
+            val objectMapper = ObjectMapper()
+            val behovSendTilKAJsonNodeLøsning = behovSendTilKAJsonNode.deepCopy<ObjectNode>()
 
-            val løsningPåBehovForOversendelseTilKA =
-                """
-                {
-                  "@event_name" : "behov",
-                  "@behov" : [ "OversendelseKlageinstans" ],
-                  "behandlingId" : "$behandlingId",
-                  "ident" : "${oppgave.personIdent()}",
-                  "fagsakId" : "$sakId",
-                  "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
-                  "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
-                  "tilknyttedeJournalposter": ${klageBehandling.journalposterTilKA(utsendingMediator).map { "\"$it\"" }},
-                  "@løsning": {
-                    "OversendelseKlageinstans": "OK"
-                  }
-                }
-                """.trimIndent()
+            val løsningNode =
+                objectMapper
+                    .createObjectNode()
+                    .put("OversendelseKlageinstans", "OK")
+
+            behovSendTilKAJsonNodeLøsning.set<ObjectNode>("@løsning", løsningNode)
+
+            val løsningPåBehovForOversendelseTilKA = behovSendTilKAJsonNodeLøsning.toString()
 
             testRapid.sendTestMessage(
                 key = oppgave.personIdent(),

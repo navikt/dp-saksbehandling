@@ -417,6 +417,7 @@ fun KlageBehandling.journalposterTilKA(utsendingMediator: UtsendingMediator): Li
             ),
         )
     }
+    logger.info { "Klage ${this.behandlingId} journalposter: $journalposter" }
     return journalposter
 }
 
