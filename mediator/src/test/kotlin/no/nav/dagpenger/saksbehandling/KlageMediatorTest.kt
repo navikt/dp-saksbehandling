@@ -168,7 +168,7 @@ class KlageMediatorTest {
                     Utsending(
                         behandlingId = vedtakIdKlagenGjelder,
                         ident = testPersonIdent,
-                        journalpostId = "jp-opprinnelig",
+                        journalpostId = "journalpostIdTilVedtakBrukerHarKlagdPå",
                         brev = null,
                     )
             }
@@ -182,7 +182,7 @@ class KlageMediatorTest {
                             ident = testPersonIdent,
                             sakId = sakId,
                             opprettet = LocalDateTime.now(),
-                            journalpostId = "JP-klage",
+                            journalpostId = "journalpostIdBrukersKlage",
                         ),
                     ).behandling.behandlingId
 
@@ -248,7 +248,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     utsendingId = UUID.randomUUID(),
                     ident = testPersonIdent,
-                    journalpostId = "jpid",
+                    journalpostId = "journalpostIdKlageVedtak",
                     distribusjonId = "distId",
                 )
 
@@ -270,9 +270,9 @@ class KlageMediatorTest {
                         it["hjemler"].map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
                         it["tilknyttedeJournalposter"].map { jp -> jp["journalpostId"].asText() } shouldBe
                             listOf(
-                                "jpid",
-                                "JP-klage",
-                                "jp-opprinnelig",
+                                "journalpostIdKlageVedtak",
+                                "journalpostIdBrukersKlage",
+                                "journalpostIdTilVedtakBrukerHarKlagdPå",
                             )
                     }
                 }
