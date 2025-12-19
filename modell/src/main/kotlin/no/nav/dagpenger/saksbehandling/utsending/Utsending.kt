@@ -105,6 +105,7 @@ data class Utsending(
 
     fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
         tilstand.mottaDistribuertKvittering(this, distribuertHendelse)
+        // TODO: Denne teller alle utsendinger, uavhengig av om de er minsteinntekt eller ikke
         counter.labelValues("avslagMinsteinntekt").inc()
     }
 

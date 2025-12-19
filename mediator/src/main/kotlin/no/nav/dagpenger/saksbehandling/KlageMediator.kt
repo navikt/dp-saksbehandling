@@ -235,6 +235,19 @@ class KlageMediator(
                     ident = oppgave.personIdent(),
                 )
 
+//            1) Lagre klagebehandling og utsending med brev
+//            2) Sende hendelse om vedtak fattet for klage
+//
+//
+//            3a) Mottak1: Ferdigstill oppgave
+//            3b) Mottak2: Start utsending
+//
+//            4) Mottak utsending distribuert (ny hendelse som skal sendes når distribuering er ferdig. Må inneholde behandlingId, type (klage), journalpostId og evt distibusjonId)
+            // hent klage. hvis utfall er opprettholdelse, send behov om oversendelse til ka
+
+
+
+//            1. commit - oppretter utsending
             val html = htmlDeferred.await().getOrThrow()
             utsendingMediator.opprettUtsending(
                 behandlingId = oppgave.behandling.behandlingId,
@@ -243,7 +256,9 @@ class KlageMediator(
                 type = UtsendingType.KLAGEMELDING,
             )
 
+//            2. commit - lagrer klagebehandling
             klageRepository.lagre(klageBehandling)
+//            3. commit - oppdaterer oppgavestatus
             oppgaveMediator.ferdigstillOppgave(
                 godkjentBehandlingHendelse =
                     GodkjentBehandlingHendelse(
@@ -252,10 +267,12 @@ class KlageMediator(
                         utførtAv = hendelse.utførtAv,
                     ),
             )
+//            4. commit - starter utsending
             utsendingMediator.mottaStartUtsending(
                 startUtsendingHendelse,
             )
-
+//            5. commit - send behov på rapid: oversendelse til KA
+//            OBS: Denne er avhengig av at utsendingen er journalført (trenger journalpostId)!!!!
             val saksbehandler = saksbehandlerDeferred.await()
             if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
                 auditlogg.oppdater("Ferdigstilte en klage", oppgave.personIdent(), saksbehandler.ident)
