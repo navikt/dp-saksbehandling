@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
@@ -106,9 +106,9 @@ fun Route.klageApi(
                     put {
                         val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
-                        mediator.ferdigstill(
+                        mediator.behandlingUtført(
                             hendelse =
-                                KlageFerdigbehandletHendelse(
+                                KlageBehandlingUtført(
                                     behandlingId = behandlingId,
                                     utførtAv = saksbehandler,
                                 ),

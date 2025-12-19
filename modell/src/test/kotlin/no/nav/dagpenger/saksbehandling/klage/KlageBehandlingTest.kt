@@ -8,7 +8,7 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Behandles
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -165,15 +165,15 @@ class KlageBehandlingTest {
 
         klageBehandling.tilstand().type shouldBe BEHANDLES
 
-        val klageFerdigbehandletHendelse =
-            KlageFerdigbehandletHendelse(
+        val klageBehandlingUtført =
+            KlageBehandlingUtført(
                 behandlingId = klageBehandling.behandlingId,
                 utførtAv = saksbehandler,
             )
         shouldThrow<IllegalStateException> {
-            klageBehandling.saksbehandlingFerdig(
+            klageBehandling.behandlingUtført(
                 behandlendeEnhet = "4408",
-                hendelse = klageFerdigbehandletHendelse,
+                hendelse = klageBehandlingUtført,
             )
         }
 
@@ -181,9 +181,9 @@ class KlageBehandlingTest {
         klageBehandling.svar(utfallOpplysning.opplysningId, TekstVerdi("AVVIST"))
 
         shouldNotThrow<IllegalStateException> {
-            klageBehandling.saksbehandlingFerdig(
+            klageBehandling.behandlingUtført(
                 behandlendeEnhet = "4408",
-                hendelse = klageFerdigbehandletHendelse,
+                hendelse = klageBehandlingUtført,
             )
         }
         klageBehandling.tilstand().type shouldBe FERDIGSTILT
@@ -233,15 +233,15 @@ class KlageBehandlingTest {
             )
         klageBehandling.tilstand().type shouldBe BEHANDLES
 
-        val klageFerdigbehandletHendelse =
-            KlageFerdigbehandletHendelse(
+        val klageBehandlingUtført =
+            KlageBehandlingUtført(
                 behandlingId = klageBehandling.behandlingId,
                 utførtAv = saksbehandler,
             )
         shouldThrow<IllegalStateException> {
-            klageBehandling.saksbehandlingFerdig(
+            klageBehandling.behandlingUtført(
                 behandlendeEnhet = "4408",
-                hendelse = klageFerdigbehandletHendelse,
+                hendelse = klageBehandlingUtført,
             )
         }
 
@@ -249,9 +249,9 @@ class KlageBehandlingTest {
         klageBehandling.svar(utfallOpplysning.opplysningId, TekstVerdi("OPPRETTHOLDELSE"))
 
         shouldNotThrow<IllegalStateException> {
-            klageBehandling.saksbehandlingFerdig(
+            klageBehandling.behandlingUtført(
                 behandlendeEnhet = "4408",
-                hendelse = klageFerdigbehandletHendelse,
+                hendelse = klageBehandlingUtført,
             )
         }
         klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
@@ -277,14 +277,14 @@ class KlageBehandlingTest {
     fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
         val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
-        val klageFerdigbehandletHendelse =
-            KlageFerdigbehandletHendelse(
+        val klageBehandlingUtført =
+            KlageBehandlingUtført(
                 behandlingId = klageBehandling.behandlingId,
                 utførtAv = saksbehandler,
             )
-        klageBehandling.saksbehandlingFerdig(
+        klageBehandling.behandlingUtført(
             behandlendeEnhet = "4408",
-            hendelse = klageFerdigbehandletHendelse,
+            hendelse = klageBehandlingUtført,
         )
 
         klageBehandling.tilstand().type shouldBe FERDIGSTILT

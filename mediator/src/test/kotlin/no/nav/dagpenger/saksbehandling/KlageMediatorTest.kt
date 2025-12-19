@@ -2,12 +2,11 @@ package no.nav.dagpenger.saksbehandling
 
 import PersonMediator
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
@@ -25,14 +24,17 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
@@ -56,10 +58,12 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -70,6 +74,7 @@ class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
     private val testRapid = TestRapid()
     private val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
+    private val vedtakIdKlagenGjelder = UUID.randomUUID()
     private val pdlPersonIntern =
         PDLPersonIntern(
             ident = testPersonIdent,
@@ -157,7 +162,18 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en digitalt mottatt klage som ferdigstilles med opprettholdelse`() {
-        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>(relaxed = true).also {
+                every { it.finnUtsendingForBehandlingId(vedtakIdKlagenGjelder) } returns
+                    Utsending(
+                        behandlingId = vedtakIdKlagenGjelder,
+                        ident = testPersonIdent,
+                        journalpostId = "jp-opprinnelig",
+                        brev = null,
+                    )
+            }
+
+        setupMediatorerOgSak(utsendingMediatorMock) { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator
@@ -189,9 +205,9 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
-                klageMediator.ferdigstill(
+                klageMediator.behandlingUtført(
                     hendelse =
-                        KlageFerdigbehandletHendelse(
+                        KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
                         ),
@@ -201,75 +217,91 @@ class KlageMediatorTest {
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
 
-            klageMediator.ferdigstill(
+            klageMediator.behandlingUtført(
                 hendelse =
-                    KlageFerdigbehandletHendelse(
+                    KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
                     ),
                 saksbehandlerToken = "token",
             )
 
-            val klageBehandling =
-                klageMediator.hentKlageBehandling(
+            klageMediator
+                .hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
+                ).let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+                    klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
+                    klageBehandling.hjemler() shouldBe listOf("FTRL_4_5_REGISTRERING", "FTRL_4_2")
+                }
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].asText() shouldBe "klage_behandling_utført"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["utfall"].asText() shouldBe "OPPRETTHOLDELSE"
+                it["ident"].asText() shouldBe testPersonIdent
+            }
+
+            val utsendingDistribuertHendelse =
+                UtsendingDistribuert(
+                    behandlingId = behandlingId,
+                    utsendingId = UUID.randomUUID(),
+                    ident = testPersonIdent,
+                    journalpostId = "jpid",
+                    distribusjonId = "distId",
                 )
-            klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-            klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
-            klageBehandling.hjemler() shouldBe listOf("FTRL_4_5_REGISTRERING", "FTRL_4_2")
 
-            OversendtKlageinstansMottak(
-                rapidsConnection = testRapid,
-                klageMediator = klageMediator,
+            klageMediator.vedtakDistribuert(
+                hendelse = utsendingDistribuertHendelse,
             )
+            klageMediator
+                .hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
+                    testRapid.inspektør.size shouldBe 2
+                    testRapid.inspektør.message(1).let {
+                        it["@behov"].single().asText() shouldBe "OversendelseKlageinstans"
+                        it["ident"].asText() shouldBe testPersonIdent
+                        it["fagsakId"].asText() shouldBe sakId.toString()
+                        it["behandlendeEnhet"].asText() shouldBe klageBehandling.behandlendeEnhet()
+                        it["hjemler"].map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
+                        it["tilknyttedeJournalposter"].map { jp -> jp["journalpostId"].asText() } shouldBe
+                            listOf(
+                                "jpid",
+                                "JP-klage",
+                                "jp-opprinnelig",
+                            )
+                    }
+                }
+            verify(exactly = 1) {
+                utsendingMediatorMock.opprettUtsending(
+                    behandlingId = behandlingId,
+                    brev = html,
+                    ident = testPersonIdent,
+                    type = UtsendingType.KLAGEMELDING,
+                )
+            }
 
-            testRapid.inspektør.size shouldBe 2
-            val behovSendTilKAJsonNode = testRapid.inspektør.message(1)
-            val objectMapper = ObjectMapper()
-            val behovSendTilKAJsonNodeLøsning = behovSendTilKAJsonNode.deepCopy<ObjectNode>()
-
-            val løsningNode =
-                objectMapper
-                    .createObjectNode()
-                    .put("OversendelseKlageinstans", "OK")
-
-            behovSendTilKAJsonNodeLøsning.set<ObjectNode>("@løsning", løsningNode)
-
-            val løsningPåBehovForOversendelseTilKA = behovSendTilKAJsonNodeLøsning.toString()
-
-            testRapid.sendTestMessage(
-                key = oppgave.personIdent(),
-                message = løsningPåBehovForOversendelseTilKA,
+            klageMediator.oversendtTilKlageinstans(
+                OversendtKlageinstansHendelse(behandlingId),
             )
 
             klageMediator
-                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand()
-                .type shouldBe FERDIGSTILT
-
-            oppgaveMediator
-                .hentOppgaveFor(
+                .hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
-                ).tilstand()
-                .type shouldBe FERDIG_BEHANDLET
-
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
-            testRapid.inspektør.message(1).behovNavn() shouldBe "OversendelseKlageinstans"
-
-            // i hver /registrer\w+?Opplysninger/-funksjon leses klagebehandlingen for hver opplysning som legges på.
-            // dermed blir tallene for både lesing og oppdatering sykt store.
-            verify(exactly = 21) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
-            verify(exactly = 21) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
-            verify(exactly = 1) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
+                ).let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe FERDIGSTILT
+                }
         }
     }
 
     @Test
     fun `Livssyklus til en manuell klage som ferdigstilles med opprettholdelse`() {
-        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator
@@ -295,9 +327,9 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
-                klageMediator.ferdigstill(
+                klageMediator.behandlingUtført(
                     hendelse =
-                        KlageFerdigbehandletHendelse(
+                        KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
                         ),
@@ -306,9 +338,9 @@ class KlageMediatorTest {
             }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
-            klageMediator.ferdigstill(
+            klageMediator.behandlingUtført(
                 hendelse =
-                    KlageFerdigbehandletHendelse(
+                    KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
                     ),
@@ -367,7 +399,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som ferdigstilles med avvisning`() {
-        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator
@@ -398,9 +430,9 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
-                klageMediator.ferdigstill(
+                klageMediator.behandlingUtført(
                     hendelse =
-                        KlageFerdigbehandletHendelse(
+                        KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
                         ),
@@ -409,9 +441,9 @@ class KlageMediatorTest {
             }
 
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.AVVIST)
-            klageMediator.ferdigstill(
+            klageMediator.behandlingUtført(
                 hendelse =
-                    KlageFerdigbehandletHendelse(
+                    KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
                     ),
@@ -429,7 +461,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som avbrytes`() {
-        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettKlage(
@@ -486,7 +518,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Kan ikke ferdigstille en klage med medhold`() {
-        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettKlage(
@@ -521,9 +553,9 @@ class KlageMediatorTest {
 
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
             shouldThrow<IllegalStateException> {
-                klageMediator.ferdigstill(
+                klageMediator.behandlingUtført(
                     hendelse =
-                        KlageFerdigbehandletHendelse(
+                        KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
                         ),
@@ -543,7 +575,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Kan ikke ferdigstille en klage med delvis medhold`() {
-        setupMediatorerOgSak { klageMediator, utsendingMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettKlage(
@@ -578,9 +610,9 @@ class KlageMediatorTest {
 
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.DELVIS_MEDHOLD)
             shouldThrow<IllegalStateException> {
-                klageMediator.ferdigstill(
+                klageMediator.behandlingUtført(
                     hendelse =
-                        KlageFerdigbehandletHendelse(
+                        KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
                         ),
@@ -620,7 +652,7 @@ class KlageMediatorTest {
                     ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }
                     .opplysningId,
-            svar = Verdi.TekstVerdi("01985af4-2de4-7d02-9b7f-a113696dbf1b"),
+            svar = Verdi.TekstVerdi(vedtakIdKlagenGjelder.toString()),
         )
 
         oppdaterOpplysning(
@@ -869,7 +901,10 @@ class KlageMediatorTest {
         )
     }
 
-    private fun setupMediatorerOgSak(test: (KlageMediator, UtsendingMediator, OppgaveMediator, UUID) -> Unit) {
+    private fun setupMediatorerOgSak(
+        utsendingMediator: UtsendingMediator = mockk(relaxed = true),
+        test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
+    ) {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
@@ -881,11 +916,6 @@ class KlageMediatorTest {
                 ).also {
                     it.setRapidsConnection(rapidsConnection = testRapid)
                 }
-            val utsendingMediator =
-                UtsendingMediator(
-                    utsendingRepository = PostgresUtsendingRepository(dataSource),
-                    brevProdusent = mockk(),
-                ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
 
             val oppgaveMediator =
                 OppgaveMediator(
@@ -924,7 +954,7 @@ class KlageMediatorTest {
                     ),
                 )
 
-            test(klageMediator, utsendingMediator, oppgaveMediator, sak.sakId)
+            test(klageMediator, oppgaveMediator, sak.sakId)
         }
     }
 

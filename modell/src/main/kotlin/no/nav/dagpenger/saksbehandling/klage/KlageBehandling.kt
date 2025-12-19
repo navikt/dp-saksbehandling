@@ -4,10 +4,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -43,7 +44,7 @@ data class KlageBehandling private constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
         opprettet: LocalDateTime = LocalDateTime.now(),
-    ) : this (
+    ) : this(
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
         opprettet = opprettet,
@@ -109,13 +110,15 @@ data class KlageBehandling private constructor(
 
     fun personIdent(): String =
         runCatching {
-            _tilstandslogg.firstOrNull { it.hendelse is KlageMottattHendelse || it.hendelse is ManuellKlageMottattHendelse }?.let {
-                if (it.hendelse is KlageMottattHendelse) {
-                    (it.hendelse).ident
-                } else {
-                    (it.hendelse as ManuellKlageMottattHendelse).ident
+            _tilstandslogg
+                .firstOrNull { it.hendelse is KlageMottattHendelse || it.hendelse is ManuellKlageMottattHendelse }
+                ?.let {
+                    if (it.hendelse is KlageMottattHendelse) {
+                        (it.hendelse).ident
+                    } else {
+                        (it.hendelse as ManuellKlageMottattHendelse).ident
+                    }
                 }
-            }
         }.onFailure { e -> logger.error(e) { "Feil ved henting av personident for klagebehandling: ${this.behandlingId}" } }
             .getOrThrow()!!
 
@@ -155,15 +158,15 @@ data class KlageBehandling private constructor(
         return tommeOpplysninger.isEmpty()
     }
 
-    fun saksbehandlingFerdig(
+    fun behandlingUtført(
         behandlendeEnhet: String,
-        hendelse: KlageFerdigbehandletHendelse,
+        hendelse: KlageBehandlingUtført,
     ) {
         if (!this.kanFerdigstilles()) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
         }
         this.behandlendeEnhet = behandlendeEnhet
-        tilstand.saksbehandlingFerdig(
+        tilstand.behandlingUtført(
             klageBehandling = this,
             hendelse = hendelse,
         )
@@ -183,27 +186,57 @@ data class KlageBehandling private constructor(
         )
     }
 
+    fun vedtakDistribuert(hendelse: UtsendingDistribuert) {
+        tilstand.vedtakDistribuert(
+            klageBehandling = this,
+            hendelse = hendelse,
+        )
+    }
+
     object Behandles : KlageTilstand {
         override val type: Type = BEHANDLES
 
-        override fun saksbehandlingFerdig(
+        override fun behandlingUtført(
             klageBehandling: KlageBehandling,
-            hendelse: KlageFerdigbehandletHendelse,
+            hendelse: KlageBehandlingUtført,
         ) {
-            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
-                klageBehandling.endreTilstand(
-                    nyTilstand = OversendKlageinstans,
-                    hendelse = hendelse,
-                )
-            } else if (klageBehandling.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
-                // TODO: implementer ferdigstilling av disse utfallene
-                throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
-            } else {
-                klageBehandling.endreTilstand(
-                    nyTilstand = Ferdigstilt,
-                    hendelse = hendelse,
-                )
+            val utfall =
+                requireNotNull(klageBehandling.utfall()) {
+                    "Utfall må være satt for å ferdigstille klagebehandling"
+                }
+            when (utfall) {
+                UtfallType.OPPRETTHOLDELSE -> {
+                    klageBehandling.endreTilstand(
+                        nyTilstand = BehandlingUtført,
+                        hendelse = hendelse,
+                    )
+                }
+
+                UtfallType.MEDHOLD -> {
+                    throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
+                }
+
+                UtfallType.DELVIS_MEDHOLD -> {
+                    throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
+                }
+
+                UtfallType.AVVIST -> TODO()
             }
+
+//            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+//                klageBehandling.endreTilstand(
+//                    nyTilstand = OversendKlageinstans,
+//                    hendelse = hendelse,
+//                )
+//            } else if (klageBehandling.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
+//                // TODO: implementer ferdigstilling av disse utfallene
+//                throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
+//            } else {
+//                klageBehandling.endreTilstand(
+//                    nyTilstand = Ferdigstilt,
+//                    hendelse = hendelse,
+//                )
+//            }
         }
 
         override fun avbryt(
@@ -231,6 +264,27 @@ data class KlageBehandling private constructor(
         }
     }
 
+    object BehandlingUtført : KlageTilstand {
+        override val type: Type = Type.BEHANDLING_UTFORT
+
+        override fun vedtakDistribuert(
+            klageBehandling: KlageBehandling,
+            hendelse: UtsendingDistribuert,
+        ) {
+            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+                klageBehandling.endreTilstand(
+                    nyTilstand = OversendKlageinstans,
+                    hendelse = hendelse,
+                )
+            } else {
+                klageBehandling.endreTilstand(
+                    nyTilstand = Ferdigstilt,
+                    hendelse = hendelse,
+                )
+            }
+        }
+    }
+
     object Ferdigstilt : KlageTilstand {
         override val type: Type = FERDIGSTILT
     }
@@ -242,9 +296,9 @@ data class KlageBehandling private constructor(
     sealed interface KlageTilstand {
         val type: Type
 
-        fun saksbehandlingFerdig(
+        fun behandlingUtført(
             klageBehandling: KlageBehandling,
-            hendelse: KlageFerdigbehandletHendelse,
+            hendelse: KlageBehandlingUtført,
         ): Unit = throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
 
         fun avbryt(
@@ -257,8 +311,14 @@ data class KlageBehandling private constructor(
             hendelse: OversendtKlageinstansHendelse,
         ): Unit = throw IllegalStateException("Kan ikke motta hendelse om oversendt klageinstans i tilstand $type")
 
+        fun vedtakDistribuert(
+            klageBehandling: KlageBehandling,
+            hendelse: UtsendingDistribuert,
+        ): Unit = throw IllegalStateException("Kan ikke motta hendelse om oversendt klageinstans i tilstand $type")
+
         enum class Type {
             BEHANDLES,
+            BEHANDLING_UTFORT,
             OVERSEND_KLAGEINSTANS,
             FERDIGSTILT,
             AVBRUTT,

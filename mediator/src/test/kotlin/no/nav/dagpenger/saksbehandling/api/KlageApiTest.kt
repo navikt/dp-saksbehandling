@@ -30,7 +30,7 @@ import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandl
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
@@ -299,9 +299,9 @@ class KlageApiTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.ferdigstill(
+                    it.behandlingUtført(
                         hendelse =
-                            KlageFerdigbehandletHendelse(
+                            KlageBehandlingUtført(
                                 behandlingId = klageBehandlingId,
                                 utførtAv = TestHelper.saksbehandler,
                             ),
@@ -317,9 +317,9 @@ class KlageApiTest {
         }
 
         verify(exactly = 1) {
-            mediator.ferdigstill(
+            mediator.behandlingUtført(
                 hendelse =
-                    KlageFerdigbehandletHendelse(
+                    KlageBehandlingUtført(
                         behandlingId = klageBehandlingId,
                         utførtAv = TestHelper.saksbehandler,
                     ),

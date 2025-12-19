@@ -11,25 +11,22 @@ import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.Hjemler
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
-import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.INTERN_MELDING
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.util.UUID
 
@@ -182,8 +179,8 @@ class KlageMediator(
         }
     }
 
-    fun ferdigstill(
-        hendelse: KlageFerdigbehandletHendelse,
+    fun behandlingUtført(
+        hendelse: KlageBehandlingUtført,
         saksbehandlerToken: String,
     ) {
         val oppgave =
@@ -213,39 +210,14 @@ class KlageMediator(
                         utløstAvType = UtløstAvType.KLAGE,
                     )
                 }
+
             val klageBehandling =
                 klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
-                    klageBehandling.saksbehandlingFerdig(
+                    klageBehandling.behandlingUtført(
                         behandlendeEnhet = saksbehandlerDeferred.await().enhet.enhetNr,
                         hendelse = hendelse,
                     )
                 }
-            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
-
-            val utsendingSak =
-                UtsendingSak(
-                    id = sakId.toString(),
-                    kontekst = "Dagpenger",
-                )
-
-            val startUtsendingHendelse =
-                StartUtsendingHendelse(
-                    utsendingSak = utsendingSak,
-                    behandlingId = klageBehandling.behandlingId,
-                    ident = oppgave.personIdent(),
-                )
-
-//            1) Lagre klagebehandling og utsending med brev
-//            2) Sende hendelse om vedtak fattet for klage
-//
-//
-//            3a) Mottak1: Ferdigstill oppgave
-//            3b) Mottak2: Start utsending
-//
-//            4) Mottak utsending distribuert (ny hendelse som skal sendes når distribuering er ferdig. Må inneholde behandlingId, type (klage), journalpostId og evt distibusjonId)
-            // hent klage. hvis utfall er opprettholdelse, send behov om oversendelse til ka
-
-
 
 //            1. commit - oppretter utsending
             val html = htmlDeferred.await().getOrThrow()
@@ -258,77 +230,109 @@ class KlageMediator(
 
 //            2. commit - lagrer klagebehandling
             klageRepository.lagre(klageBehandling)
+//            2. publisher på rapids - lagrer klagebehandling
+            rapidsConnection.publish(
+                oppgave.personIdent(),
+                JsonMessage
+                    .newMessage(
+                        mapOf(
+                            "@event_name" to "klage_behandling_utført",
+                            "behandlingId" to klageBehandling.behandlingId.toString(),
+                            "ident" to oppgave.personIdent(),
+                            "utfall" to klageBehandling.utfall()!!.name,
+                        ),
+                    ).toJson(),
+            )
+        }
+
+//            val startUtsendingHendelse =
+//                StartUtsendingHendelse(
+//                    utsendingSak = utsendingSak,
+//                    behandlingId = klageBehandling.behandlingId,
+//                    ident = oppgave.personIdent(),
+//                )
+//
+//            1) Lagre klagebehandling og utsending med brev
+//            2) Sende hendelse om vedtak fattet for klage
+//
+//
+//            3a) Mottak1: Ferdigstill oppgave
+//            3b) Mottak2: Start utsending
+//
+//            4) Mottak utsending distribuert (ny hendelse som skal sendes når distribuering er ferdig. Må inneholde behandlingId, type (klage), journalpostId og evt distibusjonId)
+        // hent klage. hvis utfall er opprettholdelse, send behov om oversendelse til ka
+
 //            3. commit - oppdaterer oppgavestatus
-            oppgaveMediator.ferdigstillOppgave(
-                godkjentBehandlingHendelse =
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        meldingOmVedtak = html,
-                        utførtAv = hendelse.utførtAv,
-                    ),
-            )
+
+//            oppgaveMediator.ferdigstillOppgave(
+//                godkjentBehandlingHendelse =
+//                    GodkjentBehandlingHendelse(
+//                        oppgaveId = oppgave.oppgaveId,
+//                        meldingOmVedtak = html,
+//                        utførtAv = hendelse.utførtAv,
+//                    ),
+//            )
 //            4. commit - starter utsending
-            utsendingMediator.mottaStartUtsending(
-                startUtsendingHendelse,
-            )
+//            utsendingMediator.mottaStartUtsending(
+//                startUtsendingHendelse,
+//            )
 //            5. commit - send behov på rapid: oversendelse til KA
 //            OBS: Denne er avhengig av at utsendingen er journalført (trenger journalpostId)!!!!
-            val saksbehandler = saksbehandlerDeferred.await()
-            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
-                auditlogg.oppdater("Ferdigstilte en klage", oppgave.personIdent(), saksbehandler.ident)
-                val body =
-                    mutableMapOf(
-                        "behandlingId" to klageBehandling.behandlingId.toString(),
-                        "ident" to oppgave.personIdent(),
-                        "fagsakId" to utsendingSak.id,
-                        "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
-                        "hjemler" to klageBehandling.hjemler(),
-                        "opprettet" to oppgave.opprettet.toLocalDate().toString(),
-                        "tilknyttedeJournalposter" to klageBehandling.journalposterTilKA(utsendingMediator),
-                    )
-
-                klageBehandling
-                    .synligeOpplysninger()
-                    .filter { OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper.contains(it.type) && it.verdi() != Verdi.TomVerdi }
-                    .forEach {
-                        val verdi = (it.verdi() as Verdi.TekstVerdi).value
-                        when (it.type) {
-                            OpplysningType.FULLMEKTIG_NAVN -> body.put("prosessfullmektigNavn", verdi)
-                            OpplysningType.FULLMEKTIG_ADRESSE_1 -> body.put("prosessfullmektigAdresselinje1", verdi)
-                            OpplysningType.FULLMEKTIG_ADRESSE_2 -> body.put("prosessfullmektigAdresselinje2", verdi)
-                            OpplysningType.FULLMEKTIG_ADRESSE_3 -> body.put("prosessfullmektigAdresselinje3", verdi)
-                            OpplysningType.FULLMEKTIG_POSTNR -> body.put("prosessfullmektigPostnummer", verdi)
-                            OpplysningType.FULLMEKTIG_POSTSTED -> body.put("prosessfullmektigPoststed", verdi)
-                            OpplysningType.FULLMEKTIG_LAND -> body.put("prosessfullmektigLand", verdi)
-                            else -> {}
-                        }
-                    }
-
-                klageBehandling
-                    .synligeOpplysninger()
-                    .singleOrNull { it.type == INTERN_MELDING && it.verdi() != Verdi.TomVerdi }
-                    ?.let {
-                        val verdi = (it.verdi() as Verdi.TekstVerdi).value
-                        body.put("kommentar", verdi)
-                    }
-
-                val message =
-                    JsonMessage
-                        .newNeed(
-                            behov = setOf("OversendelseKlageinstans"),
-                            map = body,
-                        ).toJson()
-                        .also {
-                            sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
-                        }
-                logger.info { "Publiserer behov OversendelseKlageinstans for klagebehandling ${klageBehandling.behandlingId}" }
-                rapidsConnection.publish(key = oppgave.personIdent(), message = message)
-            }
-        }
+//            val saksbehandler = saksbehandlerDeferred.await()
+//            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+//                auditlogg.oppdater("Ferdigstilte en klage", oppgave.personIdent(), saksbehandler.ident)
+//                val body =
+//                    mutableMapOf(
+//                        "behandlingId" to klageBehandling.behandlingId.toString(),
+//                        "ident" to oppgave.personIdent(),
+//                        "fagsakId" to utsendingSak.id,
+//                        "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
+//                        "hjemler" to klageBehandling.hjemler(),
+//                        "opprettet" to oppgave.opprettet.toLocalDate().toString(),
+//                        "tilknyttedeJournalposter" to klageBehandling.journalposterTilKA(utsendingMediator),
+//                    )
+//
+//                klageBehandling
+//                    .synligeOpplysninger()
+//                    .filter { OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper.contains(it.type) && it.verdi() != Verdi.TomVerdi }
+//                    .forEach {
+//                        val verdi = (it.verdi() as Verdi.TekstVerdi).value
+//                        when (it.type) {
+//                            OpplysningType.FULLMEKTIG_NAVN -> body.put("prosessfullmektigNavn", verdi)
+//                            OpplysningType.FULLMEKTIG_ADRESSE_1 -> body.put("prosessfullmektigAdresselinje1", verdi)
+//                            OpplysningType.FULLMEKTIG_ADRESSE_2 -> body.put("prosessfullmektigAdresselinje2", verdi)
+//                            OpplysningType.FULLMEKTIG_ADRESSE_3 -> body.put("prosessfullmektigAdresselinje3", verdi)
+//                            OpplysningType.FULLMEKTIG_POSTNR -> body.put("prosessfullmektigPostnummer", verdi)
+//                            OpplysningType.FULLMEKTIG_POSTSTED -> body.put("prosessfullmektigPoststed", verdi)
+//                            OpplysningType.FULLMEKTIG_LAND -> body.put("prosessfullmektigLand", verdi)
+//                            else -> {}
+//                        }
+//                    }
+//
+//                klageBehandling
+//                    .synligeOpplysninger()
+//                    .singleOrNull { it.type == INTERN_MELDING && it.verdi() != Verdi.TomVerdi }
+//                    ?.let {
+//                        val verdi = (it.verdi() as Verdi.TekstVerdi).value
+//                        body.put("kommentar", verdi)
+//                    }
+//
+//                val message =
+//                    JsonMessage
+//                        .newNeed(
+//                            behov = setOf("OversendelseKlageinstans"),
+//                            map = body,
+//                        ).toJson()
+//                        .also {
+//                            sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
+//                        }
+//                logger.info { "Publiserer behov OversendelseKlageinstans for klagebehandling ${klageBehandling.behandlingId}" }
+//                rapidsConnection.publish(key = oppgave.personIdent(), message = message)
+//            }
     }
 
-    // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
-    // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
+// TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
+// TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
 
     fun avbrytKlage(hendelse: AvbruttHendelse) {
         sjekkTilgangOgEierAvOppgave(
@@ -355,6 +359,82 @@ class KlageMediator(
             klageRepository.lagre(klageBehandling)
         }
     }
+
+    // Her kommer en kafka hendelse når utsending er distribuert
+    fun vedtakDistribuert(hendelse: UtsendingDistribuert) {
+        val klageBehandling = klageRepository.hentKlageBehandling(behandlingId = hendelse.behandlingId)
+        val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId).toString()
+
+        klageBehandling.vedtakDistribuert(hendelse)
+        klageRepository.lagre(klageBehandling)
+
+        // klageVedtaktet sin jourlpostId
+        hendelse.journalpostId
+
+        if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+            rapidsConnection.publish(
+                key = hendelse.ident,
+                message =
+                    JsonMessage
+                        .newNeed(
+                            behov = setOf("OversendelseKlageinstans"),
+                            mapOf(
+                                "behandlingId" to klageBehandling.behandlingId.toString(),
+                                "ident" to hendelse.ident,
+                                "fagsakId" to sakId,
+                                "behandlendeEnhet" to (klageBehandling.behandlendeEnhet() ?: "4449"),
+                                "hjemler" to klageBehandling.hjemler(),
+                                "opprettet" to klageBehandling.opprettet,
+                                "tilknyttedeJournalposter" to journalPoster(hendelse.journalpostId, klageBehandling),
+                            ),
+                        ).toJson(),
+            )
+        }
+    }
+
+    private fun journalPoster(
+        klageVedtakJournalpostId: String,
+        klageBehandling: KlageBehandling,
+    ): List<JournalpostTilKA> =
+        buildList {
+            // journalpostid Til selve klageVedtaket
+            add(
+                JournalpostTilKA(
+                    type = "KLAGE_VEDTAK",
+                    journalpostId = klageVedtakJournalpostId,
+                ),
+            )
+
+            // journalpostid Til  klagen  som er sendt inn av bruker
+            klageBehandling.journalpostId()?.let {
+                add(
+                    JournalpostTilKA(
+                        type = "BRUKERS_KLAGE",
+                        journalpostId = it,
+                    ),
+                )
+            }
+
+            // Denne får vi tak via opplysning og oppslag mot utsending
+            // journalpostid Til  vedtaket som bruker klager på
+            val vedtakIdBrukerKlagerPå =
+                klageBehandling
+                    .synligeOpplysninger()
+                    .singleOrNull { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }
+                    ?.verdi() as Verdi.TekstVerdi?
+
+            vedtakIdBrukerKlagerPå
+                ?.let {
+                    utsendingMediator.finnUtsendingForBehandlingId(UUID.fromString(it.value))?.journalpostId()
+                }?.let {
+                    add(
+                        JournalpostTilKA(
+                            type = "OPPRINNELIG_VEDTAK",
+                            journalpostId = it,
+                        ),
+                    )
+                }
+        }
 
     private fun sjekkTilgangTilOppgave(
         behandlingId: UUID,
@@ -390,54 +470,7 @@ fun KlageBehandling.hjemler(): List<String> {
         }.orEmpty()
 }
 
-private fun KlageBehandling.journalpostIdPåklagetVedtak(utsendingMediator: UtsendingMediator): String? {
-    val behandlingIdPåklagetVedtakAsText =
-        this
-            .synligeOpplysninger()
-            .singleOrNull { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }
-            ?.verdi() as Verdi.TekstVerdi?
-    if (behandlingIdPåklagetVedtakAsText != null) {
-        val behandlingIdPåklagetVedtak = UUID.fromString(behandlingIdPåklagetVedtakAsText.value)
-        return utsendingMediator.finnUtsendingForBehandlingId(behandlingId = behandlingIdPåklagetVedtak)?.journalpostId()
-    } else {
-        return null
-    }
-}
-
-private fun KlageBehandling.journalpostIdKlageVedtak(utsendingMediator: UtsendingMediator): String? =
-    utsendingMediator.finnUtsendingForBehandlingId(behandlingId = this.behandlingId)?.journalpostId()
-
-fun KlageBehandling.journalposterTilKA(utsendingMediator: UtsendingMediator): List<JournalpostTilKA> {
-    val journalposter = mutableListOf<JournalpostTilKA>()
-    this.journalpostIdKlageVedtak(utsendingMediator)?.let {
-        journalposter.add(
-            JournalpostTilKA(
-                type = "KLAGE_VEDTAK",
-                journalpostId = it,
-            ),
-        )
-    }
-    this.journalpostIdPåklagetVedtak(utsendingMediator)?.let {
-        journalposter.add(
-            JournalpostTilKA(
-                type = "OPPRINNELIG_VEDTAK",
-                journalpostId = it,
-            ),
-        )
-    }
-    this.journalpostId()?.let {
-        journalposter.add(
-            JournalpostTilKA(
-                type = "BRUKERS_KLAGE",
-                journalpostId = it,
-            ),
-        )
-    }
-    logger.info { "Klage ${this.behandlingId} journalposter: $journalposter" }
-    return journalposter
-}
-
-data class JournalpostTilKA(
+private data class JournalpostTilKA(
     val type: String,
     val journalpostId: String,
 )
