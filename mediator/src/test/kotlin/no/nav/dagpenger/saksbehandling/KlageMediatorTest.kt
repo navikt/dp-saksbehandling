@@ -249,6 +249,7 @@ class KlageMediatorTest {
             testRapid.inspektør.message(0).let {
                 it["@event_name"].asText() shouldBe "klage_behandling_utført"
                 it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
                 it["utfall"].asText() shouldBe "OPPRETTHOLDELSE"
                 it["ident"].asText() shouldBe testPersonIdent
                 it["saksbehandler"].toString() shouldEqualJson

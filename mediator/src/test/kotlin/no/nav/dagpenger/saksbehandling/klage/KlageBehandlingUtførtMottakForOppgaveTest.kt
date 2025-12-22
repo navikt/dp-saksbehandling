@@ -31,9 +31,10 @@ class KlageBehandlingUtførtMottakForOppgaveTest {
             )
         val mockOppgaveMediator =
             mockk<OppgaveMediator>(relaxed = false).also {
-                every { it.ferdigstillOppgave(testBehandlingId, testSaksbehandler) } returns Result.success(
-                    testOppgaveId
-                )
+                every { it.ferdigstillOppgave(testBehandlingId, testSaksbehandler) } returns
+                    Result.success(
+                        testOppgaveId,
+                    )
             }
 
         KlageBehandlingUtførtMottakForOppgave(testRapid, mockOppgaveMediator)

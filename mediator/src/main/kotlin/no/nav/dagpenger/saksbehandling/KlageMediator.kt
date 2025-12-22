@@ -218,7 +218,7 @@ class KlageMediator(
                         hendelse = hendelse,
                     )
                 }
-
+            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
 //            1. commit - oppretter utsending
             val html = htmlDeferred.await().getOrThrow()
             utsendingMediator.opprettUtsending(
@@ -231,6 +231,7 @@ class KlageMediator(
 //            2. commit - lagrer klagebehandling
             klageRepository.lagre(klageBehandling)
 //            2. publisher på rapids - lagrer klagebehandling
+
             rapidsConnection.publish(
                 oppgave.personIdent(),
                 JsonMessage
@@ -238,6 +239,7 @@ class KlageMediator(
                         mapOf(
                             "@event_name" to "klage_behandling_utført",
                             "behandlingId" to klageBehandling.behandlingId,
+                            "sakId" to sakId,
                             "ident" to oppgave.personIdent(),
                             "utfall" to klageBehandling.utfall()!!.name,
                             "saksbehandler" to hendelse.utførtAv,
