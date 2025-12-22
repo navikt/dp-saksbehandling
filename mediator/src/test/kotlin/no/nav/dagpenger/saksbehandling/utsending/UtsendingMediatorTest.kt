@@ -193,7 +193,8 @@ class UtsendingMediatorTest {
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
                   "journalpostId": "${utsending.journalpostId()}",
-                  "fagsystem": "${utsendingSak.kontekst}"
+                  "fagsystem": "${utsendingSak.kontekst}",
+                  "utsendingType": "${utsending.type.name}"
                 }
                 """.trimIndent()
 
@@ -361,6 +362,7 @@ class UtsendingMediatorTest {
                   ],
                   "journalpostId": "${utsending.journalpostId()}",
                   "fagsystem": "${utsendingSak.kontekst}"
+                  "utsendingType": "${utsending.type.name}"
                 }
                 """.trimIndent()
 
