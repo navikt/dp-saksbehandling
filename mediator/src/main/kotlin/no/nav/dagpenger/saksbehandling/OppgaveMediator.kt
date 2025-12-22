@@ -533,6 +533,7 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
+                oppgaveRepository.lagre(oppgave)
                 oppgave.oppgaveId
             }
         }

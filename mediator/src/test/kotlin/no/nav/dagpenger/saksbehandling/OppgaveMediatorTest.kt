@@ -35,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
@@ -59,6 +60,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -1090,6 +1092,40 @@ OppgaveMediatorTest {
                 saksbehandler = beslutter,
                 saksbehandlerToken = "token",
             )
+        }
+    }
+
+    @Test
+    fun `Livssyklus for behandling av klage som ferdigstilles`() {
+        val behandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val oppgave =
+            TestHelper.lagOppgave(
+                tilstand = UnderBehandling,
+                behandling = behandling,
+                saksbehandlerIdent = saksbehandler.navIdent,
+            )
+        DBTestHelper.withOppgave(oppgave) { ds ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(ds),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = mockk(),
+                )
+
+            oppgaveMediator
+                .ferdigstillOppgave(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    saksbehandler = saksbehandler,
+                ).getOrThrow() shouldBe oppgave.oppgaveId
+
+            val ferdigBehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            ferdigBehandletOppgave.tilstand() shouldBe FerdigBehandlet
+            ferdigBehandletOppgave.tilstandslogg.first().hendelse shouldBe
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                )
         }
     }
 
