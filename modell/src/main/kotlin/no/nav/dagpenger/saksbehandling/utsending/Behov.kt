@@ -76,6 +76,8 @@ data class DistribueringBehov(
     override val behandlingId: UUID,
     private val journalpostId: String,
     private val fagsystem: String,
+    private val ident: String,
+    private val utsendingId: UUID,
     private val utsendingType: UtsendingType,
 ) : Behov() {
     companion object {
@@ -88,6 +90,8 @@ data class DistribueringBehov(
             "journalpostId" to journalpostId,
             "fagsystem" to fagsystem,
             "utsendingType" to utsendingType.name,
+            "ident" to ident,
+            "utsendingId" to utsendingId.toString(),
         )
 }
 

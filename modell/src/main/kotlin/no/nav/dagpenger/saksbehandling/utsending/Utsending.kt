@@ -230,6 +230,8 @@ data class Utsending(
                 behandlingId = utsending.behandlingId,
                 journalpostId = utsending.journalpostId ?: throw IllegalStateException("journalpostId mangler"),
                 fagsystem = fagsystem,
+                ident = utsending.ident,
+                utsendingId = utsending.id,
                 utsendingType = utsending.type,
             )
         }

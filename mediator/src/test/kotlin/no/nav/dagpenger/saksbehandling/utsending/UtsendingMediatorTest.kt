@@ -193,8 +193,9 @@ class UtsendingMediatorTest {
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
                   "journalpostId": "${utsending.journalpostId()}",
-                  "fagsystem": "${utsendingSak.kontekst}",
-                  "utsendingType": "${utsending.type.name}"
+                  "utsendingType": "${utsending.type.name}",
+                  "ident": "${person.ident}",
+                  "utsendingId": "${utsending.id}"
                 }
                 """.trimIndent()
 
@@ -361,8 +362,11 @@ class UtsendingMediatorTest {
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
                   "journalpostId": "${utsending.journalpostId()}",
-                  "fagsystem": "${utsendingSak.kontekst}"
-                  "utsendingType": "${utsending.type.name}"
+                  "fagsystem": "${utsendingSak.kontekst}",
+                  "utsendingType": "${utsending.type.name}",
+                  "ident": "${person.ident}",
+                  "utsendingId": "${utsending.id}"
+                  
                 }
                 """.trimIndent()
 
@@ -503,7 +507,11 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
-                  "journalpostId": "${utsending.journalpostId()}"
+                  "journalpostId": "${utsending.journalpostId()}",
+                  "utsendingType": "${utsending.type.name}",
+                  "ident": "${person.ident}",
+                  "utsendingId": "${utsending.id}"
+                  
                 }
                 """.trimIndent()
 
