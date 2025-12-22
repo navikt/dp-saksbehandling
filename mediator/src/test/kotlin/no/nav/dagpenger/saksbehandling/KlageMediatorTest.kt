@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import PersonMediator
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -73,7 +74,16 @@ import java.util.UUID
 class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
     private val testRapid = TestRapid()
-    private val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
+    private val saksbehandler =
+        Saksbehandler(
+            "saksbehandler",
+            grupper = emptySet(),
+            tilganger =
+                setOf(
+                    TilgangType.SAKSBEHANDLER,
+                    TilgangType.BESLUTTER,
+                ),
+        )
     private val vedtakIdKlagenGjelder = UUID.randomUUID()
     private val pdlPersonIntern =
         PDLPersonIntern(
@@ -241,6 +251,18 @@ class KlageMediatorTest {
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["utfall"].asText() shouldBe "OPPRETTHOLDELSE"
                 it["ident"].asText() shouldBe testPersonIdent
+                it["saksbehandler"].toString() shouldEqualJson
+                    """
+                    {
+                      "navIdent": "${saksbehandler.navIdent}",
+                      "grupper": [],
+                      "tilganger": [
+                        "SAKSBEHANDLER",
+                        "BESLUTTER"
+                      ]
+                    }
+                        
+                    """.trimIndent()
             }
 
             val utsendingDistribuertHendelse =

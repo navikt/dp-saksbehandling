@@ -11,6 +11,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import java.util.UUID
 
@@ -21,6 +22,16 @@ internal abstract class KlageBehandlingUtførtMottak(
 ) : River.PacketListener {
     companion object {
         private const val KLAGE_BEHANDLING_UTFØRT_EVENT_NAME = "klage_behandling_utført"
+
+        internal fun JsonNode.asSaksbehandler(): Saksbehandler {
+            // todo: mer validering på noder eksister og sånt
+            val saksbehandlerNode = this["saksbehandler"]
+            return Saksbehandler(
+                navIdent = saksbehandlerNode["navIdent"].asText(),
+                grupper = saksbehandlerNode["grupper"].map { it.asText() }.toSet(),
+                tilganger = saksbehandlerNode["tilganger"].map { TilgangType.valueOf(it.asText()) }.toSet(),
+            )
+        }
     }
 
     init {
@@ -66,15 +77,6 @@ internal abstract class KlageBehandlingUtførtMottak(
                 saksbehandler = saksbehandler,
             )
         }
-    }
-
-    private fun JsonNode.asSaksbehandler(): Saksbehandler {
-        // todo: hente grupper og tilganger fra pakken
-        return Saksbehandler(
-            navIdent = this["saksbehandlerIdent"].asText(),
-            grupper = emptySet(),
-            tilganger = emptySet(),
-        )
     }
 }
 

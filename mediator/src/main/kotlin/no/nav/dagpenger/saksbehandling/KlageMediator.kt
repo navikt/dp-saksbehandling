@@ -237,9 +237,10 @@ class KlageMediator(
                     .newMessage(
                         mapOf(
                             "@event_name" to "klage_behandling_utført",
-                            "behandlingId" to klageBehandling.behandlingId.toString(),
+                            "behandlingId" to klageBehandling.behandlingId,
                             "ident" to oppgave.personIdent(),
                             "utfall" to klageBehandling.utfall()!!.name,
+                            "saksbehandler" to hendelse.utførtAv,
                         ),
                     ).toJson(),
             )
