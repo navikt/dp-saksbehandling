@@ -522,6 +522,22 @@ class OppgaveMediator(
         }
 
     fun ferdigstillOppgave(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Result<UUID> =
+        runCatching {
+            oppgaveRepository.hentOppgaveFor(behandlingId = behandlingId).let { oppgave ->
+                oppgave.ferdigstill(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+                oppgave.oppgaveId
+            }
+        }
+
+    fun ferdigstillOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
         saksbehandlerToken: String,
