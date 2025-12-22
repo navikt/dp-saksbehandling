@@ -15,6 +15,7 @@ class AbstractKlageBehandlingUtførtMottakTest {
         rapidsConnection: RapidsConnection,
     ) : AbstractKlageBehandlingUtførtMottak(rapidsConnection) {
         var behandlingId: UUID? = null
+        var sakId: UUID? = null
         var utfall: UtfallType? = null
         var ident: String? = null
         var saksbehandler: Saksbehandler? = null
@@ -22,11 +23,13 @@ class AbstractKlageBehandlingUtførtMottakTest {
 
         override fun håndter(
             behandlingId: UUID,
+            sakId: UUID,
             utfall: UtfallType,
             ident: String,
             saksbehandler: Saksbehandler,
         ) {
             this.behandlingId = behandlingId
+            this.sakId = sakId
             this.utfall = utfall
             this.ident = ident
             this.saksbehandler = saksbehandler
@@ -36,6 +39,7 @@ class AbstractKlageBehandlingUtførtMottakTest {
     @Test
     fun `Skal motta klage_behandling_utført hendelse`() {
         val testBehandlingId = UUID.randomUUID()
+        val testSakId = UUID.randomUUID()
         val testUtfall = UtfallType.OPPRETTHOLDELSE
         val testIdent = "12345678901"
         val testSaksbehandler =
@@ -57,6 +61,7 @@ class AbstractKlageBehandlingUtførtMottakTest {
             {
                 "@event_name": "klage_behandling_utført",
                 "behandlingId": "$testBehandlingId",
+                "sakId": "$testSakId",
                 "utfall": "${testUtfall.name}",
                 "ident": "$testIdent",
                 "saksbehandler":  {
@@ -71,6 +76,7 @@ class AbstractKlageBehandlingUtførtMottakTest {
         testRapid.sendTestMessage(klageBehandlingUtførtJson)
 
         testMottak.behandlingId shouldBe testBehandlingId
+        testMottak.sakId shouldBe testSakId
         testMottak.utfall shouldBe testUtfall
         testMottak.ident shouldBe testIdent
         testMottak.saksbehandler shouldBe testSaksbehandler

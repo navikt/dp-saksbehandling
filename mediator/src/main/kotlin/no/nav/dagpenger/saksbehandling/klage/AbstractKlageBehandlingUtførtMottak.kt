@@ -41,7 +41,7 @@ internal abstract class AbstractKlageBehandlingUtførtMottak(
         {
             precondition {
                 it.requireValue("@event_name", KLAGE_BEHANDLING_UTFØRT_EVENT_NAME)
-                it.requireKey("ident", "behandlingId", "utfall", "saksbehandler")
+                it.requireKey("ident", "behandlingId", "sakId", "utfall", "saksbehandler")
             }
         }
 
@@ -49,6 +49,7 @@ internal abstract class AbstractKlageBehandlingUtførtMottak(
 
     protected abstract fun håndter(
         behandlingId: UUID,
+        sakId: UUID,
         utfall: UtfallType,
         ident: String,
         saksbehandler: Saksbehandler,
@@ -61,6 +62,7 @@ internal abstract class AbstractKlageBehandlingUtførtMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
+        val sakId = packet["sakId"].asUUID()
         val ident = packet["ident"].asText()
         val utfall = UtfallType.valueOf(packet["utfall"].asText())
         val saksbehandler: Saksbehandler = packet["saksbehandler"].asSaksbehandler()
@@ -70,6 +72,7 @@ internal abstract class AbstractKlageBehandlingUtførtMottak(
             logger.info { "Mottatt klage_behandling_utført for behandlingId=$behandlingId med utfall: $utfall" }
             håndter(
                 behandlingId = behandlingId,
+                sakId = sakId,
                 utfall = utfall,
                 ident = ident,
                 saksbehandler = saksbehandler,

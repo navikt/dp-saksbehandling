@@ -13,6 +13,7 @@ internal class KlageBehandlingUtførtMottakForOppgave(
 
     override fun håndter(
         behandlingId: UUID,
+        sakId: UUID,
         utfall: UtfallType,
         ident: String,
         saksbehandler: Saksbehandler,

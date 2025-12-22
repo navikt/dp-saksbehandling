@@ -17,6 +17,7 @@ class KlageBehandlingUtførtMottakForOppgaveTest {
     fun `Skal håndtere klage_behandling_utført hendelse`() {
         val testOppgaveId = UUID.randomUUID()
         val testBehandlingId = UUID.randomUUID()
+        val testSakId = UUID.randomUUID()
         val testUtfall = UtfallType.OPPRETTHOLDELSE
         val testIdent = "12345678901"
         val testSaksbehandler =
@@ -45,6 +46,7 @@ class KlageBehandlingUtførtMottakForOppgaveTest {
             {
                 "@event_name": "klage_behandling_utført",
                 "behandlingId": "$testBehandlingId",
+                "sakId": "$testSakId",
                 "utfall": "${testUtfall.name}",
                 "ident": "$testIdent",
                 "saksbehandler":  {
