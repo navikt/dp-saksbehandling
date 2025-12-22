@@ -17,7 +17,7 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-internal abstract class KlageBehandlingUtførtMottak(
+internal abstract class AbstractKlageBehandlingUtførtMottak(
     rapidsConnection: RapidsConnection,
 ) : River.PacketListener {
     companion object {
@@ -25,11 +25,10 @@ internal abstract class KlageBehandlingUtførtMottak(
 
         internal fun JsonNode.asSaksbehandler(): Saksbehandler {
             // todo: mer validering på noder eksister og sånt
-            val saksbehandlerNode = this["saksbehandler"]
             return Saksbehandler(
-                navIdent = saksbehandlerNode["navIdent"].asText(),
-                grupper = saksbehandlerNode["grupper"].map { it.asText() }.toSet(),
-                tilganger = saksbehandlerNode["tilganger"].map { TilgangType.valueOf(it.asText()) }.toSet(),
+                navIdent = this["navIdent"].asText(),
+                grupper = this["grupper"].map { it.asText() }.toSet(),
+                tilganger = this["tilganger"].map { TilgangType.valueOf(it.asText()) }.toSet(),
             )
         }
     }
@@ -43,7 +42,7 @@ internal abstract class KlageBehandlingUtførtMottak(
         {
             precondition {
                 it.requireValue("@event_name", KLAGE_BEHANDLING_UTFØRT_EVENT_NAME)
-                it.requireKey("ident", "behandlingId", "utfall", "saksbehandlerIdent")
+                it.requireKey("ident", "behandlingId", "utfall", "saksbehandler")
             }
         }
 
@@ -69,7 +68,7 @@ internal abstract class KlageBehandlingUtførtMottak(
         withLoggingContext(
             "behandlingId" to behandlingId.toString(),
         ) {
-            logger.info { "Mottatt klage_behandling_utført for behandlingId=$behandlingId" }
+            logger.info { "Mottatt klage_behandling_utført for behandlingId=$behandlingId med utfall: $utfall" }
             håndter(
                 behandlingId = behandlingId,
                 utfall = utfall,
@@ -83,7 +82,7 @@ internal abstract class KlageBehandlingUtførtMottak(
 internal class KlageBehandlingUtførtMottakForOppgave(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
-) : KlageBehandlingUtførtMottak(rapidsConnection) {
+) : AbstractKlageBehandlingUtførtMottak(rapidsConnection) {
     override val mottakNavn: String = "KlageBehandlingUtførtMottakForOppgave"
 
     override fun håndter(
