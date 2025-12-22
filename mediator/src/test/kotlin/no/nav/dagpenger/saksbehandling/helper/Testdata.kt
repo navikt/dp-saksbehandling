@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.helper
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import java.util.UUID
 
 internal fun behandlingsresultatEvent(
@@ -40,6 +41,9 @@ internal fun distribuertDokumentBehovLøsning(
     behandlingId: UUID,
     journalpostId: String,
     distribusjonId: String,
+    ident: String = "12345678901",
+    utsendingId: UUID = UUID.randomUUID(),
+    utsendingType: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
 ): String {
     //language=JSON
     return """
@@ -47,6 +51,9 @@ internal fun distribuertDokumentBehovLøsning(
           "@event_name": "behov",
           "behandlingId": "$behandlingId",
           "journalpostId": "$journalpostId",
+          "ident": "$ident",
+          "utsendingId": "$utsendingId",
+          "utsendingType": "${utsendingType.name}",
           "@behov": [
             "${DistribueringBehov.BEHOV_NAVN}"
           ],
