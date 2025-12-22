@@ -1,12 +1,10 @@
-package no.nav.dagpenger.saksbehandling.mottak
+package no.nav.dagpenger.saksbehandling.klage
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
-import no.nav.dagpenger.saksbehandling.klage.UtfallType
+import no.nav.dagpenger.saksbehandling.TilgangType
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -46,8 +44,8 @@ class AbstractKlageBehandlingUtførtMottakTest {
                 grupper = emptySet(),
                 tilganger =
                     setOf(
-                        BESLUTTER,
-                        SAKSBEHANDLER,
+                        TilgangType.BESLUTTER,
+                        TilgangType.SAKSBEHANDLER,
                     ),
             )
 
