@@ -27,9 +27,14 @@ class UtsendingMediator(
     private val brevProdusent: BrevProdusent,
 ) : UtsendingRepository by utsendingRepository {
     private lateinit var rapidsConnection: RapidsConnection
+    private val observers = mutableListOf<UtsendingHendelseObserver>()
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
+    }
+
+    fun addObserver(observer: UtsendingHendelseObserver) {
+        observers.add(observer)
     }
 
     fun opprettUtsending(
@@ -53,24 +58,28 @@ class UtsendingMediator(
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(startUtsendingHendelse.behandlingId)
         utsending.startUtsending(startUtsendingHendelse)
         lagreOgPubliserBehov(utsending)
+        observers.forEach { it.onStartUtsending(startUtsendingHendelse, utsending) }
     }
 
     fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(arkiverbartBrevHendelse.behandlingId)
         utsending.mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse)
         lagreOgPubliserBehov(utsending)
+        observers.forEach { it.onArkiverbartBrev(arkiverbartBrevHendelse, utsending) }
     }
 
     fun mottaJournalførtKvittering(journalførtHendelse: JournalførtHendelse) {
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(journalførtHendelse.behandlingId)
         utsending.mottaJournalførtKvittering(journalførtHendelse)
         lagreOgPubliserBehov(utsending)
+        observers.forEach { it.onJournalført(journalførtHendelse, utsending) }
     }
 
     fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(distribuertHendelse.behandlingId)
         utsending.mottaDistribuertKvittering(distribuertHendelse)
         lagreOgPubliserBehov(utsending)
+        observers.forEach { it.onDistribuert(distribuertHendelse, utsending) }
     }
 
     private fun lagreOgPubliserBehov(utsending: Utsending) {

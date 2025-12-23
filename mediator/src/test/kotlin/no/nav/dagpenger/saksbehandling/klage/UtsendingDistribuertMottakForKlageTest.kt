@@ -40,18 +40,13 @@ class UtsendingDistribuertMottakForKlageTest {
         val melding =
             """
             {
-              "@event_name": "behov",
-              "@behov": ["DistribueringBehov"],
-              "@løsning": {
-                "DistribueringBehov": {
-                  "distribueringId": "${forVentetHendelse.distribusjonId}"
-                }
-              },
-              "utsendingType": "KLAGEMELDING",
+              "@event_name": "utsending_distribuert",
               "behandlingId": "${forVentetHendelse.behandlingId}",
-              "journalpostId": "${forVentetHendelse.journalpostId}",
               "utsendingId": "${forVentetHendelse.utsendingId}",
-              "ident": "${forVentetHendelse.ident}"
+              "distribusjonId": "${forVentetHendelse.distribusjonId}",
+              "journalpostId": "${forVentetHendelse.journalpostId}",
+              "ident": "${forVentetHendelse.ident}",
+              "type": "KLAGEMELDING"
             }
             """.trimIndent()
         testRapid.sendTestMessage(melding)

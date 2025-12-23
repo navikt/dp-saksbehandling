@@ -4,14 +4,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
-import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 
 internal class UtsendingDistribuertMottakForKlage(
@@ -23,12 +21,10 @@ internal class UtsendingDistribuertMottakForKlage(
         private val sikkerlogger = KotlinLogging.logger("tjenestekall")
         val rapidFilter: River.() -> Unit = {
             precondition {
-                it.requireValue("@event_name", "behov")
-                it.requireAll("@behov", listOf(DistribueringBehov.BEHOV_NAVN))
-                it.requireKey("@løsning")
-                it.requireValue("utsendingType", UtsendingType.KLAGEMELDING.name)
+                it.requireValue("@event_name", "utsending_distribuert")
+                it.requireValue("type", UtsendingType.KLAGEMELDING.name)
             }
-            validate { it.requireKey("behandlingId", "ident", "utsendingId", "journalpostId") }
+            validate { it.requireKey("behandlingId", "ident", "utsendingId", "journalpostId", "distribusjonId") }
         }
     }
 
@@ -43,7 +39,7 @@ internal class UtsendingDistribuertMottakForKlage(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
-        val distribusjonId = packet["@løsning"][DistribueringBehov.BEHOV_NAVN]["distribueringId"].asText()
+        val distribusjonId = packet["distribusjonId"].asText()
         val journalpostId = packet["journalpostId"].asText()
         val utsendingId = packet["utsendingId"].asUUID()
         val ident = packet["ident"].asText()

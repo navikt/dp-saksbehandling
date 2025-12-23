@@ -33,9 +33,12 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandlingUtførtMottakForOppgave
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandlingUtførtMottakForUtsending
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
+import no.nav.dagpenger.saksbehandling.klage.UtsendingDistribuertMottakForKlage
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -60,6 +63,7 @@ import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingDistribuertObserver
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
@@ -223,6 +227,7 @@ internal class ApplicationBuilder(
             }.also { rapidsConnection ->
                 sakMediator.setRapidsConnection(rapidsConnection)
                 utsendingMediator.setRapidsConnection(rapidsConnection)
+                utsendingMediator.addObserver(UtsendingDistribuertObserver(rapidsConnection))
                 oppgaveMediator.setRapidsConnection(rapidsConnection)
                 klageMediator.setRapidsConnection(rapidsConnection)
                 klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
@@ -258,6 +263,18 @@ internal class ApplicationBuilder(
                 OversendtKlageinstansMottak(
                     rapidsConnection = rapidsConnection,
                     klageMediator = klageMediator,
+                )
+                UtsendingDistribuertMottakForKlage(
+                    rapidsConnection = rapidsConnection,
+                    klageMediator = klageMediator,
+                )
+                KlageBehandlingUtførtMottakForUtsending(
+                    rapidsConnection = rapidsConnection,
+                    utsendingMediator = utsendingMediator,
+                )
+                KlageBehandlingUtførtMottakForOppgave(
+                    rapidsConnection = rapidsConnection,
+                    oppgaveMediator = oppgaveMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(
