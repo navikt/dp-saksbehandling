@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageHendelseObserver
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -41,6 +42,7 @@ class KlageMediator(
 ) {
     private lateinit var rapidsConnection: RapidsConnection
     private lateinit var auditlogg: Auditlogg
+    private val observers = mutableListOf<KlageHendelseObserver>()
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
@@ -48,6 +50,10 @@ class KlageMediator(
 
     fun setAuditlogg(auditlogg: Auditlogg) {
         this.auditlogg = auditlogg
+    }
+
+    fun addObserver(observer: KlageHendelseObserver) {
+        observers.add(observer)
     }
 
     fun hentKlageBehandling(
@@ -79,6 +85,8 @@ class KlageMediator(
                     ),
             )
         klageRepository.lagre(klageBehandling = klageBehandling)
+        observers.forEach { it.onKlageMottatt(klageMottattHendelse, klageBehandling) }
+
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
                 behandlingId = klageBehandling.behandlingId,
@@ -115,6 +123,7 @@ class KlageMediator(
             )
 
         klageRepository.lagre(klageBehandling)
+        observers.forEach { it.onManuellKlageMottatt(manuellKlageMottattHendelse, klageBehandling) }
 
         val utførtAv = manuellKlageMottattHendelse.utførtAv
         val behandlingOpprettetHendelse =
@@ -228,6 +237,7 @@ class KlageMediator(
 
 //            2. commit - lagrer klagebehandling
             klageRepository.lagre(klageBehandling)
+            observers.forEach { it.onBehandlingUtført(hendelse, klageBehandling) }
 //            2. publisher på rapids - lagrer klagebehandling
 
             rapidsConnection.publish(
@@ -263,6 +273,7 @@ class KlageMediator(
                 }
 
         klageRepository.lagre(klageBehandling)
+        observers.forEach { it.onAvbrutt(hendelse, klageBehandling) }
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
         // TODO: Fix skrivefeil i auditlogg
         auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
@@ -272,6 +283,7 @@ class KlageMediator(
         klageRepository.hentKlageBehandling(behandlingId = hendelse.behandlingId).let { klageBehandling ->
             klageBehandling.oversendtTilKlageinstans(hendelse)
             klageRepository.lagre(klageBehandling)
+            observers.forEach { it.onOversendtTilKlageinstans(hendelse, klageBehandling) }
         }
     }
 
@@ -289,6 +301,7 @@ class KlageMediator(
                 },
             )
         klageRepository.lagre(klageBehandling)
+        observers.forEach { it.onVedtakDistribuert(hendelse, klageBehandling) }
 
         when (aksjon) {
             is KlageAksjon.OversendKlageinstans -> {
@@ -302,6 +315,7 @@ class KlageMediator(
                             ).toJson(),
                 )
             }
+
             is KlageAksjon.IngenAksjon -> {
                 // Ingen handling nødvendig
             }
