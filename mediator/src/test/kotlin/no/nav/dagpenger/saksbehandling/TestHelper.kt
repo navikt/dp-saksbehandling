@@ -216,6 +216,7 @@ internal object TestHelper {
     fun lagUtsending(
         tilstand: Utsending.Tilstand,
         behandlingId: UUID,
+        utsendingSak: UtsendingSak? = null,
     ) = Utsending(
         tilstand = tilstand,
         ident = personIdent,
@@ -224,7 +225,7 @@ internal object TestHelper {
         pdfUrn = null,
         journalpostId = "journalpostId",
         distribusjonId = "distribusjonId",
-        utsendingSak = null,
+        utsendingSak = utsendingSak,
     )
 
     private fun randomFnr(): String {

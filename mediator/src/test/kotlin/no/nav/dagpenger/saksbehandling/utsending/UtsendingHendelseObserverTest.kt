@@ -1,131 +1,101 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.matchers.collections.shouldHaveSize
+import de.slub.urn.URN
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.TestHelper
-import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
-import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
-import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.toUrn
-import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.util.UUID
 
 class UtsendingHendelseObserverTest {
-    private val rapid = TestRapid()
-
     @Test
     fun `observer skal få beskjed om alle hendelser i utsendingsprosessen`() {
-        val behandling =
-            Behandling(
-                behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.SØKNAD,
-                opprettet = LocalDateTime.now(),
-                hendelse = TomHendelse,
+        val rapid = TestRapid()
+        val behandlingId = UUID.randomUUID()
+        val utsendingSak = UtsendingSak(kontekst = "Dagpenger", id = "123456789")
+        val utsending =
+            TestHelper.lagUtsending(
+                tilstand = Utsending.VenterPåVedtak,
+                behandlingId = behandlingId,
+                utsendingSak = utsendingSak,
             )
-        val person = TestHelper.testPerson
+        val testObserver = TestUtsendingObserver()
+        val utsendingRepository =
+            object : UtsendingRepository {
+                private val utsendinger = mutableSetOf<Utsending>(utsending)
 
-        DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
-            val behandlingId = behandling.behandlingId
-            val sakId = DBTestHelper.sakId.toString()
-            val utsendingSak = UtsendingSak(sakId, "Dagpenger")
-            val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-            val utsendingRepository = PostgresUtsendingRepository(ds)
-            val utsendingMediator =
-                UtsendingMediator(
-                    utsendingRepository = utsendingRepository,
-                    brevProdusent =
-                        mockk<UtsendingMediator.BrevProdusent>().also {
-                            coEvery {
-                                it.lagBrev(
-                                    ident = person.ident,
-                                    behandlingId = behandlingId,
-                                    sakId = sakId,
-                                )
-                            } returns htmlBrev
-                        },
-                ).also {
-                    it.setRapidsConnection(rapid)
+                override fun lagre(utsending: Utsending) {
+                    utsendinger.add(utsending)
                 }
 
-            UtsendingBehovLøsningMottak(
-                utsendingMediator = utsendingMediator,
-                rapidsConnection = rapid,
-            )
+                override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean = utsendinger.any { it.behandlingId == behandlingId }
 
-            val testObserver = TestUtsendingObserver()
-            utsendingMediator.addObserver(testObserver)
+                override fun slettUtsending(utsendingId: UUID): Int = utsendinger.removeIf { it.id == utsendingId }.let { if (it) 1 else 0 }
 
-            utsendingMediator.opprettUtsending(
+                override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? =
+                    utsendinger.find {
+                        it.behandlingId ==
+                            behandlingId
+                    }
+
+                override fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending =
+                    utsendinger.first {
+                        it.behandlingId ==
+                            behandlingId
+                    }
+            }
+        val mediator =
+            UtsendingMediator(
+                utsendingRepository = utsendingRepository,
+                brevProdusent = mockk(),
+            ).also {
+                it.setRapidsConnection(rapid)
+                it.addObserver(testObserver)
+            }
+
+        val startUtsendHendelse =
+            StartUtsendingHendelse(
                 behandlingId = behandlingId,
-                brev = null,
-                ident = person.ident,
-                type = UtsendingType.VEDTAK_DAGPENGER,
+                utsendingSak = utsending.sak()!!,
+                ident = utsending.ident,
+                brev = "Dette er et testbrev",
             )
+        mediator.mottaStartUtsending(startUtsendHendelse)
+        testObserver.startUtsendingHendelser.single() shouldBe startUtsendHendelse
 
-            // Start utsending
-            utsendingMediator.mottaStartUtsending(
-                StartUtsendingHendelse(
-                    behandlingId = behandlingId,
-                    ident = person.ident,
-                    brev = htmlBrev,
-                    utsendingSak = utsendingSak,
-                ),
+        val arkiverbartBrevHendelse =
+            ArkiverbartBrevHendelse(
+                behandlingId = behandlingId,
+                pdfUrn = URN.rfc8141().parse("urn:hubba:bubba"),
             )
+        mediator.mottaUrnTilArkiverbartFormatAvBrev(
+            arkiverbartBrevHendelse,
+        )
+        testObserver.arkiverbartBrevHendelser.single() shouldBe arkiverbartBrevHendelse
 
-            testObserver.startUtsendingHendelser shouldHaveSize 1
-            testObserver.startUtsendingHendelser.first().behandlingId shouldBe behandlingId
-
-            // Arkiverbart brev
-            val pdfUrn = "urn:vedlegg:123".toUrn()
-            rapid.sendTestMessage(
-                arkiverbartDokumentBehovLøsning(
-                    behandlingId = behandlingId,
-                    pdfUrnString = pdfUrn.toString(),
-                ),
+        val journalførtHendelse =
+            JournalførtHendelse(
+                behandlingId = behandlingId,
+                journalpostId = "journalpost-123",
             )
+        mediator.mottaJournalførtKvittering(journalførtHendelse)
+        testObserver.journalførtHendelser.single() shouldBe journalførtHendelse
 
-            testObserver.arkiverbartBrevHendelser shouldHaveSize 1
-            testObserver.arkiverbartBrevHendelser.first().behandlingId shouldBe behandlingId
-
-            // Journalført
-            val journalpostId = "123"
-            rapid.sendTestMessage(
-                journalføringBehovLøsning(
-                    behandlingId = behandlingId,
-                    journalpostId = journalpostId,
-                ),
+        val distribuertHendelse =
+            DistribuertHendelse(
+                behandlingId = behandlingId,
+                distribusjonId = "distribusjon-456",
+                journalpostId = "journalpost-123",
             )
-
-            testObserver.journalførtHendelser shouldHaveSize 1
-            testObserver.journalførtHendelser.first().behandlingId shouldBe behandlingId
-
-            // Distribuert
-            rapid.sendTestMessage(
-                distribuertDokumentBehovLøsning(
-                    behandlingId = behandlingId,
-                    journalpostId = journalpostId,
-                    distribusjonId = "456",
-                ),
-            )
-
-            testObserver.distribuertHendelser shouldHaveSize 1
-            testObserver.distribuertHendelser.first().behandlingId shouldBe behandlingId
-        }
+        mediator.mottaDistribuertKvittering(distribuertHendelse)
+        testObserver.distribuertHendelser.single() shouldBe distribuertHendelse
     }
 
     private class TestUtsendingObserver : UtsendingHendelseObserver {
