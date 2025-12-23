@@ -63,7 +63,6 @@ import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
-import no.nav.dagpenger.saksbehandling.utsending.UtsendingDistribuertObserver
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
@@ -227,7 +226,6 @@ internal class ApplicationBuilder(
             }.also { rapidsConnection ->
                 sakMediator.setRapidsConnection(rapidsConnection)
                 utsendingMediator.setRapidsConnection(rapidsConnection)
-                utsendingMediator.addObserver(UtsendingDistribuertObserver(rapidsConnection))
                 oppgaveMediator.setRapidsConnection(rapidsConnection)
                 klageMediator.setRapidsConnection(rapidsConnection)
                 klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
