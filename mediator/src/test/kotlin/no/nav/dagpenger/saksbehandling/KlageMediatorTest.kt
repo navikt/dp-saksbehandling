@@ -56,7 +56,6 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTA
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
-import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
@@ -225,7 +224,7 @@ class KlageMediatorTest {
                 )
             }
 
-            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
             klageMediator.behandlingUtført(
                 hendelse =
@@ -324,8 +323,19 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en manuell klage som ferdigstilles med opprettholdelse`() {
-        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
-
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>(relaxed = true).also {
+                every { it.finnUtsendingForBehandlingId(vedtakIdKlagenGjelder) } returns
+                    Utsending(
+                        behandlingId = vedtakIdKlagenGjelder,
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdTilVedtakBrukerHarKlagdPå",
+                        brev = null,
+                    )
+            }
+        setupMediatorerOgSak(
+            utsendingMediator = utsendingMediatorMock,
+        ) { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettManuellKlage(
@@ -333,7 +343,7 @@ class KlageMediatorTest {
                             ident = testPersonIdent,
                             sakId = sakId,
                             opprettet = LocalDateTime.now(),
-                            journalpostId = "journalpostId",
+                            journalpostId = "journalpostIdBrukersKlage",
                             utførtAv = saksbehandler,
                         ),
                     ).behandling.behandlingId
@@ -360,7 +370,7 @@ class KlageMediatorTest {
                 )
             }
 
-            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
             klageMediator.behandlingUtført(
                 hendelse =
                     KlageBehandlingUtført(
@@ -369,54 +379,82 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-            val klageBehandling =
-                klageMediator.hentKlageBehandling(
+
+            klageMediator
+                .hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
-                )
-            klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-            klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
+                ).let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+                    klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
+                    verify(exactly = 1) {
+                        utsendingMediatorMock.opprettUtsending(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            brev = html,
+                            ident = testPersonIdent,
+                            type = UtsendingType.KLAGEMELDING,
+                        )
+                    }
+                    testRapid.inspektør.message(0).let {
+                        it["@event_name"].asText() shouldBe "klage_behandling_utført"
+                        it["behandlingId"].asUUID() shouldBe behandlingId
+                        it["sakId"].asUUID() shouldBe sakId
+                        it["ident"].asText() shouldBe testPersonIdent
+                        it["utfall"].asText() shouldBe "OPPRETTHOLDELSE"
+                        it["saksbehandler"].toString() shouldEqualJson
+                            """
+                            {
+                              "navIdent": "${saksbehandler.navIdent}",
+                              "grupper": [],
+                              "tilganger": [
+                                "SAKSBEHANDLER",
+                                "BESLUTTER"
+                              ]
+                            }
+                            """.trimIndent()
+                    }
+                }
 
-            OversendtKlageinstansMottak(
-                rapidsConnection = testRapid,
-                klageMediator = klageMediator,
+            klageMediator.vedtakDistribuert(
+                hendelse =
+                    UtsendingDistribuert(
+                        behandlingId = behandlingId,
+                        utsendingId = UUID.randomUUID(),
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdKlageVedtak",
+                        distribusjonId = "distId",
+                    ),
             )
 
-            val løsningPåBehovForOversendelseTilKA =
-                """
-                {
-                  "@event_name" : "behov",
-                  "@behov" : [ "OversendelseKlageinstans" ],
-                  "behandlingId" : "$behandlingId",
-                  "ident" : "${oppgave.personIdent()}",
-                  "fagsakId" : "$sakId",
-                  "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
-                  "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
-                  "@løsning": {
-                    "OversendelseKlageinstans": "OK"
-                  }
+            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).let { klageBehandling ->
+                klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
+                testRapid.inspektør.size shouldBe 2
+                testRapid.inspektør.message(1).let {
+                    it["@behov"].single().asText() shouldBe "OversendelseKlageinstans"
+                    it["ident"].asText() shouldBe testPersonIdent
+                    it["fagsakId"].asText() shouldBe sakId.toString()
+                    it["behandlendeEnhet"].asText() shouldBe klageBehandling.behandlendeEnhet()
+                    it["hjemler"].map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
+                    it["tilknyttedeJournalposter"].map { jp -> jp["journalpostId"].asText() } shouldBe
+                        listOf(
+                            "journalpostIdKlageVedtak",
+                            "journalpostIdBrukersKlage",
+                            "journalpostIdTilVedtakBrukerHarKlagdPå",
+                        )
                 }
-                """.trimIndent()
+            }
 
-            testRapid.sendTestMessage(
-                key = oppgave.personIdent(),
-                message = løsningPåBehovForOversendelseTilKA,
+            klageMediator.oversendtTilKlageinstans(
+                OversendtKlageinstansHendelse(behandlingId),
             )
 
             klageMediator
-                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand()
-                .type shouldBe FERDIGSTILT
-            oppgaveMediator
-                .hentOppgaveFor(
+                .hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
-                ).tilstand()
-                .type shouldBe FERDIG_BEHANDLET
-
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
-            testRapid.inspektør.message(1).behovNavn() shouldBe "OversendelseKlageinstans"
+                ).let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe FERDIGSTILT
+                }
         }
     }
 
@@ -478,7 +516,24 @@ class KlageMediatorTest {
             klageBehandling.utfall() shouldBe UtfallType.AVVIST
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].asText() shouldBe "klage_behandling_utført"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
+                it["ident"].asText() shouldBe testPersonIdent
+                it["utfall"].asText() shouldBe "AVVIST"
+                it["saksbehandler"].toString() shouldEqualJson
+                    """
+                    {
+                      "navIdent": "${saksbehandler.navIdent}",
+                      "grupper": [],
+                      "tilganger": [
+                        "SAKSBEHANDLER",
+                        "BESLUTTER"
+                      ]
+                    }
+                    """.trimIndent()
+            }
         }
     }
 
@@ -776,6 +831,7 @@ class KlageMediatorTest {
     private fun KlageMediator.registrerUtfallOpprettholdelseOpplysninger(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
+        opprinneligVedtakId: UUID = UUID.randomUUID(),
     ) {
         fun oppdaterOpplysning(
             opplysningId: UUID,
@@ -786,6 +842,18 @@ class KlageMediatorTest {
             verdi = svar,
             saksbehandler = saksbehandler,
         )
+        oppdaterOpplysning(
+            opplysningId =
+                this
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    ).synligeOpplysninger()
+                    .single { it.type == KLAGEN_GJELDER_VEDTAK }
+                    .opplysningId,
+            svar = Verdi.TekstVerdi(opprinneligVedtakId.toString()),
+        )
+
         oppdaterOpplysning(
             opplysningId =
                 this
