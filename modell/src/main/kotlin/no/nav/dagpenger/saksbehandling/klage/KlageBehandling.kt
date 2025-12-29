@@ -140,7 +140,8 @@ data class KlageBehandling private constructor(
                     }
                 }
         }.onFailure { e -> logger.error(e) { "Feil ved henting av personident for klagebehandling: ${this.behandlingId}" } }
-            .getOrThrow()!!
+            .getOrThrow()
+            ?: throw IllegalStateException("Fant ikke personident for klagebehandling ${this.behandlingId}")
 
     fun svar(
         opplysningId: UUID,
@@ -316,6 +317,7 @@ data class KlageBehandling private constructor(
                         finnJournalpostIdForBehandling = finnJournalpostIdForBehandling,
                     )
                 }
+
                 else -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = Ferdigstilt,

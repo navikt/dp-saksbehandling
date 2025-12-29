@@ -4,11 +4,14 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
+import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Behandles
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -190,7 +193,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Opprettholdt klagebehandling får tilstand oversend KA når alle synlige og påkrevde opplysninger er utfylt`() {
+    fun `Opprettholdt klagebehandling får behandling utført og kan sendes til KA  når alle synlige og påkrevde opplysninger er utfylt`() {
         val synligOgPåkrevdOpplysning =
             Opplysning(
                 type = OpplysningType.KLAGEFRIST_OPPFYLT,
@@ -216,9 +219,10 @@ class KlageBehandlingTest {
                 verdi = Verdi.TomVerdi,
                 synlig = true,
             )
+        val behandlingId = UUIDv7.ny()
         val klageBehandling =
             KlageBehandling.rehydrer(
-                behandlingId = UUIDv7.ny(),
+                behandlingId = behandlingId,
                 opplysninger =
                     setOf(
                         synligOgPåkrevdOpplysning,
@@ -230,6 +234,19 @@ class KlageBehandlingTest {
                 journalpostId = null,
                 behandlendeEnhet = null,
                 opprettet = LocalDateTime.now(),
+                tilstandslogg =
+                    KlageTilstandslogg().also {
+                        it.leggTil(
+                            BEHANDLES,
+                            hendelse =
+                                KlageMottattHendelse(
+                                    ident = "fnr",
+                                    journalpostId = "jpid",
+                                    sakId = UUID.randomUUID(),
+                                    opprettet = LocalDateTime.now(),
+                                ),
+                        )
+                    },
             )
         klageBehandling.tilstand().type shouldBe BEHANDLES
 
@@ -255,6 +272,23 @@ class KlageBehandlingTest {
             )
         }
         klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+
+        val hendelse =
+            UtsendingDistribuert(
+                behandlingId = klageBehandling.behandlingId,
+                utsendingId = UUID.randomUUID(),
+                ident = "fnr",
+                journalpostId = "journalpostId",
+                distribusjonId = "distribusjonId",
+            )
+        val aksjon =
+            klageBehandling.vedtakDistribuert(
+                hendelse = hendelse,
+                fagsakId = "fagsakId",
+                finnJournalpostIdForBehandling = { "" },
+            )
+
+        aksjon.shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
     }
 
     @Test
