@@ -245,7 +245,12 @@ data class KlageBehandling private constructor(
                     throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
                 }
 
-                UtfallType.AVVIST -> TODO()
+                UtfallType.AVVIST -> {
+                    klageBehandling.endreTilstand(
+                        nyTilstand = Ferdigstilt,
+                        hendelse = hendelse,
+                    )
+                }
             }
 
 //            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
