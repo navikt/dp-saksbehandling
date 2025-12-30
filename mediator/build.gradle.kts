@@ -22,6 +22,8 @@ dependencies {
     implementation(project(":openapi"))
     implementation(project(":streams-consumer"))
 
+    testImplementation(testFixtures(project(":modell")))
+
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
     implementation("io.prometheus:prometheus-metrics-core:1.4.3")
