@@ -22,6 +22,8 @@ dependencies {
     implementation(project(":openapi"))
     implementation(project(":streams-consumer"))
 
+    testImplementation(testFixtures(project(":modell")))
+
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
     implementation("io.prometheus:prometheus-metrics-core:1.4.3")
@@ -40,7 +42,7 @@ dependencies {
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.3")
 
     implementation("io.opentelemetry:opentelemetry-api:1.57.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.22.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.23.0")
 
     api("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
