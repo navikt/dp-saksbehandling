@@ -90,15 +90,14 @@ class KlageMediator(
                 utførtAv = klageMottattHendelse.utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
-        return kotlin
-            .runCatching {
-                oppgaveMediator.opprettOppgaveForKlageBehandling(
-                    behandlingOpprettetHendelse = behandlingOpprettetHendelse,
-                )
-            }.onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
-                throw e
-            }.getOrThrow()
+        return runCatching {
+            oppgaveMediator.opprettOppgaveForKlageBehandling(
+                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+            )
+        }.onFailure { e ->
+            logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+            throw e
+        }.getOrThrow()
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
@@ -135,24 +134,23 @@ class KlageMediator(
             utførtAv.navIdent,
         )
 
-        return kotlin
-            .runCatching {
-                oppgaveMediator
-                    .opprettOppgaveForKlageBehandling(
-                        behandlingOpprettetHendelse = behandlingOpprettetHendelse,
-                    ).also { oppgave ->
-                        oppgaveMediator.tildelOppgave(
-                            SettOppgaveAnsvarHendelse(
-                                oppgaveId = oppgave.oppgaveId,
-                                ansvarligIdent = utførtAv.navIdent,
-                                utførtAv = utførtAv,
-                            ),
-                        )
-                    }
-            }.onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
-                throw e
-            }.getOrThrow()
+        return runCatching {
+            oppgaveMediator
+                .opprettOppgaveForKlageBehandling(
+                    behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+                ).also { oppgave ->
+                    oppgaveMediator.tildelOppgave(
+                        SettOppgaveAnsvarHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            ansvarligIdent = utførtAv.navIdent,
+                            utførtAv = utførtAv,
+                        ),
+                    )
+                }
+        }.onFailure { e ->
+            logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+            throw e
+        }.getOrThrow()
     }
 
     fun oppdaterKlageOpplysning(
@@ -279,15 +277,17 @@ class KlageMediator(
     // Her kommer en kafka hendelse når utsending er distribuert
     fun vedtakDistribuert(hendelse: UtsendingDistribuert) {
         val klageBehandling = klageRepository.hentKlageBehandling(behandlingId = hendelse.behandlingId)
-        val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId).toString()
+        val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
+        val finnJournalpostIdForBehandling: (UUID?) -> String? = { behandlingId ->
+            when (behandlingId == null) {
+                true -> null
+                false -> utsendingMediator.finnUtsendingForBehandlingId(behandlingId)?.journalpostId()
+            }
+        }
 
         val aksjon =
             klageBehandling.vedtakDistribuert(
                 hendelse = hendelse,
-                fagsakId = sakId,
-                finnJournalpostIdForBehandling = { behandlingId ->
-                    utsendingMediator.finnUtsendingForBehandlingId(behandlingId)?.journalpostId()
-                },
             )
         klageRepository.lagre(klageBehandling)
 
@@ -296,11 +296,12 @@ class KlageMediator(
                 rapidsConnection.publish(
                     key = hendelse.ident,
                     message =
-                        JsonMessage
-                            .newNeed(
-                                behov = setOf(KlageAksjon.OversendKlageinstans.BEHOV_NAVN),
-                                aksjon.behovData(),
-                            ).toJson(),
+                        KlageInstansBehovBygger(
+                            klageBehandling = klageBehandling,
+                            sakId = sakId,
+                            hendelse = hendelse,
+                            finnJournalpostIdForBehandling = finnJournalpostIdForBehandling,
+                        ).behov,
                 )
             }
 

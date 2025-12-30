@@ -279,8 +279,6 @@ class KlageBehandlingTest {
         val aksjon =
             klageBehandling.vedtakDistribuert(
                 hendelse = hendelse,
-                fagsakId = "fagsakId",
-                finnJournalpostIdForBehandling = { "" },
             )
 
         aksjon.shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
@@ -316,7 +314,7 @@ class KlageBehandlingTest {
             )
 
         klageBehandling
-            .vedtakDistribuert(hendelse, fagsakId = "fagsakId", finnJournalpostIdForBehandling = { "" })
+            .vedtakDistribuert(hendelse)
             .shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
     }
 

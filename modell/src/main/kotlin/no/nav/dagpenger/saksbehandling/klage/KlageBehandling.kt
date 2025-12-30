@@ -94,6 +94,12 @@ data class KlageBehandling private constructor(
 
     fun behandlendeEnhet(): String? = behandlendeEnhet
 
+    fun kommentarTilKlageInstans(): String? =
+        opplysninger
+            .singleOrNull { it.type == OpplysningType.INTERN_MELDING }
+            ?.verdi()
+            ?.let { (it as? Verdi.TekstVerdi)?.value }
+
     fun utfall(): UtfallType? =
         opplysninger
             .singleOrNull { it.type == UTFALL }
@@ -207,16 +213,10 @@ data class KlageBehandling private constructor(
         )
     }
 
-    fun vedtakDistribuert(
-        hendelse: UtsendingDistribuert,
-        fagsakId: String,
-        finnJournalpostIdForBehandling: (UUID) -> String?,
-    ): KlageAksjon =
+    fun vedtakDistribuert(hendelse: UtsendingDistribuert): KlageAksjon =
         tilstand.vedtakDistribuert(
             klageBehandling = this,
             hendelse = hendelse,
-            fagsakId = fagsakId,
-            finnJournalpostIdForBehandling = finnJournalpostIdForBehandling,
         )
 
     object Behandles : KlageTilstand {
@@ -301,8 +301,6 @@ data class KlageBehandling private constructor(
         override fun vedtakDistribuert(
             klageBehandling: KlageBehandling,
             hendelse: UtsendingDistribuert,
-            fagsakId: String,
-            finnJournalpostIdForBehandling: (UUID) -> String?,
         ): KlageAksjon {
             val utfall =
                 requireNotNull<UtfallType>(klageBehandling.utfall()) {
@@ -314,12 +312,7 @@ data class KlageBehandling private constructor(
                         nyTilstand = OversendKlageinstans,
                         hendelse = hendelse,
                     )
-                    byggOversendKlageinstansAksjon(
-                        klageBehandling = klageBehandling,
-                        klageVedtakJournalpostId = hendelse.journalpostId,
-                        fagsakId = fagsakId,
-                        finnJournalpostIdForBehandling = finnJournalpostIdForBehandling,
-                    )
+                    KlageAksjon.OversendKlageinstans(klageBehandling)
                 }
 
                 UtfallType.MEDHOLD -> TODO("Not implemented yet for MEDHOLD")
@@ -332,74 +325,6 @@ data class KlageBehandling private constructor(
                     KlageAksjon.IngenAksjon(klageBehandling.behandlingId)
                 }
             }
-        }
-
-        private fun byggOversendKlageinstansAksjon(
-            klageBehandling: KlageBehandling,
-            klageVedtakJournalpostId: String,
-            fagsakId: String,
-            finnJournalpostIdForBehandling: (UUID) -> String?,
-        ): KlageAksjon.OversendKlageinstans {
-            val journalposter =
-                buildList {
-                    add(
-                        KlageAksjon.JournalpostTilKA(
-                            type = "KLAGE_VEDTAK",
-                            journalpostId = klageVedtakJournalpostId,
-                        ),
-                    )
-
-                    klageBehandling.journalpostId()?.let {
-                        add(
-                            KlageAksjon.JournalpostTilKA(
-                                type = "BRUKERS_KLAGE",
-                                journalpostId = it,
-                            ),
-                        )
-                    }
-
-                    klageBehandling
-                        .hentVedtakIdBrukerKlagerPå()
-                        ?.let { behandlingId ->
-                            finnJournalpostIdForBehandling(behandlingId)
-                        }?.let { journalpostId ->
-                            add(
-                                KlageAksjon.JournalpostTilKA(
-                                    type = "OPPRINNELIG_VEDTAK",
-                                    journalpostId = journalpostId,
-                                ),
-                            )
-                        }
-                }
-
-            val fullmektigData = mutableMapOf<OpplysningType, String>()
-            klageBehandling
-                .synligeOpplysninger()
-                .filter {
-                    OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper.contains(it.type) &&
-                        it.verdi() != Verdi.TomVerdi
-                }.forEach { opplysning ->
-                    val verdi = (opplysning.verdi() as Verdi.TekstVerdi).value
-                    fullmektigData[opplysning.type] = verdi
-                }
-
-            val kommentar =
-                klageBehandling
-                    .synligeOpplysninger()
-                    .singleOrNull { it.type == OpplysningType.INTERN_MELDING && it.verdi() != Verdi.TomVerdi }
-                    ?.let { (it.verdi() as Verdi.TekstVerdi).value }
-
-            return KlageAksjon.OversendKlageinstans(
-                behandlingId = klageBehandling.behandlingId,
-                ident = klageBehandling.personIdent(),
-                fagsakId = fagsakId,
-                behandlendeEnhet = klageBehandling.behandlendeEnhet() ?: "4449",
-                hjemler = klageBehandling.hjemler(),
-                opprettet = klageBehandling.opprettet,
-                tilknyttedeJournalposter = journalposter,
-                fullmektigData = fullmektigData,
-                kommentar = kommentar,
-            )
         }
 
         override fun toString(): String = "BehandlingUtført(type=$type)"
@@ -434,8 +359,6 @@ data class KlageBehandling private constructor(
         fun vedtakDistribuert(
             klageBehandling: KlageBehandling,
             hendelse: UtsendingDistribuert,
-            fagsakId: String,
-            finnJournalpostIdForBehandling: (UUID) -> String?,
         ): KlageAksjon = throw IllegalStateException("Kan ikke motta hendelse om distribuert vedtak i tilstand $type")
 
         enum class Type {
