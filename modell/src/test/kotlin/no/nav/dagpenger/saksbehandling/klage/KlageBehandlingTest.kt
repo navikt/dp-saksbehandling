@@ -29,6 +29,8 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandling
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandlingMedUtfall
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -86,7 +88,7 @@ class KlageBehandlingTest {
         val klageBehandling = KlageBehandling()
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
-                opplysning.synlighet()
+                    opplysning.synlighet()
         } shouldBe emptySet()
 
         // Besvarer alle opplysninger som er synlige, unntatt formkrav
@@ -94,8 +96,8 @@ class KlageBehandlingTest {
             .synligeOpplysninger()
             .filter { opplysning ->
                 opplysning.type in klagenGjelderOpplysningTyper +
-                    fristvurderingOpplysningTyper +
-                    oversittetFristOpplysningTyper
+                        fristvurderingOpplysningTyper +
+                        oversittetFristOpplysningTyper
             }.forEach {
                 when (it.type.datatype) {
                     Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
@@ -107,7 +109,7 @@ class KlageBehandlingTest {
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
-                opplysning.synlighet()
+                    opplysning.synlighet()
         } shouldBe emptySet()
 
         // Besvarer formkrav
@@ -121,7 +123,7 @@ class KlageBehandlingTest {
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
-                opplysning.synlighet()
+                    opplysning.synlighet()
         } shouldNotBe emptySet<Opplysning>()
     }
 
@@ -303,7 +305,6 @@ class KlageBehandlingTest {
     @Test
     fun `vedtak distribuert hendelse for en klagebehandling som opprettholdes`() {
         val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.OPPRETTHOLDELSE)
-
         val hendelse =
             UtsendingDistribuert(
                 behandlingId = klageBehandling.behandlingId,
@@ -315,7 +316,45 @@ class KlageBehandlingTest {
 
         klageBehandling
             .vedtakDistribuert(hendelse)
-            .shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
+            .let {
+                it.shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
+                it.klageBehandling shouldBe klageBehandling
+            }
+    }
+
+    @Test
+    fun `vedtak distribuert hendelse for en klagebehandling som avbrytes`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.AVVIST)
+        val hendelse =
+            UtsendingDistribuert(
+                behandlingId = klageBehandling.behandlingId,
+                utsendingId = UUID.randomUUID(),
+                ident = "fnr",
+                journalpostId = "journalpostId",
+                distribusjonId = "distribusjonId",
+            )
+
+        klageBehandling
+            .vedtakDistribuert(hendelse)
+            .shouldBeInstanceOf<KlageAksjon.IngenAksjon>()
+    }
+
+    @ParameterizedTest
+    @CsvSource("MEDHOLD,DELVIS_MEDHOLDE", delimiter = ',')
+    fun `vedtak distribuert hendelse for en klagebehandling med MEDHOLD eller DELVIS_MEDHOLD er ikke implementert`(
+        utfallType: String,
+    ) {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.valueOf(utfallType))
+        val hendelse =
+            UtsendingDistribuert(
+                behandlingId = klageBehandling.behandlingId,
+                utsendingId = UUID.randomUUID(),
+                ident = "fnr",
+                journalpostId = "journalpostId",
+                distribusjonId = "distribusjonId",
+            )
+
+        shouldThrow<NotImplementedError> { klageBehandling.vedtakDistribuert(hendelse) }
     }
 
     @Test
