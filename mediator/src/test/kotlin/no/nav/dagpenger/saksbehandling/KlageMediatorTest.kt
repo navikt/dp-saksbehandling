@@ -296,6 +296,13 @@ class KlageMediatorTest {
                                 "journalpostIdBrukersKlage",
                                 "journalpostIdTilVedtakBrukerHarKlagdPå",
                             )
+                        it["prosessFullmektigNavn"].asText() shouldBe "Djevelens Advokat"
+                        it["prosessFullmektigAdresselinje1"].asText() shouldBe "Sydenveien 1"
+                        it["prosessFullmektigAdresselinje2"].asText() shouldBe "Poste restante"
+                        it["prosessFullmektigAdresselinje3"].asText() shouldBe "Teisen postkontor"
+                        it["prosessFullmektigPostnummer"].asText() shouldBe "0666"
+                        it["prosessFullmektigPoststed"].asText() shouldBe "Oslo"
+                        it["prosessFullmektigLand"].asText() shouldBe "Norge"
                     }
                 }
             verify(exactly = 1) {
@@ -441,6 +448,13 @@ class KlageMediatorTest {
                             "journalpostIdBrukersKlage",
                             "journalpostIdTilVedtakBrukerHarKlagdPå",
                         )
+                    it["prosessFullmektigNavn"].asText() shouldBe "Djevelens Advokat"
+                    it["prosessFullmektigAdresselinje1"].asText() shouldBe "Sydenveien 1"
+                    it["prosessFullmektigAdresselinje2"].asText() shouldBe "Poste restante"
+                    it["prosessFullmektigAdresselinje3"].asText() shouldBe "Teisen postkontor"
+                    it["prosessFullmektigPostnummer"].asText() shouldBe "0666"
+                    it["prosessFullmektigPoststed"].asText() shouldBe "Oslo"
+                    it["prosessFullmektigLand"].asText() shouldBe "Norge"
                 }
             }
 

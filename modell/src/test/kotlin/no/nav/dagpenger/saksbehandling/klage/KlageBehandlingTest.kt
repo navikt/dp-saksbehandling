@@ -88,7 +88,7 @@ class KlageBehandlingTest {
         val klageBehandling = KlageBehandling()
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
-                    opplysning.synlighet()
+                opplysning.synlighet()
         } shouldBe emptySet()
 
         // Besvarer alle opplysninger som er synlige, unntatt formkrav
@@ -96,8 +96,8 @@ class KlageBehandlingTest {
             .synligeOpplysninger()
             .filter { opplysning ->
                 opplysning.type in klagenGjelderOpplysningTyper +
-                        fristvurderingOpplysningTyper +
-                        oversittetFristOpplysningTyper
+                    fristvurderingOpplysningTyper +
+                    oversittetFristOpplysningTyper
             }.forEach {
                 when (it.type.datatype) {
                     Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
@@ -109,7 +109,7 @@ class KlageBehandlingTest {
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
-                    opplysning.synlighet()
+                opplysning.synlighet()
         } shouldBe emptySet()
 
         // Besvarer formkrav
@@ -123,7 +123,7 @@ class KlageBehandlingTest {
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
-                    opplysning.synlighet()
+                opplysning.synlighet()
         } shouldNotBe emptySet<Opplysning>()
     }
 
@@ -341,9 +341,7 @@ class KlageBehandlingTest {
 
     @ParameterizedTest
     @CsvSource("MEDHOLD,DELVIS_MEDHOLDE", delimiter = ',')
-    fun `vedtak distribuert hendelse for en klagebehandling med MEDHOLD eller DELVIS_MEDHOLD er ikke implementert`(
-        utfallType: String,
-    ) {
+    fun `vedtak distribuert hendelse for en klagebehandling med MEDHOLD eller DELVIS_MEDHOLD er ikke implementert`(utfallType: String) {
         val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.valueOf(utfallType))
         val hendelse =
             UtsendingDistribuert(
