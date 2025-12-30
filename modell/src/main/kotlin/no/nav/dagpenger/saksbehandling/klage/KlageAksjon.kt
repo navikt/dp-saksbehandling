@@ -1,7 +1,10 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 sealed class KlageAksjon {
     abstract val behandlingId: UUID
@@ -18,7 +21,7 @@ sealed class KlageAksjon {
         val hjemler: List<String>,
         val opprettet: LocalDateTime,
         val tilknyttedeJournalposter: List<JournalpostTilKA>,
-        val fullmektigData: Map<String, String> = emptyMap(),
+        val fullmektigData: Map<OpplysningType, String> = emptyMap(),
         val kommentar: String? = null,
     ) : KlageAksjon() {
         companion object {
@@ -41,8 +44,19 @@ sealed class KlageAksjon {
                         )
                     },
             ).also { data ->
-                fullmektigData.forEach { (key, value) ->
-                    data[key] = value
+                fullmektigData.forEach { (opplysningType, verdi) ->
+                    when (opplysningType) {
+                        OpplysningType.FULLMEKTIG_NAVN -> data["prosessfullmektigNavn"] = verdi
+                        OpplysningType.FULLMEKTIG_ADRESSE_1 -> data["prosessfullmektigAdresselinje1"] = verdi
+                        OpplysningType.FULLMEKTIG_ADRESSE_2 -> data["prosessfullmektigAdresselinje2"] = verdi
+                        OpplysningType.FULLMEKTIG_ADRESSE_3 -> data["prosessfullmektigAdresselinje3"] = verdi
+                        OpplysningType.FULLMEKTIG_POSTNR -> data["prosessfullmektigPostnummer"] = verdi
+                        OpplysningType.FULLMEKTIG_POSTSTED -> data["prosessfullmektigPoststed"] = verdi
+                        OpplysningType.FULLMEKTIG_LAND -> data["prosessfullmektigLand"] = verdi
+                        else -> {
+                            logger.warn { "OpplysningType $opplysningType støttes ikke når fullmektig data skal sendes til KA" }
+                        }
+                    }
                 }
                 kommentar?.let {
                     data["kommentar"] = it

@@ -96,9 +96,9 @@ data class KlageBehandling private constructor(
 
     fun utfall(): UtfallType? =
         opplysninger
-            .single { it.type == UTFALL }
-            .verdi()
-            .toUtfallType()
+            .singleOrNull { it.type == UTFALL }
+            ?.verdi()
+            ?.toUtfallType()
 
     fun hjemler(): List<String> {
         val verdi =
@@ -303,8 +303,12 @@ data class KlageBehandling private constructor(
             hendelse: UtsendingDistribuert,
             fagsakId: String,
             finnJournalpostIdForBehandling: (UUID) -> String?,
-        ): KlageAksjon =
-            when (klageBehandling.utfall()) {
+        ): KlageAksjon {
+            val utfall =
+                requireNotNull<UtfallType>(klageBehandling.utfall()) {
+                    "Utfall må være satt for å behandle distribuert vedtak"
+                }
+            return when (utfall) {
                 UtfallType.OPPRETTHOLDELSE -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = OversendKlageinstans,
@@ -318,7 +322,9 @@ data class KlageBehandling private constructor(
                     )
                 }
 
-                else -> {
+                UtfallType.MEDHOLD -> TODO("Not implemented yet for MEDHOLD")
+                UtfallType.DELVIS_MEDHOLD -> TODO("Not implemented yet for DELVIS_MEDHOLD")
+                UtfallType.AVVIST -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = Ferdigstilt,
                         hendelse = hendelse,
@@ -326,6 +332,7 @@ data class KlageBehandling private constructor(
                     KlageAksjon.IngenAksjon(klageBehandling.behandlingId)
                 }
             }
+        }
 
         private fun byggOversendKlageinstansAksjon(
             klageBehandling: KlageBehandling,
@@ -365,7 +372,7 @@ data class KlageBehandling private constructor(
                         }
                 }
 
-            val fullmektigData = mutableMapOf<String, String>()
+            val fullmektigData = mutableMapOf<OpplysningType, String>()
             klageBehandling
                 .synligeOpplysninger()
                 .filter {
@@ -373,16 +380,7 @@ data class KlageBehandling private constructor(
                         it.verdi() != Verdi.TomVerdi
                 }.forEach { opplysning ->
                     val verdi = (opplysning.verdi() as Verdi.TekstVerdi).value
-                    when (opplysning.type) {
-                        OpplysningType.FULLMEKTIG_NAVN -> fullmektigData["prosessfullmektigNavn"] = verdi
-                        OpplysningType.FULLMEKTIG_ADRESSE_1 -> fullmektigData["prosessfullmektigAdresselinje1"] = verdi
-                        OpplysningType.FULLMEKTIG_ADRESSE_2 -> fullmektigData["prosessfullmektigAdresselinje2"] = verdi
-                        OpplysningType.FULLMEKTIG_ADRESSE_3 -> fullmektigData["prosessfullmektigAdresselinje3"] = verdi
-                        OpplysningType.FULLMEKTIG_POSTNR -> fullmektigData["prosessfullmektigPostnummer"] = verdi
-                        OpplysningType.FULLMEKTIG_POSTSTED -> fullmektigData["prosessfullmektigPoststed"] = verdi
-                        OpplysningType.FULLMEKTIG_LAND -> fullmektigData["prosessfullmektigLand"] = verdi
-                        else -> {}
-                    }
+                    fullmektigData[opplysning.type] = verdi
                 }
 
             val kommentar =
@@ -403,6 +401,8 @@ data class KlageBehandling private constructor(
                 kommentar = kommentar,
             )
         }
+
+        override fun toString(): String = "BehandlingUtført(type=$type)"
     }
 
     object Ferdigstilt : KlageTilstand {

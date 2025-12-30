@@ -26,6 +26,8 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.Boolsk
 import no.nav.dagpenger.saksbehandling.klage.Verdi.Dato
 import no.nav.dagpenger.saksbehandling.klage.Verdi.Flervalg
 import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
+import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandling
+import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandlingMedUtfall
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -151,8 +153,7 @@ class KlageBehandlingTest {
                 synlig = true,
             )
         val klageBehandling =
-            KlageBehandling.rehydrer(
-                behandlingId = UUIDv7.ny(),
+            lagKlageBehandling(
                 opplysninger =
                     setOf(
                         synligOgPåkrevdOpplysning,
@@ -161,9 +162,6 @@ class KlageBehandlingTest {
                         utfallOpplysning,
                     ),
                 tilstand = Behandles,
-                journalpostId = null,
-                behandlendeEnhet = null,
-                opprettet = LocalDateTime.now(),
             )
 
         klageBehandling.tilstand().type shouldBe BEHANDLES
@@ -221,7 +219,7 @@ class KlageBehandlingTest {
             )
         val behandlingId = UUIDv7.ny()
         val klageBehandling =
-            KlageBehandling.rehydrer(
+            lagKlageBehandling(
                 behandlingId = behandlingId,
                 opplysninger =
                     setOf(
@@ -231,9 +229,6 @@ class KlageBehandlingTest {
                         utfallOpplysning,
                     ),
                 tilstand = Behandles,
-                journalpostId = null,
-                behandlendeEnhet = null,
-                opprettet = LocalDateTime.now(),
                 tilstandslogg =
                     KlageTilstandslogg().also {
                         it.leggTil(
@@ -305,6 +300,24 @@ class KlageBehandlingTest {
         )
 
         klageBehandling.tilstand().type shouldBe AVBRUTT
+    }
+
+    @Test
+    fun `vedtak distribuert hendelse for en klagebehandling som opprettholdes`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.OPPRETTHOLDELSE)
+
+        val hendelse =
+            UtsendingDistribuert(
+                behandlingId = klageBehandling.behandlingId,
+                utsendingId = UUID.randomUUID(),
+                ident = "fnr",
+                journalpostId = "journalpostId",
+                distribusjonId = "distribusjonId",
+            )
+
+        klageBehandling
+            .vedtakDistribuert(hendelse, fagsakId = "fagsakId", finnJournalpostIdForBehandling = { "" })
+            .shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
     }
 
     @Test
