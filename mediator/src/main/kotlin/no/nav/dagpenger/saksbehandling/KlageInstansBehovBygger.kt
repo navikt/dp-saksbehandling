@@ -40,7 +40,7 @@ class KlageInstansBehovBygger(
                     "behandlingId" to klageBehandling.behandlingId.toString(),
                     "ident" to klageBehandling.personIdent(),
                     "fagsakId" to sakId.toString(),
-                    "behandlendeEnhet" to (klageBehandling.behandlendeEnhet() ?: "4409"),
+                    "behandlendeEnhet" to (klageBehandling.behandlendeEnhet() ?: "4449"),
                     "hjemler" to klageBehandling.hjemler(),
                     "opprettet" to klageBehandling.opprettet,
                 ) +
@@ -106,7 +106,7 @@ class KlageInstansBehovBygger(
                     finnJournalpostIdForBehandling(klageBehandling.hentVedtakIdBrukerKlagerPå())?.let {
                         add(
                             mapOf(
-                                "type" to "ORIGINAL_SAKSBEHANDLING",
+                                "type" to "OPPRINNELIG_VEDTAK",
                                 "journalpostId" to it,
                             ),
                         )

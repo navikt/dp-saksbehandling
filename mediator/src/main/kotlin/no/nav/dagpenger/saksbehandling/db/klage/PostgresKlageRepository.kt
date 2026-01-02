@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
@@ -159,7 +160,7 @@ class PostgresKlageRepository(
                         OVERSEND_KLAGEINSTANS -> KlageBehandling.OversendKlageinstans
                         FERDIGSTILT -> KlageBehandling.Ferdigstilt
                         AVBRUTT -> KlageBehandling.Avbrutt
-                        KlageTilstand.Type.BEHANDLING_UTFORT -> KlageBehandling.BehandlingUtført
+                        BEHANDLING_UTFORT -> KlageBehandling.BehandlingUtført
                     }
                 }.getOrElse { t ->
                     throw UgyldigTilstandException("Kunne ikke rehydrere klagebehandling til tilstand: ${string("tilstand")} ${t.message}")

@@ -1,9 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.assertions.json.shouldContainJsonKey
-import io.kotest.assertions.json.shouldEqualJson
-import io.kotest.matchers.shouldBe
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
+import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
+import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers
@@ -42,16 +43,24 @@ class KlageInstansBehovByggerTest {
 
         val behov = bygger.behov
 
-        behov shouldContainJsonKey "@behov"
-        behov shouldEqualJson """
+        behov shouldEqualSpecifiedJsonIgnoringOrder """
             {
-              "@behov": ["OversendelseKlageinstans"],
-              "behandlingId": "${klageBehandling.behandlingId}",
-              "ident": "${TestHelpers.Person.personIdent}",
-              "sakId": "$sakId",
-              "behandlendeEnhet": "4450",
-              "journalpostId": "vedtakJournalpostId",
-              "tilknyttedeJournalposter": ["klageJournalpostId"]
+                "@event_name": "behov",
+                "@behov": ["OversendelseKlageinstans"],
+                "behandlingId": "${klageBehandling.behandlingId}",
+                "ident": "${TestHelpers.Person.personIdent}",
+                "fagsakId": "$sakId",
+                "behandlendeEnhet": "4450",
+                "tilknyttedeJournalposter": [
+                    {
+                        "type": "KLAGE_VEDTAK",
+                        "journalpostId": "vedtakJournalpostId"
+                    },
+                    {
+                        "type": "BRUKERS_KLAGE",
+                        "journalpostId": "klageJournalpostId"
+                    }
+                ]
             }
         """
     }
@@ -81,15 +90,28 @@ class KlageInstansBehovByggerTest {
             )
 
         val behov = bygger.behov
-        behov shouldEqualJson """
+        behov shouldEqualSpecifiedJsonIgnoringOrder """
             {
-              "@behov": ["OversendelseKlageinstans"],
-              "behandlingId": "${klageBehandling.behandlingId}",
-              "ident": "${TestHelpers.Person.personIdent}",
-              "sakId": "$sakId",
-              "behandlendeEnhet": "4409",
-              "journalpostId": "vedtakJournalpostId",
-              "tilknyttedeJournalposter": ["vedtakJournalpostId", "klageJournalpostId", "$journalpostIdForOpprinneligVedtak"]
+                "@event_name": "behov",
+                "@behov": ["OversendelseKlageinstans"],
+                "behandlingId": "${klageBehandling.behandlingId}",
+                "ident": "${TestHelpers.Person.personIdent}",
+                "fagsakId": "$sakId",
+                "behandlendeEnhet": "4449",
+                "tilknyttedeJournalposter": [
+                    {
+                        "type": "KLAGE_VEDTAK",
+                        "journalpostId": "vedtakJournalpostId"
+                    },
+                    {
+                        "type": "BRUKERS_KLAGE",
+                        "journalpostId": "klageJournalpostId"
+                    },
+                    {
+                        "type": "OPPRINNELIG_VEDTAK",
+                        "journalpostId": "$journalpostIdForOpprinneligVedtak"
+                    }
+                ]
             }
         """
     }
@@ -100,21 +122,37 @@ class KlageInstansBehovByggerTest {
             TestHelpers.Klage.lagKlageBehandling(
                 opplysninger =
                     setOf(
-                        no.nav.dagpenger.saksbehandling.klage.Opplysning(
+                        Opplysning(
+                            type = OpplysningType.HVEM_KLAGER,
+                            verdi = Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.name),
+                        ),
+                        Opplysning(
                             type = OpplysningType.FULLMEKTIG_NAVN,
                             verdi = Verdi.TekstVerdi("Advokat Hansen"),
                         ),
-                        no.nav.dagpenger.saksbehandling.klage.Opplysning(
+                        Opplysning(
                             type = OpplysningType.FULLMEKTIG_ADRESSE_1,
                             verdi = Verdi.TekstVerdi("Advokateveien 1"),
                         ),
-                        no.nav.dagpenger.saksbehandling.klage.Opplysning(
+                        Opplysning(
+                            type = OpplysningType.FULLMEKTIG_ADRESSE_2,
+                            verdi = Verdi.TekstVerdi("Etasje 2"),
+                        ),
+                        Opplysning(
+                            type = OpplysningType.FULLMEKTIG_ADRESSE_3,
+                            verdi = Verdi.TekstVerdi("Inngang 3"),
+                        ),
+                        Opplysning(
                             type = OpplysningType.FULLMEKTIG_POSTNR,
                             verdi = Verdi.TekstVerdi("0123"),
                         ),
-                        no.nav.dagpenger.saksbehandling.klage.Opplysning(
+                        Opplysning(
                             type = OpplysningType.FULLMEKTIG_POSTSTED,
                             verdi = Verdi.TekstVerdi("Oslo"),
+                        ),
+                        Opplysning(
+                            type = OpplysningType.FULLMEKTIG_LAND,
+                            verdi = Verdi.TekstVerdi("NO"),
                         ),
                     ),
             )
@@ -137,27 +175,32 @@ class KlageInstansBehovByggerTest {
             )
 
         val behov = bygger.behov
-        behov shouldEqualJson """
+        behov shouldEqualSpecifiedJsonIgnoringOrder """
             {
-              "@behov": ["OversendelseKlageinstans"],
-              "behandlingId": "${klageBehandling.behandlingId}",
-              "ident": "${TestHelpers.Person.personIdent}",
-              "sakId": "$sakId",
-              "behandlendeEnhet": "4409",
-              "journalpostId": "vedtakJournalpostId",
-              "tilknyttedeJournalposter": ["vedtakJournalpostId"],
-              "fullmektig": {
-                "navn": "Advokat Hansen",
-                "adresse1": "Advokateveien 1",
-                "postnummer": "0123",
-                "poststed": "Oslo"
-              }
+                "@behov": ["OversendelseKlageinstans"],
+                "behandlingId": "${klageBehandling.behandlingId}",
+                "ident": "${TestHelpers.Person.personIdent}",
+                "fagsakId": "$sakId",
+                "behandlendeEnhet": "4449",
+                "tilknyttedeJournalposter": [
+                    {
+                        "type": "KLAGE_VEDTAK",
+                        "journalpostId": "vedtakJournalpostId"
+                    }
+                ],
+                "prosessfullmektigNavn": "Advokat Hansen",
+                "prosessfullmektigAdresselinje1": "Advokateveien 1",
+                "prosessfullmektigAdresselinje2": "Etasje 2",
+                "prosessfullmektigAdresselinje3": "Inngang 3",
+                "prosessfullmektigPostnummer": "0123",
+                "prosessfullmektigPoststed": "Oslo",
+                "prosessfullmektigLand": "NO"
             }
         """
     }
 
     @Test
-    fun `bruker default behandlende enhet 4409 når ikke satt`() {
+    fun `bruker default behandlende enhet 4449 når enhet ikke er satt`() {
         val klageBehandling =
             TestHelpers.Klage.lagKlageBehandling(
                 behandlendeEnhet = null,
@@ -181,21 +224,21 @@ class KlageInstansBehovByggerTest {
             )
 
         bygger.behov shouldContainJsonKey "behandlendeEnhet"
-        bygger.behov shouldEqualJson """
+        bygger.behov shouldEqualSpecifiedJsonIgnoringOrder """
             {
-              "@behov": ["OversendelseKlageinstans"],
-              "behandlingId": "${klageBehandling.behandlingId}",
-              "ident": "${TestHelpers.Person.personIdent}",
-              "sakId": "$sakId",
-              "behandlendeEnhet": "4409",
-              "journalpostId": "vedtakJournalpostId",
-              "tilknyttedeJournalposter": ["vedtakJournalpostId"]
+                "@event_name": "behov",
+                "@behov": ["OversendelseKlageinstans"],
+                "behandlingId": "${klageBehandling.behandlingId}",
+                "ident": "${TestHelpers.Person.personIdent}",
+                "fagsakId": "$sakId",
+                "behandlendeEnhet": "4449",
+                "tilknyttedeJournalposter": [
+                    {
+                        "type": "KLAGE_VEDTAK",
+                        "journalpostId": "vedtakJournalpostId"
+                    }
+                ]
             }
         """
-    }
-
-    @Test
-    fun `behov navn er OversendelseKlageinstans`() {
-        KlageInstansBehovBygger.BEHOV_NAVN shouldBe "OversendelseKlageinstans"
     }
 }
