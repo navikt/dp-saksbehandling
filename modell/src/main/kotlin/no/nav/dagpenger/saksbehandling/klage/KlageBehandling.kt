@@ -39,6 +39,7 @@ data class KlageBehandling private constructor(
             OversendKlageinstansSteg,
             FullmektigSteg,
         ),
+    private val kaVedtak: KAVedtak? = null,
 ) {
     constructor(
         journalpostId: String? = null,
@@ -289,7 +290,7 @@ data class KlageBehandling private constructor(
             hendelse: OversendtKlageinstansHendelse,
         ) {
             klageBehandling.endreTilstand(
-                nyTilstand = Ferdigstilt,
+                nyTilstand = BehandlesHosKA,
                 hendelse = hendelse,
             )
         }
@@ -334,6 +335,10 @@ data class KlageBehandling private constructor(
         override val type: Type = FERDIGSTILT
     }
 
+    object BehandlesHosKA : KlageTilstand {
+        override val type: Type = Type.BEHANDLES_HOS_KA
+    }
+
     object Avbrutt : KlageTilstand {
         override val type: Type = AVBRUTT
     }
@@ -365,6 +370,7 @@ data class KlageBehandling private constructor(
             BEHANDLES,
             BEHANDLING_UTFORT,
             OVERSEND_KLAGEINSTANS,
+            BEHANDLES_HOS_KA,
             FERDIGSTILT,
             AVBRUTT,
         }
