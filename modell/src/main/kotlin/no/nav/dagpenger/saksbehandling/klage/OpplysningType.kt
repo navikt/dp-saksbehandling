@@ -183,6 +183,8 @@ enum class KlagenGjelderType(
     val tekst: String,
 ) {
     AVSLAG_PÅ_SØKNAD("Avslag på søknad"),
+    VIRKNINGSDATO("Virkningsdato"),
+    STANS_AV_YTELSE("Stans av ytelse"),
     FOR_LITE_UTBETALT("For lite utbetalt"),
     VEDTAK_OM_TILBAKEBETALING("Vedtak om tilbakebetaling"),
     ANNET("Annet"),

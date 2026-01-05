@@ -86,6 +86,8 @@ class KlageDTOMapperTest {
                                 "gruppe": "KLAGESAK",
                                 "valgmuligheter": [
                                     "Avslag på søknad",
+                                    "Virkningsdato",
+                                    "Stans av ytelse",
                                     "For lite utbetalt",
                                     "Vedtak om tilbakebetaling",
                                     "Annet"
