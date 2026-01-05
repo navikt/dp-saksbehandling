@@ -95,6 +95,8 @@ data class KlageBehandling private constructor(
 
     fun behandlendeEnhet(): String? = behandlendeEnhet
 
+    fun kaVedtak(): KAVedtak? = kaVedtak
+
     fun kommentarTilKlageInstans(): String? =
         opplysninger
             .singleOrNull { it.type == OpplysningType.INTERN_MELDING }

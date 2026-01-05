@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
+import no.nav.dagpenger.saksbehandling.klage.KAVedtak
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -107,6 +108,9 @@ class PostgresKlageRepository(
             ).asUpdate,
         )
         lagre(behandlingId = klageBehandling.behandlingId, tilstandslogg = klageBehandling.tilstandslogg)
+        if (klageBehandling.kaVedtak() != null) {
+            lagre(behandlingId = klageBehandling.behandlingId, kaVedtak = klageBehandling.kaVedtak()!!)
+        }
     }
 
     private fun TransactionalSession.lagre(
@@ -116,6 +120,32 @@ class PostgresKlageRepository(
         tilstandslogg.forEach { tilstandsendring ->
             this.lagre(behandlingId, tilstandsendring)
         }
+    }
+
+    private fun TransactionalSession.lagre(
+        behandlingId: UUID,
+        kaVedtak: KAVedtak,
+    ) {
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO ka_vedtak_v1
+                        (id, klage_id, utfall, avsluttet, journalpost_ider)
+                    VALUES
+                        (:id, :klage_id, :utfall, :avsluttet, :journalpost_ider)
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "id" to kaVedtak.id,
+                        "klage_id" to behandlingId,
+                        "utfall" to kaVedtak.utfall(),
+                        "avsluttet" to kaVedtak.avsluttet,
+                        "journalpost_ider" to kaVedtak.journalpostIder,
+                    ),
+            ).asUpdate,
+        )
     }
 
     private fun TransactionalSession.lagre(
