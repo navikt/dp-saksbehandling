@@ -17,10 +17,12 @@ data class KlageinstansVedtakHendelse(
         KLAGE,
         ;
 
-        fun fromString(type: String): KlageVedtakType =
-            when (type.uppercase()) {
-                "KLAGEBEHANDLING_AVSLUTTET" -> KLAGE
-                else -> throw IllegalArgumentException("Ukjent klage vedtak type: $type")
-            }
+        companion object {
+            fun fromString(type: String): KlageVedtakType =
+                when (type.uppercase()) {
+                    "KLAGEBEHANDLING_AVSLUTTET" -> KLAGE
+                    else -> throw IllegalArgumentException("Ukjent klage vedtak type: $type")
+                }
+        }
     }
 }
