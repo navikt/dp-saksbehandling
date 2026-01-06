@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresKlageRepositoryTest {
@@ -88,13 +89,14 @@ class PostgresKlageRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente klagebehandlinger`() {
+        val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
         setupDBOgSak { klageRepository, _ ->
 
             val kaKlageVedtak =
                 KlageinstansVedtak.Klage(
                     id = UUIDv7.ny(),
                     journalpostIder = listOf("journalpost1", "journalpost2"),
-                    avsluttet = LocalDateTime.now(),
+                    avsluttet = nå,
                     utfall = KlageinstansVedtak.Klage.Utfall.STADFESTELSE,
                 )
 
@@ -102,7 +104,7 @@ class PostgresKlageRepositoryTest {
                 KlageMottattHendelse(
                     ident = testPerson.ident,
                     sakId = UUIDv7.ny(),
-                    opprettet = LocalDateTime.now(),
+                    opprettet = nå,
                     journalpostId = "journalpostId",
                 )
 
