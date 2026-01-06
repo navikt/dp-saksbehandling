@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
@@ -224,6 +225,13 @@ data class KlageBehandling private constructor(
             hendelse = hendelse,
         )
 
+    fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
+        tilstand.mottaKlageinstansVedtak(
+            klageBehandling = this,
+            hendelse = klageinstansVedtakHendelse,
+        )
+    }
+
     object Behandles : KlageTilstand {
         override val type: Type = BEHANDLES
 
@@ -341,6 +349,14 @@ data class KlageBehandling private constructor(
 
     object BehandlesAvKlageinstans : KlageTilstand {
         override val type: Type = Type.BEHANDLES_AV_KLAGEINSTANS
+
+        override fun mottaKlageinstansVedtak(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageinstansVedtakHendelse,
+        ) {
+            klageBehandling.klageinstansVedtak = KlageinstansVedtak.from(hendelse)
+            klageBehandling.endreTilstand(Ferdigstilt, hendelse)
+        }
     }
 
     object Avbrutt : KlageTilstand {
@@ -369,6 +385,11 @@ data class KlageBehandling private constructor(
             klageBehandling: KlageBehandling,
             hendelse: UtsendingDistribuert,
         ): KlageAksjon = throw IllegalStateException("Kan ikke motta hendelse om distribuert vedtak i tilstand $type")
+
+        fun mottaKlageinstansVedtak(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageinstansVedtakHendelse,
+        ): Unit = throw IllegalStateException("Kan ikke motta klageinstans vedtak i tilstand $type")
 
         enum class Type {
             BEHANDLES,

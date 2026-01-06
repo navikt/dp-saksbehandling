@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -21,5 +22,18 @@ sealed class KlageinstansVedtak {
         enum class Utfall {
             STADFESTELSE,
         }
+    }
+
+    companion object {
+        fun from(klageinstansVedtakHendelse: KlageinstansVedtakHendelse): KlageinstansVedtak =
+            when (klageinstansVedtakHendelse.type) {
+                KlageinstansVedtakHendelse.KlageVedtakType.KLAGE ->
+                    Klage(
+                        id = klageinstansVedtakHendelse.klageinstansVedtakId,
+                        journalpostIder = klageinstansVedtakHendelse.journalpostIder,
+                        avsluttet = klageinstansVedtakHendelse.avsluttet,
+                        utfall = Klage.Utfall.valueOf(klageinstansVedtakHendelse.utfall),
+                    )
+            }
     }
 }

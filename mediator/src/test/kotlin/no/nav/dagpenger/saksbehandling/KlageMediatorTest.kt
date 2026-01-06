@@ -6,6 +6,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -27,6 +28,8 @@ import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse.KlageVedtakType
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -39,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_1
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_2
@@ -325,6 +329,35 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe BEHANDLES_AV_KLAGEINSTANS
+                }
+
+            val klageinstansVedtakHendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageVedtakType.KLAGE,
+                    klageId = behandlingId,
+                    klageinstansVedtakId = UUID.randomUUID(),
+                    avsluttet = LocalDateTime.now(),
+                    utfall = "STADFESTELSE",
+                    journalpostIder = listOf("journalpostId1", "journalpostId2"),
+                )
+
+            klageMediator.mottaKlageinstansVedtak(
+                klageinstansVedtakHendelse,
+            )
+
+            klageMediator
+                .hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe FERDIGSTILT
+                    klageBehandling.klageinstansVedtak().let { klageVedtak ->
+                        klageVedtak.shouldBeInstanceOf<KlageinstansVedtak.Klage>()
+                        klageVedtak.utfall shouldBe KlageinstansVedtak.Klage.Utfall.STADFESTELSE
+                        klageVedtak.avsluttet shouldBe klageinstansVedtakHendelse.avsluttet
+                        klageVedtak.journalpostIder shouldBe listOf("journalpostId1", "journalpostId2")
+                        klageVedtak.id shouldBe klageinstansVedtakHendelse.klageinstansVedtakId
+                    }
                 }
         }
     }

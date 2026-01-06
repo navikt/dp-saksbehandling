@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -308,6 +309,13 @@ class KlageMediator(
             is KlageAksjon.IngenAksjon -> {
                 // Ingen handling nødvendig
             }
+        }
+    }
+
+    fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
+        klageRepository.hentKlageBehandling(behandlingId = klageinstansVedtakHendelse.klageId).let { klageBehandling ->
+            klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
+            klageRepository.lagre(klageBehandling)
         }
     }
 

@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
@@ -291,6 +292,7 @@ class PostgresKlageRepository(
             "KlageBehandlingUtført" -> hendelseJson.tilHendelse<KlageBehandlingUtført>()
             "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
             "UtsendingDistribuert" -> hendelseJson.tilHendelse<UtsendingDistribuert>()
+            "KlageinstansVedtakHendelse" -> hendelseJson.tilHendelse<KlageinstansVedtakHendelse>()
             else -> {
                 logger.error { "rehydrerKlageTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
                 sikkerlogger.error { "rehydrerKlageTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
