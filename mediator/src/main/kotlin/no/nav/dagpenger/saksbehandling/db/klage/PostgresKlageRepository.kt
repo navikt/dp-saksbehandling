@@ -17,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
-import no.nav.dagpenger.saksbehandling.klage.KAVedtak
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -27,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
@@ -63,9 +63,15 @@ class PostgresKlageRepository(
                                    klag.journalpost_id, 
                                    klag.behandlende_enhet, 
                                    klag.opplysninger,
-                                   beha.opprettet
+                                   beha.opprettet,
+                                   kave.id as ka_vedtak_id,
+                                   kave.journalpost_ider ,
+                                   kave.avsluttet,
+                                   kave.utfall,
+                                   kave.type as ka_vedtak_type
                             FROM   klage_v1       klag
                             JOIN   behandling_v1  beha ON beha.id = klag.id
+                            LEFT JOIN klageinstans_vedtak_v1 kave ON kave.klage_id = klag.id
                             WHERE  klag.id = :behandling_id
                             """.trimIndent(),
                         paramMap = mapOf("behandling_id" to behandlingId),
@@ -108,9 +114,7 @@ class PostgresKlageRepository(
             ).asUpdate,
         )
         lagre(behandlingId = klageBehandling.behandlingId, tilstandslogg = klageBehandling.tilstandslogg)
-        if (klageBehandling.kaVedtak() != null) {
-            lagre(behandlingId = klageBehandling.behandlingId, kaVedtak = klageBehandling.kaVedtak()!!)
-        }
+        lagre(behandlingId = klageBehandling.behandlingId, klageinstansVedtak = klageBehandling.klageinstansVedtak())
     }
 
     private fun TransactionalSession.lagre(
@@ -124,28 +128,32 @@ class PostgresKlageRepository(
 
     private fun TransactionalSession.lagre(
         behandlingId: UUID,
-        kaVedtak: KAVedtak,
+        klageinstansVedtak: KlageinstansVedtak?,
     ) {
-        this.run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO ka_vedtak_v1
-                        (id, klage_id, utfall, avsluttet, journalpost_ider)
-                    VALUES
-                        (:id, :klage_id, :utfall, :avsluttet, :journalpost_ider)
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to kaVedtak.id,
-                        "klage_id" to behandlingId,
-                        "utfall" to kaVedtak.utfall(),
-                        "avsluttet" to kaVedtak.avsluttet,
-                        "journalpost_ider" to kaVedtak.journalpostIder,
-                    ),
-            ).asUpdate,
-        )
+        klageinstansVedtak?.let { _ ->
+            val journalpostIderArray = this.createArrayOf("text", klageinstansVedtak.journalpostIder)
+            this.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO klageinstans_vedtak_v1
+                            (id, type,  klage_id, utfall, avsluttet, journalpost_ider)
+                        VALUES
+                            (:id, :type, :klage_id, :utfall, :avsluttet, :journalpost_ider)
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "id" to klageinstansVedtak.id,
+                            "type" to klageinstansVedtak.javaClass.simpleName,
+                            "klage_id" to behandlingId,
+                            "utfall" to klageinstansVedtak.utfall(),
+                            "avsluttet" to klageinstansVedtak.avsluttet,
+                            "journalpost_ider" to journalpostIderArray,
+                        ),
+                ).asUpdate,
+            )
+        }
     }
 
     private fun TransactionalSession.lagre(
@@ -206,6 +214,7 @@ class PostgresKlageRepository(
                 dataSource = dataSource,
             )
         val opprettet = this.localDateTime("opprettet")
+        val kavVedtak = this.kaVedtakOrNull()
 
         return KlageBehandling.rehydrer(
             behandlingId = behandlingId,
@@ -215,8 +224,30 @@ class PostgresKlageRepository(
             opplysninger = opplysninger,
             tilstandslogg = tilstandslogg,
             opprettet = opprettet,
+            klageinstansVedtak = kavVedtak,
         )
     }
+
+    private fun Row.kaVedtakOrNull(): KlageinstansVedtak? =
+        this.stringOrNull("ka_vedtak_type")?.let { vedtakType ->
+            when (vedtakType) {
+                "Klage" -> {
+                    KlageinstansVedtak.Klage(
+                        id = this.uuid("ka_vedtak_id"),
+                        journalpostIder = this.stringList("journalpost_ider"),
+                        avsluttet = this.localDateTime("avsluttet"),
+                        utfall = KlageinstansVedtak.Klage.Utfall.valueOf(this.string("utfall")),
+                    )
+                }
+
+                else -> {
+                    logger.error { " Ukjent vedtakstype $vedtakType" }
+                    throw IllegalArgumentException("Ukjent vedtakstype $vedtakType")
+                }
+            }
+        }
+
+    private fun Row.stringList(columnLabel: String): List<String> = this.array<String>(columnLabel).toList()
 
     private fun hentKlageTilstandslogg(
         behandlingId: UUID,

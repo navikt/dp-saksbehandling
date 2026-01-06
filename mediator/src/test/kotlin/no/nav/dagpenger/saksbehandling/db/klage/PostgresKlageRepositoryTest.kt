@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -89,6 +90,14 @@ class PostgresKlageRepositoryTest {
     fun `Skal kunne lagre og hente klagebehandlinger`() {
         setupDBOgSak { klageRepository, _ ->
 
+            val kaKlageVedtak =
+                KlageinstansVedtak.Klage(
+                    id = UUIDv7.ny(),
+                    journalpostIder = listOf("journalpost1", "journalpost2"),
+                    avsluttet = LocalDateTime.now(),
+                    utfall = KlageinstansVedtak.Klage.Utfall.STADFESTELSE,
+                )
+
             val klageMottattHendelse =
                 KlageMottattHendelse(
                     ident = testPerson.ident,
@@ -111,6 +120,7 @@ class PostgresKlageRepositoryTest {
                                 hendelse = klageMottattHendelse,
                             ),
                         ),
+                    klageinstansVedtak = kaKlageVedtak,
                 )
 
             val boolskOpplysningId =
@@ -161,6 +171,7 @@ class PostgresKlageRepositoryTest {
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
 
             hentetKlageBehandling.tilstandslogg.size shouldBe klageBehandling.tilstandslogg.size
+            hentetKlageBehandling.klageinstansVedtak() shouldBe kaKlageVedtak
         }
     }
 

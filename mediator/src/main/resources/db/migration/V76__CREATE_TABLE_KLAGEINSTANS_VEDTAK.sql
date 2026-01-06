@@ -1,6 +1,7 @@
-CREATE TABLE IF NOT EXISTS ka_vedtak_v1
+CREATE TABLE IF NOT EXISTS klageinstans_vedtak_v1
 (
     id                      UUID                        PRIMARY KEY,
+    type                    TEXT                        NOT NULL,
     klage_id                UUID                        NOT NULL REFERENCES klage_v1 (id),
     utfall                  TEXT                        NOT NULL,
     avsluttet               TIMESTAMP WITHOUT TIME ZONE NOT NULL,

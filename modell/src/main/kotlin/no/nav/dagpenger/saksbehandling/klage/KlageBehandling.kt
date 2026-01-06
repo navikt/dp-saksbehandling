@@ -39,7 +39,7 @@ data class KlageBehandling private constructor(
             OversendKlageinstansSteg,
             FullmektigSteg,
         ),
-    private val kaVedtak: KAVedtak? = null,
+    private var klageinstansVedtak: KlageinstansVedtak? = null,
 ) {
     constructor(
         journalpostId: String? = null,
@@ -73,6 +73,7 @@ data class KlageBehandling private constructor(
                     OversendKlageinstansSteg,
                     FullmektigSteg,
                 ),
+            klageinstansVedtak: KlageinstansVedtak? = null,
         ): KlageBehandling =
             KlageBehandling(
                 behandlingId = behandlingId,
@@ -83,6 +84,7 @@ data class KlageBehandling private constructor(
                 behandlendeEnhet = behandlendeEnhet,
                 _tilstandslogg = tilstandslogg,
                 steg = steg,
+                klageinstansVedtak = klageinstansVedtak,
             )
     }
 
@@ -95,7 +97,7 @@ data class KlageBehandling private constructor(
 
     fun behandlendeEnhet(): String? = behandlendeEnhet
 
-    fun kaVedtak(): KAVedtak? = kaVedtak
+    fun klageinstansVedtak(): KlageinstansVedtak? = klageinstansVedtak
 
     fun kommentarTilKlageInstans(): String? =
         opplysninger

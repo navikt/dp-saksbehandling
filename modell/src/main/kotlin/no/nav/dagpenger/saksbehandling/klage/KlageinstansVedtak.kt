@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.klage
 import java.time.LocalDateTime
 import java.util.UUID
 
-sealed class KAVedtak {
+sealed class KlageinstansVedtak {
     abstract val id: UUID
     abstract val journalpostIder: List<String>
     abstract val avsluttet: LocalDateTime
@@ -15,7 +15,7 @@ sealed class KAVedtak {
         override val journalpostIder: List<String>,
         override val avsluttet: LocalDateTime,
         val utfall: Utfall,
-    ) : KAVedtak() {
+    ) : KlageinstansVedtak() {
         override fun utfall(): String = utfall.name
 
         enum class Utfall {
