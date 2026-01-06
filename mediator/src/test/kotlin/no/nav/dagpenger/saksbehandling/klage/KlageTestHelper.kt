@@ -4,7 +4,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES_HOS_KA
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
@@ -132,7 +132,7 @@ fun lagKlagebehandling(
                 FERDIGSTILT -> KlageBehandling.Ferdigstilt
                 AVBRUTT -> KlageBehandling.Avbrutt
                 BEHANDLING_UTFORT -> KlageBehandling.BehandlingUtført
-                BEHANDLES_HOS_KA -> KlageBehandling.BehandlesHosKA
+                BEHANDLES_AV_KLAGEINSTANS -> KlageBehandling.BehandlesAvKlageinstans
             },
         behandlingId = UUIDv7.ny(),
         journalpostId = null,

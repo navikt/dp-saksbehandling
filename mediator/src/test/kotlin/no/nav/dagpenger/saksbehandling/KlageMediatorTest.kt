@@ -35,7 +35,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES_HOS_KA
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
@@ -324,7 +324,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).let { klageBehandling ->
-                    klageBehandling.tilstand().type shouldBe BEHANDLES_HOS_KA
+                    klageBehandling.tilstand().type shouldBe BEHANDLES_AV_KLAGEINSTANS
                 }
         }
     }
@@ -468,7 +468,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).let { klageBehandling ->
-                    klageBehandling.tilstand().type shouldBe BEHANDLES_HOS_KA
+                    klageBehandling.tilstand().type shouldBe BEHANDLES_AV_KLAGEINSTANS
                 }
         }
     }

@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class KlageInstansBehovByggerTest {
+class BehovbyggerKlageinstansTest {
     private val sakId = UUID.randomUUID()
     private val utsendingId = UUID.randomUUID()
     private val journalpostIdForOpprinneligVedtak = "originalJournalpostId"
@@ -34,7 +34,7 @@ class KlageInstansBehovByggerTest {
             )
 
         val bygger =
-            KlageInstansBehovBygger(
+            BehovbyggerKlageinstans(
                 klageBehandling = klageBehandling,
                 sakId = sakId,
                 hendelse = hendelse,
@@ -82,7 +82,7 @@ class KlageInstansBehovByggerTest {
             )
 
         val bygger =
-            KlageInstansBehovBygger(
+            BehovbyggerKlageinstans(
                 klageBehandling = klageBehandling,
                 sakId = sakId,
                 hendelse = hendelse,
@@ -167,7 +167,7 @@ class KlageInstansBehovByggerTest {
             )
 
         val bygger =
-            KlageInstansBehovBygger(
+            BehovbyggerKlageinstans(
                 klageBehandling = klageBehandling,
                 sakId = sakId,
                 hendelse = hendelse,
@@ -216,7 +216,7 @@ class KlageInstansBehovByggerTest {
             )
 
         val bygger =
-            KlageInstansBehovBygger(
+            BehovbyggerKlageinstans(
                 klageBehandling = klageBehandling,
                 sakId = sakId,
                 hendelse = hendelse,

@@ -296,7 +296,7 @@ class KlageMediator(
                 rapidsConnection.publish(
                     key = hendelse.ident,
                     message =
-                        KlageInstansBehovBygger(
+                        BehovbyggerKlageinstans(
                             klageBehandling = klageBehandling,
                             sakId = sakId,
                             hendelse = hendelse,

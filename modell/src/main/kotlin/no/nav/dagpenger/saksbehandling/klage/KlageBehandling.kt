@@ -292,7 +292,7 @@ data class KlageBehandling private constructor(
             hendelse: OversendtKlageinstansHendelse,
         ) {
             klageBehandling.endreTilstand(
-                nyTilstand = BehandlesHosKA,
+                nyTilstand = BehandlesAvKlageinstans,
                 hendelse = hendelse,
             )
         }
@@ -337,8 +337,8 @@ data class KlageBehandling private constructor(
         override val type: Type = FERDIGSTILT
     }
 
-    object BehandlesHosKA : KlageTilstand {
-        override val type: Type = Type.BEHANDLES_HOS_KA
+    object BehandlesAvKlageinstans : KlageTilstand {
+        override val type: Type = Type.BEHANDLES_AV_KLAGEINSTANS
     }
 
     object Avbrutt : KlageTilstand {
@@ -372,7 +372,7 @@ data class KlageBehandling private constructor(
             BEHANDLES,
             BEHANDLING_UTFORT,
             OVERSEND_KLAGEINSTANS,
-            BEHANDLES_HOS_KA,
+            BEHANDLES_AV_KLAGEINSTANS,
             FERDIGSTILT,
             AVBRUTT,
         }

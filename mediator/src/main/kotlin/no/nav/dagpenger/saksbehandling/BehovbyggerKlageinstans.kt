@@ -11,7 +11,7 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
-class KlageInstansBehovBygger(
+class BehovbyggerKlageinstans(
     klageBehandling: KlageBehandling,
     sakId: UUID,
     hendelse: UtsendingDistribuert,
