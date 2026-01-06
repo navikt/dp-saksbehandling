@@ -73,9 +73,11 @@ import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class KlageMediatorTest {
+    private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val testPersonIdent = "12345678901"
     private val testRapid = TestRapid()
     private val saksbehandler =
@@ -195,7 +197,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = LocalDateTime.now(),
+                            opprettet = nå,
                             journalpostId = "journalpostIdBrukersKlage",
                         ),
                     ).behandling.behandlingId
@@ -336,7 +338,7 @@ class KlageMediatorTest {
                     type = KlageVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = UUID.randomUUID(),
-                    avsluttet = LocalDateTime.now(),
+                    avsluttet = nå,
                     utfall = "STADFESTELSE",
                     journalpostIder = listOf("journalpostId1", "journalpostId2"),
                 )
@@ -383,7 +385,7 @@ class KlageMediatorTest {
                         ManuellKlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = LocalDateTime.now(),
+                            opprettet = nå,
                             journalpostId = "journalpostIdBrukersKlage",
                             utførtAv = saksbehandler,
                         ),
@@ -516,7 +518,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = LocalDateTime.now(),
+                            opprettet = nå,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -594,7 +596,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = LocalDateTime.now(),
+                            opprettet = nå,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -651,7 +653,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = LocalDateTime.now(),
+                            opprettet = nå,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -708,7 +710,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = LocalDateTime.now(),
+                            opprettet = nå,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -1088,7 +1090,7 @@ class KlageMediatorTest {
                         søknadId = UUIDv7.ny(),
                         behandlingId = UUIDv7.ny(),
                         ident = testPersonIdent,
-                        opprettet = LocalDateTime.now(),
+                        opprettet = nå,
                         behandlingskjedeId = UUIDv7.ny(),
                     ),
                 )
