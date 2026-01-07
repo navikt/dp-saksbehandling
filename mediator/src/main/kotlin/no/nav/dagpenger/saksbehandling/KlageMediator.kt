@@ -245,6 +245,12 @@ class KlageMediator(
                         ),
                     ).toJson(),
             )
+
+            auditlogg.opprett(
+                "Ferdigstilte en klagebehandling",
+                klageBehandling.personIdent(),
+                hendelse.utførtAv.navIdent,
+            )
         }
     }
 
