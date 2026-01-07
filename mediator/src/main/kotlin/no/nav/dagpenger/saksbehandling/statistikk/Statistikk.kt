@@ -18,7 +18,8 @@ interface StatistikkTjeneste {
     fun hentAntallBrevSendt(): Int
 
     fun hentOppgaver(): List<Pair<UUID, LocalDateTime>>
-    fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>)
+
+    fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>): Int
 }
 
 class PostgresStatistikkTjeneste(
@@ -155,6 +156,7 @@ class PostgresStatistikkTjeneste(
                 queryOf(
                     //language=PostgreSQL
                     statement = """
+                        INSERT INTO oppgave_til_statistikk_v1 (oppgave_id,ferdig_behandlet_tidspunkt)
                             SELECT opp.id ,opp.endret_tidspunkt
                             FROM oppgave_v1 opp
                             JOIN behandling_v1 beh on beh.id = opp.behandling_id
@@ -164,16 +166,37 @@ class PostgresStatistikkTjeneste(
                                 SELECT coalesce(max(ferdig_behandlet_tidspunkt), '1900-01-01t00:00:00'::timestamptz)
                                 FROM oppgave_til_statistikk_v1
                                 WHERE overfort_til_statistikk = true)
-                            AND sak.er_dp_sak = true;
+                            AND sak.er_dp_sak = true
+                        ON CONFLICT (oppgave_id) DO UPDATE set ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
+                        RETURNING oppgave_id  , ferdig_behandlet_tidspunkt 
                     """,
                 ).map { row ->
-                    Pair(row.uuid("id"), row.localDateTime("endret_tidspunkt"))
+                    Pair(row.uuid("oppgave_id"), row.localDateTime("ferdig_behandlet_tidspunkt"))
                 }.asList,
             )
         }
     }
 
-    override fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>) {
-        TODO("Not yet implemented")
+    override fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>): Int {
+        val sql = """
+            UPDATE oppgave_til_statistikk_v1
+            SET overfort_til_statistikk = true
+            WHERE oppgave_id = :oppgave_id"""
+
+        val paramsMap =
+            oppgaver.map {
+                mapOf(
+                    "oppgave_id" to it.first,
+                )
+            }
+
+        return sessionOf(dataSource = dataSource)
+            .use { session ->
+                session
+                    .batchPreparedNamedStatement(
+                        statement = sql,
+                        params = paramsMap,
+                    )
+            }.sum()
     }
 }

@@ -26,10 +26,9 @@ internal class BehandlingsresultatMottak(
         meterRegistry: MeterRegistry,
     ) {
         oppgaveMediator.hentOppgaveIdFor(behandlingsresultat.behandlingId)?.let {
-            //sak statistikk greier:
+            // sak statistikk greier:
             // Er dette vår sak?
-            // 
-
+            //
 
             oppgaveMediator.ferdigstillOppgave(
                 vedtakFattetHendelse =
