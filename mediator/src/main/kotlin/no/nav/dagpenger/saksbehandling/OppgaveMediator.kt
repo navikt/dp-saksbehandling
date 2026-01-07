@@ -484,24 +484,6 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
-        oppgaveRepository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
-            withLoggingContext(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
-            ) {
-                logger.info {
-                    "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                oppgave.ferdigstill(godkjentBehandlingHendelse)
-                oppgaveRepository.lagre(oppgave)
-                logger.info {
-                    "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                }
-            }
-        }
-    }
-
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave =
         oppgaveRepository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
