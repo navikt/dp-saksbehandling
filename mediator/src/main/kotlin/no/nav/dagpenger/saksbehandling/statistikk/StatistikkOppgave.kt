@@ -12,17 +12,16 @@ data class StatistikkOppgave constructor(
     val personIdent: String,
 ) {
     constructor(
-        behandling: Behandling,
         oppgave: Oppgave,
         sakId: UUID,
     ) : this(
         behandling = StatistikkBehandling(
-            id = behandling.behandlingId,
-            tidspunkt = behandling.opprettet,
+            id = oppgave.behandling.behandlingId,
+            tidspunkt = oppgave.behandling.opprettet,
             basertPåBehandling = null,
             utløstAv = UtløstAv(
-                type = behandling.utløstAv.name,
-                tidspunkt = behandling.opprettet //todo
+                type = oppgave.behandling.utløstAv.name,
+                tidspunkt = oppgave.behandling.opprettet //todo
             )
         ),
         sakId = sakId,

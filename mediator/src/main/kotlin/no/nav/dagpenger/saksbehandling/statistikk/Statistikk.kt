@@ -4,6 +4,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 interface StatistikkTjeneste {
@@ -14,6 +16,9 @@ interface StatistikkTjeneste {
     fun hentBeholdningsInfo(): BeholdningsInfoDTO
 
     fun hentAntallBrevSendt(): Int
+
+    fun hentOppgaver(): List<Pair<UUID, LocalDateTime>>
+    fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>)
 }
 
 class PostgresStatistikkTjeneste(
@@ -143,4 +148,32 @@ class PostgresStatistikkTjeneste(
                 }.asSingle,
             )
         } ?: 0
+
+    override fun hentOppgaver(): List<Pair<UUID, LocalDateTime>> {
+        sessionOf(dataSource = dataSource).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                            SELECT opp.id ,opp.endret_tidspunkt
+                            FROM oppgave_v1 opp
+                            JOIN behandling_v1 beh on beh.id = opp.behandling_id
+                            JOIN sak_v2 sak on sak.id = beh.sak_id
+                            WHERE opp.tilstand = 'FERDIG_BEHANDLET'
+                            AND opp.endret_tidspunkt > (
+                                SELECT coalesce(max(ferdig_behandlet_tidspunkt), '1900-01-01t00:00:00'::timestamptz)
+                                FROM oppgave_til_statistikk_v1
+                                WHERE overfort_til_statistikk = true)
+                            AND sak.er_dp_sak = true;
+                    """,
+                ).map { row ->
+                    Pair(row.uuid("id"), row.localDateTime("endret_tidspunkt"))
+                }.asList,
+            )
+        }
+    }
+
+    override fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>) {
+        TODO("Not yet implemented")
+    }
 }
