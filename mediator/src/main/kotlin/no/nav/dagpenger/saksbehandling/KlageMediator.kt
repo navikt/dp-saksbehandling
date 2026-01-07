@@ -197,6 +197,14 @@ class KlageMediator(
                     oppslag.hentPerson(oppgave.personIdent())
                 }
 
+            val klageBehandling =
+                klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+                    klageBehandling.behandlingUtført(
+                        behandlendeEnhet = saksbehandlerDeferred.await().enhet.enhetNr,
+                        hendelse = hendelse,
+                    )
+                }
+            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
             val htmlDeferred =
                 async(Dispatchers.IO) {
                     meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
@@ -206,19 +214,12 @@ class KlageMediator(
                         behandlingId = oppgave.behandling.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
                         utløstAvType = UtløstAvType.KLAGE,
+                        sakId = sakId.toString(),
                     )
                 }
 
-            val klageBehandling =
-                klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
-                    klageBehandling.behandlingUtført(
-                        behandlendeEnhet = saksbehandlerDeferred.await().enhet.enhetNr,
-                        hendelse = hendelse,
-                    )
-                }
-            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
-//            1. commit - oppretter utsending
             val html = htmlDeferred.await().getOrThrow()
+//            1. commit - oppretter utsending
             utsendingMediator.opprettUtsending(
                 behandlingId = oppgave.behandling.behandlingId,
                 brev = html,
@@ -243,6 +244,12 @@ class KlageMediator(
                             "saksbehandler" to hendelse.utførtAv,
                         ),
                     ).toJson(),
+            )
+
+            auditlogg.opprett(
+                "Ferdigstilte en klagebehandling",
+                klageBehandling.personIdent(),
+                hendelse.utførtAv.navIdent,
             )
         }
     }
