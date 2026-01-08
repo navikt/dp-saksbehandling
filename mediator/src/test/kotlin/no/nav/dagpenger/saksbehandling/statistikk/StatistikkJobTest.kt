@@ -62,16 +62,16 @@ class StatistikkJobTest {
                 "oppgave": {
                     "sakId": "$sakId1",
                     "behandling": {
-                    "id": "${oppgave1.behandling.behandlingId}",
-                    "tidspunkt": "${oppgave1.behandling.opprettet}",
-                    "basertPåBehandling": null,
-                    "utløstAv": {
-                        "type": "${oppgave1.behandling.utløstAv.name}",
-                        "tidspunkt": "${oppgave1.behandling.opprettet}"
-                    }
+                        "id": "${oppgave1.behandling.behandlingId}",
+                        "tidspunkt": "${oppgave1.behandling.opprettet}",
+                        "basertPåBehandling": null,
+                        "utløstAv": {
+                            "type": "${oppgave1.behandling.utløstAv.name}",
+                            "tidspunkt": "${oppgave1.behandling.opprettet}"
+                        }
                     },
-                    "oppgaveTilstander": [],
-                    "personIdent": "${oppgave1.personIdent()}"
+                    "personIdent": "${oppgave1.personIdent()}",
+                    "oppgaveTilstander": []
                 }
             
             }
@@ -83,35 +83,31 @@ class StatistikkJobTest {
                 "oppgave": {
                     "sakId": "$sakId2",
                     "behandling": {
-                    "id": "${oppgave2.behandling.behandlingId}",
-                    "tidspunkt": "${oppgave2.behandling.opprettet}",
-                    "basertPåBehandling": null,
-                    "utløstAv": {
-                        "type": "${oppgave2.behandling.utløstAv.name}",
-                        "tidspunkt": "${oppgave2.behandling.opprettet}"
-                    }
+                        "id": "${oppgave2.behandling.behandlingId}",
+                        "tidspunkt": "${oppgave2.behandling.opprettet}",
+                        "basertPåBehandling": null,
+                        "utløstAv": {
+                            "type": "${oppgave2.behandling.utløstAv.name}",
+                            "tidspunkt": "${oppgave2.behandling.opprettet}"
+                        }
                     },
+                    "personIdent": "${oppgave2.personIdent()}",
+                    "saksbehandlerIdent": "${oppgave2.sisteSaksbehandler()}",
+                    "beslutterIdent": "${oppgave2.sisteBeslutter()}",
                     "oppgaveTilstander": [
-                    {
-                        "tilstand": "${oppgave2.tilstandslogg[0].tilstand.name}",
-                        "tidspunkt": "${oppgave2.tilstandslogg[0].tidspunkt}",
-                        "saksbehandlerIdent": null,
-                        "beslutterIdent": null
-                    },
-                    {
-                        "tilstand": "${oppgave2.tilstandslogg[1].tilstand.name}",
-                        "tidspunkt": "${oppgave2.tilstandslogg[1].tidspunkt}",
-                        "saksbehandlerIdent": null,
-                        "beslutterIdent": null
-                    },
-                    {
-                        "tilstand": "${oppgave2.tilstandslogg[2].tilstand.name}",
-                        "tidspunkt": "${oppgave2.tilstandslogg[2].tidspunkt}",
-                        "saksbehandlerIdent": null,
-                        "beslutterIdent": null
-                    }
-                    ],
-                    "personIdent": "${oppgave2.personIdent()}"
+                        {
+                            "tilstand": "${oppgave2.tilstandslogg[0].tilstand.name}",
+                            "tidspunkt": "${oppgave2.tilstandslogg[0].tidspunkt}"
+                        },
+                        {
+                            "tilstand": "${oppgave2.tilstandslogg[1].tilstand.name}",
+                            "tidspunkt": "${oppgave2.tilstandslogg[1].tidspunkt}"
+                        },
+                        {
+                            "tilstand": "${oppgave2.tilstandslogg[2].tilstand.name}",
+                            "tidspunkt": "${oppgave2.tilstandslogg[2].tidspunkt}"
+                        }
+                    ]
                 }
             
             }

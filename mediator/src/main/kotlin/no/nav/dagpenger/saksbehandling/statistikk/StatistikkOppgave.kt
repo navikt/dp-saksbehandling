@@ -7,16 +7,20 @@ import java.util.UUID
 data class StatistikkOppgave constructor(
     val behandling: StatistikkBehandling,
     val sakId: UUID,
-    val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring>,
     val personIdent: String,
+    val saksbehandlerIdent: String?,
+    val beslutterIdent: String?,
+    val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring>,
 ) {
     fun asMap(): Map<String, Any> =
-        mapOf(
-            "sakId" to sakId.toString(),
-            "behandling" to behandling,
-            "oppgaveTilstander" to oppgaveTilstander,
-            "personIdent" to personIdent,
-        )
+        buildMap {
+            put("sakId", sakId.toString())
+            put("behandling", behandling)
+            put("personIdent", personIdent)
+            saksbehandlerIdent?.let { put("saksbehandlerIdent", it) }
+            beslutterIdent?.let { put("beslutterIdent", it) }
+            put("oppgaveTilstander", oppgaveTilstander)
+        }
 
     constructor(
         oppgave: Oppgave,
@@ -34,16 +38,16 @@ data class StatistikkOppgave constructor(
                     ),
             ),
         sakId = sakId,
+        personIdent = oppgave.personIdent(),
+        saksbehandlerIdent = oppgave.sisteSaksbehandler(),
+        beslutterIdent = oppgave.sisteBeslutter(),
         oppgaveTilstander =
             oppgave.tilstandslogg.map {
                 StatistikkOppgaveTilstandsendring(
                     tilstand = it.tilstand.name,
                     tidspunkt = it.tidspunkt,
-                    saksbehandlerIdent = null, // todo
-                    beslutterIdent = null, // todo
                 )
             },
-        personIdent = oppgave.personIdent(),
     )
 
     data class StatistikkBehandling(
@@ -61,7 +65,5 @@ data class StatistikkOppgave constructor(
     data class StatistikkOppgaveTilstandsendring(
         val tilstand: String,
         val tidspunkt: LocalDateTime,
-        val saksbehandlerIdent: String?,
-        val beslutterIdent: String?,
     )
 }
