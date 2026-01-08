@@ -19,7 +19,7 @@ interface StatistikkTjeneste {
 
     fun hentOppgaver(): List<Pair<UUID, LocalDateTime>>
 
-    fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>): Int
+    fun oppdaterOppgaver(oppgaveId: UUID): Int
 }
 
 class PostgresStatistikkTjeneste(
@@ -177,26 +177,21 @@ class PostgresStatistikkTjeneste(
         }
     }
 
-    override fun oppdaterOppgaver(oppgaver: List<Pair<UUID, LocalDateTime>>): Int {
-        val sql = """
-            UPDATE oppgave_til_statistikk_v1
-            SET overfort_til_statistikk = true
-            WHERE oppgave_id = :oppgave_id"""
-
-        val paramsMap =
-            oppgaver.map {
-                mapOf(
-                    "oppgave_id" to it.first,
+    override fun oppdaterOppgaver(oppgaveId: UUID): Int =
+        sessionOf(dataSource = dataSource)
+            .use { session ->
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement = """
+                            UPDATE oppgave_til_statistikk_v1
+                            SET overfort_til_statistikk = true
+                            WHERE oppgave_id = :oppgave_id""",
+                        paramMap =
+                            mapOf(
+                                "oppgave_id" to oppgaveId,
+                            ),
+                    ).asUpdate,
                 )
             }
-
-        return sessionOf(dataSource = dataSource)
-            .use { session ->
-                session
-                    .batchPreparedNamedStatement(
-                        statement = sql,
-                        params = paramsMap,
-                    )
-            }.sum()
-    }
 }

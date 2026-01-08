@@ -1,8 +1,5 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.dagpenger.saksbehandling.Oppgave
 import java.time.LocalDateTime
 import java.util.UUID
@@ -13,15 +10,13 @@ data class StatistikkOppgave constructor(
     val oppgaveTilstander: List<OppgaveTilstandEndring>,
     val personIdent: String,
 ) {
-    companion object {
-        private val objectMapper =
-            jacksonObjectMapper().apply {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-    }
-
-    fun toJson(): String = objectMapper.writeValueAsString(this)
+    fun asMap(): Map<String, Any> =
+        mapOf(
+            "sakId" to sakId.toString(),
+            "behandling" to behandling,
+            "oppgaveTilstander" to oppgaveTilstander,
+            "personIdent" to personIdent,
+        )
 
     constructor(
         oppgave: Oppgave,

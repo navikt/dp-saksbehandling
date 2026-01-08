@@ -1,12 +1,12 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.job.Job
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import no.nav.dagpenger.saksbehandling.statistikk.toJson
 
 class StatistikkJob(
     private val rapidsConnection: RapidsConnection,
@@ -31,25 +31,20 @@ class StatistikkJob(
                     sakId = sakId,
                 )
             }
-
-        rapidsConnection.publish(
-            //language=JSON
-            """
-            {
-              "@event_name": "statistikk_job",
-              "statistikkOppgaver":  ${oppgaver.toJson()}
-              
-            }  
-            """.trimIndent(),
-        )
+        oppgaver.forEach { oppgave ->
+            rapidsConnection.publish(
+                key = oppgave.personIdent,
+                message =
+                    JsonMessage
+                        .newMessage(
+                            mapOf(
+                                "@event_name" to "statistikk_oppgave_ferdigstilt",
+                                "oppgave" to oppgave.asMap(),
+                            ),
+                        ).toJson(),
+            )
+        }
     }
 
     override val logger: KLogger = KotlinLogging.logger {}
 }
-
-private fun List<StatistikkOppgave>.toJson(): String =
-    this.joinToString(
-        prefix = "[",
-        postfix = "]",
-        separator = ",",
-    ) { oppgave -> oppgave.toJson() }

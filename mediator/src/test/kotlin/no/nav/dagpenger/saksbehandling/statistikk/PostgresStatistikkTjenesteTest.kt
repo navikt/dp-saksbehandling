@@ -78,7 +78,9 @@ class PostgresStatistikkTjenesteTest {
             val oppgaverSomSkalSendesTilDVH = postgresStatistikkTjeneste.hentOppgaver()
             oppgaverSomSkalSendesTilDVH.map { it.first }.toSet() shouldBe setOf(dpSakOppgave1, dpSakOppgave2)
 
-            postgresStatistikkTjeneste.oppdaterOppgaver(oppgaverSomSkalSendesTilDVH) shouldBe 2
+            oppgaverSomSkalSendesTilDVH.forEach {
+                postgresStatistikkTjeneste.oppdaterOppgaver(it.first) shouldBe 1
+            }
             postgresStatistikkTjeneste.hentOppgaver() shouldBe emptyList()
         }
     }
