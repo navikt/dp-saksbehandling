@@ -72,10 +72,6 @@ internal abstract class AbstractBehandlingsresultatMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingsresultat = Behandlingsresultat(packet)
-        if (behandlingsresultat.behandlingId == UUID.fromString("019b9cf5-56da-726e-bfee-b4d4847a6bde")) {
-            logger.info { "Hopper over behandling som feiler" }
-            return
-        }
         withLoggingContext(
             "behandletHendelseId" to behandlingsresultat.behandletHendelseId,
             "behandlingId" to "${behandlingsresultat.behandlingId}",
