@@ -10,12 +10,15 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Date
 import java.util.Timer
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.minutes
 
 abstract class Job(
     private val leaderElector: suspend () -> Result<Boolean> = LeaderElector::isLeader,
 ) {
+    private val isRunning = AtomicBoolean(false)
+
     companion object {
         val now = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
         val omFemMinutter =
@@ -71,19 +74,29 @@ abstract class Job(
 
     private fun executeJobIfLeader() {
         runBlocking {
-            leaderElector()
-                .onSuccess {
-                    when (it) {
-                        true -> {
-                            logger.info { "Starter jobb $jobName" }
-                            executeJob()
-                        }
+            // Prevent overlapping executions on the same pod
+            if (!isRunning.compareAndSet(false, true)) {
+                logger.warn { "Jobb $jobName kjører fortsatt fra forrige intervall, hopper over denne kjøringen" }
+                return@runBlocking
+            }
 
-                        false -> logger.info { "Er ikke leder, kjører ikke jobb: $jobName" }
+            try {
+                leaderElector()
+                    .onSuccess {
+                        when (it) {
+                            true -> {
+                                logger.info { "Starter jobb $jobName" }
+                                executeJob()
+                            }
+
+                            false -> logger.info { "Er ikke leder, kjører ikke jobb: $jobName" }
+                        }
+                    }.onFailure {
+                        logger.error(it) { "Kunne ikke avgjøre om jeg er leder for jobb: $jobName" }
                     }
-                }.onFailure {
-                    logger.error(it) { "Kunne ikke avgjøre om jeg er leder for jobb: $jobName" }
-                }
+            } finally {
+                isRunning.set(false)
+            }
         }
     }
 }
