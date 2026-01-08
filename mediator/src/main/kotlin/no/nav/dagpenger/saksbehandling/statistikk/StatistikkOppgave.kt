@@ -7,7 +7,7 @@ import java.util.UUID
 data class StatistikkOppgave constructor(
     val behandling: StatistikkBehandling,
     val sakId: UUID,
-    val oppgaveTilstander: List<OppgaveTilstandEndring>,
+    val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring>,
     val personIdent: String,
 ) {
     fun asMap(): Map<String, Any> =
@@ -36,7 +36,7 @@ data class StatistikkOppgave constructor(
         sakId = sakId,
         oppgaveTilstander =
             oppgave.tilstandslogg.map {
-                OppgaveTilstandEndring(
+                StatistikkOppgaveTilstandsendring(
                     tilstand = it.tilstand.name,
                     tidspunkt = it.tidspunkt,
                     saksbehandlerIdent = null, // todo
@@ -58,7 +58,7 @@ data class StatistikkOppgave constructor(
         val tidspunkt: LocalDateTime,
     )
 
-    data class OppgaveTilstandEndring(
+    data class StatistikkOppgaveTilstandsendring(
         val tilstand: String,
         val tidspunkt: LocalDateTime,
         val saksbehandlerIdent: String?,

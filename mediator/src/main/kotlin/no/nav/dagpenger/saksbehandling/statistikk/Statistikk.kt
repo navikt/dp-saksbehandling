@@ -17,9 +17,9 @@ interface StatistikkTjeneste {
 
     fun hentAntallBrevSendt(): Int
 
-    fun hentOppgaver(): List<Pair<UUID, LocalDateTime>>
+    fun oppgaverTilStatistikk(): List<Pair<UUID, LocalDateTime>>
 
-    fun oppdaterOppgaver(oppgaveId: UUID): Int
+    fun markerSomOverført(oppgaveId: UUID): Int
 }
 
 class PostgresStatistikkTjeneste(
@@ -150,25 +150,31 @@ class PostgresStatistikkTjeneste(
             )
         } ?: 0
 
-    override fun hentOppgaver(): List<Pair<UUID, LocalDateTime>> {
+    override fun oppgaverTilStatistikk(): List<Pair<UUID, LocalDateTime>> {
         sessionOf(dataSource = dataSource).use { session ->
             return session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                        INSERT INTO oppgave_til_statistikk_v1 (oppgave_id,ferdig_behandlet_tidspunkt)
-                            SELECT opp.id ,opp.endret_tidspunkt
-                            FROM oppgave_v1 opp
-                            JOIN behandling_v1 beh on beh.id = opp.behandling_id
-                            JOIN sak_v2 sak on sak.id = beh.sak_id
-                            WHERE opp.tilstand = 'FERDIG_BEHANDLET'
-                            AND opp.endret_tidspunkt > (
+                        INSERT
+                        INTO    oppgave_til_statistikk_v1 (
+                                oppgave_id,
+                                ferdig_behandlet_tidspunkt
+                            )
+                            SELECT  opp.id,
+                                    opp.endret_tidspunkt
+                            FROM    oppgave_v1    opp
+                            JOIN    behandling_v1 beh ON beh.id = opp.behandling_id
+                            JOIN    sak_v2        sak ON sak.id = beh.sak_id
+                            WHERE   opp.tilstand = 'FERDIG_BEHANDLET'
+                            AND     sak.er_dp_sak = true
+                            AND     opp.endret_tidspunkt > (
                                 SELECT coalesce(max(ferdig_behandlet_tidspunkt), '1900-01-01t00:00:00'::timestamptz)
-                                FROM oppgave_til_statistikk_v1
-                                WHERE overfort_til_statistikk = true)
-                            AND sak.er_dp_sak = true
-                        ON CONFLICT (oppgave_id) DO UPDATE set ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
-                        RETURNING oppgave_id  , ferdig_behandlet_tidspunkt 
+                                FROM   oppgave_til_statistikk_v1
+                                WHERE  overfort_til_statistikk = true
+                                )
+                        ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
+                        RETURNING   oppgave_id, ferdig_behandlet_tidspunkt 
                     """,
                 ).map { row ->
                     Pair(row.uuid("oppgave_id"), row.localDateTime("ferdig_behandlet_tidspunkt"))
@@ -177,7 +183,7 @@ class PostgresStatistikkTjeneste(
         }
     }
 
-    override fun oppdaterOppgaver(oppgaveId: UUID): Int =
+    override fun markerSomOverført(oppgaveId: UUID): Int =
         sessionOf(dataSource = dataSource)
             .use { session ->
                 session.run(
@@ -185,8 +191,9 @@ class PostgresStatistikkTjeneste(
                         //language=PostgreSQL
                         statement = """
                             UPDATE oppgave_til_statistikk_v1
-                            SET overfort_til_statistikk = true
-                            WHERE oppgave_id = :oppgave_id""",
+                            SET    overfort_til_statistikk = true
+                            WHERE  oppgave_id = :oppgave_id
+                            """,
                         paramMap =
                             mapOf(
                                 "oppgave_id" to oppgaveId,

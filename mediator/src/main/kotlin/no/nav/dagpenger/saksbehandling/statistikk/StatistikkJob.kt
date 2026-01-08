@@ -7,6 +7,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.job.Job
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import java.time.LocalDateTime
+import java.util.UUID
 
 class StatistikkJob(
     private val rapidsConnection: RapidsConnection,
@@ -21,9 +23,9 @@ class StatistikkJob(
     override val jobName: String = "StatistikkJob"
 
     override suspend fun executeJob() {
-        val list = statistikkTjeneste.hentOppgaver()
+        val oppgaveListe: List<Pair<UUID, LocalDateTime>> = statistikkTjeneste.oppgaverTilStatistikk()
         val oppgaver =
-            list.map {
+            oppgaveListe.map {
                 val oppgave = oppgaveRepository.hentOppgave(it.first)
                 val sakId = sakMediator.hentSakIdForBehandlingId(oppgave.behandling.behandlingId)
                 StatistikkOppgave(

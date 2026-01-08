@@ -14,36 +14,28 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class StatistikkJobTest {
-    val sakId1 = UUID.randomUUID()
-    val sakId2 = UUID.randomUUID()
-    val oppgave1 =
-        TestHelper.lagOppgave()
-    val oppgave2 =
-        TestHelper.lagOppgave(
-            tilstandslogg =
-                lagTilstandLogg(),
-        )
+    private val sakId1 = UUID.randomUUID()
+    private val sakId2 = UUID.randomUUID()
+    private val oppgave1 = TestHelper.lagOppgave()
+    private val oppgave2 = TestHelper.lagOppgave(tilstandslogg = lagTilstandLogg())
+    private val now = LocalDateTime.now()
 
     private val testRapid = TestRapid()
-
     private val sakMediator =
         mockk<SakMediator>(relaxed = true).also {
             every { it.hentSakIdForBehandlingId(oppgave1.behandling.behandlingId) } returns sakId1
             every { it.hentSakIdForBehandlingId(oppgave2.behandling.behandlingId) } returns sakId2
         }
-
-    val now = LocalDateTime.now()
-
     private val statistikkTjeneste =
         mockk<StatistikkTjeneste>().also {
-            every { it.hentOppgaver() } returns
+            every { it.oppgaverTilStatistikk() } returns
                 listOf(
                     Pair(oppgave1.oppgaveId, now),
                     Pair(oppgave2.oppgaveId, now),
                 )
             every {
-                it.oppdaterOppgaver(oppgave1.oppgaveId)
-                it.oppdaterOppgaver(oppgave2.oppgaveId)
+                it.markerSomOverført(oppgave1.oppgaveId)
+                it.markerSomOverført(oppgave2.oppgaveId)
             } returns 1
         }
     private val oppgaveRepository =
@@ -53,7 +45,7 @@ class StatistikkJobTest {
         }
 
     @Test
-    fun `skal publisere statistikk oppgaver på riktig format`() {
+    fun `Skal publisere oppgaver til statistikk på riktig format`() {
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,
