@@ -61,7 +61,7 @@ class StatistikkJobTest {
                     "behandling": {
                         "id": "${oppgave1.behandling.behandlingId}",
                         "tidspunkt": "${oppgave1.behandling.opprettet}",
-                        "basertPåBehandling": null,
+                        "basertPåBehandlingId": null,
                         "utløstAv": {
                             "type": "${oppgave1.behandling.utløstAv.name}",
                             "tidspunkt": "${oppgave1.behandling.opprettet}"
@@ -82,7 +82,7 @@ class StatistikkJobTest {
                     "behandling": {
                         "id": "${oppgave2.behandling.behandlingId}",
                         "tidspunkt": "${oppgave2.behandling.opprettet}",
-                        "basertPåBehandling": null,
+                        "basertPåBehandlingId": null,
                         "utløstAv": {
                             "type": "${oppgave2.behandling.utløstAv.name}",
                             "tidspunkt": "${oppgave2.behandling.opprettet}"

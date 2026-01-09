@@ -30,7 +30,7 @@ data class StatistikkOppgave constructor(
             StatistikkBehandling(
                 id = oppgave.behandling.behandlingId,
                 tidspunkt = oppgave.behandling.opprettet,
-                basertPåBehandling = null,
+                basertPåBehandlingId = null,
                 utløstAv =
                     UtløstAv(
                         type = oppgave.behandling.utløstAv.name,
@@ -53,7 +53,7 @@ data class StatistikkOppgave constructor(
     data class StatistikkBehandling(
         val id: UUID,
         val tidspunkt: LocalDateTime,
-        val basertPåBehandling: UUID?,
+        val basertPåBehandlingId: UUID?,
         val utløstAv: UtløstAv,
     )
 
