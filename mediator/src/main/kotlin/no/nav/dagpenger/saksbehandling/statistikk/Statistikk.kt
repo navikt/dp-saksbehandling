@@ -4,7 +4,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
-import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -17,7 +16,7 @@ interface StatistikkTjeneste {
 
     fun hentAntallBrevSendt(): Int
 
-    fun oppgaverTilStatistikk(): List<Pair<UUID, LocalDateTime>>
+    fun oppgaverTilStatistikk(): List<UUID>
 
     fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int
 
@@ -152,7 +151,7 @@ class PostgresStatistikkTjeneste(
             )
         } ?: 0
 
-    override fun oppgaverTilStatistikk(): List<Pair<UUID, LocalDateTime>> {
+    override fun oppgaverTilStatistikk(): List<UUID> {
         sessionOf(dataSource = dataSource).use { session ->
             return session.run(
                 queryOf(
@@ -176,10 +175,10 @@ class PostgresStatistikkTjeneste(
                                 WHERE  overfort_til_statistikk = true
                                 )
                         ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
-                        RETURNING   oppgave_id, ferdig_behandlet_tidspunkt 
+                        RETURNING   oppgave_id 
                     """,
                 ).map { row ->
-                    Pair(row.uuid("oppgave_id"), row.localDateTime("ferdig_behandlet_tidspunkt"))
+                    row.uuid("oppgave_id")
                 }.asList,
             )
         }

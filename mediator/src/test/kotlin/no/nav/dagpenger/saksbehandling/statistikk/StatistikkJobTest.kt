@@ -28,11 +28,7 @@ class StatistikkJobTest {
         }
     private val statistikkTjeneste =
         mockk<StatistikkTjeneste>().also {
-            every { it.oppgaverTilStatistikk() } returns
-                listOf(
-                    Pair(oppgave1.oppgaveId, now),
-                    Pair(oppgave2.oppgaveId, now),
-                )
+            every { it.oppgaverTilStatistikk() } returns listOf(oppgave1.oppgaveId, oppgave2.oppgaveId)
             every {
                 it.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId)
                 it.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId)

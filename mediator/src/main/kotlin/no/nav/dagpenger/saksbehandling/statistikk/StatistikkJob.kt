@@ -7,7 +7,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.job.Job
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import java.time.LocalDateTime
 import java.util.UUID
 
 class StatistikkJob(
@@ -26,11 +25,11 @@ class StatistikkJob(
             logger.error { "Ikke alle oppgaver er publisert til statistikk. Avbryter kjøring." }
             return
         }
-        val oppgaveListe: List<Pair<UUID, LocalDateTime>> = statistikkTjeneste.oppgaverTilStatistikk()
-        logger.info { "Antall oppgave som skal publiseres til statistikk: ${oppgaveListe.size}" }
+        val oppgaveIdListe: List<UUID> = statistikkTjeneste.oppgaverTilStatistikk()
+        logger.info { "Antall oppgave som skal publiseres til statistikk: ${oppgaveIdListe.size}" }
         val oppgaver =
-            oppgaveListe.map {
-                val oppgave = oppgaveRepository.hentOppgave(it.first)
+            oppgaveIdListe.map {
+                val oppgave = oppgaveRepository.hentOppgave(it)
                 val sakId = sakMediator.hentSakIdForBehandlingId(oppgave.behandling.behandlingId)
                 StatistikkOppgave(
                     oppgave = oppgave,

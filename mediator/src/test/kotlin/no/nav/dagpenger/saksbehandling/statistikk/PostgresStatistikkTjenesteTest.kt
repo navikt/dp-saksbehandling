@@ -12,10 +12,10 @@ import java.util.UUID
 class PostgresStatistikkTjenesteTest {
     @Test
     fun `Skal hente ferdigbehandlede oppgaver som tilhører dp-sak og som ikke er oversendt statistikk`() {
-        val dpSakFerdigBehandletOppgave1 = UUID.randomUUID()
-        val dpSakFerdigBehandletOppgave2 = UUID.randomUUID()
-        val dpSakUnderBehandlingOppgave3 = UUID.randomUUID()
-        val arenaFerdigBehandletOppgave4 = UUID.randomUUID()
+        val dpSakFerdigBehandletOppgaveId1 = UUID.randomUUID()
+        val dpSakFerdigBehandletOppgaveId2 = UUID.randomUUID()
+        val dpSakUnderBehandlingOppgaveId3 = UUID.randomUUID()
+        val arenaFerdigBehandletOppgaveId4 = UUID.randomUUID()
         DBTestHelper.withMigratedDb { ds ->
             TestHelper.lagBehandling().let {
                 opprettSakMedBehandlingOgOppgave(
@@ -28,7 +28,7 @@ class PostgresStatistikkTjenesteTest {
                     behandling = it,
                     oppgave =
                         TestHelper.lagOppgave(
-                            oppgaveId = dpSakFerdigBehandletOppgave1,
+                            oppgaveId = dpSakFerdigBehandletOppgaveId1,
                             behandling = it,
                             tilstand = Oppgave.FerdigBehandlet,
                         ),
@@ -47,7 +47,7 @@ class PostgresStatistikkTjenesteTest {
                     behandling = it,
                     oppgave =
                         TestHelper.lagOppgave(
-                            oppgaveId = dpSakFerdigBehandletOppgave2,
+                            oppgaveId = dpSakFerdigBehandletOppgaveId2,
                             behandling = it,
                             tilstand = Oppgave.FerdigBehandlet,
                         ),
@@ -66,7 +66,7 @@ class PostgresStatistikkTjenesteTest {
                     behandling = it,
                     oppgave =
                         TestHelper.lagOppgave(
-                            oppgaveId = dpSakUnderBehandlingOppgave3,
+                            oppgaveId = dpSakUnderBehandlingOppgaveId3,
                             behandling = it,
                             tilstand = Oppgave.UnderBehandling,
                         ),
@@ -85,7 +85,7 @@ class PostgresStatistikkTjenesteTest {
                     behandling = it,
                     oppgave =
                         TestHelper.lagOppgave(
-                            oppgaveId = arenaFerdigBehandletOppgave4,
+                            oppgaveId = arenaFerdigBehandletOppgaveId4,
                             behandling = it,
                             tilstand = Oppgave.FerdigBehandlet,
                         ),
@@ -96,14 +96,14 @@ class PostgresStatistikkTjenesteTest {
             val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(ds)
 
             val oppgaverSomSkalSendesTilDVH = postgresStatistikkTjeneste.oppgaverTilStatistikk()
-            oppgaverSomSkalSendesTilDVH.map { it.first }.toSet() shouldBe setOf(dpSakFerdigBehandletOppgave1, dpSakFerdigBehandletOppgave2)
+            oppgaverSomSkalSendesTilDVH.map { it }.toSet() shouldBe setOf(dpSakFerdigBehandletOppgaveId1, dpSakFerdigBehandletOppgaveId2)
 
             oppgaverSomSkalSendesTilDVH.forEach {
-                postgresStatistikkTjeneste.markerOppgaveTilStatistikkSomOverført(it.first) shouldBe 1
+                postgresStatistikkTjeneste.markerOppgaveTilStatistikkSomOverført(it) shouldBe 1
             }
             postgresStatistikkTjeneste.oppgaverTilStatistikk() shouldBe emptyList()
 
-            val dpSakFerdigBehandletOppgave5 = UUID.randomUUID()
+            val dpSakFerdigBehandletOppgaveId5 = UUID.randomUUID()
             TestHelper.lagBehandling().let {
                 opprettSakMedBehandlingOgOppgave(
                     person = DBTestHelper.testPerson,
@@ -115,7 +115,7 @@ class PostgresStatistikkTjenesteTest {
                     behandling = it,
                     oppgave =
                         TestHelper.lagOppgave(
-                            oppgaveId = dpSakFerdigBehandletOppgave5,
+                            oppgaveId = dpSakFerdigBehandletOppgaveId5,
                             behandling = it,
                             tilstand = Oppgave.FerdigBehandlet,
                         ),
@@ -124,7 +124,7 @@ class PostgresStatistikkTjenesteTest {
             }
 
             val nyOppgaveSomSkalSendesTilDVH = postgresStatistikkTjeneste.oppgaverTilStatistikk()
-            nyOppgaveSomSkalSendesTilDVH.map { it.first }.toSet() shouldBe setOf(dpSakFerdigBehandletOppgave5)
+            nyOppgaveSomSkalSendesTilDVH.map { it }.toSet() shouldBe setOf(dpSakFerdigBehandletOppgaveId5)
         }
     }
 }
