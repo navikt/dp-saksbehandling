@@ -59,7 +59,7 @@ class StatistikkJobTest {
                 "oppgave": {
                     "sakId": "$sakId1",
                     "behandling": {
-                        "id": "${oppgave1.behandling.behandlingId}",
+                        "behandlingId": "${oppgave1.behandling.behandlingId}",
                         "tidspunkt": "${oppgave1.behandling.opprettet}",
                         "basertPåBehandlingId": null,
                         "utløstAv": {
@@ -80,7 +80,7 @@ class StatistikkJobTest {
                 "oppgave": {
                     "sakId": "$sakId2",
                     "behandling": {
-                        "id": "${oppgave2.behandling.behandlingId}",
+                        "behandlingId": "${oppgave2.behandling.behandlingId}",
                         "tidspunkt": "${oppgave2.behandling.opprettet}",
                         "basertPåBehandlingId": null,
                         "utløstAv": {

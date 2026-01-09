@@ -4,7 +4,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class StatistikkOppgave constructor(
+data class StatistikkOppgave(
     val behandling: StatistikkBehandling,
     val sakId: UUID,
     val personIdent: String,
@@ -28,7 +28,7 @@ data class StatistikkOppgave constructor(
     ) : this(
         behandling =
             StatistikkBehandling(
-                id = oppgave.behandling.behandlingId,
+                behandlingId = oppgave.behandling.behandlingId,
                 tidspunkt = oppgave.behandling.opprettet,
                 basertPåBehandlingId = null,
                 utløstAv =
@@ -51,7 +51,7 @@ data class StatistikkOppgave constructor(
     )
 
     data class StatistikkBehandling(
-        val id: UUID,
+        val behandlingId: UUID,
         val tidspunkt: LocalDateTime,
         val basertPåBehandlingId: UUID?,
         val utløstAv: UtløstAv,

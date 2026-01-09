@@ -191,12 +191,10 @@ class KlageMediator(
                         ident = hendelse.utførtAv.navIdent,
                     )
                 }
-
             val personDeferred =
                 async(Dispatchers.IO) {
                     oppslag.hentPerson(oppgave.personIdent())
                 }
-
             val klageBehandling =
                 klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
                     klageBehandling.behandlingUtført(
@@ -217,20 +215,14 @@ class KlageMediator(
                         sakId = sakId.toString(),
                     )
                 }
-
             val html = htmlDeferred.await().getOrThrow()
-//            1. commit - oppretter utsending
             utsendingMediator.opprettUtsending(
                 behandlingId = oppgave.behandling.behandlingId,
                 brev = html,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
             )
-
-//            2. commit - lagrer klagebehandling
             klageRepository.lagre(klageBehandling)
-//            2. publisher på rapids - lagrer klagebehandling
-
             rapidsConnection.publish(
                 oppgave.personIdent(),
                 JsonMessage
@@ -245,7 +237,6 @@ class KlageMediator(
                         ),
                     ).toJson(),
             )
-
             auditlogg.opprett(
                 "Ferdigstilte en klagebehandling",
                 klageBehandling.personIdent(),
@@ -255,7 +246,7 @@ class KlageMediator(
     }
 
     // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
-// TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
+    // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
     fun avbrytKlage(hendelse: AvbruttHendelse) {
         sjekkTilgangOgEierAvOppgave(
             behandlingId = hendelse.behandlingId,
@@ -282,7 +273,6 @@ class KlageMediator(
         }
     }
 
-    // Her kommer en kafka hendelse når utsending er distribuert
     fun vedtakDistribuert(hendelse: UtsendingDistribuert) {
         val klageBehandling = klageRepository.hentKlageBehandling(behandlingId = hendelse.behandlingId)
         val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
