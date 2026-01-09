@@ -16,14 +16,18 @@ class StatistikkJob(
     private val statistikkTjeneste: StatistikkTjeneste,
     private val oppgaveRepository: OppgaveRepository,
 ) : Job() {
-    private companion object {
-        private val logger = KotlinLogging.logger {}
-    }
-
     override val jobName: String = "StatistikkJob"
+    override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
+        if (statistikkTjeneste.tidligereOppgaverErOverførtTilStatistikk()) {
+            logger.info { "Starter publisering av oppgaver til statistikk." }
+        } else {
+            logger.error { "Ikke alle oppgaver er publisert til statistikk. Avbryter kjøring." }
+            return
+        }
         val oppgaveListe: List<Pair<UUID, LocalDateTime>> = statistikkTjeneste.oppgaverTilStatistikk()
+        logger.info { "Antall oppgave som skal publiseres til statistikk: ${oppgaveListe.size}" }
         val oppgaver =
             oppgaveListe.map {
                 val oppgave = oppgaveRepository.hentOppgave(it.first)
@@ -46,7 +50,6 @@ class StatistikkJob(
                         ).toJson(),
             )
         }
+        logger.info { "Publisering av oppgaver til statistikk ferdig." }
     }
-
-    override val logger: KLogger = KotlinLogging.logger {}
 }

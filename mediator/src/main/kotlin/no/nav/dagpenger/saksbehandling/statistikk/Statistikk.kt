@@ -19,7 +19,9 @@ interface StatistikkTjeneste {
 
     fun oppgaverTilStatistikk(): List<Pair<UUID, LocalDateTime>>
 
-    fun markerSomOverført(oppgaveId: UUID): Int
+    fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int
+
+    fun tidligereOppgaverErOverførtTilStatistikk(): Boolean
 }
 
 class PostgresStatistikkTjeneste(
@@ -183,22 +185,41 @@ class PostgresStatistikkTjeneste(
         }
     }
 
-    override fun markerSomOverført(oppgaveId: UUID): Int =
-        sessionOf(dataSource = dataSource)
-            .use { session ->
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = """
+    override fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int =
+        sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                             UPDATE oppgave_til_statistikk_v1
                             SET    overfort_til_statistikk = true
                             WHERE  oppgave_id = :oppgave_id
                             """,
-                        paramMap =
-                            mapOf(
-                                "oppgave_id" to oppgaveId,
-                            ),
-                    ).asUpdate,
+                    paramMap =
+                        mapOf(
+                            "oppgave_id" to oppgaveId,
+                        ),
+                ).asUpdate,
+            )
+        }
+
+    override fun tidligereOppgaverErOverførtTilStatistikk(): Boolean {
+        sessionOf(dataSource = dataSource).use { session ->
+            val count =
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement = """
+                        SELECT COUNT(*) as count
+                        FROM   oppgave_til_statistikk_v1
+                        WHERE  overfort_til_statistikk = false;
+                    """,
+                        paramMap = mapOf(),
+                    ).map { row ->
+                        row.int("count")
+                    }.asSingle,
                 )
-            }
+            return count == 0
+        }
+    }
 }

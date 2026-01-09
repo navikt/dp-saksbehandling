@@ -34,9 +34,10 @@ class StatistikkJobTest {
                     Pair(oppgave2.oppgaveId, now),
                 )
             every {
-                it.markerSomOverført(oppgave1.oppgaveId)
-                it.markerSomOverført(oppgave2.oppgaveId)
+                it.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId)
+                it.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId)
             } returns 1
+            every { it.tidligereOppgaverErOverførtTilStatistikk() } returns true
         }
     private val oppgaveRepository =
         mockk<OppgaveRepository>().also {
@@ -112,5 +113,21 @@ class StatistikkJobTest {
             
             }
             """.trimIndent()
+    }
+
+    @Test
+    fun `Skal ikke publisere oppgaver til statistikk hvis det finnes tidligere oppgaver som ikke er overført`() {
+        every { statistikkTjeneste.tidligereOppgaverErOverførtTilStatistikk() } returns false
+
+        runBlocking {
+            StatistikkJob(
+                rapidsConnection = testRapid,
+                sakMediator = sakMediator,
+                statistikkTjeneste = statistikkTjeneste,
+                oppgaveRepository = oppgaveRepository,
+            ).executeJob()
+        }
+
+        assert(testRapid.inspektør.size == 0)
     }
 }

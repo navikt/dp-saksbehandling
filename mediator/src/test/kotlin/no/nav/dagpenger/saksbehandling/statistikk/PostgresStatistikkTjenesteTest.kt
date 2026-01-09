@@ -99,7 +99,7 @@ class PostgresStatistikkTjenesteTest {
             oppgaverSomSkalSendesTilDVH.map { it.first }.toSet() shouldBe setOf(dpSakFerdigBehandletOppgave1, dpSakFerdigBehandletOppgave2)
 
             oppgaverSomSkalSendesTilDVH.forEach {
-                postgresStatistikkTjeneste.markerSomOverført(it.first) shouldBe 1
+                postgresStatistikkTjeneste.markerOppgaveTilStatistikkSomOverført(it.first) shouldBe 1
             }
             postgresStatistikkTjeneste.oppgaverTilStatistikk() shouldBe emptyList()
 
