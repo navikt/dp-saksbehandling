@@ -58,7 +58,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
             """
             {
-                "@event_name": "statistikk_oppgave_ferdigstilt",
+                "@event_name": "oppgave_til_statistikk",
                 "oppgave": {
                     "sakId": "$sakId1",
                     "behandling": {
@@ -79,7 +79,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
             """
             {
-                "@event_name": "statistikk_oppgave_ferdigstilt",
+                "@event_name": "oppgave_til_statistikk",
                 "oppgave": {
                     "sakId": "$sakId2",
                     "behandling": {
