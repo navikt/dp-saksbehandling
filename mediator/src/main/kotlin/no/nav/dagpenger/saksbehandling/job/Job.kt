@@ -28,7 +28,7 @@ abstract class Job(
                     .now()
                     .atZone(ZoneId.of("Europe/Oslo"))
                     .toInstant()
-                    .plus(Duration.ofMinutes(10)),
+                    .plus(Duration.ofMinutes(5)),
             )
         val Int.Dag get() = this * 1000L * 60L * 60L * 24L
         val Int.Minutt get() = this * 1000L * 60L
