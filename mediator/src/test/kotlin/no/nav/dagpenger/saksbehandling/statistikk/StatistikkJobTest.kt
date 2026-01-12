@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagTilstandLogg
@@ -27,10 +28,8 @@ class StatistikkJobTest {
     private val statistikkTjeneste =
         mockk<StatistikkTjeneste>().also {
             every { it.oppgaverTilStatistikk() } returns listOf(oppgave1.oppgaveId, oppgave2.oppgaveId)
-            every {
-                it.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId)
-                it.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId)
-            } returns 1
+            every { it.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId) } returns 1
+            every { it.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId) } returns 1
             every { it.tidligereOppgaverErOverførtTilStatistikk() } returns true
         }
     private val oppgaveRepository =
@@ -40,7 +39,7 @@ class StatistikkJobTest {
         }
 
     @Test
-    fun `Skal publisere oppgaver til statistikk på riktig format`() {
+    fun `Skal publisere oppgaver til statistikk på riktig format og sette oppgaven som publisert`() {
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,
@@ -48,6 +47,11 @@ class StatistikkJobTest {
                 statistikkTjeneste = statistikkTjeneste,
                 oppgaveRepository = oppgaveRepository,
             ).executeJob()
+        }
+
+        verify(exactly = 1) {
+            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId)
+            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId)
         }
 
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJson

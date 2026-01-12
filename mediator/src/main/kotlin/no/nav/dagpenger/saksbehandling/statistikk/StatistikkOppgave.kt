@@ -6,6 +6,7 @@ import java.util.UUID
 
 data class StatistikkOppgave(
     val behandling: StatistikkBehandling,
+    val oppgaveId: UUID,
     val sakId: UUID,
     val personIdent: String,
     val saksbehandlerIdent: String?,
@@ -37,6 +38,7 @@ data class StatistikkOppgave(
                         tidspunkt = oppgave.behandling.opprettet, // todo
                     ),
             ),
+        oppgaveId = oppgave.oppgaveId,
         sakId = sakId,
         personIdent = oppgave.personIdent(),
         saksbehandlerIdent = oppgave.sisteSaksbehandler(),

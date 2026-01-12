@@ -37,17 +37,23 @@ class StatistikkJob(
                 )
             }
         statistikkOppgaver.forEach { statistikkOppgave ->
-            rapidsConnection.publish(
-                key = statistikkOppgave.personIdent,
-                message =
-                    JsonMessage
-                        .newMessage(
-                            mapOf(
-                                "@event_name" to "oppgave_til_statistikk",
-                                "oppgave" to statistikkOppgave.asMap(),
-                            ),
-                        ).toJson(),
-            )
+            rapidsConnection
+                .publish(
+                    key = statistikkOppgave.personIdent,
+                    message =
+                        JsonMessage
+                            .newMessage(
+                                mapOf(
+                                    "@event_name" to "oppgave_til_statistikk",
+                                    "oppgave" to statistikkOppgave.asMap(),
+                                ),
+                            ).toJson(),
+                ).also {
+                    statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(statistikkOppgave.oppgaveId)
+                    logger.info {
+                        "Publisert oppgave med id ${statistikkOppgave.oppgaveId} til statistikk."
+                    }
+                }
         }
         logger.info { "Publisering av oppgaver til statistikk ferdig." }
     }
