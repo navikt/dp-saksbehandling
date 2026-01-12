@@ -12,6 +12,7 @@ import java.util.Date
 import java.util.Timer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.fixedRateTimer
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 abstract class Job(
@@ -62,7 +63,7 @@ abstract class Job(
         startAt: Date = omFemMinutter,
         period: Long = 1.Dag,
     ): Timer {
-        logger.info { "Jobb $jobName vil kjøre med intervall ${period.minutes} minutter med første kjøring $startAt" }
+        logger.info { "Jobb $jobName vil kjøre med intervall ${period.milliseconds.inWholeMinutes} minutter med første kjøring $startAt" }
         return fixedRateTimer(
             name = jobName,
             daemon = daemon,
