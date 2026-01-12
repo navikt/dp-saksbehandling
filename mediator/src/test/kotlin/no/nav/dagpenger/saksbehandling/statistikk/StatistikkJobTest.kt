@@ -10,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagTilstandLogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.util.UUID
 
 class StatistikkJobTest {
@@ -18,7 +17,6 @@ class StatistikkJobTest {
     private val sakId2 = UUID.randomUUID()
     private val oppgave1 = TestHelper.lagOppgave()
     private val oppgave2 = TestHelper.lagOppgave(tilstandslogg = lagTilstandLogg())
-    private val now = LocalDateTime.now()
 
     private val testRapid = TestRapid()
     private val sakMediator =

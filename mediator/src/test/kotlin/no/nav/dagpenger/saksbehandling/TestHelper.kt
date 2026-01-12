@@ -148,7 +148,7 @@ internal object TestHelper {
                         behandletHendelseType = "Søknad",
                         behandlingId = UUID.randomUUID(),
                     ),
-                tidspunkt = opprettetNå,
+                tidspunkt = opprettetNå.minusDays(3),
             ),
             Tilstandsendring(
                 tilstand = UNDER_BEHANDLING,

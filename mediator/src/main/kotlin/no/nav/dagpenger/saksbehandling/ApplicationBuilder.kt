@@ -58,6 +58,7 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.StatistikkJob
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -191,6 +192,7 @@ internal class ApplicationBuilder(
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
+    private val statistikkJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication
@@ -299,6 +301,15 @@ internal class ApplicationBuilder(
                         oppgaveMediator = oppgaveMediator,
                     ).startJob(
                         period = 1.Dag,
+                    )
+                statistikkJob =
+                    StatistikkJob(
+                        rapidsConnection = rapidsConnection,
+                        sakMediator = sakMediator,
+                        statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
+                        oppgaveRepository = oppgaveRepository,
+                    ).startJob(
+                        period = 5.Minutt,
                     )
 
                 oversendKlageinstansAlarmJob =
