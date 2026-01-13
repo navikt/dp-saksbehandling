@@ -13,7 +13,6 @@ import java.util.Timer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 
 abstract class Job(
     private val leaderElector: suspend () -> Result<Boolean> = LeaderElector::isLeader,

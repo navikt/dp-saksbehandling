@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
 import java.time.LocalDateTime
 import java.util.UUID
@@ -12,6 +13,7 @@ data class StatistikkOppgave(
     val saksbehandlerIdent: String?,
     val beslutterIdent: String?,
     val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring>,
+    val versjon: String = Configuration.versjon,
 ) {
     fun asMap(): Map<String, Any> =
         buildMap {
@@ -21,6 +23,7 @@ data class StatistikkOppgave(
             saksbehandlerIdent?.let { put("saksbehandlerIdent", it) }
             beslutterIdent?.let { put("beslutterIdent", it) }
             put("oppgaveTilstander", oppgaveTilstander)
+            put("versjon", versjon)
         }
 
     constructor(

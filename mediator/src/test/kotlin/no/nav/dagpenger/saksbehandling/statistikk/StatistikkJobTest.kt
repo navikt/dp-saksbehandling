@@ -40,6 +40,7 @@ class StatistikkJobTest {
 
     @Test
     fun `Skal publisere oppgaver til statistikk på riktig format og sette oppgaven som publisert`() {
+        System.setProperty("NAIS_APP_IMAGE", "dp:saksbehandling:1.2.3")
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,
@@ -70,7 +71,8 @@ class StatistikkJobTest {
                         }
                     },
                     "personIdent": "${oppgave1.personIdent()}",
-                    "oppgaveTilstander": []
+                    "oppgaveTilstander": [],
+                    "versjon": "dp:saksbehandling:1.2.3"
                 }
             
             }
@@ -106,7 +108,8 @@ class StatistikkJobTest {
                             "tilstand": "${oppgave2.tilstandslogg[2].tilstand.name}",
                             "tidspunkt": "${oppgave2.tilstandslogg[2].tidspunkt}"
                         }
-                    ]
+                    ],
+                    "versjon": "dp:saksbehandling:1.2.3"
                 }
             
             }
