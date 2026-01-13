@@ -8,7 +8,10 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagTilstandLogg
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -16,8 +19,29 @@ import java.util.UUID
 class StatistikkJobTest {
     private val sakId1 = UUID.randomUUID()
     private val sakId2 = UUID.randomUUID()
-    private val oppgave1 = TestHelper.lagOppgave()
-    private val oppgave2 = TestHelper.lagOppgave(tilstandslogg = lagTilstandLogg())
+
+    private val oppgave1 =
+        TestHelper.lagOppgave(
+            behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.SØKNAD),
+        )
+    val basertPåBehandlingIdForOppgave2 = UUIDv7.ny()
+    private val oppgave2 =
+        TestHelper.lagOppgave(
+            behandling =
+                TestHelper.lagBehandling(
+                    utløstAvType = UtløstAvType.MANUELL,
+                    hendelse =
+                        ManuellBehandlingOpprettetHendelse(
+                            manuellId = UUIDv7.ny(),
+                            behandlingId = UUIDv7.ny(),
+                            ident = "MIKKE",
+                            opprettet = TestHelper.opprettetNå,
+                            basertPåBehandling = basertPåBehandlingIdForOppgave2,
+                            behandlingskjedeId = basertPåBehandlingIdForOppgave2,
+                        ),
+                ),
+            tilstandslogg = lagTilstandLogg(),
+        )
 
     private val testRapid = TestRapid()
     private val sakMediator =
@@ -88,7 +112,7 @@ class StatistikkJobTest {
                     "behandling": {
                         "behandlingId": "${oppgave2.behandling.behandlingId}",
                         "tidspunkt": "${oppgave2.behandling.opprettet}",
-                        "basertPåBehandlingId": null,
+                        "basertPåBehandlingId": "$basertPåBehandlingIdForOppgave2",
                         "utløstAv": {
                             "type": "${oppgave2.behandling.utløstAv.name}",
                             "tidspunkt": "${oppgave2.behandling.opprettet}"

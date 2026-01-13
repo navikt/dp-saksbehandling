@@ -1,7 +1,11 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -35,7 +39,7 @@ data class StatistikkOppgave(
             StatistikkBehandling(
                 behandlingId = oppgave.behandling.behandlingId,
                 tidspunkt = oppgave.behandling.opprettet,
-                basertPåBehandlingId = null,
+                basertPåBehandlingId = oppgave.behandling.basertPåBehandlingId(),
                 utløstAv =
                     UtløstAv(
                         type = oppgave.behandling.utløstAv.name,
@@ -73,3 +77,11 @@ data class StatistikkOppgave(
         val tidspunkt: LocalDateTime,
     )
 }
+
+private fun Behandling.basertPåBehandlingId(): UUID? =
+    when (this.hendelse) {
+        is SøknadsbehandlingOpprettetHendelse -> (hendelse as SøknadsbehandlingOpprettetHendelse).basertPåBehandling
+        is MeldekortbehandlingOpprettetHendelse -> (hendelse as MeldekortbehandlingOpprettetHendelse).basertPåBehandling
+        is ManuellBehandlingOpprettetHendelse -> (hendelse as ManuellBehandlingOpprettetHendelse).basertPåBehandling
+        else -> null
+    }
