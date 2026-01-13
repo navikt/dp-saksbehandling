@@ -174,7 +174,9 @@ class PostgresStatistikkTjeneste(
                                 FROM   oppgave_til_statistikk_v1
                                 WHERE  overfort_til_statistikk = true
                                 )
-                            LIMIT 2
+                           ORDER BY opp.endret_tidspunkt 
+                           LIMIT 2
+                            
                         ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
                         RETURNING   oppgave_id 
                     """,
