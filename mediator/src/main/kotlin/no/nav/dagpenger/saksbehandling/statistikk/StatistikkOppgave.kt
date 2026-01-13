@@ -18,6 +18,7 @@ data class StatistikkOppgave(
     fun asMap(): Map<String, Any> =
         buildMap {
             put("sakId", sakId.toString())
+            put("oppgaveId", oppgaveId.toString())
             put("behandling", behandling)
             put("personIdent", personIdent)
             saksbehandlerIdent?.let { put("saksbehandlerIdent", it) }

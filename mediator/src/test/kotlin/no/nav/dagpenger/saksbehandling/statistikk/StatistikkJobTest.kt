@@ -61,6 +61,7 @@ class StatistikkJobTest {
                 "@event_name": "oppgave_til_statistikk",
                 "oppgave": {
                     "sakId": "$sakId1",
+                    "oppgaveId": "${oppgave1.oppgaveId}",
                     "behandling": {
                         "behandlingId": "${oppgave1.behandling.behandlingId}",
                         "tidspunkt": "${oppgave1.behandling.opprettet}",
@@ -83,6 +84,7 @@ class StatistikkJobTest {
                 "@event_name": "oppgave_til_statistikk",
                 "oppgave": {
                     "sakId": "$sakId2",
+                    "oppgaveId": "${oppgave2.oppgaveId}",
                     "behandling": {
                         "behandlingId": "${oppgave2.behandling.behandlingId}",
                         "tidspunkt": "${oppgave2.behandling.opprettet}",
