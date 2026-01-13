@@ -6,10 +6,13 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaConfiguration
+
+private val logger = KotlinLogging.logger { }
 
 object Configuration {
     const val APP_NAME = "dp-saksbehandling"
@@ -132,6 +135,13 @@ object Configuration {
             val accessToken = azureAdClient.onBehalfOf(token, dpMeldingOmVedtakScope).access_token
             requireNotNull(accessToken) { "Failed to get access token" }
             accessToken
+        }
+    }
+
+    val versjon by lazy {
+        properties.getOrElse(Key("NAIS_APP_IMAGE", stringType)) {
+            logger.error { "Mangler dp-saksbehandling versjon" }
+            "Ukjent"
         }
     }
 }
