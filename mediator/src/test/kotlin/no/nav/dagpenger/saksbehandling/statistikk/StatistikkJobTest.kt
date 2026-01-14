@@ -6,23 +6,38 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
-import no.nav.dagpenger.saksbehandling.TestHelper.lagTilstandLogg
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class StatistikkJobTest {
     private val sakId1 = UUID.randomUUID()
     private val sakId2 = UUID.randomUUID()
 
+    private val avsluttetTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+
     private val oppgave1 =
         TestHelper.lagOppgave(
             behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.SØKNAD),
+            tilstandslogg =
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        hendelse = TomHendelse,
+                        tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
+                        tidspunkt = avsluttetTidspunkt,
+                    ),
+                ),
         )
     val basertPåBehandlingIdForOppgave2 = UUIDv7.ny()
     private val oppgave2 =
@@ -40,7 +55,14 @@ class StatistikkJobTest {
                             behandlingskjedeId = basertPåBehandlingIdForOppgave2,
                         ),
                 ),
-            tilstandslogg = lagTilstandLogg(),
+            tilstandslogg =
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        hendelse = TomHendelse,
+                        tilstand = Oppgave.Tilstand.Type.AVBRUTT,
+                        tidspunkt = avsluttetTidspunkt,
+                    ),
+                ),
         )
 
     private val testRapid = TestRapid()
@@ -96,8 +118,15 @@ class StatistikkJobTest {
                         }
                     },
                     "personIdent": "${oppgave1.personIdent()}",
-                    "oppgaveTilstander": [],
-                    "versjon": "dp:saksbehandling:1.2.3"
+                    "oppgaveTilstander": [
+                        {
+                            "tilstand": "FERDIG_BEHANDLET",
+                            "tidspunkt": "$avsluttetTidspunkt"
+                        }
+
+                    ],
+                    "versjon": "dp:saksbehandling:1.2.3",
+                    "avsluttetTidspunkt": "$avsluttetTidspunkt"
                 }
             
             }
@@ -123,19 +152,12 @@ class StatistikkJobTest {
                     "beslutterIdent": "${oppgave2.sisteBeslutter()}",
                     "oppgaveTilstander": [
                         {
-                            "tilstand": "${oppgave2.tilstandslogg[0].tilstand.name}",
-                            "tidspunkt": "${oppgave2.tilstandslogg[0].tidspunkt}"
-                        },
-                        {
-                            "tilstand": "${oppgave2.tilstandslogg[1].tilstand.name}",
-                            "tidspunkt": "${oppgave2.tilstandslogg[1].tidspunkt}"
-                        },
-                        {
-                            "tilstand": "${oppgave2.tilstandslogg[2].tilstand.name}",
-                            "tidspunkt": "${oppgave2.tilstandslogg[2].tidspunkt}"
+                            "tilstand": "AVBRUTT",
+                            "tidspunkt": "$avsluttetTidspunkt"
                         }
                     ],
-                    "versjon": "dp:saksbehandling:1.2.3"
+                    "versjon": "dp:saksbehandling:1.2.3",
+                    "avsluttetTidspunkt": "$avsluttetTidspunkt"
                 }
             
             }

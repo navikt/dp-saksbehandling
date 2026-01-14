@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.statistikk
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -17,6 +18,7 @@ data class StatistikkOppgave(
     val saksbehandlerIdent: String?,
     val beslutterIdent: String?,
     val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring>,
+    val avsluttetTidspunkt: LocalDateTime,
     val versjon: String = Configuration.versjon,
 ) {
     fun asMap(): Map<String, Any> =
@@ -29,6 +31,7 @@ data class StatistikkOppgave(
             beslutterIdent?.let { put("beslutterIdent", it) }
             put("oppgaveTilstander", oppgaveTilstander)
             put("versjon", versjon)
+            put("avsluttetTidspunkt", avsluttetTidspunkt.toString())
         }
 
     constructor(
@@ -51,6 +54,7 @@ data class StatistikkOppgave(
         personIdent = oppgave.personIdent(),
         saksbehandlerIdent = oppgave.sisteSaksbehandler(),
         beslutterIdent = oppgave.sisteBeslutter(),
+        avsluttetTidspunkt = oppgave.tilstandslogg.avsluttetTidspunkt(),
         oppgaveTilstander =
             oppgave.tilstandslogg.map {
                 StatistikkOppgaveTilstandsendring(
@@ -77,6 +81,15 @@ data class StatistikkOppgave(
         val tidspunkt: LocalDateTime,
     )
 }
+
+private fun OppgaveTilstandslogg.avsluttetTidspunkt(): LocalDateTime =
+    this
+        .single {
+            setOf(
+                Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
+                Oppgave.Tilstand.Type.AVBRUTT,
+            ).contains(it.tilstand)
+        }.tidspunkt
 
 private fun Behandling.basertPåBehandlingId(): UUID? =
     when (this.hendelse) {
