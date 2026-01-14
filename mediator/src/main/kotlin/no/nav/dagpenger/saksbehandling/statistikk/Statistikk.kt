@@ -163,13 +163,15 @@ class PostgresStatistikkTjeneste(
                                 ferdig_behandlet_tidspunkt
                             )
                             SELECT  opp.id,
-                                    opp.endret_tidspunkt
-                            FROM    oppgave_v1    opp
-                            JOIN    behandling_v1 beh ON beh.id = opp.behandling_id
-                            JOIN    sak_v2        sak ON sak.id = beh.sak_id
-                            WHERE   opp.tilstand = 'FERDIG_BEHANDLET'
+                                    otl.tidspunkt
+                            FROM    oppgave_v1                      opp
+                            JOIN    behandling_v1                   beh ON beh.id = opp.behandling_id
+                            JOIN    sak_v2                          sak ON sak.id = beh.sak_id
+                            JOIN    oppgave_tilstand_logg_v1        otl ON otl.oppgave_id = opp.id
+                            WHERE   opp.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
+                            AND     otl.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
                             AND     sak.er_dp_sak = true
-                            AND     opp.endret_tidspunkt > (
+                            AND     otl.tidspunkt > (
                                 SELECT coalesce(max(ferdig_behandlet_tidspunkt), '1900-01-01t00:00:00'::timestamptz)
                                 FROM   oppgave_til_statistikk_v1
                                 WHERE  overfort_til_statistikk = true
