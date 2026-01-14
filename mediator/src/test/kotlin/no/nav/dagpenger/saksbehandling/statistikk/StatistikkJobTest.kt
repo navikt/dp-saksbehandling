@@ -1,14 +1,16 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.assertions.json.shouldEqualSpecifiedJson
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.opprettetNå
+import no.nav.dagpenger.saksbehandling.TestHelper.personIdent
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -17,30 +19,19 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHende
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class StatistikkJobTest {
     private val sakId1 = UUID.randomUUID()
     private val sakId2 = UUID.randomUUID()
-
-    private val avsluttetTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-
-    private val oppgave1 =
+    private val oppgaveFerdigBehandlet =
         TestHelper.lagOppgave(
             behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.SØKNAD),
-            tilstandslogg =
-                OppgaveTilstandslogg(
-                    Tilstandsendring(
-                        hendelse = TomHendelse,
-                        tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
-                        tidspunkt = avsluttetTidspunkt,
-                    ),
-                ),
+            tilstandslogg = TestHelper.lagOppgaveTilstandslogg(ferdigBehandlet = true),
         )
-    val basertPåBehandlingIdForOppgave2 = UUIDv7.ny()
-    private val oppgave2 =
+    val basertPåBehandlingId = UUIDv7.ny()
+    val avbruttTidspunkt = opprettetNå.minusSeconds(22)
+    private val oppgaveAvbrutt =
         TestHelper.lagOppgave(
             behandling =
                 TestHelper.lagBehandling(
@@ -50,17 +41,17 @@ class StatistikkJobTest {
                             manuellId = UUIDv7.ny(),
                             behandlingId = UUIDv7.ny(),
                             ident = "MIKKE",
-                            opprettet = TestHelper.opprettetNå,
-                            basertPåBehandling = basertPåBehandlingIdForOppgave2,
-                            behandlingskjedeId = basertPåBehandlingIdForOppgave2,
+                            opprettet = opprettetNå,
+                            basertPåBehandling = basertPåBehandlingId,
+                            behandlingskjedeId = basertPåBehandlingId,
                         ),
                 ),
             tilstandslogg =
                 OppgaveTilstandslogg(
                     Tilstandsendring(
+                        tilstand = AVBRUTT,
                         hendelse = TomHendelse,
-                        tilstand = Oppgave.Tilstand.Type.AVBRUTT,
-                        tidspunkt = avsluttetTidspunkt,
+                        tidspunkt = avbruttTidspunkt,
                     ),
                 ),
         )
@@ -68,20 +59,20 @@ class StatistikkJobTest {
     private val testRapid = TestRapid()
     private val sakMediator =
         mockk<SakMediator>(relaxed = true).also {
-            every { it.hentSakIdForBehandlingId(oppgave1.behandling.behandlingId) } returns sakId1
-            every { it.hentSakIdForBehandlingId(oppgave2.behandling.behandlingId) } returns sakId2
+            every { it.hentSakIdForBehandlingId(oppgaveFerdigBehandlet.behandling.behandlingId) } returns sakId1
+            every { it.hentSakIdForBehandlingId(oppgaveAvbrutt.behandling.behandlingId) } returns sakId2
         }
     private val statistikkTjeneste =
         mockk<StatistikkTjeneste>().also {
-            every { it.oppgaverTilStatistikk() } returns listOf(oppgave1.oppgaveId, oppgave2.oppgaveId)
-            every { it.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId) } returns 1
-            every { it.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId) } returns 1
+            every { it.oppgaverTilStatistikk() } returns listOf(oppgaveFerdigBehandlet.oppgaveId, oppgaveAvbrutt.oppgaveId)
+            every { it.markerOppgaveTilStatistikkSomOverført(oppgaveFerdigBehandlet.oppgaveId) } returns 1
+            every { it.markerOppgaveTilStatistikkSomOverført(oppgaveAvbrutt.oppgaveId) } returns 1
             every { it.tidligereOppgaverErOverførtTilStatistikk() } returns true
         }
     private val oppgaveRepository =
         mockk<OppgaveRepository>().also {
-            every { it.hentOppgave(oppgave1.oppgaveId) } returns oppgave1
-            every { it.hentOppgave(oppgave2.oppgaveId) } returns oppgave2
+            every { it.hentOppgave(oppgaveFerdigBehandlet.oppgaveId) } returns oppgaveFerdigBehandlet
+            every { it.hentOppgave(oppgaveAvbrutt.oppgaveId) } returns oppgaveAvbrutt
         }
 
     @Test
@@ -97,67 +88,78 @@ class StatistikkJobTest {
         }
 
         verify(exactly = 1) {
-            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgave1.oppgaveId)
-            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgave2.oppgaveId)
+            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgaveFerdigBehandlet.oppgaveId)
+            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgaveAvbrutt.oppgaveId)
         }
 
-        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
                 "@event_name": "oppgave_til_statistikk",
                 "oppgave": {
                     "sakId": "$sakId1",
-                    "oppgaveId": "${oppgave1.oppgaveId}",
+                    "oppgaveId": "${oppgaveFerdigBehandlet.oppgaveId}",
                     "behandling": {
-                        "behandlingId": "${oppgave1.behandling.behandlingId}",
-                        "tidspunkt": "${oppgave1.behandling.opprettet}",
+                        "behandlingId": "${oppgaveFerdigBehandlet.behandling.behandlingId}",
+                        "tidspunkt": "${oppgaveFerdigBehandlet.behandling.opprettet}",
                         "basertPåBehandlingId": null,
                         "utløstAv": {
-                            "type": "${oppgave1.behandling.utløstAv.name}",
-                            "tidspunkt": "${oppgave1.behandling.opprettet}"
+                            "type": "${oppgaveFerdigBehandlet.behandling.utløstAv.name}",
+                            "tidspunkt": "${oppgaveFerdigBehandlet.behandling.opprettet}"
                         }
                     },
-                    "personIdent": "${oppgave1.personIdent()}",
+                    "personIdent": "${oppgaveFerdigBehandlet.personIdent()}",
+                    "saksbehandlerIdent": "${oppgaveFerdigBehandlet.sisteSaksbehandler()}",
+                    "beslutterIdent": "${oppgaveFerdigBehandlet.sisteBeslutter()}",
                     "oppgaveTilstander": [
                         {
                             "tilstand": "FERDIG_BEHANDLET",
-                            "tidspunkt": "$avsluttetTidspunkt"
+                            "tidspunkt": "$opprettetNå"
+                        },
+                        {
+                            "tilstand": "UNDER_KONTROLL",
+                            "tidspunkt": "${opprettetNå.minusDays(1)}"
+                        },
+                        {
+                            "tilstand": "UNDER_BEHANDLING",
+                            "tidspunkt": "${opprettetNå.minusDays(2)}"
+                        },
+                        {
+                            "tilstand": "KLAR_TIL_BEHANDLING",
+                            "tidspunkt": "${opprettetNå.minusDays(3)}"
                         }
-
                     ],
                     "versjon": "dp:saksbehandling:1.2.3",
-                    "avsluttetTidspunkt": "$avsluttetTidspunkt"
+                    "avsluttetTidspunkt": "$opprettetNå"
                 }
             
             }
             """.trimIndent()
-        testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
+        testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
                 "@event_name": "oppgave_til_statistikk",
                 "oppgave": {
                     "sakId": "$sakId2",
-                    "oppgaveId": "${oppgave2.oppgaveId}",
+                    "oppgaveId": "${oppgaveAvbrutt.oppgaveId}",
                     "behandling": {
-                        "behandlingId": "${oppgave2.behandling.behandlingId}",
-                        "tidspunkt": "${oppgave2.behandling.opprettet}",
-                        "basertPåBehandlingId": "$basertPåBehandlingIdForOppgave2",
+                        "behandlingId": "${oppgaveAvbrutt.behandling.behandlingId}",
+                        "tidspunkt": "${oppgaveAvbrutt.behandling.opprettet}",
+                        "basertPåBehandlingId": "$basertPåBehandlingId",
                         "utløstAv": {
-                            "type": "${oppgave2.behandling.utløstAv.name}",
-                            "tidspunkt": "${oppgave2.behandling.opprettet}"
+                            "type": "${oppgaveAvbrutt.behandling.utløstAv.name}",
+                            "tidspunkt": "${oppgaveAvbrutt.behandling.opprettet}"
                         }
                     },
-                    "personIdent": "${oppgave2.personIdent()}",
-                    "saksbehandlerIdent": "${oppgave2.sisteSaksbehandler()}",
-                    "beslutterIdent": "${oppgave2.sisteBeslutter()}",
+                    "personIdent": "${oppgaveAvbrutt.personIdent()}",
                     "oppgaveTilstander": [
                         {
                             "tilstand": "AVBRUTT",
-                            "tidspunkt": "$avsluttetTidspunkt"
+                            "tidspunkt": "$avbruttTidspunkt"
                         }
                     ],
                     "versjon": "dp:saksbehandling:1.2.3",
-                    "avsluttetTidspunkt": "$avsluttetTidspunkt"
+                    "avsluttetTidspunkt": "$avbruttTidspunkt"
                 }
             
             }

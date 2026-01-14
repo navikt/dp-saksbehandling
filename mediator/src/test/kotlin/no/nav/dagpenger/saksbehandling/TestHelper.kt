@@ -5,6 +5,7 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
@@ -137,8 +138,8 @@ internal object TestHelper {
 
     val søknadId = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
 
-    fun lagTilstandLogg(): OppgaveTilstandslogg =
-        OppgaveTilstandslogg(
+    fun lagOppgaveTilstandslogg(ferdigBehandlet: Boolean = false): OppgaveTilstandslogg {
+        val tilstandKlarTilBehandling =
             Tilstandsendring(
                 tilstand = KLAR_TIL_BEHANDLING,
                 hendelse =
@@ -149,7 +150,8 @@ internal object TestHelper {
                         behandlingId = UUID.randomUUID(),
                     ),
                 tidspunkt = opprettetNå.minusDays(3),
-            ),
+            )
+        val tilstandUnderBehandling =
             Tilstandsendring(
                 tilstand = UNDER_BEHANDLING,
                 hendelse =
@@ -159,7 +161,8 @@ internal object TestHelper {
                         utførtAv = saksbehandler,
                     ),
                 tidspunkt = opprettetNå.minusDays(2),
-            ),
+            )
+        val tilstandUnderKontroll =
             Tilstandsendring(
                 tilstand = UNDER_KONTROLL,
                 hendelse =
@@ -169,8 +172,20 @@ internal object TestHelper {
                         utførtAv = beslutter,
                     ),
                 tidspunkt = opprettetNå.minusDays(1),
-            ),
-        )
+            )
+        val tilstandFerdigBehandlet =
+            Tilstandsendring(
+                tilstand = FERDIG_BEHANDLET,
+                hendelse = TomHendelse,
+                tidspunkt = opprettetNå,
+            )
+
+        return if (ferdigBehandlet) {
+            OppgaveTilstandslogg(tilstandKlarTilBehandling, tilstandUnderBehandling, tilstandUnderKontroll, tilstandFerdigBehandlet)
+        } else {
+            OppgaveTilstandslogg(tilstandKlarTilBehandling, tilstandUnderBehandling, tilstandUnderKontroll)
+        }
+    }
 
     fun lagOppgave(
         tilstand: Oppgave.Tilstand = KlarTilBehandling,

@@ -44,7 +44,7 @@ class OppgaveDTOMapperTest {
                     tilstand = Oppgave.UnderKontroll(),
                     opprettet = etTidspunkt,
                     person = TestHelper.testPerson,
-                    tilstandslogg = TestHelper.lagTilstandLogg(),
+                    tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
 
             OppgaveDTOMapper(
@@ -190,7 +190,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    tilstandslogg = TestHelper.lagTilstandLogg(),
+                    tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -350,7 +350,7 @@ class OppgaveDTOMapperTest {
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
                     behandling = TestHelper.lagBehandling(utløstAvType = MANUELL),
-                    tilstandslogg = TestHelper.lagTilstandLogg(),
+                    tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -510,7 +510,7 @@ class OppgaveDTOMapperTest {
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
                     behandling = TestHelper.lagBehandling(utløstAvType = MELDEKORT),
-                    tilstandslogg = TestHelper.lagTilstandLogg(),
+                    tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
                 oppslag =
