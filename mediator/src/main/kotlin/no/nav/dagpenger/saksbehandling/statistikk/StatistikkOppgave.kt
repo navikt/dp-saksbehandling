@@ -84,7 +84,7 @@ data class StatistikkOppgave(
 
 private fun OppgaveTilstandslogg.avsluttetTidspunkt(): LocalDateTime =
     this
-        .single {
+        .first {
             setOf(
                 Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
                 Oppgave.Tilstand.Type.AVBRUTT,
