@@ -163,20 +163,24 @@ class PostgresStatistikkTjeneste(
                                 ferdig_behandlet_tidspunkt
                             )
                             SELECT  opp.id,
-                                    otl.tidspunkt
+                                    latest_otl.tidspunkt
                             FROM    oppgave_v1                      opp
                             JOIN    behandling_v1                   beh ON beh.id = opp.behandling_id
                             JOIN    sak_v2                          sak ON sak.id = beh.sak_id
-                            JOIN    oppgave_tilstand_logg_v1        otl ON otl.oppgave_id = opp.id
+                            JOIN ( SELECT oppgave_id, MAX(tidspunkt) AS tidspunkt
+                                   FROM   oppgave_tilstand_logg_v1
+                                   WHERE  tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
+                                   GROUP BY oppgave_id
+                                 ) latest_otl ON latest_otl.oppgave_id = opp.id
+                            
                             WHERE   opp.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
-                            AND     otl.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
                             AND     sak.er_dp_sak = true
-                            AND     otl.tidspunkt > (
+                            AND     latest_otl.tidspunkt > (
                                 SELECT coalesce(max(ferdig_behandlet_tidspunkt), '1900-01-01t00:00:00'::timestamptz)
                                 FROM   oppgave_til_statistikk_v1
                                 WHERE  overfort_til_statistikk = true
                                 )
-                           ORDER BY opp.endret_tidspunkt 
+                           ORDER BY latest_otl.tidspunkt
                            LIMIT 2
                             
                         ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
