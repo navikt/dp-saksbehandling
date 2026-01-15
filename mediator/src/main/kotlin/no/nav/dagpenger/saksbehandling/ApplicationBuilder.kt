@@ -309,6 +309,7 @@ internal class ApplicationBuilder(
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
                         oppgaveRepository = oppgaveRepository,
                     ).startJob(
+                        startAt = now,
                         period = 5.Minutt,
                     )
 
