@@ -23,12 +23,14 @@ import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.StatistikkV2Tjeneste
 import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
 
 internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,
     oppgaveDTOMapper: OppgaveDTOMapper,
     statistikkTjeneste: StatistikkTjeneste,
+    statistikkV2Tjeneste: StatistikkV2Tjeneste,
     klageMediator: KlageMediator,
     klageDTOMapper: KlageDTOMapper,
     personMediator: PersonMediator,
@@ -75,7 +77,7 @@ internal fun Application.installerApis(
             personMediator = personMediator,
         )
         sakApi(mediator = sakMediator)
-        statistikkApi(statistikkTjeneste)
+        statistikkApi(statistikkTjeneste, statistikkV2Tjeneste)
         innsendingApi(innsendingMediator, applicationCallParser)
         klageApi(
             mediator = klageMediator,

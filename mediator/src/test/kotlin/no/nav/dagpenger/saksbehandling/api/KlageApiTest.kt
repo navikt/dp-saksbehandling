@@ -475,6 +475,7 @@ class KlageApiTest {
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
                     statistikkTjeneste = mockk(),
+                    statistikkV2Tjeneste = mockk(),
                     klageMediator = klageMediator,
                     klageDTOMapper = KlageDTOMapper(oppslag = oppslag),
                     personMediator = mockk(),

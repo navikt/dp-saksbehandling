@@ -17,7 +17,10 @@ import kotlinx.html.title
 import kotlinx.html.ul
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 
-internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
+internal fun Application.statistikkApi(
+    statistikkTjeneste: StatistikkTjeneste,
+    statistikkV2Tjeneste: StatistikkV2Tjeneste,
+) {
     routing {
         route("public/statistikk") {
             get {
@@ -48,6 +51,28 @@ internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
                             "individuellStatistikk" to statistikk,
                             "generellStatistikk" to generellStatistikk,
                             "beholdningsinfo" to beholdningsinfo,
+                        ),
+                    )
+                }
+            }
+            route("v2/statistikk") {
+                get {
+                    val statistikkFilter =
+                        StatistikkFilter.fra(
+                            call.request.queryParameters,
+                        )
+                    val statistikk = statistikkV2Tjeneste.hentSaksbehandlerStatistikk(call.navIdent(), statistikkFilter)
+                    val generellStatistikk = statistikkV2Tjeneste.hentAntallVedtakGjort(statistikkFilter)
+                    val beholdningsinfo = statistikkTjeneste.hentBeholdningsInfo()
+                    val brevSendt = statistikkV2Tjeneste.hentAntallBrevSendt(statistikkFilter)
+
+                    call.respond(
+                        HttpStatusCode.OK,
+                        mapOf(
+                            "individuellStatistikk" to statistikk,
+                            "generellStatistikk" to generellStatistikk,
+                            "beholdningsinfo" to beholdningsinfo,
+                            "brevSendt" to brevSendt,
                         ),
                     )
                 }
