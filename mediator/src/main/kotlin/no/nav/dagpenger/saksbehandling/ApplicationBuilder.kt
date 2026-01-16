@@ -303,20 +303,20 @@ internal class ApplicationBuilder(
                         period = 1.Dag,
                     )
 
-                statistikkJob = if (Configuration.isDev) {
-                    StatistikkJob(
-                        rapidsConnection = rapidsConnection,
-                        sakMediator = sakMediator,
-                        statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                        oppgaveRepository = oppgaveRepository,
-                    ).startJob(
-                        startAt = now,
-                        period = 5.Minutt,
-                    )
-
-                } else {
-                    null
-                }
+                statistikkJob =
+                    if (Configuration.isDev) {
+                        StatistikkJob(
+                            rapidsConnection = rapidsConnection,
+                            sakMediator = sakMediator,
+                            statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
+                            oppgaveRepository = oppgaveRepository,
+                        ).startJob(
+                            startAt = now,
+                            period = 5.Minutt,
+                        )
+                    } else {
+                        null
+                    }
 
                 oversendKlageinstansAlarmJob =
                     OversendKlageinstansAlarmJob(
