@@ -192,7 +192,7 @@ internal class ApplicationBuilder(
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
-    private val statistikkJob: Timer
+    private val statistikkJob: Timer?
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication
@@ -302,7 +302,8 @@ internal class ApplicationBuilder(
                     ).startJob(
                         period = 1.Dag,
                     )
-                statistikkJob =
+
+                statistikkJob = if (Configuration.isDev) {
                     StatistikkJob(
                         rapidsConnection = rapidsConnection,
                         sakMediator = sakMediator,
@@ -312,6 +313,10 @@ internal class ApplicationBuilder(
                         startAt = now,
                         period = 5.Minutt,
                     )
+
+                } else {
+                    null
+                }
 
                 oversendKlageinstansAlarmJob =
                     OversendKlageinstansAlarmJob(
@@ -353,6 +358,7 @@ internal class ApplicationBuilder(
         metrikkJob.cancel()
         oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
+        statistikkJob?.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 
