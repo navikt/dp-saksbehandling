@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
@@ -1268,7 +1268,11 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgave1TilOla =
-                this.leggTilOppgave(person = ola, tilstand = Oppgave.KlarTilBehandling, opprettet = opprettetNå)
+                this.leggTilOppgave(
+                    person = ola,
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = opprettetNå,
+                )
             val oppgave2TilOla =
                 this.leggTilOppgave(
                     person = ola,
@@ -1279,7 +1283,7 @@ class PostgresOppgaveRepositoryTest {
                 this.leggTilOppgave(
                     person = ola,
                     tilstand = Oppgave.AvbruttMaskinelt,
-                    opprettet = opprettetNå.minusDays(1),
+                    opprettet = opprettetNå.minusDays(2),
                 )
             val oppgave1TilGry =
                 this.leggTilOppgave(
@@ -1287,8 +1291,8 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(2),
                 )
-            repo.finnOppgaverFor(ola.ident) shouldNotContain oppgave3TilOlaSomIkkeErSøkbar
-            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
+            repo.finnOppgaverFor(ola.ident) shouldContain oppgave3TilOlaSomIkkeErSøkbar
+            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave3TilOlaSomIkkeErSøkbar, oppgave2TilOla, oppgave1TilOla)
             repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry)
         }
     }

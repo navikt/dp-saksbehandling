@@ -1010,7 +1010,6 @@ data class Oppgave private constructor(
                 val maskinelleTilstander =
                     setOf(
                         OPPRETTET,
-                        AVBRUTT_MASKINELT,
                     )
 
                 // Tilstander som ikke lenger er i bruk, skal ikke ikke være søkbare.
