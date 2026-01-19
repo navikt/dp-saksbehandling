@@ -426,7 +426,7 @@ class PostgresOppgaveRepository(
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstander = Type.søkbareTilstander,
+                tilstander = Type.values,
                 oppgaveId = oppgaveId,
             ),
         ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
