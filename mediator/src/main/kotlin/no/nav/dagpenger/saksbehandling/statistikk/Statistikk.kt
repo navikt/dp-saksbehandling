@@ -162,25 +162,28 @@ class PostgresStatistikkTjeneste(
                                 oppgave_id,
                                 ferdig_behandlet_tidspunkt
                             )
-                            SELECT  opp.id,
-                                    latest_otl.tidspunkt
-                            FROM    oppgave_v1                      opp
-                            JOIN    behandling_v1                   beh ON beh.id = opp.behandling_id
-                            JOIN    sak_v2                          sak ON sak.id = beh.sak_id
+                            SELECT  oppgave.id,
+                                    avslutt.tidspunkt
+                            FROM    oppgave_v1                      oppgave
+                            JOIN    behandling_v1                   behandl ON behandl.id = oppgave.behandling_id
+                            JOIN    sak_v2                          sak     ON sak.id = behandl.sak_id
                             JOIN ( SELECT oppgave_id, MAX(tidspunkt) AS tidspunkt
                                    FROM   oppgave_tilstand_logg_v1
                                    WHERE  tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
                                    GROUP BY oppgave_id
-                                 ) latest_otl ON latest_otl.oppgave_id = opp.id
+                                 ) avslutt ON avslutt.oppgave_id = oppgave.id
                             
-                            WHERE   opp.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
-                            AND     sak.er_dp_sak = true
-                            AND     latest_otl.tidspunkt > (
-                                SELECT coalesce(max(ferdig_behandlet_tidspunkt), '1900-01-01t00:00:00'::timestamptz)
-                                FROM   oppgave_til_statistikk_v1
-                                WHERE  overfort_til_statistikk = true
+                            WHERE   oppgave.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
+                            AND     sak.er_dp_sak = TRUE
+                            AND     avslutt.tidspunkt > (
+                                SELECT  coalesce(
+                                            max(ferdig_behandlet_tidspunkt), 
+                                            '1900-01-01t00:00:00'::timestamptz
+                                        ) AS siste_overforingstidspunkt
+                                FROM    oppgave_til_statistikk_v1
+                                WHERE   overfort_til_statistikk = TRUE
                                 )
-                           ORDER BY latest_otl.tidspunkt 
+                            ORDER BY avslutt.tidspunkt 
                         ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
                         RETURNING   oppgave_id 
                     """,
@@ -198,7 +201,7 @@ class PostgresStatistikkTjeneste(
                     //language=PostgreSQL
                     statement = """
                             UPDATE oppgave_til_statistikk_v1
-                            SET    overfort_til_statistikk = true
+                            SET    overfort_til_statistikk = TRUE
                             WHERE  oppgave_id = :oppgave_id
                             """,
                     paramMap =
@@ -218,7 +221,7 @@ class PostgresStatistikkTjeneste(
                         statement = """
                         SELECT COUNT(*) as count
                         FROM   oppgave_til_statistikk_v1
-                        WHERE  overfort_til_statistikk = false;
+                        WHERE  overfort_til_statistikk = FALSE;
                     """,
                         paramMap = mapOf(),
                     ).map { row ->
