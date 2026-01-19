@@ -1250,6 +1250,7 @@ components:
         - AVVENTER_LÅS_AV_BEHANDLING
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
         - AVBRUTT
+        - AVBRUTT_MASKINELT
 
     UtlostAvType:
       type: string

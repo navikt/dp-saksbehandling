@@ -288,7 +288,7 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO =
         is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
         is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
         is Oppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
-        is Oppgave.AvbruttMaskinelt -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand AvbruttMaskinelt")
+        is Oppgave.AvbruttMaskinelt -> OppgaveTilstandDTO.AVBRUTT_MASKINELT
     }
 
 internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
