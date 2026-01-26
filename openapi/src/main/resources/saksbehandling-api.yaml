@@ -76,6 +76,7 @@ paths:
       parameters:
         - in: query
           name: emneknagg
+          description: Filtrer på emneknagger ved å bruke visningsnavn (f.eks. "Avslag", "Innvilgelse"). Responsen returnerer fulle Emneknagg-objekter med både visningsnavn og kategori.
           required: false
           style: form
           explode: true
@@ -83,6 +84,7 @@ paths:
             type: array
             items:
               type: string
+          example: ["Avslag", "Innvilgelse"]
         - in: query
           name: tilstand
           required: false
@@ -1240,9 +1242,15 @@ components:
 
     Emneknagg:
       type: object
+      description: |
+        Emneknagg med visningsnavn og kategori. 
+        Når du filtrerer oppgaver med query parameter 'emneknagg', bruk kun visningsnavnet (string).
+        Responsen vil returnere fulle Emneknagg-objekter med både visningsnavn og kategori.
       properties:
         visningsnavn:
           type: string
+          description: Det lesbare navnet på emneknaggen (f.eks. "Avslag", "Innvilgelse")
+          example: "Avslag"
         kategori:
           $ref: '#/components/schemas/EmneknaggKategori'
       required:
@@ -1251,6 +1259,7 @@ components:
 
     EmneknaggKategori:
       type: string
+      description: Kategorisering av emneknagger for enklere gruppering og filtrering i frontend
       enum:
         - RETTIGHET
         - GJENOPPTAK
