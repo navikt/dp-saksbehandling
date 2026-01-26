@@ -11,7 +11,6 @@ DO $$
             JOIN    oppgave_v1      opp ON beh.id = opp.behandling_id
             WHERE   uts.tilstand    = 'Avbrutt'
             AND     opp.tilstand    = 'FERDIG_BEHANDLET'
-            AND     opp.id          = '019626bc-71f6-79f1-b826-698ece94e14e'
         LOOP
             UPDATE  oppgave_v1
             SET     tilstand    = 'AVBRUTT'
