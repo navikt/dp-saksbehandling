@@ -236,116 +236,62 @@ internal class OppgaveDTOMapper(
         )
 }
 
-class RegelEmnenagg(
-    private val visningsNavn: String,
-) {
-    fun bygg(): EmneknaggDTO? {
-        val regelknagg = Emneknagg.Regelknagg.entries.singleOrNull { it.visningsnavn == visningsNavn }
-
-        return regelknagg?.let {
-            when (it) {
-                in
-                setOf(
-                    Emneknagg.Regelknagg.AVSLAG,
-                    Emneknagg.Regelknagg.INNVILGELSE,
-                ),
-                -> {
-                    EmneknaggDTO(
-                        visningsnavn = regelknagg.visningsnavn,
-                        kategori = EmneknaggKategoriDTO.SØKNADSRESULTAT,
-                    )
-                }
-
-                Emneknagg.Regelknagg.GJENOPPTAK -> {
-                    EmneknaggDTO(
-                        visningsnavn = regelknagg.visningsnavn,
-                        kategori = EmneknaggKategoriDTO.GJENOPPTAK,
-                    )
-                }
-
-                in
-                setOf(
-                    Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
-                    Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
-                    Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
-                    Emneknagg.Regelknagg.AVSLAG_ALDER,
-                    Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
-                    Emneknagg.Regelknagg.AVSLAG_STREIK,
-                    Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
-                    Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
-                    Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
-                    Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
-                    Emneknagg.Regelknagg.AVSLAG_UTDANNING,
-                    Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
-                ),
-                ->
-                    EmneknaggDTO(
-                        visningsnavn = regelknagg.visningsnavn,
-                        kategori = EmneknaggKategoriDTO.AVSLAGSGRUNN,
-                    )
-
-                in
-                setOf(
-                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
-                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
-                    Emneknagg.Regelknagg.RETTIGHET_KONKURS,
-                ),
-                ->
-                    EmneknaggDTO(
-                        visningsnavn = regelknagg.visningsnavn,
-                        kategori = EmneknaggKategoriDTO.RETTIGHET,
-                    )
-
-                else -> null
-            }
+private val emneknaggKategoriMap: Map<String, EmneknaggKategoriDTO> by lazy {
+    buildMap {
+        Emneknagg.Regelknagg.entries.forEach { regelknagg ->
+            put(regelknagg.visningsnavn, regelknagg.tilKategori())
+        }
+        Emneknagg.PåVent.entries.forEach { påVent ->
+            put(påVent.visningsnavn, EmneknaggKategoriDTO.PÅ_VENT)
+        }
+        Emneknagg.AvbrytBehandling.entries.forEach { avbryt ->
+            put(avbryt.visningsnavn, EmneknaggKategoriDTO.AVBRUTT_GRUNN)
         }
     }
 }
 
-class PåVent(
-    private val visningsNavn: String,
-) {
-    fun bygg(): EmneknaggDTO? {
-        val påVentKnagg = Emneknagg.PåVent.entries.singleOrNull { it.visningsnavn == visningsNavn }
-        return påVentKnagg?.let {
-            EmneknaggDTO(
-                visningsnavn = påVentKnagg.visningsnavn,
-                kategori = EmneknaggKategoriDTO.PÅ_VENT,
-            )
-        }
-    }
-}
+private fun Emneknagg.Regelknagg.tilKategori(): EmneknaggKategoriDTO =
+    when (this) {
+        Emneknagg.Regelknagg.AVSLAG,
+        Emneknagg.Regelknagg.INNVILGELSE,
+        -> EmneknaggKategoriDTO.SØKNADSRESULTAT
 
-class Avbryt(
-    private val visningsNavn: String,
-) {
-    fun bygg(): EmneknaggDTO? {
-        val påVentKnagg = Emneknagg.PåVent.entries.singleOrNull { it.visningsnavn == visningsNavn }
-        return påVentKnagg?.let {
-            EmneknaggDTO(
-                visningsnavn = påVentKnagg.visningsnavn,
-                kategori = EmneknaggKategoriDTO.AVBRUTT_GRUNN,
-            )
-        }
+        Emneknagg.Regelknagg.GJENOPPTAK ->
+            EmneknaggKategoriDTO.GJENOPPTAK
+
+        Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
+        Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
+        Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
+        Emneknagg.Regelknagg.AVSLAG_ALDER,
+        Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
+        Emneknagg.Regelknagg.AVSLAG_STREIK,
+        Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
+        Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
+        Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
+        Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
+        Emneknagg.Regelknagg.AVSLAG_UTDANNING,
+        Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
+        -> EmneknaggKategoriDTO.AVSLAGSGRUNN
+
+        Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
+        Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
+        Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
+        Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
+        Emneknagg.Regelknagg.RETTIGHET_KONKURS,
+        -> EmneknaggKategoriDTO.RETTIGHET
     }
-}
 
 fun Set<String>.tilOppgaveEmneknaggerDTOListe(): List<EmneknaggDTO> =
     this.map { visningsNavn ->
-        if (visningsNavn.startsWith("Ettersending")) {
-            EmneknaggDTO(
-                visningsnavn = visningsNavn,
-                kategori = EmneknaggKategoriDTO.ETTERSENDING,
-            )
-        } else {
-            RegelEmnenagg(visningsNavn).bygg() ?: PåVent(visningsNavn).bygg() ?: Avbryt(visningsNavn).bygg()
-                ?: EmneknaggDTO(
-                    visningsnavn = visningsNavn,
-                    kategori = EmneknaggKategoriDTO.UDEFINERT,
-                )
-        }
+        val kategori =
+            when {
+                visningsNavn.startsWith("Ettersending") -> EmneknaggKategoriDTO.ETTERSENDING
+                else -> emneknaggKategoriMap[visningsNavn] ?: EmneknaggKategoriDTO.UDEFINERT
+            }
+        EmneknaggDTO(
+            visningsnavn = visningsNavn,
+            kategori = kategori,
+        )
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =
