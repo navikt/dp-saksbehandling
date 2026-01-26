@@ -4,13 +4,13 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
+import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import java.time.LocalDate
 import java.util.UUID
 
@@ -178,51 +178,5 @@ class FilterBuilder {
 private fun Set<String>.grupperEmneknaggPerKategori(): Map<String, Set<String>> =
     this
         .groupBy { visningsNavn ->
-            when {
-                visningsNavn.startsWith("Ettersending") -> "ETTERSENDING"
-                else -> hentKategoriForEmneknagg(visningsNavn)
-            }
+            hentEmneknaggKategori(visningsNavn).name
         }.mapValues { it.value.toSet() }
-
-private fun hentKategoriForEmneknagg(visningsNavn: String): String {
-    Emneknagg.Regelknagg.entries.find { it.visningsnavn == visningsNavn }?.let { regelknagg ->
-        return when (regelknagg) {
-            Emneknagg.Regelknagg.AVSLAG,
-            Emneknagg.Regelknagg.INNVILGELSE,
-            -> "SØKNADSRESULTAT"
-
-            Emneknagg.Regelknagg.GJENOPPTAK -> "GJENOPPTAK"
-
-            Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
-            Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
-            Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
-            Emneknagg.Regelknagg.AVSLAG_ALDER,
-            Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
-            Emneknagg.Regelknagg.AVSLAG_STREIK,
-            Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
-            Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
-            Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
-            Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
-            Emneknagg.Regelknagg.AVSLAG_UTDANNING,
-            Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
-            -> "AVSLAGSGRUNN"
-
-            Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
-            Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
-            Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
-            Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
-            Emneknagg.Regelknagg.RETTIGHET_KONKURS,
-            -> "RETTIGHET"
-        }
-    }
-
-    Emneknagg.PåVent.entries.find { it.visningsnavn == visningsNavn }?.let {
-        return "PÅ_VENT"
-    }
-
-    Emneknagg.AvbrytBehandling.entries.find { it.visningsnavn == visningsNavn }?.let {
-        return "AVBRUTT_GRUNN"
-    }
-
-    return "UDEFINERT"
-}

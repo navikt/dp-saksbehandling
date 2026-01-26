@@ -4,7 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -42,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.time.LocalDate
@@ -236,62 +237,25 @@ internal class OppgaveDTOMapper(
         )
 }
 
-private val emneknaggKategoriMap: Map<String, EmneknaggKategoriDTO> by lazy {
-    buildMap {
-        Emneknagg.Regelknagg.entries.forEach { regelknagg ->
-            put(regelknagg.visningsnavn, regelknagg.tilKategori())
-        }
-        Emneknagg.PåVent.entries.forEach { påVent ->
-            put(påVent.visningsnavn, EmneknaggKategoriDTO.PÅ_VENT)
-        }
-        Emneknagg.AvbrytBehandling.entries.forEach { avbryt ->
-            put(avbryt.visningsnavn, EmneknaggKategoriDTO.AVBRUTT_GRUNN)
-        }
-    }
-}
-
-private fun Emneknagg.Regelknagg.tilKategori(): EmneknaggKategoriDTO =
-    when (this) {
-        Emneknagg.Regelknagg.AVSLAG,
-        Emneknagg.Regelknagg.INNVILGELSE,
-        -> EmneknaggKategoriDTO.SØKNADSRESULTAT
-
-        Emneknagg.Regelknagg.GJENOPPTAK ->
-            EmneknaggKategoriDTO.GJENOPPTAK
-
-        Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
-        Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
-        Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
-        Emneknagg.Regelknagg.AVSLAG_ALDER,
-        Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
-        Emneknagg.Regelknagg.AVSLAG_STREIK,
-        Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
-        Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
-        Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
-        Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
-        Emneknagg.Regelknagg.AVSLAG_UTDANNING,
-        Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
-        -> EmneknaggKategoriDTO.AVSLAGSGRUNN
-
-        Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
-        Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
-        Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
-        Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
-        Emneknagg.Regelknagg.RETTIGHET_KONKURS,
-        -> EmneknaggKategoriDTO.RETTIGHET
-    }
-
 fun Set<String>.tilOppgaveEmneknaggerDTOListe(): List<EmneknaggDTO> =
     this.map { visningsNavn ->
-        val kategori =
-            when {
-                visningsNavn.startsWith("Ettersending") -> EmneknaggKategoriDTO.ETTERSENDING
-                else -> emneknaggKategoriMap[visningsNavn] ?: EmneknaggKategoriDTO.UDEFINERT
-            }
+        val kategori = hentEmneknaggKategori(visningsNavn)
         EmneknaggDTO(
             visningsnavn = visningsNavn,
-            kategori = kategori,
+            kategori = kategori.tilDTO(),
         )
+    }
+
+private fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
+    when (this) {
+        EmneknaggKategori.RETTIGHET -> EmneknaggKategoriDTO.RETTIGHET
+        EmneknaggKategori.GJENOPPTAK -> EmneknaggKategoriDTO.GJENOPPTAK
+        EmneknaggKategori.SØKNADSRESULTAT -> EmneknaggKategoriDTO.SØKNADSRESULTAT
+        EmneknaggKategori.AVSLAGSGRUNN -> EmneknaggKategoriDTO.AVSLAGSGRUNN
+        EmneknaggKategori.AVBRUTT_GRUNN -> EmneknaggKategoriDTO.AVBRUTT_GRUNN
+        EmneknaggKategori.PÅ_VENT -> EmneknaggKategoriDTO.PÅ_VENT
+        EmneknaggKategori.ETTERSENDING -> EmneknaggKategoriDTO.ETTERSENDING
+        EmneknaggKategori.UDEFINERT -> EmneknaggKategoriDTO.UDEFINERT
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =

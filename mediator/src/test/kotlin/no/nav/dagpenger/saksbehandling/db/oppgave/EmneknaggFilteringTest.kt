@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import org.junit.jupiter.api.Test
 
 class EmneknaggFilteringTest {
@@ -122,55 +123,8 @@ class EmneknaggFilteringTest {
     }
 }
 
-// Hjelpefunksjon for testing - må være private extension i produksjonskoden
 private fun Set<String>.grupperEmneknaggPerKategori(): Map<String, Set<String>> =
     this
         .groupBy { visningsNavn ->
-            when {
-                visningsNavn.startsWith("Ettersending") -> "ETTERSENDING"
-                else -> hentKategoriForEmneknagg(visningsNavn)
-            }
+            hentEmneknaggKategori(visningsNavn).name
         }.mapValues { it.value.toSet() }
-
-private fun hentKategoriForEmneknagg(visningsNavn: String): String {
-    Emneknagg.Regelknagg.entries.find { it.visningsnavn == visningsNavn }?.let { regelknagg ->
-        return when (regelknagg) {
-            Emneknagg.Regelknagg.AVSLAG,
-            Emneknagg.Regelknagg.INNVILGELSE,
-            -> "SØKNADSRESULTAT"
-
-            Emneknagg.Regelknagg.GJENOPPTAK -> "GJENOPPTAK"
-
-            Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
-            Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
-            Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
-            Emneknagg.Regelknagg.AVSLAG_ALDER,
-            Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
-            Emneknagg.Regelknagg.AVSLAG_STREIK,
-            Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
-            Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
-            Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
-            Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
-            Emneknagg.Regelknagg.AVSLAG_UTDANNING,
-            Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
-            -> "AVSLAGSGRUNN"
-
-            Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
-            Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
-            Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
-            Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
-            Emneknagg.Regelknagg.RETTIGHET_KONKURS,
-            -> "RETTIGHET"
-        }
-    }
-
-    Emneknagg.PåVent.entries.find { it.visningsnavn == visningsNavn }?.let {
-        return "PÅ_VENT"
-    }
-
-    Emneknagg.AvbrytBehandling.entries.find { it.visningsnavn == visningsNavn }?.let {
-        return "AVBRUTT_GRUNN"
-    }
-
-    return "UDEFINERT"
-}
