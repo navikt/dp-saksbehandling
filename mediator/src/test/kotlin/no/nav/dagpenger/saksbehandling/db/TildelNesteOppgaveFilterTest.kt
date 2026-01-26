@@ -30,23 +30,23 @@ class TildelNesteOppgaveFilterTest {
                 grupper = setOf(),
                 tilganger = setOf(TilgangType.SAKSBEHANDLER),
             )
-        TildelNesteOppgaveFilter.fra(
-            queryString = queryString,
-            saksbehandler = saksbehandler,
-        ) shouldBe
-            TildelNesteOppgaveFilter(
-                periode =
-                    Periode(
-                        fom = LocalDate.of(2021, 1, 1),
-                        tom = LocalDate.of(2023, 1, 1),
-                    ),
-                tilstander = setOf(Type.KLAR_TIL_KONTROLL, Type.UNDER_KONTROLL),
-                utløstAvTyper = setOf(UtløstAvType.KLAGE),
-                emneknagger = setOf("knagg1", "knagg2"),
-                egneAnsatteTilgang = false,
-                adressebeskyttelseTilganger = setOf(UGRADERT),
-                navIdent = saksbehandler.navIdent,
+        val filter =
+            TildelNesteOppgaveFilter.fra(
+                queryString = queryString,
+                saksbehandler = saksbehandler,
             )
+        filter.periode shouldBe
+            Periode(
+                fom = LocalDate.of(2021, 1, 1),
+                tom = LocalDate.of(2023, 1, 1),
+            )
+        filter.tilstander shouldBe setOf(Type.KLAR_TIL_KONTROLL, Type.UNDER_KONTROLL)
+        filter.utløstAvTyper shouldBe setOf(UtløstAvType.KLAGE)
+        filter.emneknagger shouldBe setOf("knagg1", "knagg2")
+        filter.egneAnsatteTilgang shouldBe false
+        filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
+        filter.navIdent shouldBe saksbehandler.navIdent
+        filter.emneknaggGruppertPerKategori shouldBe mapOf("UDEFINERT" to setOf("knagg1", "knagg2"))
     }
 
     @Test
@@ -87,16 +87,16 @@ class TildelNesteOppgaveFilterTest {
                 grupper = setOf(),
                 tilganger = setOf(TilgangType.SAKSBEHANDLER),
             )
-        TildelNesteOppgaveFilter.fra(
-            queryString = "",
-            saksbehandler = saksbehandler,
-        ) shouldBe
-            TildelNesteOppgaveFilter(
-                periode = Periode.UBEGRENSET_PERIODE,
-                emneknagger = setOf(),
-                egneAnsatteTilgang = false,
-                adressebeskyttelseTilganger = setOf(UGRADERT),
-                navIdent = saksbehandler.navIdent,
+        val filter =
+            TildelNesteOppgaveFilter.fra(
+                queryString = "",
+                saksbehandler = saksbehandler,
             )
+        filter.periode shouldBe Periode.UBEGRENSET_PERIODE
+        filter.emneknagger shouldBe setOf()
+        filter.egneAnsatteTilgang shouldBe false
+        filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
+        filter.navIdent shouldBe saksbehandler.navIdent
+        filter.emneknaggGruppertPerKategori shouldBe emptyMap()
     }
 }

@@ -4,6 +4,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -21,6 +22,7 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
+    val emneknaggGruppertPerKategori: Map<String, Set<String>> = emptyMap(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
@@ -61,6 +63,7 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknagger = emneknagger,
+                emneknaggGruppertPerKategori = emneknagger.grupperEmneknaggPerKategori(),
                 utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
             )
@@ -71,6 +74,7 @@ data class Søkefilter(
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagger: Set<String>,
+    val emneknaggGruppertPerKategori: Map<String, Set<String>> = emptyMap(),
     val tilstander: Set<Tilstand.Type> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
@@ -93,6 +97,7 @@ data class TildelNesteOppgaveFilter(
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagger = emneknagger,
+                emneknaggGruppertPerKategori = emneknagger.grupperEmneknaggPerKategori(),
                 tilstander = tilstander,
                 utløstAvTyper = utløstAvTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
@@ -168,4 +173,56 @@ class FilterBuilder {
     fun tilstander(): Set<Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
 
     fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
+}
+
+private fun Set<String>.grupperEmneknaggPerKategori(): Map<String, Set<String>> =
+    this
+        .groupBy { visningsNavn ->
+            when {
+                visningsNavn.startsWith("Ettersending") -> "ETTERSENDING"
+                else -> hentKategoriForEmneknagg(visningsNavn)
+            }
+        }.mapValues { it.value.toSet() }
+
+private fun hentKategoriForEmneknagg(visningsNavn: String): String {
+    Emneknagg.Regelknagg.entries.find { it.visningsnavn == visningsNavn }?.let { regelknagg ->
+        return when (regelknagg) {
+            Emneknagg.Regelknagg.AVSLAG,
+            Emneknagg.Regelknagg.INNVILGELSE,
+            -> "SØKNADSRESULTAT"
+
+            Emneknagg.Regelknagg.GJENOPPTAK -> "GJENOPPTAK"
+
+            Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
+            Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
+            Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
+            Emneknagg.Regelknagg.AVSLAG_ALDER,
+            Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
+            Emneknagg.Regelknagg.AVSLAG_STREIK,
+            Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
+            Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
+            Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
+            Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
+            Emneknagg.Regelknagg.AVSLAG_UTDANNING,
+            Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
+            -> "AVSLAGSGRUNN"
+
+            Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
+            Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
+            Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
+            Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
+            Emneknagg.Regelknagg.RETTIGHET_KONKURS,
+            -> "RETTIGHET"
+        }
+    }
+
+    Emneknagg.PåVent.entries.find { it.visningsnavn == visningsNavn }?.let {
+        return "PÅ_VENT"
+    }
+
+    Emneknagg.AvbrytBehandling.entries.find { it.visningsnavn == visningsNavn }?.let {
+        return "AVBRUTT_GRUNN"
+    }
+
+    return "UDEFINERT"
 }

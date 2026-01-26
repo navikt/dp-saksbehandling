@@ -303,11 +303,11 @@ class OppgaveApiTest {
             mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
-                        Søkefilter(
-                            periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = setOf(KLAR_TIL_BEHANDLING),
-                            emneknagger = setOf("TULLBALL", "KLAGE"),
-                        ),
+                        match {
+                            it.emneknagger == setOf("TULLBALL", "KLAGE") &&
+                                it.tilstander == setOf(KLAR_TIL_BEHANDLING) &&
+                                it.periode == Periode.UBEGRENSET_PERIODE
+                        },
                     )
                 } returns søkResultat
             }

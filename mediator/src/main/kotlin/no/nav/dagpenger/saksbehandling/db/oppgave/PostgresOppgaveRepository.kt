@@ -111,17 +111,37 @@ class PostgresOppgaveRepository(
 
                 // language=SQL
                 val emneknaggClause =
-                    if (filter.emneknagger.isNotEmpty()) {
-                        """
-                        AND EXISTS(
-                            SELECT 1
-                            FROM   emneknagg_v1 emne
-                            WHERE  emne.oppgave_id = oppg.id
-                            AND    emne.emneknagg IN ($emneknagger)
-                        )
-                        """.trimIndent()
-                    } else {
-                        ""
+                    when {
+                        filter.emneknaggGruppertPerKategori.isNotEmpty() -> {
+                            // AND mellom kategorier, OR innenfor samme kategori
+                            val categoryConditions =
+                                filter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
+                                    val emneknaggList = emneknagger.joinToString { "'$it'" }
+                                    """
+                                    EXISTS(
+                                        SELECT 1
+                                        FROM   emneknagg_v1 emne
+                                        WHERE  emne.oppgave_id = oppg.id
+                                        AND    emne.emneknagg IN ($emneknaggList)
+                                    )
+                                    """.trimIndent()
+                                }
+                            " AND " + categoryConditions.joinToString(" AND ")
+                        }
+
+                        filter.emneknagger.isNotEmpty() -> {
+                            // Fallback for bakoverkompatibilitet
+                            """
+                            AND EXISTS(
+                                SELECT 1
+                                FROM   emneknagg_v1 emne
+                                WHERE  emne.oppgave_id = oppg.id
+                                AND    emne.emneknagg IN ($emneknagger)
+                            )
+                            """.trimIndent()
+                        }
+
+                        else -> ""
                     }
 
                 // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
@@ -487,17 +507,37 @@ class PostgresOppgaveRepository(
 
             val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
             val emneknaggClause =
-                if (søkeFilter.emneknagger.isNotEmpty()) {
-                    """
-                    AND EXISTS(
-                        SELECT 1
-                        FROM   emneknagg_v1 emne
-                        WHERE  emne.oppgave_id = oppg.id
-                        AND    emne.emneknagg IN ($emneknaggerAsText)
-                    )
-                    """.trimIndent()
-                } else {
-                    ""
+                when {
+                    søkeFilter.emneknaggGruppertPerKategori.isNotEmpty() -> {
+                        // AND mellom kategorier, OR innenfor samme kategori
+                        val categoryConditions =
+                            søkeFilter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
+                                val emneknaggList = emneknagger.joinToString { "'$it'" }
+                                """
+                                EXISTS(
+                                    SELECT 1
+                                    FROM   emneknagg_v1 emne
+                                    WHERE  emne.oppgave_id = oppg.id
+                                    AND    emne.emneknagg IN ($emneknaggList)
+                                )
+                                """.trimIndent()
+                            }
+                        " AND " + categoryConditions.joinToString(" AND ")
+                    }
+
+                    søkeFilter.emneknagger.isNotEmpty() -> {
+                        // Fallback for bakoverkompatibilitet
+                        """
+                        AND EXISTS(
+                            SELECT 1
+                            FROM   emneknagg_v1 emne
+                            WHERE  emne.oppgave_id = oppg.id
+                            AND    emne.emneknagg IN ($emneknaggerAsText)
+                        )
+                        """.trimIndent()
+                    }
+
+                    else -> ""
                 }
             val orderByOpprettetClause = """ ORDER BY oppg.opprettet """
 

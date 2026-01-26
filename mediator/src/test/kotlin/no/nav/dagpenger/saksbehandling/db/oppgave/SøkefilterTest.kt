@@ -23,42 +23,44 @@ class SøkefilterTest {
                 this["antallOppgaver"] = "10"
                 this["side"] = "1"
             }.let {
-                Søkefilter.fra(it, "testIdent") shouldBe
-                    Søkefilter(
-                        periode =
-                            Periode(
-                                fom = LocalDate.of(2021, 1, 1),
-                                tom = LocalDate.of(2023, 1, 1),
-                            ),
-                        tilstander =
-                            setOf(
-                                Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                                Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                            ),
-                        utløstAvTyper =
-                            setOf(
-                                UtløstAvType.SØKNAD,
-                                UtløstAvType.KLAGE,
-                            ),
-                        emneknagger = setOf("Permittert", "Permittert fisk"),
-                        saksbehandlerIdent = "testIdent",
-                        paginering = Søkefilter.Paginering(10, 0),
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.periode shouldBe
+                    Periode(
+                        fom = LocalDate.of(2021, 1, 1),
+                        tom = LocalDate.of(2023, 1, 1),
                     )
+                søkefilter.tilstander shouldBe
+                    setOf(
+                        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                        Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                    )
+                søkefilter.utløstAvTyper shouldBe
+                    setOf(
+                        UtløstAvType.SØKNAD,
+                        UtløstAvType.KLAGE,
+                    )
+                søkefilter.emneknagger shouldBe setOf("Permittert", "Permittert fisk")
+                søkefilter.saksbehandlerIdent shouldBe "testIdent"
+                søkefilter.paginering shouldBe Søkefilter.Paginering(10, 0)
+                søkefilter.emneknaggGruppertPerKategori.shouldBe(
+                    mapOf(
+                        "RETTIGHET" to setOf("Permittert", "Permittert fisk"),
+                    ),
+                )
             }
     }
 
     @Test
     fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom, tom eller paginering`() {
-        Søkefilter.fra(Parameters.Companion.Empty, "testIdent") shouldBe
-            Søkefilter(
-                periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                saksbehandlerIdent = null,
-                personIdent = null,
-                oppgaveId = null,
-                behandlingId = null,
-                paginering = Søkefilter.Paginering(20, 0),
-            )
+        val søkefilter = Søkefilter.fra(Parameters.Companion.Empty, "testIdent")
+        søkefilter.periode shouldBe Periode.UBEGRENSET_PERIODE
+        søkefilter.tilstander shouldBe Oppgave.Tilstand.Type.Companion.søkbareTilstander
+        søkefilter.saksbehandlerIdent shouldBe null
+        søkefilter.personIdent shouldBe null
+        søkefilter.oppgaveId shouldBe null
+        søkefilter.behandlingId shouldBe null
+        søkefilter.paginering shouldBe Søkefilter.Paginering(20, 0)
+        søkefilter.emneknaggGruppertPerKategori shouldBe emptyMap()
     }
 
     @Test
