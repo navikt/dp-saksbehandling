@@ -5,25 +5,25 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Emneknagg
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ALDER
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ANDRE_YTELSER
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ARBEIDSINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ARBEIDSTID
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_IKKE_REGISTRERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_MEDLEMSKAP
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_OPPHOLD_UTLAND
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_REELL_ARBEIDSSØKER
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_STREIK
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_UTDANNING
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.Emneknagg.GJENOPPTAK
+import no.nav.dagpenger.saksbehandling.Emneknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_KONKURS
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_ORDINÆR
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_PERMITTERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_PERMITTERT_FISK
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_KONKURS
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
@@ -61,7 +61,7 @@ class EmneknaggBuilder(
             ) {
                 emneknagger.add(INNVILGELSE.visningsnavn)
             } else {
-                emneknagger.add(Emneknagg.Regelknagg.AVSLAG.visningsnavn)
+                emneknagger.add(Emneknagg.AVSLAG.visningsnavn)
                 emneknagger.addAll(avslåtteVilkårEmneknagger())
             }
             if (jsonNode["basertPå"].finnesMedVerdi()) {

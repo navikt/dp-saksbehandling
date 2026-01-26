@@ -4,6 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -21,6 +22,8 @@ import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -146,7 +149,7 @@ internal class OppgaveDTOMapper(
             tidspunktOpprettet = oppgave.opprettet,
             behandlingType = oppgave.tilBehandlingTypeDTO(),
             utlostAv = oppgave.tilUtlostAvTypeDTO(),
-            emneknagger = oppgave.emneknagger.toList(),
+            emneknagger = oppgave.emneknagger.tilEmneknaggDTOListe(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
             utsattTilDato = oppgave.utsattTil(),
@@ -241,7 +244,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         tidspunktOpprettet = this.opprettet,
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
-        emneknagger = this.emneknagger.toList(),
+        emneknagger = this.emneknagger.tilEmneknaggDTOListe(),
         skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
             when (this.person.adressebeskyttelseGradering) {
@@ -297,6 +300,31 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
     )
+
+internal fun Collection<String>.tilEmneknaggDTOListe(): List<EmneknaggDTO> =
+    this.map {
+        when (it.startsWith(Emneknagg.Ettersending.fastTekst)) {
+            true -> {
+                EmneknaggDTO(
+                    visningsnavn = it,
+                    kategori = EmneknaggKategoriDTO.ETTERSENDING,
+                )
+            }
+
+            false -> {
+                val emneknagge = Emneknagg.valueOf(it)
+                EmneknaggDTO(
+                    visningsnavn = emneknagge.visningsnavn,
+                    kategori = EmneknaggKategoriDTO.valueOf(emneknagge.kategori.name),
+                )
+            }
+        }
+        val emneknagge = Emneknagg.valueOf(it)
+        EmneknaggDTO(
+            visningsnavn = emneknagge.visningsnavn,
+            kategori = EmneknaggKategoriDTO.valueOf(emneknagge.kategori.name),
+        )
+    }
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
     when (this.behandling.utløstAv) {

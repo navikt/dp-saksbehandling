@@ -88,7 +88,8 @@ data class Oppgave private constructor(
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
         internal val påVentEmneknagger: Set<String> =
-            Emneknagg.PåVent.entries
+            Emneknagg.entries
+                .filter { it.kategori == Emneknagg.EmneknaggKategori.PÅ_VENT }
                 .map { påVentÅrsaker ->
                     påVentÅrsaker.visningsnavn
                 }.toSet()
@@ -191,7 +192,7 @@ data class Oppgave private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
-        val ettersendingEmneknagger = this._emneknagger.filter { it.startsWith(Emneknagg.Ettersending().fastTekst) }.toSet()
+        val ettersendingEmneknagger = this._emneknagger.filter { it.startsWith(Emneknagg.Ettersending.fastTekst) }.toSet()
         val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet() + ettersendingEmneknagger
         this._emneknagger.clear()
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
@@ -663,7 +664,7 @@ data class Oppgave private constructor(
                     hendelse = PåVentFristUtgåttHendelse(oppgaveId = oppgave.oppgaveId),
                 )
             }
-            oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
+            oppgave._emneknagger.add(Emneknagg.TIDLIGERE_UTSATT.visningsnavn)
             oppgave._emneknagger.add(Emneknagg.Ettersending().visningsnavn)
             oppgave.utsattTil = null
         }
@@ -721,7 +722,7 @@ data class Oppgave private constructor(
                 }
             oppgave.endreTilstand(nyTilstand, hendelse)
             oppgave.utsattTil = null
-            oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
+            oppgave._emneknagger.add(Emneknagg.TIDLIGERE_UTSATT.visningsnavn)
         }
     }
 

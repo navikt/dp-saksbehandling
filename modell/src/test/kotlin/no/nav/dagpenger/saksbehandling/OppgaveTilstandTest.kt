@@ -6,7 +6,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.RETUR_FRA_KONTROLL
@@ -312,7 +311,7 @@ class OppgaveTilstandTest {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                        årsak = Emneknagg.AVBRUTT_BEHANDLES_I_ARENA,
                         navIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,
                     ),
@@ -327,7 +326,7 @@ class OppgaveTilstandTest {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                        årsak = Emneknagg.AVBRUTT_BEHANDLES_I_ARENA,
                         navIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,
                     ),

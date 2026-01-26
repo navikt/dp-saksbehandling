@@ -13,8 +13,6 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
-import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -855,7 +853,7 @@ OppgaveMediatorTest {
                 avbrytOppgaveHendelse =
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                        årsak = Emneknagg.AVBRUTT_BEHANDLES_I_ARENA,
                         navIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,
                     ),
@@ -866,7 +864,7 @@ OppgaveMediatorTest {
 
             avbruttOppgave.tilstand().type shouldBe AVBRUTT
             avbruttOppgave.tilstandslogg.first().tilstand shouldBe AVBRUTT
-            avbruttOppgave.emneknagger.contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
+            avbruttOppgave.emneknagger.contains(Emneknagg.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
             avbruttOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
@@ -893,14 +891,14 @@ OppgaveMediatorTest {
                     utsattTil = utSattTil,
                     beholdOppgave = false,
                     utførtAv = saksbehandler,
-                    årsak = AVVENT_MELDEKORT,
+                    årsak = Emneknagg.AVVENT_MELDEKORT,
                 ),
             )
 
             oppgaveMediator
                 .hentAlleOppgaverMedTilstand(PAA_VENT)
                 .single()
-                .emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
+                .emneknagger shouldContain Emneknagg.AVVENT_MELDEKORT.visningsnavn
         }
     }
 

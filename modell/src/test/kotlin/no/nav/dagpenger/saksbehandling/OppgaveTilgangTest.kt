@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagSaksbehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -349,7 +348,7 @@ class OppgaveTilgangTest {
                         navIdent = saksbehandler.navIdent,
                         utsattTil = LocalDate.MAX,
                         beholdOppgave = true,
-                        årsak = Emneknagg.PåVent.AVVENT_ANNET,
+                        årsak = Emneknagg.AVVENT_ANNET,
                     ),
                 )
             }
@@ -457,7 +456,7 @@ class OppgaveTilgangTest {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        årsak = Emneknagg.AVBRUTT_ANNET,
                         navIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,
                     ),
@@ -468,7 +467,7 @@ class OppgaveTilgangTest {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        årsak = Emneknagg.AVBRUTT_ANNET,
                         navIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,
                     ),
@@ -488,7 +487,7 @@ class OppgaveTilgangTest {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        årsak = Emneknagg.AVBRUTT_ANNET,
                         navIdent = saksbehandlerUtenEkstraTilganger.navIdent,
                         utførtAv = saksbehandlerUtenEkstraTilganger,
                     ),
@@ -505,7 +504,7 @@ class OppgaveTilgangTest {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
                         oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        årsak = Emneknagg.AVBRUTT_ANNET,
                         navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
                         utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
                     ),
@@ -521,7 +520,7 @@ class OppgaveTilgangTest {
             oppgave.avbryt(
                 AvbrytOppgaveHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    årsak = Emneknagg.AVBRUTT_BEHANDLES_I_ARENA,
                     navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
                     utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
                 ),
@@ -532,7 +531,7 @@ class OppgaveTilgangTest {
             oppgave.avbryt(
                 AvbrytOppgaveHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    årsak = Emneknagg.AVBRUTT_BEHANDLES_I_ARENA,
                     navIdent = saksbehandlerUtenEkstraTilganger.navIdent,
                     utførtAv = saksbehandlerUtenEkstraTilganger,
                 ),

@@ -7,25 +7,25 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ALDER
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ANDRE_YTELSER
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ARBEIDSINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_ARBEIDSTID
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_IKKE_REGISTRERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_MEDLEMSKAP
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_OPPHOLD_UTLAND
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_REELL_ARBEIDSSØKER
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_STREIK
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_UTDANNING
+import no.nav.dagpenger.saksbehandling.Emneknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.Emneknagg.GJENOPPTAK
+import no.nav.dagpenger.saksbehandling.Emneknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_ORDINÆR
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_PERMITTERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -403,7 +403,7 @@ class EmneknaggBuilderTest {
         EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
-                Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                Emneknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
             )
     }
 
@@ -421,7 +421,7 @@ class EmneknaggBuilderTest {
         EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
-                Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+                Emneknagg.RETTIGHET_KONKURS.visningsnavn,
             )
     }
 

@@ -15,8 +15,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
-import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
@@ -405,10 +404,10 @@ private suspend fun ApplicationCall.avbrytOppgaveHendelse(saksbehandler: Saksbeh
         utførtAv = saksbehandler,
         årsak =
             when (avbrytOppgaveDTO.aarsak) {
-                AvbrytOppgaveAarsakDTO.BEHANDLES_I_ARENA -> AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA
-                AvbrytOppgaveAarsakDTO.FLERE_SØKNADER -> AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
-                AvbrytOppgaveAarsakDTO.TRUKKET_SØKNAD -> AvbrytBehandling.AVBRUTT_TRUKKET_SØKNAD
-                AvbrytOppgaveAarsakDTO.ANNET -> AvbrytBehandling.AVBRUTT_ANNET
+                AvbrytOppgaveAarsakDTO.BEHANDLES_I_ARENA -> Emneknagg.AVBRUTT_BEHANDLES_I_ARENA
+                AvbrytOppgaveAarsakDTO.FLERE_SØKNADER -> Emneknagg.AVBRUTT_FLERE_SØKNADER
+                AvbrytOppgaveAarsakDTO.TRUKKET_SØKNAD -> Emneknagg.AVBRUTT_TRUKKET_SØKNAD
+                AvbrytOppgaveAarsakDTO.ANNET -> Emneknagg.AVBRUTT_ANNET
             },
     )
 }
@@ -423,13 +422,13 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbeh
         utførtAv = saksbehandler,
         årsak =
             when (utsettOppgaveDto.aarsak) {
-                UtsettOppgaveAarsakDTO.AVVENT_SVAR -> PåVent.AVVENT_SVAR
-                UtsettOppgaveAarsakDTO.AVVENT_MELDEKORT -> PåVent.AVVENT_MELDEKORT
-                UtsettOppgaveAarsakDTO.AVVENT_DOKUMENTASJON -> PåVent.AVVENT_DOKUMENTASJON
-                UtsettOppgaveAarsakDTO.AVVENT_PERMITTERINGSÅRSAK -> PåVent.AVVENT_PERMITTERINGSÅRSAK
-                UtsettOppgaveAarsakDTO.AVVENT_RAPPORTERINGSFRIST -> PåVent.AVVENT_RAPPORTERINGSFRIST
-                UtsettOppgaveAarsakDTO.AVVENT_SVAR_PÅ_FORESPØRSEL -> PåVent.AVVENT_SVAR_PÅ_FORESPØRSEL
-                UtsettOppgaveAarsakDTO.ANNET -> PåVent.AVVENT_ANNET
+                UtsettOppgaveAarsakDTO.AVVENT_SVAR -> Emneknagg.AVVENT_SVAR
+                UtsettOppgaveAarsakDTO.AVVENT_MELDEKORT -> Emneknagg.AVVENT_MELDEKORT
+                UtsettOppgaveAarsakDTO.AVVENT_DOKUMENTASJON -> Emneknagg.AVVENT_DOKUMENTASJON
+                UtsettOppgaveAarsakDTO.AVVENT_PERMITTERINGSÅRSAK -> Emneknagg.AVVENT_PERMITTERINGSÅRSAK
+                UtsettOppgaveAarsakDTO.AVVENT_RAPPORTERINGSFRIST -> Emneknagg.AVVENT_RAPPORTERINGSFRIST
+                UtsettOppgaveAarsakDTO.AVVENT_SVAR_PÅ_FORESPØRSEL -> Emneknagg.AVVENT_SVAR_PÅ_FORESPØRSEL
+                UtsettOppgaveAarsakDTO.ANNET -> Emneknagg.AVVENT_ANNET
             },
     )
 }

@@ -1467,22 +1467,22 @@ class PostgresOppgaveRepositoryTest {
                 tilstand = Oppgave.UnderBehandling,
                 opprettet = enUkeSiden,
                 saksbehandlerIdent = saksbehandler1,
-                emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                emneknagger = setOf(Emneknagg.INNVILGELSE.visningsnavn),
             )
             this.leggTilOppgave(
                 tilstand = Oppgave.UnderBehandling,
                 saksbehandlerIdent = saksbehandler2,
-                emneknagger = setOf(Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn),
+                emneknagger = setOf(Emneknagg.AVSLAG_MINSTEINNTEKT.visningsnavn),
             )
             this.leggTilOppgave(
                 tilstand = Oppgave.FerdigBehandlet,
                 saksbehandlerIdent = saksbehandler2,
-                emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                emneknagger = setOf(Emneknagg.INNVILGELSE.visningsnavn),
             )
             this.leggTilOppgave(
                 tilstand = Oppgave.UnderBehandling,
                 saksbehandlerIdent = null,
-                emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                emneknagger = setOf(Emneknagg.INNVILGELSE.visningsnavn),
             )
 
             val repo = PostgresOppgaveRepository(ds)
@@ -1527,7 +1527,7 @@ class PostgresOppgaveRepositoryTest {
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
                         saksbehandlerIdent = saksbehandler2,
-                        emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                        emneknagger = setOf(Emneknagg.INNVILGELSE.visningsnavn),
                     ),
                 ).oppgaver.size shouldBe 1
         }

@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -36,7 +36,7 @@ class ForslagTilBehandlingsresultatMottakTest {
             }
         }
 
-        slots.single { it.behandletHendelseType == "Søknad" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
+        slots.single { it.behandletHendelseType == "Søknad" }.emneknagger shouldBe setOf(Emneknagg.AVSLAG.visningsnavn)
         slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe emptySet()
         slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe emptySet()
     }

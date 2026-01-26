@@ -28,8 +28,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
-import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -48,6 +47,8 @@ import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -788,7 +789,7 @@ class OppgaveApiTest {
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
                 utførtAv = TestHelper.saksbehandler,
-                årsak = AVVENT_RAPPORTERINGSFRIST,
+                årsak = Emneknagg.AVVENT_RAPPORTERINGSFRIST,
             )
 
         coEvery {
@@ -831,7 +832,7 @@ class OppgaveApiTest {
         val avbrytOppgaveHendelse =
             AvbrytOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                årsak = AVBRUTT_ANNET,
+                årsak = Emneknagg.AVBRUTT_ANNET,
                 navIdent = TestHelper.saksbehandler.navIdent,
                 utførtAv = TestHelper.saksbehandler,
             )
@@ -882,7 +883,7 @@ class OppgaveApiTest {
         val avbrytOppgaveHendelse =
             AvbrytOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                årsak = AVBRUTT_ANNET,
+                årsak = Emneknagg.AVBRUTT_ANNET,
                 navIdent = TestHelper.saksbehandler.navIdent,
                 utførtAv = TestHelper.saksbehandler,
             )
@@ -976,7 +977,7 @@ class OppgaveApiTest {
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         utlostAv = testOppgave.tilUtlostAvTypeDTO(),
-                        emneknagger = testOppgave.emneknagger.toList(),
+                        emneknagger = testOppgave.emneknagger.tilEmneknaggDTOListe(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
@@ -1127,7 +1128,7 @@ class OppgaveApiTest {
                         tidspunktOpprettet = oppgave.opprettet,
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
                         utlostAv = oppgave.tilUtlostAvTypeDTO(),
-                        emneknagger = oppgave.emneknagger.toList(),
+                        emneknagger = oppgave.emneknagger.tilEmneknaggDTOListe(),
                         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
@@ -1321,6 +1322,52 @@ class OppgaveApiTest {
                     "status" : 404,
                     "detail" : "Ingen oppgaveId funnet for behandlingId: $behandlingIdSomIkkeFinnes"
                 }"""
+            }
+        }
+    }
+
+    @Test
+    fun `Skal få med emneknaggkategorier`() {
+        val mockOppgave = mockk<Oppgave>()
+        val mockOppgaveDTO =
+            mockk<OppgaveDTO>(relaxed = true).also {
+                every { it.emneknagger } returns
+                    listOf(
+                        EmneknaggDTO(
+                            visningsnavn = "hubba",
+                            kategori = EmneknaggKategoriDTO.ETTERSENDING,
+                        ),
+                        EmneknaggDTO(
+                            visningsnavn = "bubba",
+                            kategori = EmneknaggKategoriDTO.SØKNADSRESULTAT,
+                        ),
+                    )
+            }
+        withOppgaveApi(
+            oppgaveMediator =
+                mockk<OppgaveMediator>().also {
+                    every { it.hentOppgave(any(), any()) } returns mockOppgave
+                },
+            oppgaveDTOMapper =
+                mockk<OppgaveDTOMapper>().also {
+                    coEvery { it.lagOppgaveDTO(mockOppgave) } returns mockOppgaveDTO
+                },
+        ) {
+            client.get("/oppgave/${UUIDv7.ny()}") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                    { "emneknagger": [
+                        {
+                          "visningsnavn": "hubba",
+                          "kategori": "ETTERSENDING"
+                        },
+                        {
+                          "visningsnavn": "bubba",
+                          "kategori": "SØKNADSRESULTAT"
+                        } ] 
+                    }
+                    """.trimIndent()
             }
         }
     }
