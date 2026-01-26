@@ -1,4 +1,4 @@
-SET session_replication_role = replica;
+DROP TRIGGER IF EXISTS oppdater_endret_tidspunkt ON oppgave_v1;
 
 DO $$
     DECLARE
@@ -26,4 +26,8 @@ DO $$
         END LOOP;
     END $$;
 
-SET session_replication_role = origin;
+CREATE TRIGGER oppdater_endret_tidspunkt
+    BEFORE UPDATE
+    ON oppgave_v1
+    FOR EACH ROW
+EXECUTE FUNCTION oppdater_endret_tidspunkt();
