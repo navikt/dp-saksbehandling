@@ -1114,7 +1114,7 @@ components:
         emneknagger:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/Emneknagg'
         skjermesSomEgneAnsatte:
           type: boolean
         adressebeskyttelseGradering:
@@ -1174,7 +1174,7 @@ components:
         emneknagger:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/Emneknagg'
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
         notat:
@@ -1237,6 +1237,31 @@ components:
         - DP_SAK
         - GOSYS
         - INGEN
+
+    Emneknagg:
+      type: object
+      properties:
+        visningsnavn:
+          type: string
+        kategori:
+          $ref: '#/components/schemas/EmneknaggKategori'
+      required:
+        - visningsnavn
+        - kategori
+
+    EmneknaggKategori:
+      type: string
+      enum:
+        - RETTIGHET
+        - GJENOPPTAK
+        - SØKNADSRESULTAT
+        - AVSLAGSGRUNN
+        - AVBRUTT_GRUNN
+        - PÅ_VENT
+        - ETTERSENDING
+        - UDEFINERT
+
+
 
     OppgaveTilstand:
       type: string

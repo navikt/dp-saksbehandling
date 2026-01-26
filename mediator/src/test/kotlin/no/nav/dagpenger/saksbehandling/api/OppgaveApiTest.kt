@@ -976,7 +976,7 @@ class OppgaveApiTest {
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         utlostAv = testOppgave.tilUtlostAvTypeDTO(),
-                        emneknagger = testOppgave.emneknagger.toList(),
+                        emneknagger = testOppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
@@ -1127,7 +1127,7 @@ class OppgaveApiTest {
                         tidspunktOpprettet = oppgave.opprettet,
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
                         utlostAv = oppgave.tilUtlostAvTypeDTO(),
-                        emneknagger = oppgave.emneknagger.toList(),
+                        emneknagger = oppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
                         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(

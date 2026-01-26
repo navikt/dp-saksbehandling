@@ -4,6 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -21,6 +22,8 @@ import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -146,7 +149,7 @@ internal class OppgaveDTOMapper(
             tidspunktOpprettet = oppgave.opprettet,
             behandlingType = oppgave.tilBehandlingTypeDTO(),
             utlostAv = oppgave.tilUtlostAvTypeDTO(),
-            emneknagger = oppgave.emneknagger.toList(),
+            emneknagger = oppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
             utsattTilDato = oppgave.utsattTil(),
@@ -233,6 +236,118 @@ internal class OppgaveDTOMapper(
         )
 }
 
+class RegelEmnenagg(
+    private val visningsNavn: String,
+) {
+    fun bygg(): EmneknaggDTO? {
+        val regelknagg = Emneknagg.Regelknagg.entries.singleOrNull { it.visningsnavn == visningsNavn }
+
+        return regelknagg?.let {
+            when (it) {
+                in
+                setOf(
+                    Emneknagg.Regelknagg.AVSLAG,
+                    Emneknagg.Regelknagg.INNVILGELSE,
+                ),
+                -> {
+                    EmneknaggDTO(
+                        visningsnavn = regelknagg.visningsnavn,
+                        kategori = EmneknaggKategoriDTO.SØKNADSRESULTAT,
+                    )
+                }
+
+                Emneknagg.Regelknagg.GJENOPPTAK -> {
+                    EmneknaggDTO(
+                        visningsnavn = regelknagg.visningsnavn,
+                        kategori = EmneknaggKategoriDTO.GJENOPPTAK,
+                    )
+                }
+
+                in
+                setOf(
+                    Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT,
+                    Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT,
+                    Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID,
+                    Emneknagg.Regelknagg.AVSLAG_ALDER,
+                    Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER,
+                    Emneknagg.Regelknagg.AVSLAG_STREIK,
+                    Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND,
+                    Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER,
+                    Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT,
+                    Emneknagg.Regelknagg.AVSLAG_UTESTENGT,
+                    Emneknagg.Regelknagg.AVSLAG_UTDANNING,
+                    Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP,
+                ),
+                ->
+                    EmneknaggDTO(
+                        visningsnavn = regelknagg.visningsnavn,
+                        kategori = EmneknaggKategoriDTO.AVSLAGSGRUNN,
+                    )
+
+                in
+                setOf(
+                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR,
+                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT,
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT,
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK,
+                    Emneknagg.Regelknagg.RETTIGHET_KONKURS,
+                ),
+                ->
+                    EmneknaggDTO(
+                        visningsnavn = regelknagg.visningsnavn,
+                        kategori = EmneknaggKategoriDTO.RETTIGHET,
+                    )
+
+                else -> null
+            }
+        }
+    }
+}
+
+class PåVent(
+    private val visningsNavn: String,
+) {
+    fun bygg(): EmneknaggDTO? {
+        val påVentKnagg = Emneknagg.PåVent.entries.singleOrNull { it.visningsnavn == visningsNavn }
+        return påVentKnagg?.let {
+            EmneknaggDTO(
+                visningsnavn = påVentKnagg.visningsnavn,
+                kategori = EmneknaggKategoriDTO.PÅ_VENT,
+            )
+        }
+    }
+}
+
+class Avbryt(
+    private val visningsNavn: String,
+) {
+    fun bygg(): EmneknaggDTO? {
+        val påVentKnagg = Emneknagg.PåVent.entries.singleOrNull { it.visningsnavn == visningsNavn }
+        return påVentKnagg?.let {
+            EmneknaggDTO(
+                visningsnavn = påVentKnagg.visningsnavn,
+                kategori = EmneknaggKategoriDTO.AVBRUTT_GRUNN,
+            )
+        }
+    }
+}
+
+fun Set<String>.tilOppgaveEmneknaggerDTOListe(): List<EmneknaggDTO> =
+    this.map { visningsNavn ->
+        if (visningsNavn.startsWith("Ettersending")) {
+            EmneknaggDTO(
+                visningsnavn = visningsNavn,
+                kategori = EmneknaggKategoriDTO.ETTERSENDING,
+            )
+        } else {
+            RegelEmnenagg(visningsNavn).bygg() ?: PåVent(visningsNavn).bygg() ?: Avbryt(visningsNavn).bygg()
+                ?: EmneknaggDTO(
+                    visningsnavn = visningsNavn,
+                    kategori = EmneknaggKategoriDTO.UDEFINERT,
+                )
+        }
+    }
+
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
@@ -241,7 +356,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         tidspunktOpprettet = this.opprettet,
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
-        emneknagger = this.emneknagger.toList(),
+        emneknagger = this.emneknagger.tilOppgaveEmneknaggerDTOListe(),
         skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
             when (this.person.adressebeskyttelseGradering) {
