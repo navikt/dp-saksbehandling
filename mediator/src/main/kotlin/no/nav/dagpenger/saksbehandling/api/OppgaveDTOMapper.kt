@@ -250,10 +250,10 @@ private fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
     when (this) {
         EmneknaggKategori.RETTIGHET -> EmneknaggKategoriDTO.RETTIGHET
         EmneknaggKategori.GJENOPPTAK -> EmneknaggKategoriDTO.GJENOPPTAK
-        EmneknaggKategori.SØKNADSRESULTAT -> EmneknaggKategoriDTO.SØKNADSRESULTAT
+        EmneknaggKategori.SØKNADSRESULTAT -> EmneknaggKategoriDTO.SOKNADSRESULTAT
         EmneknaggKategori.AVSLAGSGRUNN -> EmneknaggKategoriDTO.AVSLAGSGRUNN
         EmneknaggKategori.AVBRUTT_GRUNN -> EmneknaggKategoriDTO.AVBRUTT_GRUNN
-        EmneknaggKategori.PÅ_VENT -> EmneknaggKategoriDTO.PÅ_VENT
+        EmneknaggKategori.PÅ_VENT -> EmneknaggKategoriDTO.PAA_VENT
         EmneknaggKategori.ETTERSENDING -> EmneknaggKategoriDTO.ETTERSENDING
         EmneknaggKategori.UDEFINERT -> EmneknaggKategoriDTO.UDEFINERT
     }

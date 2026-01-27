@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
@@ -84,7 +85,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = Periode.Companion.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
+                        emneknaggGruppertPerKategori = emptyMap(),
                         adressebeskyttelseTilganger = setOf(FORTROLIG),
                         navIdent = saksbehandler.navIdent,
                     ),
@@ -152,7 +153,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = mapOf(),
                             tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
@@ -202,7 +203,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = mapOf(),
                             utløstAvTyper = setOf(UtløstAvType.KLAGE),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
@@ -272,7 +273,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = saksbehandlerUtenTilgangTilEgneAnsatte.navIdent,
@@ -297,7 +298,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
@@ -356,7 +357,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             harBeslutterRolle = false,
@@ -383,7 +384,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger =
                                 setOf(
@@ -428,7 +429,7 @@ class PostgresOppgaveRepositoryTest {
             val filter =
                 TildelNesteOppgaveFilter(
                     periode = Periode.Companion.UBEGRENSET_PERIODE,
-                    emneknagger = setOf("Testknagg"),
+                    emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("Testknagg")),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = saksbehandler.navIdent,
                 )
@@ -525,7 +526,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = Periode.Companion.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
+                        emneknaggGruppertPerKategori = emptyMap(),
                         egneAnsatteTilgang = saksbehandlerUtført.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = saksbehandlerUtført.adressebeskyttelseTilganger(),
                         harBeslutterRolle = saksbehandlerUtført.tilganger.contains(TilgangType.BESLUTTER),
@@ -543,7 +544,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.Companion.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = annenBeslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = annenBeslutter.adressebeskyttelseTilganger(),
                             harBeslutterRolle = annenBeslutter.tilganger.contains(TilgangType.BESLUTTER),
@@ -735,14 +736,14 @@ class PostgresOppgaveRepositoryTest {
             val emneknaggFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
                     periode = Periode.UBEGRENSET_PERIODE,
-                    emneknagger = setOf("Testknagg"),
+                    emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.SØKNADSRESULTAT to setOf("Testknagg")),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
                 )
             val opprettetIDagFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
-                    emneknagger = emptySet(),
+                    emneknaggGruppertPerKategori = emptyMap(),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
                 )
@@ -793,7 +794,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = testSaksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
                             harBeslutterRolle = testSaksbehandler.tilganger.contains(TilgangType.BESLUTTER),
@@ -818,7 +819,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = beslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
                             harBeslutterRolle = beslutter.tilganger.contains(TilgangType.BESLUTTER),
@@ -843,7 +844,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
                             harBeslutterRolle = beslutterEgneAnsatte.tilganger.contains(TilgangType.BESLUTTER),
@@ -868,7 +869,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
                             harBeslutterRolle = beslutterFortroligAdresse.tilganger.contains(TilgangType.BESLUTTER),
@@ -893,7 +894,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
                             harBeslutterRolle = beslutterStrengtFortroligAdresse.tilganger.contains(TilgangType.BESLUTTER),
@@ -919,7 +920,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
                             harBeslutterRolle = beslutterStrengtFortroligAdresseUtland.tilganger.contains(TilgangType.BESLUTTER),
@@ -944,7 +945,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang =
                                 beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
                                     TilgangType.EGNE_ANSATTE,
@@ -1243,7 +1244,7 @@ class PostgresOppgaveRepositoryTest {
                                 Oppgave.Tilstand.Type.entries
                                     .toSet(),
                             periode = Periode.UBEGRENSET_PERIODE,
-                            emneknagger = emptySet(),
+                            emneknaggGruppertPerKategori = emptyMap(),
                             utløstAvTyper = setOf(UtløstAvType.KLAGE),
                         ),
                 ).oppgaver shouldBe listOf(klageOppgave)
@@ -1417,7 +1418,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = emptySet(),
+                        emneknaggGruppertPerKategori = emptyMap(),
                     ),
                 ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3)
 
@@ -1428,7 +1429,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = setOf("hubba"),
+                        emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba")),
                     ),
                 ).oppgaver shouldBe listOf(oppgave1, oppgave2)
 
@@ -1439,7 +1440,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = setOf("bubba"),
+                        emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("bubba")),
                     ),
                 ).oppgaver shouldBe listOf(oppgave1)
 
@@ -1450,7 +1451,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        emneknagger = setOf("bubba", "hubba"),
+                        emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba", "bubba")),
                     ),
                 ).oppgaver shouldBe listOf(oppgave1, oppgave2)
         }
@@ -1527,7 +1528,10 @@ class PostgresOppgaveRepositoryTest {
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
                         saksbehandlerIdent = saksbehandler2,
-                        emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                        emneknaggGruppertPerKategori =
+                            mapOf(
+                                Emneknagg.Regelknagg.INNVILGELSE.kategori to setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                            ),
                     ),
                 ).oppgaver.size shouldBe 1
         }

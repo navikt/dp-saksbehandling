@@ -30,6 +30,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
+import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -304,7 +305,14 @@ class OppgaveApiTest {
                 every {
                     it.søk(
                         match {
-                            it.emneknagger == setOf("TULLBALL", "KLAGE") &&
+                            it.emneknaggGruppertPerKategori ==
+                                mapOf(
+                                    EmneknaggKategori.RETTIGHET to
+                                        setOf(
+                                            "TULLBALL",
+                                            "KLAGE",
+                                        ),
+                                ) &&
                                 it.tilstander == setOf(KLAR_TIL_BEHANDLING) &&
                                 it.periode == Periode.UBEGRENSET_PERIODE
                         },
@@ -314,7 +322,7 @@ class OppgaveApiTest {
 
         withOppgaveApi(oppgaveMediatorMock) {
             client
-                .get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&emneknagg=TULLBALL&emneknagg=KLAGE") { autentisert() }
+                .get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&rettighet=TULLBALL&rettighet=KLAGE") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"

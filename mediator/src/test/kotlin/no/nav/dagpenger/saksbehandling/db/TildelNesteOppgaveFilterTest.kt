@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -16,8 +17,9 @@ import java.time.LocalDate
 
 class TildelNesteOppgaveFilterTest {
     private val queryString =
-        """emneknagg=knagg1&emneknagg=knagg2
+        """rettighet=knagg1&rettighet=knagg2
         &fom=2021-01-01&tom=2023-01-01
+        &udefinert=u1&udefinert=u2
         &tilstand=KLAR_TIL_KONTROLL&tilstand=UNDER_KONTROLL
         &utlostAv=KLAGE
         """.trimMargin()
@@ -42,11 +44,14 @@ class TildelNesteOppgaveFilterTest {
             )
         filter.tilstander shouldBe setOf(Type.KLAR_TIL_KONTROLL, Type.UNDER_KONTROLL)
         filter.utløstAvTyper shouldBe setOf(UtløstAvType.KLAGE)
-        filter.emneknagger shouldBe setOf("knagg1", "knagg2")
+        filter.emneknaggGruppertPerKategori shouldBe
+            mapOf(
+                EmneknaggKategori.RETTIGHET to setOf("knagg1", "knagg2"),
+                EmneknaggKategori.UDEFINERT to setOf("u1", "u2"),
+            )
         filter.egneAnsatteTilgang shouldBe false
         filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
         filter.navIdent shouldBe saksbehandler.navIdent
-        filter.emneknaggGruppertPerKategori shouldBe mapOf("UDEFINERT" to setOf("knagg1", "knagg2"))
     }
 
     @Test
@@ -93,7 +98,7 @@ class TildelNesteOppgaveFilterTest {
                 saksbehandler = saksbehandler,
             )
         filter.periode shouldBe Periode.UBEGRENSET_PERIODE
-        filter.emneknagger shouldBe setOf()
+        filter.emneknaggGruppertPerKategori shouldBe emptyMap()
         filter.egneAnsatteTilgang shouldBe false
         filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
         filter.navIdent shouldBe saksbehandler.navIdent

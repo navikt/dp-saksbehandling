@@ -86,7 +86,7 @@ paths:
               type: string
           example: ["Ordinær", "Verneplikt"]
         - in: query
-          name: søknadsresultat
+          name: soknadsresultat
           description: Filtrer på søknadsresultatknagger (f.eks. "Avslag", "Innvilgelse")
           required: false
           style: form
@@ -119,7 +119,7 @@ paths:
               type: string
           example: ["Gjenopptak"]
         - in: query
-          name: på_vent
+          name: paa_vent
           description: Filtrer på på-vent årsaker (f.eks. "Avvent svar", "Avvent dokumentasjon")
           required: false
           style: form
@@ -144,32 +144,6 @@ paths:
           name: ettersending
           description: Filtrer på ettersendinger
           required: false
-          style: form
-          explode: true
-          schema:
-            type: array
-            items:
-              type: string
-        - in: query
-          name: emneknaggKategori
-          description: |
-            (Deprecated: Bruk kategori-spesifikke parametere som 'rettighet', 'søknadsresultat' osv i stedet)
-            Filtrer på emneknagger ved å bruke visningsnavn.
-          required: false
-          deprecated: true
-          style: form
-          explode: true
-          schema:
-            type: array
-            items:
-              type: string
-        - in: query
-          name: emneknagg
-          description: |
-            (Deprecated: Bruk kategori-spesifikke parametere som 'rettighet', 'søknadsresultat' osv i stedet)
-            Filtrer på emneknagger ved å bruke visningsnavn.
-          required: false
-          deprecated: true
           style: form
           explode: true
           schema:
@@ -1354,10 +1328,10 @@ components:
       enum:
         - RETTIGHET
         - GJENOPPTAK
-        - SØKNADSRESULTAT
+        - SOKNADSRESULTAT
         - AVSLAGSGRUNN
         - AVBRUTT_GRUNN
-        - PÅ_VENT
+        - PAA_VENT
         - ETTERSENDING
         - UDEFINERT
 

@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
+import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import org.junit.jupiter.api.Test
@@ -16,7 +17,7 @@ class SøkefilterTest {
             .build {
                 this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
                 this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
-                this.appendAll("emneknagg", listOf("Permittert", "Permittert fisk"))
+                this.appendAll("rettighet", listOf("Permittert", "Permittert fisk"))
                 this["fom"] = "2021-01-01"
                 this["tom"] = "2023-01-01"
                 this["mineOppgaver"] = "true"
@@ -39,12 +40,19 @@ class SøkefilterTest {
                         UtløstAvType.SØKNAD,
                         UtløstAvType.KLAGE,
                     )
-                søkefilter.emneknagger shouldBe setOf("Permittert", "Permittert fisk")
+                søkefilter.emneknaggGruppertPerKategori shouldBe
+                    mapOf(
+                        EmneknaggKategori.RETTIGHET to
+                            setOf(
+                                "Permittert",
+                                "Permittert fisk",
+                            ),
+                    )
                 søkefilter.saksbehandlerIdent shouldBe "testIdent"
                 søkefilter.paginering shouldBe Søkefilter.Paginering(10, 0)
                 søkefilter.emneknaggGruppertPerKategori.shouldBe(
                     mapOf(
-                        "RETTIGHET" to setOf("Permittert", "Permittert fisk"),
+                        EmneknaggKategori.RETTIGHET to setOf("Permittert", "Permittert fisk"),
                     ),
                 )
             }
@@ -87,69 +95,19 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Skal kunne bruke emneknaggKategori som query parameter`() {
-        Parameters.Companion
-            .build {
-                this.appendAll("emneknaggKategori", listOf("Avslag", "Ordinær"))
-                this["fom"] = "2021-01-01"
-                this["tom"] = "2023-01-01"
-            }.let {
-                val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.emneknagger shouldBe setOf("Avslag", "Ordinær")
-                søkefilter.emneknaggGruppertPerKategori shouldBe
-                    mapOf(
-                        "SØKNADSRESULTAT" to setOf("Avslag"),
-                        "RETTIGHET" to setOf("Ordinær"),
-                    )
-            }
-    }
-
-    @Test
-    fun `emneknaggKategori skal ha prioritet over emneknagg hvis begge er satt`() {
-        Parameters.Companion
-            .build {
-                this.appendAll("emneknagg", listOf("Gammel", "Parameter"))
-                this.appendAll("emneknaggKategori", listOf("Avslag", "Innvilgelse"))
-            }.let {
-                val søkefilter = Søkefilter.fra(it, "testIdent")
-                // Skal bruke emneknaggKategori
-                søkefilter.emneknagger shouldBe setOf("Avslag", "Innvilgelse")
-            }
-    }
-
-    @Test
     fun `Skal kunne bruke kategori-baserte query parametere`() {
         Parameters.Companion
             .build {
                 this.appendAll("rettighet", listOf("Ordinær", "Verneplikt"))
-                this.appendAll("søknadsresultat", listOf("Avslag"))
+                this.appendAll("soknadsresultat", listOf("Avslag"))
                 this["fom"] = "2021-01-01"
                 this["tom"] = "2023-01-01"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.emneknagger shouldBe setOf("Ordinær", "Verneplikt", "Avslag")
                 søkefilter.emneknaggGruppertPerKategori shouldBe
                     mapOf(
-                        "RETTIGHET" to setOf("Ordinær", "Verneplikt"),
-                        "SØKNADSRESULTAT" to setOf("Avslag"),
-                    )
-            }
-    }
-
-    @Test
-    fun `Kategori-baserte parametere skal ha prioritet over emneknagg og emneknaggKategori`() {
-        Parameters.Companion
-            .build {
-                this.appendAll("emneknagg", listOf("Gammel1"))
-                this.appendAll("emneknaggKategori", listOf("Gammel2"))
-                this.appendAll("rettighet", listOf("Ordinær"))
-            }.let {
-                val søkefilter = Søkefilter.fra(it, "testIdent")
-                // Skal bruke kategori-baserte parametere
-                søkefilter.emneknagger shouldBe setOf("Ordinær")
-                søkefilter.emneknaggGruppertPerKategori shouldBe
-                    mapOf(
-                        "RETTIGHET" to setOf("Ordinær"),
+                        EmneknaggKategori.RETTIGHET to setOf("Ordinær", "Verneplikt"),
+                        EmneknaggKategori.SØKNADSRESULTAT to setOf("Avslag"),
                     )
             }
     }

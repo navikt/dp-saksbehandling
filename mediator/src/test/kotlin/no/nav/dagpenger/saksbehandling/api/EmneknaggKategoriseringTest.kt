@@ -19,8 +19,8 @@ class EmneknaggKategoriseringTest {
 
         val result = emneknagger.tilOppgaveEmneknaggerDTOListe()
 
-        result.single { it.visningsnavn == "Avslag" }.kategori shouldBe EmneknaggKategoriDTO.SØKNADSRESULTAT
-        result.single { it.visningsnavn == "Innvilgelse" }.kategori shouldBe EmneknaggKategoriDTO.SØKNADSRESULTAT
+        result.single { it.visningsnavn == "Avslag" }.kategori shouldBe EmneknaggKategoriDTO.SOKNADSRESULTAT
+        result.single { it.visningsnavn == "Innvilgelse" }.kategori shouldBe EmneknaggKategoriDTO.SOKNADSRESULTAT
         result.single { it.visningsnavn == "Gjenopptak" }.kategori shouldBe EmneknaggKategoriDTO.GJENOPPTAK
         result.single { it.visningsnavn == "Minsteinntekt" }.kategori shouldBe EmneknaggKategoriDTO.AVSLAGSGRUNN
         result.single { it.visningsnavn == "Ordinær" }.kategori shouldBe EmneknaggKategoriDTO.RETTIGHET
@@ -81,7 +81,7 @@ class EmneknaggKategoriseringTest {
         val result = påVentKnagger.tilOppgaveEmneknaggerDTOListe()
 
         result.forEach { emneknagg ->
-            emneknagg.kategori shouldBe EmneknaggKategoriDTO.PÅ_VENT
+            emneknagg.kategori shouldBe EmneknaggKategoriDTO.PAA_VENT
         }
     }
 
@@ -146,8 +146,8 @@ class EmneknaggKategoriseringTest {
         val result = miksedeKnagger.tilOppgaveEmneknaggerDTOListe()
 
         result.size shouldBe 5
-        result.single { it.visningsnavn == "Avslag" }.kategori shouldBe EmneknaggKategoriDTO.SØKNADSRESULTAT
-        result.single { it.visningsnavn == "Avvent svar" }.kategori shouldBe EmneknaggKategoriDTO.PÅ_VENT
+        result.single { it.visningsnavn == "Avslag" }.kategori shouldBe EmneknaggKategoriDTO.SOKNADSRESULTAT
+        result.single { it.visningsnavn == "Avvent svar" }.kategori shouldBe EmneknaggKategoriDTO.PAA_VENT
         result.single { it.visningsnavn.startsWith("Ettersending") }.kategori shouldBe EmneknaggKategoriDTO.ETTERSENDING
         result.single { it.visningsnavn == "Annen avbruddsårsak" }.kategori shouldBe EmneknaggKategoriDTO.AVBRUTT_GRUNN
         result.single { it.visningsnavn == "Ukjent knagg" }.kategori shouldBe EmneknaggKategoriDTO.UDEFINERT
