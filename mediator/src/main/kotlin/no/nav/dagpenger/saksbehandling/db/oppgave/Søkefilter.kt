@@ -22,11 +22,12 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
-    val emneknaggGruppertPerKategori: Map<String, Set<String>> = emptyMap(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
 ) {
+    val emneknaggGruppertPerKategori: Map<String, Set<String>> = emneknagger.grupperEmneknaggPerKategori()
+
     data class Paginering(
         val antallOppgaver: Int,
         val side: Int,
@@ -63,7 +64,6 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknagger = emneknagger,
-                emneknaggGruppertPerKategori = emneknagger.grupperEmneknaggPerKategori(),
                 utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
             )
@@ -74,7 +74,6 @@ data class Søkefilter(
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagger: Set<String>,
-    val emneknaggGruppertPerKategori: Map<String, Set<String>> = emptyMap(),
     val tilstander: Set<Tilstand.Type> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
@@ -82,6 +81,8 @@ data class TildelNesteOppgaveFilter(
     val harBeslutterRolle: Boolean = false,
     val navIdent: String,
 ) {
+    val emneknaggGruppertPerKategori: Map<String, Set<String>> = emneknagger.grupperEmneknaggPerKategori()
+
     companion object {
         fun fra(
             queryString: String,
@@ -97,7 +98,6 @@ data class TildelNesteOppgaveFilter(
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagger = emneknagger,
-                emneknaggGruppertPerKategori = emneknagger.grupperEmneknaggPerKategori(),
                 tilstander = tilstander,
                 utløstAvTyper = utløstAvTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,

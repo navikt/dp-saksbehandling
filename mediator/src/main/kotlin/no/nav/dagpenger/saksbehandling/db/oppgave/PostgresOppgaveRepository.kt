@@ -92,7 +92,6 @@ class PostgresOppgaveRepository(
     ): UUID? =
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
-                val emneknagger = filter.emneknagger.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
                 val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'$it'" }
                 val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
@@ -118,7 +117,7 @@ class PostgresOppgaveRepository(
                                 filter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
                                     val emneknaggList = emneknagger.joinToString { "'$it'" }
                                     """
-                                    EXISTS(
+                                    AND EXISTS(
                                         SELECT 1
                                         FROM   emneknagg_v1 emne
                                         WHERE  emne.oppgave_id = oppg.id
@@ -126,21 +125,8 @@ class PostgresOppgaveRepository(
                                     )
                                     """.trimIndent()
                                 }
-                            " AND " + categoryConditions.joinToString(" AND ")
+                            categoryConditions.joinToString(" ")
                         }
-
-                        filter.emneknagger.isNotEmpty() -> {
-                            // Fallback for bakoverkompatibilitet
-                            """
-                            AND EXISTS(
-                                SELECT 1
-                                FROM   emneknagg_v1 emne
-                                WHERE  emne.oppgave_id = oppg.id
-                                AND    emne.emneknagg IN ($emneknagger)
-                            )
-                            """.trimIndent()
-                        }
-
                         else -> ""
                     }
 
@@ -505,7 +491,6 @@ class PostgresOppgaveRepository(
                     """.trimIndent()
                 } ?: ""
 
-            val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
             val emneknaggClause =
                 when {
                     søkeFilter.emneknaggGruppertPerKategori.isNotEmpty() -> {
@@ -514,7 +499,7 @@ class PostgresOppgaveRepository(
                             søkeFilter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
                                 val emneknaggList = emneknagger.joinToString { "'$it'" }
                                 """
-                                EXISTS(
+                                AND EXISTS(
                                     SELECT 1
                                     FROM   emneknagg_v1 emne
                                     WHERE  emne.oppgave_id = oppg.id
@@ -522,19 +507,7 @@ class PostgresOppgaveRepository(
                                 )
                                 """.trimIndent()
                             }
-                        " AND " + categoryConditions.joinToString(" AND ")
-                    }
-
-                    søkeFilter.emneknagger.isNotEmpty() -> {
-                        // Fallback for bakoverkompatibilitet
-                        """
-                        AND EXISTS(
-                            SELECT 1
-                            FROM   emneknagg_v1 emne
-                            WHERE  emne.oppgave_id = oppg.id
-                            AND    emne.emneknagg IN ($emneknaggerAsText)
-                        )
-                        """.trimIndent()
+                        categoryConditions.joinToString(" ")
                     }
 
                     else -> ""
@@ -619,7 +592,6 @@ class PostgresOppgaveRepository(
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,
                     "soknad_id" to søkeFilter.søknadId?.toString(),
-                    "emneknagger" to emneknaggerAsText,
                 )
             sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
             sikkerlogger.info { "Henter oppgaver med følgende SQL: $oppgaverQuery" }
