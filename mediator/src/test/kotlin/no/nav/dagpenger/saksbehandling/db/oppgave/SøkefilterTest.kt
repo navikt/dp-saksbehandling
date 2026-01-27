@@ -85,4 +85,35 @@ class SøkefilterTest {
             Søkefilter.Paginering(0, 2)
         }
     }
+
+    @Test
+    fun `Skal kunne bruke emneknaggKategori som query parameter`() {
+        Parameters.Companion
+            .build {
+                this.appendAll("emneknaggKategori", listOf("Avslag", "Ordinær"))
+                this["fom"] = "2021-01-01"
+                this["tom"] = "2023-01-01"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.emneknagger shouldBe setOf("Avslag", "Ordinær")
+                søkefilter.emneknaggGruppertPerKategori shouldBe
+                    mapOf(
+                        "SØKNADSRESULTAT" to setOf("Avslag"),
+                        "RETTIGHET" to setOf("Ordinær"),
+                    )
+            }
+    }
+
+    @Test
+    fun `emneknaggKategori skal ha prioritet over emneknagg hvis begge er satt`() {
+        Parameters.Companion
+            .build {
+                this.appendAll("emneknagg", listOf("Gammel", "Parameter"))
+                this.appendAll("emneknaggKategori", listOf("Avslag", "Innvilgelse"))
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                // Skal bruke emneknaggKategori
+                søkefilter.emneknagger shouldBe setOf("Avslag", "Innvilgelse")
+            }
+    }
 }

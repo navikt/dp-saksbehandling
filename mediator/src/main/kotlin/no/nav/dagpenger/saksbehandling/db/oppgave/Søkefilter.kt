@@ -153,7 +153,9 @@ class FilterBuilder {
 
     fun tom(): LocalDate? = stringValues["tom"]?.let { LocalDate.parse(it) }
 
-    fun emneknagg(): Set<String>? = stringValues.getAll("emneknagg")?.toSet()
+    fun emneknagg(): Set<String>? =
+        stringValues.getAll("emneknaggKategori")?.toSet()
+            ?: stringValues.getAll("emneknagg")?.toSet()
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 

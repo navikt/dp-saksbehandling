@@ -75,9 +75,27 @@ paths:
       summary: Hent alle oppgaver med status Klar til behandling
       parameters:
         - in: query
-          name: emneknagg
-          description: Filtrer på emneknagger ved å bruke visningsnavn (f.eks. "Avslag", "Innvilgelse"). Responsen returnerer fulle Emneknagg-objekter med både visningsnavn og kategori.
+          name: emneknaggKategori
+          description: |
+            Filtrer på emneknagger ved å bruke visningsnavn (f.eks. "Avslag", "Innvilgelse"). 
+            Responsen returnerer fulle Emneknagg-objekter med både visningsnavn og kategori.
+            Dette er den foretrukne måten å filtrere på emneknagger.
           required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Avslag", "Innvilgelse", "Ordinær"]
+        - in: query
+          name: emneknagg
+          description: |
+            (Deprecated: Bruk 'emneknaggKategori' i stedet)
+            Filtrer på emneknagger ved å bruke visningsnavn. 
+            Støttes fortsatt for bakoverkompatibilitet.
+          required: false
+          deprecated: true
           style: form
           explode: true
           schema:
