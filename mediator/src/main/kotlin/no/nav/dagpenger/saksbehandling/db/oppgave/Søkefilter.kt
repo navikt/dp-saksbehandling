@@ -4,7 +4,6 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -14,6 +13,18 @@ import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import java.time.LocalDate
 import java.util.UUID
+
+// Mapping fra query parameter navn til kategori-navn (brukt i SQL)
+private val KATEGORI_PARAMETER_MAP =
+    mapOf(
+        "rettighet" to "RETTIGHET",
+        "gjenopptak" to "GJENOPPTAK",
+        "søknadsresultat" to "SØKNADSRESULTAT",
+        "avslagsgrunn" to "AVSLAGSGRUNN",
+        "avbrutt_grunn" to "AVBRUTT_GRUNN",
+        "på_vent" to "PÅ_VENT",
+        "ettersending" to "ETTERSENDING",
+    )
 
 data class Søkefilter(
     val periode: Periode,
@@ -63,16 +74,6 @@ data class Søkefilter(
             val emneknagger = builder.emneknagg() ?: emptySet()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
-            val direkteGruppering = builder.emneknaggGruppertPerKategori()
-
-            // Hvis kategori-baserte parametere er sendt, bruk dem direkte
-            // Ellers, grupper emneknagger automatisk basert på visningsnavn
-            val gruppertPerKategori =
-                if (direkteGruppering.isNotEmpty()) {
-                    direkteGruppering
-                } else {
-                    emneknagger.grupperEmneknaggPerKategori()
-                }
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
@@ -83,7 +84,7 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknagger = emneknagger,
-                _emneknaggGruppertPerKategori = gruppertPerKategori,
+                _emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
             )
@@ -123,19 +124,11 @@ data class TildelNesteOppgaveFilter(
             val emneknagger = builder.emneknagg() ?: emptySet()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val tilstander = builder.tilstander() ?: emptySet()
-            val direkteGruppering = builder.emneknaggGruppertPerKategori()
-
-            val gruppertPerKategori =
-                if (direkteGruppering.isNotEmpty()) {
-                    direkteGruppering
-                } else {
-                    emneknagger.grupperEmneknaggPerKategori()
-                }
 
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagger = emneknagger,
-                _emneknaggGruppertPerKategori = gruppertPerKategori,
+                _emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 tilstander = tilstander,
                 utløstAvTyper = utløstAvTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
@@ -192,20 +185,8 @@ class FilterBuilder {
     fun tom(): LocalDate? = stringValues["tom"]?.let { LocalDate.parse(it) }
 
     fun emneknagg(): Set<String>? {
-        // Ny måte: Parse kategori-baserte parametere
-        val kategoriParametre =
-            mapOf(
-                "rettighet" to EmneknaggKategori.RETTIGHET,
-                "gjenopptak" to EmneknaggKategori.GJENOPPTAK,
-                "søknadsresultat" to EmneknaggKategori.SØKNADSRESULTAT,
-                "avslagsgrunn" to EmneknaggKategori.AVSLAGSGRUNN,
-                "avbrutt_grunn" to EmneknaggKategori.AVBRUTT_GRUNN,
-                "på_vent" to EmneknaggKategori.PÅ_VENT,
-                "ettersending" to EmneknaggKategori.ETTERSENDING,
-            )
-
         val emneknaggerFraKategorier =
-            kategoriParametre.flatMap { (paramNavn, _) ->
+            KATEGORI_PARAMETER_MAP.keys.flatMap { paramNavn ->
                 stringValues.getAll(paramNavn)?.toList() ?: emptyList()
             }
 
@@ -218,28 +199,16 @@ class FilterBuilder {
         }
     }
 
-    fun emneknaggGruppertPerKategori(): Map<String, Set<String>> {
-        val kategoriParametre =
-            mapOf(
-                "rettighet" to "RETTIGHET",
-                "gjenopptak" to "GJENOPPTAK",
-                "søknadsresultat" to "SØKNADSRESULTAT",
-                "avslagsgrunn" to "AVSLAGSGRUNN",
-                "avbrutt_grunn" to "AVBRUTT_GRUNN",
-                "på_vent" to "PÅ_VENT",
-                "ettersending" to "ETTERSENDING",
-            )
-
-        return kategoriParametre
+    fun emneknaggGruppertPerKategori(): Map<String, Set<String>> =
+        KATEGORI_PARAMETER_MAP
             .mapNotNull { (paramNavn, kategoriNavn) ->
                 val verdier = stringValues.getAll(paramNavn)?.toSet()
-                if (verdier != null && verdier.isNotEmpty()) {
+                if (!verdier.isNullOrEmpty()) {
                     kategoriNavn to verdier
                 } else {
                     null
                 }
             }.toMap()
-    }
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 
