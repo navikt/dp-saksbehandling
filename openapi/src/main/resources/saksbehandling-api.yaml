@@ -75,11 +75,8 @@ paths:
       summary: Hent alle oppgaver med status Klar til behandling
       parameters:
         - in: query
-          name: emneknaggKategori
-          description: |
-            Filtrer på emneknagger ved å bruke visningsnavn (f.eks. "Avslag", "Innvilgelse"). 
-            Responsen returnerer fulle Emneknagg-objekter med både visningsnavn og kategori.
-            Dette er den foretrukne måten å filtrere på emneknagger.
+          name: rettighet
+          description: Filtrer på rettighetsknagger (f.eks. "Ordinær", "Verneplikt", "Permittert")
           required: false
           style: form
           explode: true
@@ -87,13 +84,77 @@ paths:
             type: array
             items:
               type: string
-          example: ["Avslag", "Innvilgelse", "Ordinær"]
+          example: ["Ordinær", "Verneplikt"]
         - in: query
-          name: emneknagg
+          name: søknadsresultat
+          description: Filtrer på søknadsresultatknagger (f.eks. "Avslag", "Innvilgelse")
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Avslag", "Innvilgelse"]
+        - in: query
+          name: avslagsgrunn
+          description: Filtrer på avslagsgrunner (f.eks. "Minsteinntekt", "Arbeidstid")
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Minsteinntekt"]
+        - in: query
+          name: gjenopptak
+          description: Filtrer på gjenopptakknagger
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Gjenopptak"]
+        - in: query
+          name: på_vent
+          description: Filtrer på på-vent årsaker (f.eks. "Avvent svar", "Avvent dokumentasjon")
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Avvent svar"]
+        - in: query
+          name: avbrutt_grunn
+          description: Filtrer på avbruddsårsaker
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Trukket søknad"]
+        - in: query
+          name: ettersending
+          description: Filtrer på ettersendinger
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: emneknaggKategori
           description: |
-            (Deprecated: Bruk 'emneknaggKategori' i stedet)
-            Filtrer på emneknagger ved å bruke visningsnavn. 
-            Støttes fortsatt for bakoverkompatibilitet.
+            (Deprecated: Bruk kategori-spesifikke parametere som 'rettighet', 'søknadsresultat' osv i stedet)
+            Filtrer på emneknagger ved å bruke visningsnavn.
           required: false
           deprecated: true
           style: form
@@ -102,7 +163,19 @@ paths:
             type: array
             items:
               type: string
-          example: ["Avslag", "Innvilgelse"]
+        - in: query
+          name: emneknagg
+          description: |
+            (Deprecated: Bruk kategori-spesifikke parametere som 'rettighet', 'søknadsresultat' osv i stedet)
+            Filtrer på emneknagger ved å bruke visningsnavn.
+          required: false
+          deprecated: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
         - in: query
           name: tilstand
           required: false

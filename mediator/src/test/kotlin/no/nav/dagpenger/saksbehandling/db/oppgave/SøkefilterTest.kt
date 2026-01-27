@@ -116,4 +116,41 @@ class SøkefilterTest {
                 søkefilter.emneknagger shouldBe setOf("Avslag", "Innvilgelse")
             }
     }
+
+    @Test
+    fun `Skal kunne bruke kategori-baserte query parametere`() {
+        Parameters.Companion
+            .build {
+                this.appendAll("rettighet", listOf("Ordinær", "Verneplikt"))
+                this.appendAll("søknadsresultat", listOf("Avslag"))
+                this["fom"] = "2021-01-01"
+                this["tom"] = "2023-01-01"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.emneknagger shouldBe setOf("Ordinær", "Verneplikt", "Avslag")
+                søkefilter.emneknaggGruppertPerKategori shouldBe
+                    mapOf(
+                        "RETTIGHET" to setOf("Ordinær", "Verneplikt"),
+                        "SØKNADSRESULTAT" to setOf("Avslag"),
+                    )
+            }
+    }
+
+    @Test
+    fun `Kategori-baserte parametere skal ha prioritet over emneknagg og emneknaggKategori`() {
+        Parameters.Companion
+            .build {
+                this.appendAll("emneknagg", listOf("Gammel1"))
+                this.appendAll("emneknaggKategori", listOf("Gammel2"))
+                this.appendAll("rettighet", listOf("Ordinær"))
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                // Skal bruke kategori-baserte parametere
+                søkefilter.emneknagger shouldBe setOf("Ordinær")
+                søkefilter.emneknaggGruppertPerKategori shouldBe
+                    mapOf(
+                        "RETTIGHET" to setOf("Ordinær"),
+                    )
+            }
+    }
 }
