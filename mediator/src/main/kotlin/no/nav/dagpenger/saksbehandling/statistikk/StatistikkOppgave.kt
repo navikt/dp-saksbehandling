@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.statistikk
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -17,10 +16,17 @@ data class StatistikkOppgave(
     val personIdent: String,
     val saksbehandlerIdent: String?,
     val beslutterIdent: String?,
-    val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring>,
-    val avsluttetTidspunkt: LocalDateTime,
+    val oppgaveTilstander: List<StatistikkOppgaveTilstandsendring> = emptyList(),
     val versjon: String = Configuration.versjon,
 ) {
+    val sisteOppgaveTilstandsEndring = oppgaveTilstander.maxBy { it.tidspunkt }
+
+    override fun toString(): String =
+        "StatistikkOppgave(oppgaveId=$oppgaveId, " +
+            "sakId=$sakId,behandling=$behandling,  saksbehandlerIdent=$saksbehandlerIdent," +
+            "beslutterIdent=$beslutterIdent, sisteOppgaveTilstandsEndring=$sisteOppgaveTilstandsEndring," +
+            "versjon='$versjon')"
+
     fun asMap(): Map<String, Any> =
         buildMap {
             put("sakId", sakId.toString())
@@ -30,8 +36,9 @@ data class StatistikkOppgave(
             saksbehandlerIdent?.let { put("saksbehandlerIdent", it) }
             beslutterIdent?.let { put("beslutterIdent", it) }
             put("oppgaveTilstander", oppgaveTilstander)
+            // todo sjekk null
+            put("sisteTilstandsendring", oppgaveTilstander.maxBy { it.tidspunkt })
             put("versjon", versjon)
-            put("avsluttetTidspunkt", avsluttetTidspunkt.toString())
         }
 
     constructor(
@@ -54,7 +61,6 @@ data class StatistikkOppgave(
         personIdent = oppgave.personIdent(),
         saksbehandlerIdent = oppgave.sisteSaksbehandler(),
         beslutterIdent = oppgave.sisteBeslutter(),
-        avsluttetTidspunkt = oppgave.tilstandslogg.avsluttetTidspunkt(),
         oppgaveTilstander =
             oppgave.tilstandslogg.map {
                 StatistikkOppgaveTilstandsendring(
@@ -81,15 +87,6 @@ data class StatistikkOppgave(
         val tidspunkt: LocalDateTime,
     )
 }
-
-private fun OppgaveTilstandslogg.avsluttetTidspunkt(): LocalDateTime =
-    this
-        .first {
-            setOf(
-                Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
-                Oppgave.Tilstand.Type.AVBRUTT,
-            ).contains(it.tilstand)
-        }.tidspunkt
 
 private fun Behandling.basertPåBehandlingId(): UUID? =
     when (this.hendelse) {

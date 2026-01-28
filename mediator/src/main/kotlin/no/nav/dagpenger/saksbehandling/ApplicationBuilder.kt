@@ -58,7 +58,7 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.StatistikkJob
+import no.nav.dagpenger.saksbehandling.statistikk.SaksbehandlingStatistikk
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -192,7 +192,6 @@ internal class ApplicationBuilder(
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
-    private val statistikkJob: Timer?
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication
@@ -227,6 +226,14 @@ internal class ApplicationBuilder(
                 },
             ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
             }.also { rapidsConnection ->
+
+                SaksbehandlingStatistikk(
+                    rapidsConnection = rapidsConnection,
+                    saksMediator = sakMediator,
+                ).also {
+                    oppgaveMediator.leggTilObserver(it)
+                }
+
                 sakMediator.setRapidsConnection(rapidsConnection)
                 utsendingMediator.setRapidsConnection(rapidsConnection)
                 oppgaveMediator.setRapidsConnection(rapidsConnection)
@@ -303,21 +310,6 @@ internal class ApplicationBuilder(
                         period = 1.Dag,
                     )
 
-                statistikkJob =
-                    if (Configuration.isDev) {
-                        StatistikkJob(
-                            rapidsConnection = rapidsConnection,
-                            sakMediator = sakMediator,
-                            statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                            oppgaveRepository = oppgaveRepository,
-                        ).startJob(
-                            startAt = now,
-                            period = 5.Minutt,
-                        )
-                    } else {
-                        null
-                    }
-
                 oversendKlageinstansAlarmJob =
                     OversendKlageinstansAlarmJob(
                         rapidsConnection = rapidsConnection,
@@ -358,7 +350,6 @@ internal class ApplicationBuilder(
         metrikkJob.cancel()
         oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
-        statistikkJob?.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 
