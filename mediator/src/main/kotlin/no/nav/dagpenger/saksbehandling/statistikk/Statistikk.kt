@@ -21,6 +21,8 @@ interface StatistikkTjeneste {
     fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int
 
     fun tidligereOppgaverErOverførtTilStatistikk(): Boolean
+
+    fun oppgaveTilstandsEndringer(): List<StatistikkOppgave>
 }
 
 class PostgresStatistikkTjeneste(

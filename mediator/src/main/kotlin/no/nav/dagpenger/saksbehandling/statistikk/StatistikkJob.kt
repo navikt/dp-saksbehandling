@@ -27,15 +27,7 @@ class StatistikkJob(
         }
         val oppgaveIdListe: List<UUID> = statistikkTjeneste.oppgaverTilStatistikk()
         logger.info { "Antall oppgave som skal publiseres til statistikk: ${oppgaveIdListe.size}" }
-        val statistikkOppgaver =
-            oppgaveIdListe.map {
-                val oppgave = oppgaveRepository.hentOppgave(it)
-                val sakId = sakMediator.hentSakIdForBehandlingId(oppgave.behandling.behandlingId)
-                StatistikkOppgave(
-                    oppgave = oppgave,
-                    sakId = sakId,
-                )
-            }
+        val statistikkOppgaver = emptyList<StatistikkOppgave>()
         statistikkOppgaver.forEach { statistikkOppgave ->
             rapidsConnection
                 .publish(
