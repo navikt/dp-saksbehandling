@@ -11,9 +11,7 @@ import java.util.UUID
 
 class StatistikkJob(
     private val rapidsConnection: RapidsConnection,
-    private val sakMediator: SakMediator,
     private val statistikkTjeneste: StatistikkTjeneste,
-    private val oppgaveRepository: OppgaveRepository,
 ) : Job() {
     override val jobName: String = "StatistikkJob"
     override val logger: KLogger = KotlinLogging.logger {}
@@ -25,25 +23,23 @@ class StatistikkJob(
             logger.error { "Ikke alle oppgaver er publisert til statistikk. Avbryter kjøring." }
             return
         }
-        val oppgaveIdListe: List<UUID> = statistikkTjeneste.oppgaverTilStatistikk()
-        logger.info { "Antall oppgave som skal publiseres til statistikk: ${oppgaveIdListe.size}" }
-        val statistikkOppgaver = emptyList<StatistikkOppgave>()
-        statistikkOppgaver.forEach { statistikkOppgave ->
+        val oppgaveTilstandsendringer =  statistikkTjeneste.oppgaveTilstandsendringer()
+        oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
             rapidsConnection
                 .publish(
-                    key = statistikkOppgave.personIdent,
+                    key = oppgaveTilstandsendring.personIdent,
                     message =
                         JsonMessage
                             .newMessage(
                                 mapOf(
-                                    "@event_name" to "oppgave_til_statistikk",
-                                    "oppgave" to statistikkOppgave.asMap(),
+                                    "@event_name" to "oppgave_til_statistikk_v3",
+                                    "oppgave" to oppgaveTilstandsendring.asMap(),
                                 ),
                             ).toJson(),
                 ).also {
-                    statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(statistikkOppgave.oppgaveId)
+                    statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgaveTilstandsendring.oppgaveId)
                     logger.info {
-                        "Publisert oppgave med id ${statistikkOppgave.oppgaveId} til statistikk."
+                        "Publisert oppgave med id ${oppgaveTilstandsendring.oppgaveId} til statistikk."
                     }
                 }
         }

@@ -2,91 +2,51 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import no.nav.dagpenger.aktivitetslogg.aktivitet.Hendelse
 import no.nav.dagpenger.saksbehandling.Configuration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class StatistikkOppgave(
-    val behandling: StatistikkBehandling,
+data class OppgaveTilstandsendring(
     val oppgaveId: UUID,
+    val mottatt: LocalDate,
     val sakId: UUID,
+    val behandlingId: UUID,
     val personIdent: String,
     val saksbehandlerIdent: String?,
     val beslutterIdent: String?,
     val versjon: String = Configuration.versjon,
-    val hendelse: Hendelse,
-    val sisteOppgaveTilstandsEndring : StatistikkOppgaveTilstandsendring
+    val tilstandsendring: StatistikkOppgaveTilstandsendring,
+    val utløstAv: String,
 ) {
-
-    override fun toString(): String =
-        "StatistikkOppgave(oppgaveId=$oppgaveId, " +
-            "sakId=$sakId,behandling=$behandling,  saksbehandlerIdent=$saksbehandlerIdent," +
-            "beslutterIdent=$beslutterIdent, sisteOppgaveTilstandsEndring=$sisteOppgaveTilstandsEndring," +
-            "versjon='$versjon')"
-
-    fun asMap(): Map<String, Any> =
-        buildMap {
-            put("sakId", sakId.toString())
-            put("oppgaveId", oppgaveId.toString())
-            put("behandling", behandling)
-            put("personIdent", personIdent)
-            saksbehandlerIdent?.let { put("saksbehandlerIdent", it) }
-            beslutterIdent?.let { put("beslutterIdent", it) }
-            // todo sjekk null
-            put("sisteTilstandsendring", sisteOppgaveTilstandsEndring)
-            put("versjon", versjon)
-        }
-
-//    constructor(
-//        oppgave: Oppgave,
-//        sakId: UUID,
-//    ) : this(
-//        behandling =
-//            StatistikkBehandling(
-//                behandlingId = oppgave.behandling.behandlingId,
-//                tidspunkt = oppgave.behandling.opprettet,
-//                basertPåBehandlingId = oppgave.behandling.basertPåBehandlingId(),
-//                utløstAv =
-//                    UtløstAv(
-//                        type = oppgave.behandling.utløstAv.name,
-//                        tidspunkt = oppgave.behandling.opprettet, // todo
-//                    ),
-//            ),
-//        oppgaveId = oppgave.oppgaveId,
-//        sakId = sakId,
-//        personIdent = oppgave.personIdent(),
-//        saksbehandlerIdent = oppgave.sisteSaksbehandler(),
-//        beslutterIdent = oppgave.sisteBeslutter(),
-//        oppgaveTilstander =
-//            oppgave.tilstandslogg.map {
-//                StatistikkOppgaveTilstandsendring(
-//                    tilstand = it.tilstand.name,
-//                    tidspunkt = it.tidspunkt,
-//                )
-//            },
-//    )
-
-    data class StatistikkBehandling(
-        val behandlingId: UUID,
-        val tidspunkt: LocalDateTime,
-        val basertPåBehandlingId: UUID?,
-        val utløstAv: UtløstAv,
-    )
-
-    data class UtløstAv(
-        val type: String,
-        val tidspunkt: LocalDateTime,
-    )
-
     data class StatistikkOppgaveTilstandsendring(
+        val id: UUID,
         val tilstand: String,
         val tidspunkt: LocalDateTime,
     )
+    override fun toString(): String =
+        "StatistikkOppgave(oppgaveId=$oppgaveId, " +
+                "mottatt=$mottatt," +
+                "sakId=$sakId," +
+                "behandlingId=$behandlingId," +
+                "saksbehandlerIdent=$saksbehandlerIdent," +
+                "beslutterIdent=$beslutterIdent," +
+                "utløstAv=$utløstAv," +
+                "tilstandsEndring=$tilstandsendring," +
+                "versjon='$versjon')"
+
+    fun asMap(): Map<String, Any> =
+        buildMap {
+            put("oppgaveId", oppgaveId.toString())
+            put("mottatt", mottatt.toString())
+            put("sakId", sakId.toString())
+            put("behandlingId", behandlingId.toString())
+            put("personIdent", personIdent)
+            saksbehandlerIdent?.let { put("saksbehandlerIdent", it) }
+            beslutterIdent?.let { put("beslutterIdent", it) }
+            put("tilstandsendring", tilstandsendring)
+            put("utløstAv", utløstAv)
+            put("versjon", versjon)
+        }
+
 }
 
-//private fun Behandling.basertPåBehandlingId(): UUID? =
-//    when (this.hendelse) {
-//        is SøknadsbehandlingOpprettetHendelse -> (hendelse as SøknadsbehandlingOpprettetHendelse).basertPåBehandling
-//        is MeldekortbehandlingOpprettetHendelse -> (hendelse as MeldekortbehandlingOpprettetHendelse).basertPåBehandling
-//        is ManuellBehandlingOpprettetHendelse -> (hendelse as ManuellBehandlingOpprettetHendelse).basertPåBehandling
-//        else -> null
-//    }

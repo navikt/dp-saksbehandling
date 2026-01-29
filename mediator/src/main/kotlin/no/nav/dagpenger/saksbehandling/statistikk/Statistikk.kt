@@ -22,7 +22,7 @@ interface StatistikkTjeneste {
 
     fun tidligereOppgaverErOverførtTilStatistikk(): Boolean
 
-    fun oppgaveTilstandsEndringer(): List<StatistikkOppgave>
+    fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring>
 }
 
 class PostgresStatistikkTjeneste(
@@ -232,5 +232,9 @@ class PostgresStatistikkTjeneste(
                 )
             return count == 0
         }
+    }
+
+    override fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring> {
+        TODO("Not yet implemented")
     }
 }
