@@ -58,7 +58,6 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.SaksbehandlingStatistikk
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -226,13 +225,6 @@ internal class ApplicationBuilder(
                 },
             ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
             }.also { rapidsConnection ->
-
-                SaksbehandlingStatistikk(
-                    rapidsConnection = rapidsConnection,
-                    saksMediator = sakMediator,
-                ).also {
-                    oppgaveMediator.leggTilObserver(it)
-                }
 
                 sakMediator.setRapidsConnection(rapidsConnection)
                 utsendingMediator.setRapidsConnection(rapidsConnection)

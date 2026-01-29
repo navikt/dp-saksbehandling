@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.assertions.any
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -82,7 +81,6 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
-import no.nav.dagpenger.saksbehandling.statistikk.SaksbehandlingStatistikk
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
@@ -564,12 +562,6 @@ OppgaveMediatorTest {
                     utsendingRepository = PostgresUtsendingRepository(datasource),
                     brevProdusent = mockk(),
                 )
-            oppgaveMediator.leggTilObserver(
-                SaksbehandlingStatistikk(
-                    testRapid,
-                    saksMediator = sakMediatorMock,
-                ),
-            )
 
             val oppgave =
                 datasource.lagTestoppgave(
@@ -609,17 +601,6 @@ OppgaveMediatorTest {
                 utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId)
             utsending.behandlingId shouldBe ferdigbehandletOppgave.behandling.behandlingId
             utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
-
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(0).let {
-                it["@event_name"].asText() shouldBe "oppgave_til_statistikk_v2"
-                it["oppgave"]["sisteTilstandsendring"]["tilstand"].asText() shouldBe "UNDER_BEHANDLING"
-            }
-
-            testRapid.inspektør.message(1).let {
-                it["@event_name"].asText() shouldBe "oppgave_til_statistikk_v2"
-                it["oppgave"]["sisteTilstandsendring"]["tilstand"].asText() shouldBe "FERDIG_BEHANDLET"
-            }
         }
     }
 
@@ -781,7 +762,7 @@ OppgaveMediatorTest {
                     opprettet = LocalDateTime.now(),
                     behandlingskjedeId = behandlingId,
                 ),
-        ) { datasource, oppgaveMediator ->
+        ) { _, oppgaveMediator ->
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(

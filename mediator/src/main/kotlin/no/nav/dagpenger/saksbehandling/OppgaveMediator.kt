@@ -41,7 +41,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.oppgave.OppgaveObserver
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
@@ -56,7 +55,6 @@ class OppgaveMediator(
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
     private val sakMediator: SakMediator,
-    private val observers: MutableList<OppgaveObserver> = mutableListOf(),
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -102,12 +100,7 @@ class OppgaveMediator(
                         kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                     ),
             )
-        lagreOgNotify(oppgave)
-    }
-
-    private fun lagreOgNotify(oppgave: Oppgave) {
         oppgaveRepository.lagre(oppgave)
-        observers.forEach { it.oppgaveEndret(oppgave) }
     }
 
     fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
@@ -127,7 +120,7 @@ class OppgaveMediator(
             .singleOrNull()
             ?.let { oppgave ->
                 oppgave.taImotEttersending(hendelse)
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
             } ?: logger.warn {
             "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
         }
@@ -170,7 +163,7 @@ class OppgaveMediator(
                             kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                         ),
                 )
-            lagreOgNotify(oppgave)
+            oppgaveRepository.lagre(oppgave)
         }
 
         // todo Bedre  Exception håndtering
@@ -246,14 +239,14 @@ class OppgaveMediator(
                                     kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                                 ),
                         )
-                    lagreOgNotify(oppgave)
+                    oppgaveRepository.lagre(oppgave)
                 }
 
                 false -> {
                     oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
                         when (handling) {
                             Handling.LAGRE_OPPGAVE -> {
-                                lagreOgNotify(oppgave)
+                                oppgaveRepository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet forslag til vedtak. Oppgavens tilstand er" +
                                         " ${oppgave.tilstand().type} etter behandling."
@@ -279,14 +272,14 @@ class OppgaveMediator(
             .hentOppgave(fjernOppgaveAnsvarHendelse.oppgaveId)
             .let { oppgave ->
                 oppgave.fjernAnsvar(fjernOppgaveAnsvarHendelse)
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
             }
     }
 
     fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave =
         oppgaveRepository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
             oppgave.tildel(settOppgaveAnsvarHendelse)
-            lagreOgNotify(oppgave)
+            oppgaveRepository.lagre(oppgave)
         }
 
     fun sendTilKontroll(
@@ -320,7 +313,7 @@ class OppgaveMediator(
                                     ident = oppgave.personIdent(),
                                     saksbehandlerToken = saksbehandlerToken,
                                 ).onSuccess {
-                                    lagreOgNotify(oppgave)
+                                    oppgaveRepository.lagre(oppgave)
                                     logger.info {
                                         "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                                     }
@@ -357,7 +350,7 @@ class OppgaveMediator(
                         ident = oppgave.personIdent(),
                         saksbehandlerToken = beslutterToken,
                     ).onSuccess {
-                        lagreOgNotify(oppgave)
+                        oppgaveRepository.lagre(oppgave)
                         logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
                     }.onFailure {
                         val feil =
@@ -390,7 +383,7 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
             }
         }
     }
@@ -412,7 +405,7 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
             }
         }
     }
@@ -447,7 +440,7 @@ class OppgaveMediator(
                         ident = oppgave.personIdent(),
                         saksbehandlerToken = saksbehandlerToken,
                     ).onSuccess {
-                        lagreOgNotify(oppgave)
+                        oppgaveRepository.lagre(oppgave)
                     }.onFailure {
                         logger.error { "Feil ved avbryting av oppgave: $it" }
                     }.getOrThrow()
@@ -465,7 +458,7 @@ class OppgaveMediator(
                     "Mottatt InnsendingFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(innsendingFerdigstiltHendelse)
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
                 logger.info {
                     "Behandlet InnsendingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
@@ -483,7 +476,7 @@ class OppgaveMediator(
                     "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(avbruttHendelse)
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
                 logger.info {
                     "Behandlet AvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
@@ -499,7 +492,9 @@ class OppgaveMediator(
                 }
                 oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
                     when (handling) {
-                        Handling.LAGRE_OPPGAVE -> lagreOgNotify(oppgave)
+                        Handling.LAGRE_OPPGAVE -> {
+                            oppgaveRepository.lagre(oppgave)
+                        }
                         Handling.INGEN -> {}
                     }
                 }
@@ -522,7 +517,7 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                lagreOgNotify(oppgave)
+                oppgaveRepository.lagre(oppgave)
                 oppgave.oppgaveId
             }
         }
@@ -598,7 +593,7 @@ class OppgaveMediator(
                         ident = oppgave.personIdent(),
                         saksbehandlerToken = saksbehandlerToken,
                     ).onSuccess {
-                        lagreOgNotify(oppgave)
+                        oppgaveRepository.lagre(oppgave)
                     }.onFailure {
                         utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
                             when (rowsDeleted) {
@@ -617,7 +612,7 @@ class OppgaveMediator(
                         ident = oppgave.personIdent(),
                         saksbehandlerToken = saksbehandlerToken,
                     ).onSuccess {
-                        lagreOgNotify(oppgave)
+                        oppgaveRepository.lagre(oppgave)
                     }.onFailure {
                         utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
                             when (rowsDeleted) {
@@ -644,7 +639,7 @@ class OppgaveMediator(
                         ident = oppgave.personIdent(),
                         saksbehandlerToken = saksbehandlerToken,
                     ).onSuccess {
-                        lagreOgNotify(oppgave)
+                        oppgaveRepository.lagre(oppgave)
                     }.onFailure {
                         throw it
                     }
@@ -657,7 +652,7 @@ class OppgaveMediator(
                         ident = oppgave.personIdent(),
                         saksbehandlerToken = saksbehandlerToken,
                     ).onSuccess {
-                        lagreOgNotify(oppgave)
+                        oppgaveRepository.lagre(oppgave)
                     }.onFailure {
                         throw it
                     }
@@ -681,7 +676,7 @@ class OppgaveMediator(
                 ) {
                     logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
                     oppgave.avbryt(hendelse)
-                    lagreOgNotify(oppgave)
+                    oppgaveRepository.lagre(oppgave)
                     logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
                 }
             }
@@ -690,7 +685,7 @@ class OppgaveMediator(
     fun utsettOppgave(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
         oppgaveRepository.hentOppgave(utsettOppgaveHendelse.oppgaveId).let { oppgave ->
             oppgave.utsett(utsettOppgaveHendelse)
-            lagreOgNotify(oppgave)
+            oppgaveRepository.lagre(oppgave)
         }
     }
 
@@ -699,7 +694,7 @@ class OppgaveMediator(
     fun håndterPåVentFristUtgått(påVentFristUtgåttHendelse: PåVentFristUtgåttHendelse) {
         oppgaveRepository.hentOppgave(påVentFristUtgåttHendelse.oppgaveId).let { oppgave ->
             oppgave.oppgaverPåVentMedUtgåttFrist(påVentFristUtgåttHendelse)
-            lagreOgNotify(oppgave)
+            oppgaveRepository.lagre(oppgave)
         }
     }
 
@@ -730,8 +725,4 @@ class OppgaveMediator(
         feilType: AlertManager.AlertType,
         utvidetFeilmelding: String,
     ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
-
-    fun leggTilObserver(observer: OppgaveObserver) {
-        observers.add(observer)
-    }
 }
