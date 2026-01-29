@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
-import no.nav.dagpenger.aktivitetslogg.aktivitet.Hendelse
 import no.nav.dagpenger.saksbehandling.Configuration
 import java.time.LocalDate
 import java.time.LocalDateTime
