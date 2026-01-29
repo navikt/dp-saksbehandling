@@ -22,16 +22,17 @@ data class OppgaveTilstandsendring(
         val tilstand: String,
         val tidspunkt: LocalDateTime,
     )
+
     override fun toString(): String =
         "StatistikkOppgave(oppgaveId=$oppgaveId, " +
-                "mottatt=$mottatt," +
-                "sakId=$sakId," +
-                "behandlingId=$behandlingId," +
-                "saksbehandlerIdent=$saksbehandlerIdent," +
-                "beslutterIdent=$beslutterIdent," +
-                "utløstAv=$utløstAv," +
-                "tilstandsEndring=$tilstandsendring," +
-                "versjon='$versjon')"
+            "mottatt=$mottatt," +
+            "sakId=$sakId," +
+            "behandlingId=$behandlingId," +
+            "saksbehandlerIdent=$saksbehandlerIdent," +
+            "beslutterIdent=$beslutterIdent," +
+            "utløstAv=$utløstAv," +
+            "tilstandsEndring=$tilstandsendring," +
+            "versjon='$versjon')"
 
     fun asMap(): Map<String, Any> =
         buildMap {
@@ -46,6 +47,4 @@ data class OppgaveTilstandsendring(
             put("utløstAv", utløstAv)
             put("versjon", versjon)
         }
-
 }
-

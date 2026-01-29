@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS saksbehandling_statistikk_v1
     person_ident            TEXT                        NOT NULL,
     saksbehandler_ident     TEXT,
     beslutter_ident         TEXT,
-    versjon                 TEXT                        NOT NULL,
     utlost_av               TEXT                        NOT NULL,
     overfort_til_statistikk BOOLEAN                     NOT NULL DEFAULT false
 );

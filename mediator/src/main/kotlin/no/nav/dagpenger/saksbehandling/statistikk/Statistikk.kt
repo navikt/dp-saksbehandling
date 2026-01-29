@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import java.util.UUID
@@ -16,9 +17,11 @@ interface StatistikkTjeneste {
 
     fun hentAntallBrevSendt(): Int
 
-    fun tidligereOppgaverErOverførtTilStatistikk(): Boolean
+    fun tidligereOppgaveTilstandsendringErOverfort(): Boolean
 
     fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring>
+
+    fun markerTilstandsendringerSomOverført(tilstandsId: UUID)
 }
 
 class PostgresStatistikkTjeneste(
@@ -149,7 +152,7 @@ class PostgresStatistikkTjeneste(
             )
         } ?: 0
 
-    override fun tidligereOppgaverErOverførtTilStatistikk(): Boolean {
+    override fun tidligereOppgaveTilstandsendringErOverfort(): Boolean {
         sessionOf(dataSource = dataSource).use { session ->
             val count =
                 session.run(
@@ -157,7 +160,7 @@ class PostgresStatistikkTjeneste(
                         //language=PostgreSQL
                         statement = """
                         SELECT COUNT(*) as count
-                        FROM   oppgave_til_statistikk_v1
+                        FROM   saksbehandling_statistikk_v1
                         WHERE  overfort_til_statistikk = FALSE;
                     """,
                         paramMap = mapOf(),
@@ -169,7 +172,93 @@ class PostgresStatistikkTjeneste(
         }
     }
 
-    override fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring> {
-        TODO("Not yet implemented")
+    override fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring> =
+        sessionOf(dataSource = dataSource)
+            .use { session ->
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement = """
+                        INSERT
+                        INTO    saksbehandling_statistikk_v1 (
+                                    tilstand_id             ,
+                                    tilstand                ,
+                                    tilstand_tidspunkt      ,
+                                    oppgave_id              ,
+                                    mottatt                 ,
+                                    sak_id                  ,
+                                    behandling_id           ,
+                                    person_ident            ,
+                                    saksbehandler_ident     ,
+                                    beslutter_ident         ,
+                                    utlost_av               
+                            )
+                            SELECT  
+                                    log.id             ,
+                                    log.tilstand                ,
+                                    log.tidspunkt      ,
+                                    opp.id              ,
+                                    opp.opprettet                 ,
+                                    beh.sak_id                  ,
+                                    beh.id           ,
+                                    per.ident,
+                                    CASE WHEN log.tilstand = 'UNDER_BEHANDLING' THEN log.hendelse->>'ansvarligIdent' END,
+                                    CASE WHEN log.tilstand = 'UNDER_KONTROLL' THEN log.hendelse->>'ansvarligIdent' END,
+                                    beh.utlost_av               
+                            FROM   oppgave_tilstand_logg_v1      log
+                            JOIN   oppgave_v1                    opp ON opp.id = log.oppgave_id
+                            JOIN   behandling_v1                 beh ON beh.id = opp.behandling_id
+                            JOIN   person_v1                     per ON per.id = beh.person_id
+                            AND     log.tidspunkt > (
+                                SELECT  coalesce(
+                                            max(tilstand_tidspunkt), 
+                                            '1900-01-01t00:00:00'::timestamptz
+                                        ) AS siste_overforingstidspunkt
+                                FROM    saksbehandling_statistikk_v1
+                                WHERE   overfort_til_statistikk = TRUE
+                                )
+                            ORDER BY log.id  desc 
+                        ON CONFLICT (tilstand_id) DO NOTHING 
+                        RETURNING   *
+                        """,
+                    ).map { row ->
+                        OppgaveTilstandsendring(
+                            oppgaveId = row.uuid("oppgave_id"),
+                            mottatt = row.localDate("mottatt"),
+                            sakId = row.uuid("sak_id"),
+                            behandlingId = row.uuid("behandling_id"),
+                            personIdent = row.string("person_ident"),
+                            saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
+                            beslutterIdent = row.stringOrNull("beslutter_ident"),
+                            versjon = Configuration.versjon,
+                            tilstandsendring =
+                                OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring(
+                                    id = row.uuid("tilstand_id"),
+                                    tilstand = row.string("tilstand"),
+                                    tidspunkt = row.localDateTime("tilstand_tidspunkt"),
+                                ),
+                            utløstAv = row.string("utlost_av"),
+                        )
+                    }.asList,
+                )
+            }
+
+    override fun markerTilstandsendringerSomOverført(tilstandId: UUID) {
+        sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        UPDATE saksbehandling_statistikk_v1
+                        SET    overfort_til_statistikk = TRUE
+                        WHERE  tilstand_id = :tilstand_id
+                        """,
+                    paramMap =
+                        mapOf(
+                            "tilstand_id" to tilstandId,
+                        ),
+                ).asUpdate,
+            )
+        }
     }
 }
