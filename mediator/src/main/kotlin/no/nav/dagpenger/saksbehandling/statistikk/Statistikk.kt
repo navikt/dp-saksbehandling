@@ -16,10 +16,6 @@ interface StatistikkTjeneste {
 
     fun hentAntallBrevSendt(): Int
 
-    fun oppgaverTilStatistikk(): List<UUID>
-
-    fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int
-
     fun tidligereOppgaverErOverførtTilStatistikk(): Boolean
 
     fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring>
@@ -152,67 +148,6 @@ class PostgresStatistikkTjeneste(
                 }.asSingle,
             )
         } ?: 0
-
-    override fun oppgaverTilStatistikk(): List<UUID> {
-        sessionOf(dataSource = dataSource).use { session ->
-            return session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                        INSERT
-                        INTO    oppgave_til_statistikk_v1 (
-                                oppgave_id,
-                                ferdig_behandlet_tidspunkt
-                            )
-                            SELECT  oppgave.id,
-                                    avslutt.tidspunkt
-                            FROM    oppgave_v1                      oppgave
-                            JOIN    behandling_v1                   behandl ON behandl.id = oppgave.behandling_id
-                            JOIN    sak_v2                          sak     ON sak.id = behandl.sak_id
-                            JOIN ( SELECT oppgave_id, MAX(tidspunkt) AS tidspunkt
-                                   FROM   oppgave_tilstand_logg_v1
-                                   WHERE  tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
-                                   GROUP BY oppgave_id
-                                 ) avslutt ON avslutt.oppgave_id = oppgave.id
-                            
-                            WHERE   oppgave.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
-                            AND     sak.er_dp_sak = TRUE
-                            AND     avslutt.tidspunkt > (
-                                SELECT  coalesce(
-                                            max(ferdig_behandlet_tidspunkt), 
-                                            '1900-01-01t00:00:00'::timestamptz
-                                        ) AS siste_overforingstidspunkt
-                                FROM    oppgave_til_statistikk_v1
-                                WHERE   overfort_til_statistikk = TRUE
-                                )
-                            ORDER BY avslutt.tidspunkt 
-                        ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
-                        RETURNING   oppgave_id 
-                    """,
-                ).map { row ->
-                    row.uuid("oppgave_id")
-                }.asList,
-            )
-        }
-    }
-
-    override fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int =
-        sessionOf(dataSource = dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                            UPDATE oppgave_til_statistikk_v1
-                            SET    overfort_til_statistikk = TRUE
-                            WHERE  oppgave_id = :oppgave_id
-                            """,
-                    paramMap =
-                        mapOf(
-                            "oppgave_id" to oppgaveId,
-                        ),
-                ).asUpdate,
-            )
-        }
 
     override fun tidligereOppgaverErOverførtTilStatistikk(): Boolean {
         sessionOf(dataSource = dataSource).use { session ->

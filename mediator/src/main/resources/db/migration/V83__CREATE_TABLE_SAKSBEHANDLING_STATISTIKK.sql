@@ -1,6 +1,9 @@
 CREATE TABLE IF NOT EXISTS saksbehandling_statistikk_v1
 (
-    oppgave_id              UUID PRIMARY KEY,
+    tilstand_id             UUID PRIMARY KEY,
+    tilstand                TEXT                        NOT NULL,
+    tilstand_tidspunkt      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    oppgave_id              UUID                        NOT NULL,
     mottatt                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     sak_id                  UUID                        NOT NULL,
     behandling_id           UUID                        NOT NULL,
@@ -8,9 +11,6 @@ CREATE TABLE IF NOT EXISTS saksbehandling_statistikk_v1
     saksbehandler_ident     TEXT,
     beslutter_ident         TEXT,
     versjon                 TEXT                        NOT NULL,
-    tilstand                TEXT                        NOT NULL,
-    tilstand_id             UUID                        NOT NULL,
-    tilstand_tidspunkt      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     utlost_av               TEXT                        NOT NULL,
     overfort_til_statistikk BOOLEAN                     NOT NULL DEFAULT false
 );
