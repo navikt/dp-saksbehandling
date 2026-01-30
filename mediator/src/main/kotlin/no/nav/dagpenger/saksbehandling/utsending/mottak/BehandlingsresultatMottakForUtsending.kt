@@ -63,7 +63,7 @@ internal class BehandlingsresultatMottakForUtsending(
                         ),
                     behandlingsresultat = behandlingsresultat,
                 )
-            val skipSet = setOf<UUID>(UUID.fromString("019bfed4-7aa7-7a74-a470-05df4c8eac49"))
+            val skipSet = setOf<UUID>(UUID.fromString("019c0e2a-bdd7-7ba9-8a8c-6e7d2089608b"))
             if (vedtakFattetHendelse.behandlingId in skipSet) {
                 logger.info { "Skipper behandlingId: ${vedtakFattetHendelse.behandlingId} fra BehandlingsresultatMottakForUtsending" }
                 return
