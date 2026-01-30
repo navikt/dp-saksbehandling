@@ -34,9 +34,11 @@ class StatistikkJob(
                                 ),
                             ).toJson(),
                 ).also {
-                    statistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsId = oppgaveTilstandsendring.tilstandsendring.id)
+                    statistikkTjeneste.markerTilstandsendringerSomOverført(
+                        tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
+                    )
                     logger.info {
-                        "Publisert oppgavetilstandsendring med id ${oppgaveTilstandsendring.tilstandsendring.id} til statistikk."
+                        "Publisert oppgavetilstandsendring med id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                     }
                 }
         }

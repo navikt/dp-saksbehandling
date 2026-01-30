@@ -156,7 +156,7 @@ class PostgresStatistikkTjeneste(
         }
     }
 
-    override fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring> =
+    override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
         sessionOf(dataSource = dataSource)
             .use { session ->
                 session.run(
@@ -204,7 +204,7 @@ class PostgresStatistikkTjeneste(
                         RETURNING   *
                         """,
                     ).map { row ->
-                        OppgaveTilstandsendring(
+                        OppgaveITilstand(
                             oppgaveId = row.uuid("oppgave_id"),
                             mottatt = row.localDate("mottatt"),
                             sakId = row.uuid("sak_id"),
@@ -214,8 +214,8 @@ class PostgresStatistikkTjeneste(
                             beslutterIdent = row.stringOrNull("beslutter_ident"),
                             versjon = Configuration.versjon,
                             tilstandsendring =
-                                OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring(
-                                    id = row.uuid("tilstand_id"),
+                                OppgaveITilstand.Tilstandsendring(
+                                    tilstandsendringId = row.uuid("tilstand_id"),
                                     tilstand = row.string("tilstand"),
                                     tidspunkt = row.localDateTime("tilstand_tidspunkt"),
                                 ),

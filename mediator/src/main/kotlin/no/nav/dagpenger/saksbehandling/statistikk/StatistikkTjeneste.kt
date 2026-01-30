@@ -15,7 +15,7 @@ interface StatistikkTjeneste {
 
     fun tidligereTilstandsendringerErOverført(): Boolean
 
-    fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring>
+    fun oppgaveTilstandsendringer(): List<OppgaveITilstand>
 
-    fun markerTilstandsendringerSomOverført(tilstandsId: UUID)
+    fun markerTilstandsendringerSomOverført(tilstandId: UUID)
 }

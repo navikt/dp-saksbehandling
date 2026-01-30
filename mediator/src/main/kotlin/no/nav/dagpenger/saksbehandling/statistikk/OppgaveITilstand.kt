@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class OppgaveTilstandsendring(
+data class OppgaveITilstand(
     val oppgaveId: UUID,
     val mottatt: LocalDate,
     val sakId: UUID,
@@ -14,11 +14,11 @@ data class OppgaveTilstandsendring(
     val saksbehandlerIdent: String?,
     val beslutterIdent: String?,
     val versjon: String = Configuration.versjon,
-    val tilstandsendring: StatistikkOppgaveTilstandsendring,
+    val tilstandsendring: Tilstandsendring,
     val utløstAv: String,
 ) {
-    data class StatistikkOppgaveTilstandsendring(
-        val id: UUID,
+    data class Tilstandsendring(
+        val tilstandsendringId: UUID,
         val tilstand: String,
         val tidspunkt: LocalDateTime,
     )
@@ -31,7 +31,7 @@ data class OppgaveTilstandsendring(
             "saksbehandlerIdent=$saksbehandlerIdent," +
             "beslutterIdent=$beslutterIdent," +
             "utløstAv=$utløstAv," +
-            "tilstandsEndring=$tilstandsendring," +
+            "tilstandsendring=$tilstandsendring," +
             "versjon='$versjon')"
 
     fun asMap(): Map<String, Any> =

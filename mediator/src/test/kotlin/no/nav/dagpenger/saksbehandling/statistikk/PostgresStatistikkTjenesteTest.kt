@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.statistikk.OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring
+import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand.Tilstandsendring
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -54,7 +54,7 @@ class PostgresStatistikkTjenesteTest {
                     it.size shouldBe 1
                     val førsteTilstandsendring = it.single()
                     førsteTilstandsendring shouldBe
-                        OppgaveTilstandsendring(
+                        OppgaveITilstand(
                             oppgaveId = oppgave.oppgaveId,
                             mottatt = oppgave.opprettet.toLocalDate(),
                             sakId = sak.sakId,
@@ -64,8 +64,8 @@ class PostgresStatistikkTjenesteTest {
                             beslutterIdent = null,
                             versjon = Configuration.versjon,
                             tilstandsendring =
-                                StatistikkOppgaveTilstandsendring(
-                                    id = oppgave.tilstandslogg.first().id,
+                                Tilstandsendring(
+                                    tilstandsendringId = oppgave.tilstandslogg.first().id,
                                     tilstand = "KLAR_TIL_BEHANDLING",
                                     tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
                                 ),
@@ -74,7 +74,7 @@ class PostgresStatistikkTjenesteTest {
                     førsteTilstandsendring
                 }
 
-            postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(førsteTilstandsendring.tilstandsendring.id)
+            postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(førsteTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
             oppgave.tildel(
@@ -92,7 +92,7 @@ class PostgresStatistikkTjenesteTest {
                 val tilstandsendring = it.single()
                 tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_BEHANDLING"
                 tilstandsendring.saksbehandlerIdent shouldBe TestHelper.saksbehandler.navIdent
-                postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.id)
+                postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
             }
 
             oppgave.sendTilKontroll(

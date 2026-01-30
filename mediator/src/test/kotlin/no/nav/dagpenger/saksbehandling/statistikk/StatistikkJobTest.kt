@@ -17,7 +17,7 @@ class StatistikkJobTest {
     private val testRapid = TestRapid()
     val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     val tilstandKlarTilBehandling =
-        OppgaveTilstandsendring(
+        OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
             mottatt = LocalDate.now(),
             sakId = UUIDv7.ny(),
@@ -27,8 +27,8 @@ class StatistikkJobTest {
             beslutterIdent = null,
             versjon = "dp:saksbehandling:1.2.3",
             tilstandsendring =
-                OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring(
-                    id = UUIDv7.ny(),
+                OppgaveITilstand.Tilstandsendring(
+                    tilstandsendringId = UUIDv7.ny(),
                     tilstand = "KLAR_TIL_BEHANDLING",
                     tidspunkt = nå.minusDays(1),
                 ),
@@ -36,7 +36,7 @@ class StatistikkJobTest {
         )
 
     val tilstandUnderBehandling =
-        OppgaveTilstandsendring(
+        OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
             mottatt = LocalDate.now(),
             sakId = UUIDv7.ny(),
@@ -46,8 +46,8 @@ class StatistikkJobTest {
             beslutterIdent = "B987",
             versjon = "dp:saksbehandling:1.2.3",
             tilstandsendring =
-                OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring(
-                    id = UUIDv7.ny(),
+                OppgaveITilstand.Tilstandsendring(
+                    tilstandsendringId = UUIDv7.ny(),
                     tilstand = "UNDER_BEHANDLING",
                     tidspunkt = nå,
                 ),
@@ -61,8 +61,8 @@ class StatistikkJobTest {
                     tilstandKlarTilBehandling,
                     tilstandUnderBehandling,
                 )
-            every { it.markerTilstandsendringerSomOverført(tilstandKlarTilBehandling.tilstandsendring.id) } just Runs
-            every { it.markerTilstandsendringerSomOverført(tilstandUnderBehandling.tilstandsendring.id) } just Runs
+            every { it.markerTilstandsendringerSomOverført(tilstandKlarTilBehandling.tilstandsendring.tilstandsendringId) } just Runs
+            every { it.markerTilstandsendringerSomOverført(tilstandUnderBehandling.tilstandsendring.tilstandsendringId) } just Runs
         }
 
     @Test
@@ -85,7 +85,7 @@ class StatistikkJobTest {
                 "behandlingId": "${tilstandKlarTilBehandling.behandlingId}",
                 "personIdent": "12345612345",
                 "tilstandsendring": {
-                  "id": "${tilstandKlarTilBehandling.tilstandsendring.id}",
+                  "tilstandsendringId": "${tilstandKlarTilBehandling.tilstandsendring.tilstandsendringId}",
                   "tilstand": "KLAR_TIL_BEHANDLING",
                   "tidspunkt": "${tilstandKlarTilBehandling.tilstandsendring.tidspunkt}"
                 },
@@ -105,7 +105,7 @@ class StatistikkJobTest {
                 "behandlingId": "${tilstandUnderBehandling.behandlingId}",
                 "personIdent": "12345612345",
                 "tilstandsendring": {
-                  "id": "${tilstandUnderBehandling.tilstandsendring.id}",
+                  "tilstandsendringId": "${tilstandUnderBehandling.tilstandsendring.tilstandsendringId}",
                   "tilstand": "UNDER_BEHANDLING",
                   "tidspunkt": "${tilstandUnderBehandling.tilstandsendring.tidspunkt}"
                 },
