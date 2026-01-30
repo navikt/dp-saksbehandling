@@ -2,183 +2,130 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.TestHelper
-import no.nav.dagpenger.saksbehandling.TestHelper.opprettetNå
-import no.nav.dagpenger.saksbehandling.Tilstandsendring
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
-@Disabled("Midlertidig deaktivert")
 class StatistikkJobTest {
-    private val sakId1 = UUID.randomUUID()
-    private val sakId2 = UUID.randomUUID()
-    private val oppgaveFerdigBehandlet =
-        TestHelper.lagOppgave(
-            behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.SØKNAD),
-            tilstandslogg = TestHelper.lagOppgaveTilstandslogg(ferdigBehandlet = true),
-        )
-    val basertPåBehandlingId = UUIDv7.ny()
-    val avbruttTidspunkt = opprettetNå.minusSeconds(22)
-    private val oppgaveAvbrutt =
-        TestHelper.lagOppgave(
-            behandling =
-                TestHelper.lagBehandling(
-                    utløstAvType = UtløstAvType.MANUELL,
-                    hendelse =
-                        ManuellBehandlingOpprettetHendelse(
-                            manuellId = UUIDv7.ny(),
-                            behandlingId = UUIDv7.ny(),
-                            ident = "MIKKE",
-                            opprettet = opprettetNå,
-                            basertPåBehandling = basertPåBehandlingId,
-                            behandlingskjedeId = basertPåBehandlingId,
-                        ),
-                ),
-            tilstandslogg =
-                OppgaveTilstandslogg(
-                    Tilstandsendring(
-                        tilstand = AVBRUTT,
-                        hendelse = TomHendelse,
-                        tidspunkt = avbruttTidspunkt,
-                    ),
-                ),
-        )
-
     private val testRapid = TestRapid()
-    private val sakMediator =
-        mockk<SakMediator>(relaxed = true).also {
-            every { it.hentSakIdForBehandlingId(oppgaveFerdigBehandlet.behandling.behandlingId) } returns sakId1
-            every { it.hentSakIdForBehandlingId(oppgaveAvbrutt.behandling.behandlingId) } returns sakId2
-        }
+    val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+    val tilstandKlarTilBehandling =
+        OppgaveTilstandsendring(
+            oppgaveId = UUIDv7.ny(),
+            mottatt = LocalDate.now(),
+            sakId = UUIDv7.ny(),
+            behandlingId = UUIDv7.ny(),
+            personIdent = "12345612345",
+            saksbehandlerIdent = null,
+            beslutterIdent = null,
+            versjon = "dp:saksbehandling:1.2.3",
+            tilstandsendring =
+                OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring(
+                    id = UUIDv7.ny(),
+                    tilstand = "KLAR_TIL_BEHANDLING",
+                    tidspunkt = nå.minusDays(1),
+                ),
+            utløstAv = "SØKNAD",
+        )
 
-//    private val statistikkTjeneste =
-//        mockk<StatistikkTjeneste>().also {
-//            every { it.oppgaverTilStatistikk() } returns listOf(oppgaveFerdigBehandlet.oppgaveId, oppgaveAvbrutt.oppgaveId)
-//            every { it.markerOppgaveTilStatistikkSomOverført(oppgaveFerdigBehandlet.oppgaveId) } returns 1
-//            every { it.markerOppgaveTilStatistikkSomOverført(oppgaveAvbrutt.oppgaveId) } returns 1
-//            every { it.tidligereOppgaveTilstandsendringErOverfort() } returns true
-//        }
-    private val oppgaveRepository =
-        mockk<OppgaveRepository>().also {
-            every { it.hentOppgave(oppgaveFerdigBehandlet.oppgaveId) } returns oppgaveFerdigBehandlet
-            every { it.hentOppgave(oppgaveAvbrutt.oppgaveId) } returns oppgaveAvbrutt
+    val tilstandUnderBehandling =
+        OppgaveTilstandsendring(
+            oppgaveId = UUIDv7.ny(),
+            mottatt = LocalDate.now(),
+            sakId = UUIDv7.ny(),
+            behandlingId = UUIDv7.ny(),
+            personIdent = "12345612345",
+            saksbehandlerIdent = "AB123",
+            beslutterIdent = "B987",
+            versjon = "dp:saksbehandling:1.2.3",
+            tilstandsendring =
+                OppgaveTilstandsendring.StatistikkOppgaveTilstandsendring(
+                    id = UUIDv7.ny(),
+                    tilstand = "UNDER_BEHANDLING",
+                    tidspunkt = nå,
+                ),
+            utløstAv = "SØKNAD",
+        )
+    private val statistikkTjeneste =
+        mockk<StatistikkTjeneste>().also {
+            every { it.tidligereTilstandsendringerErOverført() } returns true
+            every { it.oppgaveTilstandsendringer() } returns
+                listOf(
+                    tilstandKlarTilBehandling,
+                    tilstandUnderBehandling,
+                )
+            every { it.markerTilstandsendringerSomOverført(tilstandKlarTilBehandling.tilstandsendring.id) } just Runs
+            every { it.markerTilstandsendringerSomOverført(tilstandUnderBehandling.tilstandsendring.id) } just Runs
         }
 
     @Test
-    fun `Skal publisere oppgaver til statistikk på riktig format og sette oppgaven som publisert`() {
-//        System.setProperty("NAIS_APP_IMAGE", "dp:saksbehandling:1.2.3")
-//        runBlocking {
-//            StatistikkJob(
-//                rapidsConnection = testRapid,
-//                sakMediator = sakMediator,
-//                statistikkTjeneste = statistikkTjeneste,
-//                oppgaveRepository = oppgaveRepository,
-//            ).executeJob()
-//        }
-//
-//        verify(exactly = 1) {
-//            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgaveFerdigBehandlet.oppgaveId)
-//            statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgaveAvbrutt.oppgaveId)
-//        }
-//
+    fun `Skal publisere oppgavetilstandsendringer til statistikk på riktig format og sette de som publisert`() {
+        runBlocking {
+            StatistikkJob(
+                rapidsConnection = testRapid,
+                statistikkTjeneste = statistikkTjeneste,
+            ).executeJob()
+        }
+
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-                "@event_name": "oppgave_til_statistikk",
-                "oppgave": {
-                    "sakId": "$sakId1",
-                    "oppgaveId": "${oppgaveFerdigBehandlet.oppgaveId}",
-                    "behandling": {
-                        "behandlingId": "${oppgaveFerdigBehandlet.behandling.behandlingId}",
-                        "tidspunkt": "${oppgaveFerdigBehandlet.behandling.opprettet}",
-                        "basertPåBehandlingId": null,
-                        "utløstAv": {
-                            "type": "${oppgaveFerdigBehandlet.behandling.utløstAv.name}",
-                            "tidspunkt": "${oppgaveFerdigBehandlet.behandling.opprettet}"
-                        }
-                    },
-                    "personIdent": "${oppgaveFerdigBehandlet.personIdent()}",
-                    "saksbehandlerIdent": "${oppgaveFerdigBehandlet.sisteSaksbehandler()}",
-                    "beslutterIdent": "${oppgaveFerdigBehandlet.sisteBeslutter()}",
-                    "oppgaveTilstander": [
-                        {
-                            "tilstand": "FERDIG_BEHANDLET",
-                            "tidspunkt": "$opprettetNå"
-                        },
-                        {
-                            "tilstand": "UNDER_KONTROLL",
-                            "tidspunkt": "${opprettetNå.minusDays(1)}"
-                        },
-                        {
-                            "tilstand": "UNDER_BEHANDLING",
-                            "tidspunkt": "${opprettetNå.minusDays(2)}"
-                        },
-                        {
-                            "tilstand": "KLAR_TIL_BEHANDLING",
-                            "tidspunkt": "${opprettetNå.minusDays(3)}"
-                        }
-                    ],
-                    "versjon": "dp:saksbehandling:1.2.3",
-                    "avsluttetTidspunkt": "$opprettetNå"
-                }
-            
+              "@event_name": "oppgave_til_statistikk_v3",
+              "oppgave": {
+                "oppgaveId": "${tilstandKlarTilBehandling.oppgaveId}",
+                "mottatt": "${tilstandKlarTilBehandling.mottatt}",
+                "sakId": "${tilstandKlarTilBehandling.sakId}",
+                "behandlingId": "${tilstandKlarTilBehandling.behandlingId}",
+                "personIdent": "12345612345",
+                "tilstandsendring": {
+                  "id": "${tilstandKlarTilBehandling.tilstandsendring.id}",
+                  "tilstand": "KLAR_TIL_BEHANDLING",
+                  "tidspunkt": "${tilstandKlarTilBehandling.tilstandsendring.tidspunkt}"
+                },
+                "utløstAv": "SØKNAD",
+                "versjon": "dp:saksbehandling:1.2.3"
+              }
             }
             """.trimIndent()
         testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-                "@event_name": "oppgave_til_statistikk",
-                "oppgave": {
-                    "sakId": "$sakId2",
-                    "oppgaveId": "${oppgaveAvbrutt.oppgaveId}",
-                    "behandling": {
-                        "behandlingId": "${oppgaveAvbrutt.behandling.behandlingId}",
-                        "tidspunkt": "${oppgaveAvbrutt.behandling.opprettet}",
-                        "basertPåBehandlingId": "$basertPåBehandlingId",
-                        "utløstAv": {
-                            "type": "${oppgaveAvbrutt.behandling.utløstAv.name}",
-                            "tidspunkt": "${oppgaveAvbrutt.behandling.opprettet}"
-                        }
-                    },
-                    "personIdent": "${oppgaveAvbrutt.personIdent()}",
-                    "oppgaveTilstander": [
-                        {
-                            "tilstand": "AVBRUTT",
-                            "tidspunkt": "$avbruttTidspunkt"
-                        }
-                    ],
-                    "versjon": "dp:saksbehandling:1.2.3",
-                    "avsluttetTidspunkt": "$avbruttTidspunkt"
-                }
-            
+              "@event_name": "oppgave_til_statistikk_v3",
+              "oppgave": {
+                "oppgaveId": "${tilstandUnderBehandling.oppgaveId}",
+                "mottatt": "${tilstandUnderBehandling.mottatt}",
+                "sakId": "${tilstandUnderBehandling.sakId}",
+                "behandlingId": "${tilstandUnderBehandling.behandlingId}",
+                "personIdent": "12345612345",
+                "tilstandsendring": {
+                  "id": "${tilstandUnderBehandling.tilstandsendring.id}",
+                  "tilstand": "UNDER_BEHANDLING",
+                  "tidspunkt": "${tilstandUnderBehandling.tilstandsendring.tidspunkt}"
+                },
+                "utløstAv": "SØKNAD",
+                "versjon": "dp:saksbehandling:1.2.3"
+              }
             }
             """.trimIndent()
     }
 
     @Test
-    fun `Skal ikke publisere oppgaver til statistikk hvis det finnes tidligere oppgaver som ikke er overført`() {
-//        every { statistikkTjeneste.tidligereOppgaveTilstandsendringErOverfort() } returns false
-//
-//        runBlocking {
-//            StatistikkJob(
-//                rapidsConnection = testRapid,
-//                sakMediator = sakMediator,
-//                statistikkTjeneste = statistikkTjeneste,
-//                oppgaveRepository = oppgaveRepository,
-//            ).executeJob()
-//        }
-//
-//        assert(testRapid.inspektør.size == 0)
+    fun `Skal ikke publisere oppgavetilstandsendringer til statistikk hvis tidligere kjøring ikke er fullført`() {
+        every { statistikkTjeneste.tidligereTilstandsendringerErOverført() } returns false
+
+        runBlocking {
+            StatistikkJob(
+                rapidsConnection = testRapid,
+                statistikkTjeneste = statistikkTjeneste,
+            ).executeJob()
+        }
+        assert(testRapid.inspektør.size == 0)
     }
 }

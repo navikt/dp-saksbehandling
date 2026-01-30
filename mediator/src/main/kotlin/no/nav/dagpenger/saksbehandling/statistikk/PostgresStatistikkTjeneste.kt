@@ -136,7 +136,7 @@ class PostgresStatistikkTjeneste(
             )
         } ?: 0
 
-    override fun tidligereTilstandsendringErOverført(): Boolean {
+    override fun tidligereTilstandsendringerErOverført(): Boolean {
         sessionOf(dataSource = dataSource).use { session ->
             val count =
                 session.run(

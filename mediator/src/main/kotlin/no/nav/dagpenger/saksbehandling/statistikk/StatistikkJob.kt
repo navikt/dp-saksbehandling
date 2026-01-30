@@ -14,10 +14,10 @@ class StatistikkJob(
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        if (statistikkTjeneste.tidligereTilstandsendringErOverført()) {
-            logger.info { "Starter publisering av oppgaver til statistikk." }
+        if (statistikkTjeneste.tidligereTilstandsendringerErOverført()) {
+            logger.info { "Starter publisering av oppgavetilstandsendringer til statistikk." }
         } else {
-            logger.error { "Ikke alle oppgaver er publisert til statistikk. Avbryter kjøring." }
+            logger.error { "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring." }
             return
         }
         val oppgaveTilstandsendringer = statistikkTjeneste.oppgaveTilstandsendringer()
@@ -34,12 +34,12 @@ class StatistikkJob(
                                 ),
                             ).toJson(),
                 ).also {
-//                    statistikkTjeneste.markerOppgaveTilStatistikkSomOverført(oppgaveTilstandsendring.oppgaveId)
+                    statistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsId = oppgaveTilstandsendring.tilstandsendring.id)
                     logger.info {
-                        "Publisert oppgave med id ${oppgaveTilstandsendring.oppgaveId} til statistikk."
+                        "Publisert oppgavetilstandsendring med id ${oppgaveTilstandsendring.tilstandsendring.id} til statistikk."
                     }
                 }
         }
-        logger.info { "Publisering av oppgaver til statistikk ferdig." }
+        logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
     }
 }

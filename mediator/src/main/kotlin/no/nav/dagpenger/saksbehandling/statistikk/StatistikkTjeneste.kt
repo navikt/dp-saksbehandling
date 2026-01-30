@@ -13,7 +13,7 @@ interface StatistikkTjeneste {
 
     fun hentAntallBrevSendt(): Int
 
-    fun tidligereTilstandsendringErOverført(): Boolean
+    fun tidligereTilstandsendringerErOverført(): Boolean
 
     fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring>
 
