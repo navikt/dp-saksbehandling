@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -18,7 +19,7 @@ import java.time.LocalDateTime
 
 class PostgresStatistikkTjenesteTest {
     @Test
-    fun hubba() {
+    fun `Tilstandsendringer skal oversendes saksbehandlingsstatistikk`() {
         val behandling = TestHelper.lagBehandling()
         val oppgave =
             TestHelper.lagOppgave(
@@ -124,6 +125,71 @@ class PostgresStatistikkTjenesteTest {
                     tilstandsendring.saksbehandlerIdent shouldBe null
                 }
             }
+        }
+    }
+
+    @Test
+    fun `Tilstandsendringer på oppgave av type Innsending og Klage skal ikke oversendes saksbehandlingsstatistikk`() {
+        val innsendingBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.INNSENDING)
+        val innsendingOppgave =
+            TestHelper.lagOppgave(
+                behandling = innsendingBehandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val klageBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val klageOppgave =
+            TestHelper.lagOppgave(
+                behandling = innsendingBehandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val sak =
+            Sak(
+                søknadId = DBTestHelper.søknadId,
+                opprettet = LocalDateTime.now(),
+            )
+        DBTestHelper.withMigratedDb { ds ->
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = innsendingBehandling,
+                sak = sak,
+                oppgave = innsendingOppgave,
+                merkSomEgenSak = true,
+            )
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = klageBehandling,
+                sak = sak,
+                oppgave = klageOppgave,
+                merkSomEgenSak = true,
+            )
+            val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+
+            innsendingOppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = innsendingOppgave.oppgaveId,
+                    ansvarligIdent = TestHelper.saksbehandler.navIdent,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+
+            PostgresOppgaveRepository(dataSource = ds).lagre(innsendingOppgave)
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
         }
     }
 }
