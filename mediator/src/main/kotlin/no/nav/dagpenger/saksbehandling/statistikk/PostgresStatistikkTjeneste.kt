@@ -156,6 +156,8 @@ class PostgresStatistikkTjeneste(
         }
     }
 
+//                            AND     log.id > (
+//                                    SELECT  coalesce(max(tilstand_id), '01992833-79c9-7257-85c2-0c382c7a2afe') AS siste_overforte_tilstandsendring
     override fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring> =
         sessionOf(dataSource = dataSource)
             .use { session ->
@@ -192,11 +194,10 @@ class PostgresStatistikkTjeneste(
                             JOIN    oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN    behandling_v1                 beh ON beh.id = opp.behandling_id
                             JOIN    person_v1                     per ON per.id = beh.person_id
-                            AND     log.id > (
-                                    SELECT  coalesce(max(tilstand_id), '01992833-79c9-7257-85c2-0c382c7a2afe') AS siste_overforte_tilstandsendring
-                                    FROM    saksbehandling_statistikk_v1
-                                    WHERE   overfort_til_statistikk = TRUE
-                                    )
+                            AND     log.tidspunkt > (   SELECT  coalesce(max(tilstand_tidspunkt), '1900-01-01t00:00:00'::timestamptz )
+                                                        FROM    saksbehandling_statistikk_v1
+                                                        WHERE   overfort_til_statistikk = TRUE
+                                                    )
                             ORDER BY log.id DESC 
                         ON CONFLICT (tilstand_id) DO NOTHING 
                         RETURNING   *
