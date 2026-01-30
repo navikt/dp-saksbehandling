@@ -14,7 +14,7 @@ class StatistikkJob(
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        if (statistikkTjeneste.tidligereOppgaveTilstandsendringErOverfort()) {
+        if (statistikkTjeneste.tidligereTilstandsendringErOverført()) {
             logger.info { "Starter publisering av oppgaver til statistikk." }
         } else {
             logger.error { "Ikke alle oppgaver er publisert til statistikk. Avbryter kjøring." }

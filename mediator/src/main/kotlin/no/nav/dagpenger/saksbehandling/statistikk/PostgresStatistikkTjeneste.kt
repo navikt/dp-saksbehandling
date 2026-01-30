@@ -8,22 +8,6 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import java.util.UUID
 import javax.sql.DataSource
 
-interface StatistikkTjeneste {
-    fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO
-
-    fun hentAntallVedtakGjort(): StatistikkDTO
-
-    fun hentBeholdningsInfo(): BeholdningsInfoDTO
-
-    fun hentAntallBrevSendt(): Int
-
-    fun tidligereOppgaveTilstandsendringErOverfort(): Boolean
-
-    fun oppgaveTilstandsendringer(): List<OppgaveTilstandsendring>
-
-    fun markerTilstandsendringerSomOverført(tilstandsId: UUID)
-}
-
 class PostgresStatistikkTjeneste(
     private val dataSource: DataSource,
 ) : StatistikkTjeneste {
@@ -152,7 +136,7 @@ class PostgresStatistikkTjeneste(
             )
         } ?: 0
 
-    override fun tidligereOppgaveTilstandsendringErOverfort(): Boolean {
+    override fun tidligereTilstandsendringErOverført(): Boolean {
         sessionOf(dataSource = dataSource).use { session ->
             val count =
                 session.run(
@@ -180,44 +164,40 @@ class PostgresStatistikkTjeneste(
                         //language=PostgreSQL
                         statement = """
                         INSERT
-                        INTO    saksbehandling_statistikk_v1 (
-                                    tilstand_id             ,
-                                    tilstand                ,
-                                    tilstand_tidspunkt      ,
-                                    oppgave_id              ,
-                                    mottatt                 ,
-                                    sak_id                  ,
-                                    behandling_id           ,
-                                    person_ident            ,
-                                    saksbehandler_ident     ,
-                                    beslutter_ident         ,
-                                    utlost_av               
+                        INTO  saksbehandling_statistikk_v1 (
+                              tilstand_id
+                            , tilstand
+                            , tilstand_tidspunkt
+                            , oppgave_id
+                            , mottatt
+                            , sak_id
+                            , behandling_id
+                            , person_ident
+                            , saksbehandler_ident
+                            , beslutter_ident
+                            , utlost_av               
                             )
-                            SELECT  
-                                    log.id             ,
-                                    log.tilstand                ,
-                                    log.tidspunkt      ,
-                                    opp.id              ,
-                                    opp.opprettet                 ,
-                                    beh.sak_id                  ,
-                                    beh.id           ,
-                                    per.ident,
-                                    CASE WHEN log.tilstand = 'UNDER_BEHANDLING' THEN log.hendelse->>'ansvarligIdent' END,
-                                    CASE WHEN log.tilstand = 'UNDER_KONTROLL' THEN log.hendelse->>'ansvarligIdent' END,
-                                    beh.utlost_av               
-                            FROM   oppgave_tilstand_logg_v1      log
-                            JOIN   oppgave_v1                    opp ON opp.id = log.oppgave_id
-                            JOIN   behandling_v1                 beh ON beh.id = opp.behandling_id
-                            JOIN   person_v1                     per ON per.id = beh.person_id
-                            AND     log.tidspunkt > (
-                                SELECT  coalesce(
-                                            max(tilstand_tidspunkt), 
-                                            '1900-01-01t00:00:00'::timestamptz
-                                        ) AS siste_overforingstidspunkt
-                                FROM    saksbehandling_statistikk_v1
-                                WHERE   overfort_til_statistikk = TRUE
-                                )
-                            ORDER BY log.id  desc 
+                            SELECT    log.id
+                                    , log.tilstand
+                                    , log.tidspunkt
+                                    , opp.id
+                                    , opp.opprettet
+                                    , beh.sak_id
+                                    , beh.id
+                                    , per.ident
+                                    , CASE WHEN log.tilstand = 'UNDER_BEHANDLING' THEN log.hendelse->>'ansvarligIdent' END
+                                    , CASE WHEN log.tilstand = 'UNDER_KONTROLL'   THEN log.hendelse->>'ansvarligIdent' END
+                                    , beh.utlost_av               
+                            FROM    oppgave_tilstand_logg_v1      log
+                            JOIN    oppgave_v1                    opp ON opp.id = log.oppgave_id
+                            JOIN    behandling_v1                 beh ON beh.id = opp.behandling_id
+                            JOIN    person_v1                     per ON per.id = beh.person_id
+                            AND     log.id > (
+                                    SELECT  coalesce(max(tilstand_id), '01992833-79c9-7257-85c2-0c382c7a2afe') AS siste_overforte_tilstandsendring
+                                    FROM    saksbehandling_statistikk_v1
+                                    WHERE   overfort_til_statistikk = TRUE
+                                    )
+                            ORDER BY log.id DESC 
                         ON CONFLICT (tilstand_id) DO NOTHING 
                         RETURNING   *
                         """,
