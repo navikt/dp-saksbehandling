@@ -142,6 +142,7 @@ class InnsendingApiTest {
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
                     statistikkTjeneste = mockk(),
+                    statistikkV2Tjeneste = mockk(),
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),

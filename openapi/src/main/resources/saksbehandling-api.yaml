@@ -962,6 +962,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+
+  /v2/statistikk:
+    get:
+      summary: Hent statistikk for oppgaver
+      description: Henter statistikk for oppgaver.
+      parameters:
+        - in: query
+          name: rettighet
+          description: Filtrer på rettighetsknagger (f.eks. "Ordinær", "Verneplikt", "Permittert")
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: [ "Ordinær", "Verneplikt" ]
+        - in: query
+          name: tilstand
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/OppgaveTilstand'
+        - in: query
+          name: utlostAv
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UtlostAvType'
+        - in: query
+          name: fom
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: tom
+          required: false
+          schema:
+            type: string
+            format: date
+
+      responses:
+        '200':
+          description: Statistikk hentet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatistikkV2'
+        '401':
+          description: Uautorisert tilgang
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /statistikk:
     get:
       summary: Hent statistikk
@@ -1597,6 +1664,40 @@ components:
         - dag
         - uke
         - totalt
+        -
+
+    StatistikkV2:
+      type: object
+      properties:
+        grupper:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatistikkV2Gruppe'
+        serier:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatistikkV2Serie'
+
+    StatistikkV2Gruppe:
+      type: object
+      properties:
+        navn:
+          type: string
+        total:
+          type: integer
+        eldsteOppgave:
+          type: string
+          format: date-time
+
+    StatistikkV2Serie:
+      type: object
+      properties:
+        navn:
+          type: string
+        verdier:
+          type: array
+          items:
+            type: integer
 
     BeholdningsInfo:
       type: object

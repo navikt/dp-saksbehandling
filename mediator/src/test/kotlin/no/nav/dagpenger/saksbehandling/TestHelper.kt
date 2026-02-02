@@ -197,6 +197,7 @@ internal object TestHelper {
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
+        sistEndret: LocalDateTime = LocalDateTime.now(),
     ): Oppgave =
         Oppgave.rehydrer(
             oppgaveId = oppgaveId,

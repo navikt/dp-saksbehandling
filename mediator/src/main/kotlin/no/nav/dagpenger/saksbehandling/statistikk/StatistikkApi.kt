@@ -15,9 +15,14 @@ import kotlinx.html.li
 import kotlinx.html.p
 import kotlinx.html.title
 import kotlinx.html.ul
+import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2DTO
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 
-internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
+internal fun Application.statistikkApi(
+    statistikkTjeneste: StatistikkTjeneste,
+    statistikkV2Tjeneste: StatistikkV2Tjeneste,
+) {
     routing {
         route("public/statistikk") {
             get {
@@ -49,6 +54,51 @@ internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
                             "generellStatistikk" to generellStatistikk,
                             "beholdningsinfo" to beholdningsinfo,
                         ),
+                    )
+                }
+            }
+            route("v2/statistikk") {
+                get {
+                    val statistikkFilter = StatistikkFilter.fra(
+                        call.request.queryParameters,
+                    )
+
+                    if (
+                        statistikkFilter.oppgavetyper.size == 1 &&
+                        statistikkFilter.oppgavetyper.first() == UtløstAvType.SØKNAD &&
+                        statistikkFilter.rettighetstyper.isNotEmpty()
+                    ) {
+                        // Gruppér per rettighetstype, per status
+                        val grupper = statistikkV2Tjeneste.hentRettighetstyper(
+                            call.navIdent(),
+                            statistikkFilter,
+                        )
+                        val serier = statistikkV2Tjeneste.hentRettighetstypeSerier(
+                            call.navIdent(),
+                            statistikkFilter,
+                        )
+                        call.respond(
+                            HttpStatusCode.OK, StatistikkV2DTO(
+                                grupper = emptyList(),
+                                serier = emptyList(),
+                            )
+                        )
+                        return@get
+                    }
+                    val grupper = statistikkV2Tjeneste.hentOppgavetyper(
+                        call.navIdent(),
+                        statistikkFilter,
+                    )
+                    val serier = statistikkV2Tjeneste.hentOppgavetypeSerier(
+                        call.navIdent(),
+                        statistikkFilter,
+                    )
+
+                    call.respond(
+                        HttpStatusCode.OK, StatistikkV2DTO(
+                            grupper = emptyList(),
+                            serier = emptyList(),
+                        )
                     )
                 }
             }

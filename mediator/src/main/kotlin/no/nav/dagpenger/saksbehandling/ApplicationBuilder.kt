@@ -59,6 +59,7 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkJob
+import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkV2Tjeneste
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -204,6 +205,7 @@ internal class ApplicationBuilder(
                             oppgaveMediator = oppgaveMediator,
                             oppgaveDTOMapper = oppgaveDTOMapper,
                             statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
+                            statistikkV2Tjeneste = PostgresStatistikkV2Tjeneste(dataSource),
                             klageMediator = klageMediator,
                             klageDTOMapper = KlageDTOMapper(oppslag),
                             personMediator = personMediator,
