@@ -20,30 +20,34 @@ class StatistikkJob(
             logger.error { "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring." }
             return
         }
-        val oppgaveTilstandsendringer = statistikkTjeneste.oppgaveTilstandsendringer().also {
-            logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
-        }
-        oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
-            rapidsConnection
-                .publish(
-                    key = oppgaveTilstandsendring.personIdent,
-                    message =
-                        JsonMessage
-                            .newMessage(
-                                mapOf(
-                                    "@event_name" to "oppgave_til_statistikk_v3",
-                                    "oppgave" to oppgaveTilstandsendring.asMap(),
-                                ),
-                            ).toJson(),
-                ).also {
-                    statistikkTjeneste.markerTilstandsendringerSomOverført(
-                        tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
-                    )
-                    logger.info {
-                        "Publisert oppgavetilstandsendring med id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+        runCatching {
+            val oppgaveTilstandsendringer = statistikkTjeneste.oppgaveTilstandsendringer().also {
+                logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
+            }
+            oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
+                rapidsConnection
+                    .publish(
+                        key = oppgaveTilstandsendring.personIdent,
+                        message =
+                            JsonMessage
+                                .newMessage(
+                                    mapOf(
+                                        "@event_name" to "oppgave_til_statistikk_v3",
+                                        "oppgave" to oppgaveTilstandsendring.asMap(),
+                                    ),
+                                ).toJson(),
+                    ).also {
+                        statistikkTjeneste.markerTilstandsendringerSomOverført(
+                            tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
+                        )
+                        logger.info {
+                            "Publisert oppgavetilstandsendring med id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+                        }
                     }
-                }
+            }
+            logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
+        }.onFailure {
+            logger.error(it) { "Feil under kjøring av StatistikkJob" }
         }
-        logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
     }
 }
