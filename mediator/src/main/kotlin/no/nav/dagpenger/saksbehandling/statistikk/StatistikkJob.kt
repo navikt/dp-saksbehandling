@@ -20,7 +20,9 @@ class StatistikkJob(
             logger.error { "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring." }
             return
         }
-        val oppgaveTilstandsendringer = statistikkTjeneste.oppgaveTilstandsendringer()
+        val oppgaveTilstandsendringer = statistikkTjeneste.oppgaveTilstandsendringer().also {
+            logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
+        }
         oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
             rapidsConnection
                 .publish(
