@@ -50,7 +50,6 @@ class PostgresStatistikkV2Tjeneste(
                     eldsteOppgave = row.localDateTime("eldste_oppgave"),
                 )
             }.asList
-            )
         }
 
     override fun hentRettighetstypeSerier(
@@ -63,9 +62,33 @@ class PostgresStatistikkV2Tjeneste(
     override fun hentOppgavetyper(
         navIdent: String,
         statistikkFilter: StatistikkFilter
-    ): List<StatistikkV2GruppeDTO> {
-        TODO("Not yet implemented")
-    }
+    ): List<StatistikkV2GruppeDTO> =
+        sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        SELECT oppg.tilstand, COUNT(*) AS count, MIN(oppg.opprettet) AS eldste_oppgave
+                        FROM oppgave_v1 oppg
+                        WHERE oppg.tilstand IN (:tilstander)
+                          AND oppg.opprettet >= :fom
+                          AND oppg.opprettet <= :tom_pluss_1_dag
+                        GROUP BY oppg.tilstand;
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "tilstander" to statistikkFilter.statuser,
+                        "fom" to statistikkFilter.periode.fom,
+                        "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                    )
+                )
+            )
+        }.map { row ->
+            StatistikkV2GruppeDTO(
+                navn = row.string("tilstand"),
+                total = row.int("count"),
+                eldsteOppgave = row.localDateTime("eldste_oppgave"),
+            )
+        }.asList
 
     override fun hentOppgavetypeSerier(
         navIdent: String,
