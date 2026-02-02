@@ -113,15 +113,14 @@ class PostgresStatistikkTjenesteTest {
             PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                 it.size shouldBe 2
-
                 it.first().let { tilstandsendring ->
-                    tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_KONTROLL"
-                    tilstandsendring.beslutterIdent shouldBe TestHelper.beslutter.navIdent
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "KLAR_TIL_KONTROLL"
+                    tilstandsendring.beslutterIdent shouldBe null
                     tilstandsendring.saksbehandlerIdent shouldBe null
                 }
                 it.last().let { tilstandsendring ->
-                    tilstandsendring.tilstandsendring.tilstand shouldBe "KLAR_TIL_KONTROLL"
-                    tilstandsendring.beslutterIdent shouldBe null
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_KONTROLL"
+                    tilstandsendring.beslutterIdent shouldBe TestHelper.beslutter.navIdent
                     tilstandsendring.saksbehandlerIdent shouldBe null
                 }
             }

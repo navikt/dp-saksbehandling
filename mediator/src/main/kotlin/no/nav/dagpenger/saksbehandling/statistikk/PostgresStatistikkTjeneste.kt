@@ -199,7 +199,7 @@ class PostgresStatistikkTjeneste(
                                                         ORDER BY tilstand_id DESC
                                                         LIMIT 1
                                                       ) , '00000000-0000-7000-8000-000000000000')
-                            ORDER BY log.id DESC
+                            ORDER BY log.id
                             LIMIT 100
                         ON CONFLICT (tilstand_id) DO NOTHING 
                         RETURNING   *
