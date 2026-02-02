@@ -47,7 +47,7 @@ class StatistikkJob(
             }
             logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
         }.onFailure {
-            logger.error(it) { "Feil under kjøring av StatistikkJob" }
+            logger.error(it) { "Feil under kjøring av StatistikkJob: $it" }
         }
     }
 }
