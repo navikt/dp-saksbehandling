@@ -321,7 +321,7 @@ internal class ApplicationBuilder(
                         statistikkTjeneste = statistikkTjeneste,
                     ).startJob(
                         startAt = now,
-                        period = 1.Minutt,
+                        period = 5.Minutt,
                     )
                 metrikkJob =
                     MetrikkJob().startJob(
