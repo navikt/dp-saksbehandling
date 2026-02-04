@@ -1,0 +1,1 @@
+ALTER TABLE saksbehandling_statistikk_v1 ADD COLUMN IF NOT EXISTS behandling_resultat TEXT;

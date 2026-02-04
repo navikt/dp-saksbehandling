@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 
 class PostgresStatistikkTjenesteTest {
     @Test
-    fun `Tilstandsendringer skal oversendes saksbehandlingsstatistikk`() {
+    fun `Tilstandsendringer på oppgave utløst av Søknad skal oversendes saksbehandlingsstatistikk`() {
         val behandling = TestHelper.lagBehandling()
         val oppgave =
             TestHelper.lagOppgave(
@@ -42,10 +42,8 @@ class PostgresStatistikkTjenesteTest {
             this.opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
                 behandling = behandling,
-                sak =
-                sak,
-                oppgave =
-                oppgave,
+                sak = sak,
+                oppgave = oppgave,
                 merkSomEgenSak = true,
             )
             val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
@@ -56,7 +54,7 @@ class PostgresStatistikkTjenesteTest {
                     førsteTilstandsendring shouldBe
                         OppgaveITilstand(
                             oppgaveId = oppgave.oppgaveId,
-                            mottatt = oppgave.opprettet.toLocalDate(),
+                            mottatt = oppgave.opprettet,
                             sakId = sak.sakId,
                             behandlingId = behandling.behandlingId,
                             personIdent = testPerson.ident,
@@ -70,6 +68,7 @@ class PostgresStatistikkTjenesteTest {
                                     tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
                                 ),
                             utløstAv = "SØKNAD",
+                            behandlingResultat = null,
                         )
                     førsteTilstandsendring
                 }
@@ -128,22 +127,9 @@ class PostgresStatistikkTjenesteTest {
     }
 
     @Test
-    fun `Tilstandsendringer på oppgave av type Innsending og Klage skal ikke oversendes saksbehandlingsstatistikk`() {
+    fun `Tilstandsendringer på oppgave utløst av Innsending skal oversendes saksbehandlingsstatistikk`() {
         val innsendingBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.INNSENDING)
         val innsendingOppgave =
-            TestHelper.lagOppgave(
-                behandling = innsendingBehandling,
-                tilstand = Oppgave.KlarTilBehandling,
-                tilstandslogg =
-                    OppgaveTilstandslogg().also {
-                        it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                            hendelse = TomHendelse,
-                        )
-                    },
-            )
-        val klageBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE)
-        val klageOppgave =
             TestHelper.lagOppgave(
                 behandling = innsendingBehandling,
                 tilstand = Oppgave.KlarTilBehandling,
@@ -168,15 +154,8 @@ class PostgresStatistikkTjenesteTest {
                 oppgave = innsendingOppgave,
                 merkSomEgenSak = true,
             )
-            this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
-                behandling = klageBehandling,
-                sak = sak,
-                oppgave = klageOppgave,
-                merkSomEgenSak = true,
-            )
             val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
 
             innsendingOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -187,6 +166,51 @@ class PostgresStatistikkTjenesteTest {
             )
 
             PostgresOppgaveRepository(dataSource = ds).lagre(innsendingOppgave)
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `Tilstandsendringer på oppgave utløst av Klage skal ikke oversendes saksbehandlingsstatistikk`() {
+        val klageBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val klageOppgave =
+            TestHelper.lagOppgave(
+                behandling = klageBehandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val sak =
+            Sak(
+                søknadId = DBTestHelper.søknadId,
+                opprettet = LocalDateTime.now(),
+            )
+        DBTestHelper.withMigratedDb { ds ->
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = klageBehandling,
+                sak = sak,
+                oppgave = klageOppgave,
+                merkSomEgenSak = true,
+            )
+            val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+
+            klageOppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = klageOppgave.oppgaveId,
+                    ansvarligIdent = TestHelper.saksbehandler.navIdent,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+
+            PostgresOppgaveRepository(dataSource = ds).lagre(klageOppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
         }

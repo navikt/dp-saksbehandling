@@ -1,13 +1,12 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
 import no.nav.dagpenger.saksbehandling.Configuration
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
 data class OppgaveITilstand(
     val oppgaveId: UUID,
-    val mottatt: LocalDate,
+    val mottatt: LocalDateTime,
     val sakId: UUID,
     val behandlingId: UUID,
     val personIdent: String,
@@ -16,6 +15,7 @@ data class OppgaveITilstand(
     val versjon: String = Configuration.versjon,
     val tilstandsendring: Tilstandsendring,
     val utløstAv: String,
+    val behandlingResultat: String?,
 ) {
     data class Tilstandsendring(
         val tilstandsendringId: UUID,
@@ -32,7 +32,8 @@ data class OppgaveITilstand(
             "beslutterIdent=$beslutterIdent," +
             "utløstAv=$utløstAv," +
             "tilstandsendring=$tilstandsendring," +
-            "versjon='$versjon')"
+            "versjon='$versjon'," +
+            "behandlingResultat=$behandlingResultat)"
 
     fun asMap(): Map<String, Any> =
         buildMap {
@@ -46,5 +47,6 @@ data class OppgaveITilstand(
             put("tilstandsendring", tilstandsendring)
             put("utløstAv", utløstAv)
             put("versjon", versjon)
+            behandlingResultat?.let { put("behandlingResultat", it) }
         }
 }

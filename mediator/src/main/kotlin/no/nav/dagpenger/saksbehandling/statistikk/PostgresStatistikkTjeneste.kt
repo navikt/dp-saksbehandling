@@ -175,7 +175,8 @@ class PostgresStatistikkTjeneste(
                             , person_ident
                             , saksbehandler_ident
                             , beslutter_ident
-                            , utlost_av               
+                            , utlost_av
+                            , behandling_resultat
                             )
                             SELECT    log.id
                                     , log.tilstand
@@ -187,19 +188,21 @@ class PostgresStatistikkTjeneste(
                                     , per.ident
                                     , CASE WHEN log.tilstand = 'UNDER_BEHANDLING' THEN log.hendelse->>'ansvarligIdent' END
                                     , CASE WHEN log.tilstand = 'UNDER_KONTROLL'   THEN log.hendelse->>'ansvarligIdent' END
-                                    , beh.utlost_av               
-                            FROM    oppgave_tilstand_logg_v1      log
-                            JOIN    oppgave_v1                    opp ON opp.id = log.oppgave_id
-                            JOIN    behandling_v1                 beh ON beh.id = opp.behandling_id
-                            JOIN    person_v1                     per ON per.id = beh.person_id
-                            WHERE   beh.utlost_av NOT IN( 'INNSENDING','KLAGE' )
-                            AND     log.id > coalesce(( SELECT  tilstand_id
+                                    , beh.utlost_av
+                                    , ins.resultat_type
+                            FROM      oppgave_tilstand_logg_v1      log
+                            JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
+                            JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
+                            JOIN      person_v1                     per ON per.id = beh.person_id
+                            LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
+                            WHERE     beh.utlost_av != 'KLAGE'
+                            AND       log.id > coalesce(( SELECT  tilstand_id
                                                         FROM    saksbehandling_statistikk_v1
                                                         WHERE   overfort_til_statistikk = TRUE
                                                         ORDER BY tilstand_id DESC
                                                         LIMIT 1
                                                       ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
-                            ORDER BY log.id
+                            ORDER BY  log.id
                             LIMIT 100
                         ON CONFLICT (tilstand_id) DO NOTHING 
                         RETURNING   *
@@ -207,7 +210,7 @@ class PostgresStatistikkTjeneste(
                     ).map { row ->
                         OppgaveITilstand(
                             oppgaveId = row.uuid("oppgave_id"),
-                            mottatt = row.localDate("mottatt"),
+                            mottatt = row.localDateTime("mottatt"),
                             sakId = row.uuid("sak_id"),
                             behandlingId = row.uuid("behandling_id"),
                             personIdent = row.string("person_ident"),
@@ -221,6 +224,7 @@ class PostgresStatistikkTjeneste(
                                     tidspunkt = row.localDateTime("tilstand_tidspunkt"),
                                 ),
                             utløstAv = row.string("utlost_av"),
+                            behandlingResultat = row.stringOrNull("behandling_resultat"),
                         )
                     }.asList,
                 )

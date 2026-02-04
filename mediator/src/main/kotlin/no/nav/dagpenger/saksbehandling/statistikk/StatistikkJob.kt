@@ -21,9 +21,10 @@ class StatistikkJob(
             return
         }
         runCatching {
-            val oppgaveTilstandsendringer = statistikkTjeneste.oppgaveTilstandsendringer().also {
-                logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
-            }
+            val oppgaveTilstandsendringer =
+                statistikkTjeneste.oppgaveTilstandsendringer().also {
+                    logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
+                }
             oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
                 rapidsConnection
                     .publish(
