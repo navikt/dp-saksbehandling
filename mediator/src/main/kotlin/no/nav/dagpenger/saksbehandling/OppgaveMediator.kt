@@ -492,7 +492,9 @@ class OppgaveMediator(
                 }
                 oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
                     when (handling) {
-                        Handling.LAGRE_OPPGAVE -> oppgaveRepository.lagre(oppgave)
+                        Handling.LAGRE_OPPGAVE -> {
+                            oppgaveRepository.lagre(oppgave)
+                        }
                         Handling.INGEN -> {}
                     }
                 }

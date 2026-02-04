@@ -539,6 +539,11 @@ OppgaveMediatorTest {
         val behandlingId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val saksbehandlerToken = "token"
+        val sakMediatorMock =
+            mockk<SakMediator>().also {
+                every { it.hentSakIdForBehandlingId(any()) } returns UUIDv7.ny()
+            }
+
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
@@ -557,16 +562,6 @@ OppgaveMediatorTest {
                     utsendingRepository = PostgresUtsendingRepository(datasource),
                     brevProdusent = mockk(),
                 )
-
-            oppgaveMediator.opprettEllerOppdaterOppgave(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
-                    behandlingId = behandlingId,
-                    emneknagger = emneknagger,
-                ),
-            )
 
             val oppgave =
                 datasource.lagTestoppgave(
@@ -767,7 +762,7 @@ OppgaveMediatorTest {
                     opprettet = LocalDateTime.now(),
                     behandlingskjedeId = behandlingId,
                 ),
-        ) { datasource, oppgaveMediator ->
+        ) { _, oppgaveMediator ->
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(

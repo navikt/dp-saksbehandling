@@ -191,9 +191,9 @@ internal class ApplicationBuilder(
     private val oversendKlageinstansAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
+    private val statistikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
-    private val statistikkJob: Timer?
-
+    val statistikkTjeneste = PostgresStatistikkTjeneste(dataSource)
     private val rapidsConnection: RapidsConnection =
         RapidApplication
             .create(
@@ -203,7 +203,7 @@ internal class ApplicationBuilder(
                         installerApis(
                             oppgaveMediator = oppgaveMediator,
                             oppgaveDTOMapper = oppgaveDTOMapper,
-                            statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
+                            statistikkTjeneste = statistikkTjeneste,
                             klageMediator = klageMediator,
                             klageDTOMapper = KlageDTOMapper(oppslag),
                             personMediator = personMediator,
@@ -227,6 +227,7 @@ internal class ApplicationBuilder(
                 },
             ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
             }.also { rapidsConnection ->
+
                 sakMediator.setRapidsConnection(rapidsConnection)
                 utsendingMediator.setRapidsConnection(rapidsConnection)
                 oppgaveMediator.setRapidsConnection(rapidsConnection)
@@ -302,22 +303,6 @@ internal class ApplicationBuilder(
                     ).startJob(
                         period = 1.Dag,
                     )
-
-                statistikkJob =
-                    if (Configuration.isDev) {
-                        StatistikkJob(
-                            rapidsConnection = rapidsConnection,
-                            sakMediator = sakMediator,
-                            statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                            oppgaveRepository = oppgaveRepository,
-                        ).startJob(
-                            startAt = now,
-                            period = 5.Minutt,
-                        )
-                    } else {
-                        null
-                    }
-
                 oversendKlageinstansAlarmJob =
                     OversendKlageinstansAlarmJob(
                         rapidsConnection = rapidsConnection,
@@ -329,6 +314,14 @@ internal class ApplicationBuilder(
                     OppgaveFristUtgåttJob(oppgaveMediator).startJob(
                         startAt = getNextOccurrence(3, 0),
                         period = 1.Dag,
+                    )
+                statistikkJob =
+                    StatistikkJob(
+                        rapidsConnection = rapidsConnection,
+                        statistikkTjeneste = statistikkTjeneste,
+                    ).startJob(
+                        startAt = now,
+                        period = 1.Minutt,
                     )
                 metrikkJob =
                     MetrikkJob().startJob(
@@ -356,9 +349,9 @@ internal class ApplicationBuilder(
         oversendKlageinstansAlarmJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
+        statistikkJob.cancel()
         oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
-        statistikkJob?.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 

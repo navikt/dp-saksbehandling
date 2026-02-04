@@ -2,26 +2,11 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import java.util.UUID
 import javax.sql.DataSource
-
-interface StatistikkTjeneste {
-    fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO
-
-    fun hentAntallVedtakGjort(): StatistikkDTO
-
-    fun hentBeholdningsInfo(): BeholdningsInfoDTO
-
-    fun hentAntallBrevSendt(): Int
-
-    fun oppgaverTilStatistikk(): List<UUID>
-
-    fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int
-
-    fun tidligereOppgaverErOverførtTilStatistikk(): Boolean
-}
 
 class PostgresStatistikkTjeneste(
     private val dataSource: DataSource,
@@ -151,68 +136,7 @@ class PostgresStatistikkTjeneste(
             )
         } ?: 0
 
-    override fun oppgaverTilStatistikk(): List<UUID> {
-        sessionOf(dataSource = dataSource).use { session ->
-            return session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                        INSERT
-                        INTO    oppgave_til_statistikk_v1 (
-                                oppgave_id,
-                                ferdig_behandlet_tidspunkt
-                            )
-                            SELECT  oppgave.id,
-                                    avslutt.tidspunkt
-                            FROM    oppgave_v1                      oppgave
-                            JOIN    behandling_v1                   behandl ON behandl.id = oppgave.behandling_id
-                            JOIN    sak_v2                          sak     ON sak.id = behandl.sak_id
-                            JOIN ( SELECT oppgave_id, MAX(tidspunkt) AS tidspunkt
-                                   FROM   oppgave_tilstand_logg_v1
-                                   WHERE  tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
-                                   GROUP BY oppgave_id
-                                 ) avslutt ON avslutt.oppgave_id = oppgave.id
-                            
-                            WHERE   oppgave.tilstand IN ( 'FERDIG_BEHANDLET', 'AVBRUTT')
-                            AND     sak.er_dp_sak = TRUE
-                            AND     avslutt.tidspunkt > (
-                                SELECT  coalesce(
-                                            max(ferdig_behandlet_tidspunkt), 
-                                            '1900-01-01t00:00:00'::timestamptz
-                                        ) AS siste_overforingstidspunkt
-                                FROM    oppgave_til_statistikk_v1
-                                WHERE   overfort_til_statistikk = TRUE
-                                )
-                            ORDER BY avslutt.tidspunkt 
-                        ON CONFLICT (oppgave_id) DO UPDATE SET ferdig_behandlet_tidspunkt = EXCLUDED.ferdig_behandlet_tidspunkt
-                        RETURNING   oppgave_id 
-                    """,
-                ).map { row ->
-                    row.uuid("oppgave_id")
-                }.asList,
-            )
-        }
-    }
-
-    override fun markerOppgaveTilStatistikkSomOverført(oppgaveId: UUID): Int =
-        sessionOf(dataSource = dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                            UPDATE oppgave_til_statistikk_v1
-                            SET    overfort_til_statistikk = TRUE
-                            WHERE  oppgave_id = :oppgave_id
-                            """,
-                    paramMap =
-                        mapOf(
-                            "oppgave_id" to oppgaveId,
-                        ),
-                ).asUpdate,
-            )
-        }
-
-    override fun tidligereOppgaverErOverførtTilStatistikk(): Boolean {
+    override fun tidligereTilstandsendringerErOverført(): Boolean {
         sessionOf(dataSource = dataSource).use { session ->
             val count =
                 session.run(
@@ -220,7 +144,7 @@ class PostgresStatistikkTjeneste(
                         //language=PostgreSQL
                         statement = """
                         SELECT COUNT(*) as count
-                        FROM   oppgave_til_statistikk_v1
+                        FROM   saksbehandling_statistikk_v1
                         WHERE  overfort_til_statistikk = FALSE;
                     """,
                         paramMap = mapOf(),
@@ -229,6 +153,99 @@ class PostgresStatistikkTjeneste(
                     }.asSingle,
                 )
             return count == 0
+        }
+    }
+
+    override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
+        sessionOf(dataSource = dataSource)
+            .use { session ->
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement = """
+                        INSERT
+                        INTO  saksbehandling_statistikk_v1 (
+                              tilstand_id
+                            , tilstand
+                            , tilstand_tidspunkt
+                            , oppgave_id
+                            , mottatt
+                            , sak_id
+                            , behandling_id
+                            , person_ident
+                            , saksbehandler_ident
+                            , beslutter_ident
+                            , utlost_av
+                            , behandling_resultat
+                            )
+                            SELECT    log.id
+                                    , log.tilstand
+                                    , log.tidspunkt
+                                    , opp.id
+                                    , opp.opprettet
+                                    , beh.sak_id
+                                    , beh.id
+                                    , per.ident
+                                    , CASE WHEN log.tilstand = 'UNDER_BEHANDLING' THEN log.hendelse->>'ansvarligIdent' END
+                                    , CASE WHEN log.tilstand = 'UNDER_KONTROLL'   THEN log.hendelse->>'ansvarligIdent' END
+                                    , beh.utlost_av
+                                    , ins.resultat_type
+                            FROM      oppgave_tilstand_logg_v1      log
+                            JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
+                            JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
+                            JOIN      person_v1                     per ON per.id = beh.person_id
+                            LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
+                            WHERE     beh.utlost_av != 'KLAGE'
+                            AND       log.id > coalesce(( SELECT  tilstand_id
+                                                        FROM    saksbehandling_statistikk_v1
+                                                        WHERE   overfort_til_statistikk = TRUE
+                                                        ORDER BY tilstand_id DESC
+                                                        LIMIT 1
+                                                      ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
+                            ORDER BY  log.id
+                            LIMIT 100
+                        ON CONFLICT (tilstand_id) DO NOTHING 
+                        RETURNING   *
+                        """,
+                    ).map { row ->
+                        OppgaveITilstand(
+                            oppgaveId = row.uuid("oppgave_id"),
+                            mottatt = row.localDateTime("mottatt"),
+                            sakId = row.uuid("sak_id"),
+                            behandlingId = row.uuid("behandling_id"),
+                            personIdent = row.string("person_ident"),
+                            saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
+                            beslutterIdent = row.stringOrNull("beslutter_ident"),
+                            versjon = Configuration.versjon,
+                            tilstandsendring =
+                                OppgaveITilstand.Tilstandsendring(
+                                    tilstandsendringId = row.uuid("tilstand_id"),
+                                    tilstand = row.string("tilstand"),
+                                    tidspunkt = row.localDateTime("tilstand_tidspunkt"),
+                                ),
+                            utløstAv = row.string("utlost_av"),
+                            behandlingResultat = row.stringOrNull("behandling_resultat"),
+                        )
+                    }.asList,
+                )
+            }
+
+    override fun markerTilstandsendringerSomOverført(tilstandId: UUID) {
+        sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        UPDATE saksbehandling_statistikk_v1
+                        SET    overfort_til_statistikk = TRUE
+                        WHERE  tilstand_id = :tilstand_id
+                        """,
+                    paramMap =
+                        mapOf(
+                            "tilstand_id" to tilstandId,
+                        ),
+                ).asUpdate,
+            )
         }
     }
 }
