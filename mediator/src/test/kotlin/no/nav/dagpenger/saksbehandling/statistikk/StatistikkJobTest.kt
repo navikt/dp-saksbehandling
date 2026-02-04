@@ -101,7 +101,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v3",
+              "@event_name": "oppgave_til_statistikk",
               "oppgave": {
                 "oppgaveId": "${tilstandSøknadKlarTilBehandling.oppgaveId}",
                 "mottatt": "${tilstandSøknadKlarTilBehandling.mottatt}",
@@ -121,7 +121,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v3",
+              "@event_name": "oppgave_til_statistikk",
               "oppgave": {
                 "oppgaveId": "${tilstandSøknadUnderBehandling.oppgaveId}",
                 "mottatt": "${tilstandSøknadUnderBehandling.mottatt}",
@@ -143,7 +143,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v3",
+              "@event_name": "oppgave_til_statistikk",
               "oppgave": {
                 "oppgaveId": "${tilstandInnsendingFerdigBehandlet.oppgaveId}",
                 "mottatt": "${tilstandInnsendingFerdigBehandlet.mottatt}",
