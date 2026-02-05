@@ -1009,6 +1009,11 @@ paths:
           schema:
             type: string
             format: date
+        - in: query
+          name: grupperEtter
+          required: false
+          schema:
+            $ref: '#/components/schemas/GrupperEtter'
 
       responses:
         '200':
@@ -1336,6 +1341,12 @@ components:
         - historikk
         - meldingOmVedtakKilde
         - kontrollertBrev
+
+    GrupperEtter:
+      type: string
+      enum:
+        - RETTIGHETSTYPE
+        - OPPGAVETYPE
 
     Kjonn:
       type: string

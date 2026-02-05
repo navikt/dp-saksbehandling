@@ -15,7 +15,7 @@ import kotlinx.html.li
 import kotlinx.html.p
 import kotlinx.html.title
 import kotlinx.html.ul
-import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2DTO
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 
@@ -65,9 +65,7 @@ internal fun Application.statistikkApi(
                         )
 
                     if (
-                        statistikkFilter.utløstAvTyper.size == 1 &&
-                        statistikkFilter.utløstAvTyper.first() == UtløstAvType.SØKNAD &&
-                        statistikkFilter.rettighetstyper.isNotEmpty()
+                        statistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name
                     ) {
                         // Gruppér per rettighetstype, per status
                         val grupper =

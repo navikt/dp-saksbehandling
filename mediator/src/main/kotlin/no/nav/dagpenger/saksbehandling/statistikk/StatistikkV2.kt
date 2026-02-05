@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 import javax.sql.DataSource
@@ -19,25 +21,29 @@ interface StatistikkV2Tjeneste {
 class PostgresStatistikkV2Tjeneste(
     private val dataSource: DataSource,
 ) : StatistikkV2Tjeneste {
-    override fun hentOppgavetyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> =
-        sessionOf(dataSource = dataSource).use { session ->
+    override fun hentOppgavetyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+        val utløstAvTyper =
+            statistikkFilter.utløstAvTyper.ifEmpty {
+                UtløstAvType.entries.toSet()
+            }
+        return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT beha.utlost_av, COUNT(*) AS total, MIN(oppg.opprettet) AS eldste_oppgave
-                    FROM oppgave_v1 oppg
-                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                    WHERE beha.utlost_av = ANY(:utlost_av_typer)
-                    AND oppg.opprettet >= :fom
-                    AND oppg.opprettet <= :tom_pluss_1_dag
-                    GROUP BY beha.utlost_av;
-                    """,
+                        SELECT beha.utlost_av, COUNT(*) AS total, MIN(oppg.opprettet) AS eldste_oppgave
+                        FROM oppgave_v1 oppg
+                        JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
+                        WHERE beha.utlost_av = ANY(:utlost_av_typer)
+                        AND oppg.opprettet >= :fom
+                        AND oppg.opprettet <= :tom_pluss_1_dag
+                        GROUP BY beha.utlost_av;
+                        """,
                     paramMap =
                         mapOf(
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
-                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                            "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     StatistikkV2GruppeDTO(
@@ -48,9 +54,20 @@ class PostgresStatistikkV2Tjeneste(
                 }.asList,
             )
         }
+    }
 
-    override fun hentOppgavetypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> =
-        sessionOf(dataSource = dataSource).use { session ->
+    override fun hentOppgavetypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
+        val utløstAvTyper =
+            statistikkFilter.utløstAvTyper.ifEmpty {
+                UtløstAvType.entries.toSet()
+            }
+        val tilstander =
+            statistikkFilter.statuser.ifEmpty {
+                Oppgave.Tilstand.Type.entries
+                    .map { it.name }
+                    .toSet()
+            }
+        return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -67,8 +84,8 @@ class PostgresStatistikkV2Tjeneste(
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
-                            "tilstander" to statistikkFilter.statuser.toTypedArray(),
+                            "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
+                            "tilstander" to tilstander.toTypedArray(),
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                         ),
@@ -80,9 +97,21 @@ class PostgresStatistikkV2Tjeneste(
                 }.asList,
             )
         }
+    }
 
-    override fun hentRettighetstyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> =
-        sessionOf(dataSource = dataSource).use { session ->
+    override fun hentRettighetstyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+        val utløstAvTyper =
+            statistikkFilter.utløstAvTyper.ifEmpty {
+                UtløstAvType.entries.toSet()
+            }
+        val tilstander =
+            statistikkFilter.statuser.ifEmpty {
+                Oppgave.Tilstand.Type.entries
+                    .map { it.name }
+                    .toSet()
+            }
+
+        return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -99,8 +128,8 @@ class PostgresStatistikkV2Tjeneste(
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "tilstander" to statistikkFilter.statuser.toTypedArray(),
-                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                            "tilstander" to tilstander.toTypedArray(),
+                            "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                         ),
@@ -113,9 +142,15 @@ class PostgresStatistikkV2Tjeneste(
                 }.asList,
             )
         }
+    }
 
-    override fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> =
-        sessionOf(dataSource = dataSource).use { session ->
+    override fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
+        val utløstAvTyper =
+            statistikkFilter.utløstAvTyper.ifEmpty {
+                UtløstAvType.entries.toSet()
+            }
+
+        return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -132,7 +167,7 @@ class PostgresStatistikkV2Tjeneste(
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                            "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                         ),
@@ -144,4 +179,5 @@ class PostgresStatistikkV2Tjeneste(
                 }.asList,
             )
         }
+    }
 }

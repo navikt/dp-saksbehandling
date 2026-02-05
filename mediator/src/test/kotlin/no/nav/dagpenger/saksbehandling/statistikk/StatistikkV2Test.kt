@@ -14,7 +14,7 @@ import kotlin.test.Test
 
 class StatistikkV2Test {
     @Test
-    fun `test hentAntallVedtakGjortV2`() {
+    fun `test hent alt fra statistikkv2`() {
         val behandling1 = lagBehandling(behandlingId = UUIDv7.ny())
         val behandling2 = lagBehandling(behandlingId = UUIDv7.ny())
         val behandling3 = lagBehandling(behandlingId = UUIDv7.ny())
@@ -52,8 +52,6 @@ class StatistikkV2Test {
             val statistikkFilter =
                 StatistikkFilter(
                     periode = Periode(fom = LocalDate.of(2025, 1, 1).minusDays(1), tom = LocalDate.now().plusDays(1)),
-                    utløstAvTyper = setOf(behandling1.utløstAv, behandling2.utløstAv, behandling3.utløstAv),
-                    statuser = setOf(Oppgave.FerdigBehandlet.type.name),
                 )
             val oppgavetyper = statistikkTjeneste.hentOppgavetyper(statistikkFilter)
 

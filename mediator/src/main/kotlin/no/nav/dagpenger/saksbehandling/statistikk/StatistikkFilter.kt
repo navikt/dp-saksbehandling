@@ -4,6 +4,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 
 data class StatistikkFilter(
@@ -11,6 +12,7 @@ data class StatistikkFilter(
     val statuser: Set<String> = emptySet(),
     val rettighetstyper: Set<String> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
+    val grupperEtter: String = GrupperEtterDTO.OPPGAVETYPE.name,
 ) {
     companion object {
         fun fra(queryParameters: Parameters): StatistikkFilter {
@@ -19,12 +21,14 @@ data class StatistikkFilter(
             val statuser = builder.status() ?: emptySet()
             val rettighetstyper = builder.rettighetstyper() ?: emptySet()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
+            val grupperEtter = builder.grupperEtter()
 
             return StatistikkFilter(
                 periode = Periode.fra(queryParameters),
                 statuser = statuser,
                 rettighetstyper = rettighetstyper,
                 utløstAvTyper = utløstAvTyper,
+                grupperEtter = grupperEtter,
             )
         }
     }
@@ -45,5 +49,7 @@ data class StatistikkFilter(
         fun rettighetstyper(): Set<String>? = stringValues.getAll("rettighet")?.toSet()
 
         fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
+
+        fun grupperEtter(): String = stringValues.get("grupperEtter") ?: GrupperEtterDTO.OPPGAVETYPE.name
     }
 }
