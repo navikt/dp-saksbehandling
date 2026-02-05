@@ -58,28 +58,28 @@ class StatistikkV2Test {
             oppgavetyper.size shouldBe 1
             oppgavetyper[0].total shouldBe 3
             oppgavetyper[0].navn shouldBe behandling1.utløstAv.name
-            oppgavetyper[0].eldsteOppgave?.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
+            oppgavetyper[0].eldsteOppgave.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
 
             val oppgavetypeserier = statistikkTjeneste.hentOppgavetypeSerier(statistikkFilter)
             oppgavetypeserier.size shouldBe 1
             oppgavetypeserier[0].navn shouldBe behandling1.utløstAv.name
-            oppgavetypeserier[0].verdier?.size shouldBe 1
-            oppgavetypeserier[0].verdier!![0] shouldBe 3
+            oppgavetypeserier[0].verdier.size shouldBe 1
+            oppgavetypeserier[0].verdier[0] shouldBe 3
 
             val rettighetstyper = statistikkTjeneste.hentRettighetstyper(statistikkFilter)
             rettighetstyper.size shouldBe 1
             rettighetstyper[0].total shouldBe 3
             rettighetstyper[0].navn shouldBe Oppgave.FerdigBehandlet.type.name
-            rettighetstyper[0].eldsteOppgave?.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
+            rettighetstyper[0].eldsteOppgave.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
 
             val rettighetstypeserier = statistikkTjeneste.hentRettighetstypeSerier(statistikkFilter)
             rettighetstypeserier.size shouldBe 2
             rettighetstypeserier[0].navn shouldBe "hallo"
-            rettighetstypeserier[0].verdier?.size shouldBe 1
-            rettighetstypeserier[0].verdier!![0] shouldBe 2
+            rettighetstypeserier[0].verdier.size shouldBe 1
+            rettighetstypeserier[0].verdier[0] shouldBe 2
             rettighetstypeserier[1].navn shouldBe "hallo2"
-            rettighetstypeserier[1].verdier?.size shouldBe 1
-            rettighetstypeserier[1].verdier!![0] shouldBe 1
+            rettighetstypeserier[1].verdier.size shouldBe 1
+            rettighetstypeserier[1].verdier[0] shouldBe 1
         }
     }
 }

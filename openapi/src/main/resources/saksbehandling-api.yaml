@@ -1688,6 +1688,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StatistikkV2Serie'
+      required:
+        - grupper
+        - serier
 
     StatistikkV2Gruppe:
       type: object
@@ -1699,6 +1702,10 @@ components:
         eldsteOppgave:
           type: string
           format: date-time
+      required:
+        - navn
+        - total
+        - eldsteOppgave
 
     StatistikkV2Serie:
       type: object
@@ -1709,6 +1716,9 @@ components:
           type: array
           items:
             type: integer
+      required:
+        - navn
+        - verdier
 
     BeholdningsInfo:
       type: object
