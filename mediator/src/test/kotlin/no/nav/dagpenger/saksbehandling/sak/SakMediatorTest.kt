@@ -382,8 +382,8 @@ class SakMediatorTest {
             val packet = testRapid.inspektør.message(0)
             packet["@event_name"].asText() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["søknadId"].asUUID() shouldBe søknadIdNyRett
             packet["ident"].asText() shouldBe testIdent
+            packet["årsak"].asText() shouldBe "Skjermet eller adressebeskyttet person"
         }
     }
 
@@ -438,8 +438,8 @@ class SakMediatorTest {
             val packet = testRapid.inspektør.message(0)
             packet["@event_name"].asText() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["søknadId"].asUUID() shouldBe søknadIdNyRett
             packet["ident"].asText() shouldBe testIdent
+            packet["årsak"].asText() shouldBe "Skjermet eller adressebeskyttet person"
         }
     }
 

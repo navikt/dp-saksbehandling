@@ -339,10 +339,8 @@ internal fun Route.oppgaveApi(
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
                             val avbrytOppgaveHendelse = call.avbrytOppgaveHendelse(saksbehandler = saksbehandler)
-                            val saksbehandlerToken = call.request.jwt()
                             oppgaveMediator.avbryt(
                                 avbrytOppgaveHendelse = avbrytOppgaveHendelse,
-                                saksbehandlerToken = saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }
