@@ -17,7 +17,10 @@ import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class StatistikkTestApiTest {
     init {
@@ -97,6 +100,84 @@ class StatistikkTestApiTest {
 
                     beholdningsinfo["antallOppgaverKlarTilBehandling"]!!.jsonPrimitive.int shouldBe 2
                     beholdningsinfo["antallOppgaverKlarTilKontroll"]!!.jsonPrimitive.int shouldBe 3
+                }
+        }
+    }
+
+    @Test
+    fun `test autentisert statistikk v2 apirespons`() {
+        val date = LocalDateTime.now().minusDays(1)
+        val mockStatistikkV2Tjeneste =
+            mockk<StatistikkV2Tjeneste>().also {
+                every { it.hentOppgavetyper(any()) } returns
+                    listOf(
+                        StatistikkV2GruppeDTO(
+                            navn = "test",
+                            total = 1,
+                            eldsteOppgave = date,
+                        ),
+                    )
+                every { it.hentOppgavetypeSerier(any()) } returns
+                    listOf(
+                        StatistikkV2SerieDTO(
+                            navn = "test",
+                            verdier = listOf(1),
+                        ),
+                    )
+                every { it.hentRettighetstyper(any()) } returns
+                    listOf(
+                        StatistikkV2GruppeDTO(
+                            navn = "test",
+                            total = 1,
+                            eldsteOppgave = date,
+                        ),
+                    )
+                every { it.hentRettighetstypeSerier(any()) } returns
+                    listOf(
+                        StatistikkV2SerieDTO(
+                            navn = "test",
+                            verdier = listOf(1),
+                        ),
+                    )
+            }
+
+        testApplication {
+            application {
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    statistikkV2Tjeneste = mockStatistikkV2Tjeneste,
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                    sakMediator = mockk(),
+                    innsendingMediator = mockk(),
+                )
+            }
+
+            client
+                .get("v2/statistikk") {
+                    autentisert(token = gyldigSaksbehandlerToken())
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 200
+                    val json = httpResponse.bodyAsText().trimIndent()
+
+                    // verify through string matching
+                    json shouldBe
+                        """
+                        {
+                          "grupper" : [ {
+                            "navn" : "test",
+                            "total" : 1,
+                            "eldsteOppgave" : "$date"
+                          } ],
+                          "serier" : [ {
+                            "navn" : "test",
+                            "verdier" : [ 1 ]
+                          } ]
+                        }
+                        """.trimIndent()
                 }
         }
     }

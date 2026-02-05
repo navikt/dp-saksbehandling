@@ -59,46 +59,49 @@ internal fun Application.statistikkApi(
             }
             route("v2/statistikk") {
                 get {
-                    val statistikkFilter = StatistikkFilter.fra(
-                        call.request.queryParameters,
-                    )
+                    val statistikkFilter =
+                        StatistikkFilter.fra(
+                            call.request.queryParameters,
+                        )
 
                     if (
-                        statistikkFilter.oppgavetyper.size == 1 &&
-                        statistikkFilter.oppgavetyper.first() == UtløstAvType.SØKNAD &&
+                        statistikkFilter.utløstAvTyper.size == 1 &&
+                        statistikkFilter.utløstAvTyper.first() == UtløstAvType.SØKNAD &&
                         statistikkFilter.rettighetstyper.isNotEmpty()
                     ) {
                         // Gruppér per rettighetstype, per status
-                        val grupper = statistikkV2Tjeneste.hentRettighetstyper(
-                            call.navIdent(),
-                            statistikkFilter,
-                        )
-                        val serier = statistikkV2Tjeneste.hentRettighetstypeSerier(
-                            call.navIdent(),
-                            statistikkFilter,
-                        )
-                        call.respond(
-                            HttpStatusCode.OK, StatistikkV2DTO(
-                                grupper = emptyList(),
-                                serier = emptyList(),
+                        val grupper =
+                            statistikkV2Tjeneste.hentRettighetstyper(
+                                statistikkFilter,
                             )
+                        val serier =
+                            statistikkV2Tjeneste.hentRettighetstypeSerier(
+                                statistikkFilter,
+                            )
+                        call.respond(
+                            HttpStatusCode.OK,
+                            StatistikkV2DTO(
+                                grupper = grupper,
+                                serier = serier,
+                            ),
                         )
                         return@get
                     }
-                    val grupper = statistikkV2Tjeneste.hentOppgavetyper(
-                        call.navIdent(),
-                        statistikkFilter,
-                    )
-                    val serier = statistikkV2Tjeneste.hentOppgavetypeSerier(
-                        call.navIdent(),
-                        statistikkFilter,
-                    )
+                    val grupper =
+                        statistikkV2Tjeneste.hentOppgavetyper(
+                            statistikkFilter,
+                        )
+                    val serier =
+                        statistikkV2Tjeneste.hentOppgavetypeSerier(
+                            statistikkFilter,
+                        )
 
                     call.respond(
-                        HttpStatusCode.OK, StatistikkV2DTO(
-                            grupper = emptyList(),
-                            serier = emptyList(),
-                        )
+                        HttpStatusCode.OK,
+                        StatistikkV2DTO(
+                            grupper = grupper,
+                            serier = serier,
+                        ),
                     )
                 }
             }

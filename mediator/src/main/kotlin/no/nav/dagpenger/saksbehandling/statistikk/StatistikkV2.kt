@@ -7,94 +7,141 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 import javax.sql.DataSource
 
 interface StatistikkV2Tjeneste {
-    fun hentRettighetstyper(navIdent: String, statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>;
-    fun hentRettighetstypeSerier(navIdent: String, statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>;
-    fun hentOppgavetyper(navIdent: String, statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>;
-    fun hentOppgavetypeSerier(navIdent: String, statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>;
+    fun hentOppgavetyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
+
+    fun hentOppgavetypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
+
+    fun hentRettighetstyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
+
+    fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
 }
 
 class PostgresStatistikkV2Tjeneste(
     private val dataSource: DataSource,
 ) : StatistikkV2Tjeneste {
-
-    override fun hentRettighetstyper(
-        navIdent: String,
-        statistikkFilter: StatistikkFilter
-    ): List<StatistikkV2GruppeDTO> =
+    override fun hentOppgavetyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> =
         sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT beha.utlost_av, COUNT(*) AS count, MIN(oppg.opprettet) AS eldste_oppgave
+                    SELECT beha.utlost_av, COUNT(*) AS total, MIN(oppg.opprettet) AS eldste_oppgave
                     FROM oppgave_v1 oppg
                     JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                    WHERE beha.utlost_av IN (:utlostAvTyper)
-                    AND saksbehandler_ident = :navIdent
+                    WHERE beha.utlost_av = ANY(:utlost_av_typer)
                     AND oppg.opprettet >= :fom
                     AND oppg.opprettet <= :tom_pluss_1_dag
                     GROUP BY beha.utlost_av;
                     """,
                     paramMap =
                         mapOf(
-                            "navIdent" to navIdent,
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
-                            "utlostAvTyper" to statistikkFilter.utløstAvTyper.toList(),
-                        )
-                ),
-            ).map { row ->
-                StatistikkV2GruppeDTO(
-                    navn = row.string("rettighet_type"),
-                    total = row.int("count"),
-                    eldsteOppgave = row.localDateTime("eldste_oppgave"),
-                )
-            }.asList
+                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                        ),
+                ).map { row ->
+                    StatistikkV2GruppeDTO(
+                        navn = row.string("utlost_av"),
+                        total = row.int("total"),
+                        eldsteOppgave = row.localDateTime("eldste_oppgave"),
+                    )
+                }.asList,
+            )
         }
 
-    override fun hentRettighetstypeSerier(
-        navIdent: String,
-        statistikkFilter: StatistikkFilter
-    ): List<StatistikkV2SerieDTO> {
-        TODO("Not yet implemented")
-    }
-
-    override fun hentOppgavetyper(
-        navIdent: String,
-        statistikkFilter: StatistikkFilter
-    ): List<StatistikkV2GruppeDTO> =
+    override fun hentOppgavetypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> =
         sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
+                    statement =
+                        """
+                        SELECT beh.utlost_av, oppg.tilstand, COUNT(*) AS count
+                        FROM oppgave_v1 oppg
+                                 JOIN behandling_v1 beh ON beh.id = oppg.behandling_id
+                        WHERE beh.utlost_av = ANY(:utlost_av_typer)
+                          AND oppg.tilstand = ANY(:tilstander)
+                          AND oppg.opprettet >= :fom
+                          AND oppg.opprettet <= :tom_pluss_1_dag
+                        GROUP BY beh.utlost_av, oppg.tilstand;
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                            "tilstander" to statistikkFilter.statuser.toTypedArray(),
+                            "fom" to statistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                        ),
+                ).map { row ->
+                    StatistikkV2SerieDTO(
+                        navn = row.string("utlost_av"),
+                        verdier = listOf(row.int("count")),
+                    )
+                }.asList,
+            )
+        }
+
+    override fun hentRettighetstyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> =
+        sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
                         SELECT oppg.tilstand, COUNT(*) AS count, MIN(oppg.opprettet) AS eldste_oppgave
                         FROM oppgave_v1 oppg
-                        WHERE oppg.tilstand IN (:tilstander)
+                        JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
+                        WHERE beha.utlost_av = ANY(:utlost_av_typer)
+                          AND oppg.tilstand = ANY(:tilstander)
                           AND oppg.opprettet >= :fom
                           AND oppg.opprettet <= :tom_pluss_1_dag
                         GROUP BY oppg.tilstand;
-                    """.trimIndent(),
-                    paramMap = mapOf(
-                        "tilstander" to statistikkFilter.statuser,
-                        "fom" to statistikkFilter.periode.fom,
-                        "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "tilstander" to statistikkFilter.statuser.toTypedArray(),
+                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                            "fom" to statistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                        ),
+                ).map { row ->
+                    StatistikkV2GruppeDTO(
+                        navn = row.string("tilstand"),
+                        total = row.int("count"),
+                        eldsteOppgave = row.localDateTime("eldste_oppgave"),
                     )
-                )
+                }.asList,
             )
-        }.map { row ->
-            StatistikkV2GruppeDTO(
-                navn = row.string("tilstand"),
-                total = row.int("count"),
-                eldsteOppgave = row.localDateTime("eldste_oppgave"),
+        }
+
+    override fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> =
+        sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT emn.emneknagg, COUNT(*) AS count
+                        FROM oppgave_v1 oppg
+                            JOIN behandling_v1 beh ON beh.id = oppg.behandling_id
+                            JOIN emneknagg_v1 emn ON oppg.id = emn.oppgave_id
+                        WHERE beh.utlost_av = ANY(:utlost_av_typer)
+                          AND oppg.opprettet >= :fom
+                          AND oppg.opprettet <= :tom_pluss_1_dag
+                        GROUP BY emn.emneknagg;
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "utlost_av_typer" to statistikkFilter.utløstAvTyper.map { it.name }.toTypedArray(),
+                            "fom" to statistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                        ),
+                ).map { row ->
+                    StatistikkV2SerieDTO(
+                        navn = row.string("emneknagg"),
+                        verdier = listOf(row.int("count")),
+                    )
+                }.asList,
             )
-        }.asList
-
-    override fun hentOppgavetypeSerier(
-        navIdent: String,
-        statistikkFilter: StatistikkFilter
-    ): List<StatistikkV2SerieDTO> {
-        TODO("Not yet implemented")
-    }
-
+        }
 }

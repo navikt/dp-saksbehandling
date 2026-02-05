@@ -28,6 +28,7 @@ class StatistikkV2Test {
                     oppgaveId = UUIDv7.ny(),
                     tilstand = Oppgave.FerdigBehandlet,
                     behandling = behandling1,
+                    emneknagger = setOf("hallo"),
                 ),
             )
             repo.lagre(
@@ -35,6 +36,7 @@ class StatistikkV2Test {
                     oppgaveId = UUIDv7.ny(),
                     tilstand = Oppgave.FerdigBehandlet,
                     behandling = behandling2,
+                    emneknagger = setOf("hallo"),
                 ),
             )
             repo.lagre(
@@ -42,6 +44,7 @@ class StatistikkV2Test {
                     oppgaveId = UUIDv7.ny(),
                     tilstand = Oppgave.FerdigBehandlet,
                     behandling = behandling3,
+                    emneknagger = setOf("hallo2"),
                 ),
             )
 
@@ -49,53 +52,36 @@ class StatistikkV2Test {
             val statistikkFilter =
                 StatistikkFilter(
                     periode = Periode(fom = LocalDate.of(2025, 1, 1).minusDays(1), tom = LocalDate.now().plusDays(1)),
+                    utløstAvTyper = setOf(behandling1.utløstAv, behandling2.utløstAv, behandling3.utløstAv),
+                    statuser = setOf(Oppgave.FerdigBehandlet.type.name),
                 )
-            val result = statistikkTjeneste.hentAntallVedtakGjort(statistikkFilter)
+            val oppgavetyper = statistikkTjeneste.hentOppgavetyper(statistikkFilter)
 
-            result shouldBe 3
-        }
-    }
+            oppgavetyper.size shouldBe 1
+            oppgavetyper[0].total shouldBe 3
+            oppgavetyper[0].navn shouldBe behandling1.utløstAv.name
+            oppgavetyper[0].eldsteOppgave?.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
 
-    @Test
-    fun `test hentAntallVedtakGjortV2 utenfor periode`() {
-        val behandling1 = lagBehandling(behandlingId = UUIDv7.ny())
-        val behandling2 = lagBehandling(behandlingId = UUIDv7.ny())
-        val behandling3 = lagBehandling(behandlingId = UUIDv7.ny())
-        DBTestHelper.withBehandlinger(
-            behandlinger = listOf(behandling1, behandling2, behandling3),
-        ) { ds: DataSource ->
-            // Insert test data
-            val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(
-                lagOppgave(
-                    oppgaveId = UUIDv7.ny(),
-                    tilstand = Oppgave.FerdigBehandlet,
-                    behandling = behandling1,
-                ),
-            )
-            repo.lagre(
-                lagOppgave(
-                    oppgaveId = UUIDv7.ny(),
-                    tilstand = Oppgave.FerdigBehandlet,
-                    behandling = behandling2,
-                ),
-            )
-            repo.lagre(
-                lagOppgave(
-                    oppgaveId = UUIDv7.ny(),
-                    tilstand = Oppgave.FerdigBehandlet,
-                    behandling = behandling3,
-                ),
-            )
+            val oppgavetypeserier = statistikkTjeneste.hentOppgavetypeSerier(statistikkFilter)
+            oppgavetypeserier.size shouldBe 1
+            oppgavetypeserier[0].navn shouldBe behandling1.utløstAv.name
+            oppgavetypeserier[0].verdier?.size shouldBe 1
+            oppgavetypeserier[0].verdier!![0] shouldBe 3
 
-            val statistikkTjeneste = PostgresStatistikkV2Tjeneste(ds)
-            val statistikkFilter =
-                StatistikkFilter(
-                    periode = Periode(fom = LocalDate.of(1000, 1, 1), tom = LocalDate.of(1000, 1, 1)),
-                )
-            val result = statistikkTjeneste.hentAntallVedtakGjort(statistikkFilter)
+            val rettighetstyper = statistikkTjeneste.hentRettighetstyper(statistikkFilter)
+            rettighetstyper.size shouldBe 1
+            rettighetstyper[0].total shouldBe 3
+            rettighetstyper[0].navn shouldBe Oppgave.FerdigBehandlet.type.name
+            rettighetstyper[0].eldsteOppgave?.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
 
-            result shouldBe 0
+            val rettighetstypeserier = statistikkTjeneste.hentRettighetstypeSerier(statistikkFilter)
+            rettighetstypeserier.size shouldBe 2
+            rettighetstypeserier[0].navn shouldBe "hallo"
+            rettighetstypeserier[0].verdier?.size shouldBe 1
+            rettighetstypeserier[0].verdier!![0] shouldBe 2
+            rettighetstypeserier[1].navn shouldBe "hallo2"
+            rettighetstypeserier[1].verdier?.size shouldBe 1
+            rettighetstypeserier[1].verdier!![0] shouldBe 1
         }
     }
 }

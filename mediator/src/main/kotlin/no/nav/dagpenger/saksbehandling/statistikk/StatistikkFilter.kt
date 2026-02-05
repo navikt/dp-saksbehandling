@@ -45,6 +45,5 @@ data class StatistikkFilter(
         fun rettighetstyper(): Set<String>? = stringValues.getAll("rettighet")?.toSet()
 
         fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
-
     }
 }
