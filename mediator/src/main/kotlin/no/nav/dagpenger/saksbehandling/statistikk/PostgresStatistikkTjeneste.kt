@@ -204,7 +204,6 @@ class PostgresStatistikkTjeneste(
                                                       ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
                             ORDER BY  log.id
                             LIMIT 100
-                        ON CONFLICT (tilstand_id) DO NOTHING 
                         RETURNING   *
                         """,
                     ).map { row ->

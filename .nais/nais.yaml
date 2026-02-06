@@ -130,3 +130,5 @@ spec:
             value: "write,ddl,role"
           - name: pgaudit.log_parameter
             value: "on"
+  strategy:
+    type: Recreate

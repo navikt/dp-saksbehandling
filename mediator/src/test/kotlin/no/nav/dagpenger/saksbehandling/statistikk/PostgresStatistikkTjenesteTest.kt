@@ -167,7 +167,7 @@ class PostgresStatistikkTjenesteTest {
 
             PostgresOppgaveRepository(dataSource = ds).lagre(innsendingOppgave)
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
         }
     }
 
