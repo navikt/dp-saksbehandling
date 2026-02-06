@@ -27,6 +27,7 @@ class StatistikkJobTest {
             versjon = "dp:saksbehandling:1.2.3",
             tilstandsendring =
                 OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = 1,
                     tilstandsendringId = UUIDv7.ny(),
                     tilstand = "KLAR_TIL_BEHANDLING",
                     tidspunkt = nå.minusDays(1),
@@ -47,6 +48,7 @@ class StatistikkJobTest {
             versjon = "dp:saksbehandling:1.2.3",
             tilstandsendring =
                 OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = 2,
                     tilstandsendringId = UUIDv7.ny(),
                     tilstand = "UNDER_BEHANDLING",
                     tidspunkt = nå,
@@ -67,6 +69,7 @@ class StatistikkJobTest {
             versjon = "dp:saksbehandling:1.2.3",
             tilstandsendring =
                 OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = 3,
                     tilstandsendringId = UUIDv7.ny(),
                     tilstand = "FERDIG_BEHANDLET",
                     tidspunkt = nå,
@@ -109,6 +112,7 @@ class StatistikkJobTest {
                 "behandlingId": "${tilstandSøknadKlarTilBehandling.behandlingId}",
                 "personIdent": "12345612345",
                 "tilstandsendring": {
+                  "sekvensnummer": 1,
                   "tilstandsendringId": "${tilstandSøknadKlarTilBehandling.tilstandsendring.tilstandsendringId}",
                   "tilstand": "KLAR_TIL_BEHANDLING",
                   "tidspunkt": "${tilstandSøknadKlarTilBehandling.tilstandsendring.tidspunkt}"
@@ -131,6 +135,7 @@ class StatistikkJobTest {
                 "saksbehandlerIdent": "AB123",
                 "beslutterIdent": "B987",
                 "tilstandsendring": {
+                  "sekvensnummer": 2,
                   "tilstandsendringId": "${tilstandSøknadUnderBehandling.tilstandsendring.tilstandsendringId}",
                   "tilstand": "UNDER_BEHANDLING",
                   "tidspunkt": "${tilstandSøknadUnderBehandling.tilstandsendring.tidspunkt}"
@@ -152,6 +157,7 @@ class StatistikkJobTest {
                 "personIdent": "12345612345",
                 "saksbehandlerIdent": "SB111",
                 "tilstandsendring": {
+                  "sekvensnummer": 3,
                   "tilstandsendringId": "${tilstandInnsendingFerdigBehandlet.tilstandsendring.tilstandsendringId}",
                   "tilstand": "FERDIG_BEHANDLET",
                   "tidspunkt": "${tilstandInnsendingFerdigBehandlet.tilstandsendring.tidspunkt}"

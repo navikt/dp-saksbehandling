@@ -218,6 +218,7 @@ class PostgresStatistikkTjeneste(
                             versjon = Configuration.versjon,
                             tilstandsendring =
                                 OppgaveITilstand.Tilstandsendring(
+                                    sekvensnummer = row.long("sekvensnummer"),
                                     tilstandsendringId = row.uuid("tilstand_id"),
                                     tilstand = row.string("tilstand"),
                                     tidspunkt = row.localDateTime("tilstand_tidspunkt"),
