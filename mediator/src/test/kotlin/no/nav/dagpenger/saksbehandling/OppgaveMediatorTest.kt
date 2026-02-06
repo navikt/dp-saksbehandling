@@ -168,7 +168,6 @@ OppgaveMediatorTest {
             } returns Result.success(true)
             every { it.sendTilbake(any(), any(), any()) } returns Result.success(Unit)
             every { it.beslutt(any(), any(), any()) } returns Result.success(Unit)
-            every { it.avbryt(any(), any(), any()) } returns Result.success(Unit)
         }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
@@ -846,16 +845,14 @@ OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.avbryt(
-                avbrytOppgaveHendelse =
-                    AvbrytOppgaveHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
-                        navIdent = saksbehandler.navIdent,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
+            val avbrytOppgaveHendelse =
+                AvbrytOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    navIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                )
+            oppgaveMediator.avbryt(avbrytOppgaveHendelse)
 
             val avbruttOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
 
@@ -863,6 +860,13 @@ OppgaveMediatorTest {
             avbruttOppgave.tilstandslogg.first().tilstand shouldBe AVBRUTT
             avbruttOppgave.emneknagger.contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
             avbruttOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let { message ->
+                message["@event_name"].asText() shouldBe "avbryt_behandling"
+                message["behandlingId"].asText() shouldBe oppgave.behandling.behandlingId.toString()
+                message["ident"].asText() shouldBe oppgave.personIdent()
+                message["årsak"].asText() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
+            }
         }
     }
 

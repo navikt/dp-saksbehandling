@@ -63,6 +63,7 @@ class PostgresStatistikkTjenesteTest {
                             versjon = Configuration.versjon,
                             tilstandsendring =
                                 Tilstandsendring(
+                                    sekvensnummer = 1,
                                     tilstandsendringId = oppgave.tilstandslogg.first().id,
                                     tilstand = "KLAR_TIL_BEHANDLING",
                                     tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
@@ -167,7 +168,7 @@ class PostgresStatistikkTjenesteTest {
 
             PostgresOppgaveRepository(dataSource = ds).lagre(innsendingOppgave)
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
         }
     }
 

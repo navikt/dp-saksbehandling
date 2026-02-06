@@ -18,6 +18,7 @@ data class OppgaveITilstand(
     val behandlingResultat: String?,
 ) {
     data class Tilstandsendring(
+        val sekvensnummer: Long,
         val tilstandsendringId: UUID,
         val tilstand: String,
         val tidspunkt: LocalDateTime,

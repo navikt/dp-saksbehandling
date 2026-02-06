@@ -67,7 +67,10 @@ class SakMediator(
         }.onFailure { e ->
             when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
                 true -> {
-                    sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
+                    sendAvbrytBehandling(
+                        søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse,
+                        årsak = "Skjermet eller adressebeskyttet person",
+                    )
                 }
 
                 else -> {
@@ -171,7 +174,10 @@ class SakMediator(
 
     fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
-    private fun sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+    private fun sendAvbrytBehandling(
+        søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse,
+        årsak: String,
+    ) {
         rapidsConnection.publish(
             key = søknadsbehandlingOpprettetHendelse.ident,
             message =
@@ -181,8 +187,8 @@ class SakMediator(
                         map =
                             mapOf(
                                 "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
-                                "søknadId" to søknadsbehandlingOpprettetHendelse.søknadId,
                                 "ident" to søknadsbehandlingOpprettetHendelse.ident,
+                                "årsak" to årsak,
                             ),
                     ).toJson(),
         )

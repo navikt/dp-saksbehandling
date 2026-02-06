@@ -146,11 +146,6 @@ class BehandlingHttpKlientTest {
     fun `kall mot dp-behandling happy path `(): Unit =
         runBlocking {
             val behandlingKlient = behandlingKlient()
-            behandlingKlient.avbryt(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
-            requireNotNull(requestData).let {
-                it.body.contentType.toString() shouldBe "application/json"
-                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
-            }
             behandlingKlient.godkjenn(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
             requireNotNull(requestData).let {
                 it.body.contentType.toString() shouldBe "application/json"
@@ -178,7 +173,6 @@ class BehandlingHttpKlientTest {
                     delay = 50.milliseconds,
                     timeOut = 10.milliseconds,
                 )
-            behandlingKlient.avbryt(behandlingId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.godkjenn(behandlingId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.beslutt(behandlingId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.sendTilbake(behandlingId, ident, saksbehandlerToken).isFailure shouldBe true
@@ -188,7 +182,6 @@ class BehandlingHttpKlientTest {
     fun `error test når db-behandling svarer med status kode 500`(): Unit =
         runBlocking {
             val behandlingKlient = behandlingKlient()
-            behandlingKlient.avbryt(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.godkjenn(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.beslutt(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.sendTilbake(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true

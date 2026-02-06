@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
@@ -13,6 +14,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
+import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -424,26 +428,30 @@ class OppgaveMediator(
         return LocalDateTime.now()
     }
 
-    fun avbryt(
-        avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
-        saksbehandlerToken: String,
-    ) {
+    fun avbryt(avbrytOppgaveHendelse: AvbrytOppgaveHendelse) {
         oppgaveRepository.hentOppgave(avbrytOppgaveHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
                 oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
-                behandlingKlient
-                    .avbryt(
-                        behandlingId = oppgave.behandling.behandlingId,
-                        ident = oppgave.personIdent(),
-                        saksbehandlerToken = saksbehandlerToken,
-                    ).onSuccess {
-                        oppgaveRepository.lagre(oppgave)
-                    }.onFailure {
-                        logger.error { "Feil ved avbryting av oppgave: $it" }
-                    }.getOrThrow()
+                oppgaveRepository.lagre(oppgave)
+                if (oppgave.behandling.utløstAv in setOf(SØKNAD, MANUELL, MELDEKORT)) {
+                    rapidsConnection.publish(
+                        key = oppgave.personIdent(),
+                        message =
+                            JsonMessage
+                                .newMessage(
+                                    eventName = "avbryt_behandling",
+                                    map =
+                                        mapOf(
+                                            "behandlingId" to oppgave.behandling.behandlingId,
+                                            "ident" to oppgave.personIdent(),
+                                            "årsak" to avbrytOppgaveHendelse.årsak.visningsnavn,
+                                        ),
+                                ).toJson(),
+                    )
+                }
             }
         }
     }

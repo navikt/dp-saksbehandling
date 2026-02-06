@@ -848,7 +848,6 @@ class OppgaveApiTest {
                 every {
                     it.avbryt(
                         avbrytOppgaveHendelse = avbrytOppgaveHendelse,
-                        saksbehandlerToken = saksbehandlerToken,
                     )
                 } just Runs
             }
@@ -873,7 +872,6 @@ class OppgaveApiTest {
             coVerify(exactly = 1) {
                 oppgaveMediatorMock.avbryt(
                     avbrytOppgaveHendelse = avbrytOppgaveHendelse,
-                    saksbehandlerToken = saksbehandlerToken,
                 )
             }
         }
@@ -899,7 +897,6 @@ class OppgaveApiTest {
                 every {
                     it.avbryt(
                         avbrytOppgaveHendelse = avbrytOppgaveHendelse,
-                        saksbehandlerToken = saksbehandlerToken,
                     )
                 } throws DataNotFoundException("Fant ikke oppgave med id ${oppgave.oppgaveId}")
             }
@@ -930,7 +927,6 @@ class OppgaveApiTest {
             coVerify(exactly = 1) {
                 oppgaveMediatorMock.avbryt(
                     avbrytOppgaveHendelse = avbrytOppgaveHendelse,
-                    saksbehandlerToken = saksbehandlerToken,
                 )
             }
         }

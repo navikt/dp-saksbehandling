@@ -48,12 +48,6 @@ interface BehandlingKlient {
         saksbehandlerToken: String,
     ): Result<Unit>
 
-    fun avbryt(
-        behandlingId: UUID,
-        ident: String,
-        saksbehandlerToken: String,
-    ): Result<Unit>
-
     fun opprettManuellBehandling(
         personIdent: String,
         saksbehandlerToken: String,
@@ -104,12 +98,6 @@ internal class BehandlingHttpKlient(
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit> = kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
-
-    override fun avbryt(
-        behandlingId: UUID,
-        ident: String,
-        saksbehandlerToken: String,
-    ): Result<Unit> = kallBehandling("avbryt", behandlingId, saksbehandlerToken, ident)
 
     override fun opprettManuellBehandling(
         personIdent: String,
