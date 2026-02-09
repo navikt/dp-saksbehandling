@@ -69,7 +69,7 @@ internal fun Application.statistikkApi(
                     ) {
                         // Gruppér per rettighetstype, per status
                         val grupper =
-                            statistikkV2Tjeneste.hentRettighetstyper(
+                            statistikkV2Tjeneste.hentStatuserForRettighetstypeFilter(
                                 statistikkFilter,
                             )
                         val serier =
@@ -86,11 +86,11 @@ internal fun Application.statistikkApi(
                         return@get
                     }
                     val grupper =
-                        statistikkV2Tjeneste.hentOppgavetyper(
+                        statistikkV2Tjeneste.hentStatuserForUtløstAvFilter(
                             statistikkFilter,
                         )
                     val serier =
-                        statistikkV2Tjeneste.hentOppgavetypeSerier(
+                        statistikkV2Tjeneste.hentUtløstAvSerier(
                             statistikkFilter,
                         )
 

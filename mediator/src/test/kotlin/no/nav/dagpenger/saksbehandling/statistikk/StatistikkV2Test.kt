@@ -53,20 +53,20 @@ class StatistikkV2Test {
                 StatistikkFilter(
                     periode = Periode(fom = LocalDate.of(2025, 1, 1).minusDays(1), tom = LocalDate.now().plusDays(1)),
                 )
-            val oppgavetyper = statistikkTjeneste.hentOppgavetyper(statistikkFilter)
+            val oppgavetyper = statistikkTjeneste.hentStatuserForUtløstAvFilter(statistikkFilter)
 
             oppgavetyper.size shouldBe 1
             oppgavetyper[0].total shouldBe 3
             oppgavetyper[0].navn shouldBe behandling1.utløstAv.name
             oppgavetyper[0].eldsteOppgave.toLocalDate() shouldBe behandling1.opprettet.toLocalDate()
 
-            val oppgavetypeserier = statistikkTjeneste.hentOppgavetypeSerier(statistikkFilter)
+            val oppgavetypeserier = statistikkTjeneste.hentUtløstAvSerier(statistikkFilter)
             oppgavetypeserier.size shouldBe 1
             oppgavetypeserier[0].navn shouldBe behandling1.utløstAv.name
             oppgavetypeserier[0].verdier.size shouldBe 1
             oppgavetypeserier[0].verdier[0] shouldBe 3
 
-            val rettighetstyper = statistikkTjeneste.hentRettighetstyper(statistikkFilter)
+            val rettighetstyper = statistikkTjeneste.hentStatuserForRettighetstypeFilter(statistikkFilter)
             rettighetstyper.size shouldBe 1
             rettighetstyper[0].total shouldBe 3
             rettighetstyper[0].navn shouldBe Oppgave.FerdigBehandlet.type.name

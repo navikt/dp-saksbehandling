@@ -109,7 +109,7 @@ class StatistikkTestApiTest {
         val date = LocalDateTime.now().minusDays(1)
         val mockStatistikkV2Tjeneste =
             mockk<StatistikkV2Tjeneste>().also {
-                every { it.hentOppgavetyper(any()) } returns
+                every { it.hentStatuserForUtløstAvFilter(any()) } returns
                     listOf(
                         StatistikkV2GruppeDTO(
                             navn = "test",
@@ -117,14 +117,14 @@ class StatistikkTestApiTest {
                             eldsteOppgave = date,
                         ),
                     )
-                every { it.hentOppgavetypeSerier(any()) } returns
+                every { it.hentUtløstAvSerier(any()) } returns
                     listOf(
                         StatistikkV2SerieDTO(
                             navn = "test",
                             verdier = listOf(1),
                         ),
                     )
-                every { it.hentRettighetstyper(any()) } returns
+                every { it.hentStatuserForRettighetstypeFilter(any()) } returns
                     listOf(
                         StatistikkV2GruppeDTO(
                             navn = "test",

@@ -7,21 +7,12 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 import javax.sql.DataSource
-
-interface StatistikkV2Tjeneste {
-    fun hentOppgavetyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
-
-    fun hentOppgavetypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
-
-    fun hentRettighetstyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
-
-    fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
-}
+import no.nav.dagpenger.saksbehandling.Emneknagg
 
 class PostgresStatistikkV2Tjeneste(
     private val dataSource: DataSource,
 ) : StatistikkV2Tjeneste {
-    override fun hentOppgavetyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+    override fun hentStatuserForUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -31,13 +22,31 @@ class PostgresStatistikkV2Tjeneste(
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                        SELECT beha.utlost_av, COUNT(*) AS total, MIN(oppg.opprettet) AS eldste_oppgave
-                        FROM oppgave_v1 oppg
-                        JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                        WHERE beha.utlost_av = ANY(:utlost_av_typer)
-                        AND oppg.opprettet >= :fom
-                        AND oppg.opprettet <= :tom_pluss_1_dag
-                        GROUP BY beha.utlost_av;
+                        SELECT tils.tilstand                                                        AS status
+                             , (SELECT  count(*)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   oppg.tilstand = tils.tilstand
+                                AND     beha.utlost_av = ANY(:utlost_av_typer)
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                             )                                                                      AS antall
+                             , (SELECT  MIN(oppg.opprettet)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   oppg.tilstand = tils.tilstand
+                                AND     beha.utlost_av = ANY(:utlost_av_typer)
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                             )                                                                      AS eldste_oppgave
+                        FROM (VALUES ('KLAR_TIL_BEHANDLING')
+                                   , ('UNDER_BEHANDLING')
+                                   , ('PAA_VENT')
+                                   , ('KLAR_TIL_KONTROLL')
+                                   , ('UNDER_KONTROLL')
+                                   , ('FERDIG_BEHANDLET')
+                                   , ('AVBRUTT')
+                             ) AS tils(tilstand)
                         """,
                     paramMap =
                         mapOf(
@@ -47,8 +56,8 @@ class PostgresStatistikkV2Tjeneste(
                         ),
                 ).map { row ->
                     StatistikkV2GruppeDTO(
-                        navn = row.string("utlost_av"),
-                        total = row.int("total"),
+                        navn = row.string("status"),
+                        total = row.int("antall"),
                         eldsteOppgave = row.localDateTime("eldste_oppgave"),
                     )
                 }.asList,
@@ -56,7 +65,7 @@ class PostgresStatistikkV2Tjeneste(
         }
     }
 
-    override fun hentOppgavetypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
+    override fun hentUtløstAvSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -99,16 +108,26 @@ class PostgresStatistikkV2Tjeneste(
         }
     }
 
-    override fun hentRettighetstyper(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
-        val utløstAvTyper =
-            statistikkFilter.utløstAvTyper.ifEmpty {
-                UtløstAvType.entries.toSet()
-            }
-        val tilstander =
-            statistikkFilter.statuser.ifEmpty {
-                Oppgave.Tilstand.Type.entries
-                    .map { it.name }
-                    .toSet()
+    override fun hentStatuserForRettighetstypeFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+//        val utløstAvTyper =
+//            statistikkFilter.utløstAvTyper.ifEmpty {
+//                UtløstAvType.entries.toSet()
+//            }
+//        val tilstander =
+//            statistikkFilter.statuser.ifEmpty {
+//                Oppgave.Tilstand.Type.entries
+//                    .map { it.name }
+//                    .toSet()
+//            }
+        val rettighetstyper =
+            statistikkFilter.rettighetstyper.ifEmpty {
+                setOf(
+                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn
+                )
+
             }
 
         return sessionOf(dataSource = dataSource).use { session ->
@@ -117,21 +136,49 @@ class PostgresStatistikkV2Tjeneste(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT oppg.tilstand, COUNT(*) AS count, MIN(oppg.opprettet) AS eldste_oppgave
-                        FROM oppgave_v1 oppg
-                        JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                        WHERE beha.utlost_av = ANY(:utlost_av_typer)
-                          AND oppg.tilstand = ANY(:tilstander)
-                          AND oppg.opprettet >= :fom
-                          AND oppg.opprettet <= :tom_pluss_1_dag
-                        GROUP BY oppg.tilstand;
+                        SELECT tils.tilstand                                                        AS status
+                             , (SELECT  count(*)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   oppg.tilstand = tils.tilstand
+                                AND     beha.utlost_av = 'SØKNAD'
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                                AND EXISTS(
+                                    SELECT  1
+                                    FROM    emneknagg_v1 emne
+                                    WHERE   emne.oppgave_id = oppg.id
+                                    AND     emne.emneknagg  = ANY(:rettighetstyper)
+                                )
+                             )                                                                      AS antall
+                             , (SELECT  MIN(oppg.opprettet)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   oppg.tilstand = tils.tilstand
+                                AND     beha.utlost_av = 'SØKNAD'
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                                AND EXISTS(
+                                    SELECT  1
+                                    FROM    emneknagg_v1 emne
+                                    WHERE   emne.oppgave_id = oppg.id
+                                    AND     emne.emneknagg  = ANY(:rettighetstyper)
+                                )
+                             )                                                                      AS eldste_oppgave
+                        FROM (VALUES ('KLAR_TIL_BEHANDLING')
+                                   , ('UNDER_BEHANDLING')
+                                   , ('PAA_VENT')
+                                   , ('KLAR_TIL_KONTROLL')
+                                   , ('UNDER_KONTROLL')
+                                   , ('FERDIG_BEHANDLET')
+                                   , ('AVBRUTT')
+                             ) AS tils(tilstand)
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "tilstander" to tilstander.toTypedArray(),
-                            "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                            "rettighetstyper" to rettighetstyper.toTypedArray(),
                         ),
                 ).map { row ->
                     StatistikkV2GruppeDTO(
