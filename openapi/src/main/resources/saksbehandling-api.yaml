@@ -970,7 +970,7 @@ paths:
       parameters:
         - in: query
           name: rettighet
-          description: Filtrer på rettighetsknagger (f.eks. "Ordinær", "Verneplikt", "Permittert")
+          description: Filtrer på rettighet-emneknagger (f.eks. "Ordinær", "Verneplikt", "Permittert")
           required: false
           style: form
           explode: true
@@ -978,7 +978,7 @@ paths:
             type: array
             items:
               type: string
-          example: [ "Ordinær", "Verneplikt" ]
+          example: [ "Ordinær", "Verneplikt", "Permittert" ]
         - in: query
           name: tilstand
           required: false
@@ -1688,9 +1688,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StatistikkV2Serie'
+        resultat:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatistikkV2Resultat'
       required:
         - grupper
         - serier
+        - resultat
 
     StatistikkV2Gruppe:
       type: object
@@ -1705,9 +1710,42 @@ components:
       required:
         - navn
         - total
-        - eldsteOppgave
 
     StatistikkV2Serie:
+      type: object
+      properties:
+        navn:
+          type: string
+        total:
+          type: integer
+      required:
+        - navn
+        - total
+
+    StatistikkV2Resultat:
+      type: object
+      properties:
+        grupper:
+          type: array
+          items:
+            $ref: '#/components/schemas/V2StatusNavn'
+        serier:
+          type: array
+          items:
+            $ref: '#/components/schemas/V2Serie'
+      required:
+        - grupper
+        - serier
+
+    V2StatusNavn:
+      type: object
+      properties:
+        navn:
+          type: string
+      required:
+        - navn
+
+    V2Serie:
       type: object
       properties:
         navn:
@@ -1715,10 +1753,21 @@ components:
         verdier:
           type: array
           items:
-            type: integer
+            ref: '#/components/schemas/V2GruppeMedAntall'
       required:
         - navn
         - verdier
+
+    V2GruppeMedAntall:
+      type: object
+      properties:
+        gruppe:
+          type: string
+        antall:
+          type: integer
+      required:
+        - gruppe
+        - antall
 
     BeholdningsInfo:
       type: object

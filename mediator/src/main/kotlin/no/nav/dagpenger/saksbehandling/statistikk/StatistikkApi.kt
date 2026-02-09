@@ -64,42 +64,33 @@ internal fun Application.statistikkApi(
                             call.request.queryParameters,
                         )
 
-                    if (
-                        statistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name
-                    ) {
-                        // Gruppér per rettighetstype, per status
-                        val grupper =
-                            statistikkV2Tjeneste.hentStatuserForRettighetstypeFilter(
-                                statistikkFilter,
-                            )
-                        val serier =
-                            statistikkV2Tjeneste.hentRettighetstypeSerier(
-                                statistikkFilter,
-                            )
+                    if (statistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name) {
+                        val grupper = statistikkV2Tjeneste.hentTilstanderMedRettighetFilter(statistikkFilter)
+                        val serier = statistikkV2Tjeneste.hentRettigheterMedTilstandFilter(statistikkFilter)
                         call.respond(
-                            HttpStatusCode.OK,
-                            StatistikkV2DTO(
-                                grupper = grupper,
-                                serier = serier,
-                            ),
+                            status = HttpStatusCode.OK,
+                            message =
+                                StatistikkV2DTO(
+                                    grupper = grupper,
+                                    serier = serier,
+                                    // TODO: hent resultat
+                                    resultat = emptyList(),
+                                ),
                         )
                         return@get
                     }
-                    val grupper =
-                        statistikkV2Tjeneste.hentStatuserForUtløstAvFilter(
-                            statistikkFilter,
-                        )
-                    val serier =
-                        statistikkV2Tjeneste.hentUtløstAvSerier(
-                            statistikkFilter,
-                        )
+                    val grupper = statistikkV2Tjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter)
+                    val serier = statistikkV2Tjeneste.hentUtløstAvMedTilstandFilter(statistikkFilter)
 
                     call.respond(
-                        HttpStatusCode.OK,
-                        StatistikkV2DTO(
-                            grupper = grupper,
-                            serier = serier,
-                        ),
+                        status = HttpStatusCode.OK,
+                        message =
+                            StatistikkV2DTO(
+                                grupper = grupper,
+                                serier = serier,
+                                // TODO: hent resultat
+                                resultat = emptyList(),
+                            ),
                     )
                 }
             }

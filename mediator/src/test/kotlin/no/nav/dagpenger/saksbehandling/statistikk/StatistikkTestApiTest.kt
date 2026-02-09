@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class StatistikkTestApiTest {
     init {
@@ -105,38 +106,38 @@ class StatistikkTestApiTest {
     }
 
     @Test
-    fun `test autentisert statistikk v2 apirespons`() {
-        val date = LocalDateTime.now().minusDays(1)
+    fun `test autentisert statistikk v2 api-respons`() {
+        val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
         val mockStatistikkV2Tjeneste =
             mockk<StatistikkV2Tjeneste>().also {
-                every { it.hentStatuserForUtløstAvFilter(any()) } returns
+                every { it.hentTilstanderMedUtløstAvFilter(any()) } returns
                     listOf(
                         StatistikkV2GruppeDTO(
                             navn = "test",
                             total = 1,
-                            eldsteOppgave = date,
+                            eldsteOppgave = iGår,
                         ),
                     )
-                every { it.hentUtløstAvSerier(any()) } returns
+                every { it.hentUtløstAvMedTilstandFilter(any()) } returns
                     listOf(
                         StatistikkV2SerieDTO(
                             navn = "test",
-                            verdier = listOf(1),
+                            total = 1,
                         ),
                     )
-                every { it.hentStatuserForRettighetstypeFilter(any()) } returns
+                every { it.hentTilstanderMedRettighetFilter(any()) } returns
                     listOf(
                         StatistikkV2GruppeDTO(
                             navn = "test",
                             total = 1,
-                            eldsteOppgave = date,
+                            eldsteOppgave = iGår,
                         ),
                     )
-                every { it.hentRettighetstypeSerier(any()) } returns
+                every { it.hentRettigheterMedTilstandFilter(any()) } returns
                     listOf(
                         StatistikkV2SerieDTO(
                             navn = "test",
-                            verdier = listOf(1),
+                            total = 1,
                         ),
                     )
             }
@@ -170,12 +171,13 @@ class StatistikkTestApiTest {
                           "grupper" : [ {
                             "navn" : "test",
                             "total" : 1,
-                            "eldsteOppgave" : "$date"
+                            "eldsteOppgave" : "$iGår"
                           } ],
                           "serier" : [ {
                             "navn" : "test",
-                            "verdier" : [ 1 ]
-                          } ]
+                            "total" : 1
+                          } ],
+                          "resultat" : [ ]
                         }
                         """.trimIndent()
                 }

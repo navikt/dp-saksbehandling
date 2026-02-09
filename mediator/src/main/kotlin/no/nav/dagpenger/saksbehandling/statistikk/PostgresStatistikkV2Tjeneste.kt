@@ -2,17 +2,17 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 import javax.sql.DataSource
-import no.nav.dagpenger.saksbehandling.Emneknagg
 
 class PostgresStatistikkV2Tjeneste(
     private val dataSource: DataSource,
 ) : StatistikkV2Tjeneste {
-    override fun hentStatuserForUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+    override fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -22,26 +22,26 @@ class PostgresStatistikkV2Tjeneste(
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                        SELECT tils.tilstand                                                        AS status
-                             , (SELECT  count(*)
+                        SELECT tils.tilstand                                                        AS tilstand
+                             , (SELECT  COUNT(*)
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                                WHERE   oppg.tilstand = tils.tilstand
-                                AND     beha.utlost_av = ANY(:utlost_av_typer)
-                                AND     oppg.opprettet >= :fom
-                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                                WHERE   oppg.tilstand   = tils.tilstand
+                                AND     beha.utlost_av  = ANY(:utlost_av_typer)
+                                AND     oppg.opprettet  >= :fom
+                                AND     oppg.opprettet  <  :tom_pluss_1_dag
                              )                                                                      AS antall
                              , (SELECT  MIN(oppg.opprettet)
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                                WHERE   oppg.tilstand = tils.tilstand
-                                AND     beha.utlost_av = ANY(:utlost_av_typer)
-                                AND     oppg.opprettet >= :fom
-                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                                WHERE   oppg.tilstand   = tils.tilstand
+                                AND     beha.utlost_av  = ANY(:utlost_av_typer)
+                                AND     oppg.opprettet  >= :fom
+                                AND     oppg.opprettet  <  :tom_pluss_1_dag
                              )                                                                      AS eldste_oppgave
                         FROM (VALUES ('KLAR_TIL_BEHANDLING')
-                                   , ('UNDER_BEHANDLING')
                                    , ('PAA_VENT')
+                                   , ('UNDER_BEHANDLING')
                                    , ('KLAR_TIL_KONTROLL')
                                    , ('UNDER_KONTROLL')
                                    , ('FERDIG_BEHANDLET')
@@ -56,20 +56,16 @@ class PostgresStatistikkV2Tjeneste(
                         ),
                 ).map { row ->
                     StatistikkV2GruppeDTO(
-                        navn = row.string("status"),
+                        navn = row.string("tilstand"),
                         total = row.int("antall"),
-                        eldsteOppgave = row.localDateTime("eldste_oppgave"),
+                        eldsteOppgave = row.localDateTimeOrNull("eldste_oppgave"),
                     )
                 }.asList,
             )
         }
     }
 
-    override fun hentUtløstAvSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
-        val utløstAvTyper =
-            statistikkFilter.utløstAvTyper.ifEmpty {
-                UtløstAvType.entries.toSet()
-            }
+    override fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
         val tilstander =
             statistikkFilter.statuser.ifEmpty {
                 Oppgave.Tilstand.Type.entries
@@ -82,18 +78,25 @@ class PostgresStatistikkV2Tjeneste(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT beh.utlost_av, oppg.tilstand, COUNT(*) AS count
-                        FROM oppgave_v1 oppg
-                                 JOIN behandling_v1 beh ON beh.id = oppg.behandling_id
-                        WHERE beh.utlost_av = ANY(:utlost_av_typer)
-                          AND oppg.tilstand = ANY(:tilstander)
-                          AND oppg.opprettet >= :fom
-                          AND oppg.opprettet <= :tom_pluss_1_dag
-                        GROUP BY beh.utlost_av, oppg.tilstand;
+                        SELECT utlo.utlost_av                                               AS utlost_av
+                             , (SELECT  COUNT(*)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   beha.utlost_av  = utlo.utlost_av
+                                AND     oppg.tilstand   = ANY(:tilstander)
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <  :tom_pluss_1_dag
+                             )                                                              AS antall
+                        FROM (VALUES ('SØKNAD')
+                                   , ('MELDEKORT')
+                                   , ('MANUELL')
+                                   , ('OMGJØRING')
+                                   , ('KLAGE')
+                                   , ('INNSENDING')
+                             ) AS utlo(utlost_av)
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                             "tilstander" to tilstander.toTypedArray(),
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
@@ -101,33 +104,23 @@ class PostgresStatistikkV2Tjeneste(
                 ).map { row ->
                     StatistikkV2SerieDTO(
                         navn = row.string("utlost_av"),
-                        verdier = listOf(row.int("count")),
+                        total = row.int("antall"),
                     )
                 }.asList,
             )
         }
     }
 
-    override fun hentStatuserForRettighetstypeFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
-//        val utløstAvTyper =
-//            statistikkFilter.utløstAvTyper.ifEmpty {
-//                UtløstAvType.entries.toSet()
-//            }
-//        val tilstander =
-//            statistikkFilter.statuser.ifEmpty {
-//                Oppgave.Tilstand.Type.entries
-//                    .map { it.name }
-//                    .toSet()
-//            }
+    override fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
         val rettighetstyper =
             statistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
+                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
                     Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
                     Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
                     Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn
+                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
                 )
-
             }
 
         return sessionOf(dataSource = dataSource).use { session ->
@@ -136,38 +129,38 @@ class PostgresStatistikkV2Tjeneste(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT tils.tilstand                                                        AS status
-                             , (SELECT  count(*)
+                        SELECT tils.tilstand                                                AS tilstand
+                             , (SELECT  COUNT(*)
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand = tils.tilstand
                                 AND     beha.utlost_av = 'SØKNAD'
                                 AND     oppg.opprettet >= :fom
-                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                                AND     oppg.opprettet <  :tom_pluss_1_dag
                                 AND EXISTS(
                                     SELECT  1
                                     FROM    emneknagg_v1 emne
                                     WHERE   emne.oppgave_id = oppg.id
                                     AND     emne.emneknagg  = ANY(:rettighetstyper)
                                 )
-                             )                                                                      AS antall
+                             )                                                              AS antall
                              , (SELECT  MIN(oppg.opprettet)
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand = tils.tilstand
                                 AND     beha.utlost_av = 'SØKNAD'
                                 AND     oppg.opprettet >= :fom
-                                AND     oppg.opprettet <= :tom_pluss_1_dag
+                                AND     oppg.opprettet <  :tom_pluss_1_dag
                                 AND EXISTS(
                                     SELECT  1
                                     FROM    emneknagg_v1 emne
                                     WHERE   emne.oppgave_id = oppg.id
                                     AND     emne.emneknagg  = ANY(:rettighetstyper)
                                 )
-                             )                                                                      AS eldste_oppgave
+                             )                                                              AS eldste_oppgave
                         FROM (VALUES ('KLAR_TIL_BEHANDLING')
-                                   , ('UNDER_BEHANDLING')
                                    , ('PAA_VENT')
+                                   , ('UNDER_BEHANDLING')
                                    , ('KLAR_TIL_KONTROLL')
                                    , ('UNDER_KONTROLL')
                                    , ('FERDIG_BEHANDLET')
@@ -183,15 +176,15 @@ class PostgresStatistikkV2Tjeneste(
                 ).map { row ->
                     StatistikkV2GruppeDTO(
                         navn = row.string("tilstand"),
-                        total = row.int("count"),
-                        eldsteOppgave = row.localDateTime("eldste_oppgave"),
+                        total = row.int("antall"),
+                        eldsteOppgave = row.localDateTimeOrNull("eldste_oppgave"),
                     )
                 }.asList,
             )
         }
     }
 
-    override fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
+    override fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -203,14 +196,24 @@ class PostgresStatistikkV2Tjeneste(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT emn.emneknagg, COUNT(*) AS count
-                        FROM oppgave_v1 oppg
-                            JOIN behandling_v1 beh ON beh.id = oppg.behandling_id
-                            JOIN emneknagg_v1 emn ON oppg.id = emn.oppgave_id
-                        WHERE beh.utlost_av = ANY(:utlost_av_typer)
-                          AND oppg.opprettet >= :fom
-                          AND oppg.opprettet <= :tom_pluss_1_dag
-                        GROUP BY emn.emneknagg;
+                        SELECT rett.rettighet                                               AS rettighet
+                             , (SELECT  COUNT(*)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON  beha.id         = oppg.behandling_id
+                                JOIN    emneknagg_v1  emne ON  emne.oppgave_id = oppg.id
+                                                           AND emne.emneknagg  = rett.rettighet
+                                WHERE   beha.utlost_av  = 'SØKNAD'
+                                AND     oppg.tilstand   = ANY(:tilstander)
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <  :tom_pluss_1_dag
+                             )                                                              AS antall
+                        FROM (VALUES ('Ordinær')
+                                   , ('Verneplikt')
+                                   , ('Permittert')
+                                   , ('Permittert fisk')
+                                   , ('Konkurs')
+                             ) AS rett(rettighet)
+                        
                         """.trimIndent(),
                     paramMap =
                         mapOf(
@@ -220,8 +223,8 @@ class PostgresStatistikkV2Tjeneste(
                         ),
                 ).map { row ->
                     StatistikkV2SerieDTO(
-                        navn = row.string("emneknagg"),
-                        verdier = listOf(row.int("count")),
+                        navn = row.string("rettighet"),
+                        total = row.int("antall"),
                     )
                 }.asList,
             )

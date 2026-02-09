@@ -4,11 +4,11 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
 
 interface StatistikkV2Tjeneste {
-    fun hentStatuserForUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
+    fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
 
-    fun hentUtløstAvSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
+    fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
 
-    fun hentStatuserForRettighetstypeFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
+    fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
 
-    fun hentRettighetstypeSerier(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
+    fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
 }
