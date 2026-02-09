@@ -177,7 +177,7 @@ class PostgresStatistikkTjeneste(
                             , beslutter_ident
                             , utlost_av
                             , behandling_resultat
-                            )
+                        )
                             SELECT    log.id
                                     , log.tilstand
                                     , log.tidspunkt
