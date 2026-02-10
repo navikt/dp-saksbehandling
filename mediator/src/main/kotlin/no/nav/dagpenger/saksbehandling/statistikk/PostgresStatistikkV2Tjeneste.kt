@@ -67,7 +67,7 @@ class PostgresStatistikkV2Tjeneste(
 
     override fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
         val tilstander =
-            statistikkFilter.statuser.ifEmpty {
+            statistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
                     .map { it.name }
                     .toSet()

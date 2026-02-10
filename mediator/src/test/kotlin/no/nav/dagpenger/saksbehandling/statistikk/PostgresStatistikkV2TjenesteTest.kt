@@ -16,20 +16,21 @@ import kotlin.test.Test
 
 class PostgresStatistikkV2TjenesteTest {
     @Test
-    fun `Hent alt fra statistikkv2`() {
+    fun `Hent oppgaver for statistikk V2 basert på filter`() {
         val iDag = TestHelper.opprettetNå
         val iGår = TestHelper.opprettetNå.minusDays(1)
-        val periode =
+        val periodeFomIGårTomIDag =
             Periode(
                 fom = iGår.toLocalDate(),
                 tom = LocalDate.now().plusDays(1),
             )
-        val defaultfilter = StatistikkFilter(periode = periode)
+        val filterPeriodeFomIGårTomIDag = StatistikkFilter(periode = periodeFomIGårTomIDag)
         val behandling1 = lagBehandling(opprettet = iGår)
         val behandling2 = lagBehandling(opprettet = iDag)
         val behandling3 = lagBehandling(opprettet = iDag, utløstAvType = UtløstAvType.KLAGE)
         val behandling4 = lagBehandling(opprettet = iDag)
         val behandling5 = lagBehandling(opprettet = iDag)
+        val behandling6 = lagBehandling(opprettet = iGår.minusDays(1))
 
         val oppgave1FerdigBehandlet =
             lagOppgave(
@@ -71,8 +72,16 @@ class PostgresStatistikkV2TjenesteTest {
                 behandling = behandling5,
                 emneknagger = setOf("Verneplikt"),
             )
+        val oppgave6FerdigBehandlet =
+            lagOppgave(
+                oppgaveId = UUIDv7.ny(),
+                opprettet = behandling6.opprettet,
+                tilstand = Oppgave.FerdigBehandlet,
+                behandling = behandling6,
+                emneknagger = setOf("Ordinær"),
+            )
         DBTestHelper.withBehandlinger(
-            behandlinger = listOf(behandling1, behandling2, behandling3, behandling4, behandling5),
+            behandlinger = listOf(behandling1, behandling2, behandling3, behandling4, behandling5, behandling6),
         ) { ds: DataSource ->
             // Insert test data
             val repo = PostgresOppgaveRepository(ds)
@@ -81,10 +90,11 @@ class PostgresStatistikkV2TjenesteTest {
             repo.lagre(oppgave3FerdigBehandlet)
             repo.lagre(oppgave4KlarTilBehandling)
             repo.lagre(oppgave5KlarTilKontroll)
+            repo.lagre(oppgave6FerdigBehandlet)
 
             val statistikkTjeneste = PostgresStatistikkV2Tjeneste(ds)
 
-            val tilstanderAlle = statistikkTjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter = defaultfilter)
+            val tilstanderAlle = statistikkTjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter = filterPeriodeFomIGårTomIDag)
 
             tilstanderAlle.size shouldBe 7
             tilstanderAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 1
@@ -101,7 +111,7 @@ class PostgresStatistikkV2TjenesteTest {
             val tilstanderKlage =
                 statistikkTjeneste.hentTilstanderMedUtløstAvFilter(
                     StatistikkFilter(
-                        periode = periode,
+                        periode = periodeFomIGårTomIDag,
                         utløstAvTyper = setOf(UtløstAvType.KLAGE),
                     ),
                 )
@@ -116,40 +126,65 @@ class PostgresStatistikkV2TjenesteTest {
             tilstanderKlage.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling3.opprettet
             tilstanderKlage.single { it.navn == "AVBRUTT" }.total shouldBe 0
 
-            val tilstanderSøknad = statistikkTjeneste.hentTilstanderMedRettighetFilter(StatistikkFilter(periode))
+            val tilstanderSøknadAlle = statistikkTjeneste.hentTilstanderMedRettighetFilter(filterPeriodeFomIGårTomIDag)
 
-            tilstanderSøknad.size shouldBe 7
-            tilstanderSøknad.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 1
-            tilstanderSøknad.single { it.navn == "KLAR_TIL_BEHANDLING" }.eldsteOppgave!! shouldBe behandling4.opprettet
-            tilstanderSøknad.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
-            tilstanderSøknad.single { it.navn == "PAA_VENT" }.total shouldBe 0
-            tilstanderSøknad.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
-            tilstanderSøknad.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
-            tilstanderSøknad.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
-            tilstanderSøknad.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 2
-            tilstanderSøknad.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling1.opprettet
-            tilstanderSøknad.single { it.navn == "AVBRUTT" }.total shouldBe 0
+            tilstanderSøknadAlle.size shouldBe 7
+            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 1
+            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.eldsteOppgave!! shouldBe behandling4.opprettet
+            tilstanderSøknadAlle.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
+            tilstanderSøknadAlle.single { it.navn == "PAA_VENT" }.total shouldBe 0
+            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
+            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
+            tilstanderSøknadAlle.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
+            tilstanderSøknadAlle.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 2
+            tilstanderSøknadAlle.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling1.opprettet
+            tilstanderSøknadAlle.single { it.navn == "AVBRUTT" }.total shouldBe 0
 
-            val tilstanderVerneplikt =
+            val tilstanderSøknadVerneplikt =
                 statistikkTjeneste.hentTilstanderMedRettighetFilter(
                     StatistikkFilter(
-                        periode = periode,
+                        periode = periodeFomIGårTomIDag,
                         rettighetstyper = setOf("Verneplikt"),
                     ),
                 )
 
-            tilstanderVerneplikt.size shouldBe 7
-            tilstanderVerneplikt.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 0
-            tilstanderVerneplikt.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
-            tilstanderVerneplikt.single { it.navn == "PAA_VENT" }.total shouldBe 0
-            tilstanderVerneplikt.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
-            tilstanderVerneplikt.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
-            tilstanderVerneplikt.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
-            tilstanderVerneplikt.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 1
-            tilstanderVerneplikt.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling2.opprettet
-            tilstanderVerneplikt.single { it.navn == "AVBRUTT" }.total shouldBe 0
-        }
+            tilstanderSøknadVerneplikt.size shouldBe 7
+            tilstanderSøknadVerneplikt.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.navn == "PAA_VENT" }.total shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
+            tilstanderSøknadVerneplikt.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
+            tilstanderSøknadVerneplikt.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 1
+            tilstanderSøknadVerneplikt.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling2.opprettet
+            tilstanderSøknadVerneplikt.single { it.navn == "AVBRUTT" }.total shouldBe 0
 
-        // TODO: Test henting av serier
+            val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
+
+            utløstAvAlle.size shouldBe 6
+            utløstAvAlle.single { it.navn == "SØKNAD" }.total shouldBe 4
+            utløstAvAlle.single { it.navn == "KLAGE" }.total shouldBe 1
+            utløstAvAlle.single { it.navn == "INNSENDING" }.total shouldBe 0
+            utløstAvAlle.single { it.navn == "MELDEKORT" }.total shouldBe 0
+            utløstAvAlle.single { it.navn == "MANUELL" }.total shouldBe 0
+            utløstAvAlle.single { it.navn == "OMGJØRING" }.total shouldBe 0
+
+            val utløstAvFerdigBehandlet =
+                statistikkTjeneste.hentUtløstAvMedTilstandFilter(
+                    statistikkFilter =
+                        StatistikkFilter(
+                            periode = periodeFomIGårTomIDag,
+                            tilstander = setOf("FERDIG_BEHANDLET"),
+                        ),
+                )
+
+            utløstAvFerdigBehandlet.size shouldBe 6
+            utløstAvFerdigBehandlet.single { it.navn == "SØKNAD" }.total shouldBe 2
+            utløstAvFerdigBehandlet.single { it.navn == "KLAGE" }.total shouldBe 1
+            utløstAvFerdigBehandlet.single { it.navn == "INNSENDING" }.total shouldBe 0
+            utløstAvFerdigBehandlet.single { it.navn == "OMGJØRING" }.total shouldBe 0
+            utløstAvFerdigBehandlet.single { it.navn == "MELDEKORT" }.total shouldBe 0
+            utløstAvFerdigBehandlet.single { it.navn == "MANUELL" }.total shouldBe 0
+        }
     }
 }

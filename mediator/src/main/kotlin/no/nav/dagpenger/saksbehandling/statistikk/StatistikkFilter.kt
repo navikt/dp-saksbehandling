@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 
 data class StatistikkFilter(
     val periode: Periode,
-    val statuser: Set<String> = emptySet(),
+    val tilstander: Set<String> = emptySet(),
     val rettighetstyper: Set<String> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val grupperEtter: String = GrupperEtterDTO.OPPGAVETYPE.name,
@@ -25,7 +25,7 @@ data class StatistikkFilter(
 
             return StatistikkFilter(
                 periode = Periode.fra(queryParameters),
-                statuser = statuser,
+                tilstander = statuser,
                 rettighetstyper = rettighetstyper,
                 utløstAvTyper = utløstAvTyper,
                 grupperEtter = grupperEtter,
