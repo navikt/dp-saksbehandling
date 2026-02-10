@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -185,6 +186,21 @@ class PostgresStatistikkV2TjenesteTest {
             utløstAvFerdigBehandlet.single { it.navn == "OMGJØRING" }.total shouldBe 0
             utløstAvFerdigBehandlet.single { it.navn == "MELDEKORT" }.total shouldBe 0
             utløstAvFerdigBehandlet.single { it.navn == "MANUELL" }.total shouldBe 0
+
+            val resultatSerie =
+                statistikkTjeneste.hentResultatSerierForUtløstAv(
+                    statistikkFilter =
+                        StatistikkFilter(
+                            periode = periodeFomIGårTomIDag,
+                            tilstander = setOf("FERDIG_BEHANDLET", "PAA_VENT", "KLAR_TIL_KONTROLL"),
+                            utløstAvTyper = setOf(UtløstAvType.SØKNAD, UtløstAvType.KLAGE),
+                            grupperEtter = GrupperEtterDTO.OPPGAVETYPE.name,
+                        ),
+                )
+            resultatSerie.size shouldBe 6
+//            resultatSerie.single { it.navn == "FERDIG_BEHANDLET" && it.}.verdier.size shouldBe 2
+//            resultatSerie.single { it.navn == "PAA_VENT" }.verdier.size shouldBe 2
+//            resultatSerie.single { it.navn == "KLAR_TIL_KONTROLL" }.verdier.size shouldBe 2
         }
     }
 }

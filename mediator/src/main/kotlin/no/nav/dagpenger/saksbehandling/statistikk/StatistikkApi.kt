@@ -15,8 +15,14 @@ import kotlinx.html.li
 import kotlinx.html.p
 import kotlinx.html.title
 import kotlinx.html.ul
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2DTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2ResultatDTO
+import no.nav.dagpenger.saksbehandling.api.models.V2GruppeMedAntallDTO
+import no.nav.dagpenger.saksbehandling.api.models.V2SerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.V2StatusNavnDTO
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 
 internal fun Application.statistikkApi(
@@ -73,14 +79,19 @@ internal fun Application.statistikkApi(
                                 StatistikkV2DTO(
                                     grupper = grupper,
                                     serier = serier,
-                                    // TODO: hent resultat
-                                    resultat = emptyList(),
+                                    resultat =
+                                        StatistikkV2ResultatDTO(
+                                            grupper = statistikkFilter.rettighetstyper.map { V2StatusNavnDTO(navn = it) },
+                                            serier = emptyList(),
+//                                            statistikkV2Tjeneste.hentResultatSerierForRettigheter(statistikkFilter)
+                                        ),
                                 ),
                         )
                         return@get
                     }
                     val grupper = statistikkV2Tjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter)
                     val serier = statistikkV2Tjeneste.hentUtløstAvMedTilstandFilter(statistikkFilter)
+                    val resultatSerierForUtløstAv = statistikkV2Tjeneste.hentResultatSerierForUtløstAv(statistikkFilter)
 
                     call.respond(
                         status = HttpStatusCode.OK,
@@ -88,8 +99,11 @@ internal fun Application.statistikkApi(
                             StatistikkV2DTO(
                                 grupper = grupper,
                                 serier = serier,
-                                // TODO: hent resultat
-                                resultat = emptyList(),
+                                resultat =
+                                    StatistikkV2ResultatDTO(
+                                        grupper = statistikkFilter.rettighetstyper.map { V2StatusNavnDTO(navn = it) },
+                                        serier = resultatSerierForUtløstAv.tilDto(),
+                                    ),
                             ),
                     )
                 }
@@ -97,3 +111,43 @@ internal fun Application.statistikkApi(
         }
     }
 }
+
+internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDto(): List<V2SerieDTO> =
+    this
+        .groupBy { it.utløstAv }
+        .map { (utlostAv, hubbas) ->
+            V2SerieDTO(
+                navn = utlostAv.tilSerieNavn(),
+                verdier =
+                    hubbas.map { hubba ->
+                        V2GruppeMedAntallDTO(
+                            gruppe = hubba.tilstand.tilGruppeNavn(),
+                            antall = hubba.antall,
+                        )
+                    },
+            )
+        }
+
+private fun Oppgave.Tilstand.Type.tilGruppeNavn(): String =
+    when (this) {
+        Oppgave.Tilstand.Type.OPPRETTET -> "Opprettet"
+        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> "Klar til behandling"
+        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> "Under behandling"
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> "Ferdig behandlet"
+        Oppgave.Tilstand.Type.PAA_VENT -> "På vent"
+        Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL -> "Klar til kontroll"
+        Oppgave.Tilstand.Type.UNDER_KONTROLL -> "Under kontroll"
+        Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> "Avventer lås av behandling"
+        Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Avventer opplåsing av behandling"
+        Oppgave.Tilstand.Type.AVBRUTT -> "Avbrutt"
+        Oppgave.Tilstand.Type.AVBRUTT_MASKINELT -> "Avbrutt maskinelt"
+    }
+
+private fun UtløstAvType.tilSerieNavn(): String =
+    when (this) {
+        UtløstAvType.KLAGE -> "Klage"
+        UtløstAvType.SØKNAD -> "Søknad"
+        UtløstAvType.MELDEKORT -> "Meldekort"
+        UtløstAvType.MANUELL -> "Manuell"
+        UtløstAvType.INNSENDING -> "Innsending"
+    }
