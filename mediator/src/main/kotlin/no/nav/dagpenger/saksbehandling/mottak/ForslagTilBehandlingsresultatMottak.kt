@@ -22,7 +22,7 @@ internal class ForslagTilBehandlingsresultatMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "forslag_til_behandlingsresultat")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
+                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring"))
                 it.requireKey("ident", "behandlingId")
                 it.requireKey("opplysninger")
                 it.requireKey("behandletHendelse")

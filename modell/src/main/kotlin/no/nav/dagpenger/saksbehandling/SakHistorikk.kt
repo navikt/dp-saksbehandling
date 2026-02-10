@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
 
@@ -31,6 +32,12 @@ data class SakHistorikk(
                 it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
             }.knyttTilSakResultat()
 
+    fun knyttTilSak(omgjøringBehandlingOpprettetHendelse: OmgjøringBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(omgjøringBehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
+
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat =
         saker
             .map {
@@ -50,7 +57,8 @@ data class SakHistorikk(
             }.knyttTilSakResultat()
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
-        val sakerTilknyttet: List<KnyttTilSakResultat.KnyttetTilSak> = this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
+        val sakerTilknyttet: List<KnyttTilSakResultat.KnyttetTilSak> =
+            this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
         return when (sakerTilknyttet.size) {
             0 -> {
                 KnyttTilSakResultat.IkkeKnyttetTilSak(*saker.map { it.sakId }.toTypedArray())

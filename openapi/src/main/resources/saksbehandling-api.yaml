@@ -1359,6 +1359,7 @@ components:
         - SØKNAD
         - MANUELL
         - INNSENDING
+        - OMGJØRING
 
     BehandlingType:
       type: string

@@ -32,4 +32,5 @@ enum class UtløstAvType {
     MELDEKORT,
     MANUELL,
     INNSENDING,
+    OMGJØRING,
 }
