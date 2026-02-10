@@ -1021,7 +1021,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatistikkV2'
+                $ref: '#/components/schemas/Oppgavestatistikk'
         '401':
           description: Uautorisert tilgang
           content:
@@ -1677,25 +1677,25 @@ components:
         - totalt
         -
 
-    StatistikkV2:
+    Oppgavestatistikk:
       type: object
       properties:
         grupper:
           type: array
           items:
-            $ref: '#/components/schemas/StatistikkV2Gruppe'
+            $ref: '#/components/schemas/StatistikkGruppe'
         serier:
           type: array
           items:
-            $ref: '#/components/schemas/StatistikkV2Serie'
+            $ref: '#/components/schemas/StatistikkSerie'
         resultat:
-          $ref: '#/components/schemas/StatistikkV2Resultat'
+          $ref: '#/components/schemas/StatistikkResultat'
       required:
         - grupper
         - serier
         - resultat
 
-    StatistikkV2Gruppe:
+    StatistikkGruppe:
       type: object
       properties:
         navn:
@@ -1709,7 +1709,7 @@ components:
         - navn
         - total
 
-    StatistikkV2Serie:
+    StatistikkSerie:
       type: object
       properties:
         navn:
@@ -1720,22 +1720,22 @@ components:
         - navn
         - total
 
-    StatistikkV2Resultat:
+    StatistikkResultat:
       type: object
       properties:
         grupper:
           type: array
           items:
-            $ref: '#/components/schemas/V2StatusNavn'
+            $ref: '#/components/schemas/TilstandNavn'
         serier:
           type: array
           items:
-            $ref: '#/components/schemas/V2Serie'
+            $ref: '#/components/schemas/StatistikkResultatSerie'
       required:
         - grupper
         - serier
 
-    V2StatusNavn:
+    TilstandNavn:
       type: object
       properties:
         navn:
@@ -1743,7 +1743,7 @@ components:
       required:
         - navn
 
-    V2Serie:
+    StatistikkResultatSerie:
       type: object
       properties:
         navn:
@@ -1751,12 +1751,12 @@ components:
         verdier:
           type: array
           items:
-            $ref: '#/components/schemas/V2GruppeMedAntall'
+            $ref: '#/components/schemas/StatistikkGruppeMedAntall'
       required:
         - navn
         - verdier
 
-    V2GruppeMedAntall:
+    StatistikkGruppeMedAntall:
       type: object
       properties:
         gruppe:

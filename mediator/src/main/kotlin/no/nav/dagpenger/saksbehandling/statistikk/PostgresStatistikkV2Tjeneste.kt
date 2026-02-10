@@ -5,15 +5,15 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2StatusNavnDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import javax.sql.DataSource
 
 class PostgresStatistikkV2Tjeneste(
     private val dataSource: DataSource,
 ) : StatistikkV2Tjeneste {
-    override fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+    override fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -57,7 +57,7 @@ class PostgresStatistikkV2Tjeneste(
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
-                    StatistikkV2GruppeDTO(
+                    StatistikkGruppeDTO(
                         navn = row.string("tilstand"),
                         total = row.int("antall"),
                         eldsteOppgave = row.localDateTimeOrNull("eldste_oppgave"),
@@ -67,7 +67,7 @@ class PostgresStatistikkV2Tjeneste(
         }
     }
 
-    override fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
+    override fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO> {
         val tilstander =
             statistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
@@ -103,7 +103,7 @@ class PostgresStatistikkV2Tjeneste(
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                         ),
                 ).map { row ->
-                    StatistikkV2SerieDTO(
+                    StatistikkSerieDTO(
                         navn = row.string("utlost_av"),
                         total = row.int("antall"),
                     )
@@ -112,7 +112,7 @@ class PostgresStatistikkV2Tjeneste(
         }
     }
 
-    override fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO> {
+    override fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO> {
         val rettighetstyper =
             statistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
@@ -175,7 +175,7 @@ class PostgresStatistikkV2Tjeneste(
                             "rettighetstyper" to rettighetstyper.toTypedArray(),
                         ),
                 ).map { row ->
-                    StatistikkV2GruppeDTO(
+                    StatistikkGruppeDTO(
                         navn = row.string("tilstand"),
                         total = row.int("antall"),
                         eldsteOppgave = row.localDateTimeOrNull("eldste_oppgave"),
@@ -185,7 +185,7 @@ class PostgresStatistikkV2Tjeneste(
         }
     }
 
-    override fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO> {
+    override fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -223,7 +223,7 @@ class PostgresStatistikkV2Tjeneste(
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                         ),
                 ).map { row ->
-                    StatistikkV2SerieDTO(
+                    StatistikkSerieDTO(
                         navn = row.string("rettighet"),
                         total = row.int("antall"),
                     )
@@ -232,11 +232,11 @@ class PostgresStatistikkV2Tjeneste(
         }
     }
 
-    override fun hentResultatGrupper(statistikkFilter: StatistikkFilter): List<V2StatusNavnDTO> =
+    override fun hentResultatGrupper(statistikkFilter: StatistikkFilter): List<TilstandNavnDTO> =
         statistikkFilter.utløstAvTyper
             .ifEmpty {
                 UtløstAvType.entries.toSet()
-            }.map { V2StatusNavnDTO(navn = it.name) }
+            }.map { TilstandNavnDTO(navn = it.name) }
 
     override fun hentResultatSerierForUtløstAv(statistikkFilter: StatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv> {
         val utløstAvTyper =

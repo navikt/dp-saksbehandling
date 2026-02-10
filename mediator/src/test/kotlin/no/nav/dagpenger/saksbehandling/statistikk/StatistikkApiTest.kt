@@ -20,9 +20,9 @@ import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2StatusNavnDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -154,7 +154,7 @@ class StatistikkApiTest {
             mockk<StatistikkV2Tjeneste>().also {
                 every { it.hentTilstanderMedUtløstAvFilter(any()) } returns
                     listOf(
-                        StatistikkV2GruppeDTO(
+                        StatistikkGruppeDTO(
                             navn = "KLAR_TIL_BEHANDLING",
                             total = 1,
                             eldsteOppgave = iGår,
@@ -162,7 +162,7 @@ class StatistikkApiTest {
                     )
                 every { it.hentTilstanderMedRettighetFilter(any()) } returns
                     listOf(
-                        StatistikkV2GruppeDTO(
+                        StatistikkGruppeDTO(
                             navn = "UNDER_BEHANDLING",
                             total = 1,
                             eldsteOppgave = iGår,
@@ -170,14 +170,14 @@ class StatistikkApiTest {
                     )
                 every { it.hentUtløstAvMedTilstandFilter(any()) } returns
                     listOf(
-                        StatistikkV2SerieDTO(
+                        StatistikkSerieDTO(
                             navn = "SØKNAD",
                             total = 1,
                         ),
                     )
                 every { it.hentRettigheterMedTilstandFilter(any()) } returns
                     listOf(
-                        StatistikkV2SerieDTO(
+                        StatistikkSerieDTO(
                             navn = "Verneplikt",
                             total = 1,
                         ),
@@ -199,11 +199,7 @@ class StatistikkApiTest {
                         ),
                     )
                 every { it.hentResultatGrupper(any()) } returns
-                    listOf(
-                        V2StatusNavnDTO(
-                            navn = "Klar til behandling",
-                        ),
-                    )
+                    listOf(TilstandNavnDTO(navn = "Klar til behandling"))
             }
 
         testApplication {

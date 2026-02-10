@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.statistikk
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.api.models.V2GruppeMedAntallDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2SerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeMedAntallDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
 import org.junit.jupiter.api.Test
 
 class StatistikkV2MapperTest {
@@ -30,31 +30,31 @@ class StatistikkV2MapperTest {
             )
         val rettighetSerier =
             listOf(
-                V2SerieDTO(
+                StatistikkResultatSerieDTO(
                     navn = "Ordinær",
                     verdier =
                         listOf(
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "Klar til behandling",
                                 antall = 4,
                             ),
                         ),
                 ),
-                V2SerieDTO(
+                StatistikkResultatSerieDTO(
                     navn = "Verneplikt",
                     verdier =
                         listOf(
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "Klar til behandling",
                                 antall = 2,
                             ),
                         ),
                 ),
-                V2SerieDTO(
+                StatistikkResultatSerieDTO(
                     navn = "Permittert",
                     verdier =
                         listOf(
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "På vent",
                                 antall = 0,
                             ),
@@ -101,37 +101,37 @@ class StatistikkV2MapperTest {
             )
         val utløstAvSerier =
             listOf(
-                V2SerieDTO(
+                StatistikkResultatSerieDTO(
                     navn = "Søknad",
                     verdier =
                         listOf(
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "Klar til behandling",
                                 antall = 4,
                             ),
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "På vent",
                                 antall = 0,
                             ),
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "Under behandling",
                                 antall = 166,
                             ),
                         ),
                 ),
-                V2SerieDTO(
+                StatistikkResultatSerieDTO(
                     navn = "Manuell",
                     verdier =
                         listOf(
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "Klar til behandling",
                                 antall = 2,
                             ),
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "På vent",
                                 antall = 0,
                             ),
-                            V2GruppeMedAntallDTO(
+                            StatistikkGruppeMedAntallDTO(
                                 gruppe = "Under behandling",
                                 antall = 67,
                             ),

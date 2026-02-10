@@ -1,19 +1,19 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2GruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2SerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2StatusNavnDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 
 interface StatistikkV2Tjeneste {
-    fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
+    fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO>
 
-    fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
+    fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO>
 
-    fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2GruppeDTO>
+    fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO>
 
-    fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkV2SerieDTO>
+    fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO>
 
-    fun hentResultatGrupper(statistikkFilter: StatistikkFilter): List<V2StatusNavnDTO>
+    fun hentResultatGrupper(statistikkFilter: StatistikkFilter): List<TilstandNavnDTO>
 
     fun hentResultatSerierForUtløstAv(statistikkFilter: StatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv>
 

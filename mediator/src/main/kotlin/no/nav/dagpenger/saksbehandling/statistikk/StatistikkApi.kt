@@ -18,11 +18,11 @@ import kotlinx.html.ul
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2DTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkV2ResultatDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2GruppeMedAntallDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2SerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.V2StatusNavnDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgavestatistikkDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeMedAntallDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 
 internal fun Application.statistikkApi(
@@ -77,12 +77,12 @@ internal fun Application.statistikkApi(
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
-                                StatistikkV2DTO(
+                                OppgavestatistikkDTO(
                                     grupper = grupper,
                                     serier = serier,
                                     resultat =
-                                        StatistikkV2ResultatDTO(
-                                            grupper = statistikkFilter.rettighetstyper.map { V2StatusNavnDTO(navn = it) },
+                                        StatistikkResultatDTO(
+                                            grupper = statistikkFilter.rettighetstyper.map { TilstandNavnDTO(navn = it) },
                                             serier = resultat.tilDtoForRettighet(),
                                         ),
                                 ),
@@ -95,16 +95,16 @@ internal fun Application.statistikkApi(
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
-                                StatistikkV2DTO(
+                                OppgavestatistikkDTO(
                                     grupper = grupper,
                                     serier = serier,
                                     resultat =
-                                        StatistikkV2ResultatDTO(
+                                        StatistikkResultatDTO(
                                             grupper =
                                                 statistikkFilter.tilstander
                                                     .ifEmpty {
                                                         Oppgave.Tilstand.Type.Companion.søkbareTilstander
-                                                    }.map { V2StatusNavnDTO(navn = it.tilTilstandNavn()) },
+                                                    }.map { TilstandNavnDTO(navn = it.tilTilstandNavn()) },
                                             serier = resultat.tilDtoForUtløstAv(),
                                         ),
                                 ),
@@ -132,15 +132,15 @@ private fun Oppgave.Tilstand.Type.tilTilstandNavn(): String {
     }
 }
 
-internal fun List<AntallOppgaverForTilstandOgRettighet>.tilDtoForRettighet(): List<V2SerieDTO> =
+internal fun List<AntallOppgaverForTilstandOgRettighet>.tilDtoForRettighet(): List<StatistikkResultatSerieDTO> =
     this
         .groupBy { it.rettighet }
         .map { (rettighet, antallOppgaverForTilstandOgRettighetListe) ->
-            V2SerieDTO(
+            StatistikkResultatSerieDTO(
                 navn = rettighet,
                 verdier =
                     antallOppgaverForTilstandOgRettighetListe.map { antallOppgaverForTilstandOgRettighet ->
-                        V2GruppeMedAntallDTO(
+                        StatistikkGruppeMedAntallDTO(
                             gruppe = antallOppgaverForTilstandOgRettighet.tilstand.tilGruppeNavn(),
                             antall = antallOppgaverForTilstandOgRettighet.antall,
                         )
@@ -148,15 +148,15 @@ internal fun List<AntallOppgaverForTilstandOgRettighet>.tilDtoForRettighet(): Li
             )
         }
 
-internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDtoForUtløstAv(): List<V2SerieDTO> =
+internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDtoForUtløstAv(): List<StatistikkResultatSerieDTO> =
     this
         .groupBy { it.utløstAv }
         .map { (utlostAv, antallOppgaverForTilstandOgUtløstAvListe) ->
-            V2SerieDTO(
+            StatistikkResultatSerieDTO(
                 navn = utlostAv.tilSerieNavn(),
                 verdier =
                     antallOppgaverForTilstandOgUtløstAvListe.map { antallOppgaverForTilstandOgUtløstAv ->
-                        V2GruppeMedAntallDTO(
+                        StatistikkGruppeMedAntallDTO(
                             gruppe = antallOppgaverForTilstandOgUtløstAv.tilstand.tilGruppeNavn(),
                             antall = antallOppgaverForTilstandOgUtløstAv.antall,
                         )
