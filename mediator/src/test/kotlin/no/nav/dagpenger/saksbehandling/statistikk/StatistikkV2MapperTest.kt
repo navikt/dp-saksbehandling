@@ -9,7 +9,63 @@ import org.junit.jupiter.api.Test
 
 class StatistikkV2MapperTest {
     @Test
-    fun `skal mappe til StatistikkV2DTO`() {
+    fun `Skal mappe til StatistikkV2DTO ved gruppering etter rettighet`() {
+        val tilstanderOgRettighetAntall =
+            listOf(
+                AntallOppgaverForTilstandOgRettighet(
+                    tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                    rettighet = "Ordinær",
+                    antall = 4,
+                ),
+                AntallOppgaverForTilstandOgRettighet(
+                    tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                    rettighet = "Verneplikt",
+                    antall = 2,
+                ),
+                AntallOppgaverForTilstandOgRettighet(
+                    tilstand = Oppgave.Tilstand.Type.PAA_VENT,
+                    rettighet = "Permittert",
+                    antall = 0,
+                ),
+            )
+        val rettighetSerier =
+            listOf(
+                V2SerieDTO(
+                    navn = "Ordinær",
+                    verdier =
+                        listOf(
+                            V2GruppeMedAntallDTO(
+                                gruppe = "Klar til behandling",
+                                antall = 4,
+                            ),
+                        ),
+                ),
+                V2SerieDTO(
+                    navn = "Verneplikt",
+                    verdier =
+                        listOf(
+                            V2GruppeMedAntallDTO(
+                                gruppe = "Klar til behandling",
+                                antall = 2,
+                            ),
+                        ),
+                ),
+                V2SerieDTO(
+                    navn = "Permittert",
+                    verdier =
+                        listOf(
+                            V2GruppeMedAntallDTO(
+                                gruppe = "På vent",
+                                antall = 0,
+                            ),
+                        ),
+                ),
+            )
+        tilstanderOgRettighetAntall.tilDtoForRettighet() shouldBe rettighetSerier
+    }
+
+    @Test
+    fun `Skal mappe til StatistikkV2DTO ved gruppering etter UtløstAv`() {
         val tilstanderOgUtløstAvAntall =
             listOf(
                 AntallOppgaverForTilstandOgUtløstAv(
@@ -43,7 +99,7 @@ class StatistikkV2MapperTest {
                     antall = 67,
                 ),
             )
-        val serieDTOs =
+        val utløstAvSerier =
             listOf(
                 V2SerieDTO(
                     navn = "Søknad",
@@ -82,6 +138,6 @@ class StatistikkV2MapperTest {
                         ),
                 ),
             )
-        tilstanderOgUtløstAvAntall.tilDto() shouldBe serieDTOs
+        tilstanderOgUtløstAvAntall.tilDtoForUtløstAv() shouldBe utløstAvSerier
     }
 }

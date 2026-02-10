@@ -2,6 +2,9 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
@@ -175,7 +178,7 @@ class PostgresStatistikkV2TjenesteTest {
                     statistikkFilter =
                         StatistikkFilter(
                             periode = periodeFomIGårTomIDag,
-                            tilstander = setOf("FERDIG_BEHANDLET"),
+                            tilstander = setOf(FERDIG_BEHANDLET),
                         ),
                 )
 
@@ -192,7 +195,7 @@ class PostgresStatistikkV2TjenesteTest {
                     statistikkFilter =
                         StatistikkFilter(
                             periode = periodeFomIGårTomIDag,
-                            tilstander = setOf("FERDIG_BEHANDLET", "PAA_VENT", "KLAR_TIL_KONTROLL"),
+                            tilstander = setOf(FERDIG_BEHANDLET, PAA_VENT, KLAR_TIL_KONTROLL),
                             utløstAvTyper = setOf(UtløstAvType.SØKNAD, UtløstAvType.KLAGE),
                             grupperEtter = GrupperEtterDTO.OPPGAVETYPE.name,
                         ),

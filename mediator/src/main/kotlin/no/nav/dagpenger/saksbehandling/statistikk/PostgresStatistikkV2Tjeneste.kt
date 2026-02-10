@@ -18,6 +18,7 @@ class PostgresStatistikkV2Tjeneste(
             statistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
             }
+
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -70,7 +71,6 @@ class PostgresStatistikkV2Tjeneste(
         val tilstander =
             statistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
-                    .map { it.name }
                     .toSet()
             }
         return sessionOf(dataSource = dataSource).use { session ->
@@ -98,7 +98,7 @@ class PostgresStatistikkV2Tjeneste(
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "tilstander" to tilstander.toTypedArray(),
+                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                         ),
@@ -246,7 +246,6 @@ class PostgresStatistikkV2Tjeneste(
         val tilstander =
             statistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
-                    .map { it.name }
                     .toSet()
             }
         return sessionOf(dataSource = dataSource).use { session ->
@@ -272,7 +271,7 @@ class PostgresStatistikkV2Tjeneste(
                             "fom" to statistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
-                            "tilstander" to tilstander.toTypedArray(),
+                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     AntallOppgaverForTilstandOgUtløstAv(

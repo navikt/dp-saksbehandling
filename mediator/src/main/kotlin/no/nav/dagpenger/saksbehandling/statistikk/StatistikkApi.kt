@@ -73,6 +73,7 @@ internal fun Application.statistikkApi(
                     if (statistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name) {
                         val grupper = statistikkV2Tjeneste.hentTilstanderMedRettighetFilter(statistikkFilter)
                         val serier = statistikkV2Tjeneste.hentRettigheterMedTilstandFilter(statistikkFilter)
+                        val resultat = statistikkV2Tjeneste.hentResultatSerierForRettigheter(statistikkFilter)
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
@@ -82,47 +83,82 @@ internal fun Application.statistikkApi(
                                     resultat =
                                         StatistikkV2ResultatDTO(
                                             grupper = statistikkFilter.rettighetstyper.map { V2StatusNavnDTO(navn = it) },
-                                            serier = emptyList(),
-//                                            statistikkV2Tjeneste.hentResultatSerierForRettigheter(statistikkFilter)
+                                            serier = resultat.tilDtoForRettighet(),
                                         ),
                                 ),
                         )
-                        return@get
-                    }
-                    val grupper = statistikkV2Tjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter)
-                    val serier = statistikkV2Tjeneste.hentUtløstAvMedTilstandFilter(statistikkFilter)
-                    val resultatSerierForUtløstAv = statistikkV2Tjeneste.hentResultatSerierForUtløstAv(statistikkFilter)
+                    } else {
+                        val grupper = statistikkV2Tjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter)
+                        val serier = statistikkV2Tjeneste.hentUtløstAvMedTilstandFilter(statistikkFilter)
+                        val resultat = statistikkV2Tjeneste.hentResultatSerierForUtløstAv(statistikkFilter)
 
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message =
-                            StatistikkV2DTO(
-                                grupper = grupper,
-                                serier = serier,
-                                resultat =
-                                    StatistikkV2ResultatDTO(
-                                        grupper = statistikkFilter.rettighetstyper.map { V2StatusNavnDTO(navn = it) },
-                                        serier = resultatSerierForUtløstAv.tilDto(),
-                                    ),
-                            ),
-                    )
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message =
+                                StatistikkV2DTO(
+                                    grupper = grupper,
+                                    serier = serier,
+                                    resultat =
+                                        StatistikkV2ResultatDTO(
+                                            grupper =
+                                                statistikkFilter.tilstander
+                                                    .ifEmpty {
+                                                        Oppgave.Tilstand.Type.Companion.søkbareTilstander
+                                                    }.map { V2StatusNavnDTO(navn = it.tilTilstandNavn()) },
+                                            serier = resultat.tilDtoForUtløstAv(),
+                                        ),
+                                ),
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDto(): List<V2SerieDTO> =
+private fun Oppgave.Tilstand.Type.tilTilstandNavn(): String {
+    when (this) {
+        Oppgave.Tilstand.Type.OPPRETTET -> return "Opprettet"
+        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> return "Klar til behandling"
+        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> return "Under behandling"
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> return "Ferdig behandlet"
+        Oppgave.Tilstand.Type.PAA_VENT -> return "På vent"
+        Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL -> return "Klar til kontroll"
+        Oppgave.Tilstand.Type.UNDER_KONTROLL -> return "Under kontroll"
+        Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> return "Avventer lås av behandling"
+        Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> return "Avventer opplåsing av behandling"
+        Oppgave.Tilstand.Type.AVBRUTT -> return "Avbrutt"
+        Oppgave.Tilstand.Type.AVBRUTT_MASKINELT -> return "Avbrutt maskinelt"
+    }
+}
+
+internal fun List<AntallOppgaverForTilstandOgRettighet>.tilDtoForRettighet(): List<V2SerieDTO> =
+    this
+        .groupBy { it.rettighet }
+        .map { (rettighet, antallOppgaverForTilstandOgRettighetListe) ->
+            V2SerieDTO(
+                navn = rettighet,
+                verdier =
+                    antallOppgaverForTilstandOgRettighetListe.map { antallOppgaverForTilstandOgRettighet ->
+                        V2GruppeMedAntallDTO(
+                            gruppe = antallOppgaverForTilstandOgRettighet.tilstand.tilGruppeNavn(),
+                            antall = antallOppgaverForTilstandOgRettighet.antall,
+                        )
+                    },
+            )
+        }
+
+internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDtoForUtløstAv(): List<V2SerieDTO> =
     this
         .groupBy { it.utløstAv }
-        .map { (utlostAv, hubbas) ->
+        .map { (utlostAv, antallOppgaverForTilstandOgUtløstAvListe) ->
             V2SerieDTO(
                 navn = utlostAv.tilSerieNavn(),
                 verdier =
-                    hubbas.map { hubba ->
+                    antallOppgaverForTilstandOgUtløstAvListe.map { antallOppgaverForTilstandOgUtløstAv ->
                         V2GruppeMedAntallDTO(
-                            gruppe = hubba.tilstand.tilGruppeNavn(),
-                            antall = hubba.antall,
+                            gruppe = antallOppgaverForTilstandOgUtløstAv.tilstand.tilGruppeNavn(),
+                            antall = antallOppgaverForTilstandOgUtløstAv.antall,
                         )
                     },
             )

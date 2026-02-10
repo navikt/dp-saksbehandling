@@ -3,13 +3,14 @@ package no.nav.dagpenger.saksbehandling.statistikk
 import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 
 data class StatistikkFilter(
     val periode: Periode,
-    val tilstander: Set<String> = emptySet(),
+    val tilstander: Set<Oppgave.Tilstand.Type> = emptySet(),
     val rettighetstyper: Set<String> = emptySet(),
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val grupperEtter: String = GrupperEtterDTO.OPPGAVETYPE.name,
@@ -18,14 +19,14 @@ data class StatistikkFilter(
         fun fra(queryParameters: Parameters): StatistikkFilter {
             val builder = StatistikkFilterBuilder(queryParameters)
 
-            val statuser = builder.status() ?: emptySet()
+            val tilstander = builder.tilstander() ?: emptySet()
             val rettighetstyper = builder.rettighetstyper() ?: emptySet()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val grupperEtter = builder.grupperEtter()
 
             return StatistikkFilter(
                 periode = Periode.fra(queryParameters),
-                tilstander = statuser,
+                tilstander = tilstander,
                 rettighetstyper = rettighetstyper,
                 utløstAvTyper = utløstAvTyper,
                 grupperEtter = grupperEtter,
@@ -44,7 +45,7 @@ data class StatistikkFilter(
             this.stringValues = stringValues
         }
 
-        fun status(): Set<String>? = stringValues.getAll("tilstand")?.toSet()
+        fun tilstander(): Set<Oppgave.Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
 
         fun rettighetstyper(): Set<String>? = stringValues.getAll("rettighet")?.toSet()
 
