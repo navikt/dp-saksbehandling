@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -150,5 +151,25 @@ class HendelseJsonSerDerTest {
             """.trimIndent()
 
         json.tilHendelse<VedtakFattetHendelse>() shouldBe vedtakFattetHendelse
+    }
+
+    @Test
+    fun `Skal kunne serialisere og deserialisere SkriptHendelser`() {
+        val skriptHendelse =
+            SkriptHendelse(
+                utførtAv = Applikasjon("V87__UPDATE_HENDELSE_TYPE_TIL_SKRIPT_HENDELSE.sql"),
+            )
+
+        val jsonSkriptHendelse =
+            skriptHendelse.tilJson().also {
+                it shouldEqualJson """{
+              "utførtAv": {
+                "navn": "V87__UPDATE_HENDELSE_TYPE_TIL_SKRIPT_HENDELSE.sql"
+              }
+            }
+        """
+            }
+
+        jsonSkriptHendelse.tilHendelse<SkriptHendelse>() shouldBe skriptHendelse
     }
 }
