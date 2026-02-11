@@ -72,9 +72,12 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                         )
 
                     if (produksjonsstatistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name) {
-                        val grupper = produksjonsstatistikkRepository.hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter)
-                        val serier = produksjonsstatistikkRepository.hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter)
-                        val resultat = produksjonsstatistikkRepository.hentResultatSerierForRettigheter(produksjonsstatistikkFilter)
+                        val grupper =
+                            produksjonsstatistikkRepository.hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter)
+                        val serier =
+                            produksjonsstatistikkRepository.hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter)
+                        val resultat =
+                            produksjonsstatistikkRepository.hentResultatSerierForRettigheter(produksjonsstatistikkFilter)
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
@@ -83,15 +86,22 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                                     serier = serier,
                                     resultat =
                                         StatistikkResultatDTO(
-                                            grupper = produksjonsstatistikkFilter.rettighetstyper.map { TilstandNavnDTO(navn = it) },
+                                            grupper =
+                                                produksjonsstatistikkFilter.tilstander
+                                                    .ifEmpty {
+                                                        Oppgave.Tilstand.Type.Companion.søkbareTilstander
+                                                    }.map { TilstandNavnDTO(navn = it.tilTilstandNavn()) },
                                             serier = resultat.tilDtoForRettighet(),
                                         ),
                                 ),
                         )
                     } else {
-                        val grupper = produksjonsstatistikkRepository.hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter)
-                        val serier = produksjonsstatistikkRepository.hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter)
-                        val resultat = produksjonsstatistikkRepository.hentResultatSerierForUtløstAv(produksjonsstatistikkFilter)
+                        val grupper =
+                            produksjonsstatistikkRepository.hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter)
+                        val serier =
+                            produksjonsstatistikkRepository.hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter)
+                        val resultat =
+                            produksjonsstatistikkRepository.hentResultatSerierForUtløstAv(produksjonsstatistikkFilter)
 
                         call.respond(
                             status = HttpStatusCode.OK,

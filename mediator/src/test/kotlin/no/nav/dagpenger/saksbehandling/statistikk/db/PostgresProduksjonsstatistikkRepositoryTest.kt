@@ -227,6 +227,20 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             resultatSerieForRettigheter.single { it.tilstand == FERDIG_BEHANDLET && it.rettighet == "Verneplikt" }.antall shouldBe 1
             resultatSerieForRettigheter.single { it.tilstand == KLAR_TIL_BEHANDLING && it.rettighet == "Verneplikt" }.antall shouldBe 0
             resultatSerieForRettigheter.single { it.tilstand == KLAR_TIL_KONTROLL && it.rettighet == "Verneplikt" }.antall shouldBe 1
+
+            val resultatSerieForFlereRettigheter =
+                statistikkTjeneste.hentResultatSerierForRettigheter(
+                    produksjonsstatistikkFilter =
+                        ProduksjonsstatistikkFilter(
+                            periode = periodeFomIGårTomIDag,
+                            tilstander = setOf(FERDIG_BEHANDLET),
+                            rettighetstyper = setOf("Verneplikt", "MikkeMus"),
+                            grupperEtter = GrupperEtterDTO.RETTIGHETSTYPE.name,
+                        ),
+                )
+            resultatSerieForFlereRettigheter.size shouldBe 2
+            resultatSerieForFlereRettigheter.single { it.tilstand == FERDIG_BEHANDLET && it.rettighet == "MikkeMus" }.antall shouldBe 1
+            resultatSerieForFlereRettigheter.single { it.tilstand == FERDIG_BEHANDLET && it.rettighet == "Verneplikt" }.antall shouldBe 1
         }
     }
 

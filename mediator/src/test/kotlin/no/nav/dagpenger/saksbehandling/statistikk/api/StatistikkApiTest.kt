@@ -12,7 +12,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
@@ -113,7 +114,7 @@ class StatistikkApiTest {
     }
 
     @Test
-    fun `API skal svare med status 400 og http problem ved feil i queryparam`() {
+    fun `API skal svare med status 400 og http problem ved ugyldig tilstand i queryparam`() {
         testApplication {
             application {
                 installerApis(
@@ -151,7 +152,45 @@ class StatistikkApiTest {
     }
 
     @Test
-    fun `API skal svare med status 200 og hente produksjonsstatistikk når bruker er autentisert`() {
+    fun `API skal svare med status 400 og http problem ved ugyldig utlostAv i queryparam`() {
+        testApplication {
+            application {
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    saksbehandlingsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                    sakMediator = mockk(),
+                    innsendingMediator = mockk(),
+                )
+            }
+
+            client
+                .get("produksjonsstatistikk?utlostAv=FEIL") {
+                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 400
+                    val json = httpResponse.bodyAsText()
+                    json shouldEqualJson
+                        //language=json
+                        """
+                        {
+                          "type" : "dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi",
+                          "title" : "Ugyldig verdi",
+                          "status" : 400,
+                          "detail" : "No enum constant no.nav.dagpenger.saksbehandling.UtløstAvType.FEIL",
+                          "instance" : "/produksjonsstatistikk"
+                        }
+                        """.trimIndent()
+                }
+        }
+    }
+
+    @Test
+    fun `Hent produksjonsstatistikk gruppert på utlostAv når bruker er autentisert og ingen gruppering er valgt`() {
         val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
         val mockProduksjonsstatistikkRepository =
             mockk<ProduksjonsstatistikkRepository>().also {
@@ -163,14 +202,6 @@ class StatistikkApiTest {
                             eldsteOppgave = iGår,
                         ),
                     )
-                every { it.hentTilstanderMedRettighetFilter(any()) } returns
-                    listOf(
-                        StatistikkGruppeDTO(
-                            navn = "UNDER_BEHANDLING",
-                            total = 1,
-                            eldsteOppgave = iGår,
-                        ),
-                    )
                 every { it.hentUtløstAvMedTilstandFilter(any()) } returns
                     listOf(
                         StatistikkSerieDTO(
@@ -178,26 +209,11 @@ class StatistikkApiTest {
                             total = 1,
                         ),
                     )
-                every { it.hentRettigheterMedTilstandFilter(any()) } returns
-                    listOf(
-                        StatistikkSerieDTO(
-                            navn = "Verneplikt",
-                            total = 1,
-                        ),
-                    )
                 every { it.hentResultatSerierForUtløstAv(any()) } returns
                     listOf(
                         AntallOppgaverForTilstandOgUtløstAv(
-                            tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            tilstand = KLAR_TIL_BEHANDLING,
                             utløstAv = UtløstAvType.SØKNAD,
-                            antall = 1,
-                        ),
-                    )
-                every { it.hentResultatSerierForRettigheter(any()) } returns
-                    listOf(
-                        AntallOppgaverForTilstandOgRettighet(
-                            tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                            rettighet = "Verneplikt",
                             antall = 1,
                         ),
                     )
@@ -254,6 +270,149 @@ class StatistikkApiTest {
                                   {
                                     "gruppe" : "Klar til behandling",
                                     "antall" : 1
+                                  } 
+                                ]
+                              } 
+                            ]
+                          }
+                        }
+                        """.trimIndent()
+                }
+        }
+    }
+
+    @Test
+    fun `Hent produksjonsstatistikk gruppert på rettighet når bruker er autentisert og rettighetgruppering er valgt`() {
+        val iDag = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
+        val mockProduksjonsstatistikkRepository =
+            mockk<ProduksjonsstatistikkRepository>().also {
+                every { it.hentTilstanderMedRettighetFilter(any()) } returns
+                    listOf(
+                        StatistikkGruppeDTO(
+                            navn = "KLAR_TIL_BEHANDLING",
+                            total = 8,
+                            eldsteOppgave = iDag,
+                        ),
+                        StatistikkGruppeDTO(
+                            navn = "UNDER_BEHANDLING",
+                            total = 14,
+                            eldsteOppgave = iGår,
+                        ),
+                    )
+                every { it.hentRettigheterMedTilstandFilter(any()) } returns
+                    listOf(
+                        StatistikkSerieDTO(
+                            navn = "Ordinær",
+                            total = 20,
+                        ),
+                        StatistikkSerieDTO(
+                            navn = "Verneplikt",
+                            total = 2,
+                        ),
+                    )
+                every { it.hentResultatSerierForRettigheter(any()) } returns
+                    listOf(
+                        AntallOppgaverForTilstandOgRettighet(
+                            tilstand = KLAR_TIL_BEHANDLING,
+                            rettighet = "Ordinær",
+                            antall = 6,
+                        ),
+                        AntallOppgaverForTilstandOgRettighet(
+                            tilstand = KLAR_TIL_BEHANDLING,
+                            rettighet = "Verneplikt",
+                            antall = 2,
+                        ),
+                        AntallOppgaverForTilstandOgRettighet(
+                            tilstand = UNDER_BEHANDLING,
+                            rettighet = "Ordinær",
+                            antall = 14,
+                        ),
+                        AntallOppgaverForTilstandOgRettighet(
+                            tilstand = UNDER_BEHANDLING,
+                            rettighet = "Verneplikt",
+                            antall = 0,
+                        ),
+                    )
+                every { it.hentResultatGrupper(any()) } returns
+                    listOf(TilstandNavnDTO(navn = "Klar til behandling"), TilstandNavnDTO(navn = "Under behandling"))
+            }
+
+        testApplication {
+            application {
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    saksbehandlingsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                    sakMediator = mockk(),
+                    innsendingMediator = mockk(),
+                )
+            }
+
+            client
+                .get("produksjonsstatistikk?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING&grupperEtter=RETTIGHETSTYPE") {
+                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 200
+                    val json = httpResponse.bodyAsText().trimIndent()
+
+                    // verify through string matching
+                    json shouldEqualJson
+                        //language=json
+                        """
+                        {
+                          "grupper" : [ {
+                            "navn" : "KLAR_TIL_BEHANDLING",
+                            "total" : 8,
+                            "eldsteOppgave" : "$iDag"
+                          },{
+                            "navn" : "UNDER_BEHANDLING",
+                            "total" : 14,
+                            "eldsteOppgave" : "$iGår"
+                          } ],
+                          "serier" : [ {
+                            "navn" : "Ordinær",
+                            "total" : 20
+                          }, {
+                            "navn" : "Verneplikt",
+                            "total" : 2
+                          } ],
+                          "resultat" : {
+                            "grupper" : [ 
+                              {
+                                "navn" : "Klar til behandling"
+                              }, {
+                                "navn" : "Under behandling"
+                              }
+                            ],
+                            "serier" : [ 
+                              {
+                                "navn" : "Ordinær",
+                                "verdier" : [ 
+                                  {
+                                    "gruppe" : "Klar til behandling",
+                                    "antall" : 6
+                                  } ,
+                                  {
+                                    "gruppe" : "Under behandling",
+                                    "antall" : 14
+                                  } 
+                                ]
+                              }, 
+                              {
+                                "navn" : "Verneplikt",
+                                "verdier" : [ 
+                                  {
+                                    "gruppe" : "Klar til behandling",
+                                    "antall" : 2
+                                  } ,
+                                  {
+                                    "gruppe" : "Under behandling",
+                                    "antall" : 0
                                   } 
                                 ]
                               } 
