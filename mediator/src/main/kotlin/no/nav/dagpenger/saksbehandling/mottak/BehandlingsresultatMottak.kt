@@ -25,18 +25,6 @@ internal class BehandlingsresultatMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        oppgaveMediator.hentOppgaveIdFor(behandlingsresultat.behandlingId)?.let {
-            // sak statistikk greier:
-            // Er dette vår sak?
-            //
-
-            oppgaveMediator.ferdigstillOppgave(
-                vedtakFattetHendelse =
-                    packet.vedtakFattetHendelse(
-                        sak = null,
-                        behandlingsresultat = behandlingsresultat,
-                    ),
-            )
-        }
+        oppgaveMediator.håndter(packet.vedtakFattetHendelse(null, behandlingsresultat))
     }
 }
