@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
-import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
+import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 import javax.sql.DataSource
 
 class PostgresProduksjonsstatistikkRepository(
@@ -141,9 +141,9 @@ class PostgresProduksjonsstatistikkRepository(
             )
         } ?: 0
 
-    override fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO> {
+    override fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO> {
         val utløstAvTyper =
-            statistikkFilter.utløstAvTyper.ifEmpty {
+            produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
             }
 
@@ -180,8 +180,8 @@ class PostgresProduksjonsstatistikkRepository(
                         """,
                     paramMap =
                         mapOf(
-                            "fom" to statistikkFilter.periode.fom,
-                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                            "fom" to produksjonsstatistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
@@ -195,9 +195,9 @@ class PostgresProduksjonsstatistikkRepository(
         }
     }
 
-    override fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO> {
+    override fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO> {
         val tilstander =
-            statistikkFilter.tilstander.ifEmpty {
+            produksjonsstatistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
                     .toSet()
             }
@@ -227,8 +227,8 @@ class PostgresProduksjonsstatistikkRepository(
                     paramMap =
                         mapOf(
                             "tilstander" to tilstander.map { it.name }.toTypedArray(),
-                            "fom" to statistikkFilter.periode.fom,
-                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                            "fom" to produksjonsstatistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                         ),
                 ).map { row ->
                     StatistikkSerieDTO(
@@ -240,9 +240,9 @@ class PostgresProduksjonsstatistikkRepository(
         }
     }
 
-    override fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO> {
+    override fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO> {
         val rettighetstyper =
-            statistikkFilter.rettighetstyper.ifEmpty {
+            produksjonsstatistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
                     Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
                     Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
@@ -298,8 +298,8 @@ class PostgresProduksjonsstatistikkRepository(
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "fom" to statistikkFilter.periode.fom,
-                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                            "fom" to produksjonsstatistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "rettighetstyper" to rettighetstyper.toTypedArray(),
                         ),
                 ).map { row ->
@@ -313,9 +313,9 @@ class PostgresProduksjonsstatistikkRepository(
         }
     }
 
-    override fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO> {
+    override fun hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO> {
         val utløstAvTyper =
-            statistikkFilter.utløstAvTyper.ifEmpty {
+            produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
             }
 
@@ -347,8 +347,8 @@ class PostgresProduksjonsstatistikkRepository(
                     paramMap =
                         mapOf(
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
-                            "fom" to statistikkFilter.periode.fom,
-                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                            "fom" to produksjonsstatistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                         ),
                 ).map { row ->
                     StatistikkSerieDTO(
@@ -360,19 +360,21 @@ class PostgresProduksjonsstatistikkRepository(
         }
     }
 
-    override fun hentResultatGrupper(statistikkFilter: StatistikkFilter): List<TilstandNavnDTO> =
-        statistikkFilter.utløstAvTyper
+    override fun hentResultatGrupper(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandNavnDTO> =
+        produksjonsstatistikkFilter.utløstAvTyper
             .ifEmpty {
                 UtløstAvType.entries.toSet()
             }.map { TilstandNavnDTO(navn = it.name) }
 
-    override fun hentResultatSerierForUtløstAv(statistikkFilter: StatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv> {
+    override fun hentResultatSerierForUtløstAv(
+        produksjonsstatistikkFilter: ProduksjonsstatistikkFilter,
+    ): List<AntallOppgaverForTilstandOgUtløstAv> {
         val utløstAvTyper =
-            statistikkFilter.utløstAvTyper.ifEmpty {
+            produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
             }
         val tilstander =
-            statistikkFilter.tilstander.ifEmpty {
+            produksjonsstatistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
                     .toSet()
             }
@@ -396,8 +398,8 @@ class PostgresProduksjonsstatistikkRepository(
                         """,
                     paramMap =
                         mapOf(
-                            "fom" to statistikkFilter.periode.fom,
-                            "tom_pluss_1_dag" to statistikkFilter.periode.tom.plusDays(1),
+                            "fom" to produksjonsstatistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                             "tilstander" to tilstander.map { it.name }.toTypedArray(),
                         ),
@@ -412,8 +414,9 @@ class PostgresProduksjonsstatistikkRepository(
         }
     }
 
-    override fun hentResultatSerierForRettigheter(statistikkFilter: StatistikkFilter): List<AntallOppgaverForTilstandOgRettighet> =
-        emptyList()
+    override fun hentResultatSerierForRettigheter(
+        produksjonsstatistikkFilter: ProduksjonsstatistikkFilter,
+    ): List<AntallOppgaverForTilstandOgRettighet> = emptyList()
 }
 
 data class AntallOppgaverForTilstandOgUtløstAv(

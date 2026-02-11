@@ -77,7 +77,7 @@ internal fun Application.installerApis(
             personMediator = personMediator,
         )
         sakApi(mediator = sakMediator)
-        statistikkApi(saksbehandlingsstatistikkRepository, produksjonsstatistikkRepository)
+        statistikkApi(produksjonsstatistikkRepository)
         innsendingApi(innsendingMediator, applicationCallParser)
         klageApi(
             mediator = klageMediator,

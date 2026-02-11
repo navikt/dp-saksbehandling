@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
+import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -29,7 +29,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                 fom = iGår.toLocalDate(),
                 tom = LocalDate.now().plusDays(1),
             )
-        val filterPeriodeFomIGårTomIDag = StatistikkFilter(periode = periodeFomIGårTomIDag)
+        val filterPeriodeFomIGårTomIDag = ProduksjonsstatistikkFilter(periode = periodeFomIGårTomIDag)
         val behandling1 = lagBehandling(opprettet = iGår)
         val behandling2 = lagBehandling(opprettet = iDag)
         val behandling3 = lagBehandling(opprettet = iDag, utløstAvType = UtløstAvType.KLAGE)
@@ -99,7 +99,10 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(ds)
 
-            val tilstanderAlle = statistikkTjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter = filterPeriodeFomIGårTomIDag)
+            val tilstanderAlle =
+                statistikkTjeneste.hentTilstanderMedUtløstAvFilter(
+                    produksjonsstatistikkFilter = filterPeriodeFomIGårTomIDag,
+                )
 
             tilstanderAlle.size shouldBe 7
             tilstanderAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 1
@@ -115,7 +118,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val tilstanderKlage =
                 statistikkTjeneste.hentTilstanderMedUtløstAvFilter(
-                    StatistikkFilter(
+                    ProduksjonsstatistikkFilter(
                         periode = periodeFomIGårTomIDag,
                         utløstAvTyper = setOf(UtløstAvType.KLAGE),
                     ),
@@ -147,7 +150,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val tilstanderSøknadVerneplikt =
                 statistikkTjeneste.hentTilstanderMedRettighetFilter(
-                    StatistikkFilter(
+                    ProduksjonsstatistikkFilter(
                         periode = periodeFomIGårTomIDag,
                         rettighetstyper = setOf("Verneplikt"),
                     ),
@@ -176,8 +179,8 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val utløstAvFerdigBehandlet =
                 statistikkTjeneste.hentUtløstAvMedTilstandFilter(
-                    statistikkFilter =
-                        StatistikkFilter(
+                    produksjonsstatistikkFilter =
+                        ProduksjonsstatistikkFilter(
                             periode = periodeFomIGårTomIDag,
                             tilstander = setOf(FERDIG_BEHANDLET),
                         ),
@@ -193,8 +196,8 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val resultatSerie =
                 statistikkTjeneste.hentResultatSerierForUtløstAv(
-                    statistikkFilter =
-                        StatistikkFilter(
+                    produksjonsstatistikkFilter =
+                        ProduksjonsstatistikkFilter(
                             periode = periodeFomIGårTomIDag,
                             tilstander = setOf(FERDIG_BEHANDLET, PAA_VENT, KLAR_TIL_KONTROLL),
                             utløstAvTyper = setOf(UtløstAvType.SØKNAD, UtløstAvType.KLAGE),

@@ -8,7 +8,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 
-data class StatistikkFilter(
+data class ProduksjonsstatistikkFilter(
     val periode: Periode,
     val tilstander: Set<Oppgave.Tilstand.Type> = emptySet(),
     val rettighetstyper: Set<String> = emptySet(),
@@ -16,7 +16,7 @@ data class StatistikkFilter(
     val grupperEtter: String = GrupperEtterDTO.OPPGAVETYPE.name,
 ) {
     companion object {
-        fun fra(queryParameters: Parameters): StatistikkFilter {
+        fun fra(queryParameters: Parameters): ProduksjonsstatistikkFilter {
             val builder = StatistikkFilterBuilder(queryParameters)
 
             val tilstander = builder.tilstander() ?: emptySet()
@@ -24,7 +24,7 @@ data class StatistikkFilter(
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val grupperEtter = builder.grupperEtter()
 
-            return StatistikkFilter(
+            return ProduksjonsstatistikkFilter(
                 periode = Periode.fra(queryParameters),
                 tilstander = tilstander,
                 rettighetstyper = rettighetstyper,

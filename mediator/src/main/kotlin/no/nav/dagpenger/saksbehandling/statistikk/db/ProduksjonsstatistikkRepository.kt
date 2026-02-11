@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
-import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
+import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 
 interface ProduksjonsstatistikkRepository {
     // Gamle metoder for statistikk
@@ -18,17 +18,19 @@ interface ProduksjonsstatistikkRepository {
     fun hentAntallBrevSendt(): Int
 
     // Nye metoder for statistikk med filter
-    fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO>
+    fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO>
 
-    fun hentUtløstAvMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO>
+    fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO>
 
-    fun hentTilstanderMedRettighetFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO>
+    fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO>
 
-    fun hentRettigheterMedTilstandFilter(statistikkFilter: StatistikkFilter): List<StatistikkSerieDTO>
+    fun hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO>
 
-    fun hentResultatGrupper(statistikkFilter: StatistikkFilter): List<TilstandNavnDTO>
+    fun hentResultatGrupper(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandNavnDTO>
 
-    fun hentResultatSerierForUtløstAv(statistikkFilter: StatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv>
+    fun hentResultatSerierForUtløstAv(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv>
 
-    fun hentResultatSerierForRettigheter(statistikkFilter: StatistikkFilter): List<AntallOppgaverForTilstandOgRettighet>
+    fun hentResultatSerierForRettigheter(
+        produksjonsstatistikkFilter: ProduksjonsstatistikkFilter,
+    ): List<AntallOppgaverForTilstandOgRettighet>
 }
