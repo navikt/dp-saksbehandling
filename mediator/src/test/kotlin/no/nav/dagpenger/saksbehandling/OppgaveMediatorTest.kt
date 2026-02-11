@@ -393,7 +393,9 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgaveIdFor(behandlingId) shouldBe null
 
             shouldThrowWithMessage<IllegalArgumentException>(
-                "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for behandlingId $behandlingId. Oppgave skal alltid eksistere for manuelle vedtak.",
+                "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for " +
+                    "behandlingId $behandlingId. " +
+                    "Oppgave skal alltid eksistere for manuelle vedtak.",
             ) {
                 oppgaveMediator.håndter(
                     lagVedtakHendelse(

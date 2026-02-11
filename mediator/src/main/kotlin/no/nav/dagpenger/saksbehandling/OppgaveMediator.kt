@@ -735,23 +735,28 @@ class OppgaveMediator(
 
     private fun oppretteOppgaveForAutomatiskFattetVedtak(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         require(vedtakFattetHendelse.automatiskBehandlet == true) {
-            "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for behandlingId ${vedtakFattetHendelse.behandlingId}. Oppgave skal alltid eksistere for manuelle vedtak."
+            "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for " +
+                "behandlingId ${vedtakFattetHendelse.behandlingId}. " +
+                "Oppgave skal alltid eksistere for manuelle vedtak."
         }
 
         val sakHistorikk =
             requireNotNull(sakMediator.finnSakHistorikk(vedtakFattetHendelse.ident)) {
                 sikkerlogger.error {
-                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, men fant ingen sakshistorikk for ident ${vedtakFattetHendelse.ident}"
+                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
+                        "men fant ingen sakshistorikk for ident ${vedtakFattetHendelse.ident}"
                 }
                 logger.error {
-                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, men fant ingen sakshistorikk. Se sikkerlogg for ident "
+                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
+                        "men fant ingen sakshistorikk. Se sikkerlogg for ident "
                 }
             }
 
         val behandling =
             requireNotNull(sakHistorikk.finnBehandling(vedtakFattetHendelse.behandlingId)) {
                 logger.error {
-                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, men fant ingen behandling i sakshistorikken"
+                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
+                        "men fant ingen behandling i sakshistorikken"
                 }
             }
 
@@ -768,7 +773,8 @@ class OppgaveMediator(
                 ),
         ).also {
             logger.info {
-                "Opprettet t oppgave(${it.oppgaveId}) for behandlingId ${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
+                "Opprettet oppgave(${it.oppgaveId}) for behandlingId " +
+                    "${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
             }
         }
     }
