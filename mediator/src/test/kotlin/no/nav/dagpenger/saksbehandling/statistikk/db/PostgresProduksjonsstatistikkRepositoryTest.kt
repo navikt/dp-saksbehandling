@@ -19,7 +19,7 @@ import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.test.Test
 
-class PostgresStatistikkV2TjenesteTest {
+class PostgresProduksjonsstatistikkRepositoryTest {
     @Test
     fun `Hent oppgaver for statistikk V2 basert på filter`() {
         val iDag = TestHelper.opprettetNå
@@ -97,7 +97,7 @@ class PostgresStatistikkV2TjenesteTest {
             repo.lagre(oppgave5KlarTilKontroll)
             repo.lagre(oppgave6FerdigBehandlet)
 
-            val statistikkTjeneste = PostgresStatistikkV2Tjeneste(ds)
+            val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(ds)
 
             val tilstanderAlle = statistikkTjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter = filterPeriodeFomIGårTomIDag)
 

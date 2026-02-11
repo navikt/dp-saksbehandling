@@ -8,7 +8,7 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -78,8 +78,8 @@ class StatistikkJobTest {
             utløstAv = "INNSENDING",
             behandlingResultat = "RettTilDagpenger",
         )
-    private val statistikkTjeneste =
-        mockk<StatistikkTjeneste>().also {
+    private val saksbehandlingsstatistikkRepository =
+        mockk<SaksbehandlingsstatistikkRepository>().also {
             every { it.tidligereTilstandsendringerErOverført() } returns true
             every { it.oppgaveTilstandsendringer() } returns
                 listOf(
@@ -98,7 +98,7 @@ class StatistikkJobTest {
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,
-                statistikkTjeneste = statistikkTjeneste,
+                saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
             ).executeJob()
         }
 
@@ -173,12 +173,12 @@ class StatistikkJobTest {
 
     @Test
     fun `Skal ikke publisere oppgavetilstandsendringer til statistikk hvis tidligere kjøring ikke er fullført`() {
-        every { statistikkTjeneste.tidligereTilstandsendringerErOverført() } returns false
+        every { saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført() } returns false
 
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,
-                statistikkTjeneste = statistikkTjeneste,
+                saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
             ).executeJob()
         }
         assert(testRapid.inspektør.size == 0)

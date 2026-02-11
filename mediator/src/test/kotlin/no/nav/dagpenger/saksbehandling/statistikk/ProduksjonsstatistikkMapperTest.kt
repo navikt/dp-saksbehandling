@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOg
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
 import org.junit.jupiter.api.Test
 
-class StatistikkV2MapperTest {
+class ProduksjonsstatistikkMapperTest {
     @Test
     fun `Skal mappe til StatistikkV2DTO ved gruppering etter rettighet`() {
         val tilstanderOgRettighetAntall =

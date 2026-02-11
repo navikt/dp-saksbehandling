@@ -58,8 +58,8 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkJob
-import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresStatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresStatistikkV2Tjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresSaksbehandlingsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresProduksjonsstatistikkRepository
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -194,8 +194,8 @@ internal class ApplicationBuilder(
     private val metrikkJob: Timer
     private val statistikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
-    val statistikkTjeneste = PostgresStatistikkTjeneste(dataSource)
-    val statistikkV2Tjeneste = PostgresStatistikkV2Tjeneste(dataSource)
+    val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource)
+    val statistikkV2Tjeneste = PostgresProduksjonsstatistikkRepository(dataSource)
     private val rapidsConnection: RapidsConnection =
         RapidApplication
             .create(
@@ -205,8 +205,8 @@ internal class ApplicationBuilder(
                         installerApis(
                             oppgaveMediator = oppgaveMediator,
                             oppgaveDTOMapper = oppgaveDTOMapper,
-                            statistikkTjeneste = statistikkTjeneste,
-                            statistikkV2Tjeneste = statistikkV2Tjeneste,
+                            saksbehandlingsstatistikkRepository = statistikkTjeneste,
+                            produksjonsstatistikkRepository = statistikkV2Tjeneste,
                             klageMediator = klageMediator,
                             klageDTOMapper = KlageDTOMapper(oppslag),
                             personMediator = personMediator,
@@ -321,7 +321,7 @@ internal class ApplicationBuilder(
                 statistikkJob =
                     StatistikkJob(
                         rapidsConnection = rapidsConnection,
-                        statistikkTjeneste = statistikkTjeneste,
+                        saksbehandlingsstatistikkRepository = statistikkTjeneste,
                     ).startJob(
                         startAt = now,
                         period = 5.Minutt,

@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import java.util.UUID
 
-interface StatistikkTjeneste {
+interface SaksbehandlingsstatistikkRepository {
     fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO
 
     fun hentAntallVedtakGjort(): StatistikkDTO

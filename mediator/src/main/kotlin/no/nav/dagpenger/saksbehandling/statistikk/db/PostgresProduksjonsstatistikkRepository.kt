@@ -11,9 +11,9 @@ import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
 import javax.sql.DataSource
 
-class PostgresStatistikkV2Tjeneste(
+class PostgresProduksjonsstatistikkRepository(
     private val dataSource: DataSource,
-) : StatistikkV2Tjeneste {
+) : ProduksjonsstatistikkRepository {
     override fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO> {
         val utløstAvTyper =
             statistikkFilter.utløstAvTyper.ifEmpty {

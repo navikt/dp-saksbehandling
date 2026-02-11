@@ -7,7 +7,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresStatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresSaksbehandlingsstatistikkRepository
 import org.junit.jupiter.api.Test
 import javax.sql.DataSource
 
@@ -44,7 +44,7 @@ class StatistikkTest {
                 ),
             )
 
-            val statistikkTjeneste = PostgresStatistikkTjeneste(ds)
+            val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(ds)
             val result = statistikkTjeneste.hentAntallVedtakGjort()
 
             result.dag shouldBe 3
@@ -65,7 +65,7 @@ class StatistikkTest {
             repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling, behandling = behandling1))
             repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling, behandling = behandling2))
 
-            val statistikkTjeneste = PostgresStatistikkTjeneste(ds)
+            val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(ds)
             val result = statistikkTjeneste.hentBeholdningsInfo()
 
             result.antallOppgaverKlarTilBehandling shouldBe 2

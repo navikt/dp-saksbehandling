@@ -18,7 +18,7 @@ import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand.Tilstandsendr
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class PostgresStatistikkTjenesteTest {
+class PostgresSaksbehandlingsstatistikkRepositoryTest {
     @Test
     fun `Tilstandsendringer på oppgave utløst av Søknad skal oversendes saksbehandlingsstatistikk`() {
         val behandling = TestHelper.lagBehandling()
@@ -47,7 +47,7 @@ class PostgresStatistikkTjenesteTest {
                 oppgave = oppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
             val førsteTilstandsendring =
                 postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                     it.size shouldBe 1
@@ -156,7 +156,7 @@ class PostgresStatistikkTjenesteTest {
                 oppgave = innsendingOppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
 
             innsendingOppgave.tildel(
@@ -201,7 +201,7 @@ class PostgresStatistikkTjenesteTest {
                 oppgave = klageOppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresStatistikkTjeneste(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
             klageOppgave.tildel(

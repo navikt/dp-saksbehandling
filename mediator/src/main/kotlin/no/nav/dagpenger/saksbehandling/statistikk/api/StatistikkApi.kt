@@ -27,12 +27,12 @@ import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
-import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkV2Tjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
 
 internal fun Application.statistikkApi(
-    statistikkTjeneste: StatistikkTjeneste,
-    statistikkV2Tjeneste: StatistikkV2Tjeneste,
+    saksbehandlingsstatistikkRepository: SaksbehandlingsstatistikkRepository,
+    produksjonsstatistikkRepository: ProduksjonsstatistikkRepository,
 ) {
     routing {
         route("public/statistikk") {
@@ -45,7 +45,7 @@ internal fun Application.statistikkApi(
                         h1 { +"Statistikk" }
                         p { +"Her finner du statistikk over antall brev sendt." }
                         ul {
-                            li { +"Antall brev sendt: ${statistikkTjeneste.hentAntallBrevSendt()}" }
+                            li { +"Antall brev sendt: ${saksbehandlingsstatistikkRepository.hentAntallBrevSendt()}" }
                         }
                     }
                 }
@@ -55,9 +55,9 @@ internal fun Application.statistikkApi(
         authenticate("azureAd") {
             route("statistikk") {
                 get {
-                    val statistikk = statistikkTjeneste.hentSaksbehandlerStatistikk(call.navIdent())
-                    val generellStatistikk = statistikkTjeneste.hentAntallVedtakGjort()
-                    val beholdningsinfo = statistikkTjeneste.hentBeholdningsInfo()
+                    val statistikk = saksbehandlingsstatistikkRepository.hentSaksbehandlerStatistikk(call.navIdent())
+                    val generellStatistikk = saksbehandlingsstatistikkRepository.hentAntallVedtakGjort()
+                    val beholdningsinfo = saksbehandlingsstatistikkRepository.hentBeholdningsInfo()
                     call.respond(
                         HttpStatusCode.OK,
                         mapOf(
@@ -76,9 +76,9 @@ internal fun Application.statistikkApi(
                         )
 
                     if (statistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name) {
-                        val grupper = statistikkV2Tjeneste.hentTilstanderMedRettighetFilter(statistikkFilter)
-                        val serier = statistikkV2Tjeneste.hentRettigheterMedTilstandFilter(statistikkFilter)
-                        val resultat = statistikkV2Tjeneste.hentResultatSerierForRettigheter(statistikkFilter)
+                        val grupper = produksjonsstatistikkRepository.hentTilstanderMedRettighetFilter(statistikkFilter)
+                        val serier = produksjonsstatistikkRepository.hentRettigheterMedTilstandFilter(statistikkFilter)
+                        val resultat = produksjonsstatistikkRepository.hentResultatSerierForRettigheter(statistikkFilter)
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
@@ -93,9 +93,9 @@ internal fun Application.statistikkApi(
                                 ),
                         )
                     } else {
-                        val grupper = statistikkV2Tjeneste.hentTilstanderMedUtløstAvFilter(statistikkFilter)
-                        val serier = statistikkV2Tjeneste.hentUtløstAvMedTilstandFilter(statistikkFilter)
-                        val resultat = statistikkV2Tjeneste.hentResultatSerierForUtløstAv(statistikkFilter)
+                        val grupper = produksjonsstatistikkRepository.hentTilstanderMedUtløstAvFilter(statistikkFilter)
+                        val serier = produksjonsstatistikkRepository.hentUtløstAvMedTilstandFilter(statistikkFilter)
+                        val resultat = produksjonsstatistikkRepository.hentResultatSerierForUtløstAv(statistikkFilter)
 
                         call.respond(
                             status = HttpStatusCode.OK,

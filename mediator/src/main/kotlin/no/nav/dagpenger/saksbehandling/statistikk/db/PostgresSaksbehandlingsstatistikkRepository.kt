@@ -9,9 +9,9 @@ import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresStatistikkTjeneste(
+class PostgresSaksbehandlingsstatistikkRepository(
     private val dataSource: DataSource,
-) : StatistikkTjeneste {
+) : SaksbehandlingsstatistikkRepository {
     override fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO =
         sessionOf(dataSource = dataSource).use { session ->
             session.run(

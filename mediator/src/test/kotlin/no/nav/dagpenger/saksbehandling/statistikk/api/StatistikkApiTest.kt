@@ -25,8 +25,8 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
-import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkV2Tjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -38,8 +38,8 @@ class StatistikkApiTest {
 
     @Test
     fun `test public statistikk html response`() {
-        val mockStatistikkTjeneste =
-            mockk<StatistikkTjeneste>().also {
+        val mockSaksbehandlingsstatistikkRepository =
+            mockk<SaksbehandlingsstatistikkRepository>().also {
                 every { it.hentAntallBrevSendt() } returns 3
             }
         testApplication {
@@ -47,8 +47,8 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    statistikkTjeneste = mockStatistikkTjeneste,
-                    statistikkV2Tjeneste = mockk(),
+                    saksbehandlingsstatistikkRepository = mockSaksbehandlingsstatistikkRepository,
+                    produksjonsstatistikkRepository = mockk(),
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
@@ -66,8 +66,8 @@ class StatistikkApiTest {
 
     @Test
     fun `test authenticated statistikk api response`() {
-        val mockStatistikkTjeneste =
-            mockk<StatistikkTjeneste>().also {
+        val mockSaksbehandlingsstatistikkRepository =
+            mockk<SaksbehandlingsstatistikkRepository>().also {
                 every { it.hentSaksbehandlerStatistikk(any()) } returns StatistikkDTO(1, 2, 3)
                 every { it.hentAntallVedtakGjort() } returns StatistikkDTO(4, 5, 6)
                 every { it.hentBeholdningsInfo() } returns BeholdningsInfoDTO(2, 3, null)
@@ -78,8 +78,8 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    statistikkTjeneste = mockStatistikkTjeneste,
-                    statistikkV2Tjeneste = mockk(),
+                    saksbehandlingsstatistikkRepository = mockSaksbehandlingsstatistikkRepository,
+                    produksjonsstatistikkRepository = mockk(),
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
@@ -120,8 +120,8 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    statistikkTjeneste = mockk(),
-                    statistikkV2Tjeneste = mockk(),
+                    saksbehandlingsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockk(),
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
@@ -154,8 +154,8 @@ class StatistikkApiTest {
     @Test
     fun `test autentisert statistikk v2 api-respons`() {
         val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
-        val mockStatistikkV2Tjeneste =
-            mockk<StatistikkV2Tjeneste>().also {
+        val mockProduksjonsstatistikkRepository =
+            mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentTilstanderMedUtløstAvFilter(any()) } returns
                     listOf(
                         StatistikkGruppeDTO(
@@ -211,8 +211,8 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    statistikkTjeneste = mockk(),
-                    statistikkV2Tjeneste = mockStatistikkV2Tjeneste,
+                    saksbehandlingsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),

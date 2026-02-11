@@ -5,17 +5,17 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job
-import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 
 class StatistikkJob(
     private val rapidsConnection: RapidsConnection,
-    private val statistikkTjeneste: StatistikkTjeneste,
+    private val saksbehandlingsstatistikkRepository: SaksbehandlingsstatistikkRepository,
 ) : Job() {
     override val jobName: String = "StatistikkJob"
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        if (statistikkTjeneste.tidligereTilstandsendringerErOverført()) {
+        if (saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført()) {
             logger.info { "Starter publisering av oppgavetilstandsendringer til statistikk." }
         } else {
             logger.error { "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring." }
@@ -23,7 +23,7 @@ class StatistikkJob(
         }
         runCatching {
             val oppgaveTilstandsendringer =
-                statistikkTjeneste.oppgaveTilstandsendringer().also {
+                saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer().also {
                     logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
                 }
             oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
@@ -39,7 +39,7 @@ class StatistikkJob(
                                     ),
                                 ).toJson(),
                     ).also {
-                        statistikkTjeneste.markerTilstandsendringerSomOverført(
+                        saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
                             tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
                         )
                         logger.info {
