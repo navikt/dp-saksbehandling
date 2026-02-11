@@ -112,7 +112,6 @@ class PostgresProduksjonsstatistikkRepository(
                         (SELECT min(opprettet)
                          FROM oppgave_v1
                          WHERE tilstand in ('KLAR_TIL_BEHANDLING','UNDER_BEHANDLING', 'KLAR_TIL_KONTROLL', 'UNDER_KONTROLL' ,'PAA_VENT')) AS eldste_dato
-                    
                     """,
                     paramMap = mapOf(),
                 ).map { row ->
@@ -342,7 +341,6 @@ class PostgresProduksjonsstatistikkRepository(
                                    , ('Permittert fisk')
                                    , ('Konkurs')
                              ) AS rett(rettighet)
-                        
                         """.trimIndent(),
                     paramMap =
                         mapOf(
@@ -385,16 +383,16 @@ class PostgresProduksjonsstatistikkRepository(
                     statement = """
                         SELECT  tils.tilstand,
                                 utlo.utlost_av,
-                                (   SELECT  COUNT(*)
-                                    FROM    oppgave_v1 oppg
-                                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                                    WHERE   oppg.tilstand   = tils.tilstand
-                                    AND     beha.utlost_av  = utlo.utlost_av
-                                    AND     oppg.opprettet >= :fom
-                                    AND     oppg.opprettet <  :tom_pluss_1_dag
-                             ) AS antall
-                        FROM unnest(:tilstander) AS tils(tilstand)
-                        CROSS JOIN unnest(:utlost_av_typer) AS utlo(utlost_av)
+                            (   SELECT  COUNT(*)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   oppg.tilstand   = tils.tilstand
+                                AND     beha.utlost_av  = utlo.utlost_av
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <  :tom_pluss_1_dag
+                            )   AS antall
+                        FROM        unnest(:tilstander) AS tils(tilstand)
+                        CROSS JOIN  unnest(:utlost_av_typer) AS utlo(utlost_av)
                         """,
                     paramMap =
                         mapOf(
@@ -416,7 +414,63 @@ class PostgresProduksjonsstatistikkRepository(
 
     override fun hentResultatSerierForRettigheter(
         produksjonsstatistikkFilter: ProduksjonsstatistikkFilter,
-    ): List<AntallOppgaverForTilstandOgRettighet> = emptyList()
+    ): List<AntallOppgaverForTilstandOgRettighet> {
+        val rettighetstyper =
+            produksjonsstatistikkFilter.rettighetstyper.ifEmpty {
+                setOf(
+                    "Ordinær",
+                    "Verneplikt",
+                    "Permittert",
+                    "Permittert fisk",
+                    "Konkurs",
+                )
+            }
+        val tilstander =
+            produksjonsstatistikkFilter.tilstander.ifEmpty {
+                Oppgave.Tilstand.Type.entries
+                    .toSet()
+            }
+        return sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        SELECT  tils.tilstand,
+                                rett.rettighet,
+                            (   SELECT  COUNT(*)
+                                FROM    oppgave_v1 oppg
+                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                WHERE   oppg.tilstand   = tils.tilstand
+                                AND     beha.utlost_av  = 'SØKNAD'
+                                AND     oppg.opprettet >= :fom
+                                AND     oppg.opprettet <  :tom_pluss_1_dag
+                                AND EXISTS
+                                (   SELECT  1
+                                    FROM    emneknagg_v1 emne
+                                    WHERE   emne.oppgave_id = oppg.id
+                                    AND     emne.emneknagg  = rett.rettighet
+                                )
+                             ) AS antall
+                        FROM        unnest(:tilstander) AS tils(tilstand)
+                        CROSS JOIN  unnest(:rettighet_typer) AS rett(rettighet)
+                        """,
+                    paramMap =
+                        mapOf(
+                            "fom" to produksjonsstatistikkFilter.periode.fom,
+                            "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
+                            "rettighet_typer" to rettighetstyper.toTypedArray(),
+                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
+                        ),
+                ).map { row ->
+                    AntallOppgaverForTilstandOgRettighet(
+                        tilstand = Oppgave.Tilstand.Type.valueOf(row.string("tilstand")),
+                        rettighet = row.string("rettighet"),
+                        antall = row.int("antall"),
+                    )
+                }.asList,
+            )
+        }
+    }
 }
 
 data class AntallOppgaverForTilstandOgUtløstAv(

@@ -1678,7 +1678,7 @@ components:
         - totalt
         -
 
-    Oppgavestatistikk:
+    Produksjonsstatistikk:
       type: object
       properties:
         grupper:

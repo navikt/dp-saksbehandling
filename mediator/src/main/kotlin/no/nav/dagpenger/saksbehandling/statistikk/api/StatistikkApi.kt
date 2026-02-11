@@ -18,7 +18,7 @@ import kotlinx.html.ul
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgavestatistikkDTO
+import no.nav.dagpenger.saksbehandling.api.models.ProduksjonsstatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeMedAntallDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
@@ -78,7 +78,7 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
-                                OppgavestatistikkDTO(
+                                ProduksjonsstatistikkDTO(
                                     grupper = grupper,
                                     serier = serier,
                                     resultat =
@@ -96,7 +96,7 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                         call.respond(
                             status = HttpStatusCode.OK,
                             message =
-                                OppgavestatistikkDTO(
+                                ProduksjonsstatistikkDTO(
                                     grupper = grupper,
                                     serier = serier,
                                     resultat =

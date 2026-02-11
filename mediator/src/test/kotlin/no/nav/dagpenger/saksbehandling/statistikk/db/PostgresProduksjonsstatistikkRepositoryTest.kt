@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.statistikk.db
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -21,7 +22,7 @@ import javax.sql.DataSource
 
 class PostgresProduksjonsstatistikkRepositoryTest {
     @Test
-    fun `Hent oppgaver basert på filter`() {
+    fun `Hent produksjonsstatistikk basert på filter`() {
         val iDag = TestHelper.opprettetNå
         val iGår = TestHelper.opprettetNå.minusDays(1)
         val periodeFomIGårTomIDag =
@@ -194,7 +195,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             utløstAvFerdigBehandlet.single { it.navn == "MELDEKORT" }.total shouldBe 0
             utløstAvFerdigBehandlet.single { it.navn == "MANUELL" }.total shouldBe 0
 
-            val resultatSerie =
+            val resultatSerieForUtløstAv =
                 statistikkTjeneste.hentResultatSerierForUtløstAv(
                     produksjonsstatistikkFilter =
                         ProduksjonsstatistikkFilter(
@@ -204,10 +205,28 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                             grupperEtter = GrupperEtterDTO.OPPGAVETYPE.name,
                         ),
                 )
-            resultatSerie.size shouldBe 6
-//            resultatSerie.single { it.navn == "FERDIG_BEHANDLET" && it.}.verdier.size shouldBe 2
-//            resultatSerie.single { it.navn == "PAA_VENT" }.verdier.size shouldBe 2
-//            resultatSerie.single { it.navn == "KLAR_TIL_KONTROLL" }.verdier.size shouldBe 2
+            resultatSerieForUtløstAv.size shouldBe 6
+            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == UtløstAvType.SØKNAD }.antall shouldBe 2
+            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == UtløstAvType.SØKNAD }.antall shouldBe 0
+            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == UtløstAvType.SØKNAD }.antall shouldBe 1
+            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == UtløstAvType.KLAGE }.antall shouldBe 1
+            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == UtløstAvType.KLAGE }.antall shouldBe 0
+            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == UtløstAvType.KLAGE }.antall shouldBe 0
+
+            val resultatSerieForRettigheter =
+                statistikkTjeneste.hentResultatSerierForRettigheter(
+                    produksjonsstatistikkFilter =
+                        ProduksjonsstatistikkFilter(
+                            periode = periodeFomIGårTomIDag,
+                            tilstander = setOf(FERDIG_BEHANDLET, KLAR_TIL_BEHANDLING, KLAR_TIL_KONTROLL),
+                            rettighetstyper = setOf("Verneplikt"),
+                            grupperEtter = GrupperEtterDTO.RETTIGHETSTYPE.name,
+                        ),
+                )
+            resultatSerieForRettigheter.size shouldBe 3
+            resultatSerieForRettigheter.single { it.tilstand == FERDIG_BEHANDLET && it.rettighet == "Verneplikt" }.antall shouldBe 1
+            resultatSerieForRettigheter.single { it.tilstand == KLAR_TIL_BEHANDLING && it.rettighet == "Verneplikt" }.antall shouldBe 0
+            resultatSerieForRettigheter.single { it.tilstand == KLAR_TIL_KONTROLL && it.rettighet == "Verneplikt" }.antall shouldBe 1
         }
     }
 
