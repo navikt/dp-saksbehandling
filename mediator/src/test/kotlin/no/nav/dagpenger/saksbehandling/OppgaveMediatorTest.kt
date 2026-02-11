@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -356,6 +357,69 @@ OppgaveMediatorTest {
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `For automatiske VedtakfattetHendelse skal oppgave lages og settes til ferdigbehandlet `() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        val opprettet = LocalDateTime.now()
+
+        fun lagVedtakHendelse(
+            behandlingId: UUID,
+            automatiskBehandlet: Boolean,
+        ): VedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                behandletHendelseId = søknadId.toString(),
+                behandletHendelseType = "Søknad",
+                ident = testIdent,
+                sak = null,
+                automatiskBehandlet = automatiskBehandlet,
+            )
+
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = opprettet,
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { _, oppgaveMediator ->
+
+            oppgaveMediator.hentOppgaveIdFor(behandlingId) shouldBe null
+
+            shouldThrowWithMessage<IllegalArgumentException>(
+                "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for behandlingId $behandlingId. Oppgave skal alltid eksistere for manuelle vedtak.",
+            ) {
+                oppgaveMediator.håndter(
+                    lagVedtakHendelse(
+                        behandlingId = behandlingId,
+                        automatiskBehandlet = false,
+                    ),
+                )
+            }
+
+            val automatiskVedtakfattetHendelse =
+                lagVedtakHendelse(
+                    behandlingId = behandlingId,
+                    automatiskBehandlet = true,
+                )
+            oppgaveMediator.håndter(
+                automatiskVedtakfattetHendelse,
+            )
+
+            val oppgaveId =
+                oppgaveMediator.hentOppgaveIdFor(behandlingId).also {
+                    it shouldNotBe null
+                }
+            with(oppgaveMediator.hentOppgave(oppgaveId!!, testInspektør)) {
+                tilstand().type shouldBe FERDIG_BEHANDLET
+                tilstandslogg.single().hendelse shouldBe automatiskVedtakfattetHendelse
+            }
         }
     }
 
