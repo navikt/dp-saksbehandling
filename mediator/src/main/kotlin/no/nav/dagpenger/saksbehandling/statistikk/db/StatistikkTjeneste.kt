@@ -1,7 +1,8 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
+import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import java.util.UUID
 
 interface StatistikkTjeneste {

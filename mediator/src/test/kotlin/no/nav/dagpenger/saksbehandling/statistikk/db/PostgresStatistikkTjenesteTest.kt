@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Configuration
@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand.Tilstandsendring
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

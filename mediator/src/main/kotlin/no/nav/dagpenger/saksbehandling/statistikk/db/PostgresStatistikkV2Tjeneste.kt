@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
+import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
 import javax.sql.DataSource
 
 class PostgresStatistikkV2Tjeneste(

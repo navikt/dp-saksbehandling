@@ -1,8 +1,9 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
+import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
 
 interface StatistikkV2Tjeneste {
     fun hentTilstanderMedUtløstAvFilter(statistikkFilter: StatistikkFilter): List<StatistikkGruppeDTO>

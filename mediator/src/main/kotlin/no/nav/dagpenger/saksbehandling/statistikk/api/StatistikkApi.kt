@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -24,6 +24,11 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
+import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
+import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkV2Tjeneste
 
 internal fun Application.statistikkApi(
     statistikkTjeneste: StatistikkTjeneste,
@@ -66,7 +71,7 @@ internal fun Application.statistikkApi(
             route("v2/statistikk") {
                 get {
                     val statistikkFilter =
-                        StatistikkFilter.fra(
+                        StatistikkFilter.Companion.fra(
                             call.request.queryParameters,
                         )
 

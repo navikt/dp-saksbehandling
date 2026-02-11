@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
 import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.test.Test

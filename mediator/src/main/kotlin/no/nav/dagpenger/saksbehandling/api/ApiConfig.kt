@@ -22,9 +22,9 @@ import no.nav.dagpenger.saksbehandling.api.auth.authConfig
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
-import no.nav.dagpenger.saksbehandling.statistikk.StatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.StatistikkV2Tjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
+import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
+import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkV2Tjeneste
 
 internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,

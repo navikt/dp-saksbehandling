@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.statistikk
+package no.nav.dagpenger.saksbehandling.statistikk.api
 
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
@@ -14,8 +14,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
-import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
@@ -23,6 +23,10 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
+import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.db.StatistikkV2Tjeneste
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -86,11 +90,11 @@ class StatistikkApiTest {
 
             client
                 .get("statistikk") {
-                    autentisert(token = gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 200
                     val json = httpResponse.bodyAsText()
-                    val jsonElement = Json.parseToJsonElement(json).jsonObject
+                    val jsonElement = Json.Default.parseToJsonElement(json).jsonObject
                     val individuellStatistikk = jsonElement["individuellStatistikk"]!!.jsonObject
                     val generellStatistikk = jsonElement["generellStatistikk"]!!.jsonObject
                     val beholdningsinfo = jsonElement["beholdningsinfo"]!!.jsonObject
@@ -128,7 +132,7 @@ class StatistikkApiTest {
 
             client
                 .get("v2/statistikk?tilstand=FEIL") {
-                    autentisert(token = gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 400
                     val json = httpResponse.bodyAsText()
@@ -219,7 +223,7 @@ class StatistikkApiTest {
 
             client
                 .get("v2/statistikk?tilstand=KLAR_TIL_BEHANDLING") {
-                    autentisert(token = gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 200
                     val json = httpResponse.bodyAsText().trimIndent()
