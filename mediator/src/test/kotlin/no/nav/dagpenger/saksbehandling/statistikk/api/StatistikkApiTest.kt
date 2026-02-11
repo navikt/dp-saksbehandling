@@ -25,8 +25,8 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
-import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit

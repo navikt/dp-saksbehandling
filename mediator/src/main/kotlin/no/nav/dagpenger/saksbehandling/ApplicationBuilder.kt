@@ -58,8 +58,8 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkJob
-import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresSaksbehandlingsstatistikkRepository
 import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresSaksbehandlingsstatistikkRepository
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream

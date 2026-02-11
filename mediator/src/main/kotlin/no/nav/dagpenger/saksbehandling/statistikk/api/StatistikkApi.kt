@@ -27,8 +27,8 @@ import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
-import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 
 internal fun Application.statistikkApi(
     saksbehandlingsstatistikkRepository: SaksbehandlingsstatistikkRepository,
