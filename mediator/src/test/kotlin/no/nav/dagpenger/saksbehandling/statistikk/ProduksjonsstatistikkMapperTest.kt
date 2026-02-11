@@ -5,8 +5,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeMedAntallDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
-import no.nav.dagpenger.saksbehandling.statistikk.api.tilDtoForRettighet
-import no.nav.dagpenger.saksbehandling.statistikk.api.tilDtoForUtløstAv
+import no.nav.dagpenger.saksbehandling.statistikk.api.tilStatistikkResultatSerieDTOForRettighet
+import no.nav.dagpenger.saksbehandling.statistikk.api.tilStatistikkResultatSerieDTOForUtløstAv
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
 import org.junit.jupiter.api.Test
@@ -65,7 +65,7 @@ class ProduksjonsstatistikkMapperTest {
                         ),
                 ),
             )
-        tilstanderOgRettighetAntall.tilDtoForRettighet() shouldBe rettighetSerier
+        tilstanderOgRettighetAntall.tilStatistikkResultatSerieDTOForRettighet() shouldBe rettighetSerier
     }
 
     @Test
@@ -142,6 +142,6 @@ class ProduksjonsstatistikkMapperTest {
                         ),
                 ),
             )
-        tilstanderOgUtløstAvAntall.tilDtoForUtløstAv() shouldBe utløstAvSerier
+        tilstanderOgUtløstAvAntall.tilStatistikkResultatSerieDTOForUtløstAv() shouldBe utløstAvSerier
     }
 }

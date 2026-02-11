@@ -19,15 +19,20 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.api.models.ProduksjonsstatistikkDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeMedAntallDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForUtløstAv
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.TilstandStatistikk
 
 internal fun Application.statistikkApi(produksjonsstatistikkRepository: ProduksjonsstatistikkRepository) {
     routing {
@@ -72,9 +77,9 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                         )
 
                     if (produksjonsstatistikkFilter.grupperEtter == GrupperEtterDTO.RETTIGHETSTYPE.name) {
-                        val grupper =
+                        val tilstandStatistikker =
                             produksjonsstatistikkRepository.hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter)
-                        val serier =
+                        val antallOppgaverForRettighet =
                             produksjonsstatistikkRepository.hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter)
                         val resultat =
                             produksjonsstatistikkRepository.hentResultatSerierForRettigheter(produksjonsstatistikkFilter)
@@ -82,8 +87,8 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                             status = HttpStatusCode.OK,
                             message =
                                 ProduksjonsstatistikkDTO(
-                                    grupper = grupper,
-                                    serier = serier,
+                                    grupper = tilstandStatistikker.tilStatistikkGruppeDTO(),
+                                    serier = antallOppgaverForRettighet.tilStatistikkSerieDTOForRettighet(),
                                     resultat =
                                         StatistikkResultatDTO(
                                             grupper =
@@ -91,12 +96,12 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                                                     .ifEmpty {
                                                         Oppgave.Tilstand.Type.Companion.søkbareTilstander
                                                     }.map { TilstandNavnDTO(navn = it.tilTilstandNavn()) },
-                                            serier = resultat.tilDtoForRettighet(),
+                                            serier = resultat.tilStatistikkResultatSerieDTOForRettighet(),
                                         ),
                                 ),
                         )
                     } else {
-                        val grupper =
+                        val tilstandStatistikker =
                             produksjonsstatistikkRepository.hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter)
                         val serier =
                             produksjonsstatistikkRepository.hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter)
@@ -107,8 +112,8 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                             status = HttpStatusCode.OK,
                             message =
                                 ProduksjonsstatistikkDTO(
-                                    grupper = grupper,
-                                    serier = serier,
+                                    grupper = tilstandStatistikker.tilStatistikkGruppeDTO(),
+                                    serier = serier.tilStatistikkSerieDTOForUtløstAv(),
                                     resultat =
                                         StatistikkResultatDTO(
                                             grupper =
@@ -116,7 +121,7 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
                                                     .ifEmpty {
                                                         Oppgave.Tilstand.Type.Companion.søkbareTilstander
                                                     }.map { TilstandNavnDTO(navn = it.tilTilstandNavn()) },
-                                            serier = resultat.tilDtoForUtløstAv(),
+                                            serier = resultat.tilStatistikkResultatSerieDTOForUtløstAv(),
                                         ),
                                 ),
                         )
@@ -127,23 +132,7 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
     }
 }
 
-private fun Oppgave.Tilstand.Type.tilTilstandNavn(): String {
-    when (this) {
-        Oppgave.Tilstand.Type.OPPRETTET -> return "Opprettet"
-        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> return "Klar til behandling"
-        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> return "Under behandling"
-        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> return "Ferdig behandlet"
-        Oppgave.Tilstand.Type.PAA_VENT -> return "På vent"
-        Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL -> return "Klar til kontroll"
-        Oppgave.Tilstand.Type.UNDER_KONTROLL -> return "Under kontroll"
-        Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> return "Avventer lås av behandling"
-        Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> return "Avventer opplåsing av behandling"
-        Oppgave.Tilstand.Type.AVBRUTT -> return "Avbrutt"
-        Oppgave.Tilstand.Type.AVBRUTT_MASKINELT -> return "Avbrutt maskinelt"
-    }
-}
-
-internal fun List<AntallOppgaverForTilstandOgRettighet>.tilDtoForRettighet(): List<StatistikkResultatSerieDTO> =
+internal fun List<AntallOppgaverForTilstandOgRettighet>.tilStatistikkResultatSerieDTOForRettighet(): List<StatistikkResultatSerieDTO> =
     this
         .groupBy { it.rettighet }
         .map { (rettighet, antallOppgaverForTilstandOgRettighetListe) ->
@@ -152,14 +141,14 @@ internal fun List<AntallOppgaverForTilstandOgRettighet>.tilDtoForRettighet(): Li
                 verdier =
                     antallOppgaverForTilstandOgRettighetListe.map { antallOppgaverForTilstandOgRettighet ->
                         StatistikkGruppeMedAntallDTO(
-                            gruppe = antallOppgaverForTilstandOgRettighet.tilstand.tilGruppeNavn(),
+                            gruppe = antallOppgaverForTilstandOgRettighet.tilstand.tilTilstandNavn(),
                             antall = antallOppgaverForTilstandOgRettighet.antall,
                         )
                     },
             )
         }
 
-internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDtoForUtløstAv(): List<StatistikkResultatSerieDTO> =
+internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilStatistikkResultatSerieDTOForUtløstAv(): List<StatistikkResultatSerieDTO> =
     this
         .groupBy { it.utløstAv }
         .map { (utlostAv, antallOppgaverForTilstandOgUtløstAvListe) ->
@@ -168,14 +157,39 @@ internal fun List<AntallOppgaverForTilstandOgUtløstAv>.tilDtoForUtløstAv(): Li
                 verdier =
                     antallOppgaverForTilstandOgUtløstAvListe.map { antallOppgaverForTilstandOgUtløstAv ->
                         StatistikkGruppeMedAntallDTO(
-                            gruppe = antallOppgaverForTilstandOgUtløstAv.tilstand.tilGruppeNavn(),
+                            gruppe = antallOppgaverForTilstandOgUtløstAv.tilstand.tilTilstandNavn(),
                             antall = antallOppgaverForTilstandOgUtløstAv.antall,
                         )
                     },
             )
         }
 
-private fun Oppgave.Tilstand.Type.tilGruppeNavn(): String =
+private fun List<TilstandStatistikk>.tilStatistikkGruppeDTO(): List<StatistikkGruppeDTO> =
+    this.map { tilstandStatistikk ->
+        StatistikkGruppeDTO(
+            navn = tilstandStatistikk.tilstand.name,
+            total = tilstandStatistikk.antall,
+            eldsteOppgave = tilstandStatistikk.eldsteOppgaveTidspunkt,
+        )
+    }
+
+internal fun List<AntallOppgaverForRettighet>.tilStatistikkSerieDTOForRettighet(): List<StatistikkSerieDTO> =
+    this.map { antallOppgaverForRettighet ->
+        StatistikkSerieDTO(
+            navn = antallOppgaverForRettighet.rettighet,
+            total = antallOppgaverForRettighet.antall,
+        )
+    }
+
+internal fun List<AntallOppgaverForUtløstAv>.tilStatistikkSerieDTOForUtløstAv(): List<StatistikkSerieDTO> =
+    this.map { antallOppgaverForUtløstAv ->
+        StatistikkSerieDTO(
+            navn = antallOppgaverForUtløstAv.utløstAv.name,
+            total = antallOppgaverForUtløstAv.antall,
+        )
+    }
+
+private fun Oppgave.Tilstand.Type.tilTilstandNavn(): String =
     when (this) {
         Oppgave.Tilstand.Type.OPPRETTET -> "Opprettet"
         Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> "Klar til behandling"

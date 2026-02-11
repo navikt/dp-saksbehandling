@@ -14,18 +14,19 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
+import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForUtløstAv
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.TilstandStatistikk
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -195,24 +196,24 @@ class StatistikkApiTest {
             mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentTilstanderMedUtløstAvFilter(any()) } returns
                     listOf(
-                        StatistikkGruppeDTO(
-                            navn = "KLAR_TIL_BEHANDLING",
-                            total = 1,
-                            eldsteOppgave = iGår,
+                        TilstandStatistikk(
+                            tilstand = KLAR_TIL_BEHANDLING,
+                            antall = 1,
+                            eldsteOppgaveTidspunkt = iGår,
                         ),
                     )
                 every { it.hentUtløstAvMedTilstandFilter(any()) } returns
                     listOf(
-                        StatistikkSerieDTO(
-                            navn = "SØKNAD",
-                            total = 1,
+                        AntallOppgaverForUtløstAv(
+                            utløstAv = SØKNAD,
+                            antall = 1,
                         ),
                     )
                 every { it.hentResultatSerierForUtløstAv(any()) } returns
                     listOf(
                         AntallOppgaverForTilstandOgUtløstAv(
                             tilstand = KLAR_TIL_BEHANDLING,
-                            utløstAv = UtløstAvType.SØKNAD,
+                            utløstAv = SØKNAD,
                             antall = 1,
                         ),
                     )
@@ -286,26 +287,26 @@ class StatistikkApiTest {
             mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentTilstanderMedRettighetFilter(any()) } returns
                     listOf(
-                        StatistikkGruppeDTO(
-                            navn = "KLAR_TIL_BEHANDLING",
-                            total = 8,
-                            eldsteOppgave = iDag,
+                        TilstandStatistikk(
+                            tilstand = KLAR_TIL_BEHANDLING,
+                            antall = 8,
+                            eldsteOppgaveTidspunkt = iDag,
                         ),
-                        StatistikkGruppeDTO(
-                            navn = "UNDER_BEHANDLING",
-                            total = 14,
-                            eldsteOppgave = iGår,
+                        TilstandStatistikk(
+                            tilstand = UNDER_BEHANDLING,
+                            antall = 14,
+                            eldsteOppgaveTidspunkt = iGår,
                         ),
                     )
                 every { it.hentRettigheterMedTilstandFilter(any()) } returns
                     listOf(
-                        StatistikkSerieDTO(
-                            navn = "Ordinær",
-                            total = 20,
+                        AntallOppgaverForRettighet(
+                            rettighet = "Ordinær",
+                            antall = 20,
                         ),
-                        StatistikkSerieDTO(
-                            navn = "Verneplikt",
-                            total = 2,
+                        AntallOppgaverForRettighet(
+                            rettighet = "Verneplikt",
+                            antall = 2,
                         ),
                     )
                 every { it.hentResultatSerierForRettigheter(any()) } returns

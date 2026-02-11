@@ -2,8 +2,6 @@ package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 
 interface ProduksjonsstatistikkRepository {
@@ -17,13 +15,13 @@ interface ProduksjonsstatistikkRepository {
     fun hentAntallBrevSendt(): Int
 
     // Nye metoder for statistikk med filter
-    fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO>
+    fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandStatistikk>
 
-    fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO>
+    fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForUtløstAv>
 
-    fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO>
+    fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandStatistikk>
 
-    fun hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO>
+    fun hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForRettighet>
 
     fun hentResultatSerierForUtløstAv(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv>
 

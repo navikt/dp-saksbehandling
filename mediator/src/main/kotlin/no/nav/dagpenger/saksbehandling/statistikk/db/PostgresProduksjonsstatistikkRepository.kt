@@ -7,9 +7,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class PostgresProduksjonsstatistikkRepository(
@@ -139,7 +138,7 @@ class PostgresProduksjonsstatistikkRepository(
             )
         } ?: 0
 
-    override fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO> {
+    override fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandStatistikk> {
         val utløstAvTyper =
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -183,22 +182,23 @@ class PostgresProduksjonsstatistikkRepository(
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
-                    StatistikkGruppeDTO(
-                        navn = row.string("tilstand"),
-                        total = row.int("antall"),
-                        eldsteOppgave = row.localDateTimeOrNull("eldste_oppgave"),
+                    TilstandStatistikk(
+                        tilstand = Oppgave.Tilstand.Type.valueOf(row.string("tilstand")),
+                        antall = row.int("antall"),
+                        eldsteOppgaveTidspunkt = row.localDateTimeOrNull("eldste_oppgave"),
                     )
                 }.asList,
             )
         }
     }
 
-    override fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO> {
+    override fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForUtløstAv> {
         val tilstander =
             produksjonsstatistikkFilter.tilstander.ifEmpty {
                 Oppgave.Tilstand.Type.entries
                     .toSet()
             }
+        // TODO legg til OMGJØRING i utlo-lista
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -217,7 +217,6 @@ class PostgresProduksjonsstatistikkRepository(
                         FROM (VALUES ('SØKNAD')
                                    , ('MELDEKORT')
                                    , ('MANUELL')
-                                   , ('OMGJØRING')
                                    , ('KLAGE')
                                    , ('INNSENDING')
                              ) AS utlo(utlost_av)
@@ -229,16 +228,16 @@ class PostgresProduksjonsstatistikkRepository(
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                         ),
                 ).map { row ->
-                    StatistikkSerieDTO(
-                        navn = row.string("utlost_av"),
-                        total = row.int("antall"),
+                    AntallOppgaverForUtløstAv(
+                        utløstAv = UtløstAvType.valueOf(row.string("utlost_av")),
+                        antall = row.int("antall"),
                     )
                 }.asList,
             )
         }
     }
 
-    override fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO> {
+    override fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandStatistikk> {
         val rettighetstyper =
             produksjonsstatistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
@@ -301,17 +300,19 @@ class PostgresProduksjonsstatistikkRepository(
                             "rettighetstyper" to rettighetstyper.toTypedArray(),
                         ),
                 ).map { row ->
-                    StatistikkGruppeDTO(
-                        navn = row.string("tilstand"),
-                        total = row.int("antall"),
-                        eldsteOppgave = row.localDateTimeOrNull("eldste_oppgave"),
+                    TilstandStatistikk(
+                        tilstand = Oppgave.Tilstand.Type.valueOf(row.string("tilstand")),
+                        antall = row.int("antall"),
+                        eldsteOppgaveTidspunkt = row.localDateTimeOrNull("eldste_oppgave"),
                     )
                 }.asList,
             )
         }
     }
 
-    override fun hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO> {
+    override fun hentRettigheterMedTilstandFilter(
+        produksjonsstatistikkFilter: ProduksjonsstatistikkFilter,
+    ): List<AntallOppgaverForRettighet> {
         val utløstAvTyper =
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
@@ -348,9 +349,9 @@ class PostgresProduksjonsstatistikkRepository(
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                         ),
                 ).map { row ->
-                    StatistikkSerieDTO(
-                        navn = row.string("rettighet"),
-                        total = row.int("antall"),
+                    AntallOppgaverForRettighet(
+                        rettighet = row.string("rettighet"),
+                        antall = row.int("antall"),
                     )
                 }.asList,
             )
@@ -476,4 +477,20 @@ data class AntallOppgaverForTilstandOgRettighet(
     val tilstand: Oppgave.Tilstand.Type,
     val rettighet: String,
     val antall: Int,
+)
+
+data class AntallOppgaverForRettighet(
+    val rettighet: String,
+    val antall: Int,
+)
+
+data class AntallOppgaverForUtløstAv(
+    val utløstAv: UtløstAvType,
+    val antall: Int,
+)
+
+data class TilstandStatistikk(
+    val tilstand: Oppgave.Tilstand.Type,
+    val antall: Int,
+    val eldsteOppgaveTidspunkt: LocalDateTime?,
 )

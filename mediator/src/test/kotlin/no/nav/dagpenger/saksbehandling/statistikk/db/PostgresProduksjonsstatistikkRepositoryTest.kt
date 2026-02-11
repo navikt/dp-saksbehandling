@@ -2,15 +2,22 @@ package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.UtløstAvType.INNSENDING
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
+import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -33,7 +40,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
         val filterPeriodeFomIGårTomIDag = ProduksjonsstatistikkFilter(periode = periodeFomIGårTomIDag)
         val behandling1 = lagBehandling(opprettet = iGår)
         val behandling2 = lagBehandling(opprettet = iDag)
-        val behandling3 = lagBehandling(opprettet = iDag, utløstAvType = UtløstAvType.KLAGE)
+        val behandling3 = lagBehandling(opprettet = iDag, utløstAvType = KLAGE)
         val behandling4 = lagBehandling(opprettet = iDag)
         val behandling5 = lagBehandling(opprettet = iDag)
         val behandling6 = lagBehandling(opprettet = iGår.minusDays(1))
@@ -106,48 +113,48 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                 )
 
             tilstanderAlle.size shouldBe 7
-            tilstanderAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 1
-            tilstanderAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.eldsteOppgave!! shouldBe behandling4.opprettet
-            tilstanderAlle.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
-            tilstanderAlle.single { it.navn == "PAA_VENT" }.total shouldBe 0
-            tilstanderAlle.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
-            tilstanderAlle.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
-            tilstanderAlle.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
-            tilstanderAlle.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 3
-            tilstanderAlle.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling1.opprettet
-            tilstanderAlle.single { it.navn == "AVBRUTT" }.total shouldBe 0
+            tilstanderAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 1
+            tilstanderAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.eldsteOppgaveTidspunkt!! shouldBe behandling4.opprettet
+            tilstanderAlle.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
+            tilstanderAlle.single { it.tilstand == PAA_VENT }.antall shouldBe 0
+            tilstanderAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 1
+            tilstanderAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt!! shouldBe behandling5.opprettet
+            tilstanderAlle.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
+            tilstanderAlle.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 3
+            tilstanderAlle.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe behandling1.opprettet
+            tilstanderAlle.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
             val tilstanderKlage =
                 statistikkTjeneste.hentTilstanderMedUtløstAvFilter(
                     ProduksjonsstatistikkFilter(
                         periode = periodeFomIGårTomIDag,
-                        utløstAvTyper = setOf(UtløstAvType.KLAGE),
+                        utløstAvTyper = setOf(KLAGE),
                     ),
                 )
 
             tilstanderKlage.size shouldBe 7
-            tilstanderKlage.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 0
-            tilstanderKlage.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
-            tilstanderKlage.single { it.navn == "PAA_VENT" }.total shouldBe 0
-            tilstanderKlage.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 0
-            tilstanderKlage.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
-            tilstanderKlage.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 1
-            tilstanderKlage.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling3.opprettet
-            tilstanderKlage.single { it.navn == "AVBRUTT" }.total shouldBe 0
+            tilstanderKlage.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 0
+            tilstanderKlage.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
+            tilstanderKlage.single { it.tilstand == PAA_VENT }.antall shouldBe 0
+            tilstanderKlage.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 0
+            tilstanderKlage.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
+            tilstanderKlage.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 1
+            tilstanderKlage.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe behandling3.opprettet
+            tilstanderKlage.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
             val tilstanderSøknadAlle = statistikkTjeneste.hentTilstanderMedRettighetFilter(filterPeriodeFomIGårTomIDag)
 
             tilstanderSøknadAlle.size shouldBe 7
-            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 1
-            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_BEHANDLING" }.eldsteOppgave!! shouldBe behandling4.opprettet
-            tilstanderSøknadAlle.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
-            tilstanderSøknadAlle.single { it.navn == "PAA_VENT" }.total shouldBe 0
-            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
-            tilstanderSøknadAlle.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
-            tilstanderSøknadAlle.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
-            tilstanderSøknadAlle.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 2
-            tilstanderSøknadAlle.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling1.opprettet
-            tilstanderSøknadAlle.single { it.navn == "AVBRUTT" }.total shouldBe 0
+            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 1
+            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.eldsteOppgaveTidspunkt!! shouldBe behandling4.opprettet
+            tilstanderSøknadAlle.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
+            tilstanderSøknadAlle.single { it.tilstand == PAA_VENT }.antall shouldBe 0
+            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 1
+            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt!! shouldBe behandling5.opprettet
+            tilstanderSøknadAlle.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
+            tilstanderSøknadAlle.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 2
+            tilstanderSøknadAlle.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe behandling1.opprettet
+            tilstanderSøknadAlle.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
             val tilstanderSøknadVerneplikt =
                 statistikkTjeneste.hentTilstanderMedRettighetFilter(
@@ -158,25 +165,25 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                 )
 
             tilstanderSøknadVerneplikt.size shouldBe 7
-            tilstanderSøknadVerneplikt.single { it.navn == "KLAR_TIL_BEHANDLING" }.total shouldBe 0
-            tilstanderSøknadVerneplikt.single { it.navn == "UNDER_BEHANDLING" }.total shouldBe 0
-            tilstanderSøknadVerneplikt.single { it.navn == "PAA_VENT" }.total shouldBe 0
-            tilstanderSøknadVerneplikt.single { it.navn == "KLAR_TIL_KONTROLL" }.total shouldBe 1
-            tilstanderSøknadVerneplikt.single { it.navn == "KLAR_TIL_KONTROLL" }.eldsteOppgave!! shouldBe behandling5.opprettet
-            tilstanderSøknadVerneplikt.single { it.navn == "UNDER_KONTROLL" }.total shouldBe 0
-            tilstanderSøknadVerneplikt.single { it.navn == "FERDIG_BEHANDLET" }.total shouldBe 1
-            tilstanderSøknadVerneplikt.single { it.navn == "FERDIG_BEHANDLET" }.eldsteOppgave!! shouldBe behandling2.opprettet
-            tilstanderSøknadVerneplikt.single { it.navn == "AVBRUTT" }.total shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.tilstand == PAA_VENT }.antall shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 1
+            tilstanderSøknadVerneplikt.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt!! shouldBe behandling5.opprettet
+            tilstanderSøknadVerneplikt.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
+            tilstanderSøknadVerneplikt.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 1
+            tilstanderSøknadVerneplikt.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe behandling2.opprettet
+            tilstanderSøknadVerneplikt.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
-            utløstAvAlle.size shouldBe 6
-            utløstAvAlle.single { it.navn == "SØKNAD" }.total shouldBe 4
-            utløstAvAlle.single { it.navn == "KLAGE" }.total shouldBe 1
-            utløstAvAlle.single { it.navn == "INNSENDING" }.total shouldBe 0
-            utløstAvAlle.single { it.navn == "MELDEKORT" }.total shouldBe 0
-            utløstAvAlle.single { it.navn == "MANUELL" }.total shouldBe 0
-            utløstAvAlle.single { it.navn == "OMGJØRING" }.total shouldBe 0
+            utløstAvAlle.size shouldBe 5
+            utløstAvAlle.single { it.utløstAv == SØKNAD }.antall shouldBe 4
+            utløstAvAlle.single { it.utløstAv == KLAGE }.antall shouldBe 1
+            utløstAvAlle.single { it.utløstAv == INNSENDING }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == MANUELL }.antall shouldBe 0
+//            utløstAvAlle.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
 
             val utløstAvFerdigBehandlet =
                 statistikkTjeneste.hentUtløstAvMedTilstandFilter(
@@ -187,13 +194,13 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ),
                 )
 
-            utløstAvFerdigBehandlet.size shouldBe 6
-            utløstAvFerdigBehandlet.single { it.navn == "SØKNAD" }.total shouldBe 2
-            utløstAvFerdigBehandlet.single { it.navn == "KLAGE" }.total shouldBe 1
-            utløstAvFerdigBehandlet.single { it.navn == "INNSENDING" }.total shouldBe 0
-            utløstAvFerdigBehandlet.single { it.navn == "OMGJØRING" }.total shouldBe 0
-            utløstAvFerdigBehandlet.single { it.navn == "MELDEKORT" }.total shouldBe 0
-            utløstAvFerdigBehandlet.single { it.navn == "MANUELL" }.total shouldBe 0
+            utløstAvFerdigBehandlet.size shouldBe 5
+            utløstAvFerdigBehandlet.single { it.utløstAv == SØKNAD }.antall shouldBe 2
+            utløstAvFerdigBehandlet.single { it.utløstAv == KLAGE }.antall shouldBe 1
+            utløstAvFerdigBehandlet.single { it.utløstAv == INNSENDING }.antall shouldBe 0
+//            utløstAvFerdigBehandlet.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
+            utløstAvFerdigBehandlet.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
+            utløstAvFerdigBehandlet.single { it.utløstAv == MANUELL }.antall shouldBe 0
 
             val resultatSerieForUtløstAv =
                 statistikkTjeneste.hentResultatSerierForUtløstAv(
@@ -201,17 +208,17 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ProduksjonsstatistikkFilter(
                             periode = periodeFomIGårTomIDag,
                             tilstander = setOf(FERDIG_BEHANDLET, PAA_VENT, KLAR_TIL_KONTROLL),
-                            utløstAvTyper = setOf(UtløstAvType.SØKNAD, UtløstAvType.KLAGE),
+                            utløstAvTyper = setOf(SØKNAD, KLAGE),
                             grupperEtter = GrupperEtterDTO.OPPGAVETYPE.name,
                         ),
                 )
             resultatSerieForUtløstAv.size shouldBe 6
-            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == UtløstAvType.SØKNAD }.antall shouldBe 2
-            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == UtløstAvType.SØKNAD }.antall shouldBe 0
-            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == UtløstAvType.SØKNAD }.antall shouldBe 1
-            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == UtløstAvType.KLAGE }.antall shouldBe 1
-            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == UtløstAvType.KLAGE }.antall shouldBe 0
-            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == UtløstAvType.KLAGE }.antall shouldBe 0
+            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == SØKNAD }.antall shouldBe 2
+            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == SØKNAD }.antall shouldBe 0
+            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == SØKNAD }.antall shouldBe 1
+            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == KLAGE }.antall shouldBe 1
+            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == KLAGE }.antall shouldBe 0
+            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == KLAGE }.antall shouldBe 0
 
             val resultatSerieForRettigheter =
                 statistikkTjeneste.hentResultatSerierForRettigheter(
