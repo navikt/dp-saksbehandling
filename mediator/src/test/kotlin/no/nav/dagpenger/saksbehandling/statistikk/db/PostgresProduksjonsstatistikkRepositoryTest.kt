@@ -15,13 +15,13 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkFilter
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import javax.sql.DataSource
-import kotlin.test.Test
 
 class PostgresProduksjonsstatistikkRepositoryTest {
     @Test
-    fun `Hent oppgaver for statistikk V2 basert på filter`() {
+    fun `Hent oppgaver basert på filter`() {
         val iDag = TestHelper.opprettetNå
         val iGår = TestHelper.opprettetNå.minusDays(1)
         val periodeFomIGårTomIDag =
@@ -205,6 +205,66 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 //            resultatSerie.single { it.navn == "FERDIG_BEHANDLET" && it.}.verdier.size shouldBe 2
 //            resultatSerie.single { it.navn == "PAA_VENT" }.verdier.size shouldBe 2
 //            resultatSerie.single { it.navn == "KLAR_TIL_KONTROLL" }.verdier.size shouldBe 2
+        }
+    }
+
+    @Test
+    fun `test hentAntallVedtakGjort`() {
+        val behandling1 = lagBehandling(behandlingId = UUIDv7.ny())
+        val behandling2 = lagBehandling(behandlingId = UUIDv7.ny())
+        val behandling3 = lagBehandling(behandlingId = UUIDv7.ny())
+        DBTestHelper.withBehandlinger(
+            behandlinger = listOf(behandling1, behandling2, behandling3),
+        ) { ds: DataSource ->
+            // Insert test data
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    tilstand = Oppgave.FerdigBehandlet,
+                    behandling = behandling1,
+                ),
+            )
+            repo.lagre(
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    tilstand = Oppgave.FerdigBehandlet,
+                    behandling = behandling2,
+                ),
+            )
+            repo.lagre(
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    tilstand = Oppgave.FerdigBehandlet,
+                    behandling = behandling3,
+                ),
+            )
+
+            val produksjonsstatistikkRepository = PostgresProduksjonsstatistikkRepository(ds)
+            val result = produksjonsstatistikkRepository.hentAntallVedtakGjort()
+
+            result.dag shouldBe 3
+            result.uke shouldBe 3
+            result.totalt shouldBe 3
+        }
+    }
+
+    @Test
+    fun `test hentBeholdningsInfo`() {
+        val behandling1 = lagBehandling()
+        val behandling2 = lagBehandling()
+        DBTestHelper.withBehandlinger(
+            behandlinger = listOf(behandling1, behandling2),
+        ) { ds: DataSource ->
+            // Insert test data
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling, behandling = behandling1))
+            repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling, behandling = behandling2))
+
+            val produksjonsstatistikkRepository = PostgresProduksjonsstatistikkRepository(ds)
+            val result = produksjonsstatistikkRepository.hentBeholdningsInfo()
+
+            result.antallOppgaverKlarTilBehandling shouldBe 2
         }
     }
 }

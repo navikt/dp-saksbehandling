@@ -963,7 +963,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
 
 
-  /v2/statistikk:
+  /produksjonsstatistikk:
     get:
       summary: Hent statistikk for oppgaver
       description: Henter statistikk for oppgaver.
@@ -1034,6 +1034,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+
   /statistikk:
     get:
       summary: Hent statistikk

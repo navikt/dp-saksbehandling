@@ -45,7 +45,7 @@ internal fun Application.statistikkApi(
                         h1 { +"Statistikk" }
                         p { +"Her finner du statistikk over antall brev sendt." }
                         ul {
-                            li { +"Antall brev sendt: ${saksbehandlingsstatistikkRepository.hentAntallBrevSendt()}" }
+                            li { +"Antall brev sendt: ${produksjonsstatistikkRepository.hentAntallBrevSendt()}" }
                         }
                     }
                 }
@@ -55,9 +55,9 @@ internal fun Application.statistikkApi(
         authenticate("azureAd") {
             route("statistikk") {
                 get {
-                    val statistikk = saksbehandlingsstatistikkRepository.hentSaksbehandlerStatistikk(call.navIdent())
-                    val generellStatistikk = saksbehandlingsstatistikkRepository.hentAntallVedtakGjort()
-                    val beholdningsinfo = saksbehandlingsstatistikkRepository.hentBeholdningsInfo()
+                    val statistikk = produksjonsstatistikkRepository.hentSaksbehandlerStatistikk(call.navIdent())
+                    val generellStatistikk = produksjonsstatistikkRepository.hentAntallVedtakGjort()
+                    val beholdningsinfo = produksjonsstatistikkRepository.hentBeholdningsInfo()
                     call.respond(
                         HttpStatusCode.OK,
                         mapOf(
@@ -68,7 +68,7 @@ internal fun Application.statistikkApi(
                     )
                 }
             }
-            route("v2/statistikk") {
+            route("produksjonsstatistikk") {
                 get {
                     val statistikkFilter =
                         StatistikkFilter.Companion.fra(

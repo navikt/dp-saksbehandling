@@ -26,7 +26,6 @@ import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
-import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -38,8 +37,8 @@ class StatistikkApiTest {
 
     @Test
     fun `test public statistikk html response`() {
-        val mockSaksbehandlingsstatistikkRepository =
-            mockk<SaksbehandlingsstatistikkRepository>().also {
+        val mockProduksjonsstatistikkRepository =
+            mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentAntallBrevSendt() } returns 3
             }
         testApplication {
@@ -47,8 +46,8 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockSaksbehandlingsstatistikkRepository,
-                    produksjonsstatistikkRepository = mockk(),
+                    saksbehandlingsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
@@ -66,8 +65,8 @@ class StatistikkApiTest {
 
     @Test
     fun `test authenticated statistikk api response`() {
-        val mockSaksbehandlingsstatistikkRepository =
-            mockk<SaksbehandlingsstatistikkRepository>().also {
+        val mockProduksjonsstatistikkRepository =
+            mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentSaksbehandlerStatistikk(any()) } returns StatistikkDTO(1, 2, 3)
                 every { it.hentAntallVedtakGjort() } returns StatistikkDTO(4, 5, 6)
                 every { it.hentBeholdningsInfo() } returns BeholdningsInfoDTO(2, 3, null)
@@ -78,8 +77,8 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockSaksbehandlingsstatistikkRepository,
-                    produksjonsstatistikkRepository = mockk(),
+                    saksbehandlingsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
@@ -114,7 +113,7 @@ class StatistikkApiTest {
     }
 
     @Test
-    fun `test feil i query param for statistikk v2 api`() {
+    fun `API skal svare med status 400 og http problem ved feil i queryparam`() {
         testApplication {
             application {
                 installerApis(
@@ -131,7 +130,7 @@ class StatistikkApiTest {
             }
 
             client
-                .get("v2/statistikk?tilstand=FEIL") {
+                .get("produksjonsstatistikk?tilstand=FEIL") {
                     autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 400
@@ -144,7 +143,7 @@ class StatistikkApiTest {
                           "title" : "Ugyldig verdi",
                           "status" : 400,
                           "detail" : "No enum constant no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FEIL",
-                          "instance" : "/v2/statistikk"
+                          "instance" : "/produksjonsstatistikk"
                         }
                         """.trimIndent()
                 }
@@ -152,7 +151,7 @@ class StatistikkApiTest {
     }
 
     @Test
-    fun `test autentisert statistikk v2 api-respons`() {
+    fun `API skal svare med status 200 og hente produksjonsstatistikk når bruker er autentisert`() {
         val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
         val mockProduksjonsstatistikkRepository =
             mockk<ProduksjonsstatistikkRepository>().also {
@@ -222,7 +221,7 @@ class StatistikkApiTest {
             }
 
             client
-                .get("v2/statistikk?tilstand=KLAR_TIL_BEHANDLING") {
+                .get("produksjonsstatistikk?tilstand=KLAR_TIL_BEHANDLING") {
                     autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 200
