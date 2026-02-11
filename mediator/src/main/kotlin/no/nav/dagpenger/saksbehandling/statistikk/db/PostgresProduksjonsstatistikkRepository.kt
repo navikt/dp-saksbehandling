@@ -9,7 +9,6 @@ import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 import javax.sql.DataSource
 
@@ -357,12 +356,6 @@ class PostgresProduksjonsstatistikkRepository(
             )
         }
     }
-
-    override fun hentResultatGrupper(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandNavnDTO> =
-        produksjonsstatistikkFilter.utløstAvTyper
-            .ifEmpty {
-                UtløstAvType.entries.toSet()
-            }.map { TilstandNavnDTO(navn = it.name) }
 
     override fun hentResultatSerierForUtløstAv(
         produksjonsstatistikkFilter: ProduksjonsstatistikkFilter,

@@ -23,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
@@ -217,8 +216,6 @@ class StatistikkApiTest {
                             antall = 1,
                         ),
                     )
-                every { it.hentResultatGrupper(any()) } returns
-                    listOf(TilstandNavnDTO(navn = "Klar til behandling"))
             }
 
         testApplication {
@@ -334,8 +331,6 @@ class StatistikkApiTest {
                             antall = 0,
                         ),
                     )
-                every { it.hentResultatGrupper(any()) } returns
-                    listOf(TilstandNavnDTO(navn = "Klar til behandling"), TilstandNavnDTO(navn = "Under behandling"))
             }
 
         testApplication {

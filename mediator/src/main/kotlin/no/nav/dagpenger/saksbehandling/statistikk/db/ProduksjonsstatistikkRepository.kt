@@ -4,7 +4,6 @@ import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
-import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 
 interface ProduksjonsstatistikkRepository {
@@ -25,8 +24,6 @@ interface ProduksjonsstatistikkRepository {
     fun hentTilstanderMedRettighetFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkGruppeDTO>
 
     fun hentRettigheterMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<StatistikkSerieDTO>
-
-    fun hentResultatGrupper(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandNavnDTO>
 
     fun hentResultatSerierForUtløstAv(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForTilstandOgUtløstAv>
 
