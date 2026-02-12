@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -71,6 +72,25 @@ data class Sak(
                     utløstAv = UtløstAvType.MELDEKORT,
                     opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
                     hendelse = meldekortbehandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+        }
+
+    fun knyttTilSak(omgjøringBehandlingOpprettetHendelse: OmgjøringBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == omgjøringBehandlingOpprettetHendelse.behandlingskjedeId ||
+            this.basertPåBehandlingErKnyttetTilSak(
+                omgjøringBehandlingOpprettetHendelse.basertPåBehandling,
+            )
+        ) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = omgjøringBehandlingOpprettetHendelse.behandlingId,
+                    utløstAv = UtløstAvType.OMGJØRING,
+                    opprettet = omgjøringBehandlingOpprettetHendelse.opprettet,
+                    hendelse = omgjøringBehandlingOpprettetHendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

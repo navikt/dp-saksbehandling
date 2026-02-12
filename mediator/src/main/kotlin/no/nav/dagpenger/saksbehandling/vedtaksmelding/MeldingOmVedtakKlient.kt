@@ -56,6 +56,7 @@ class MeldingOmVedtakKlient(
                 UtløstAvType.MELDEKORT -> "MELDEKORT"
                 UtløstAvType.MANUELL -> "MANUELL"
                 UtløstAvType.INNSENDING -> "INNSENDING"
+                UtløstAvType.OMGJØRING -> "OMGJØRING"
             }
 
         val meldingOmVedtakDataDTO =

@@ -14,7 +14,7 @@ internal class BehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort")
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort", "Omgjøring")
 
     override val mottakNavn: String = "BehandlingsresultatMottak"
 
@@ -25,18 +25,9 @@ internal class BehandlingsresultatMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        oppgaveMediator.hentOppgaveIdFor(behandlingsresultat.behandlingId)?.let {
-            // sak statistikk greier:
-            // Er dette vår sak?
-            //
-
-            oppgaveMediator.ferdigstillOppgave(
-                vedtakFattetHendelse =
-                    packet.vedtakFattetHendelse(
-                        sak = null,
-                        behandlingsresultat = behandlingsresultat,
-                    ),
-            )
-        }
+        oppgaveMediator.håndter(
+            packet.vedtakFattetHendelse(null, behandlingsresultat),
+            EmneknaggBuilder(packet.toJson()).bygg(),
+        )
     }
 }

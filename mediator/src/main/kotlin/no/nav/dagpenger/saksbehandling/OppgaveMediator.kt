@@ -492,27 +492,6 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave =
-        oppgaveRepository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
-            withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
-                logger.info {
-                    "Mottatt VedtakFattetHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
-                    when (handling) {
-                        Handling.LAGRE_OPPGAVE -> {
-                            oppgaveRepository.lagre(oppgave)
-                        }
-                        Handling.INGEN -> {}
-                    }
-                }
-
-                logger.info {
-                    "Behandlet VedtakFattetHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                }
-            }
-        }
-
     fun ferdigstillOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
@@ -728,6 +707,83 @@ class OppgaveMediator(
         søknadId: UUID,
         ident: String,
     ) = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
+
+    fun håndter(
+        vedtakFattetHendelse: VedtakFattetHendelse,
+        emneknagger: Set<String> = emptySet(),
+    ) {
+        withLoggingContext("behandlingId" to vedtakFattetHendelse.behandlingId.toString()) {
+            logger.info { "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}" }
+            val oppgave: Oppgave =
+                oppgaveRepository.finnOppgaveFor(vedtakFattetHendelse.behandlingId)
+                    ?: oppretteOppgaveForAutomatiskFattetVedtak(vedtakFattetHendelse, emneknagger)
+            withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                logger.info {
+                    "Mottatt VedtakFattetHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
+                    when (handling) {
+                        Handling.LAGRE_OPPGAVE -> {
+                            oppgaveRepository.lagre(oppgave)
+                        }
+                        Handling.INGEN -> {}
+                    }
+                }
+                logger.info {
+                    "Behandlet VedtakFattetHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                }
+            }
+        }
+    }
+
+    private fun oppretteOppgaveForAutomatiskFattetVedtak(
+        vedtakFattetHendelse: VedtakFattetHendelse,
+        emneknagger: Set<String>,
+    ): Oppgave {
+        require(vedtakFattetHendelse.automatiskBehandlet == true) {
+            "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for " +
+                "behandlingId ${vedtakFattetHendelse.behandlingId}. " +
+                "Oppgave skal alltid eksistere for manuelle vedtak."
+        }
+
+        val sakHistorikk =
+            requireNotNull(sakMediator.finnSakHistorikk(vedtakFattetHendelse.ident)) {
+                sikkerlogger.error {
+                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
+                        "men fant ingen sakshistorikk for ident ${vedtakFattetHendelse.ident}"
+                }
+                logger.error {
+                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
+                        "men fant ingen sakshistorikk. Se sikkerlogg for ident "
+                }
+            }
+
+        val behandling =
+            requireNotNull(sakHistorikk.finnBehandling(vedtakFattetHendelse.behandlingId)) {
+                logger.error {
+                    "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
+                        "men fant ingen behandling i sakshistorikken"
+                }
+            }
+
+        return Oppgave(
+            oppgaveId = UUIDv7.ny(),
+            emneknagger = emneknagger,
+            opprettet = behandling.opprettet,
+            person = sakHistorikk.person,
+            behandling = behandling,
+            meldingOmVedtak =
+                Oppgave.MeldingOmVedtak(
+                    kilde = DP_SAK,
+                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                ),
+        ).also {
+            logger.info {
+                "Opprettet oppgave(${it.oppgaveId}) for behandlingId " +
+                    "${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
+            }
+        }
+    }
 
     private fun sendAlertTilRapid(
         feilType: AlertManager.AlertType,
