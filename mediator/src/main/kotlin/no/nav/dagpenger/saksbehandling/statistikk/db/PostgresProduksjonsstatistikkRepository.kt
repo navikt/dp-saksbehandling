@@ -302,11 +302,11 @@ class PostgresProduksjonsstatistikkRepository(
         val rettighetstyper =
             produksjonsstatistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
-                    "Ordinær",
-                    "Verneplikt",
-                    "Permittert",
-                    "Permittert fisk",
-                    "Konkurs",
+                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
                 )
             }
         val tilstander =

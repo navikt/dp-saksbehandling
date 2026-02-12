@@ -24,12 +24,10 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
-import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 
 internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,
     oppgaveDTOMapper: OppgaveDTOMapper,
-    saksbehandlingsstatistikkRepository: SaksbehandlingsstatistikkRepository,
     produksjonsstatistikkRepository: ProduksjonsstatistikkRepository,
     klageMediator: KlageMediator,
     klageDTOMapper: KlageDTOMapper,
