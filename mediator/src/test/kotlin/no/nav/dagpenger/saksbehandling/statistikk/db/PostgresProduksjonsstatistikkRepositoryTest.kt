@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType.INNSENDING
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
+import no.nav.dagpenger.saksbehandling.UtløstAvType.OMGJØRING
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
@@ -177,12 +178,13 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
-            utløstAvAlle.size shouldBe 5
+            utløstAvAlle.size shouldBe 6
             utløstAvAlle.single { it.utløstAv == SØKNAD }.antall shouldBe 4
             utløstAvAlle.single { it.utløstAv == KLAGE }.antall shouldBe 1
             utløstAvAlle.single { it.utløstAv == INNSENDING }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == MANUELL }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
 
             val utløstAvFerdigBehandlet =
                 statistikkTjeneste.hentUtløstAvMedTilstandFilter(
@@ -193,12 +195,13 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ),
                 )
 
-            utløstAvFerdigBehandlet.size shouldBe 5
+            utløstAvFerdigBehandlet.size shouldBe 6
             utløstAvFerdigBehandlet.single { it.utløstAv == SØKNAD }.antall shouldBe 2
             utløstAvFerdigBehandlet.single { it.utløstAv == KLAGE }.antall shouldBe 1
             utløstAvFerdigBehandlet.single { it.utløstAv == INNSENDING }.antall shouldBe 0
             utløstAvFerdigBehandlet.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
             utløstAvFerdigBehandlet.single { it.utløstAv == MANUELL }.antall shouldBe 0
+            utløstAvFerdigBehandlet.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
 
             val resultatSerieForUtløstAv =
                 statistikkTjeneste.hentResultatSerierForUtløstAv(

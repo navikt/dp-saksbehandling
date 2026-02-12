@@ -105,6 +105,7 @@ class PostgresProduksjonsstatistikkRepository(
                         FROM (VALUES ('SØKNAD')
                                    , ('MELDEKORT')
                                    , ('MANUELL')
+                                   , ('OMGJØRING')
                                    , ('KLAGE')
                                    , ('INNSENDING')
                              ) AS utlo(utlost_av)
