@@ -2,16 +2,11 @@ package no.nav.dagpenger.saksbehandling.statistikk.api
 
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
@@ -19,8 +14,6 @@ import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
-import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
-import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
@@ -34,83 +27,6 @@ import java.time.temporal.ChronoUnit
 class StatistikkApiTest {
     init {
         mockAzure()
-    }
-
-    @Test
-    fun `test public statistikk html response`() {
-        val mockProduksjonsstatistikkRepository =
-            mockk<ProduksjonsstatistikkRepository>().also {
-                every { it.hentAntallBrevSendt() } returns 3
-            }
-        testApplication {
-            application {
-                installerApis(
-                    oppgaveMediator = mockk(),
-                    oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
-                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
-                    klageMediator = mockk(),
-                    klageDTOMapper = mockk(),
-                    personMediator = mockk(),
-                    sakMediator = mockk(),
-                    innsendingMediator = mockk(),
-                )
-            }
-
-            client.get("public/statistikk").let { httpResponse ->
-                httpResponse.status.value shouldBe 200
-                httpResponse.bodyAsText() shouldContain """Antall brev sendt: 3"""
-            }
-        }
-    }
-
-    @Test
-    fun `test authenticated statistikk api response`() {
-        val mockProduksjonsstatistikkRepository =
-            mockk<ProduksjonsstatistikkRepository>().also {
-                every { it.hentSaksbehandlerStatistikk(any()) } returns StatistikkDTO(1, 2, 3)
-                every { it.hentAntallVedtakGjort() } returns StatistikkDTO(4, 5, 6)
-                every { it.hentBeholdningsInfo() } returns BeholdningsInfoDTO(2, 3, null)
-            }
-
-        testApplication {
-            application {
-                installerApis(
-                    oppgaveMediator = mockk(),
-                    oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
-                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
-                    klageMediator = mockk(),
-                    klageDTOMapper = mockk(),
-                    personMediator = mockk(),
-                    sakMediator = mockk(),
-                    innsendingMediator = mockk(),
-                )
-            }
-
-            client
-                .get("statistikk") {
-                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
-                }.let { httpResponse ->
-                    httpResponse.status.value shouldBe 200
-                    val json = httpResponse.bodyAsText()
-                    val jsonElement = Json.Default.parseToJsonElement(json).jsonObject
-                    val individuellStatistikk = jsonElement["individuellStatistikk"]!!.jsonObject
-                    val generellStatistikk = jsonElement["generellStatistikk"]!!.jsonObject
-                    val beholdningsinfo = jsonElement["beholdningsinfo"]!!.jsonObject
-
-                    individuellStatistikk["dag"]!!.jsonPrimitive.int shouldBe 1
-                    individuellStatistikk["uke"]!!.jsonPrimitive.int shouldBe 2
-                    individuellStatistikk["totalt"]!!.jsonPrimitive.int shouldBe 3
-
-                    generellStatistikk["dag"]!!.jsonPrimitive.int shouldBe 4
-                    generellStatistikk["uke"]!!.jsonPrimitive.int shouldBe 5
-                    generellStatistikk["totalt"]!!.jsonPrimitive.int shouldBe 6
-
-                    beholdningsinfo["antallOppgaverKlarTilBehandling"]!!.jsonPrimitive.int shouldBe 2
-                    beholdningsinfo["antallOppgaverKlarTilKontroll"]!!.jsonPrimitive.int shouldBe 3
-                }
-        }
     }
 
     @Test
@@ -241,7 +157,6 @@ class StatistikkApiTest {
                     httpResponse.status.value shouldBe 200
                     val json = httpResponse.bodyAsText().trimIndent()
 
-                    // verify through string matching
                     json shouldEqualJson
                         //language=json
                         """
@@ -356,7 +271,6 @@ class StatistikkApiTest {
                     httpResponse.status.value shouldBe 200
                     val json = httpResponse.bodyAsText().trimIndent()
 
-                    // verify through string matching
                     json shouldEqualJson
                         //language=json
                         """

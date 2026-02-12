@@ -1035,41 +1035,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /statistikk:
-    get:
-      summary: Hent statistikk
-      description: Henter statistikk for innlogget saksbehandler samt generell statistikk.
-      responses:
-        '200':
-          description: Statistikk hentet
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  individuellStatistikk:
-                    $ref: '#/components/schemas/Statistikk'
-                  generellStatistikk:
-                    $ref: '#/components/schemas/Statistikk'
-                  beholdningsinfo:
-                    $ref: '#/components/schemas/BeholdningsInfo'
-                required:
-                  - individuellStatistikk
-                  - generellStatistikk
-                  - beholdningsinfo
-        '401':
-          description: Uautorisert tilgang
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-        default:
-          description: Feil
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-
 components:
   schemas:
     Innsending:

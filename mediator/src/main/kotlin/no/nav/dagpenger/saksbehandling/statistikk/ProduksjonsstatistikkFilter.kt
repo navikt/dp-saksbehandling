@@ -19,17 +19,12 @@ data class ProduksjonsstatistikkFilter(
         fun fra(queryParameters: Parameters): ProduksjonsstatistikkFilter {
             val builder = StatistikkFilterBuilder(queryParameters)
 
-            val tilstander = builder.tilstander() ?: emptySet()
-            val rettighetstyper = builder.rettighetstyper() ?: emptySet()
-            val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
-            val grupperEtter = builder.grupperEtter()
-
             return ProduksjonsstatistikkFilter(
                 periode = Periode.fra(queryParameters),
-                tilstander = tilstander,
-                rettighetstyper = rettighetstyper,
-                utløstAvTyper = utløstAvTyper,
-                grupperEtter = grupperEtter,
+                tilstander = builder.tilstander(),
+                rettighetstyper = builder.rettighetstyper(),
+                utløstAvTyper = builder.utløstAvTyper(),
+                grupperEtter = builder.grupperEtter(),
             )
         }
     }
@@ -45,11 +40,12 @@ data class ProduksjonsstatistikkFilter(
             this.stringValues = stringValues
         }
 
-        fun tilstander(): Set<Oppgave.Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
+        fun tilstander(): Set<Oppgave.Tilstand.Type> =
+            stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet() ?: emptySet()
 
-        fun rettighetstyper(): Set<String>? = stringValues.getAll("rettighet")?.toSet()
+        fun rettighetstyper(): Set<String> = stringValues.getAll("rettighet")?.toSet() ?: emptySet()
 
-        fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
+        fun utløstAvTyper(): Set<UtløstAvType> = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet() ?: emptySet()
 
         fun grupperEtter(): String = stringValues.get("grupperEtter") ?: GrupperEtterDTO.OPPGAVETYPE.name
     }

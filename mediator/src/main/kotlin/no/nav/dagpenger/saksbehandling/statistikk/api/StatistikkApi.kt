@@ -25,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkSerieDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilstandNavnDTO
-import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
@@ -54,21 +53,6 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
         }
 
         authenticate("azureAd") {
-            route("statistikk") {
-                get {
-                    val statistikk = produksjonsstatistikkRepository.hentSaksbehandlerStatistikk(call.navIdent())
-                    val generellStatistikk = produksjonsstatistikkRepository.hentAntallVedtakGjort()
-                    val beholdningsinfo = produksjonsstatistikkRepository.hentBeholdningsInfo()
-                    call.respond(
-                        HttpStatusCode.OK,
-                        mapOf(
-                            "individuellStatistikk" to statistikk,
-                            "generellStatistikk" to generellStatistikk,
-                            "beholdningsinfo" to beholdningsinfo,
-                        ),
-                    )
-                }
-            }
             route("produksjonsstatistikk") {
                 get {
                     val produksjonsstatistikkFilter =
