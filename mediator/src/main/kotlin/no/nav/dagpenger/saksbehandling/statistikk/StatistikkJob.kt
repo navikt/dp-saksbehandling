@@ -42,7 +42,8 @@ class StatistikkJob(
                             tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
                         )
                         logger.info {
-                            "Publisert oppgavetilstandsendring med id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+                            "Publisert oppgavetilstandsendring med " +
+                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
                     }
             }

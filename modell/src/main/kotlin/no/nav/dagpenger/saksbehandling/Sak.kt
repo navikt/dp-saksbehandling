@@ -79,18 +79,18 @@ data class Sak(
             KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
 
-    fun knyttTilSak(omgjoringBehanndlingOpprettetHendelse: OmgjøringBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == omgjoringBehanndlingOpprettetHendelse.behandlingskjedeId ||
+    fun knyttTilSak(omgjøringBehandlingOpprettetHendelse: OmgjøringBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == omgjøringBehandlingOpprettetHendelse.behandlingskjedeId ||
             this.basertPåBehandlingErKnyttetTilSak(
-                omgjoringBehanndlingOpprettetHendelse.basertPåBehandling,
+                omgjøringBehandlingOpprettetHendelse.basertPåBehandling,
             )
         ) {
             behandlinger.add(
                 Behandling(
-                    behandlingId = omgjoringBehanndlingOpprettetHendelse.behandlingId,
+                    behandlingId = omgjøringBehandlingOpprettetHendelse.behandlingId,
                     utløstAv = UtløstAvType.OMGJØRING,
-                    opprettet = omgjoringBehanndlingOpprettetHendelse.opprettet,
-                    hendelse = omgjoringBehanndlingOpprettetHendelse,
+                    opprettet = omgjøringBehandlingOpprettetHendelse.opprettet,
+                    hendelse = omgjøringBehandlingOpprettetHendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

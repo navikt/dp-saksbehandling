@@ -31,7 +31,7 @@ internal class BehandlingOpprettetMottak(
                 it.requireValue("@event_name", "behandling_opprettet")
                 it.requireAny(
                     key = "behandletHendelse.type",
-                    values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring", "Omgjøring"),
+                    values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring"),
                 )
             }
             validate {

@@ -10,11 +10,11 @@ class EmneknaggFilteringTest {
     fun `Gruppering av emneknagger etter kategori`() {
         val emneknagger =
             setOf(
-                Emneknagg.Regelknagg.AVSLAG.visningsnavn, // SØKNADSRESULTAT
-                Emneknagg.Regelknagg.INNVILGELSE.visningsnavn, // SØKNADSRESULTAT
-                Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn, // RETTIGHET
-                Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn, // RETTIGHET
-                Emneknagg.Regelknagg.GJENOPPTAK.visningsnavn, // GJENOPPTAK
+                Emneknagg.Regelknagg.AVSLAG.visningsnavn,
+                Emneknagg.Regelknagg.INNVILGELSE.visningsnavn,
+                Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
+                Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
+                Emneknagg.Regelknagg.GJENOPPTAK.visningsnavn,
             )
 
         val gruppert = emneknagger.grupperEmneknaggPerKategori()
