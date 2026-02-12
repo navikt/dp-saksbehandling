@@ -32,7 +32,11 @@ class PostgresProduksjonsstatistikkRepository(
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
             }
-
+        val tilstander =
+            produksjonsstatistikkFilter.tilstander.ifEmpty {
+                Oppgave.Tilstand.Type.søkbareTilstander
+                    .toSet()
+            }
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -43,6 +47,7 @@ class PostgresProduksjonsstatistikkRepository(
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand   = tils.tilstand
+                                AND     oppg.tilstand   = ANY(:tilstander)
                                 AND     beha.utlost_av  = ANY(:utlost_av_typer)
                                 AND     oppg.opprettet  >= :fom
                                 AND     oppg.opprettet  <  :tom_pluss_1_dag
@@ -51,6 +56,7 @@ class PostgresProduksjonsstatistikkRepository(
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand   = tils.tilstand
+                                AND     oppg.tilstand   = ANY(:tilstander)
                                 AND     beha.utlost_av  = ANY(:utlost_av_typer)
                                 AND     oppg.opprettet  >= :fom
                                 AND     oppg.opprettet  <  :tom_pluss_1_dag
@@ -69,6 +75,7 @@ class PostgresProduksjonsstatistikkRepository(
                             "fom" to produksjonsstatistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
+                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     TilstandStatistikk(
@@ -84,7 +91,7 @@ class PostgresProduksjonsstatistikkRepository(
     override fun hentUtløstAvMedTilstandFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<AntallOppgaverForUtløstAv> {
         val tilstander =
             produksjonsstatistikkFilter.tilstander.ifEmpty {
-                Oppgave.Tilstand.Type.entries
+                Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
         return sessionOf(dataSource = dataSource).use { session ->
@@ -137,6 +144,11 @@ class PostgresProduksjonsstatistikkRepository(
                     Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
                 )
             }
+        val tilstander =
+            produksjonsstatistikkFilter.tilstander.ifEmpty {
+                Oppgave.Tilstand.Type.søkbareTilstander
+                    .toSet()
+            }
 
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
@@ -148,10 +160,11 @@ class PostgresProduksjonsstatistikkRepository(
                              , (SELECT  COUNT(*)
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                                WHERE   oppg.tilstand = tils.tilstand
-                                AND     beha.utlost_av = 'SØKNAD'
-                                AND     oppg.opprettet >= :fom
-                                AND     oppg.opprettet <  :tom_pluss_1_dag
+                                WHERE   oppg.tilstand   = tils.tilstand
+                                AND     oppg.tilstand   = ANY(:tilstander)
+                                AND     beha.utlost_av  = 'SØKNAD'
+                                AND     oppg.opprettet  >= :fom
+                                AND     oppg.opprettet  <  :tom_pluss_1_dag
                                 AND EXISTS(
                                     SELECT  1
                                     FROM    emneknagg_v1 emne
@@ -162,10 +175,11 @@ class PostgresProduksjonsstatistikkRepository(
                              , (SELECT  MIN(oppg.opprettet)
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                                WHERE   oppg.tilstand = tils.tilstand
-                                AND     beha.utlost_av = 'SØKNAD'
-                                AND     oppg.opprettet >= :fom
-                                AND     oppg.opprettet <  :tom_pluss_1_dag
+                                WHERE   oppg.tilstand   = tils.tilstand
+                                AND     oppg.tilstand   = ANY(:tilstander)
+                                AND     beha.utlost_av  = 'SØKNAD'
+                                AND     oppg.opprettet  >= :fom
+                                AND     oppg.opprettet  <  :tom_pluss_1_dag
                                 AND EXISTS(
                                     SELECT  1
                                     FROM    emneknagg_v1 emne
@@ -187,6 +201,7 @@ class PostgresProduksjonsstatistikkRepository(
                             "fom" to produksjonsstatistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "rettighetstyper" to rettighetstyper.toTypedArray(),
+                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     TilstandStatistikk(
@@ -204,7 +219,7 @@ class PostgresProduksjonsstatistikkRepository(
     ): List<AntallOppgaverForRettighet> {
         val tilstander =
             produksjonsstatistikkFilter.tilstander.ifEmpty {
-                Oppgave.Tilstand.Type.entries
+                Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
 
@@ -257,7 +272,7 @@ class PostgresProduksjonsstatistikkRepository(
             }
         val tilstander =
             produksjonsstatistikkFilter.tilstander.ifEmpty {
-                Oppgave.Tilstand.Type.entries
+                Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
         return sessionOf(dataSource = dataSource).use { session ->
@@ -311,7 +326,7 @@ class PostgresProduksjonsstatistikkRepository(
             }
         val tilstander =
             produksjonsstatistikkFilter.tilstander.ifEmpty {
-                Oppgave.Tilstand.Type.entries
+                Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
         return sessionOf(dataSource = dataSource).use { session ->
