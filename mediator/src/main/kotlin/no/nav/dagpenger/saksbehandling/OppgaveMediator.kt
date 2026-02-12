@@ -708,12 +708,15 @@ class OppgaveMediator(
         ident: String,
     ) = oppgaveRepository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
 
-    fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
+    fun håndter(
+        vedtakFattetHendelse: VedtakFattetHendelse,
+        emneknagger: Set<String> = emptySet(),
+    ) {
         withLoggingContext("behandlingId" to vedtakFattetHendelse.behandlingId.toString()) {
             logger.info { "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}" }
             val oppgave: Oppgave =
                 oppgaveRepository.finnOppgaveFor(vedtakFattetHendelse.behandlingId)
-                    ?: oppretteOppgaveForAutomatiskFattetVedtak(vedtakFattetHendelse)
+                    ?: oppretteOppgaveForAutomatiskFattetVedtak(vedtakFattetHendelse, emneknagger)
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt VedtakFattetHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
@@ -733,7 +736,10 @@ class OppgaveMediator(
         }
     }
 
-    private fun oppretteOppgaveForAutomatiskFattetVedtak(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
+    private fun oppretteOppgaveForAutomatiskFattetVedtak(
+        vedtakFattetHendelse: VedtakFattetHendelse,
+        emneknagger: Set<String>,
+    ): Oppgave {
         require(vedtakFattetHendelse.automatiskBehandlet == true) {
             "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for " +
                 "behandlingId ${vedtakFattetHendelse.behandlingId}. " +
@@ -762,7 +768,7 @@ class OppgaveMediator(
 
         return Oppgave(
             oppgaveId = UUIDv7.ny(),
-            emneknagger = emptySet(),
+            emneknagger = emneknagger,
             opprettet = behandling.opprettet,
             person = sakHistorikk.person,
             behandling = behandling,

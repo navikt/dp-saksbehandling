@@ -361,7 +361,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `For automatiske VedtakfattetHendelse skal oppgave lages og settes til ferdigbehandlet `() {
+    fun `For automatiske VedtakfattetHendelse skal oppgave lages med emneknagger og settes til ferdigbehandlet `() {
         val behandlingId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val opprettet = LocalDateTime.now()
@@ -398,10 +398,12 @@ OppgaveMediatorTest {
                     "Oppgave skal alltid eksistere for manuelle vedtak.",
             ) {
                 oppgaveMediator.håndter(
-                    lagVedtakHendelse(
-                        behandlingId = behandlingId,
-                        automatiskBehandlet = false,
-                    ),
+                    vedtakFattetHendelse =
+                        lagVedtakHendelse(
+                            behandlingId = behandlingId,
+                            automatiskBehandlet = false,
+                        ),
+                    emneknagger = emneknagger,
                 )
             }
 
@@ -410,8 +412,11 @@ OppgaveMediatorTest {
                     behandlingId = behandlingId,
                     automatiskBehandlet = true,
                 )
+
+            val forventetEmneKnagger = setOf("e1", "e2")
             oppgaveMediator.håndter(
-                automatiskVedtakfattetHendelse,
+                vedtakFattetHendelse = automatiskVedtakfattetHendelse,
+                emneknagger = forventetEmneKnagger,
             )
 
             val oppgaveId =
@@ -421,6 +426,7 @@ OppgaveMediatorTest {
             with(oppgaveMediator.hentOppgave(oppgaveId!!, testInspektør)) {
                 tilstand().type shouldBe FERDIG_BEHANDLET
                 tilstandslogg.single().hendelse shouldBe automatiskVedtakfattetHendelse
+                emneknagger shouldBe forventetEmneKnagger
             }
         }
     }

@@ -25,6 +25,9 @@ internal class BehandlingsresultatMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        oppgaveMediator.håndter(packet.vedtakFattetHendelse(null, behandlingsresultat))
+        oppgaveMediator.håndter(
+            packet.vedtakFattetHendelse(null, behandlingsresultat),
+            EmneknaggBuilder(packet.toJson()).bygg(),
+        )
     }
 }

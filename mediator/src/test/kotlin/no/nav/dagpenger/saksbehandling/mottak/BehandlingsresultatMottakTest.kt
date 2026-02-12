@@ -17,7 +17,6 @@ import java.util.UUID
 class BehandlingsresultatMottakTest {
     private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
-    private val behandlingIdUtenOppgave = UUID.randomUUID()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val oppgave =
         TestHelper.lagOppgave(
@@ -29,7 +28,7 @@ class BehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {
-            every { it.håndter(any()) } just Runs
+            every { it.håndter(any(), any()) } just Runs
         }
 
     init {
@@ -41,14 +40,16 @@ class BehandlingsresultatMottakTest {
         testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Søknad"))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
-                    ident = TestHelper.testPerson.ident,
-                    automatiskBehandlet = true,
-                    sak = null,
-                ),
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = true,
+                        sak = null,
+                    ),
+                emneknagger = any(),
             )
         }
     }
@@ -58,14 +59,16 @@ class BehandlingsresultatMottakTest {
         testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Søknad", automatisk = false))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
-                    ident = TestHelper.testPerson.ident,
-                    automatiskBehandlet = false,
-                    sak = null,
-                ),
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = false,
+                        sak = null,
+                    ),
+                emneknagger = any(),
             )
         }
     }
@@ -75,14 +78,16 @@ class BehandlingsresultatMottakTest {
         testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Meldekort"))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Meldekort",
-                    ident = TestHelper.testPerson.ident,
-                    automatiskBehandlet = true,
-                    sak = null,
-                ),
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Meldekort",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = true,
+                        sak = null,
+                    ),
+                emneknagger = emptySet(),
             )
         }
     }
@@ -92,14 +97,16 @@ class BehandlingsresultatMottakTest {
         testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Manuell"))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Manuell",
-                    ident = TestHelper.testPerson.ident,
-                    automatiskBehandlet = true,
-                    sak = null,
-                ),
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Manuell",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = true,
+                        sak = null,
+                    ),
+                emneknagger = emptySet(),
             )
         }
     }
@@ -122,6 +129,7 @@ class BehandlingsresultatMottakTest {
                 "type": "$behandletHendelseType"
               },
               "automatisk": $automatisk,
+              "opplysninger": [],
               "rettighetsperioder": [ ]
                 }
               ]

@@ -90,6 +90,7 @@ internal data class Behandlingsresultat(
     val behandletHendelseId: String,
     val rettighetsperioder: List<Rettighetsperiode>,
     val automatiskBehandlet: Boolean,
+    private val packet: JsonMessage,
 ) {
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
@@ -103,6 +104,7 @@ internal data class Behandlingsresultat(
                     harRett = it["harRett"].asBoolean(),
                 )
             },
+        packet = packet,
     )
 
     private fun dagpengerInnvilget(): Boolean =
