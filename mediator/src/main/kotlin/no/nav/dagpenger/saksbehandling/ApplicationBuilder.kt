@@ -205,7 +205,6 @@ internal class ApplicationBuilder(
                         installerApis(
                             oppgaveMediator = oppgaveMediator,
                             oppgaveDTOMapper = oppgaveDTOMapper,
-                            saksbehandlingsstatistikkRepository = statistikkTjeneste,
                             produksjonsstatistikkRepository = statistikkV2Tjeneste,
                             klageMediator = klageMediator,
                             klageDTOMapper = KlageDTOMapper(oppslag),

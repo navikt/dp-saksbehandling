@@ -36,7 +36,6 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
                     produksjonsstatistikkRepository = mockk(),
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
@@ -74,7 +73,6 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
                     produksjonsstatistikkRepository = mockk(),
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
@@ -140,7 +138,6 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
                     produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
@@ -254,7 +251,6 @@ class StatistikkApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
                     produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),

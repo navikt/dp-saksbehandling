@@ -22,7 +22,6 @@ internal object OppgaveApiTestHelper {
                 installerApis(
                     oppgaveMediator = oppgaveMediator,
                     oppgaveDTOMapper = oppgaveDTOMapper,
-                    saksbehandlingsstatistikkRepository = mockk(relaxed = true),
                     produksjonsstatistikkRepository = mockk(relaxed = true),
                     klageMediator = mockk(relaxed = true),
                     klageDTOMapper = mockk(relaxed = true),
@@ -59,7 +58,6 @@ internal object OppgaveApiTestHelper {
                             OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                             mockk<SakMediator>(relaxed = true),
                         ),
-                    saksbehandlingsstatistikkRepository = mockk(relaxed = true),
                     produksjonsstatistikkRepository = mockk(relaxed = true),
                     klageMediator = mockk(relaxed = true),
                     klageDTOMapper = mockk(relaxed = true),

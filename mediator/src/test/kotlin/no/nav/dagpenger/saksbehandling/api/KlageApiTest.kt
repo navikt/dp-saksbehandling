@@ -474,7 +474,6 @@ class KlageApiTest {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    saksbehandlingsstatistikkRepository = mockk(),
                     produksjonsstatistikkRepository = mockk(),
                     klageMediator = klageMediator,
                     klageDTOMapper = KlageDTOMapper(oppslag = oppslag),

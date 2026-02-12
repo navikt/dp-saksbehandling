@@ -363,7 +363,6 @@ class StatuspageTest {
         installerApis(
             oppgaveMediator = mockk(),
             oppgaveDTOMapper = mockk(),
-            saksbehandlingsstatistikkRepository = mockk(),
             produksjonsstatistikkRepository = mockk(),
             klageMediator = mockk(),
             klageDTOMapper = mockk(),
