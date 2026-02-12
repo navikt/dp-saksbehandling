@@ -12,6 +12,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -28,7 +29,10 @@ internal class BehandlingOpprettetMottak(
 
             precondition {
                 it.requireValue("@event_name", "behandling_opprettet")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
+                it.requireAny(
+                    key = "behandletHendelse.type",
+                    values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring", "Omgjøring"),
+                )
             }
             validate {
                 it.requireKey("ident", "behandlingId", "@opprettet", "behandlingskjedeId")
@@ -82,6 +86,25 @@ internal class BehandlingOpprettetMottak(
                         sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelse)
                     } else {
                         sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+                    }
+                }
+            }
+
+            "Omgjøring" -> {
+                withLoggingContext("behandlingId" to "$behandlingId") {
+                    logger.info { "Mottok behandling_opprettet hendelse for omgjøring" }
+                    if (basertPåBehandling != null) {
+                        sakMediator.knyttTilSak(
+                            OmgjøringBehandlingOpprettetHendelse(
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = opprettet,
+                                basertPåBehandling = basertPåBehandling,
+                                behandlingskjedeId = behandlingskjedeId,
+                            ),
+                        )
+                    } else {
+                        logger.warn { "Mottok behandling_opprettet av type omgjøring, uten 'basertPåBehandling'. Opprettes ikke!" }
                     }
                 }
             }

@@ -70,6 +70,7 @@ internal class OppgaveDTOMapper(
                                             UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            UtløstAvType.OMGJØRING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
                                         },
                                     utlostAv =
@@ -78,6 +79,7 @@ internal class OppgaveDTOMapper(
                                             UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
                                             UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
                                             UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
+                                            UtløstAvType.OMGJØRING -> UtlostAvTypeDTO.OMGJØRING
                                             UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
                                         },
                                     opprettet = behandling.opprettet,
@@ -330,6 +332,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
         UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
+        UtløstAvType.OMGJØRING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
     }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
@@ -339,4 +342,5 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
+        UtløstAvType.OMGJØRING -> UtlostAvTypeDTO.OMGJØRING
     }

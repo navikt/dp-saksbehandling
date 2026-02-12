@@ -14,7 +14,7 @@ internal class BehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort")
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort", "Omgjøring")
 
     override val mottakNavn: String = "BehandlingsresultatMottak"
 
