@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -87,7 +88,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                 behandling = behandling5,
                 emneknagger = setOf("Verneplikt"),
             )
-        val oppgave6FerdigBehandlet =
+        val oppgave6FerdigBehandletIForgårs =
             lagOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = behandling6.opprettet,
@@ -114,7 +115,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             repo.lagre(oppgave3FerdigBehandlet)
             repo.lagre(oppgave4KlarTilBehandling)
             repo.lagre(oppgave5KlarTilKontroll)
-            repo.lagre(oppgave6FerdigBehandlet)
+            repo.lagre(oppgave6FerdigBehandletIForgårs)
             repo.lagre(oppgave7KlarTilBehandling)
 
             val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(ds)
@@ -146,6 +147,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             tilstanderKlage.size shouldBe 7
             tilstanderKlage.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 1
+            tilstanderKlage.single { it.tilstand == KLAR_TIL_BEHANDLING }.eldsteOppgaveTidspunkt!! shouldBe behandling7.opprettet
             tilstanderKlage.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
             tilstanderKlage.single { it.tilstand == PAA_VENT }.antall shouldBe 0
             tilstanderKlage.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 0
@@ -158,14 +160,14 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             tilstanderSøknadAlle.size shouldBe 7
             tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 1
-            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.eldsteOppgaveTidspunkt!! shouldBe behandling4.opprettet
+            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_BEHANDLING }.eldsteOppgaveTidspunkt shouldBe behandling4.opprettet
             tilstanderSøknadAlle.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
             tilstanderSøknadAlle.single { it.tilstand == PAA_VENT }.antall shouldBe 0
             tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 1
-            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt!! shouldBe behandling5.opprettet
+            tilstanderSøknadAlle.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt shouldBe behandling5.opprettet
             tilstanderSøknadAlle.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
             tilstanderSøknadAlle.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 2
-            tilstanderSøknadAlle.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe behandling1.opprettet
+            tilstanderSøknadAlle.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt shouldBe behandling1.opprettet
             tilstanderSøknadAlle.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
             val tilstanderSøknadVerneplikt =
@@ -181,32 +183,35 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             tilstanderSøknadVerneplikt.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
             tilstanderSøknadVerneplikt.single { it.tilstand == PAA_VENT }.antall shouldBe 0
             tilstanderSøknadVerneplikt.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 1
-            tilstanderSøknadVerneplikt.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt!! shouldBe behandling5.opprettet
+            tilstanderSøknadVerneplikt.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt shouldBe behandling5.opprettet
             tilstanderSøknadVerneplikt.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
             tilstanderSøknadVerneplikt.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 1
-            tilstanderSøknadVerneplikt.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe behandling2.opprettet
+            tilstanderSøknadVerneplikt.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt shouldBe behandling2.opprettet
             tilstanderSøknadVerneplikt.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
-            val tilstanderSøknadOrdinærFerdigBehandlet =
+            val tilstanderSøknadVernepliktFerdigBehandlet =
                 statistikkTjeneste.hentTilstanderMedRettighetFilter(
                     ProduksjonsstatistikkFilter(
                         periode = periodeFomIGårTomIDag,
-                        rettighetstyper = setOf("Ordinær"),
+                        rettighetstyper = setOf("Verneplikt"),
                         tilstander = setOf(FERDIG_BEHANDLET),
                     ),
                 )
 
-            tilstanderSøknadOrdinærFerdigBehandlet.size shouldBe 7
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 0
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == PAA_VENT }.antall shouldBe 0
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 0
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 1
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt!! shouldBe
-                behandling1.opprettet
-            tilstanderSøknadOrdinærFerdigBehandlet.single { it.tilstand == AVBRUTT }.antall shouldBe 0
+            tilstanderSøknadVernepliktFerdigBehandlet.size shouldBe 7
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 0
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == PAA_VENT }.antall shouldBe 0
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 1
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == KLAR_TIL_KONTROLL }.eldsteOppgaveTidspunkt shouldBe
+                behandling5.opprettet
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 1
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == FERDIG_BEHANDLET }.eldsteOppgaveTidspunkt shouldBe
+                behandling2.opprettet
+            tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
+            // TODO - kan slettes
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
             utløstAvAlle.size shouldBe 6
@@ -233,6 +238,32 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == MANUELL }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
+
+            val rettighetAlle = statistikkTjeneste.hentRettigheterMedTilstandFilter(filterPeriodeFomIGårTomIDag)
+
+            rettighetAlle.size shouldBe 5
+            rettighetAlle.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn }.antall shouldBe 2
+            rettighetAlle.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn }.antall shouldBe 2
+            rettighetAlle.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn }.antall shouldBe 0
+            rettighetAlle.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn }.antall shouldBe 0
+            rettighetAlle.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn }.antall shouldBe 0
+
+            val rettighetFerdigBehandlet =
+                statistikkTjeneste.hentRettigheterMedTilstandFilter(
+                    produksjonsstatistikkFilter =
+                        ProduksjonsstatistikkFilter(
+                            periode = periodeFomIGårTomIDag,
+                            tilstander = setOf(FERDIG_BEHANDLET),
+                        ),
+                )
+
+            rettighetFerdigBehandlet.size shouldBe 5
+            rettighetFerdigBehandlet.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn }.antall shouldBe 1
+            rettighetFerdigBehandlet.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn }.antall shouldBe 1
+            rettighetFerdigBehandlet.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn }.antall shouldBe 0
+            rettighetFerdigBehandlet.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn }.antall shouldBe
+                0
+            rettighetFerdigBehandlet.single { it.rettighet == Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn }.antall shouldBe 0
 
             val resultatSerieForUtløstAv =
                 statistikkTjeneste.hentResultatSerierForUtløstAv(
@@ -280,27 +311,6 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             resultatSerieForFlereRettigheter.size shouldBe 2
             resultatSerieForFlereRettigheter.single { it.tilstand == FERDIG_BEHANDLET && it.rettighet == "MikkeMus" }.antall shouldBe 1
             resultatSerieForFlereRettigheter.single { it.tilstand == FERDIG_BEHANDLET && it.rettighet == "Verneplikt" }.antall shouldBe 1
-
-            val tilstanderKlageOrdinær =
-                statistikkTjeneste.hentTilstanderMedUtløstAvFilter(
-                    produksjonsstatistikkFilter =
-                        ProduksjonsstatistikkFilter(
-                            periode = periodeFomIGårTomIDag,
-                            tilstander = setOf(KLAR_TIL_BEHANDLING),
-                            rettighetstyper = setOf("Ordinær"),
-                            utløstAvTyper = setOf(KLAGE),
-                            grupperEtter = GrupperEtterDTO.OPPGAVETYPE.name,
-                        ),
-                )
-            tilstanderKlageOrdinær.size shouldBe 7
-            tilstanderKlageOrdinær.single { it.tilstand == KLAR_TIL_BEHANDLING }.antall shouldBe 1
-            tilstanderKlageOrdinær.single { it.tilstand == KLAR_TIL_BEHANDLING }.eldsteOppgaveTidspunkt!! shouldBe behandling4.opprettet
-            tilstanderKlageOrdinær.single { it.tilstand == UNDER_BEHANDLING }.antall shouldBe 0
-            tilstanderKlageOrdinær.single { it.tilstand == PAA_VENT }.antall shouldBe 0
-            tilstanderKlageOrdinær.single { it.tilstand == KLAR_TIL_KONTROLL }.antall shouldBe 0
-            tilstanderKlageOrdinær.single { it.tilstand == UNDER_KONTROLL }.antall shouldBe 0
-            tilstanderKlageOrdinær.single { it.tilstand == FERDIG_BEHANDLET }.antall shouldBe 0
-            tilstanderKlageOrdinær.single { it.tilstand == AVBRUTT }.antall shouldBe 0
         }
     }
 }

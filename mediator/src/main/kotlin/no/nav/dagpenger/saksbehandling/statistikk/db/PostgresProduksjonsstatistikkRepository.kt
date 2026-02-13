@@ -2,7 +2,11 @@ package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
@@ -32,11 +36,6 @@ class PostgresProduksjonsstatistikkRepository(
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 UtløstAvType.entries.toSet()
             }
-        val tilstander =
-            produksjonsstatistikkFilter.tilstander.ifEmpty {
-                Oppgave.Tilstand.Type.søkbareTilstander
-                    .toSet()
-            }
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -47,7 +46,6 @@ class PostgresProduksjonsstatistikkRepository(
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand   = tils.tilstand
-                                AND     oppg.tilstand   = ANY(:tilstander)
                                 AND     beha.utlost_av  = ANY(:utlost_av_typer)
                                 AND     oppg.opprettet  >= :fom
                                 AND     oppg.opprettet  <  :tom_pluss_1_dag
@@ -56,7 +54,6 @@ class PostgresProduksjonsstatistikkRepository(
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand   = tils.tilstand
-                                AND     oppg.tilstand   = ANY(:tilstander)
                                 AND     beha.utlost_av  = ANY(:utlost_av_typer)
                                 AND     oppg.opprettet  >= :fom
                                 AND     oppg.opprettet  <  :tom_pluss_1_dag
@@ -75,7 +72,6 @@ class PostgresProduksjonsstatistikkRepository(
                             "fom" to produksjonsstatistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "utlost_av_typer" to utløstAvTyper.map { it.name }.toTypedArray(),
-                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     TilstandStatistikk(
@@ -137,17 +133,12 @@ class PostgresProduksjonsstatistikkRepository(
         val rettighetstyper =
             produksjonsstatistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
-                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+                    RETTIGHET_ORDINÆR.visningsnavn,
+                    RETTIGHET_VERNEPLIKT.visningsnavn,
+                    RETTIGHET_PERMITTERT.visningsnavn,
+                    RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                    RETTIGHET_KONKURS.visningsnavn,
                 )
-            }
-        val tilstander =
-            produksjonsstatistikkFilter.tilstander.ifEmpty {
-                Oppgave.Tilstand.Type.søkbareTilstander
-                    .toSet()
             }
 
         return sessionOf(dataSource = dataSource).use { session ->
@@ -161,7 +152,6 @@ class PostgresProduksjonsstatistikkRepository(
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand   = tils.tilstand
-                                AND     oppg.tilstand   = ANY(:tilstander)
                                 AND     beha.utlost_av  = 'SØKNAD'
                                 AND     oppg.opprettet  >= :fom
                                 AND     oppg.opprettet  <  :tom_pluss_1_dag
@@ -176,7 +166,6 @@ class PostgresProduksjonsstatistikkRepository(
                                 FROM    oppgave_v1 oppg
                                 JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                                 WHERE   oppg.tilstand   = tils.tilstand
-                                AND     oppg.tilstand   = ANY(:tilstander)
                                 AND     beha.utlost_av  = 'SØKNAD'
                                 AND     oppg.opprettet  >= :fom
                                 AND     oppg.opprettet  <  :tom_pluss_1_dag
@@ -201,7 +190,6 @@ class PostgresProduksjonsstatistikkRepository(
                             "fom" to produksjonsstatistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
                             "rettighetstyper" to rettighetstyper.toTypedArray(),
-                            "tilstander" to tilstander.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     TilstandStatistikk(
@@ -222,7 +210,6 @@ class PostgresProduksjonsstatistikkRepository(
                 Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
-
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -317,11 +304,11 @@ class PostgresProduksjonsstatistikkRepository(
         val rettighetstyper =
             produksjonsstatistikkFilter.rettighetstyper.ifEmpty {
                 setOf(
-                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
-                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+                    RETTIGHET_ORDINÆR.visningsnavn,
+                    RETTIGHET_VERNEPLIKT.visningsnavn,
+                    RETTIGHET_PERMITTERT.visningsnavn,
+                    RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                    RETTIGHET_KONKURS.visningsnavn,
                 )
             }
         val tilstander =
