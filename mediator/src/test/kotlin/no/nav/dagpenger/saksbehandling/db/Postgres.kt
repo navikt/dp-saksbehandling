@@ -2,12 +2,12 @@ package no.nav.dagpenger.saksbehandling.db
 
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.internal.configuration.ConfigUtils
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import javax.sql.DataSource
 
 internal object Postgres {
     val instance by lazy {
-        PostgreSQLContainer<Nothing>("postgres:14.2").apply {
+        PostgreSQLContainer("postgres:18.1").apply {
             start()
         }
     }
