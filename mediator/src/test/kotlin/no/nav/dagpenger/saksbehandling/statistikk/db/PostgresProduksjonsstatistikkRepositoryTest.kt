@@ -211,7 +211,6 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                 behandling2.opprettet
             tilstanderSøknadVernepliktFerdigBehandlet.single { it.tilstand == AVBRUTT }.antall shouldBe 0
 
-            // TODO - kan slettes
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
             utløstAvAlle.size shouldBe 6
