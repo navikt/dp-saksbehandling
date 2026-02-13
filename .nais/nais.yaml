@@ -122,7 +122,7 @@ spec:
           hour: 4
         pointInTimeRecovery: {{ db.pointInTimeRecovery }}
         tier: "{{ db.tier }}"
-        type: POSTGRES_15
+        type: POSTGRES_18
         flags:
           - name: cloudsql.enable_pgaudit
             value: "true"
