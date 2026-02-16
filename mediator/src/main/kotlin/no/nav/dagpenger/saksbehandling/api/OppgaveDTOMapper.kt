@@ -131,7 +131,7 @@ internal class OppgaveDTOMapper(
                 sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                 sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 oppgaveHistorikk = oppgaveHistorikk.await(),
-                soknadId = oppgave.soknadId(),
+                soknadId = oppgave.søknadId(),
             )
         }
 
