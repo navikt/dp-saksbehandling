@@ -314,13 +314,13 @@ data class Oppgave private constructor(
         }.onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
             .getOrThrow()
 
-    fun soknadId(): UUID? =
+    fun søknadId(): UUID? =
         runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 val hendelse = it.hendelse as ForslagTilVedtakHendelse
                 when (hendelse.behandletHendelseType) {
                     "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
-                    "Manuell", "Meldekort" -> {
+                    "Manuell", "Meldekort", "Omgjøring" -> {
                         logger.info {
                             "behandletHendelseType is ${hendelse.behandletHendelseType} " +
                                 "for oppgave: ${this.oppgaveId} " +

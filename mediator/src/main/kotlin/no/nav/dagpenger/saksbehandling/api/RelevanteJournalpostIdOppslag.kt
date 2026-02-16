@@ -46,7 +46,7 @@ class RelevanteJournalpostIdOppslag(
 
     private suspend fun JournalpostIdKlient.hentJournalPostIder(oppgave: Oppgave): Set<String> =
         oppgave
-            .soknadId()
+            .søknadId()
             ?.let {
                 this.hentJournalpostIder(it, oppgave.personIdent())
             }?.getOrNull()

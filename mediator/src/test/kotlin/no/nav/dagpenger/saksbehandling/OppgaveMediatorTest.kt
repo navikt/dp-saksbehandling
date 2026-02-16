@@ -810,7 +810,7 @@ OppgaveMediatorTest {
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandling.behandlingId,
-                    behandletHendelseId = oppgave.soknadId()!!.toString(),
+                    behandletHendelseId = oppgave.søknadId()!!.toString(),
                     behandletHendelseType = "Søknad",
                     ident = testIdent,
                 ),
@@ -864,7 +864,7 @@ OppgaveMediatorTest {
                     ident = søknadOppgave.personIdent(),
                     journalpostId = "asdf",
                     registrertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
-                    søknadId = søknadOppgave.soknadId(),
+                    søknadId = søknadOppgave.søknadId(),
                     skjemaKode = "NAV 11-12.05",
                     kategori = Kategori.KLAGE,
                 )
@@ -891,7 +891,7 @@ OppgaveMediatorTest {
 
             oppgaveMediator.taImotEttersending(
                 ettersendingSomManglerSøknadId.copy(
-                    søknadId = søknadOppgave.soknadId(),
+                    søknadId = søknadOppgave.søknadId(),
                     kategori = Kategori.ETTERSENDING,
                 ),
             )
