@@ -200,7 +200,7 @@ class PostgresOppgaveRepository(
                     """
                         SELECT *
                         FROM   alle_oppgaver alop
-                        ORDER BY alop.opprettet
+                        ORDER BY alop.opprettet, alop.id
                         FETCH FIRST 1 ROWS ONLY
                     )
                     """.trimIndent()
@@ -513,7 +513,7 @@ class PostgresOppgaveRepository(
 
                     else -> ""
                 }
-            val orderByOpprettetClause = """ ORDER BY oppg.opprettet """
+            val orderByOpprettetClause = """ ORDER BY oppg.opprettet, oppg.id """
 
             val limitAndOffsetClause =
                 søkeFilter.paginering?.let {
