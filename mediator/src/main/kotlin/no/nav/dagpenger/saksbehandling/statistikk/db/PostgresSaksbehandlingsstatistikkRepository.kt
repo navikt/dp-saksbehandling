@@ -51,6 +51,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             , beslutter_ident
                             , utlost_av
                             , behandling_resultat
+                            , fagsystem
                             )
                             SELECT    log.id
                                     , log.tilstand
@@ -64,18 +65,27 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                     , CASE WHEN log.tilstand = 'UNDER_KONTROLL'   THEN log.hendelse->>'ansvarligIdent' END
                                     , beh.utlost_av
                                     , ins.resultat_type
+                                    , CASE WHEN log.tilstand = 'FERDIG_BEHANDLET' THEN
+                                        CASE
+                                            WHEN sak.er_dp_sak THEN
+                                                'DAGPENGER'
+                                            WHEN sak.arena_sak_id IS NOT NULL THEN
+                                                'ARENA'
+                                        END
+                                      END
                             FROM      oppgave_tilstand_logg_v1      log
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
+                            JOIN      sak_v2                        sak ON sak.id = beh.sak_id
                             JOIN      person_v1                     per ON per.id = beh.person_id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
                             WHERE     beh.utlost_av != 'KLAGE'
-                            AND       log.id > coalesce(( SELECT  tilstand_id
-                                                        FROM    saksbehandling_statistikk_v1
-                                                        WHERE   overfort_til_statistikk = TRUE
-                                                        ORDER BY tilstand_id DESC
-                                                        LIMIT 1
-                                                      ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
+                            AND       log.id > coalesce((   SELECT      tilstand_id
+                                                            FROM        saksbehandling_statistikk_v1
+                                                            WHERE       overfort_til_statistikk = TRUE
+                                                            ORDER BY    tilstand_id DESC
+                                                            LIMIT 1
+                                                        ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
                             ORDER BY  log.id
                             LIMIT 100
                         RETURNING   *
