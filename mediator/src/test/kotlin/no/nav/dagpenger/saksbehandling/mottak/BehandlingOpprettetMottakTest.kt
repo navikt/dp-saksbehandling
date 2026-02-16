@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.util.UUID
 
 class BehandlingOpprettetMottakTest {
@@ -20,14 +20,14 @@ class BehandlingOpprettetMottakTest {
     val manuellId = UUID.randomUUID()
     val behandlingIdNyRett = UUID.randomUUID()
     val behandlingIdGjenopptak = UUID.randomUUID()
-    val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
+    val behandletHendelseSkjedde = LocalDate.parse("2024-02-27")
     val behandlingskjedeId = UUIDv7.ny()
     private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingIdNyRett,
             ident = testIdent,
-            opprettet = opprettet,
+            opprettet = behandletHendelseSkjedde.atStartOfDay(),
             behandlingskjedeId = behandlingskjedeId,
         )
     private val søknadsbehandlingOpprettetHendelseGjenopptak =
@@ -35,7 +35,7 @@ class BehandlingOpprettetMottakTest {
             søknadId = søknadId,
             behandlingId = behandlingIdGjenopptak,
             ident = testIdent,
-            opprettet = opprettet,
+            opprettet = behandletHendelseSkjedde.atStartOfDay(),
             basertPåBehandling = behandlingIdNyRett,
             behandlingskjedeId = behandlingskjedeId,
         )
@@ -83,7 +83,7 @@ class BehandlingOpprettetMottakTest {
                         meldekortId = meldekortId,
                         behandlingId = behandlingIdNyRett,
                         ident = testIdent,
-                        opprettet = opprettet,
+                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
                     ),
@@ -107,7 +107,7 @@ class BehandlingOpprettetMottakTest {
                         manuellId = manuellId,
                         behandlingId = behandlingIdNyRett,
                         ident = testIdent,
-                        opprettet = opprettet,
+                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
                     ),
@@ -120,13 +120,13 @@ class BehandlingOpprettetMottakTest {
         """
         {
             "@event_name": "behandling_opprettet",
-            "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
             "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$søknadId",
-                "type": "Søknad"
+                "type": "Søknad",
+                "skjedde": "$behandletHendelseSkjedde"
             },
             "behandlingId": "$behandlingIdNyRett",
             "ident": "$ident"
@@ -138,13 +138,13 @@ class BehandlingOpprettetMottakTest {
         """
         {
             "@event_name": "behandling_opprettet",
-            "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
             "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$søknadId",
-                "type": "Søknad"
+                "type": "Søknad",
+                "skjedde": "$behandletHendelseSkjedde"
             },
             "basertPåBehandling": "$behandlingIdNyRett",
             "behandlingId": "$behandlingIdGjenopptak",
@@ -160,13 +160,13 @@ class BehandlingOpprettetMottakTest {
     ) = """
         {
             "@event_name": "behandling_opprettet",
-            "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
             "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "Long",
                 "id": $meldekortId,
-                "type": "Meldekort"
+                "type": "Meldekort",
+                "skjedde": "$behandletHendelseSkjedde"
             },
             "basertPåBehandling": "$basertPåBehandling",
             "behandlingId": "$behandlingIdNyRett",
@@ -182,13 +182,13 @@ class BehandlingOpprettetMottakTest {
     ) = """
         {
             "@event_name": "behandling_opprettet",
-            "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
             "behandlingskjedeId" : "$behandlingskjedeId",
             "behandletHendelse": {
                 "datatype": "UUID",
                 "id": "$manuellId",
-                "type": "Manuell"
+                "type": "Manuell",
+                "skjedde": "$behandletHendelseSkjedde"
             },
             "basertPåBehandling": "$basertPåBehandling",
             "behandlingId": "$behandlingIdNyRett",
