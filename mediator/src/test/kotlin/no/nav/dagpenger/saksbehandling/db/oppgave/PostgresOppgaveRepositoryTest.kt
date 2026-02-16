@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
@@ -969,6 +970,41 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal få tildelt oppgave sortert etter id hvis opprettet har samme verdi`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val iDag = LocalDate.now()
+            val iGår = LocalDate.now().minusDays(1)
+            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+            val forventetOppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+
+            val repo =
+                PostgresOppgaveRepository(ds)
+                    .tildelOgHentNesteOppgave(
+                        nesteOppgaveHendelse =
+                            NesteOppgaveHendelse(
+                                ansvarligIdent = saksbehandler.navIdent,
+                                utførtAv = saksbehandler,
+                            ),
+                        filter =
+                            TildelNesteOppgaveFilter(
+                                periode = Periode.UBEGRENSET_PERIODE,
+                                egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                                adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger(),
+                                harBeslutterRolle = saksbehandler.tilganger.contains(TilgangType.BESLUTTER),
+                                navIdent = saksbehandler.navIdent,
+                            ),
+                    ).let {
+                        assertSoftly {
+                            require(it != null) { "Skal finne en oppgave" }
+                            it.oppgaveId shouldBe forventetOppgave.oppgaveId
+                        }
+                    }
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre en oppgave flere ganger`() {
         DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1171,7 +1207,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(testOppgave)
-            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
             repo.lagre(testOppgave.copy(tilstand = Oppgave.FerdigBehandlet))
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -1213,7 +1249,7 @@ class PostgresOppgaveRepositoryTest {
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveFerdigBehandlet.oppgaveId
             }
-            repo.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).let { oppgaver ->
+            repo.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).let { oppgaver ->
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveKlarTilBehandling.oppgaveId
             }
@@ -1381,7 +1417,7 @@ class PostgresOppgaveRepositoryTest {
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
                 søknadId = hendelse.søknadId,
-            ) shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            ) shouldBe KLAR_TIL_BEHANDLING
 
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
@@ -1458,7 +1494,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver tildel en gitt saksbehandler`() {
+    fun `Skal kunne søke etter oppgaver tildelt en gitt saksbehandler`() {
         val enUkeSiden = opprettetNå.minusDays(7)
         val saksbehandler1 = "saksbehandler1"
         val saksbehandler2 = "saksbehandler2"
@@ -1652,7 +1688,7 @@ class PostgresOppgaveRepositoryTest {
                     Søkefilter(
                         tilstander =
                             setOf(
-                                Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                                KLAR_TIL_BEHANDLING,
                                 Oppgave.Tilstand.Type.UNDER_BEHANDLING,
                             ),
                         periode = Periode.UBEGRENSET_PERIODE,
@@ -1674,14 +1710,14 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
                         setOf(
                             Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            KLAR_TIL_BEHANDLING,
                         )
                 }
 
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode =
                             Periode(
                                 fom = enUkeSiden.plusDays(1).toLocalDate(),
@@ -1705,7 +1741,7 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode =
                             Periode(
                                 fom = opprettetNå.toLocalDate(),
@@ -1749,13 +1785,39 @@ class PostgresOppgaveRepositoryTest {
             val oppgaver =
                 repo.søk(
                     Søkefilter(
-                        tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode = Periode(fom = iGår, tom = iGår),
                     ),
                 )
             oppgaver.oppgaver.size shouldBe 2
             oppgaver.oppgaver.contains(oppgaveOpprettetTidligIGår)
             oppgaver.oppgaver.contains(oppgaveOpprettetSeintIGår)
+        }
+    }
+
+    @Test
+    fun `Skal få oppgaver sortert etter id hvis opprettet har samme verdi`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val iDag = LocalDate.now()
+            val iGår = LocalDate.now().minusDays(1)
+            val oppgave1 = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+            val oppgave2 = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+            val oppgaveIGår = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+            val oppgave3 = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgaver =
+                repo.søk(
+                    Søkefilter(
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
+                        periode = Periode(fom = iGår, tom = iDag),
+                    ),
+                )
+            oppgaver.oppgaver.size shouldBe 4
+            oppgaver.oppgaver[0] shouldBe oppgaveIGår
+            oppgaver.oppgaver[1] shouldBe oppgave1
+            oppgaver.oppgaver[2] shouldBe oppgave2
+            oppgaver.oppgaver[3] shouldBe oppgave3
         }
     }
 
