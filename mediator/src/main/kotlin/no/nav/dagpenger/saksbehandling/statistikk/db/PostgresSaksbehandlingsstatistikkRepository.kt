@@ -56,7 +56,13 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             , arena_sak_id
                             )
                             SELECT    log.id
-                                    , log.tilstand
+                                    , CASE
+                                        WHEN log.tilstand       = 'AVBRUTT' 
+                                        AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
+                                            'AVBRUTT_MANUELT'
+                                        ELSE
+                                            log.tilstand
+                                        END
                                     , log.tidspunkt
                                     , opp.id
                                     , opp.opprettet

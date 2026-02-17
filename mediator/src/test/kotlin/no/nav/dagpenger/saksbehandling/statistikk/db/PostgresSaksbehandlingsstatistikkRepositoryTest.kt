@@ -2,14 +2,19 @@ package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.beslutter
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -20,7 +25,7 @@ import java.time.LocalDateTime
 
 class PostgresSaksbehandlingsstatistikkRepositoryTest {
     @Test
-    fun `Tilstandsendringer på oppgave utløst av Søknad skal oversendes saksbehandlingsstatistikk`() {
+    fun `Tilstandsendringer på oppgave utløst av Søknad skal oversendes saksbehandlingsstatistikk - Avbrutt manuelt`() {
         val behandling = TestHelper.lagBehandling()
         val oppgave =
             TestHelper.lagOppgave(
@@ -109,25 +114,206 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = TestHelper.beslutter.navIdent,
-                    utførtAv = TestHelper.beslutter,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
                 ),
             )
-
             PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                 it.size shouldBe 2
                 it.first().let { tilstandsendring ->
                     tilstandsendring.tilstandsendring.tilstand shouldBe "KLAR_TIL_KONTROLL"
                     tilstandsendring.beslutterIdent shouldBe null
                     tilstandsendring.saksbehandlerIdent shouldBe null
+
+                    postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
                 }
                 it.last().let { tilstandsendring ->
                     tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_KONTROLL"
-                    tilstandsendring.beslutterIdent shouldBe TestHelper.beslutter.navIdent
+                    tilstandsendring.beslutterIdent shouldBe beslutter.navIdent
                     tilstandsendring.saksbehandlerIdent shouldBe null
+
+                    postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
                 }
             }
+
+            oppgave.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = beslutter,
+                ),
+            )
+            oppgave.avbryt(
+                AvbrytOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = TestHelper.saksbehandler.navIdent,
+                    årsak = AVBRUTT_FLERE_SØKNADER,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
+                it.size shouldBe 2
+                it.first().let { tilstandsendring ->
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_BEHANDLING"
+                    tilstandsendring.beslutterIdent shouldBe null
+                    tilstandsendring.saksbehandlerIdent shouldBe null
+                }
+                it.last().let { tilstandsendring ->
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "AVBRUTT_MANUELT"
+                    tilstandsendring.beslutterIdent shouldBe null
+                    tilstandsendring.saksbehandlerIdent shouldBe null
+                    tilstandsendring.behandlingÅrsak shouldBe AVBRUTT_FLERE_SØKNADER.name
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Tilstandsendringer på oppgave utløst av Søknad skal oversendes saksbehandlingsstatistikk - Ferdig behandlet`() {
+        val behandling = TestHelper.lagBehandling()
+        val oppgave =
+            TestHelper.lagOppgave(
+                behandling = behandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val sak =
+            Sak(
+                søknadId = DBTestHelper.søknadId,
+                opprettet = LocalDateTime.now(),
+            )
+        DBTestHelper.withMigratedDb { ds ->
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = behandling,
+                sak = sak,
+                oppgave = oppgave,
+                merkSomEgenSak = true,
+            )
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
+            val førsteTilstandsendring =
+                postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
+                    it.size shouldBe 1
+                    val førsteTilstandsendring = it.single()
+                    førsteTilstandsendring shouldBe
+                        OppgaveITilstand(
+                            oppgaveId = oppgave.oppgaveId,
+                            mottatt = oppgave.opprettet,
+                            sakId = sak.sakId,
+                            behandlingId = behandling.behandlingId,
+                            personIdent = testPerson.ident,
+                            saksbehandlerIdent = null,
+                            beslutterIdent = null,
+                            versjon = Configuration.versjon,
+                            tilstandsendring =
+                                Tilstandsendring(
+                                    sekvensnummer = 1,
+                                    tilstandsendringId = oppgave.tilstandslogg.first().id,
+                                    tilstand = "KLAR_TIL_BEHANDLING",
+                                    tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
+                                ),
+                            utløstAv = "SØKNAD",
+                            behandlingResultat = null,
+                            behandlingÅrsak = null,
+                            fagsystem = null,
+                            arenaSakId = null,
+                        )
+                    førsteTilstandsendring
+                }
+
+            postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(førsteTilstandsendring.tilstandsendring.tilstandsendringId)
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = TestHelper.saksbehandler.navIdent,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+
+            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            val andreTilstandsendring =
+                postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
+                    it.size shouldBe 1
+                    val andreTilstandsendring = it.single()
+                    andreTilstandsendring shouldBe
+                        OppgaveITilstand(
+                            oppgaveId = oppgave.oppgaveId,
+                            mottatt = oppgave.opprettet,
+                            sakId = sak.sakId,
+                            behandlingId = behandling.behandlingId,
+                            personIdent = testPerson.ident,
+                            saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                            beslutterIdent = null,
+                            versjon = Configuration.versjon,
+                            tilstandsendring =
+                                Tilstandsendring(
+                                    sekvensnummer = 2,
+                                    tilstandsendringId = oppgave.tilstandslogg.first().id,
+                                    tilstand = "UNDER_BEHANDLING",
+                                    tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
+                                ),
+                            utløstAv = "SØKNAD",
+                            behandlingResultat = null,
+                            behandlingÅrsak = null,
+                            fagsystem = null,
+                            arenaSakId = null,
+                        )
+                    andreTilstandsendring
+                }
+            postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(andreTilstandsendring.tilstandsendring.tilstandsendringId)
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtakKilde = Oppgave.MeldingOmVedtakKilde.INGEN,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+
+            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            val tredjeTilstandsendring =
+                postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
+                    it.size shouldBe 1
+                    val tredjeTilstandsendring = it.single()
+                    tredjeTilstandsendring shouldBe
+                        OppgaveITilstand(
+                            oppgaveId = oppgave.oppgaveId,
+                            mottatt = oppgave.opprettet,
+                            sakId = sak.sakId,
+                            behandlingId = behandling.behandlingId,
+                            personIdent = testPerson.ident,
+                            saksbehandlerIdent = null,
+                            beslutterIdent = null,
+                            versjon = Configuration.versjon,
+                            tilstandsendring =
+                                Tilstandsendring(
+                                    sekvensnummer = 3,
+                                    tilstandsendringId = oppgave.tilstandslogg.first().id,
+                                    tilstand = "FERDIG_BEHANDLET",
+                                    tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
+                                ),
+                            utløstAv = "SØKNAD",
+                            behandlingResultat = null,
+                            behandlingÅrsak = null,
+                            fagsystem = "DAGPENGER",
+                            arenaSakId = null,
+                        )
+                    tredjeTilstandsendring
+                }
+            postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tredjeTilstandsendring.tilstandsendring.tilstandsendringId)
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
         }
     }
 
