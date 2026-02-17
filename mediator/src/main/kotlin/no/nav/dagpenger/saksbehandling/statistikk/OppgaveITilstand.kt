@@ -16,6 +16,9 @@ data class OppgaveITilstand(
     val tilstandsendring: Tilstandsendring,
     val utløstAv: String,
     val behandlingResultat: String?,
+    val behandlingÅrsak: String?,
+    val fagsystem: String?,
+    val arenaSakId: String?,
 ) {
     data class Tilstandsendring(
         val sekvensnummer: Long,
@@ -26,15 +29,18 @@ data class OppgaveITilstand(
 
     override fun toString(): String =
         "StatistikkOppgave(oppgaveId=$oppgaveId, " +
-            "mottatt=$mottatt," +
-            "sakId=$sakId," +
-            "behandlingId=$behandlingId," +
-            "saksbehandlerIdent=$saksbehandlerIdent," +
-            "beslutterIdent=$beslutterIdent," +
-            "utløstAv=$utløstAv," +
-            "tilstandsendring=$tilstandsendring," +
-            "versjon='$versjon'," +
-            "behandlingResultat=$behandlingResultat)"
+            "mottatt=$mottatt, " +
+            "sakId=$sakId, " +
+            "behandlingId=$behandlingId, " +
+            "saksbehandlerIdent=$saksbehandlerIdent, " +
+            "beslutterIdent=$beslutterIdent, " +
+            "utløstAv=$utløstAv, " +
+            "tilstandsendring=$tilstandsendring, " +
+            "versjon='$versjon', " +
+            "behandlingResultat=$behandlingResultat, " +
+            "behandlingÅrsak=$behandlingÅrsak, " +
+            "fagsystem=$fagsystem, " +
+            "arenaSakId=$arenaSakId)"
 
     fun asMap(): Map<String, Any> =
         buildMap {
@@ -49,5 +55,8 @@ data class OppgaveITilstand(
             put("utløstAv", utløstAv)
             put("versjon", versjon)
             behandlingResultat?.let { put("behandlingResultat", it) }
+            behandlingÅrsak?.let { put("behandlingÅrsak", it) }
+            fagsystem?.let { put("fagsystem", it) }
+            arenaSakId?.let { put("arenaSakId", it) }
         }
 }

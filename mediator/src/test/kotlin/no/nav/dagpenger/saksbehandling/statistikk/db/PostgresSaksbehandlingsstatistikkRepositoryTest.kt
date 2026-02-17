@@ -71,6 +71,9 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                                 ),
                             utløstAv = "SØKNAD",
                             behandlingResultat = null,
+                            behandlingÅrsak = null,
+                            fagsystem = null,
+                            arenaSakId = null,
                         )
                     førsteTilstandsendring
                 }

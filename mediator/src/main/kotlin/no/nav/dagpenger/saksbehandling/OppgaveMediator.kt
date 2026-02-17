@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
@@ -43,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -223,6 +225,8 @@ class OppgaveMediator(
             oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
             when (oppgave == null) {
                 true -> {
+                    // Oppretter oppgave med både tilstand OPPRETTET og KLAR_TIL_BEHANDLING,
+                    // for å kunne sende egen hendelse om opprettet til BigQuery for bruk i statistikk.
                     oppgave =
                         Oppgave(
                             oppgaveId = UUIDv7.ny(),
@@ -230,6 +234,11 @@ class OppgaveMediator(
                             opprettet = behandling.opprettet,
                             tilstandslogg =
                                 OppgaveTilstandslogg(
+                                    Tilstandsendring(
+                                        tilstand = OPPRETTET,
+                                        tidspunkt = behandling.opprettet,
+                                        hendelse = TomHendelse,
+                                    ),
                                     Tilstandsendring(
                                         tilstand = KLAR_TIL_BEHANDLING,
                                         hendelse = forslagTilVedtakHendelse,
@@ -766,12 +775,23 @@ class OppgaveMediator(
                 }
             }
 
+        // Oppretter oppgave med tilstandslogg-innslag for OPPRETTET,
+        // for å kunne sende egen hendelse om opprettet til BigQuery for bruk i statistikk.
         return Oppgave(
             oppgaveId = UUIDv7.ny(),
             emneknagger = emneknagger,
             opprettet = behandling.opprettet,
             person = sakHistorikk.person,
             behandling = behandling,
+            tilstand = Oppgave.Opprettet,
+            tilstandslogg =
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        tilstand = OPPRETTET,
+                        tidspunkt = behandling.opprettet,
+                        hendelse = TomHendelse,
+                    ),
+                ),
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
                     kilde = DP_SAK,

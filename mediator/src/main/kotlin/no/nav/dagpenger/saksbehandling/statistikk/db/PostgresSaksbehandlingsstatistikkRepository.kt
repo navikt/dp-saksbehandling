@@ -51,7 +51,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             , beslutter_ident
                             , utlost_av
                             , behandling_resultat
+                            , behandling_aarsak
                             , fagsystem
+                            , arena_sak_id
                             )
                             SELECT    log.id
                                     , log.tilstand
@@ -61,18 +63,32 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                     , beh.sak_id
                                     , beh.id
                                     , per.ident
-                                    , CASE WHEN log.tilstand = 'UNDER_BEHANDLING' THEN log.hendelse->>'ansvarligIdent' END
-                                    , CASE WHEN log.tilstand = 'UNDER_KONTROLL'   THEN log.hendelse->>'ansvarligIdent' END
+                                    , CASE
+                                        WHEN log.tilstand = 'UNDER_BEHANDLING' THEN 
+                                            log.hendelse->>'ansvarligIdent'
+                                        END
+                                    , CASE 
+                                        WHEN log.tilstand = 'UNDER_KONTROLL'   THEN 
+                                            log.hendelse->>'ansvarligIdent' 
+                                        END
                                     , beh.utlost_av
                                     , ins.resultat_type
+                                    , CASE
+                                        WHEN log.tilstand       = 'AVBRUTT' 
+                                        AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
+                                            log.hendelse->>'årsak' 
+                                        END
                                     , CASE WHEN log.tilstand = 'FERDIG_BEHANDLET' THEN
                                         CASE
                                             WHEN sak.er_dp_sak THEN
                                                 'DAGPENGER'
                                             WHEN sak.arena_sak_id IS NOT NULL THEN
                                                 'ARENA'
+                                            ELSE
+                                                'UKJENT'
                                         END
                                       END
+                                    , sak.arena_sak_id
                             FROM      oppgave_tilstand_logg_v1      log
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
@@ -109,6 +125,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                 ),
                             utløstAv = row.string("utlost_av"),
                             behandlingResultat = row.stringOrNull("behandling_resultat"),
+                            behandlingÅrsak = row.stringOrNull("behandling_aarsak"),
+                            fagsystem = row.stringOrNull("fagsystem"),
+                            arenaSakId = row.stringOrNull("arena_sak_id"),
                         )
                     }.asList,
                 )

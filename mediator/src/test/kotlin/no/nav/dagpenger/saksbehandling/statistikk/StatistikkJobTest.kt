@@ -35,6 +35,9 @@ class StatistikkJobTest {
                 ),
             utløstAv = "SØKNAD",
             behandlingResultat = null,
+            fagsystem = null,
+            behandlingÅrsak = null,
+            arenaSakId = null,
         )
 
     val tilstandSøknadUnderBehandling =
@@ -56,6 +59,9 @@ class StatistikkJobTest {
                 ),
             utløstAv = "SØKNAD",
             behandlingResultat = null,
+            behandlingÅrsak = null,
+            fagsystem = null,
+            arenaSakId = null,
         )
 
     val tilstandInnsendingFerdigBehandlet =
@@ -77,6 +83,9 @@ class StatistikkJobTest {
                 ),
             utløstAv = "INNSENDING",
             behandlingResultat = "RettTilDagpenger",
+            behandlingÅrsak = "Årsak",
+            fagsystem = "DAGPENGER",
+            arenaSakId = null,
         )
     private val saksbehandlingsstatistikkRepository =
         mockk<SaksbehandlingsstatistikkRepository>().also {

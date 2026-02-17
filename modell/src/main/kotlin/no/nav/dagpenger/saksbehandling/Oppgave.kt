@@ -362,7 +362,6 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        // TODO: Bør kunne slettes. Bare innsendingsoppgaver skal være i tilstand OPPRETTET.
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,

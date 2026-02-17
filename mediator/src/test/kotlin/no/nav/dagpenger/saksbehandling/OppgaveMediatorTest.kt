@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
@@ -345,7 +346,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
+    fun `Skal ignorere ForslagTilVedtakHendelse hvis behandlingen ikke finnes`() {
         settOppOppgaveMediator { _, oppgaveMediator ->
 
             val forslagTilVedtakHendelse =
@@ -361,7 +362,50 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `For automatiske VedtakfattetHendelse skal oppgave lages med emneknagger og settes til ferdigbehandlet `() {
+    fun `Skal lagre egen hendelse med tilstand OPPRETTET når oppgave opprettes`() {
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                utløstAv = UtløstAvType.SØKNAD,
+                opprettet = LocalDateTime.now(),
+                hendelse = TomHendelse,
+            )
+        val søknadHendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = UUIDv7.ny(),
+                behandlingId = behandling.behandlingId,
+                ident = testIdent,
+                opprettet = behandling.opprettet,
+                behandlingskjedeId = behandling.behandlingId,
+            )
+        settOppOppgaveMediator(hendelse = søknadHendelse) { _, oppgaveMediator ->
+            val forventedeEmneknagger = setOf("knagg1", "knagg2")
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandling.behandlingId,
+                    emneknagger = forventedeEmneknagger,
+                )
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
+            val oppgaveId =
+                oppgaveMediator.hentOppgaveIdFor(behandling.behandlingId).also {
+                    it shouldNotBe null
+                }
+            with(oppgaveMediator.hentOppgave(oppgaveId!!, testInspektør)) {
+                tilstand().type shouldBe KLAR_TIL_BEHANDLING
+                tilstandslogg.first().tilstand shouldBe KLAR_TIL_BEHANDLING
+                tilstandslogg.first().hendelse shouldBe forslagTilVedtakHendelse
+                tilstandslogg.last().tilstand shouldBe OPPRETTET
+                tilstandslogg.last().hendelse shouldBe TomHendelse
+                forventedeEmneknagger shouldBe forventedeEmneknagger
+            }
+        }
+    }
+
+    @Test
+    fun `Opprett oppgave for automatisk VedtakFattetHendelse`() {
         val behandlingId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val opprettet = LocalDateTime.now()
@@ -425,7 +469,10 @@ OppgaveMediatorTest {
                 }
             with(oppgaveMediator.hentOppgave(oppgaveId!!, testInspektør)) {
                 tilstand().type shouldBe FERDIG_BEHANDLET
-                tilstandslogg.single().hendelse shouldBe automatiskVedtakfattetHendelse
+                tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+                tilstandslogg.first().hendelse shouldBe automatiskVedtakfattetHendelse
+                tilstandslogg.last().tilstand shouldBe OPPRETTET
+                tilstandslogg.last().hendelse shouldBe TomHendelse
                 emneknagger shouldBe forventetEmneKnagger
             }
         }
