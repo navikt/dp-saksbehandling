@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit
 class StatistikkJobTest {
     private val testRapid = TestRapid()
     val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-    val tilstandSøknadKlarTilBehandling =
+    val søknadKlarTilBehandling =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
             mottatt = LocalDateTime.now(),
@@ -40,7 +40,7 @@ class StatistikkJobTest {
             arenaSakId = null,
         )
 
-    val tilstandSøknadUnderBehandling =
+    val søknadAvbrutt =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
             mottatt = LocalDateTime.now(),
@@ -54,17 +54,17 @@ class StatistikkJobTest {
                 OppgaveITilstand.Tilstandsendring(
                     sekvensnummer = 2,
                     tilstandsendringId = UUIDv7.ny(),
-                    tilstand = "UNDER_BEHANDLING",
+                    tilstand = "AVBRUTT_MANUELT",
                     tidspunkt = nå,
                 ),
             utløstAv = "SØKNAD",
-            behandlingResultat = null,
-            behandlingÅrsak = null,
-            fagsystem = null,
-            arenaSakId = null,
+            behandlingResultat = "AVBRUTT",
+            behandlingÅrsak = "BEHANDLES_I_ARENA",
+            fagsystem = "ARENA",
+            arenaSakId = "123",
         )
 
-    val tilstandInnsendingFerdigBehandlet =
+    val innsendingFerdigBehandlet =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
             mottatt = LocalDateTime.now(),
@@ -92,13 +92,13 @@ class StatistikkJobTest {
             every { it.tidligereTilstandsendringerErOverført() } returns true
             every { it.oppgaveTilstandsendringer() } returns
                 listOf(
-                    tilstandSøknadKlarTilBehandling,
-                    tilstandSøknadUnderBehandling,
-                    tilstandInnsendingFerdigBehandlet,
+                    søknadKlarTilBehandling,
+                    søknadAvbrutt,
+                    innsendingFerdigBehandlet,
                 )
-            every { it.markerTilstandsendringerSomOverført(tilstandSøknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } just Runs
-            every { it.markerTilstandsendringerSomOverført(tilstandSøknadUnderBehandling.tilstandsendring.tilstandsendringId) } just Runs
-            every { it.markerTilstandsendringerSomOverført(tilstandInnsendingFerdigBehandlet.tilstandsendring.tilstandsendringId) } just
+            every { it.markerTilstandsendringerSomOverført(søknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } just Runs
+            every { it.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId) } just Runs
+            every { it.markerTilstandsendringerSomOverført(innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId) } just
                 Runs
         }
 
@@ -116,16 +116,16 @@ class StatistikkJobTest {
             {
               "@event_name": "oppgave_til_statistikk",
               "oppgave": {
-                "oppgaveId": "${tilstandSøknadKlarTilBehandling.oppgaveId}",
-                "mottatt": "${tilstandSøknadKlarTilBehandling.mottatt}",
-                "sakId": "${tilstandSøknadKlarTilBehandling.sakId}",
-                "behandlingId": "${tilstandSøknadKlarTilBehandling.behandlingId}",
+                "oppgaveId": "${søknadKlarTilBehandling.oppgaveId}",
+                "mottatt": "${søknadKlarTilBehandling.mottatt}",
+                "sakId": "${søknadKlarTilBehandling.sakId}",
+                "behandlingId": "${søknadKlarTilBehandling.behandlingId}",
                 "personIdent": "12345612345",
                 "tilstandsendring": {
                   "sekvensnummer": 1,
-                  "tilstandsendringId": "${tilstandSøknadKlarTilBehandling.tilstandsendring.tilstandsendringId}",
+                  "tilstandsendringId": "${søknadKlarTilBehandling.tilstandsendring.tilstandsendringId}",
                   "tilstand": "KLAR_TIL_BEHANDLING",
-                  "tidspunkt": "${tilstandSøknadKlarTilBehandling.tilstandsendring.tidspunkt}"
+                  "tidspunkt": "${søknadKlarTilBehandling.tilstandsendring.tidspunkt}"
                 },
                 "utløstAv": "SØKNAD",
                 "versjon": "dp:saksbehandling:1.2.3"
@@ -137,21 +137,25 @@ class StatistikkJobTest {
             {
               "@event_name": "oppgave_til_statistikk",
               "oppgave": {
-                "oppgaveId": "${tilstandSøknadUnderBehandling.oppgaveId}",
-                "mottatt": "${tilstandSøknadUnderBehandling.mottatt}",
-                "sakId": "${tilstandSøknadUnderBehandling.sakId}",
-                "behandlingId": "${tilstandSøknadUnderBehandling.behandlingId}",
+                "oppgaveId": "${søknadAvbrutt.oppgaveId}",
+                "mottatt": "${søknadAvbrutt.mottatt}",
+                "sakId": "${søknadAvbrutt.sakId}",
+                "behandlingId": "${søknadAvbrutt.behandlingId}",
                 "personIdent": "12345612345",
                 "saksbehandlerIdent": "AB123",
                 "beslutterIdent": "B987",
                 "tilstandsendring": {
                   "sekvensnummer": 2,
-                  "tilstandsendringId": "${tilstandSøknadUnderBehandling.tilstandsendring.tilstandsendringId}",
-                  "tilstand": "UNDER_BEHANDLING",
-                  "tidspunkt": "${tilstandSøknadUnderBehandling.tilstandsendring.tidspunkt}"
+                  "tilstandsendringId": "${søknadAvbrutt.tilstandsendring.tilstandsendringId}",
+                  "tilstand": "AVBRUTT_MANUELT",
+                  "tidspunkt": "${søknadAvbrutt.tilstandsendring.tidspunkt}"
                 },
                 "utløstAv": "SØKNAD",
-                "versjon": "dp:saksbehandling:1.2.3"
+                "versjon": "dp:saksbehandling:1.2.3",
+                "behandlingResultat": "AVBRUTT",
+                "behandlingÅrsak": "BEHANDLES_I_ARENA",
+                "fagsystem": "ARENA",
+                "arenaSakId": "123"
               }
             }
             """.trimIndent()
@@ -160,17 +164,17 @@ class StatistikkJobTest {
             {
               "@event_name": "oppgave_til_statistikk",
               "oppgave": {
-                "oppgaveId": "${tilstandInnsendingFerdigBehandlet.oppgaveId}",
-                "mottatt": "${tilstandInnsendingFerdigBehandlet.mottatt}",
-                "sakId": "${tilstandInnsendingFerdigBehandlet.sakId}",
-                "behandlingId": "${tilstandInnsendingFerdigBehandlet.behandlingId}",
+                "oppgaveId": "${innsendingFerdigBehandlet.oppgaveId}",
+                "mottatt": "${innsendingFerdigBehandlet.mottatt}",
+                "sakId": "${innsendingFerdigBehandlet.sakId}",
+                "behandlingId": "${innsendingFerdigBehandlet.behandlingId}",
                 "personIdent": "12345612345",
                 "saksbehandlerIdent": "SB111",
                 "tilstandsendring": {
                   "sekvensnummer": 3,
-                  "tilstandsendringId": "${tilstandInnsendingFerdigBehandlet.tilstandsendring.tilstandsendringId}",
+                  "tilstandsendringId": "${innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId}",
                   "tilstand": "FERDIG_BEHANDLET",
-                  "tidspunkt": "${tilstandInnsendingFerdigBehandlet.tilstandsendring.tidspunkt}"
+                  "tidspunkt": "${innsendingFerdigBehandlet.tilstandsendring.tidspunkt}"
                 },
                 "utløstAv": "INNSENDING",
                 "versjon": "dp:saksbehandling:1.2.3",
