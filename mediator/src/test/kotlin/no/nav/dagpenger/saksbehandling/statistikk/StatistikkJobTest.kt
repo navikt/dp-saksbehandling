@@ -11,7 +11,10 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+
+private val ISO_TIMESTAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
 class StatistikkJobTest {
     private val testRapid = TestRapid()
@@ -19,7 +22,7 @@ class StatistikkJobTest {
     val søknadKlarTilBehandling =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
-            mottatt = LocalDateTime.now(),
+            mottatt = nå,
             sakId = UUIDv7.ny(),
             behandlingId = UUIDv7.ny(),
             personIdent = "12345612345",
@@ -43,7 +46,7 @@ class StatistikkJobTest {
     val søknadAvbrutt =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
-            mottatt = LocalDateTime.now(),
+            mottatt = nå,
             sakId = UUIDv7.ny(),
             behandlingId = UUIDv7.ny(),
             personIdent = "12345612345",
@@ -67,7 +70,7 @@ class StatistikkJobTest {
     val innsendingFerdigBehandlet =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
-            mottatt = LocalDateTime.now(),
+            mottatt = nå,
             sakId = UUIDv7.ny(),
             behandlingId = UUIDv7.ny(),
             personIdent = "12345612345",
@@ -117,7 +120,7 @@ class StatistikkJobTest {
               "@event_name": "oppgave_til_statistikk_v1",
               "oppgave": {
                 "oppgaveId": "${søknadKlarTilBehandling.oppgaveId}",
-                "mottatt": "${søknadKlarTilBehandling.mottatt}",
+                "mottatt": "${søknadKlarTilBehandling.mottatt.format(ISO_TIMESTAMP)}",
                 "sakId": "${søknadKlarTilBehandling.sakId}",
                 "behandlingId": "${søknadKlarTilBehandling.behandlingId}",
                 "personIdent": "12345612345",
@@ -125,7 +128,7 @@ class StatistikkJobTest {
                   "sekvensnummer": 1,
                   "tilstandsendringId": "${søknadKlarTilBehandling.tilstandsendring.tilstandsendringId}",
                   "tilstand": "KLAR_TIL_BEHANDLING",
-                  "tidspunkt": "${søknadKlarTilBehandling.tilstandsendring.tidspunkt}"
+                  "tidspunkt": "${søknadKlarTilBehandling.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
                 },
                 "utløstAv": "SØKNAD",
                 "versjon": "dp:saksbehandling:1.2.3"
@@ -138,7 +141,7 @@ class StatistikkJobTest {
               "@event_name": "oppgave_til_statistikk_v1",
               "oppgave": {
                 "oppgaveId": "${søknadAvbrutt.oppgaveId}",
-                "mottatt": "${søknadAvbrutt.mottatt}",
+                "mottatt": "${søknadAvbrutt.mottatt.format(ISO_TIMESTAMP)}",
                 "sakId": "${søknadAvbrutt.sakId}",
                 "behandlingId": "${søknadAvbrutt.behandlingId}",
                 "personIdent": "12345612345",
@@ -148,7 +151,7 @@ class StatistikkJobTest {
                   "sekvensnummer": 2,
                   "tilstandsendringId": "${søknadAvbrutt.tilstandsendring.tilstandsendringId}",
                   "tilstand": "AVBRUTT_MANUELT",
-                  "tidspunkt": "${søknadAvbrutt.tilstandsendring.tidspunkt}"
+                  "tidspunkt": "${søknadAvbrutt.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
                 },
                 "utløstAv": "SØKNAD",
                 "versjon": "dp:saksbehandling:1.2.3",
@@ -165,7 +168,7 @@ class StatistikkJobTest {
               "@event_name": "oppgave_til_statistikk_v1",
               "oppgave": {
                 "oppgaveId": "${innsendingFerdigBehandlet.oppgaveId}",
-                "mottatt": "${innsendingFerdigBehandlet.mottatt}",
+                "mottatt": "${innsendingFerdigBehandlet.mottatt.format(ISO_TIMESTAMP)}",
                 "sakId": "${innsendingFerdigBehandlet.sakId}",
                 "behandlingId": "${innsendingFerdigBehandlet.behandlingId}",
                 "personIdent": "12345612345",
@@ -174,7 +177,7 @@ class StatistikkJobTest {
                   "sekvensnummer": 3,
                   "tilstandsendringId": "${innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId}",
                   "tilstand": "FERDIG_BEHANDLET",
-                  "tidspunkt": "${innsendingFerdigBehandlet.tilstandsendring.tidspunkt}"
+                  "tidspunkt": "${innsendingFerdigBehandlet.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
                 },
                 "utløstAv": "INNSENDING",
                 "versjon": "dp:saksbehandling:1.2.3",
