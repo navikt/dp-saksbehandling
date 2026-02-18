@@ -77,7 +77,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             utløstAv = "SØKNAD",
                             behandlingResultat = null,
                             behandlingÅrsak = null,
-                            fagsystem = null,
+                            fagsystem = "DAGPENGER",
                             arenaSakId = null,
                         )
                     førsteTilstandsendring
@@ -224,7 +224,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             utløstAv = "SØKNAD",
                             behandlingResultat = null,
                             behandlingÅrsak = null,
-                            fagsystem = null,
+                            fagsystem = "DAGPENGER",
                             arenaSakId = null,
                         )
                     førsteTilstandsendring
@@ -266,7 +266,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             utløstAv = "SØKNAD",
                             behandlingResultat = null,
                             behandlingÅrsak = null,
-                            fagsystem = null,
+                            fagsystem = "DAGPENGER",
                             arenaSakId = null,
                         )
                     andreTilstandsendring

@@ -84,16 +84,14 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
                                             log.hendelse->>'årsak' 
                                         END
-                                    , CASE WHEN log.tilstand = 'FERDIG_BEHANDLET' THEN
-                                        CASE
-                                            WHEN sak.er_dp_sak THEN
-                                                'DAGPENGER'
-                                            WHEN sak.arena_sak_id IS NOT NULL THEN
-                                                'ARENA'
-                                            ELSE
-                                                'UKJENT'
+                                    , CASE
+                                        WHEN sak.er_dp_sak THEN
+                                            'DAGPENGER'
+                                        WHEN sak.arena_sak_id IS NOT NULL THEN
+                                            'ARENA'
+                                        ELSE
+                                            'UKJENT'
                                         END
-                                      END
                                     , sak.arena_sak_id
                             FROM      oppgave_tilstand_logg_v1      log
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
