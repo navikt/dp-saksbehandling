@@ -13,8 +13,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
@@ -44,7 +42,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -73,31 +70,14 @@ class OppgaveMediator(
         behandling: Behandling,
         person: Person,
     ) {
-        val oppgaveId = UUIDv7.ny()
-
-        // Forventer at søknadsbehandlinger skal opprettes via regelmotor.
-        val tilstand =
-            if (innsendingMottattHendelse.søknadId != null &&
+        val forventerBehandlingOpprettet =
+            innsendingMottattHendelse.søknadId != null &&
                 innsendingMottattHendelse.kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK)
-            ) {
-                Oppgave.Opprettet
-            } else {
-                Oppgave.KlarTilBehandling
-            }
 
         val oppgave =
             Oppgave(
-                oppgaveId = oppgaveId,
                 emneknagger = setOf(),
                 opprettet = innsendingMottattHendelse.registrertTidspunkt,
-                tilstand = tilstand,
-                tilstandslogg =
-                    OppgaveTilstandslogg(
-                        Tilstandsendring(
-                            tilstand = tilstand.type,
-                            hendelse = innsendingMottattHendelse,
-                        ),
-                    ),
                 behandling = behandling,
                 person = person,
                 meldingOmVedtak =
@@ -105,7 +85,12 @@ class OppgaveMediator(
                         kilde = DP_SAK,
                         kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                     ),
-            )
+            ).also {
+                if (!forventerBehandlingOpprettet) {
+                    it.settKlarTilBehandling(innsendingMottattHendelse)
+                }
+            }
+
         oppgaveRepository.lagre(oppgave)
     }
 
@@ -151,16 +136,8 @@ class OppgaveMediator(
         } else {
             oppgave =
                 Oppgave(
-                    oppgaveId = UUIDv7.ny(),
                     emneknagger = emptySet(),
                     opprettet = behandling.opprettet,
-                    tilstandslogg =
-                        OppgaveTilstandslogg(
-                            Tilstandsendring(
-                                tilstand = KLAR_TIL_BEHANDLING,
-                                hendelse = behandlingOpprettetHendelse,
-                            ),
-                        ),
                     person = sakHistorikk.person,
                     behandling = behandling,
                     meldingOmVedtak =
@@ -168,7 +145,9 @@ class OppgaveMediator(
                             kilde = DP_SAK,
                             kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                         ),
-                )
+                ).also {
+                    it.settKlarTilBehandling(behandlingOpprettetHendelse)
+                }
             oppgaveRepository.lagre(oppgave)
         }
 
@@ -225,25 +204,10 @@ class OppgaveMediator(
             oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
             when (oppgave == null) {
                 true -> {
-                    // Oppretter oppgave med både tilstand OPPRETTET og KLAR_TIL_BEHANDLING,
-                    // for å kunne sende egen hendelse om opprettet til BigQuery for bruk i statistikk.
                     oppgave =
                         Oppgave(
-                            oppgaveId = UUIDv7.ny(),
                             emneknagger = forslagTilVedtakHendelse.emneknagger,
                             opprettet = behandling.opprettet,
-                            tilstandslogg =
-                                OppgaveTilstandslogg(
-                                    Tilstandsendring(
-                                        tilstand = OPPRETTET,
-                                        tidspunkt = behandling.opprettet,
-                                        hendelse = TomHendelse,
-                                    ),
-                                    Tilstandsendring(
-                                        tilstand = KLAR_TIL_BEHANDLING,
-                                        hendelse = forslagTilVedtakHendelse,
-                                    ),
-                                ),
                             person = sakHistorikk.person,
                             behandling = behandling,
                             meldingOmVedtak =
@@ -251,7 +215,9 @@ class OppgaveMediator(
                                     kilde = DP_SAK,
                                     kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                                 ),
-                        )
+                        ).also {
+                            it.settKlarTilBehandling(forslagTilVedtakHendelse)
+                        }
                     oppgaveRepository.lagre(oppgave)
                 }
 
@@ -735,6 +701,7 @@ class OppgaveMediator(
                         Handling.LAGRE_OPPGAVE -> {
                             oppgaveRepository.lagre(oppgave)
                         }
+
                         Handling.INGEN -> {}
                     }
                 }
@@ -775,23 +742,11 @@ class OppgaveMediator(
                 }
             }
 
-        // Oppretter oppgave med tilstandslogg-innslag for OPPRETTET,
-        // for å kunne sende egen hendelse om opprettet til BigQuery for bruk i statistikk.
         return Oppgave(
-            oppgaveId = UUIDv7.ny(),
             emneknagger = emneknagger,
             opprettet = behandling.opprettet,
             person = sakHistorikk.person,
             behandling = behandling,
-            tilstand = Oppgave.Opprettet,
-            tilstandslogg =
-                OppgaveTilstandslogg(
-                    Tilstandsendring(
-                        tilstand = OPPRETTET,
-                        tidspunkt = behandling.opprettet,
-                        hendelse = TomHendelse,
-                    ),
-                ),
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
                     kilde = DP_SAK,

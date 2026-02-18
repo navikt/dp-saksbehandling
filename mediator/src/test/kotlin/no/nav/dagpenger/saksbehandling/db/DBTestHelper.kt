@@ -210,21 +210,23 @@ class DBTestHelper private constructor(
             )
         this.lagre(sakHistorikk)
 
-        return Oppgave(
-            oppgaveId = id,
-            opprettet = opprettet,
-            tilstand = tilstand,
-            emneknagger = emneknagger,
-            tilstandslogg = tilstandslogg,
-            behandlerIdent = saksbehandlerIdent,
-            behandling = behandling,
-            person = person,
-            meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
-                    kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                ),
-        ).also { this.lagre(it) }
+        return Oppgave
+            .rehydrer(
+                oppgaveId = id,
+                opprettet = opprettet,
+                tilstand = tilstand,
+                emneknagger = emneknagger,
+                tilstandslogg = tilstandslogg,
+                behandlerIdent = saksbehandlerIdent,
+                utsattTil = null,
+                behandling = behandling,
+                person = person,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            ).also { this.lagre(it) }
     }
 
     fun leggTilOppgave(
@@ -240,18 +242,21 @@ class DBTestHelper private constructor(
                 opprettet = opprettetNå,
                 hendelse = TomHendelse,
             )
-        Oppgave(
-            oppgaveId = oppgaveId,
-            emneknagger = setOf(),
-            opprettet = behandling.opprettet,
-            tilstand = Oppgave.KlarTilBehandling,
-            behandling = behandling,
-            person = person,
-            meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
-                    kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                ),
-        ).also { lagre(it) }
+        Oppgave
+            .rehydrer(
+                oppgaveId = oppgaveId,
+                emneknagger = setOf(),
+                opprettet = behandling.opprettet,
+                tilstand = Oppgave.KlarTilBehandling,
+                behandling = behandling,
+                person = person,
+                utsattTil = null,
+                behandlerIdent = null,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            ).also { lagre(it) }
     }
 }

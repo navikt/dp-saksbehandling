@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
@@ -62,22 +63,27 @@ data class Oppgave private constructor(
     private var meldingOmVedtak: MeldingOmVedtak,
 ) {
     constructor(
-        oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstand: Tilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
-        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         person: Person,
         behandling: Behandling,
+        hendelse: Hendelse = TomHendelse,
         meldingOmVedtak: MeldingOmVedtak,
     ) : this(
-        oppgaveId = oppgaveId,
+        oppgaveId = UUIDv7.ny(),
         behandlerIdent = behandlerIdent,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
-        tilstand = tilstand,
-        _tilstandslogg = tilstandslogg,
+        tilstand = Opprettet,
+        _tilstandslogg =
+            OppgaveTilstandslogg(
+                Tilstandsendring(
+                    tilstand = OPPRETTET,
+                    tidspunkt = behandling.opprettet,
+                    hendelse = hendelse,
+                ),
+            ),
         person = person,
         behandling = behandling,
         meldingOmVedtak = meldingOmVedtak,
@@ -191,12 +197,14 @@ data class Oppgave private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
-        val ettersendingEmneknagger = this._emneknagger.filter { it.startsWith(Emneknagg.Ettersending().fastTekst) }.toSet()
-        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet() + ettersendingEmneknagger
+        val ettersendingEmneknagger =
+            this._emneknagger.filter { it.startsWith(Emneknagg.Ettersending().fastTekst) }.toSet()
+        val beholdEmneknagger =
+            this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet() + ettersendingEmneknagger
         this._emneknagger.clear()
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
         this._emneknagger.addAll(beholdEmneknagger)
-        return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
+        return tilstand.håndterForslagTilVedtak(this, forslagTilVedtakHendelse)
     }
 
     fun avbryt(avbrytOppgaveHendelse: AvbrytOppgaveHendelse) {
@@ -343,8 +351,22 @@ data class Oppgave private constructor(
         tilstand.taImotEttersending(this, hendelse)
     }
 
+    fun settKlarTilBehandling(hendelse: Hendelse) {
+        tilstand.settKlarTilBehandling(
+            oppgave = this,
+            hendelse = hendelse,
+        )
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
+
+        override fun settKlarTilBehandling(
+            oppgave: Oppgave,
+            hendelse: Hendelse,
+        ) {
+            oppgave.endreTilstand(KlarTilBehandling, hendelse)
+        }
 
         override fun avbryt(
             oppgave: Oppgave,
@@ -354,7 +376,7 @@ data class Oppgave private constructor(
         }
 
         // TODO: Bør kunne slettes. Bare innsendingsoppgaver skal være i tilstand OPPRETTET.
-        override fun oppgaveKlarTilBehandling(
+        override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -382,7 +404,7 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(oppgave.tilstand, hendelse)
         }
 
-        override fun oppgaveKlarTilBehandling(
+        override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -493,7 +515,7 @@ data class Oppgave private constructor(
             oppgave.utsattTil = utsettOppgaveHendelse.utsattTil
         }
 
-        override fun oppgaveKlarTilBehandling(
+        override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -605,7 +627,7 @@ data class Oppgave private constructor(
             return Handling.INGEN
         }
 
-        override fun oppgaveKlarTilBehandling(
+        override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -685,7 +707,7 @@ data class Oppgave private constructor(
             oppgave.utsattTil = null
         }
 
-        override fun oppgaveKlarTilBehandling(
+        override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -829,7 +851,7 @@ data class Oppgave private constructor(
             return BESLUTT
         }
 
-        override fun oppgaveKlarTilBehandling(
+        override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -1026,7 +1048,7 @@ data class Oppgave private constructor(
 
         fun behov() = emptySet<String>()
 
-        fun oppgaveKlarTilBehandling(
+        fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Handling {
@@ -1212,6 +1234,16 @@ data class Oppgave private constructor(
                 logger.error { message }
             }
             throw UlovligTilstandsendringException(message)
+        }
+
+        fun settKlarTilBehandling(
+            oppgave: Oppgave,
+            hendelse: Hendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
+            )
         }
 
         class ManglendeBeslutterTilgang(
