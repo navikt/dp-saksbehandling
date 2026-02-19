@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import PersonMediator
 import com.fasterxml.jackson.core.type.TypeReference
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
@@ -49,6 +50,7 @@ import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -64,7 +66,9 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -1336,6 +1340,12 @@ class OppgaveApiTest {
             mockk<PersonMediator>().also {
                 every { it.hentPerson(person.id) } returns person
             }
+
+        val behandlingId = UUIDv7.ny()
+        val oppgaveId = UUIDv7.ny()
+        val sakId = UUIDv7.ny()
+        val opprettet = LocalDateTime.of(2025, 1, 15, 10, 30, 0)
+
         val forventetPersonOversikt =
             PersonOversiktDTO(
                 person =
@@ -1345,20 +1355,74 @@ class OppgaveApiTest {
                         fornavn = "fornavn",
                         etternavn = "etternavn",
                         mellomnavn = null,
-                        fodselsdato = LocalDate.MIN,
-                        alder = 0,
-                        statsborgerskap = null,
+                        fodselsdato = LocalDate.of(2000, 1, 1),
+                        alder = 25,
+                        statsborgerskap = "NOR",
                         kjonn = KjonnDTO.KVINNE,
-                        skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
+                        skjermesSomEgneAnsatte = false,
                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                        sikkerhetstiltak = listOf(),
+                        sikkerhetstiltak =
+                            listOf(
+                                SikkerhetstiltakDTO(
+                                    beskrivelse = "To ansatte i samtale",
+                                    gyldigTom = LocalDate.of(2025, 12, 31),
+                                ),
+                            ),
                     ),
-                saker = emptyList(),
-                oppgaver = emptyList(),
+                saker =
+                    listOf(
+                        SakDTO(
+                            id = sakId,
+                            oppgaver =
+                                listOf(
+                                    OppgaveOversiktDTO(
+                                        oppgaveId = oppgaveId,
+                                        behandlingId = behandlingId,
+                                        personIdent = person.ident,
+                                        behandlerIdent = "saksbehandlerIdent",
+                                        tidspunktOpprettet = opprettet,
+                                        behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+                                        utlostAv = UtlostAvTypeDTO.SØKNAD,
+                                        emneknagger = emptyList(),
+                                        skjermesSomEgneAnsatte = false,
+                                        adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                                        tilstand = OppgaveTilstandDTO.UNDER_BEHANDLING,
+                                        lovligeEndringer =
+                                            LovligeEndringerDTO(
+                                                paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
+                                                avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
+                                            ),
+                                        utsattTilDato = null,
+                                    ),
+                                ),
+                        ),
+                    ),
+                oppgaver =
+                    listOf(
+                        OppgaveOversiktDTO(
+                            oppgaveId = oppgaveId,
+                            behandlingId = behandlingId,
+                            personIdent = person.ident,
+                            behandlerIdent = "saksbehandlerIdent",
+                            tidspunktOpprettet = opprettet,
+                            behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+                            utlostAv = UtlostAvTypeDTO.SØKNAD,
+                            emneknagger = emptyList(),
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                            tilstand = OppgaveTilstandDTO.UNDER_BEHANDLING,
+                            lovligeEndringer =
+                                LovligeEndringerDTO(
+                                    paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
+                                    avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
+                                ),
+                            utsattTilDato = null,
+                        ),
+                    ),
             )
         val oppgaveDTOMapperMock =
             mockk<OppgaveDTOMapper>().also {
-                coEvery { it.lagPersonOversiktDTO(person, emptyList()) } returns
+                coEvery { it.lagPersonOversiktDTO(person, any()) } returns
                     forventetPersonOversikt
             }
         withOppgaveApi(
@@ -1370,12 +1434,73 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val personOversiktDTO =
-                        objectMapper.readValue(
-                            response.bodyAsText(),
-                            object : TypeReference<PersonOversiktDTO>() {},
-                        )
-                    personOversiktDTO shouldBe forventetPersonOversikt
+                    //language=JSON
+                    response.bodyAsText() shouldEqualJson
+                        """
+                        {
+                          "person": {
+                            "ident": "${person.ident}",
+                            "id": "${person.id}",
+                            "fornavn": "fornavn",
+                            "etternavn": "etternavn",
+                            "fodselsdato": "2000-01-01",
+                            "alder": 25,
+                            "statsborgerskap": "NOR",
+                            "kjonn": "KVINNE",
+                            "skjermesSomEgneAnsatte": false,
+                            "adressebeskyttelseGradering": "UGRADERT",
+                            "sikkerhetstiltak": [
+                              {
+                                "beskrivelse": "To ansatte i samtale",
+                                "gyldigTom": "2025-12-31"
+                              }
+                            ]
+                          },
+                          "saker": [
+                            {
+                              "id": "$sakId",
+                              "oppgaver": [
+                                {
+                                  "oppgaveId": "$oppgaveId",
+                                  "behandlingId": "$behandlingId",
+                                  "personIdent": "${person.ident}",
+                                  "behandlerIdent": "saksbehandlerIdent",
+                                  "tidspunktOpprettet": "2025-01-15T10:30:00",
+                                  "behandlingType": "RETT_TIL_DAGPENGER",
+                                  "utlostAv": "SØKNAD",
+                                  "emneknagger": [],
+                                  "skjermesSomEgneAnsatte": false,
+                                  "adressebeskyttelseGradering": "UGRADERT",
+                                  "tilstand": "UNDER_BEHANDLING",
+                                  "lovligeEndringer": {
+                                    "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
+                                    "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)}
+                                  }
+                                }
+                              ]
+                            }
+                          ],
+                          "oppgaver": [
+                            {
+                              "oppgaveId": "$oppgaveId",
+                              "behandlingId": "$behandlingId",
+                              "personIdent": "${person.ident}",
+                              "behandlerIdent": "saksbehandlerIdent",
+                              "tidspunktOpprettet": "2025-01-15T10:30:00",
+                              "behandlingType": "RETT_TIL_DAGPENGER",
+                              "utlostAv": "SØKNAD",
+                              "emneknagger": [],
+                              "skjermesSomEgneAnsatte": false,
+                              "adressebeskyttelseGradering": "UGRADERT",
+                              "tilstand": "UNDER_BEHANDLING",
+                              "lovligeEndringer": {
+                                "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
+                                "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)}
+                              }
+                            }
+                          ]
+                        }
+                        """.trimIndent()
                 }
         }
     }
