@@ -156,14 +156,21 @@ class Innsending private constructor(
             Aksjon.Type.OPPRETT_MANUELL_BEHANDLING -> {
                 requireNotNull(
                     innsendingFerdigstiltHendelse.opprettetBehandlingId,
-                ) { "behandlingId kan ikke være null etter opprettelse av klage" }
+                ) { "behandlingId kan ikke være null etter opprettelse av manuell behandling" }
+                this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.opprettetBehandlingId)
+            }
+
+            Aksjon.Type.OPPRETT_REVURDERING_BEHANDLING -> {
+                requireNotNull(
+                    innsendingFerdigstiltHendelse.opprettetBehandlingId,
+                ) { "behandlingId kan ikke være null etter opprettelse av revurdering behandling" }
                 this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
 
             Aksjon.Type.OPPRETT_KLAGE -> {
                 requireNotNull(
                     innsendingFerdigstiltHendelse.opprettetBehandlingId,
-                ) { "behandlingId kan ikke være null etter opprettelse av manuell behandling" }
+                ) { "behandlingId kan ikke være null etter opprettelse av klage" }
                 this.innsendingResultat =
                     InnsendingResultat.RettTilDagpenger(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }

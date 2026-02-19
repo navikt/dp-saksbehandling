@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import org.junit.jupiter.api.Test
@@ -91,9 +92,10 @@ class InnsendingBehandlerTest {
         val behandlingKlient =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.opprettManuellBehandling(
+                    it.opprettBehandling(
                         personIdent = testInnsending.person.ident,
                         saksbehandlerToken = saksbehandlerToken,
+                        behandlingstype = BehandlingstypeDTO.MANUELL,
                         hendelseDato = testInnsending.mottatt.toLocalDate(),
                         hendelseId = testInnsending.innsendingId.toString(),
                         begrunnelse = testInnsending.vurdering()!!,
@@ -126,9 +128,65 @@ class InnsendingBehandlerTest {
             }
 
         verify(exactly = 1) {
-            behandlingKlient.opprettManuellBehandling(
+            behandlingKlient.opprettBehandling(
                 personIdent = testInnsending.person.ident,
                 saksbehandlerToken = saksbehandlerToken,
+                behandlingstype = BehandlingstypeDTO.MANUELL,
+                hendelseDato = testInnsending.mottatt.toLocalDate(),
+                hendelseId = testInnsending.innsendingId.toString(),
+                begrunnelse = testInnsending.vurdering()!!,
+            )
+        }
+    }
+
+    @Test
+    fun `Behandle en innsending med aksjon av type OpprettRevurderingBehandling`() {
+        val saksbehandlerToken = "token"
+        val behandlingId = UUID.randomUUID()
+
+        val behandlingKlient =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.opprettBehandling(
+                        personIdent = testInnsending.person.ident,
+                        saksbehandlerToken = saksbehandlerToken,
+                        behandlingstype = BehandlingstypeDTO.REVURDERING,
+                        hendelseDato = testInnsending.mottatt.toLocalDate(),
+                        hendelseId = testInnsending.innsendingId.toString(),
+                        begrunnelse = testInnsending.vurdering()!!,
+                    )
+                } returns Result.success(behandlingId)
+            }
+        val innsendingBehandler =
+            InnsendingBehandler(
+                klageMediator = mockk<KlageMediator>(),
+                behandlingKlient = behandlingKlient,
+            )
+
+        innsendingBehandler
+            .utførAksjon(
+                hendelse =
+                    lagHendelse(
+                        aksjon =
+                            Aksjon.OpprettRevurderingBehandling(
+                                saksbehandlerToken = saksbehandlerToken,
+                                valgtSakId = UUID.randomUUID(),
+                            ),
+                        vurdering = "Dette er en vurdering",
+                    ),
+                innsending = testInnsending,
+            ).let {
+                it.innsendingId shouldBe testInnsending.innsendingId
+                it.aksjonType shouldBe Aksjon.Type.OPPRETT_REVURDERING_BEHANDLING
+                it.opprettetBehandlingId shouldBe behandlingId
+                it.utførtAv shouldBe saksbehandler
+            }
+
+        verify(exactly = 1) {
+            behandlingKlient.opprettBehandling(
+                personIdent = testInnsending.person.ident,
+                saksbehandlerToken = saksbehandlerToken,
+                behandlingstype = BehandlingstypeDTO.REVURDERING,
                 hendelseDato = testInnsending.mottatt.toLocalDate(),
                 hendelseId = testInnsending.innsendingId.toString(),
                 begrunnelse = testInnsending.vurdering()!!,

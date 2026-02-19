@@ -1412,6 +1412,13 @@ components:
         - KLAGE
         - INNSENDING
 
+    BehandlingVariant:
+      type: string
+      enum:
+        - RETT_TIL_DAGPENGER_MANUELL
+        - RETT_TIL_DAGPENGER_REVURDERING
+        - KLAGE
+
     LovligeEndringer:
       type: object
       properties:
@@ -2107,8 +2114,8 @@ components:
           format: uuid
         vurdering:
           type: string
-        behandlingType:
-          $ref: '#/components/schemas/BehandlingType'
+        behandlingsvariant:
+          $ref: '#/components/schemas/BehandlingVariant'
       required:
         - vurdering
 

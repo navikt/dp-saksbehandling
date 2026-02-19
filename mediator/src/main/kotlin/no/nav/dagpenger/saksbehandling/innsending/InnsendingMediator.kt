@@ -119,10 +119,8 @@ class InnsendingMediator(
             innsendingBehandler.utførAksjon(innsending = innsending, hendelse = hendelse)
         logger.info { "Ferdigstiller innsending med id=${innsending.innsendingId} med aksjon=${hendelse.aksjon}" }
 
-        //  Oppdater innsending med behandlingId fra aksjon og sett til ferdigstilt
         innsending.ferdigstill(innsendingFerdigstiltHendelse)
         oppgaveMediator.ferdigstillOppgave(innsendingFerdigstiltHendelse)
-
         innsendingRepository.lagre(innsending)
     }
 
