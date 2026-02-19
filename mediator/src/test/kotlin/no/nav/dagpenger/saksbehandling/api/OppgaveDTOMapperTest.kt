@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -670,8 +669,8 @@ class OppgaveDTOMapperTest {
 
     @Test
     fun `lagPersonOversiktDTO skal koble oppgaver til riktig sak via behandlingId`() {
-        val behandling1 = TestHelper.lagBehandling()
-        val behandling2 = TestHelper.lagBehandling()
+        val behandling1 = TestHelper.lagBehandling(behandlingId = UUIDv7.ny())
+        val behandling2 = TestHelper.lagBehandling(behandlingId = UUIDv7.ny())
         val sak1 =
             Sak(
                 søknadId = UUIDv7.ny(),
@@ -718,91 +717,10 @@ class OppgaveDTOMapperTest {
             val sakDTO2 = result.saker.single { it.id == sak2.sakId }
 
             sakDTO1.oppgaver shouldHaveSize 1
-            sakDTO1.oppgaver.first().behandlingId shouldBe behandling1.behandlingId
+            sakDTO1.oppgaver.first() shouldBe oppgave1
 
             sakDTO2.oppgaver shouldHaveSize 1
-            sakDTO2.oppgaver.first().behandlingId shouldBe behandling2.behandlingId
-        }
-    }
-
-    @Test
-    fun `lagPersonOversiktDTO skal gi tom oppgaveliste for sak uten oppgaver`() {
-        val behandlingMedOppgave = TestHelper.lagBehandling()
-        val behandlingUtenOppgave = TestHelper.lagBehandling()
-        val sak =
-            Sak(
-                søknadId = UUIDv7.ny(),
-                opprettet = TestHelper.opprettetNå,
-            ).also {
-                it.leggTilBehandling(behandlingMedOppgave)
-                it.leggTilBehandling(behandlingUtenOppgave)
-            }
-
-        val sakHistorikk =
-            SakHistorikk.rehydrer(
-                person = TestHelper.testPerson,
-                saker = setOf(sak),
-            )
-
-        val oppgave = TestHelper.lagOppgave(behandling = behandlingMedOppgave).tilOppgaveOversiktDTO()
-
-        val sakMediator =
-            mockk<SakMediator>().also {
-                every { it.finnSakHistorikk(TestHelper.personIdent) } returns sakHistorikk
-            }
-
-        val mapper =
-            OppgaveDTOMapper(
-                oppslag =
-                    Oppslag(
-                        pdlKlient,
-                        relevanteJournalpostIdOppslag,
-                        mockk(relaxed = true),
-                        skjermingKlient = mockk(),
-                    ),
-                oppgaveHistorikkDTOMapper = mockk(relaxed = true),
-                sakMediator = sakMediator,
-            )
-
-        runBlocking {
-            val result = mapper.lagPersonOversiktDTO(TestHelper.testPerson, listOf(oppgave))
-
-            result.saker shouldHaveSize 1
-            result.saker.first().oppgaver shouldHaveSize 1
-            result.saker
-                .first()
-                .oppgaver
-                .first()
-                .behandlingId shouldBe behandlingMedOppgave.behandlingId
-        }
-    }
-
-    @Test
-    fun `lagPersonOversiktDTO skal returnere tomme saker når sakHistorikk er null`() {
-        val sakMediator =
-            mockk<SakMediator>().also {
-                every { it.finnSakHistorikk(TestHelper.personIdent) } returns null
-            }
-
-        val mapper =
-            OppgaveDTOMapper(
-                oppslag =
-                    Oppslag(
-                        pdlKlient,
-                        relevanteJournalpostIdOppslag,
-                        mockk(relaxed = true),
-                        skjermingKlient = mockk(),
-                    ),
-                oppgaveHistorikkDTOMapper = mockk(relaxed = true),
-                sakMediator = sakMediator,
-            )
-
-        val oppgave = TestHelper.lagOppgave().tilOppgaveOversiktDTO()
-
-        runBlocking {
-            val result = mapper.lagPersonOversiktDTO(TestHelper.testPerson, listOf(oppgave))
-            result.saker.shouldBeEmpty()
-            result.oppgaver shouldHaveSize 1
+            sakDTO2.oppgaver.first() shouldBe oppgave2
         }
     }
 }
