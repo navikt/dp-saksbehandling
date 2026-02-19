@@ -35,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
@@ -51,6 +52,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
+import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -198,7 +200,8 @@ class OppgaveApiTest {
                                 "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
                                 "lovligeEndringer": {
                                     "paaVentAarsaker": [],
-                                    "avbrytAarsaker": []
+                                    "avbrytAarsaker": [],
+                                    "leggTilbakeAarsaker": []
                                 },
                                 "behandlerIdent": "${oppgave1.behandlerIdent}",
                                 "utsattTilDato": "${oppgave1.utsattTil()}"
@@ -213,7 +216,8 @@ class OppgaveApiTest {
                                 "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
                                 "lovligeEndringer": {
                                     "paaVentAarsaker": [],
-                                    "avbrytAarsaker": []
+                                    "avbrytAarsaker": [],
+                                    "leggTilbakeAarsaker": []
                                 }
                             },
                             {
@@ -233,13 +237,19 @@ class OppgaveApiTest {
                                         "AVVENT_RAPPORTERINGSFRIST",
                                         "AVVENT_SVAR_PÅ_FORESPØRSEL",
                                         "ANNET"
-                                        ],
+                                    ],
                                     "avbrytAarsaker": [
                                         "BEHANDLES_I_ARENA",
                                         "FLERE_SØKNADER",
                                         "TRUKKET_SØKNAD",
                                         "ANNET"
-                                        ]
+                                    ],
+                                    "leggTilbakeAarsaker": [
+                                        "MANGLER_KOMPETANSE",
+                                        "HABILITET",
+                                        "FRAVÆR",
+                                        "ANNET"
+                                    ]
                                 }
                             }
                         ],
@@ -878,7 +888,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal får 404 hvis man forsøker å avbryte en oppgave som ikke finnes`() {
+    fun `Skal få 404 hvis man forsøker å avbryte en oppgave som ikke finnes`() {
         val oppgave =
             TestHelper.lagOppgave(
                 tilstand = Oppgave.UnderBehandling,
@@ -1035,6 +1045,11 @@ class OppgaveApiTest {
                                         UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
                                         else -> emptyList()
                                     },
+                                leggTilbakeAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
+                                        else -> emptyList()
+                                    },
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1174,6 +1189,11 @@ class OppgaveApiTest {
                                         UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
                                         else -> emptyList()
                                     },
+                                leggTilbakeAarsaker =
+                                    when (oppgave.tilstand().type) {
+                                        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
+                                        else -> emptyList()
+                                    },
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1211,7 +1231,8 @@ class OppgaveApiTest {
                       },
                       "lovligeEndringer" : {
                           "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "ANNET" ],
-                          "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "ANNET" ]
+                          "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "ANNET" ],
+                          "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "HABILITET", "FRAVÆR", "ANNET" ]
                       },
                       "historikk": [
                         {

@@ -135,7 +135,13 @@ class OppgaveDTOMapperTest {
                       "tilstand": "UNDER_KONTROLL",
                       "lovligeEndringer": {
                         "paaVentAarsaker": [],
-                        "avbrytAarsaker": []
+                        "avbrytAarsaker": [],
+                        "leggTilbakeAarsaker": [
+                          "MANGLER_KOMPETANSE",
+                          "HABILITET",
+                          "FRAVÆR",
+                          "ANNET"
+                        ]
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
@@ -293,6 +299,12 @@ class OppgaveDTOMapperTest {
                           "BEHANDLES_I_ARENA",
                           "FLERE_SØKNADER",
                           "TRUKKET_SØKNAD",
+                          "ANNET"
+                        ],
+                        "leggTilbakeAarsaker": [
+                          "MANGLER_KOMPETANSE",
+                          "HABILITET",
+                          "FRAVÆR",
                           "ANNET"
                         ]
                       },
@@ -454,6 +466,12 @@ class OppgaveDTOMapperTest {
                           "FLERE_SØKNADER",
                           "TRUKKET_SØKNAD",
                           "ANNET"
+                        ],
+                        "leggTilbakeAarsaker": [
+                          "MANGLER_KOMPETANSE",
+                          "HABILITET",
+                          "FRAVÆR",
+                          "ANNET"
                         ]
                       },
                       "saksbehandler": {
@@ -613,6 +631,12 @@ class OppgaveDTOMapperTest {
                           "BEHANDLES_I_ARENA",
                           "FLERE_SØKNADER",
                           "TRUKKET_SØKNAD",
+                          "ANNET"
+                        ],
+                        "leggTilbakeAarsaker": [
+                          "MANGLER_KOMPETANSE",
+                          "HABILITET",
+                          "FRAVÆR",
                           "ANNET"
                         ]
                       },

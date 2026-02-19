@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
@@ -26,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
+import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
@@ -178,6 +180,11 @@ internal class OppgaveDTOMapper(
                             UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
                             else -> emptyList()
                         },
+                    leggTilbakeAarsaker =
+                        when (oppgave.tilstand().type) {
+                            in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
+                            else -> emptyList()
+                        },
                 ),
             soknadId = soknadId,
             meldingOmVedtakKilde =
@@ -288,6 +295,11 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 avbrytAarsaker =
                     when (this.tilstand().type) {
                         UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
+                        else -> emptyList()
+                    },
+                leggTilbakeAarsaker =
+                    when (this.tilstand().type) {
+                        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
                         else -> emptyList()
                     },
             ),
