@@ -2,12 +2,19 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.Sak
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -658,6 +665,144 @@ class OppgaveDTOMapperTest {
                     }
                     """.trimIndent()
             }
+        }
+    }
+
+    @Test
+    fun `lagPersonOversiktDTO skal koble oppgaver til riktig sak via behandlingId`() {
+        val behandling1 = TestHelper.lagBehandling()
+        val behandling2 = TestHelper.lagBehandling()
+        val sak1 =
+            Sak(
+                søknadId = UUIDv7.ny(),
+                opprettet = TestHelper.opprettetNå,
+            ).also { it.leggTilBehandling(behandling1) }
+        val sak2 =
+            Sak(
+                søknadId = UUIDv7.ny(),
+                opprettet = TestHelper.opprettetNå,
+            ).also { it.leggTilBehandling(behandling2) }
+
+        val sakHistorikk =
+            SakHistorikk.rehydrer(
+                person = TestHelper.testPerson,
+                saker = setOf(sak1, sak2),
+            )
+
+        val oppgave1 = TestHelper.lagOppgave(behandling = behandling1).tilOppgaveOversiktDTO()
+        val oppgave2 = TestHelper.lagOppgave(behandling = behandling2).tilOppgaveOversiktDTO()
+
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSakHistorikk(TestHelper.personIdent) } returns sakHistorikk
+            }
+
+        val mapper =
+            OppgaveDTOMapper(
+                oppslag =
+                    Oppslag(
+                        pdlKlient,
+                        relevanteJournalpostIdOppslag,
+                        mockk(relaxed = true),
+                        skjermingKlient = mockk(),
+                    ),
+                oppgaveHistorikkDTOMapper = mockk(relaxed = true),
+                sakMediator = sakMediator,
+            )
+
+        runBlocking {
+            val result = mapper.lagPersonOversiktDTO(TestHelper.testPerson, listOf(oppgave1, oppgave2))
+
+            result.saker shouldHaveSize 2
+            val sakDTO1 = result.saker.single { it.id == sak1.sakId }
+            val sakDTO2 = result.saker.single { it.id == sak2.sakId }
+
+            sakDTO1.oppgaver shouldHaveSize 1
+            sakDTO1.oppgaver.first().behandlingId shouldBe behandling1.behandlingId
+
+            sakDTO2.oppgaver shouldHaveSize 1
+            sakDTO2.oppgaver.first().behandlingId shouldBe behandling2.behandlingId
+        }
+    }
+
+    @Test
+    fun `lagPersonOversiktDTO skal gi tom oppgaveliste for sak uten oppgaver`() {
+        val behandlingMedOppgave = TestHelper.lagBehandling()
+        val behandlingUtenOppgave = TestHelper.lagBehandling()
+        val sak =
+            Sak(
+                søknadId = UUIDv7.ny(),
+                opprettet = TestHelper.opprettetNå,
+            ).also {
+                it.leggTilBehandling(behandlingMedOppgave)
+                it.leggTilBehandling(behandlingUtenOppgave)
+            }
+
+        val sakHistorikk =
+            SakHistorikk.rehydrer(
+                person = TestHelper.testPerson,
+                saker = setOf(sak),
+            )
+
+        val oppgave = TestHelper.lagOppgave(behandling = behandlingMedOppgave).tilOppgaveOversiktDTO()
+
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSakHistorikk(TestHelper.personIdent) } returns sakHistorikk
+            }
+
+        val mapper =
+            OppgaveDTOMapper(
+                oppslag =
+                    Oppslag(
+                        pdlKlient,
+                        relevanteJournalpostIdOppslag,
+                        mockk(relaxed = true),
+                        skjermingKlient = mockk(),
+                    ),
+                oppgaveHistorikkDTOMapper = mockk(relaxed = true),
+                sakMediator = sakMediator,
+            )
+
+        runBlocking {
+            val result = mapper.lagPersonOversiktDTO(TestHelper.testPerson, listOf(oppgave))
+
+            result.saker shouldHaveSize 1
+            result.saker.first().oppgaver shouldHaveSize 1
+            result.saker
+                .first()
+                .oppgaver
+                .first()
+                .behandlingId shouldBe behandlingMedOppgave.behandlingId
+        }
+    }
+
+    @Test
+    fun `lagPersonOversiktDTO skal returnere tomme saker når sakHistorikk er null`() {
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSakHistorikk(TestHelper.personIdent) } returns null
+            }
+
+        val mapper =
+            OppgaveDTOMapper(
+                oppslag =
+                    Oppslag(
+                        pdlKlient,
+                        relevanteJournalpostIdOppslag,
+                        mockk(relaxed = true),
+                        skjermingKlient = mockk(),
+                    ),
+                oppgaveHistorikkDTOMapper = mockk(relaxed = true),
+                sakMediator = sakMediator,
+            )
+
+        val oppgave = TestHelper.lagOppgave().tilOppgaveOversiktDTO()
+
+        runBlocking {
+            val result = mapper.lagPersonOversiktDTO(TestHelper.testPerson, listOf(oppgave))
+            result.saker.shouldBeEmpty()
+            result.oppgaver shouldHaveSize 1
         }
     }
 }
