@@ -20,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
@@ -53,39 +52,15 @@ internal class OppgaveDTOMapper(
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
     private val sakMediator: SakMediator,
 ) {
-    private fun SakHistorikk?.saker(): List<SakDTO> =
+    private fun SakHistorikk?.saker(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
         when (this) {
             null -> emptyList()
             else ->
                 this.saker().map { sak ->
+                    val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
                     SakDTO(
                         id = sak.sakId,
-                        behandlinger =
-                            sak.behandlinger().map { behandling ->
-                                BehandlingDTO(
-                                    id = behandling.behandlingId,
-                                    behandlingType =
-                                        when (behandling.utløstAv) {
-                                            UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
-                                            UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-                                            UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-                                            UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-                                            UtløstAvType.OMGJØRING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-                                            UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
-                                        },
-                                    utlostAv =
-                                        when (behandling.utløstAv) {
-                                            UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
-                                            UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
-                                            UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
-                                            UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
-                                            UtløstAvType.OMGJØRING -> UtlostAvTypeDTO.OMGJØRING
-                                            UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
-                                        },
-                                    opprettet = behandling.opprettet,
-                                    oppgaveId = behandling.oppgaveId,
-                                )
-                            },
+                        oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
                     )
                 }
         }
@@ -102,7 +77,7 @@ internal class OppgaveDTOMapper(
         val sakHistorikk = sakMediator.finnSakHistorikk(ident = person.ident)
         return PersonOversiktDTO(
             person = lagPersonDTO(person = person),
-            saker = sakHistorikk.saker(),
+            saker = sakHistorikk.saker(oppgaver),
             oppgaver = oppgaver,
         )
     }
