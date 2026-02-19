@@ -662,7 +662,10 @@ class OppgaveMediator(
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID? = oppgaveRepository.hentOppgaveIdFor(behandlingId)
 
-    fun finnOppgaverFor(ident: String): List<Oppgave> = oppgaveRepository.finnOppgaverFor(ident)
+    fun finnOppgaverFor(
+        ident: String,
+        antall: Int? = 50,
+    ): List<Oppgave> = oppgaveRepository.finnOppgaverFor(ident, antall)
 
     fun søk(søkefilter: Søkefilter): OppgaveSøkResultat = oppgaveRepository.søk(søkefilter)
 

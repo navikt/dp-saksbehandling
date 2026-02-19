@@ -13,7 +13,10 @@ interface OppgaveRepository {
 
     fun lagre(oppgave: Oppgave)
 
-    fun finnOppgaverFor(ident: String): List<Oppgave>
+    fun finnOppgaverFor(
+        ident: String,
+        antall: Int? = 50,
+    ): List<Oppgave>
 
     fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveSøkResultat
 

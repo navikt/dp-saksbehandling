@@ -438,7 +438,10 @@ class PostgresOppgaveRepository(
             ),
         ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
-    override fun finnOppgaverFor(ident: String): List<Oppgave> =
+    override fun finnOppgaverFor(
+        ident: String,
+        antall: Int?,
+    ): List<Oppgave> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -446,11 +449,7 @@ class PostgresOppgaveRepository(
                     tilstander = Type.søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = ident,
-                    paginering =
-                        Søkefilter.Paginering(
-                            antallOppgaver = 50,
-                            side = 0,
-                        ),
+                    paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
                 ),
         ).oppgaver
 
