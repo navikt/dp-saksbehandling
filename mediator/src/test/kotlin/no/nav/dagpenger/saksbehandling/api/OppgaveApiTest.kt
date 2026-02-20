@@ -1035,21 +1035,9 @@ class OppgaveApiTest {
                         notat = null,
                         lovligeEndringer =
                             LovligeEndringerDTO(
-                                paaVentAarsaker =
-                                    when (testOppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
-                                        else -> emptyList()
-                                    },
-                                avbrytAarsaker =
-                                    when (testOppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
-                                        else -> emptyList()
-                                    },
-                                leggTilbakeAarsaker =
-                                    when (testOppgave.tilstand().type) {
-                                        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
-                                        else -> emptyList()
-                                    },
+                                paaVentAarsaker = testOppgave.lovligePåVentÅrsaker(),
+                                avbrytAarsaker = testOppgave.lovligeAvbrytÅrsaker(),
+                                leggTilbakeAarsaker = testOppgave.lovligeLeggTilbakeÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,

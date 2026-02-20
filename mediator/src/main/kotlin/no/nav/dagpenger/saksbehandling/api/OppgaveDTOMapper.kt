@@ -170,21 +170,9 @@ internal class OppgaveDTOMapper(
                 },
             lovligeEndringer =
                 LovligeEndringerDTO(
-                    paaVentAarsaker =
-                        when (oppgave.tilstand().type) {
-                            UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
-                            else -> emptyList()
-                        },
-                    avbrytAarsaker =
-                        when (oppgave.tilstand().type) {
-                            UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
-                            else -> emptyList()
-                        },
-                    leggTilbakeAarsaker =
-                        when (oppgave.tilstand().type) {
-                            in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
-                            else -> emptyList()
-                        },
+                    paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
+                    avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
+                    leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
                 ),
             soknadId = soknadId,
             meldingOmVedtakKilde =
@@ -287,21 +275,9 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         lovligeEndringer =
             LovligeEndringerDTO(
-                paaVentAarsaker =
-                    when (this.tilstand().type) {
-                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
-                        else -> emptyList()
-                    },
-                avbrytAarsaker =
-                    when (this.tilstand().type) {
-                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
-                        else -> emptyList()
-                    },
-                leggTilbakeAarsaker =
-                    when (this.tilstand().type) {
-                        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
-                        else -> emptyList()
-                    },
+                paaVentAarsaker = this.lovligePåVentÅrsaker(),
+                avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
+                leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
             ),
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
@@ -355,4 +331,22 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
         UtløstAvType.OMGJØRING -> UtlostAvTypeDTO.OMGJØRING
+    }
+
+internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
+    when (this.tilstand().type) {
+        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
+        else -> emptyList()
+    }
+
+internal fun Oppgave.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
+    when (this.tilstand().type) {
+        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
+        else -> emptyList()
+    }
+
+internal fun Oppgave.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
+    when (this.tilstand().type) {
+        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
+        else -> emptyList()
     }
