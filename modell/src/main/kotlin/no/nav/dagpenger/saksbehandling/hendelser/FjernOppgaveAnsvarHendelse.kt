@@ -5,5 +5,6 @@ import java.util.UUID
 
 data class FjernOppgaveAnsvarHendelse(
     val oppgaveId: UUID,
+    val årsak: String? = null,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

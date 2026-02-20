@@ -395,7 +395,12 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
-            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
+            oppgave.fjernAnsvar(
+                FjernOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+            )
         }
 
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -424,7 +429,12 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
 
         shouldNotThrowAny {
-            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
+            oppgave.fjernAnsvar(
+                FjernOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+            )
         }
 
         oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
@@ -562,7 +572,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler))
+            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId = UUIDv7.ny(), utførtAv = saksbehandler))
         }
 
         shouldThrow<UlovligTilstandsendringException> {
@@ -886,7 +896,12 @@ class OppgaveTilstandTest {
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
-        oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler1))
+        oppgave.fjernAnsvar(
+            FjernOppgaveAnsvarHendelse(
+                oppgaveId = oppgaveId,
+                utførtAv = saksbehandler1,
+            ),
+        )
         oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
         val saksbehandler2 = Saksbehandler("saksbehandler 2", emptySet())
