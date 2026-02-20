@@ -98,7 +98,41 @@ class InnsendingApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en innsending`() {
+    fun `Skal kunne ferdigstille en innsending uten aksjon`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillInnsendingHendelse>()
+        val mediator =
+            mockk<InnsendingMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withInnsendingApi(mediator) {
+            client
+                .put("innsending/$innsendingId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Hubba Bubba"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.innsendingId shouldBe innsendingId
+                        it.valgtSakId() shouldBe sakId
+                        it.vurdering shouldBe "Hubba Bubba"
+                        it.aksjon.type shouldBe Aksjon.Type.AVSLUTT
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en innsending med å opprette en klagebehandling`() {
         val sakId = UUIDv7.ny()
         val slot = slot<FerdigstillInnsendingHendelse>()
         val mediator =
@@ -116,7 +150,42 @@ class InnsendingApiTest {
                         {
                             "sakId": "$sakId",
                             "vurdering": "Hubba Bubba",
-                            "behandlingType": "RETT_TIL_DAGPENGER"
+                            "behandlingsvariant": "KLAGE"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.innsendingId shouldBe innsendingId
+                        it.valgtSakId() shouldBe sakId
+                        it.vurdering shouldBe "Hubba Bubba"
+                        it.aksjon.type shouldBe Aksjon.Type.OPPRETT_KLAGE
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en innsending med å opprette en manuell behandling`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillInnsendingHendelse>()
+        val mediator =
+            mockk<InnsendingMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withInnsendingApi(mediator) {
+            client
+                .put("innsending/$innsendingId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Hubba Bubba",
+                            "behandlingsvariant": "RETT_TIL_DAGPENGER_MANUELL"
                         }
                         """.trimIndent(),
                     )
@@ -127,6 +196,41 @@ class InnsendingApiTest {
                         it.valgtSakId() shouldBe sakId
                         it.vurdering shouldBe "Hubba Bubba"
                         it.aksjon.type shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en innsending med å opprette en revurdering behandling`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillInnsendingHendelse>()
+        val mediator =
+            mockk<InnsendingMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withInnsendingApi(mediator) {
+            client
+                .put("innsending/$innsendingId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Hubba Bubba",
+                            "behandlingsvariant": "RETT_TIL_DAGPENGER_REVURDERING"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.innsendingId shouldBe innsendingId
+                        it.valgtSakId() shouldBe sakId
+                        it.vurdering shouldBe "Hubba Bubba"
+                        it.aksjon.type shouldBe Aksjon.Type.OPPRETT_REVURDERING_BEHANDLING
                     }
                 }
         }

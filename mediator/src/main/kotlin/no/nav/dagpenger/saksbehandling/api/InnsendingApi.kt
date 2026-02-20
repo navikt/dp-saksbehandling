@@ -11,6 +11,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingVariantDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.InnsendingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnBehandlingDTO
@@ -52,9 +53,9 @@ fun Route.innsendingApi(
                         call.receive<FerdigstillInnsendingRequestDTO>().let { requestDTO ->
                             val saksBehandlerToken = call.request.jwt()
                             val aksjon =
-                                when (requestDTO.behandlingType) {
+                                when (requestDTO.behandlingsvariant) {
                                     null -> Avslutt(requestDTO.sakId)
-                                    BehandlingTypeDTO.RETT_TIL_DAGPENGER -> {
+                                    BehandlingVariantDTO.RETT_TIL_DAGPENGER_MANUELL -> {
                                         val valgtSakId = requestDTO.sakId
                                         requireNotNull(valgtSakId)
                                         Aksjon.OpprettManuellBehandling(
@@ -62,14 +63,19 @@ fun Route.innsendingApi(
                                             valgtSakId = valgtSakId,
                                         )
                                     }
-
-                                    BehandlingTypeDTO.KLAGE -> {
+                                    BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING -> {
+                                        val valgtSakId = requestDTO.sakId
+                                        requireNotNull(valgtSakId)
+                                        Aksjon.OpprettRevurderingBehandling(
+                                            saksbehandlerToken = saksBehandlerToken,
+                                            valgtSakId = valgtSakId,
+                                        )
+                                    }
+                                    BehandlingVariantDTO.KLAGE -> {
                                         val valgtSakId = requestDTO.sakId
                                         requireNotNull(valgtSakId)
                                         Aksjon.OpprettKlage(valgtSakId)
                                     }
-
-                                    else -> throw IllegalArgumentException("Ugyldig behandling type")
                                 }
                             mediator.ferdigstill(
                                 hendelse =

@@ -48,9 +48,10 @@ interface BehandlingKlient {
         saksbehandlerToken: String,
     ): Result<Unit>
 
-    fun opprettManuellBehandling(
+    fun opprettBehandling(
         personIdent: String,
         saksbehandlerToken: String,
+        behandlingstype: BehandlingstypeDTO,
         hendelseDato: LocalDate,
         hendelseId: String,
         begrunnelse: String,
@@ -99,20 +100,16 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
     ): Result<Unit> = kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
 
-    override fun opprettManuellBehandling(
+    override fun opprettBehandling(
         personIdent: String,
         saksbehandlerToken: String,
+        behandlingstype: BehandlingstypeDTO,
         hendelseDato: LocalDate,
         hendelseId: String,
         begrunnelse: String,
     ): Result<UUID> =
         runBlocking {
             runCatching {
-                val utløsendeHendelse =
-                    DpBehandlingHendelse(
-                        id = hendelseId,
-                        skjedde = hendelseDato,
-                    )
                 httpClient
                     .post("$dpBehandlingApiUrl/person/behandling") {
                         header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
@@ -121,7 +118,9 @@ internal class BehandlingHttpKlient(
                         setBody(
                             NyBehandlingRequest(
                                 ident = personIdent,
-                                hendelse = utløsendeHendelse,
+                                behandlingstype = behandlingstype.verdi,
+                                id = hendelseId,
+                                skjedde = hendelseDato,
                                 begrunnelse = begrunnelse,
                             ),
                         )
@@ -130,7 +129,7 @@ internal class BehandlingHttpKlient(
                     .let { UUID.fromString(it) }
             }
         }.onFailure {
-            logger.error(it) { "Kall til dp-behandling for å opprette manuell behandling feilet ${it.message}" }
+            logger.error(it) { "Kall til dp-behandling for å opprette behandling feilet ${it.message}" }
         }
 
     override suspend fun kreverTotrinnskontroll(
@@ -196,16 +195,18 @@ private data class DpBehandlingIdentRequest(
 
 private data class NyBehandlingRequest(
     val ident: String,
-    val hendelse: DpBehandlingHendelse?,
+    val behandlingstype: String,
+    val id: String,
+    val skjedde: LocalDate,
     val begrunnelse: String,
 )
 
-private data class DpBehandlingHendelse(
-    val datatype: String = "UUID",
-    val type: String = "Manuell",
-    val id: String,
-    val skjedde: LocalDate,
-)
+enum class BehandlingstypeDTO(
+    val verdi: String,
+) {
+    MANUELL("Manuell"),
+    REVURDERING("Revurdering"),
+}
 
 private data class BehandlingDTO(
     val behandlingId: String,

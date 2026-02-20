@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -30,22 +31,37 @@ class InnsendingBehandler(
                 )
 
             is Aksjon.OpprettManuellBehandling ->
-                opprettManuellBehandling(
+                opprettBehandling(
+                    hendelse = hendelse,
+                    innsending = innsending,
+                )
+
+            is Aksjon.OpprettRevurderingBehandling ->
+                opprettBehandling(
                     hendelse = hendelse,
                     innsending = innsending,
                 )
         }
 
-    private fun opprettManuellBehandling(
+    private fun opprettBehandling(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
         val vurdering =
-            requireNotNull(innsending.vurdering()) { "Vurdering av innsending må være satt ved opprettelse av manuell behandling" }
+            requireNotNull(innsending.vurdering()) { "Vurdering av innsending må være satt ved opprettelse av behandling" }
+
+        val saksbehandlerToken =
+            when (val aksjon = hendelse.aksjon) {
+                is Aksjon.OpprettManuellBehandling -> aksjon.saksbehandlerToken
+                is Aksjon.OpprettRevurderingBehandling -> aksjon.saksbehandlerToken
+                else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: $aksjon")
+            }
+
         behandlingKlient
-            .opprettManuellBehandling(
+            .opprettBehandling(
                 personIdent = innsending.person.ident,
-                saksbehandlerToken = (hendelse.aksjon as Aksjon.OpprettManuellBehandling).saksbehandlerToken,
+                saksbehandlerToken = saksbehandlerToken,
+                behandlingstype = hendelse.aksjon.tilBehandlingstype(),
                 hendelseDato = innsending.mottatt.toLocalDate(),
                 hendelseId = innsending.innsendingId.toString(),
                 begrunnelse = vurdering,
@@ -82,3 +98,10 @@ class InnsendingBehandler(
         )
     }
 }
+
+private fun Aksjon.tilBehandlingstype(): BehandlingstypeDTO =
+    when (this) {
+        is Aksjon.OpprettManuellBehandling -> BehandlingstypeDTO.MANUELL
+        is Aksjon.OpprettRevurderingBehandling -> BehandlingstypeDTO.REVURDERING
+        else -> throw IllegalArgumentException("Ugyldig aksjon for behandlingstype: $this")
+    }

@@ -96,15 +96,16 @@ class BehandlingHttpKlientTest {
     )
 
     @Test
-    fun `kall mot dp-behandling opprett behandling manuelt`() {
+    fun `Kall til dp-behandling for å opprette revurdering behandling`() {
         runBlocking {
             val behandlingKlient = behandlingKlient()
             val hendelseId = UUIDv7.ny().toString()
             val hendelseDato = LocalDate.now()
             behandlingKlient
-                .opprettManuellBehandling(
+                .opprettBehandling(
                     personIdent = ident,
                     saksbehandlerToken = saksbehandlerToken,
+                    behandlingstype = BehandlingstypeDTO.REVURDERING,
                     hendelseDato = hendelseDato,
                     hendelseId = hendelseId,
                     begrunnelse = "begrunnelse",
@@ -116,12 +117,9 @@ class BehandlingHttpKlientTest {
                     """
                     {
                     "ident":"$ident",
-                    "hendelse": {
-                        "datatype": "UUID",
-                        "type": "Manuell",
-                        "id": "$hendelseId",
-                        "skjedde": "$hendelseDato"
-                    },
+                    "behandlingstype": "Revurdering",
+                    "id": "$hendelseId",
+                    "skjedde": "$hendelseDato",
                     "begrunnelse": "begrunnelse"
                     }
                     """.trimIndent()
@@ -132,9 +130,56 @@ class BehandlingHttpKlientTest {
             behandlingKlient(
                 delay = 20.milliseconds,
                 timeOut = 10.milliseconds,
-            ).opprettManuellBehandling(
+            ).opprettBehandling(
                 personIdent = ident,
                 saksbehandlerToken = saksbehandlerToken,
+                behandlingstype = BehandlingstypeDTO.REVURDERING,
+                hendelseDato = hendelseDato,
+                hendelseId = UUIDv7.ny().toString(),
+                begrunnelse = "begrunnelse",
+            ).isFailure
+        }
+    }
+
+    @Test
+    fun `Kall til dp-behandling for å opprette manuell behandling`() {
+        runBlocking {
+            val behandlingKlient = behandlingKlient()
+            val hendelseId = UUIDv7.ny().toString()
+            val hendelseDato = LocalDate.now()
+            behandlingKlient
+                .opprettBehandling(
+                    personIdent = ident,
+                    saksbehandlerToken = saksbehandlerToken,
+                    behandlingstype = BehandlingstypeDTO.MANUELL,
+                    hendelseDato = hendelseDato,
+                    hendelseId = hendelseId,
+                    begrunnelse = "begrunnelse",
+                ).getOrThrow() shouldBe behandlingId
+
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                    "ident":"$ident",
+                    "behandlingstype": "Manuell",
+                    "id": "$hendelseId",
+                    "skjedde": "$hendelseDato",
+                    "begrunnelse": "begrunnelse"
+                    }
+                    """.trimIndent()
+                it.headers[HttpHeaders.Authorization] shouldBe "Bearer $saksbehandlerToken"
+                it.headers[HttpHeaders.Accept] shouldBe "application/json"
+            }
+
+            behandlingKlient(
+                delay = 20.milliseconds,
+                timeOut = 10.milliseconds,
+            ).opprettBehandling(
+                personIdent = ident,
+                saksbehandlerToken = saksbehandlerToken,
+                behandlingstype = BehandlingstypeDTO.MANUELL,
                 hendelseDato = hendelseDato,
                 hendelseId = UUIDv7.ny().toString(),
                 begrunnelse = "begrunnelse",
