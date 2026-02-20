@@ -81,7 +81,7 @@ internal fun Route.oppgaveApi(
                 val person = personMediator.hentPerson(personId)
                 val oppgaver =
                     oppgaveMediator
-                        .finnOppgaverFor(person.ident)
+                        .finnOppgaverFor(person.ident, antall = null)
                         .tilOppgaveOversiktDTOListe()
                 val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)

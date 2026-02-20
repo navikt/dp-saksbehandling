@@ -1153,35 +1153,13 @@ components:
         id:
           type: string
           format: uuid
-        behandlinger:
+        oppgaver:
           type: array
           items:
-            $ref: '#/components/schemas/Behandling'
+            $ref: '#/components/schemas/OppgaveOversikt'
       required:
         - id
-        - behandlinger
-
-    Behandling:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        behandlingType:
-          $ref: '#/components/schemas/BehandlingType'
-        utlostAv:
-          $ref: '#/components/schemas/UtlostAvType'
-        opprettet:
-          type: string
-          format: date-time
-        oppgaveId:
-          type: string
-          format: uuid
-      required:
-        - id
-        - behandlingType
-        - utlostAv
-        - opprettet
+        - oppgaver
 
     OppgaveOversiktResultat:
       type: object
