@@ -50,9 +50,14 @@ The domain follows Norwegian terminology:
 
 ```
 Opprettet → KlarTilBehandling → UnderBehandling → FerdigBehandlet
-                    ↑                ↓      ↓
-                    └── PåVent ←────┘      → KlarTilKontroll → UnderKontroll
+                  ↑     ↑            ↓    ↓
+                  │     └── PåVent ←─┘    └→ KlarTilKontroll → UnderKontroll
+                  │                                  ↑              ↓
+                  └──────────────────────────────────┼── returner ──┘
+                                                     └── fjernAnsvar
 ```
+
+Terminal states: `FerdigBehandlet`, `Avbrutt`, `AvbruttMaskinelt`. Most states can transition to `Avbrutt` via `BehandlingAvbrutt`.
 
 ### Event-Driven Architecture
 
@@ -128,6 +133,12 @@ Models are generated from `openapi/src/main/resources/saksbehandling-api.yaml`:
 
 ### Database
 
-- PostgreSQL with Liquibase migrations
+- PostgreSQL with Flyway migrations (in `mediator/src/main/resources/db/migration/`)
 - Repository interfaces in domain, implementations in mediator
 - Pattern: `PostgresXxxRepository` implements `XxxRepository`
+
+### Kotlin & Build
+
+- Kotlin JVM toolchain **21**
+- All modules apply `common` convention plugin from buildSrc (configures Kotlin, ktlint, JUnit Platform)
+- `streams-consumer` uses Avro plugin for Kafka schema code generation

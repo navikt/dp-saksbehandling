@@ -1400,6 +1400,7 @@ class OppgaveApiTest {
                                             LovligeEndringerDTO(
                                                 paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
                                                 avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
+                                                leggTilbakeAarsaker = LeggTilbakeAarsakDTO.entries,
                                             ),
                                         utsattTilDato = null,
                                     ),
@@ -1424,6 +1425,7 @@ class OppgaveApiTest {
                                 LovligeEndringerDTO(
                                     paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
                                     avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
+                                    leggTilbakeAarsaker = LeggTilbakeAarsakDTO.entries,
                                 ),
                             utsattTilDato = null,
                         ),
@@ -1483,7 +1485,8 @@ class OppgaveApiTest {
                                   "tilstand": "UNDER_BEHANDLING",
                                   "lovligeEndringer": {
                                     "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
-                                    "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)}
+                                    "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
+                                    "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)}
                                   }
                                 }
                               ]
@@ -1504,7 +1507,8 @@ class OppgaveApiTest {
                               "tilstand": "UNDER_BEHANDLING",
                               "lovligeEndringer": {
                                 "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
-                                "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)}
+                                "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
+                                "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)}
                               }
                             }
                           ]
