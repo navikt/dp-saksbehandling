@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import PersonMediator
 import com.fasterxml.jackson.databind.JsonNode
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
@@ -205,6 +206,14 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].asText() shouldBe "klage_behandling_opprettet"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
+                it["ident"].asText() shouldBe testPersonIdent
+                it["mottatt"].asLocalDateTime() shouldBe nå
+            }
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -252,8 +261,8 @@ class KlageMediatorTest {
                     klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
                     klageBehandling.hjemler() shouldBe listOf("FTRL_4_5_REGISTRERING", "FTRL_4_2")
                 }
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).let {
+            testRapid.inspektør.size shouldBe 2
+            testRapid.inspektør.message(1).let {
                 it["@event_name"].asText() shouldBe "klage_behandling_utført"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
@@ -291,8 +300,8 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-                    testRapid.inspektør.size shouldBe 2
-                    testRapid.inspektør.message(1).let {
+                    testRapid.inspektør.size shouldBe 3
+                    testRapid.inspektør.message(2).let {
                         it["@behov"].single().asText() shouldBe "OversendelseKlageinstans"
                         it["ident"].asText() shouldBe testPersonIdent
                         it["fagsakId"].asText() shouldBe sakId.toString()
@@ -526,6 +535,15 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].asText() shouldBe "klage_behandling_opprettet"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
+                it["ident"].asText() shouldBe testPersonIdent
+                it["mottatt"].asLocalDateTime() shouldBe nå
+            }
+
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -566,8 +584,8 @@ class KlageMediatorTest {
             klageBehandling.tilstand().type shouldBe FERDIGSTILT
             klageBehandling.utfall() shouldBe UtfallType.AVVIST
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).let {
+            testRapid.inspektør.size shouldBe 2
+            testRapid.inspektør.message(1).let {
                 it["@event_name"].asText() shouldBe "klage_behandling_utført"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
@@ -641,7 +659,14 @@ class KlageMediatorTest {
                 .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe FERDIG_BEHANDLET
-            testRapid.inspektør.size shouldBe 0
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].asText() shouldBe "klage_behandling_opprettet"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
+                it["ident"].asText() shouldBe testPersonIdent
+                it["mottatt"].asLocalDateTime() shouldBe nå
+            }
         }
     }
 
@@ -698,7 +723,14 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).tilstand()
                 .type shouldBe UNDER_BEHANDLING
-            testRapid.inspektør.size shouldBe 0
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].asText() shouldBe "klage_behandling_opprettet"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
+                it["ident"].asText() shouldBe testPersonIdent
+                it["mottatt"].asLocalDateTime() shouldBe nå
+            }
         }
     }
 

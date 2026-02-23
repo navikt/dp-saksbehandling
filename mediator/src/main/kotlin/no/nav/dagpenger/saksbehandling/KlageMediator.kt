@@ -79,7 +79,7 @@ class KlageMediator(
                         ),
                     ),
             )
-        klageRepository.lagre(klageBehandling = klageBehandling)
+        klageRepository.lagre(klageBehandling)
 
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
@@ -91,6 +91,24 @@ class KlageMediator(
                 utførtAv = klageMottattHendelse.utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+        rapidsConnection.publish(
+            key = klageMottattHendelse.ident,
+            message =
+                JsonMessage
+                    .newMessage(
+                        mapOf(
+                            "@event_name" to "klage_behandling_opprettet",
+                            "behandlingId" to klageBehandling.behandlingId,
+                            "sakId" to klageMottattHendelse.sakId,
+                            "ident" to klageMottattHendelse.ident,
+                            "mottatt" to klageMottattHendelse.opprettet,
+                        ).let { base ->
+                            klageMottattHendelse.journalpostId?.let { journalpostId ->
+                                base + ("journalpostId" to journalpostId)
+                            } ?: base
+                        },
+                    ).toJson(),
+        )
         return runCatching {
             oppgaveMediator.opprettOppgaveForKlageBehandling(
                 behandlingOpprettetHendelse = behandlingOpprettetHendelse,
