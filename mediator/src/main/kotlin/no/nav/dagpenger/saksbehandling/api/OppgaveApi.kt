@@ -4,9 +4,11 @@ import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.parseQueryString
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
+import io.ktor.server.request.queryString
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -294,6 +296,8 @@ internal fun Route.oppgaveApi(
                 route("legg-tilbake") {
                     put {
                         val saksbehandler = applicationCallParser.saksbehandler(call)
+                        val aarsak = parseQueryString(call.request.queryString()).get("aarsak") ?: "ukjent"
+                        val aarsak2 = call.request.queryParameters["aarsak"]
                         val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
@@ -442,6 +446,7 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandl
 private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): FjernOppgaveAnsvarHendelse =
     FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
+        årsak = this.request.queryParameters["aarsak"],
         utførtAv = saksbehandler,
     )
 

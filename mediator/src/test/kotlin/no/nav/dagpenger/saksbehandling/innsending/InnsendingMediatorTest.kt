@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
@@ -577,6 +578,292 @@ class InnsendingMediatorTest {
                     behandlingIdSøknad,
                 )
             innsendingEtterAvbryt.tilstand() shouldBe "FERDIGSTILT"
+        }
+    }
+
+    @Test
+    fun `Skal ferdigstille en innsending med å opprette en revurdering`() {
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                emptySet(),
+            )
+        val behandlingIdRevurdering = UUIDv7.ny()
+        val sak =
+            Sak(
+                sakId = UUIDv7.ny(),
+                søknadId = søknadId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = UtløstAvType.SØKNAD,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(it),
+                )
+            val behandlingKlientMock =
+                mockk<BehandlingKlient>().also { behandlingKlientMock ->
+                    coEvery { behandlingKlientMock.opprettBehandling(any(), any(), any(), any(), any(), any()) } returns
+                        Result.success(behandlingIdRevurdering)
+                }
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler =
+                        InnsendingBehandler(
+                            klageMediator = mockk(),
+                            behandlingKlient = behandlingKlientMock,
+                        ),
+                )
+            val innsendingMottattHendelse =
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = null,
+                    skjemaKode = skjemaKode,
+                    kategori = Kategori.GENERELL,
+                )
+
+            innsendingMediator.taImotInnsending(
+                innsendingMottattHendelse,
+            )
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
+                sak.behandlinger().size shouldBe 2
+                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.INNSENDING
+            } ?: fail("Sak med id ${sak.sakId} ikke funnet")
+
+            val innsendingOppgave =
+                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            val innsending = innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            innsending.tilstand() shouldBe "BEHANDLES"
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = innsendingOppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            innsendingMediator.ferdigstill(
+                hendelse =
+                    FerdigstillInnsendingHendelse(
+                        innsendingId = innsendingOppgave.behandling.behandlingId,
+                        aksjon =
+                            Aksjon.OpprettRevurderingBehandling(
+                                valgtSakId = sak.sakId,
+                                saksbehandlerToken = "token",
+                            ),
+                        vurdering = "Vurderingstekst",
+                        utførtAv = saksbehandler,
+                    ),
+            )
+            val ferdigstiltInnsending =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            ferdigstiltInnsending.innsendingResultat() shouldBe
+                Innsending.InnsendingResultat.RettTilDagpenger(
+                    behandlingIdRevurdering,
+                )
+            ferdigstiltInnsending.tilstand() shouldBe "FERDIGSTILT"
+
+            val ferdigbehandletOppgave =
+                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            ferdigbehandletOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+            ferdigbehandletOppgave.tilstandslogg.size shouldBe 4
+            ferdigbehandletOppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+            ferdigbehandletOppgave.tilstandslogg.first().hendelse shouldBe
+                InnsendingFerdigstiltHendelse(
+                    innsendingId = innsending.innsendingId,
+                    aksjonType = Aksjon.Type.OPPRETT_REVURDERING_BEHANDLING,
+                    opprettetBehandlingId = behandlingIdRevurdering,
+                    utførtAv = saksbehandler,
+                )
+        }
+    }
+
+    @Test
+    fun `Skal ferdigstille en innsending med å opprette en manuell behandling`() {
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                emptySet(),
+            )
+        val behandlingIdManuell = UUIDv7.ny()
+        val sak =
+            Sak(
+                sakId = UUIDv7.ny(),
+                søknadId = søknadId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = UtløstAvType.SØKNAD,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(it),
+                )
+            val behandlingKlientMock =
+                mockk<BehandlingKlient>().also { behandlingKlientMock ->
+                    coEvery { behandlingKlientMock.opprettBehandling(any(), any(), any(), any(), any(), any()) } returns
+                        Result.success(behandlingIdManuell)
+                }
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler =
+                        InnsendingBehandler(
+                            klageMediator = mockk(),
+                            behandlingKlient = behandlingKlientMock,
+                        ),
+                )
+            val innsendingMottattHendelse =
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = null,
+                    skjemaKode = skjemaKode,
+                    kategori = Kategori.GENERELL,
+                )
+
+            innsendingMediator.taImotInnsending(
+                innsendingMottattHendelse,
+            )
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
+                sak.behandlinger().size shouldBe 2
+                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.INNSENDING
+            } ?: fail("Sak med id ${sak.sakId} ikke funnet")
+
+            val innsendingOppgave =
+                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            val innsending = innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            innsending.tilstand() shouldBe "BEHANDLES"
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = innsendingOppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            innsendingMediator.ferdigstill(
+                hendelse =
+                    FerdigstillInnsendingHendelse(
+                        innsendingId = innsendingOppgave.behandling.behandlingId,
+                        aksjon =
+                            Aksjon.OpprettManuellBehandling(
+                                valgtSakId = sak.sakId,
+                                saksbehandlerToken = "token",
+                            ),
+                        vurdering = "Vurderingstekst",
+                        utførtAv = saksbehandler,
+                    ),
+            )
+            val ferdigstiltInnsending =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            ferdigstiltInnsending.innsendingResultat() shouldBe
+                Innsending.InnsendingResultat.RettTilDagpenger(
+                    behandlingIdManuell,
+                )
+            ferdigstiltInnsending.tilstand() shouldBe "FERDIGSTILT"
+
+            val ferdigbehandletOppgave =
+                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == UtløstAvType.INNSENDING
+                }
+            ferdigbehandletOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+            ferdigbehandletOppgave.tilstandslogg.size shouldBe 4
+            ferdigbehandletOppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+            ferdigbehandletOppgave.tilstandslogg.first().hendelse shouldBe
+                InnsendingFerdigstiltHendelse(
+                    innsendingId = innsending.innsendingId,
+                    aksjonType = Aksjon.Type.OPPRETT_MANUELL_BEHANDLING,
+                    opprettetBehandlingId = behandlingIdManuell,
+                    utførtAv = saksbehandler,
+                )
         }
     }
 

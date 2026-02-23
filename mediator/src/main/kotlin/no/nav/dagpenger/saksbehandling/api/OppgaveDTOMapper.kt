@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
@@ -25,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
+import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
@@ -143,16 +145,9 @@ internal class OppgaveDTOMapper(
                 },
             lovligeEndringer =
                 LovligeEndringerDTO(
-                    paaVentAarsaker =
-                        when (oppgave.tilstand().type) {
-                            UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
-                            else -> emptyList()
-                        },
-                    avbrytAarsaker =
-                        when (oppgave.tilstand().type) {
-                            UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
-                            else -> emptyList()
-                        },
+                    paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
+                    avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
+                    leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
                 ),
             soknadId = soknadId,
             meldingOmVedtakKilde =
@@ -255,16 +250,9 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         lovligeEndringer =
             LovligeEndringerDTO(
-                paaVentAarsaker =
-                    when (this.tilstand().type) {
-                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
-                        else -> emptyList()
-                    },
-                avbrytAarsaker =
-                    when (this.tilstand().type) {
-                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
-                        else -> emptyList()
-                    },
+                paaVentAarsaker = this.lovligePåVentÅrsaker(),
+                avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
+                leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
             ),
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
@@ -318,4 +306,22 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
         UtløstAvType.OMGJØRING -> UtlostAvTypeDTO.OMGJØRING
+    }
+
+internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
+    when (this.tilstand().type) {
+        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
+        else -> emptyList()
+    }
+
+internal fun Oppgave.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
+    when (this.tilstand().type) {
+        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
+        else -> emptyList()
+    }
+
+internal fun Oppgave.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
+    when (this.tilstand().type) {
+        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
+        else -> emptyList()
     }

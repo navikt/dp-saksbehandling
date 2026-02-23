@@ -30,6 +30,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
         }
     }
 
+    // Henter oppgavetilstander som skal sendes til statistikk.
+    // Går ikke lenger tilbake i tid enn det finnes behandlinger i behandlinger_mart på BigQuery, derfor begrensningen
+    // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
     override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
         sessionOf(dataSource = dataSource)
             .use { session ->
@@ -82,7 +85,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                     , CASE
                                         WHEN log.tilstand       = 'AVBRUTT' 
                                         AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
-                                            log.hendelse->>'årsak' 
+                                             log.hendelse->>'årsak' 
                                         END
                                     , CASE
                                         WHEN sak.er_dp_sak THEN
@@ -100,14 +103,15 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             JOIN      person_v1                     per ON per.id = beh.person_id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
                             WHERE     beh.utlost_av != 'KLAGE'
-                            AND       log.id > coalesce((   SELECT      tilstand_id
+                            AND       beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
+                            AND       log.id >  coalesce((  SELECT      tilstand_id
                                                             FROM        saksbehandling_statistikk_v1
                                                             WHERE       overfort_til_statistikk = TRUE
                                                             ORDER BY    tilstand_id DESC
                                                             LIMIT 1
                                                         ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
                             ORDER BY  log.id
-                            LIMIT 100
+                            LIMIT 1000
                         RETURNING   *
                         """,
                     ).map { row ->

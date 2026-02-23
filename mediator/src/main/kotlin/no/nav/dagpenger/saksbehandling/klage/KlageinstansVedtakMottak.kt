@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import java.time.LocalDateTime
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -57,24 +58,33 @@ class KlageinstansVedtakMottak(
             "klageInstansVedtakType" to klageInstansVedtakType,
         ) {
             sikkerlogger.info { "Mottok klageinstans vedtak med pakke: ${packet.toJson()}" }
-        }
 
-        val detaljeNode =
-            when (type) {
-                KlageinstansVedtakHendelse.KlageVedtakType.KLAGE -> {
-                    DetaljeNode(packet["detaljer"]["klagebehandlingAvsluttet"])
-                }
+            if (klageInstansEventId in
+                setOf(
+                    UUID.fromString("ddedbbad-94de-4aac-8ab8-f6d0c422230d"),
+                )
+            ) {
+                logger.warn { "Skipper klageinstans vedtak med eventId $klageInstansEventId" }
+                return
             }
-        klageMediator.mottaKlageinstansVedtak(
-            KlageinstansVedtakHendelse(
-                type = type,
-                klageId = klageId,
-                klageinstansVedtakId = klageinstansVedtakId,
-                avsluttet = detaljeNode.avsluttet,
-                utfall = detaljeNode.utfall,
-                journalpostIder = detaljeNode.journalpostIder,
-            ),
-        )
+
+            val detaljeNode =
+                when (type) {
+                    KlageinstansVedtakHendelse.KlageVedtakType.KLAGE -> {
+                        DetaljeNode(packet["detaljer"]["klagebehandlingAvsluttet"])
+                    }
+                }
+            klageMediator.mottaKlageinstansVedtak(
+                KlageinstansVedtakHendelse(
+                    type = type,
+                    klageId = klageId,
+                    klageinstansVedtakId = klageinstansVedtakId,
+                    avsluttet = detaljeNode.avsluttet,
+                    utfall = detaljeNode.utfall,
+                    journalpostIder = detaljeNode.journalpostIder,
+                ),
+            )
+        }
     }
 
     private class DetaljeNode(
