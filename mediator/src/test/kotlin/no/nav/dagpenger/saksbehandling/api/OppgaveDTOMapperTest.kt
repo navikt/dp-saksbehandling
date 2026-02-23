@@ -144,7 +144,7 @@ class OppgaveDTOMapperTest {
                         "avbrytAarsaker": [],
                         "leggTilbakeAarsaker": [
                           "MANGLER_KOMPETANSE",
-                          "HABILITET",
+                          "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
                         ]
@@ -309,7 +309,7 @@ class OppgaveDTOMapperTest {
                         ],
                         "leggTilbakeAarsaker": [
                           "MANGLER_KOMPETANSE",
-                          "HABILITET",
+                          "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
                         ]
@@ -475,7 +475,7 @@ class OppgaveDTOMapperTest {
                         ],
                         "leggTilbakeAarsaker": [
                           "MANGLER_KOMPETANSE",
-                          "HABILITET",
+                          "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
                         ]
@@ -641,7 +641,7 @@ class OppgaveDTOMapperTest {
                         ],
                         "leggTilbakeAarsaker": [
                           "MANGLER_KOMPETANSE",
-                          "HABILITET",
+                          "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
                         ]
