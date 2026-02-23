@@ -296,10 +296,14 @@ internal fun Route.oppgaveApi(
                 route("legg-tilbake") {
                     put {
                         val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val leggTilbakeOppgave = runCatching { call.receive<LeggTilbakeOppgaveDTO>() }.getOrNull()
-                        val aarsak = leggTilbakeOppgave?.aarsak?.name ?: "ukjent"
-                        val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
+                        val leggTilbakeOppgave = call.receive<LeggTilbakeOppgaveDTO>()
+                        val oppgaveAnsvarHendelse =
+                            FjernOppgaveAnsvarHendelse(
+                                oppgaveId = oppgaveId,
+                                årsak = leggTilbakeOppgave.aarsak.value,
+                                utførtAv = saksbehandler,
+                            )
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
@@ -440,13 +444,6 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandl
     SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = saksbehandler.navIdent,
-        utførtAv = saksbehandler,
-    )
-
-private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): FjernOppgaveAnsvarHendelse =
-    FjernOppgaveAnsvarHendelse(
-        oppgaveId = this.finnUUID("oppgaveId"),
-        årsak = this.request.queryParameters["aarsak"],
         utførtAv = saksbehandler,
     )
 

@@ -646,7 +646,7 @@ paths:
             type: string
             format: uuid
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
@@ -1559,12 +1559,14 @@ components:
       properties:
         aarsak:
           $ref: '#/components/schemas/LeggTilbakeAarsak'
+      required:
+        - aarsak
 
     LeggTilbakeAarsak:
       type: string
       enum:
         - MANGLER_KOMPETANSE
-        - HABILITET
+        - INHABILITET
         - FRAVÆR
         - ANNET
 

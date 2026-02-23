@@ -246,7 +246,7 @@ class OppgaveApiTest {
                                     ],
                                     "leggTilbakeAarsaker": [
                                         "MANGLER_KOMPETANSE",
-                                        "HABILITET",
+                                        "INHABILITET",
                                         "FRAVÆR",
                                         "ANNET"
                                     ]
@@ -765,27 +765,39 @@ class OppgaveApiTest {
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
 
+        val forventetFjernOppgaveAnsvarHendelse =
+            FjernOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                utførtAv = TestHelper.saksbehandler,
+                årsak = "INHABILITET",
+            )
+
         coEvery {
             oppgaveMediatorMock.fristillOppgave(
-                FjernOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = TestHelper.saksbehandler,
-                ),
+                forventetFjernOppgaveAnsvarHendelse,
             )
         } just runs
 
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
-            client.put("oppgave/${oppgave.oppgaveId}/legg-tilbake") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+            client
+                .put("oppgave/${oppgave.oppgaveId}/legg-tilbake") {
+                    autentisert()
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """
+                         {
+                           "aarsak": "INHABILITET"
+                        }
+                        """.trimIndent(),
+                    )
+                }.also { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
         }
 
         verify(exactly = 1) {
             oppgaveMediatorMock.fristillOppgave(
-                FjernOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = TestHelper.saksbehandler,
-                ),
+                forventetFjernOppgaveAnsvarHendelse,
             )
         }
     }
@@ -1220,7 +1232,7 @@ class OppgaveApiTest {
                       "lovligeEndringer" : {
                           "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "ANNET" ],
                           "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "ANNET" ],
-                          "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "HABILITET", "FRAVÆR", "ANNET" ]
+                          "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "INHABILITET", "FRAVÆR", "ANNET" ]
                       },
                       "historikk": [
                         {
