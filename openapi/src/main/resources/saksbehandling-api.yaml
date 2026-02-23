@@ -645,13 +645,12 @@ paths:
           schema:
             type: string
             format: uuid
-        - in: query
-          name: aarsak
-          required: false
-          style: form
-          explode: true
-          schema:
-            $ref: '#/components/schemas/LeggTilbakeAarsak'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeggTilbakeOppgave'
       responses:
         '204':
           description: Fjernet saksbehandler/beslutter som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling/kontroll
@@ -1554,6 +1553,12 @@ components:
         - FLERE_SØKNADER
         - TRUKKET_SØKNAD
         - ANNET
+
+    LeggTilbakeOppgave:
+      type: object
+      properties:
+        aarsak:
+          $ref: '#/components/schemas/LeggTilbakeAarsak'
 
     LeggTilbakeAarsak:
       type: string

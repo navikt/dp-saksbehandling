@@ -4,7 +4,6 @@ import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.parseQueryString
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
@@ -33,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
+import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
@@ -296,8 +296,8 @@ internal fun Route.oppgaveApi(
                 route("legg-tilbake") {
                     put {
                         val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val aarsak = parseQueryString(call.request.queryString()).get("aarsak") ?: "ukjent"
-                        val aarsak2 = call.request.queryParameters["aarsak"]
+                        val leggTilbakeOppgave = runCatching { call.receive<LeggTilbakeOppgaveDTO>() }.getOrNull()
+                        val aarsak = leggTilbakeOppgave?.aarsak?.name ?: "ukjent"
                         val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
