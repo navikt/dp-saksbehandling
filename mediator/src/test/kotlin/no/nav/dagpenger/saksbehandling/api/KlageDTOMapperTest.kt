@@ -133,22 +133,6 @@ class KlageDTOMapperTest {
                             },
                             {
                               "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST
-                    }.type.påkrevd},
-                              "gruppe": "FRIST",
-                              "valgmuligheter": [],
-                              "redigerbar": true,
-                              "type": "DATO"
-                            },
-                            {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
                         it.type == OpplysningType.KLAGE_MOTTATT
                     }.opplysningId}",
                               "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
@@ -159,6 +143,22 @@ class KlageDTOMapperTest {
                     }.type.navn}",
                               "paakrevd": ${klageBehandling.synligeOpplysninger().single {
                         it.type == OpplysningType.KLAGE_MOTTATT
+                    }.type.påkrevd},
+                              "gruppe": "FRIST",
+                              "valgmuligheter": [],
+                              "redigerbar": true,
+                              "type": "DATO"
+                            },
+                            {
+                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
+                        it.type == OpplysningType.KLAGEFRIST
+                    }.opplysningId}",
+                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
+                        it.type == OpplysningType.KLAGEFRIST
+                    }.type.name}",
+                              "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.type.navn}",
+                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
+                        it.type == OpplysningType.KLAGEFRIST
                     }.type.påkrevd},
                               "gruppe": "FRIST",
                               "valgmuligheter": [],
