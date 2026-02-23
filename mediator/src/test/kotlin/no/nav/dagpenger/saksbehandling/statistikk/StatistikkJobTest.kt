@@ -12,17 +12,16 @@ import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRe
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 private val ISO_TIMESTAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
 class StatistikkJobTest {
     private val testRapid = TestRapid()
-    val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+    val mottatt = LocalDateTime.of(2026, 1, 11, 9, 11, 30)
     val søknadKlarTilBehandling =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
-            mottatt = nå,
+            mottatt = mottatt,
             sakId = UUIDv7.ny(),
             behandlingId = UUIDv7.ny(),
             personIdent = "12345612345",
@@ -34,7 +33,7 @@ class StatistikkJobTest {
                     sekvensnummer = 1,
                     tilstandsendringId = UUIDv7.ny(),
                     tilstand = "KLAR_TIL_BEHANDLING",
-                    tidspunkt = nå.minusDays(1),
+                    tidspunkt = mottatt.minusDays(1),
                 ),
             utløstAv = "SØKNAD",
             behandlingResultat = null,
@@ -46,7 +45,7 @@ class StatistikkJobTest {
     val søknadAvbrutt =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
-            mottatt = nå,
+            mottatt = mottatt,
             sakId = UUIDv7.ny(),
             behandlingId = UUIDv7.ny(),
             personIdent = "12345612345",
@@ -58,7 +57,7 @@ class StatistikkJobTest {
                     sekvensnummer = 2,
                     tilstandsendringId = UUIDv7.ny(),
                     tilstand = "AVBRUTT_MANUELT",
-                    tidspunkt = nå,
+                    tidspunkt = mottatt,
                 ),
             utløstAv = "SØKNAD",
             behandlingResultat = "AVBRUTT",
@@ -70,7 +69,7 @@ class StatistikkJobTest {
     val innsendingFerdigBehandlet =
         OppgaveITilstand(
             oppgaveId = UUIDv7.ny(),
-            mottatt = nå,
+            mottatt = mottatt,
             sakId = UUIDv7.ny(),
             behandlingId = UUIDv7.ny(),
             personIdent = "12345612345",
@@ -82,7 +81,7 @@ class StatistikkJobTest {
                     sekvensnummer = 3,
                     tilstandsendringId = UUIDv7.ny(),
                     tilstand = "FERDIG_BEHANDLET",
-                    tidspunkt = nå,
+                    tidspunkt = mottatt,
                 ),
             utløstAv = "INNSENDING",
             behandlingResultat = "RettTilDagpenger",
