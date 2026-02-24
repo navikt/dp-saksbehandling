@@ -278,7 +278,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal kunne sette oppgave til kontroll`() {
+    fun `Skal kunne sette oppgave til totrinnskontroll`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
             oppgaveMediator.sendTilKontroll(
@@ -292,6 +292,60 @@ OppgaveMediatorTest {
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+        }
+    }
+
+    @Test
+    fun `Skal kunne utføre kvalitetskontroll når ikke totrinnskontroll kreves`() {
+        settOppOppgaveMediator(
+            behandlingKlient =
+                mockk<BehandlingKlient>().also {
+                    coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(false)
+                },
+        ) { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
+            oppgaveMediator.sendTilKontroll(
+                SendTilKontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+                saksbehandlerToken = "testToken",
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe KLAR_TIL_KONTROLL
+                it.behandlerIdent shouldBe null
+                it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            }
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_KONTROLL
+                it.behandlerIdent shouldBe beslutter.navIdent
+                it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+                it.sisteBeslutter() shouldBe beslutter.navIdent
+            }
+
+            oppgaveMediator.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = beslutter,
+                ),
+                "testToken",
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe Type.UNDER_BEHANDLING
+                it.behandlerIdent shouldBe saksbehandler.navIdent
+                it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+                it.sisteBeslutter() shouldBe beslutter.navIdent
+            }
         }
     }
 

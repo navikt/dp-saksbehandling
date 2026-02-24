@@ -17,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
@@ -280,30 +279,32 @@ class OppgaveMediator(
                                 oppgave.behandling.behandlingId,
                                 saksbehandlerToken = saksbehandlerToken,
                             ).onFailure {
-                                logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                                logger.error {
+                                    "Feil ved sjekk om behandling krever totrinns av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}"
+                                }
                             }.getOrThrow()
 
+                    oppgave.sendTilKontroll(sendTilKontrollHendelse)
                     when (kreverToTrinnsKontroll) {
                         true -> {
-                            oppgave.sendTilKontroll(sendTilKontrollHendelse)
                             behandlingKlient
                                 .godkjenn(
                                     behandlingId = oppgave.behandling.behandlingId,
                                     ident = oppgave.personIdent(),
                                     saksbehandlerToken = saksbehandlerToken,
-                                ).onSuccess {
-                                    oppgaveRepository.lagre(oppgave)
-                                    logger.info {
-                                        "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                                    }
-                                }.onFailure {
+                                ).onFailure {
                                     logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
                                 }.getOrThrow()
                         }
-
                         false -> {
-                            throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
+                            logger.info {
+                                "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
+                            }
                         }
+                    }
+                    oppgaveRepository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                     }
                 }
             }
@@ -323,23 +324,42 @@ class OppgaveMediator(
                     "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-                behandlingKlient
-                    .sendTilbake(
-                        behandlingId = oppgave.behandling.behandlingId,
-                        ident = oppgave.personIdent(),
-                        saksbehandlerToken = beslutterToken,
-                    ).onSuccess {
-                        oppgaveRepository.lagre(oppgave)
-                        logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
-                    }.onFailure {
-                        val feil =
-                            "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
-                                "tilbake til saksbehandling: ${it.message}"
-                        logger.error { feil }
-                        throw it
+                runBlocking {
+                    val kreverToTrinnsKontroll =
+                        behandlingKlient
+                            .kreverTotrinnskontroll(
+                                oppgave.behandling.behandlingId,
+                                saksbehandlerToken = beslutterToken,
+                            ).onFailure {
+                                logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                            }.getOrThrow()
+                    when (kreverToTrinnsKontroll) {
+                        true -> {
+                            behandlingKlient
+                                .sendTilbake(
+                                    behandlingId = oppgave.behandling.behandlingId,
+                                    ident = oppgave.personIdent(),
+                                    saksbehandlerToken = beslutterToken,
+                                ).onSuccess {
+                                    logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
+                                }.onFailure {
+                                    val feil =
+                                        "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
+                                            "tilbake til saksbehandling: ${it.message}"
+                                    logger.error { feil }
+                                    throw it
+                                }
+                        }
+                        false -> {
+                            logger.info {
+                                "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til under behandling"
+                            }
+                        }
                     }
-                logger.info {
-                    "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    oppgaveRepository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
                 }
             }
         }
