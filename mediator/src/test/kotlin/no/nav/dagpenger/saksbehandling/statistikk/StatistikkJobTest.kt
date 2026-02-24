@@ -40,6 +40,7 @@ class StatistikkJobTest {
             fagsystem = null,
             behandlingÅrsak = null,
             arenaSakId = null,
+            resultatBegrunnelse = null,
         )
 
     val søknadAvbrutt =
@@ -64,6 +65,7 @@ class StatistikkJobTest {
             behandlingÅrsak = "BEHANDLES_I_ARENA",
             fagsystem = "ARENA",
             arenaSakId = "123",
+            resultatBegrunnelse = null,
         )
 
     val innsendingFerdigBehandlet =
@@ -88,6 +90,32 @@ class StatistikkJobTest {
             behandlingÅrsak = "Årsak",
             fagsystem = "DAGPENGER",
             arenaSakId = null,
+            resultatBegrunnelse = null,
+        )
+
+    val oppgavePåVent =
+        OppgaveITilstand(
+            oppgaveId = UUIDv7.ny(),
+            mottatt = mottatt,
+            sakId = UUIDv7.ny(),
+            behandlingId = UUIDv7.ny(),
+            personIdent = "12345612345",
+            saksbehandlerIdent = null,
+            beslutterIdent = null,
+            versjon = "dp:saksbehandling:1.2.3",
+            tilstandsendring =
+                OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = 4,
+                    tilstandsendringId = UUIDv7.ny(),
+                    tilstand = "PAA_VENT",
+                    tidspunkt = mottatt.minusDays(1),
+                ),
+            utløstAv = "SØKNAD",
+            behandlingResultat = null,
+            fagsystem = null,
+            behandlingÅrsak = null,
+            arenaSakId = null,
+            resultatBegrunnelse = "AVVENT_MELDEKORT",
         )
     private val saksbehandlingsstatistikkRepository =
         mockk<SaksbehandlingsstatistikkRepository>().also {
@@ -97,9 +125,11 @@ class StatistikkJobTest {
                     søknadKlarTilBehandling,
                     søknadAvbrutt,
                     innsendingFerdigBehandlet,
+                    oppgavePåVent,
                 )
             every { it.markerTilstandsendringerSomOverført(søknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } just Runs
             every { it.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId) } just Runs
+            every { it.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId) } just Runs
             every { it.markerTilstandsendringerSomOverført(innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId) } just
                 Runs
         }
@@ -116,7 +146,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v4",
+              "@event_name": "oppgave_til_statistikk_v5",
               "oppgave": {
                 "oppgaveId": "${søknadKlarTilBehandling.oppgaveId}",
                 "mottatt": "${søknadKlarTilBehandling.mottatt.format(ISO_TIMESTAMP)}",
@@ -137,7 +167,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v4",
+              "@event_name": "oppgave_til_statistikk_v5",
               "oppgave": {
                 "oppgaveId": "${søknadAvbrutt.oppgaveId}",
                 "mottatt": "${søknadAvbrutt.mottatt.format(ISO_TIMESTAMP)}",
@@ -164,7 +194,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v4",
+              "@event_name": "oppgave_til_statistikk_v5",
               "oppgave": {
                 "oppgaveId": "${innsendingFerdigBehandlet.oppgaveId}",
                 "mottatt": "${innsendingFerdigBehandlet.mottatt.format(ISO_TIMESTAMP)}",
@@ -181,6 +211,28 @@ class StatistikkJobTest {
                 "utløstAv": "INNSENDING",
                 "versjon": "dp:saksbehandling:1.2.3",
                 "behandlingResultat": "RettTilDagpenger"
+              }
+            }
+            """.trimIndent()
+        testRapid.inspektør.message(3).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "oppgave_til_statistikk_v5",
+              "oppgave": {
+                "oppgaveId": "${oppgavePåVent.oppgaveId}",
+                "mottatt": "${oppgavePåVent.mottatt.format(ISO_TIMESTAMP)}",
+                "sakId": "${oppgavePåVent.sakId}",
+                "behandlingId": "${oppgavePåVent.behandlingId}",
+                "personIdent": "12345612345",
+                "tilstandsendring": {
+                  "sekvensnummer": 4,
+                  "tilstandsendringId": "${oppgavePåVent.tilstandsendring.tilstandsendringId}",
+                  "tilstand": "PAA_VENT",
+                  "tidspunkt": "${oppgavePåVent.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
+                },
+                "utløstAv": "SØKNAD",
+                "versjon": "dp:saksbehandling:1.2.3",
+                "resultatBegrunnelse": "AVVENT_MELDEKORT"
               }
             }
             """.trimIndent()

@@ -79,6 +79,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             behandlingÅrsak = null,
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
+                            resultatBegrunnelse = null,
                         )
                     førsteTilstandsendring
                 }
@@ -226,6 +227,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             behandlingÅrsak = null,
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
+                            resultatBegrunnelse = null,
                         )
                     førsteTilstandsendring
                 }
@@ -268,6 +270,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             behandlingÅrsak = null,
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
+                            resultatBegrunnelse = null,
                         )
                     andreTilstandsendring
                 }
@@ -309,6 +312,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             behandlingÅrsak = null,
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
+                            resultatBegrunnelse = null,
                         )
                     tredjeTilstandsendring
                 }

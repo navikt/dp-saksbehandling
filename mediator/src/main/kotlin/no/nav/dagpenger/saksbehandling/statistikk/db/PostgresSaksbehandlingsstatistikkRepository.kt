@@ -57,36 +57,37 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             , behandling_aarsak
                             , fagsystem
                             , arena_sak_id
+                            , resultat_begrunnelse
                             )
-                            SELECT    log.id
+                            SELECT    log.id                    AS tilstand_id
                                     , CASE
                                         WHEN log.tilstand       = 'AVBRUTT' 
                                         AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
                                             'AVBRUTT_MANUELT'
                                         ELSE
                                             log.tilstand
-                                        END
-                                    , log.tidspunkt
-                                    , opp.id
-                                    , opp.opprettet
-                                    , beh.sak_id
-                                    , beh.id
-                                    , per.ident
+                                        END                     AS tilstand
+                                    , log.tidspunkt             AS tilstand_tidspunkt
+                                    , opp.id                    AS oppgave_id
+                                    , opp.opprettet             AS mottatt
+                                    , beh.sak_id                AS sak_id
+                                    , beh.id                    AS behandling_id
+                                    , per.ident                 AS person_ident
                                     , CASE
                                         WHEN log.tilstand = 'UNDER_BEHANDLING' THEN 
                                             log.hendelse->>'ansvarligIdent'
-                                        END
+                                        END                     AS saksbehandler_ident
                                     , CASE 
                                         WHEN log.tilstand = 'UNDER_KONTROLL'   THEN 
                                             log.hendelse->>'ansvarligIdent' 
-                                        END
-                                    , beh.utlost_av
-                                    , ins.resultat_type
+                                        END                     AS beslutter_ident
+                                    , beh.utlost_av             AS utlost_av
+                                    , ins.resultat_type         AS behandling_resultat
                                     , CASE
                                         WHEN log.tilstand       = 'AVBRUTT' 
                                         AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
                                              log.hendelse->>'årsak' 
-                                        END
+                                        END                     AS behandling_aarsak
                                     , CASE
                                         WHEN sak.er_dp_sak THEN
                                             'DAGPENGER'
@@ -94,8 +95,12 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                             'ARENA'
                                         ELSE
                                             'UKJENT'
-                                        END
-                                    , sak.arena_sak_id
+                                        END                     AS fagsystem
+                                    , sak.arena_sak_id          AS arena_sak_id
+                                    , CASE
+                                        WHEN log.hendelse_type IN ('UtsettOppgaveHendelse','ReturnerTilSaksbehandlingHendelse') THEN 
+                                            log.hendelse->>'årsak'
+                                        END                     AS resultat_begrunnelse 
                             FROM      oppgave_tilstand_logg_v1      log
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
@@ -136,6 +141,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             behandlingÅrsak = row.stringOrNull("behandling_aarsak"),
                             fagsystem = row.stringOrNull("fagsystem"),
                             arenaSakId = row.stringOrNull("arena_sak_id"),
+                            resultatBegrunnelse = row.stringOrNull("resultat_begrunnelse"),
                         )
                     }.asList,
                 )
