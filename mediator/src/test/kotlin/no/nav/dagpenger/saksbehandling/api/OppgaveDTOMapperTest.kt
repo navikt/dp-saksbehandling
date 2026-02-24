@@ -147,6 +147,12 @@ class OppgaveDTOMapperTest {
                           "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
+                        ],
+                        "returnerTilSaksbehandlingAarsaker": [
+                          "FEIL_UTFALL",
+                          "FEIL_HJEMMEL",
+                          "HAR_MANGLER",
+                          "ANNET"
                         ]
                       },
                       "saksbehandler": {
@@ -312,7 +318,8 @@ class OppgaveDTOMapperTest {
                           "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
-                        ]
+                        ],
+                        "returnerTilSaksbehandlingAarsaker": []
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
@@ -478,7 +485,8 @@ class OppgaveDTOMapperTest {
                           "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
-                        ]
+                        ],
+                        "returnerTilSaksbehandlingAarsaker": []
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
@@ -644,7 +652,8 @@ class OppgaveDTOMapperTest {
                           "INHABILITET",
                           "FRAVÆR",
                           "ANNET"
-                        ]
+                        ],
+                        "returnerTilSaksbehandlingAarsaker": []
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",

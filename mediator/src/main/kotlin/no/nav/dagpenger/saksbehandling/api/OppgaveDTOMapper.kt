@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
@@ -148,6 +149,7 @@ internal class OppgaveDTOMapper(
                     paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
                     avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
                     leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
+                    returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
                 ),
             soknadId = soknadId,
             meldingOmVedtakKilde =
@@ -253,6 +255,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 paaVentAarsaker = this.lovligePåVentÅrsaker(),
                 avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
                 leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
+                returnerTilSaksbehandlingAarsaker = this.lovligeReturnerTilSaksbehandlerÅrsaker(),
             ),
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
@@ -323,5 +326,11 @@ internal fun Oppgave.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
 internal fun Oppgave.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
     when (this.tilstand().type) {
         in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
+        else -> emptyList()
+    }
+
+internal fun Oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTilSaksbehandlingAarsakDTO> =
+    when (this.tilstand().type) {
+        UNDER_KONTROLL -> ReturnerTilSaksbehandlingAarsakDTO.entries
         else -> emptyList()
     }

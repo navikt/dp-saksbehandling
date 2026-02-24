@@ -36,10 +36,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
+import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -253,7 +253,8 @@ class OppgaveApiTest {
                                         "INHABILITET",
                                         "FRAVÆR",
                                         "ANNET"
-                                    ]
+                                    ],
+                                    "returnerTilSaksbehandlingAarsaker": []
                                 }
                             }
                         ],
@@ -581,7 +582,11 @@ class OppgaveApiTest {
                 adGrupper = listOf(Configuration.beslutterADGruppe),
             )
         val returnerTilSaksbehandlingHendelse =
-            ReturnerTilSaksbehandlingHendelse(oppgave.oppgaveId, TestHelper.beslutter)
+            ReturnerTilSaksbehandlingHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                årsak = ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL,
+                utførtAv = TestHelper.beslutter,
+            )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, any()) } just Runs
@@ -590,6 +595,15 @@ class OppgaveApiTest {
             client
                 .put("/oppgave/${oppgave.oppgaveId}/returner-til-saksbehandler") {
                     autentisert(token = beslutterToken)
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        //language=JSON
+                        """
+                        {
+                            "aarsak": "FEIL_HJEMMEL"
+                        }
+                        """.trimIndent(),
+                    )
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                 }
@@ -1054,6 +1068,7 @@ class OppgaveApiTest {
                                 paaVentAarsaker = testOppgave.lovligePåVentÅrsaker(),
                                 avbrytAarsaker = testOppgave.lovligeAvbrytÅrsaker(),
                                 leggTilbakeAarsaker = testOppgave.lovligeLeggTilbakeÅrsaker(),
+                                returnerTilSaksbehandlingAarsaker = testOppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1183,21 +1198,10 @@ class OppgaveApiTest {
                         notat = null,
                         lovligeEndringer =
                             LovligeEndringerDTO(
-                                paaVentAarsaker =
-                                    when (oppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
-                                        else -> emptyList()
-                                    },
-                                avbrytAarsaker =
-                                    when (oppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
-                                        else -> emptyList()
-                                    },
-                                leggTilbakeAarsaker =
-                                    when (oppgave.tilstand().type) {
-                                        in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
-                                        else -> emptyList()
-                                    },
+                                paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
+                                avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
+                                leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
+                                returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1413,6 +1417,7 @@ class OppgaveApiTest {
                                                 paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
                                                 avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
                                                 leggTilbakeAarsaker = LeggTilbakeAarsakDTO.entries,
+                                                returnerTilSaksbehandlingAarsaker = emptyList(),
                                             ),
                                         utsattTilDato = null,
                                     ),
@@ -1438,6 +1443,7 @@ class OppgaveApiTest {
                                     paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
                                     avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
                                     leggTilbakeAarsaker = LeggTilbakeAarsakDTO.entries,
+                                    returnerTilSaksbehandlingAarsaker = emptyList(),
                                 ),
                             utsattTilDato = null,
                         ),
@@ -1498,7 +1504,8 @@ class OppgaveApiTest {
                                   "lovligeEndringer": {
                                     "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
                                     "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
-                                    "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)}
+                                    "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
+                                    "returnerTilSaksbehandlingAarsaker": []
                                   }
                                 }
                               ]
@@ -1520,7 +1527,8 @@ class OppgaveApiTest {
                               "lovligeEndringer": {
                                 "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
                                 "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
-                                "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)}
+                                "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
+                                "returnerTilSaksbehandlingAarsaker": []
                               }
                             }
                           ]

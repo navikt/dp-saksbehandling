@@ -921,7 +921,7 @@ class OppgaveTilstandTest {
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
 
-        oppgave.returnerTilSaksbehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId, beslutter1))
+        oppgave.returnerTilSaksbehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
 
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent

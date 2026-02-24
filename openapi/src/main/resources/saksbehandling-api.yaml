@@ -469,6 +469,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnerTilSaksbehandling'
       responses:
         '204':
           description: Vellykket respons
@@ -1422,10 +1428,16 @@ components:
           items:
             $ref: '#/components/schemas/LeggTilbakeAarsak'
           description: Årsaker til at oppgaven legges tilbake i oppgavelisten
+        returnerTilSaksbehandlingAarsaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReturnerTilSaksbehandlingAarsak'
+          description: Årsaker til at oppgaven returneres til saksbehandler etter kontroll
       required:
         - paaVentAarsaker
         - avbrytAarsaker
         - leggTilbakeAarsaker
+        - returnerTilSaksbehandlingAarsaker
 
     AdressebeskyttelseGradering:
       type: string
@@ -1530,6 +1542,22 @@ components:
         - BEHANDLES_I_ARENA
         - FLERE_SØKNADER
         - TRUKKET_SØKNAD
+        - ANNET
+
+    ReturnerTilSaksbehandling:
+      type: object
+      properties:
+        aarsak:
+          $ref: '#/components/schemas/ReturnerTilSaksbehandlingAarsak'
+      required:
+        - aarsak
+
+    ReturnerTilSaksbehandlingAarsak:
+      type: string
+      enum:
+        - FEIL_UTFALL
+        - FEIL_HJEMMEL
+        - HAR_MANGLER
         - ANNET
 
     LeggTilbakeOppgave:

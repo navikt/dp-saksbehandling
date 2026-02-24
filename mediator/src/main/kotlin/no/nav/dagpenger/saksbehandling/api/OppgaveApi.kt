@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveDTO
@@ -40,6 +41,8 @@ import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingAarsakDTO
+import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
@@ -327,9 +330,14 @@ internal fun Route.oppgaveApi(
                     put {
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         val saksbehandlerToken = call.request.jwt()
-                        val returnerTilSaksbehandlingHendelse =
-                            call.returnerTilSaksbehandlingHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
+                        val årsak = call.receive<ReturnerTilSaksbehandlingDTO>().aarsak
+                        val returnerTilSaksbehandlingHendelse =
+                            ReturnerTilSaksbehandlingHendelse(
+                                oppgaveId = oppgaveId,
+                                årsak = årsak.tilReturnerTilSaksbehandlingÅrsak(),
+                                utførtAv = saksbehandler,
+                            )
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             logger.info { "Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse" }
                             oppgaveMediator.returnerTilSaksbehandling(
@@ -453,11 +461,13 @@ private fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksbehandler
         utførtAv = saksbehandler,
     )
 
-private fun ApplicationCall.returnerTilSaksbehandlingHendelse(saksbehandler: Saksbehandler): ReturnerTilSaksbehandlingHendelse =
-    ReturnerTilSaksbehandlingHendelse(
-        oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = saksbehandler,
-    )
+private fun ReturnerTilSaksbehandlingAarsakDTO.tilReturnerTilSaksbehandlingÅrsak(): ReturnerTilSaksbehandlingÅrsak =
+    when (this) {
+        ReturnerTilSaksbehandlingAarsakDTO.FEIL_UTFALL -> ReturnerTilSaksbehandlingÅrsak.FEIL_UTFALL
+        ReturnerTilSaksbehandlingAarsakDTO.FEIL_HJEMMEL -> ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL
+        ReturnerTilSaksbehandlingAarsakDTO.HAR_MANGLER -> ReturnerTilSaksbehandlingÅrsak.HAR_MANGLER
+        ReturnerTilSaksbehandlingAarsakDTO.ANNET -> ReturnerTilSaksbehandlingÅrsak.ANNET
+    }
 
 class InternDataException(
     message: String,
