@@ -18,6 +18,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
+import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
@@ -33,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
+import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
@@ -301,10 +303,11 @@ internal fun Route.oppgaveApi(
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val leggTilbakeOppgave = call.receive<LeggTilbakeOppgaveDTO>()
+
                         val oppgaveAnsvarHendelse =
                             FjernOppgaveAnsvarHendelse(
                                 oppgaveId = oppgaveId,
-                                årsak = leggTilbakeOppgave.aarsak.value,
+                                årsak = leggTilbakeOppgave.aarsak.tilFjernOppgaveAnsvarÅrsak(),
                                 utførtAv = saksbehandler,
                             )
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
@@ -410,6 +413,14 @@ internal fun Route.oppgaveApi(
         }
     }
 }
+
+private fun LeggTilbakeAarsakDTO.tilFjernOppgaveAnsvarÅrsak(): FjernOppgaveAnsvarÅrsak =
+    when (this) {
+        LeggTilbakeAarsakDTO.MANGLER_KOMPETANSE -> FjernOppgaveAnsvarÅrsak.MANGLER_KOMPETANSE
+        LeggTilbakeAarsakDTO.INHABILITET -> FjernOppgaveAnsvarÅrsak.INHABILITET
+        LeggTilbakeAarsakDTO.FRAVÆR -> FjernOppgaveAnsvarÅrsak.FRAVÆR
+        LeggTilbakeAarsakDTO.ANNET -> FjernOppgaveAnsvarÅrsak.ANNET
+    }
 
 private suspend fun ApplicationCall.avbrytOppgaveHendelse(saksbehandler: Saksbehandler): AvbrytOppgaveHendelse {
     val avbrytOppgaveDTO = this.receive<AvbrytOppgaveDTO>()

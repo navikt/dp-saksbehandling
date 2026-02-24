@@ -4,6 +4,7 @@ import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
+import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -11,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -222,6 +224,57 @@ class HendelseJsonSerDerTest {
             ReturnerTilSaksbehandlingHendelse(
                 oppgaveId = oppgaveId,
                 årsak = ReturnerTilSaksbehandlingÅrsak.ANNET,
+                utførtAv = saksbehandler,
+            )
+    }
+
+    @Test
+    fun `Skal kunne serialisere og deserialisere FjernOppgaveAnsvarHendelse`() {
+        val oppgaveId = UUIDv7.ny()
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "navIdent",
+                grupper = emptySet(),
+                tilganger = setOf(TilgangType.SAKSBEHANDLER),
+            )
+        val hendelse =
+            FjernOppgaveAnsvarHendelse(
+                oppgaveId = oppgaveId,
+                årsak = FjernOppgaveAnsvarÅrsak.MANGLER_KOMPETANSE,
+                utførtAv = saksbehandler,
+            )
+
+        val jsonHendelse =
+            hendelse.tilJson().also {
+                it shouldEqualJson
+                    //language=Json
+                    """{
+                          "oppgaveId": "$oppgaveId",
+                          "årsak": "MANGLER_KOMPETANSE",
+                          "utførtAv": {
+                              "navIdent": "navIdent",
+                              "grupper": [],
+                              "tilganger": [ "SAKSBEHANDLER" ]
+                          }
+                        }
+                        """
+            }
+
+        jsonHendelse.tilHendelse<FjernOppgaveAnsvarHendelse>() shouldBe hendelse
+
+        //language=Json
+        """{
+                          "oppgaveId": "$oppgaveId",
+                          "utførtAv": {
+                              "navIdent": "navIdent",
+                              "grupper": [],
+                              "tilganger": [ "SAKSBEHANDLER" ]
+                          }
+                        }
+                        """.tilHendelse<FjernOppgaveAnsvarHendelse>() shouldBe
+            FjernOppgaveAnsvarHendelse(
+                oppgaveId = oppgaveId,
+                årsak = FjernOppgaveAnsvarÅrsak.ANNET,
                 utførtAv = saksbehandler,
             )
     }

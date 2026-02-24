@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
+import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -787,7 +788,7 @@ class OppgaveApiTest {
             FjernOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 utførtAv = TestHelper.saksbehandler,
-                årsak = "INHABILITET",
+                årsak = FjernOppgaveAnsvarÅrsak.INHABILITET,
             )
 
         coEvery {

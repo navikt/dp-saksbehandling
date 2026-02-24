@@ -6,3 +6,10 @@ enum class ReturnerTilSaksbehandlingÅrsak {
     HAR_MANGLER,
     ANNET,
 }
+
+enum class FjernOppgaveAnsvarÅrsak {
+    MANGLER_KOMPETANSE,
+    INHABILITET,
+    FRAVÆR,
+    ANNET,
+}
