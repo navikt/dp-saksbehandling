@@ -31,11 +31,14 @@ internal abstract class AbstractBehandlingsresultatMottak(
             }
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
+                it.requireAny("automatisk", requiredAutomatiskBehandlet())
                 it.interestedIn("basertPå")
             }
         }
 
     protected open fun requiredEventNames(): List<String> = listOf("behandlingsresultat")
+
+    protected open fun requiredAutomatiskBehandlet(): List<String> = listOf("true", "false")
 
     protected abstract fun requiredBehandletHendelseType(): List<String>
 

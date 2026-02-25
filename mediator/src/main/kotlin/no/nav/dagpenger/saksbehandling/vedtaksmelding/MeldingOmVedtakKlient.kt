@@ -116,6 +116,33 @@ class MeldingOmVedtakKlient(
             }
     }
 
+    suspend fun lagOgHentAutomatiskAvslagM2M(
+        person: PDLPersonIntern,
+        behandlingId: UUID,
+        maskinToken: String,
+        sakId: String,
+    ): Result<String> {
+        val automatiskAvslagDTO =
+            AutomatiskAvslagDTO(
+                fornavn = person.fornavn,
+                etternavn = person.etternavn,
+                fodselsnummer = person.ident,
+                sakId = sakId,
+            )
+        return kotlin
+            .runCatching {
+                httpClient
+                    .post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/automatisk-avslag") {
+                        header("Authorization", "Bearer $maskinToken")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(objectMapper.writeValueAsString(automatiskAvslagDTO))
+                    }.bodyAsText()
+            }.onFailure {
+                logger.error(it) { "Feil ved henting av automatisk avslag brev for behandlingId: $behandlingId" }
+                throw KanIkkeLageMeldingOmVedtak("Kan ikke lage automatisk avslag brev for behandlingId: $behandlingId")
+            }
+    }
+
     class KanIkkeLageMeldingOmVedtak(
         message: String,
     ) : RuntimeException(message)
@@ -130,4 +157,11 @@ private data class MeldingOmVedtakDataDTO(
     val beslutter: BehandlerDTO? = null,
     val behandlingstype: String,
     val sakId: String? = null,
+)
+private data class AutomatiskAvslagDTO(
+    val fornavn: String,
+    val etternavn: String,
+    val fodselsnummer: String,
+    val mellomnavn: String? = null,
+    val sakId: String,
 )

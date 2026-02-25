@@ -117,6 +117,43 @@ class UtsendingMediator(
         rapidsConnection.publish(key = utsending.ident, message = message)
     }
 
+    fun startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
+        val sak = vedtakFattetHendelse.sak
+        opprettUtsending(
+                behandlingId = vedtakFattetHendelse.behandlingId,
+                brev = null,
+                ident = vedtakFattetHendelse.ident,
+            )
+        require(sak != null) { "VedtakFattetHendelse må ha en sak" }
+
+        utsendingRepository
+            .hentUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
+            .let { utsending ->
+                runCatching {
+                    val brev =
+                        runBlocking {
+                            brevProdusent.lagAutomatiskVedtakBrev(
+                                ident = vedtakFattetHendelse.ident,
+                                behandlingId = vedtakFattetHendelse.behandlingId,
+                                sakId = sak.id,
+                            )
+                        }
+
+                    utsending.startUtsending(
+                        startUtsendingHendelse =
+                            StartUtsendingHendelse(
+                                utsendingSak = sak,
+                                behandlingId = vedtakFattetHendelse.behandlingId,
+                                ident = vedtakFattetHendelse.ident,
+                                brev = brev,
+                            ),
+                    )
+                    lagreOgPubliserBehov(utsending = utsending)
+                }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
+                    .getOrThrow()
+            }
+    }
+
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
@@ -185,6 +222,24 @@ class UtsendingMediator(
                         behandlingId = behandlingId,
                         maskinToken = tokenProvider.invoke(),
                         utløstAv = oppgave.behandling.utløstAv,
+                        sakId = sakId,
+                    ).getOrThrow()
+            }
+
+        suspend fun lagAutomatiskVedtakBrev(
+            ident: String,
+            behandlingId: UUID,
+            sakId: String,
+        ): String =
+            coroutineScope {
+                val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
+                val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
+
+                meldingOmVedtakKlient
+                    .lagOgHentAutomatiskAvslagM2M(
+                        person = person.await(),
+                        behandlingId = behandlingId,
+                        maskinToken = tokenProvider.invoke(),
                         sakId = sakId,
                     ).getOrThrow()
             }
