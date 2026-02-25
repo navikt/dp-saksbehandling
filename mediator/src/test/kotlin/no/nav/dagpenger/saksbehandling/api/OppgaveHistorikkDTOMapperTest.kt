@@ -6,8 +6,10 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -19,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -47,7 +50,7 @@ class OppgaveHistorikkDTOMapperTest {
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
                 )
-            val oppgaveId = UUIDv7.ny()
+
             val sistEndretTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
             OppgaveHistorikkDTOMapper(
                 repository =
@@ -80,7 +83,7 @@ class OppgaveHistorikkDTOMapperTest {
                                     nyTilstand = UNDER_KONTROLL,
                                     hendelse =
                                         SettOppgaveAnsvarHendelse(
-                                            oppgaveId = oppgaveId,
+                                            oppgaveId = UUIDv7.ny(),
                                             ansvarligIdent = beslutter.navIdent,
                                             utførtAv = beslutter,
                                         ),
@@ -116,6 +119,55 @@ class OppgaveHistorikkDTOMapperTest {
         }
 
     @Test
+    fun `Skal vise årsak til at en oppgave er lagt tilbake i body`(): Unit =
+        runBlocking {
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "saksbehandlerIdent",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+            OppgaveHistorikkDTOMapper(
+                repository =
+                    mockk<OppgaveRepository>(relaxed = true).also {
+                        every { it.finnNotat(any()) } returns null
+                    },
+                saksbehandlerOppslag =
+                    mockk<SaksbehandlerOppslag>().also {
+                        coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "fornavn",
+                                etternavn = "etternavn",
+                                enhet = enhet,
+                            )
+                    },
+            ).let { mapper ->
+
+                val historikk =
+                    mapper.lagOppgaveHistorikk(
+                        tilstandslogg =
+                            OppgaveTilstandslogg().also {
+                                it.leggTil(
+                                    nyTilstand = KLAR_TIL_BEHANDLING,
+                                    hendelse =
+                                        FjernOppgaveAnsvarHendelse(
+                                            oppgaveId = UUIDv7.ny(),
+                                            årsak = FjernOppgaveAnsvarÅrsak.INHABILITET,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                )
+                            },
+                    )
+
+                historikk.single().let { historikk ->
+                    historikk.tittel shouldBe "Klar til behandling"
+                    historikk.body shouldBe "Inhabilitet"
+                }
+            }
+        }
+
+    @Test
     fun `Oppgavehistorikk med statusoverganger og ettersending`() {
         val søknadId = UUIDv7.ny()
         val oppgaveId = UUIDv7.ny()
@@ -128,7 +180,7 @@ class OppgaveHistorikkDTOMapperTest {
                     tilstandslogg =
                         OppgaveTilstandslogg(
                             Tilstandsendring(
-                                tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                                tilstand = KLAR_TIL_BEHANDLING,
                                 hendelse =
                                     ForslagTilVedtakHendelse(
                                         ident = TestHelper.personIdent,

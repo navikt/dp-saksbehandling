@@ -7,9 +7,11 @@ enum class ReturnerTilSaksbehandlingÅrsak {
     ANNET,
 }
 
-enum class FjernOppgaveAnsvarÅrsak {
-    MANGLER_KOMPETANSE,
-    INHABILITET,
-    FRAVÆR,
-    ANNET,
+enum class FjernOppgaveAnsvarÅrsak(
+    val visningstekst: String,
+) {
+    MANGLER_KOMPETANSE("Mangler kompetanse"),
+    INHABILITET("Inhabilitet"),
+    FRAVÆR("Fravær"),
+    ANNET("Annet"),
 }

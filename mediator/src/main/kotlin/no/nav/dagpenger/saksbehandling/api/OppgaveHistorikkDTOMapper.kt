@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
@@ -53,6 +54,11 @@ internal class OppgaveHistorikkDTOMapper(
                     tidspunkt = tilstandsendring.tidspunkt,
                     tittel = tilstandsendringTittel(tilstandsendring),
                     behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
+                    body =
+                        when (tilstandsendring.hendelse) {
+                            is FjernOppgaveAnsvarHendelse -> (tilstandsendring.hendelse as FjernOppgaveAnsvarHendelse).årsak.visningstekst
+                            else -> null
+                        },
                 ),
             )
         }
