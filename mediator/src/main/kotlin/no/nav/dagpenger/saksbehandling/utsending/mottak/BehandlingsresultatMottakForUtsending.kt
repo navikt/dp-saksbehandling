@@ -74,39 +74,3 @@ internal class BehandlingsresultatMottakForUtsending(
         }
     }
 }
-
-internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
-    rapidsConnection: RapidsConnection,
-    private val utsendingMediator: UtsendingMediator,
-    private val sakRepository: SakRepository,
-) : AbstractBehandlingsresultatMottak(rapidsConnection) {
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
-
-    override val mottakNavn: String = "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
-
-    override fun JsonMessage.valideringsregler() {
-        this.requireValue("automatisk", true)
-    }
-
-    override fun håndter(
-        behandlingsresultat: Behandlingsresultat,
-        packet: JsonMessage,
-        context: MessageContext,
-        metadata: MessageMetadata,
-        meterRegistry: MeterRegistry,
-    ) {
-        val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
-        val vedtakFattetHendelse =
-            packet.vedtakFattetHendelse(
-                sak =
-                    UtsendingSak(
-                        id = sakId,
-                        kontekst = "Dagpenger",
-                    ),
-                behandlingsresultat = behandlingsresultat,
-            )
-        utsendingMediator.startUtsendingForAutomatiskVedtakFattet(
-            vedtakFattetHendelse = vedtakFattetHendelse,
-        )
-    }
-}

@@ -16,11 +16,11 @@ class AbstractBehandlingsresultatMottakTest {
     private val søknadId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
     private val ident = "12345612345"
-    private val sakId = UUIDv7.ny()
     private val rapidsConnection = TestRapid()
 
     internal class TestBehandlingsresultatMottak(
         private val eventNames: List<String>,
+        private val requireAutomatiskVerdi: Boolean? = null,
         rapidsConnection: RapidsConnection,
     ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
         override val mottakNavn: String = "TestBehandlingsresultatMottak"
@@ -28,6 +28,14 @@ class AbstractBehandlingsresultatMottakTest {
         override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort")
 
         override fun requiredEventNames(): List<String> = eventNames.ifEmpty { super.requiredEventNames() }
+
+        override fun JsonMessage.valideringsregler() {
+            when (requireAutomatiskVerdi) {
+                true -> this.requireValue("automatisk", true)
+                false -> this.requireValue("automatisk", false)
+                null -> Unit
+            }
+        }
 
         private var counter = 0
 
@@ -45,9 +53,9 @@ class AbstractBehandlingsresultatMottakTest {
     }
 
     @Test
-    fun `Skal kunne overstyre hendelse typer som håndteres`() {
-        val mottak1 = TestBehandlingsresultatMottak(listOf(), rapidsConnection)
-        val mottak2 = TestBehandlingsresultatMottak(listOf("hubba"), rapidsConnection)
+    fun `Skal kunne overstyre hvilke hendelsetyper som håndteres`() {
+        val mottak1 = TestBehandlingsresultatMottak(eventNames = listOf(), rapidsConnection = rapidsConnection)
+        val mottak2 = TestBehandlingsresultatMottak(eventNames = listOf("hubba"), rapidsConnection = rapidsConnection)
 
         rapidsConnection.sendTestMessage(
             behandlingsresultatJson(eventNavn = "behandlingsresultat"),
@@ -63,6 +71,27 @@ class AbstractBehandlingsresultatMottakTest {
         mottak2.count() shouldBe 2
     }
 
+    @Test
+    fun `Skal kunne overstyre valideringsregler i rapidfilteret`() {
+        val mottak1 =
+            TestBehandlingsresultatMottak(eventNames = listOf(), rapidsConnection = rapidsConnection, requireAutomatiskVerdi = true)
+        val mottak2 =
+            TestBehandlingsresultatMottak(eventNames = listOf(), rapidsConnection = rapidsConnection, requireAutomatiskVerdi = false)
+
+        rapidsConnection.sendTestMessage(
+            behandlingsresultatJson(eventNavn = "behandlingsresultat", automatiskBehandling = true),
+        )
+        rapidsConnection.sendTestMessage(
+            behandlingsresultatJson(eventNavn = "behandlingsresultat", automatiskBehandling = true),
+        )
+        rapidsConnection.sendTestMessage(
+            behandlingsresultatJson(eventNavn = "behandlingsresultat", automatiskBehandling = false),
+        )
+
+        mottak1.count() shouldBe 2
+        mottak2.count() shouldBe 1
+    }
+
     private fun behandlingsresultatJson(
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
@@ -70,6 +99,7 @@ class AbstractBehandlingsresultatMottakTest {
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
         basertPå: UUID? = null,
+        automatiskBehandling: Boolean = false,
         eventNavn: String,
     ): String =
         behandlingsresultatEvent(
@@ -79,6 +109,7 @@ class AbstractBehandlingsresultatMottakTest {
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
             basertPå = basertPå,
+            automatiskBehandling = automatiskBehandling,
             eventNavn = eventNavn,
         )
 }

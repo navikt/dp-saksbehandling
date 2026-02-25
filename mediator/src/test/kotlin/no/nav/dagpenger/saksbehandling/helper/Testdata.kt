@@ -14,6 +14,7 @@ internal fun behandlingsresultatEvent(
     harRett: Boolean = true,
     basertPå: UUID? = null,
     eventNavn: String = "behandlingsresultat",
+    automatiskBehandling: Boolean = false,
 ): String {
     //language=JSON
     return """
@@ -25,7 +26,7 @@ internal fun behandlingsresultatEvent(
             "id": "$behandletHendelseId",
             "type": "$behandletHendelseType"
           },
-          "automatisk": false,
+          "automatisk": $automatiskBehandling,
             ${basertPå?.let { """"basertPå": "$it",""" } ?: ""}
           "rettighetsperioder": [
             {
