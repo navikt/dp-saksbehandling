@@ -120,10 +120,10 @@ class UtsendingMediator(
     fun startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         opprettUtsending(
-                behandlingId = vedtakFattetHendelse.behandlingId,
-                brev = null,
-                ident = vedtakFattetHendelse.ident,
-            )
+            behandlingId = vedtakFattetHendelse.behandlingId,
+            brev = null,
+            ident = vedtakFattetHendelse.ident,
+        )
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
 
         utsendingRepository

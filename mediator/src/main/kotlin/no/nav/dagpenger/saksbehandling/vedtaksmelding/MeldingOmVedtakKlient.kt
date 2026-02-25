@@ -158,6 +158,7 @@ private data class MeldingOmVedtakDataDTO(
     val behandlingstype: String,
     val sakId: String? = null,
 )
+
 private data class AutomatiskAvslagDTO(
     val fornavn: String,
     val etternavn: String,

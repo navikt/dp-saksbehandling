@@ -6,12 +6,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
-import java.util.UUID
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.Behandlingsresultat
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -24,8 +24,7 @@ internal class BehandlingsresultatMottakForUtsending(
 
     override val mottakNavn: String = "BehandlingsresultatMottakForUtsending"
 
-    override fun requiredEventNames(): List<String> =
-        listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry")
+    override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry")
 
     override fun håndter(
         behandlingsresultat: Behandlingsresultat,
@@ -85,7 +84,9 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
 
     override val mottakNavn: String = "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
 
-    override fun requiredAutomatiskBehandlet() = listOf("true")
+    override fun JsonMessage.valideringsregler() {
+        this.requireValue("automatisk", true)
+    }
 
     override fun håndter(
         behandlingsresultat: Behandlingsresultat,
@@ -107,6 +108,5 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
         utsendingMediator.startUtsendingForAutomatiskVedtakFattet(
             vedtakFattetHendelse = vedtakFattetHendelse,
         )
-
     }
 }
