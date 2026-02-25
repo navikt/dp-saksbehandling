@@ -37,7 +37,7 @@ class UtsendingMediator(
         brev: String?,
         ident: String,
         type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
-    ): UUID {
+    ): Utsending {
         val utsending =
             Utsending(
                 behandlingId = behandlingId,
@@ -46,7 +46,7 @@ class UtsendingMediator(
                 type = type,
             )
         utsendingRepository.lagre(utsending)
-        return utsending.id
+        return utsending
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
@@ -118,40 +118,37 @@ class UtsendingMediator(
     }
 
     fun startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
-        val sak = vedtakFattetHendelse.sak
-        opprettUtsending(
-            behandlingId = vedtakFattetHendelse.behandlingId,
-            brev = null,
-            ident = vedtakFattetHendelse.ident,
-        )
-        require(sak != null) { "VedtakFattetHendelse må ha en sak" }
+        val utsendingSak = vedtakFattetHendelse.sak
+        val utsending =
+            opprettUtsending(
+                behandlingId = vedtakFattetHendelse.behandlingId,
+                brev = null,
+                ident = vedtakFattetHendelse.ident,
+            )
+        require(utsendingSak != null) { "VedtakFattetHendelse må ha en sak" }
 
-        utsendingRepository
-            .hentUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
-            .let { utsending ->
-                runCatching {
-                    val brev =
-                        runBlocking {
-                            brevProdusent.lagAutomatiskVedtakBrev(
-                                ident = vedtakFattetHendelse.ident,
-                                behandlingId = vedtakFattetHendelse.behandlingId,
-                                sakId = sak.id,
-                            )
-                        }
-
-                    utsending.startUtsending(
-                        startUtsendingHendelse =
-                            StartUtsendingHendelse(
-                                utsendingSak = sak,
-                                behandlingId = vedtakFattetHendelse.behandlingId,
-                                ident = vedtakFattetHendelse.ident,
-                                brev = brev,
-                            ),
+        runCatching {
+            val brev =
+                runBlocking {
+                    brevProdusent.lagAutomatiskVedtakBrev(
+                        ident = vedtakFattetHendelse.ident,
+                        behandlingId = vedtakFattetHendelse.behandlingId,
+                        sakId = utsendingSak.id,
                     )
-                    lagreOgPubliserBehov(utsending = utsending)
-                }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
-                    .getOrThrow()
-            }
+                }
+
+            utsending.startUtsending(
+                startUtsendingHendelse =
+                    StartUtsendingHendelse(
+                        utsendingSak = utsendingSak,
+                        behandlingId = vedtakFattetHendelse.behandlingId,
+                        ident = vedtakFattetHendelse.ident,
+                        brev = brev,
+                    ),
+            )
+            lagreOgPubliserBehov(utsending = utsending)
+        }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
+            .getOrThrow()
     }
 
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {

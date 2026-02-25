@@ -562,11 +562,12 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         val utsendingId =
-            utsendingMediator.opprettUtsending(
-                behandlingId = oppgave.behandling.behandlingId,
-                brev = null,
-                ident = oppgave.personIdent(),
-            )
+            utsendingMediator
+                .opprettUtsending(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    brev = null,
+                    ident = oppgave.personIdent(),
+                ).id
         when (ferdigstillBehandling) {
             FerdigstillBehandling.GODKJENN -> {
                 behandlingKlient
