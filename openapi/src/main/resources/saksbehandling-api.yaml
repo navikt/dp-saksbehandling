@@ -195,6 +195,16 @@ paths:
           required: false
           schema:
             type: integer
+        - in: query
+          name: sortering
+          description: Sorteringsrekkefølge for oppgaver basert på opprettet-tidspunkt
+          required: false
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            default: ASC
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver

@@ -512,7 +512,8 @@ class PostgresOppgaveRepository(
 
                     else -> ""
                 }
-            val orderByOpprettetClause = """ ORDER BY oppg.opprettet, oppg.id """
+            val sorteringsretning = søkeFilter.sortering.name
+            val orderByOpprettetClause = """ ORDER BY oppg.opprettet $sorteringsretning, oppg.id $sorteringsretning """
 
             val limitAndOffsetClause =
                 søkeFilter.paginering?.let {

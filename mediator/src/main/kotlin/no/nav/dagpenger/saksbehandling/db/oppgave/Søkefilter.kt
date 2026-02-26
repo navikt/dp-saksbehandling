@@ -27,7 +27,13 @@ data class Søkefilter(
     val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
+    val sortering: Sortering = Sortering.ASC,
 ) {
+    enum class Sortering {
+        ASC,
+        DESC,
+    }
+
     data class Paginering(
         val antallOppgaver: Int,
         val side: Int,
@@ -53,6 +59,7 @@ data class Søkefilter(
             val mineOppgaver = builder.mineOppgaver() ?: false
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
+            val sortering = builder.sortering()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
@@ -65,6 +72,7 @@ data class Søkefilter(
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
+                sortering = sortering,
             )
         }
     }
@@ -192,6 +200,8 @@ class FilterBuilder {
     fun tilstander(): Set<Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
 
     fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
+
+    fun sortering(): Søkefilter.Sortering = stringValues["sortering"]?.let { Søkefilter.Sortering.valueOf(it) } ?: Søkefilter.Sortering.ASC
 }
 
 private fun Set<String>.grupperEmneknaggPerKategori(): Map<String, Set<String>> =

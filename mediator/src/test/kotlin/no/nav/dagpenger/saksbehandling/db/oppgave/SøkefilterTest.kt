@@ -69,6 +69,7 @@ class SøkefilterTest {
         søkefilter.behandlingId shouldBe null
         søkefilter.paginering shouldBe Søkefilter.Paginering(20, 0)
         søkefilter.emneknaggGruppertPerKategori shouldBe emptyMap()
+        søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
     }
 
     @Test
@@ -109,6 +110,34 @@ class SøkefilterTest {
                         EmneknaggKategori.RETTIGHET to setOf("Ordinær", "Verneplikt"),
                         EmneknaggKategori.SØKNADSRESULTAT to setOf("Avslag"),
                     )
+            }
+    }
+
+    @Test
+    fun `Sortering default skal være ASC`() {
+        val søkefilter = Søkefilter.fra(Parameters.Companion.Empty, "testIdent")
+        søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
+    }
+
+    @Test
+    fun `Skal kunne sette sortering til DESC`() {
+        Parameters.Companion
+            .build {
+                this["sortering"] = "DESC"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.sortering shouldBe Søkefilter.Sortering.DESC
+            }
+    }
+
+    @Test
+    fun `Skal kunne sette sortering til ASC eksplisitt`() {
+        Parameters.Companion
+            .build {
+                this["sortering"] = "ASC"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
             }
     }
 }
