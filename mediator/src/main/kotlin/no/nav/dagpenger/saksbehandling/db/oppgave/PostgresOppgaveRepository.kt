@@ -450,6 +450,7 @@ class PostgresOppgaveRepository(
                     saksbehandlerIdent = null,
                     personIdent = ident,
                     paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
+                    sortering = Søkefilter.Sortering.DESC,
                 ),
         ).oppgaver
 
