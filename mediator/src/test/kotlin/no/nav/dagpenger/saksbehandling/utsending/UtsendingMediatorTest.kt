@@ -36,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterP
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
+import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForAutomatiskVedtakUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import org.junit.jupiter.api.Test
@@ -376,6 +377,179 @@ class UtsendingMediatorTest {
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe Distribuert
             utsending.distribusjonId() shouldBe distribusjonId
+        }
+    }
+
+    @Test
+    fun `livssyklus for en utsending når vedtak fattes automatisk i dp-sak`() {
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                utløstAv = UtløstAvType.SØKNAD,
+                opprettet = LocalDateTime.now(),
+                hendelse = TomHendelse,
+            )
+        val person = TestHelper.testPerson
+
+        DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
+            val behandlingId = behandling.behandlingId
+            val søknadId = UUIDv7.ny()
+            val sakId = DBTestHelper.sakId.toString()
+            val utsendingSak = UtsendingSak(sakId, "Dagpenger")
+            val htmlBrev = "<H1>Hei</H1><p>Her er et automatisk vedtaksbrev</p>"
+            val utsendingRepository = PostgresUtsendingRepository(ds)
+            val utsendingMediator =
+                UtsendingMediator(
+                    utsendingRepository = utsendingRepository,
+                    brevProdusent =
+                        mockk<UtsendingMediator.BrevProdusent>().also {
+                            coEvery {
+                                it.lagAutomatiskVedtakBrev(
+                                    ident = person.ident,
+                                    behandlingId = behandlingId,
+                                    sakId = sakId,
+                                )
+                            } returns htmlBrev
+                        },
+                ).also {
+                    it.setRapidsConnection(rapid)
+                }
+
+            BehandlingsresultatMottakForAutomatiskVedtakUtsending(
+                rapidsConnection = rapid,
+                utsendingMediator = utsendingMediator,
+                sakRepository = PostgresSakRepository(ds),
+            )
+
+            UtsendingBehovLøsningMottak(
+                utsendingMediator = utsendingMediator,
+                rapidsConnection = rapid,
+            )
+
+            utsendingMediator.startUtsendingForAutomatiskVedtakFattet(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = person.ident,
+                        sak = utsendingSak,
+                        automatiskBehandlet = true,
+                    ),
+            )
+
+            var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+            utsending.behandlingId shouldBe behandlingId
+            utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
+            utsending.sak() shouldBe utsendingSak
+            utsending.brev() shouldBe htmlBrev
+// ///////////////////////
+//            val message =
+//                behandlingsresultatEvent(
+//                    ident = person.ident,
+//                    behandlingId = behandling.behandlingId.toString(),
+//                    behandletHendelseId = søknadId.toString(),
+//                    behandletHendelseType = "Søknad",
+//                    harRett = true,
+//                )
+//
+//            rapid.sendTestMessage(message = message)
+//
+//            utsendingRepository.finnUtsendingForBehandlingId(behandlingId).let { utsending ->
+//                requireNotNull(utsending)
+//                utsending.brev() shouldBe htmlBrev
+//            }
+//
+//            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+//
+//            utsending.sak() shouldBe utsendingSak
+//            utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
+// ///////////////////////
+
+//            rapid.inspektør.size shouldBe 1
+//            val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
+//            rapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
+//                    //language=JSON
+//                    """
+//                {
+//                   "@event_name": "behov",
+//                   "@behov": [
+//                     "${ArkiverbartBrevBehov.BEHOV_NAVN}"
+//                   ],
+//                   "htmlBase64": "$htmlBrevAsBase64",
+//                   "dokumentNavn": "vedtak.pdf",
+//                   "kontekst": "behandling/$behandlingId",
+//                   "ident": "${person.ident}",
+//                   "sak": {
+//                      "id": "${utsendingSak.id}",
+//                      "kontekst": "${utsendingSak.kontekst}"
+//                  }
+//                }
+//                """.trimIndent()
+//
+//            val pdfUrnString = "urn:pdf:123"
+//            rapid.sendTestMessage(
+//                arkiverbartDokumentBehovLøsning(
+//                    behandlingId = behandlingId,
+//                    pdfUrnString = pdfUrnString,
+//                ),
+//            )
+//
+//            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+//            utsending.tilstand().type shouldBe AvventerJournalføring
+//            utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
+//            rapid.inspektør.size shouldBe 2
+//            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
+//                    //language=JSON
+//                    """
+//                {
+//                  "@event_name": "behov",
+//                  "@behov": [
+//                    "${JournalføringBehov.BEHOV_NAVN}"
+//                  ],
+//                  "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
+//                  "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
+//                  "ident": "${person.ident}",
+//                  "pdfUrn": "$pdfUrnString",
+//                  "sak": {
+//                    "id": "${utsendingSak.id}",
+//                    "kontekst": "${utsendingSak.kontekst}"
+//                  }
+//                }
+//                """.trimIndent()
+//
+//            val journalpostId = "123"
+//            rapid.sendTestMessage(journalføringBehovLøsning(behandlingId = behandlingId, journalpostId = journalpostId))
+//
+//            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+//            utsending.tilstand().type shouldBe AvventerDistribuering
+//            utsending.journalpostId() shouldBe journalpostId
+//            utsending.sak() shouldBe utsendingSak
+//            rapid.inspektør.size shouldBe 3
+//            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJson
+//                    //language=JSON
+//                    """
+//                {
+//                  "@event_name": "behov",
+//                  "@behov": [
+//                    "${DistribueringBehov.BEHOV_NAVN}"
+//                  ],
+//                  "journalpostId": "${utsending.journalpostId()}",
+//                  "fagsystem": "${utsendingSak.kontekst}"
+//                }
+//                """.trimIndent()
+//
+//            val distribusjonId = "distribusjonId"
+//            rapid.sendTestMessage(
+//                distribuertDokumentBehovLøsning(
+//                    behandlingId = behandlingId,
+//                    journalpostId = journalpostId,
+//                    distribusjonId = distribusjonId,
+//                ),
+//            )
+//            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+//            utsending.tilstand().type shouldBe Distribuert
+//            utsending.distribusjonId() shouldBe distribusjonId
         }
     }
 
