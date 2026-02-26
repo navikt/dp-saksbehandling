@@ -8,7 +8,7 @@ enum class ReturnerTilSaksbehandlingÅrsak {
 }
 
 enum class FjernOppgaveAnsvarÅrsak(
-    val visningstekst: String,
+    val visningsnavn: String,
 ) {
     MANGLER_KOMPETANSE("Mangler kompetanse"),
     INHABILITET("Inhabilitet"),

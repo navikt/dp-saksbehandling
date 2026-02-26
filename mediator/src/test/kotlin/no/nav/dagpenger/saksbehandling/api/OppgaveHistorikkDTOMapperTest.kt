@@ -6,9 +6,11 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
@@ -21,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -42,7 +45,7 @@ class OppgaveHistorikkDTOMapperTest {
         )
 
     @Test
-    fun `lage historikk for notat`(): Unit =
+    fun `lage historikk for notat`() {
         runBlocking {
             val beslutter =
                 Saksbehandler(
@@ -117,9 +120,10 @@ class OppgaveHistorikkDTOMapperTest {
             """
             }
         }
+    }
 
     @Test
-    fun `Skal vise årsak til at en oppgave er lagt tilbake i body`(): Unit =
+    fun `Skal vise årsak til at en oppgave er lagt tilbake i body`() {
         runBlocking {
             val saksbehandler =
                 Saksbehandler(
@@ -166,6 +170,58 @@ class OppgaveHistorikkDTOMapperTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `Skal vise årsak til at en oppgave er avbrutt i body`() {
+        runBlocking {
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "saksbehandlerIdent",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+            OppgaveHistorikkDTOMapper(
+                repository =
+                    mockk<OppgaveRepository>(relaxed = true).also {
+                        every { it.finnNotat(any()) } returns null
+                    },
+                saksbehandlerOppslag =
+                    mockk<SaksbehandlerOppslag>().also {
+                        coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "fornavn",
+                                etternavn = "etternavn",
+                                enhet = enhet,
+                            )
+                    },
+            ).let { mapper ->
+
+                val historikk =
+                    mapper.lagOppgaveHistorikk(
+                        tilstandslogg =
+                            OppgaveTilstandslogg().also {
+                                it.leggTil(
+                                    nyTilstand = AVBRUTT,
+                                    hendelse =
+                                        AvbrytOppgaveHendelse(
+                                            oppgaveId = UUIDv7.ny(),
+                                            navIdent = saksbehandler.navIdent,
+                                            årsak = Emneknagg.AvbrytBehandling.AVBRUTT_TRUKKET_SØKNAD,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                )
+                            },
+                    )
+
+                historikk.single().let { historikk ->
+                    historikk.tittel shouldBe "Avbrutt"
+                    historikk.body shouldBe "Trukket søknad"
+                }
+            }
+        }
+    }
 
     @Test
     fun `Oppgavehistorikk med statusoverganger og ettersending`() {
