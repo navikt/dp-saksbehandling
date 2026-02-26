@@ -251,13 +251,12 @@ internal class ApplicationBuilder(
                     utsendingMediator = utsendingMediator,
                     sakRepository = sakRepository,
                 )
-                if (Configuration.isDev) {
-                    BehandlingsresultatMottakForAutomatiskVedtakUtsending(
-                        rapidsConnection = rapidsConnection,
-                        utsendingMediator = utsendingMediator,
-                        sakRepository = sakRepository,
-                    )
-                }
+// TODO: Kommenter inn når vi skal skru av fatting av vedtak mot Arena.
+//                BehandlingsresultatMottakForAutomatiskVedtakUtsending(
+//                        rapidsConnection = rapidsConnection,
+//                        utsendingMediator = utsendingMediator,
+//                        sakRepository = sakRepository,
+//                    )
                 BehandlingsresultatMottakForSak(
                     rapidsConnection = rapidsConnection,
                     sakRepository = sakRepository,
