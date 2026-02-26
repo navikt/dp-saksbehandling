@@ -1325,7 +1325,7 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(2),
                 )
             repo.finnOppgaverFor(ola.ident) shouldNotContain oppgave3TilOlaSomIkkeErSøkbar
-            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
+            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave1TilOla, oppgave2TilOla)
             repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry)
         }
     }
