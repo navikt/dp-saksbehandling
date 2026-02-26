@@ -14,6 +14,7 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -152,6 +153,121 @@ class MeldingOmVedtakKlientTest {
                         }
                     } 
                     """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `kall mot dp-melding-om-vedtak happy path med maskin-token`() {
+        val sakId = UUIDv7.ny().toString()
+        runBlocking {
+            val result =
+                meldingOmVedtakKlient.lagOgHentMeldingOmVedtakM2M(
+                    person = person,
+                    saksbehandler = saksbehandler,
+                    beslutter = saksbehandler,
+                    behandlingId = behandlingIdSuksess,
+                    utløstAv = UtløstAvType.SØKNAD,
+                    maskinToken = "tulletoken",
+                    sakId = sakId,
+                )
+            result.getOrThrow() shouldBe expectedHtmlResponse
+            requireNotNull(requestData).let {
+                it.headers["Authorization"] shouldBe "Bearer tulletoken"
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                        "fornavn": "Test",
+                        "etternavn": "Person",
+                        "fodselsnummer": "testIdent",
+                        "behandlingstype": "SØKNAD",
+                        "sakId": "$sakId",
+                        "saksbehandler": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                              "navn": "Enhet",
+                              "enhetNr": "1234",
+                              "postadresse": "Postadresse"
+                            }
+                        },
+                        "beslutter": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                              "navn": "Enhet",
+                              "enhetNr": "1234",
+                              "postadresse": "Postadresse"
+                            }
+                        }
+                    } 
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `kall mot dp-melding-om-vedtak for automatisk vedtakmed maskin-token ved feil `() {
+        val sakId = UUIDv7.ny().toString()
+        runBlocking {
+            val behandlingIdSomFeiler = UUIDv7.ny()
+            shouldThrow<KanIkkeLageMeldingOmVedtak> {
+                meldingOmVedtakKlient.lagOgHentMeldingOmVedtakM2M(
+                    person = person,
+                    saksbehandler = saksbehandler,
+                    beslutter = saksbehandler,
+                    behandlingId = behandlingIdSomFeiler,
+                    utløstAv = UtløstAvType.SØKNAD,
+                    maskinToken = "tulletoken",
+                    sakId = sakId,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `kall mot dp-melding-om-vedtak happy path for automatisk vedtak`() {
+        val sakId = UUIDv7.ny().toString()
+        runBlocking {
+            val result =
+                meldingOmVedtakKlient.lagOgHentAutomatiskAvslagM2M(
+                    person = person,
+                    behandlingId = behandlingIdSuksess,
+                    maskinToken = "tulletoken",
+                    sakId = sakId,
+                )
+            result.getOrThrow() shouldBe expectedHtmlResponse
+            requireNotNull(requestData).let {
+                it.headers["Authorization"] shouldBe "Bearer tulletoken"
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                        "fornavn": "Test",
+                        "etternavn": "Person",
+                        "fodselsnummer": "testIdent",
+                        "sakId": "$sakId"
+                    } 
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `kall mot dp-melding-om-vedtak for automatisk vedtak ved feil `() {
+        val sakId = UUIDv7.ny().toString()
+        runBlocking {
+            val behandlingIdSomFeiler = UUIDv7.ny()
+            shouldThrow<KanIkkeLageMeldingOmVedtak> {
+                meldingOmVedtakKlient.lagOgHentAutomatiskAvslagM2M(
+                    person = person,
+                    behandlingId = behandlingIdSomFeiler,
+                    maskinToken = "tulletoken",
+                    sakId = sakId,
+                )
             }
         }
     }

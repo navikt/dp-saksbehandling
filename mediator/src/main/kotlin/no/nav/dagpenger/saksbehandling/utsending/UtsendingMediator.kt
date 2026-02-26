@@ -196,8 +196,6 @@ class UtsendingMediator(
             coroutineScope {
                 val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
                 val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
-
-                // TODO: For automatiske vedtak må SB og beslutter håndteres annerledes, når vi kommer så langt
                 val saksbehandler =
                     async(Dispatchers.IO) {
                         oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
@@ -229,9 +227,7 @@ class UtsendingMediator(
             sakId: String,
         ): String =
             coroutineScope {
-                val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
                 val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
-
                 meldingOmVedtakKlient
                     .lagOgHentAutomatiskAvslagM2M(
                         person = person.await(),
