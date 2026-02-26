@@ -1654,7 +1654,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne sortere oppgaver med DESC for nyeste først`() {
+    fun `Skal kunne sortere oppgaver med ASC, DESC og default`() {
         DBTestHelper.withMigratedDb { ds ->
             val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
             val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
@@ -1663,6 +1663,39 @@ class PostgresOppgaveRepositoryTest {
 
             val repo = PostgresOppgaveRepository(ds)
 
+            // Default sortering (uten å oppgi sortering) skal gi eldste først
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = null,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe eldsteOppgave
+                    it.oppgaver[1] shouldBe nestEldsteOppgave
+                    it.oppgaver[2] shouldBe nestNyesteOppgave
+                    it.oppgaver[3] shouldBe nyesteOppgave
+                }
+
+            // Eksplisitt ASC skal gi eldste først
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(2, 0),
+                        sortering = Søkefilter.Sortering.ASC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe eldsteOppgave
+                    it.oppgaver[1] shouldBe nestEldsteOppgave
+                    it.totaltAntallOppgaver shouldBe 4
+                }
+
+            // DESC skal gi nyeste først
             repo
                 .søk(
                     Søkefilter(
@@ -1679,6 +1712,7 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver[3] shouldBe eldsteOppgave
                 }
 
+            // DESC med paginering side 1
             repo
                 .søk(
                     Søkefilter(
@@ -1694,6 +1728,7 @@ class PostgresOppgaveRepositoryTest {
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
+            // DESC med paginering side 2
             repo
                 .søk(
                     Søkefilter(
