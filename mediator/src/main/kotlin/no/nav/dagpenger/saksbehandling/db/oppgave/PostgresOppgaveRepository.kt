@@ -450,6 +450,7 @@ class PostgresOppgaveRepository(
                     saksbehandlerIdent = null,
                     personIdent = ident,
                     paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
+                    sortering = Søkefilter.Sortering.DESC,
                 ),
         ).oppgaver
 
@@ -512,7 +513,8 @@ class PostgresOppgaveRepository(
 
                     else -> ""
                 }
-            val orderByOpprettetClause = """ ORDER BY oppg.opprettet, oppg.id """
+            val sorteringsretning = søkeFilter.sortering.name
+            val orderByOpprettetClause = """ ORDER BY oppg.opprettet $sorteringsretning, oppg.id $sorteringsretning """
 
             val limitAndOffsetClause =
                 søkeFilter.paginering?.let {
