@@ -1654,6 +1654,64 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne sortere oppgaver med DESC for nyeste først`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
+            val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
+            val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
+            val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
+
+            val repo = PostgresOppgaveRepository(ds)
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sortering = Søkefilter.Sortering.DESC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe nyesteOppgave
+                    it.oppgaver[1] shouldBe nestNyesteOppgave
+                    it.oppgaver[2] shouldBe nestEldsteOppgave
+                    it.oppgaver[3] shouldBe eldsteOppgave
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(2, 0),
+                        sortering = Søkefilter.Sortering.DESC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe nyesteOppgave
+                    it.oppgaver[1] shouldBe nestNyesteOppgave
+                    it.totaltAntallOppgaver shouldBe 4
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = Søkefilter.Paginering(2, 1),
+                        sortering = Søkefilter.Sortering.DESC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe nestEldsteOppgave
+                    it.oppgaver[1] shouldBe eldsteOppgave
+                    it.totaltAntallOppgaver shouldBe 4
+                }
+        }
+    }
+
+    @Test
     fun `Skal kunne søke etter oppgaver filtrert på tilstand og opprettet`() {
         val enUkeSiden = opprettetNå.minusDays(7)
 
