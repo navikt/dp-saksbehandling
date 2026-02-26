@@ -48,7 +48,7 @@ class ArenaSinkVedtakOpprettetMottak(
     // Se https://nav-it.slack.com/archives/C063581H0PR/p1753450480334419
     private val skipBehandlinger =
         setOf(
-            "019bd1c0-6c0f-76ef-8938-7a956352ebb7",
+            "019c99f0-146a-7bb9-9adf-4ef551333fea",
         ).map { UUID.fromString(it) }
 
     init {
