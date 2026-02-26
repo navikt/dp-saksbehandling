@@ -68,7 +68,6 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForAutomatiskVedtakUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
