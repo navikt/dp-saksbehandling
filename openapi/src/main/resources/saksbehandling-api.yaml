@@ -447,6 +447,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Kvalitetskontroll'
       responses:
         '204':
           description: Vellykket respons
@@ -1443,11 +1449,17 @@ components:
           items:
             $ref: '#/components/schemas/ReturnerTilSaksbehandlingAarsak'
           description: Årsaker til at oppgaven returneres til saksbehandler etter kontroll
+        kvalitetskontrollAarsaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/KvalitetskontrollAarsak'
+          description: Årsaker til at oppgaven sendes til kvalitetskontroll
       required:
         - paaVentAarsaker
         - avbrytAarsaker
         - leggTilbakeAarsaker
         - returnerTilSaksbehandlingAarsaker
+        - kvalitetskontrollAarsaker
 
     AdressebeskyttelseGradering:
       type: string
@@ -1568,6 +1580,21 @@ components:
         - FEIL_UTFALL
         - FEIL_HJEMMEL
         - HAR_MANGLER
+        - ANNET
+
+    Kvalitetskontroll:
+      type: object
+      properties:
+        aarsak:
+          $ref: '#/components/schemas/KvalitetskontrollAarsak'
+
+    KvalitetskontrollAarsak:
+      type: string
+      enum:
+        - OPPLÆRING
+        - INNGRIPENDE_FOR_BRUKER
+        - KOMPLISERT_VURDERING
+        - SKJØNNSMESSIG_VURDERING
         - ANNET
 
     LeggTilbakeOppgave:

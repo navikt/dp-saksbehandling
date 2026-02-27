@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
+import no.nav.dagpenger.saksbehandling.api.models.KvalitetskontrollAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
@@ -150,6 +151,7 @@ internal class OppgaveDTOMapper(
                     avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
                     leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
                     returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
+                    kvalitetskontrollAarsaker = oppgave.lovligeKvalitetskontrollÅrsaker(),
                 ),
             soknadId = soknadId,
             meldingOmVedtakKilde =
@@ -256,6 +258,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
                 leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
                 returnerTilSaksbehandlingAarsaker = this.lovligeReturnerTilSaksbehandlerÅrsaker(),
+                kvalitetskontrollAarsaker = this.lovligeKvalitetskontrollÅrsaker(),
             ),
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
@@ -332,5 +335,11 @@ internal fun Oppgave.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
 internal fun Oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTilSaksbehandlingAarsakDTO> =
     when (this.tilstand().type) {
         UNDER_KONTROLL -> ReturnerTilSaksbehandlingAarsakDTO.entries
+        else -> emptyList()
+    }
+
+internal fun Oppgave.lovligeKvalitetskontrollÅrsaker(): List<KvalitetskontrollAarsakDTO> =
+    when (this.tilstand().type) {
+        UNDER_BEHANDLING -> KvalitetskontrollAarsakDTO.entries
         else -> emptyList()
     }

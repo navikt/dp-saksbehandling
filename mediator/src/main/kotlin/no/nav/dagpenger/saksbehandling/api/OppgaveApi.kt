@@ -7,7 +7,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
-import io.ktor.server.request.queryString
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -19,6 +18,7 @@ import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
 import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
+import no.nav.dagpenger.saksbehandling.KvalitetskontrollÅrsak
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
@@ -33,6 +33,8 @@ import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.KvalitetskontrollAarsakDTO
+import no.nav.dagpenger.saksbehandling.api.models.KvalitetskontrollDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeOppgaveDTO
@@ -303,7 +305,6 @@ internal fun Route.oppgaveApi(
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val leggTilbakeOppgave = call.receive<LeggTilbakeOppgaveDTO>()
-
                         val oppgaveAnsvarHendelse =
                             FjernOppgaveAnsvarHendelse(
                                 oppgaveId = oppgaveId,
@@ -438,6 +439,23 @@ private suspend fun ApplicationCall.avbrytOppgaveHendelse(saksbehandler: Saksbeh
     )
 }
 
+private suspend fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse {
+    val kvalitetskontrollDTO: KvalitetskontrollDTO = this.receive<KvalitetskontrollDTO>()
+    return SendTilKontrollHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        utførtAv = saksbehandler,
+        årsak =
+            when (kvalitetskontrollDTO.aarsak) {
+                KvalitetskontrollAarsakDTO.OPPLÆRING -> KvalitetskontrollÅrsak.OPPLÆRING
+                KvalitetskontrollAarsakDTO.INNGRIPENDE_FOR_BRUKER -> KvalitetskontrollÅrsak.INNGRIPENDE_FOR_BRUKER
+                KvalitetskontrollAarsakDTO.KOMPLISERT_VURDERING -> KvalitetskontrollÅrsak.KOMPLISERT_VURDERING
+                KvalitetskontrollAarsakDTO.SKJØNNSMESSIG_VURDERING -> KvalitetskontrollÅrsak.SKJØNNSMESSIG_VURDERING
+                KvalitetskontrollAarsakDTO.ANNET -> KvalitetskontrollÅrsak.ANNET
+                null -> null
+            },
+    )
+}
+
 private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbehandler): UtsettOppgaveHendelse {
     val utsettOppgaveDto = this.receive<UtsettOppgaveDTO>()
     return UtsettOppgaveHendelse(
@@ -466,18 +484,21 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandl
         utførtAv = saksbehandler,
     )
 
-private fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse =
-    SendTilKontrollHendelse(
-        oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = saksbehandler,
-    )
-
 private fun ReturnerTilSaksbehandlingAarsakDTO.tilReturnerTilSaksbehandlingÅrsak(): ReturnerTilSaksbehandlingÅrsak =
     when (this) {
         ReturnerTilSaksbehandlingAarsakDTO.FEIL_UTFALL -> ReturnerTilSaksbehandlingÅrsak.FEIL_UTFALL
         ReturnerTilSaksbehandlingAarsakDTO.FEIL_HJEMMEL -> ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL
         ReturnerTilSaksbehandlingAarsakDTO.HAR_MANGLER -> ReturnerTilSaksbehandlingÅrsak.HAR_MANGLER
         ReturnerTilSaksbehandlingAarsakDTO.ANNET -> ReturnerTilSaksbehandlingÅrsak.ANNET
+    }
+
+private fun KvalitetskontrollAarsakDTO.tilKvalitetskontrollÅrsak(): KvalitetskontrollÅrsak =
+    when (this) {
+        KvalitetskontrollAarsakDTO.OPPLÆRING -> KvalitetskontrollÅrsak.OPPLÆRING
+        KvalitetskontrollAarsakDTO.INNGRIPENDE_FOR_BRUKER -> KvalitetskontrollÅrsak.INNGRIPENDE_FOR_BRUKER
+        KvalitetskontrollAarsakDTO.KOMPLISERT_VURDERING -> KvalitetskontrollÅrsak.KOMPLISERT_VURDERING
+        KvalitetskontrollAarsakDTO.SKJØNNSMESSIG_VURDERING -> KvalitetskontrollÅrsak.SKJØNNSMESSIG_VURDERING
+        KvalitetskontrollAarsakDTO.ANNET -> KvalitetskontrollÅrsak.ANNET
     }
 
 class InternDataException(

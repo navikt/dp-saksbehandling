@@ -15,3 +15,13 @@ enum class FjernOppgaveAnsvarÅrsak(
     FRAVÆR("Fravær"),
     ANNET("Annet"),
 }
+
+enum class KvalitetskontrollÅrsak(
+    val visningsnavn: String,
+) {
+    OPPLÆRING("Opplæring"),
+    INNGRIPENDE_FOR_BRUKER("Inngripende for bruker"),
+    KOMPLISERT_VURDERING("Komplisert vurdering"),
+    SKJØNNSMESSIG_VURDERING("Skjønnsmessig vurdering"),
+    ANNET("Annet"),
+}

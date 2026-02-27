@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
+import no.nav.dagpenger.saksbehandling.KvalitetskontrollÅrsak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -55,6 +56,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
+import no.nav.dagpenger.saksbehandling.api.models.KvalitetskontrollAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
@@ -519,21 +521,42 @@ class OppgaveApiTest {
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
-        val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgave.oppgaveId, TestHelper.saksbehandler)
+        val sendTilKontrollHendelseUtenÅrsak = SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = TestHelper.saksbehandler)
+        val sendTilKontrollHendelseMedÅrsak =
+            SendTilKontrollHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                utførtAv = TestHelper.saksbehandler,
+                årsak = KvalitetskontrollÅrsak.ANNET,
+            )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken) } just Runs
+                every { it.sendTilKontroll(sendTilKontrollHendelseUtenÅrsak, saksbehandlerToken) } just Runs
+                every { it.sendTilKontroll(sendTilKontrollHendelseMedÅrsak, saksbehandlerToken) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client
                 .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
                     autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                    setBody("{}")
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                 }
 
             verify(exactly = 1) {
-                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
+                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelseUtenÅrsak, saksbehandlerToken)
+            }
+            client
+                .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
+                    autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                    setBody("""{ "aarsak": "ANNET" }""")
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
+
+            verify(exactly = 1) {
+                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelseMedÅrsak, saksbehandlerToken)
             }
         }
     }
@@ -546,7 +569,7 @@ class OppgaveApiTest {
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
-        val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgave.oppgaveId, TestHelper.saksbehandler)
+        val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = TestHelper.saksbehandler)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
@@ -560,6 +583,8 @@ class OppgaveApiTest {
             client
                 .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
                     autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                    setBody("{}")
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.Conflict
                 }
@@ -1070,6 +1095,7 @@ class OppgaveApiTest {
                                 avbrytAarsaker = testOppgave.lovligeAvbrytÅrsaker(),
                                 leggTilbakeAarsaker = testOppgave.lovligeLeggTilbakeÅrsaker(),
                                 returnerTilSaksbehandlingAarsaker = testOppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
+                                kvalitetskontrollAarsaker = testOppgave.lovligeKvalitetskontrollÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1203,6 +1229,7 @@ class OppgaveApiTest {
                                 avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
                                 leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
                                 returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
+                                kvalitetskontrollAarsaker = oppgave.lovligeKvalitetskontrollÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1419,6 +1446,7 @@ class OppgaveApiTest {
                                                 avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
                                                 leggTilbakeAarsaker = LeggTilbakeAarsakDTO.entries,
                                                 returnerTilSaksbehandlingAarsaker = emptyList(),
+                                                kvalitetskontrollAarsaker = KvalitetskontrollAarsakDTO.entries,
                                             ),
                                         utsattTilDato = null,
                                     ),
@@ -1445,6 +1473,7 @@ class OppgaveApiTest {
                                     avbrytAarsaker = AvbrytOppgaveAarsakDTO.entries,
                                     leggTilbakeAarsaker = LeggTilbakeAarsakDTO.entries,
                                     returnerTilSaksbehandlingAarsaker = emptyList(),
+                                    kvalitetskontrollAarsaker = KvalitetskontrollAarsakDTO.entries,
                                 ),
                             utsattTilDato = null,
                         ),
@@ -1506,7 +1535,8 @@ class OppgaveApiTest {
                                     "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
                                     "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
                                     "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
-                                    "returnerTilSaksbehandlingAarsaker": []
+                                    "returnerTilSaksbehandlingAarsaker": [],
+                                    "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
                                   }
                                 }
                               ]
@@ -1529,7 +1559,8 @@ class OppgaveApiTest {
                                 "paaVentAarsaker": ${objectMapper.writeValueAsString(UtsettOppgaveAarsakDTO.entries)},
                                 "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
                                 "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
-                                "returnerTilSaksbehandlingAarsaker": []
+                                "returnerTilSaksbehandlingAarsaker": [],
+                                "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
                               }
                             }
                           ]

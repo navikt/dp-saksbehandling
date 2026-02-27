@@ -153,7 +153,8 @@ class OppgaveDTOMapperTest {
                           "FEIL_HJEMMEL",
                           "HAR_MANGLER",
                           "ANNET"
-                        ]
+                        ],
+                        "kvalitetskontrollAarsaker": []
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
@@ -319,7 +320,14 @@ class OppgaveDTOMapperTest {
                           "FRAVÆR",
                           "ANNET"
                         ],
-                        "returnerTilSaksbehandlingAarsaker": []
+                        "returnerTilSaksbehandlingAarsaker": [],
+                        "kvalitetskontrollAarsaker": [
+                            "OPPLÆRING",
+                            "INNGRIPENDE_FOR_BRUKER",
+                            "KOMPLISERT_VURDERING",
+                            "SKJØNNSMESSIG_VURDERING",
+                            "ANNET"
+                        ]
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
@@ -653,7 +661,14 @@ class OppgaveDTOMapperTest {
                           "FRAVÆR",
                           "ANNET"
                         ],
-                        "returnerTilSaksbehandlingAarsaker": []
+                        "returnerTilSaksbehandlingAarsaker": [],
+                        "kvalitetskontrollAarsaker": [
+                            "OPPLÆRING",
+                            "INNGRIPENDE_FOR_BRUKER",
+                            "KOMPLISERT_VURDERING",
+                            "SKJØNNSMESSIG_VURDERING",
+                            "ANNET"
+                        ]
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
