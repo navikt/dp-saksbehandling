@@ -451,7 +451,7 @@ private suspend fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksb
                 KvalitetskontrollAarsakDTO.KOMPLISERT_VURDERING -> KvalitetskontrollÅrsak.KOMPLISERT_VURDERING
                 KvalitetskontrollAarsakDTO.SKJØNNSMESSIG_VURDERING -> KvalitetskontrollÅrsak.SKJØNNSMESSIG_VURDERING
                 KvalitetskontrollAarsakDTO.ANNET -> KvalitetskontrollÅrsak.ANNET
-                null -> null
+                KvalitetskontrollAarsakDTO.TOTRINNSKONTROLL -> KvalitetskontrollÅrsak.TOTRINNSKONTROLL
             },
     )
 }
@@ -490,15 +490,6 @@ private fun ReturnerTilSaksbehandlingAarsakDTO.tilReturnerTilSaksbehandlingÅrsa
         ReturnerTilSaksbehandlingAarsakDTO.FEIL_HJEMMEL -> ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL
         ReturnerTilSaksbehandlingAarsakDTO.HAR_MANGLER -> ReturnerTilSaksbehandlingÅrsak.HAR_MANGLER
         ReturnerTilSaksbehandlingAarsakDTO.ANNET -> ReturnerTilSaksbehandlingÅrsak.ANNET
-    }
-
-private fun KvalitetskontrollAarsakDTO.tilKvalitetskontrollÅrsak(): KvalitetskontrollÅrsak =
-    when (this) {
-        KvalitetskontrollAarsakDTO.OPPLÆRING -> KvalitetskontrollÅrsak.OPPLÆRING
-        KvalitetskontrollAarsakDTO.INNGRIPENDE_FOR_BRUKER -> KvalitetskontrollÅrsak.INNGRIPENDE_FOR_BRUKER
-        KvalitetskontrollAarsakDTO.KOMPLISERT_VURDERING -> KvalitetskontrollÅrsak.KOMPLISERT_VURDERING
-        KvalitetskontrollAarsakDTO.SKJØNNSMESSIG_VURDERING -> KvalitetskontrollÅrsak.SKJØNNSMESSIG_VURDERING
-        KvalitetskontrollAarsakDTO.ANNET -> KvalitetskontrollÅrsak.ANNET
     }
 
 class InternDataException(

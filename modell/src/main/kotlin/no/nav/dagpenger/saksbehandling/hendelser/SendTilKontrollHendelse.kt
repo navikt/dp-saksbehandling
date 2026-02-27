@@ -6,6 +6,6 @@ import java.util.UUID
 
 data class SendTilKontrollHendelse(
     val oppgaveId: UUID,
-    val årsak: KvalitetskontrollÅrsak? = null,
+    val årsak: KvalitetskontrollÅrsak = KvalitetskontrollÅrsak.TOTRINNSKONTROLL,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

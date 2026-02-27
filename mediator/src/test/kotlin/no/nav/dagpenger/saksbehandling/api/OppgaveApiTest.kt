@@ -75,7 +75,6 @@ import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
-import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -521,8 +520,7 @@ class OppgaveApiTest {
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
-        val sendTilKontrollHendelseUtenÅrsak = SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = TestHelper.saksbehandler)
-        val sendTilKontrollHendelseMedÅrsak =
+        val sendTilKontrollHendelse =
             SendTilKontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 utførtAv = TestHelper.saksbehandler,
@@ -530,22 +528,9 @@ class OppgaveApiTest {
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.sendTilKontroll(sendTilKontrollHendelseUtenÅrsak, saksbehandlerToken) } just Runs
-                every { it.sendTilKontroll(sendTilKontrollHendelseMedÅrsak, saksbehandlerToken) } just Runs
+                every { it.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client
-                .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
-                    autentisert(token = saksbehandlerToken)
-                    contentType(ContentType.Application.Json)
-                    setBody("{}")
-                }.let { response ->
-                    response.status shouldBe HttpStatusCode.NoContent
-                }
-
-            verify(exactly = 1) {
-                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelseUtenÅrsak, saksbehandlerToken)
-            }
             client
                 .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
                     autentisert(token = saksbehandlerToken)
@@ -553,40 +538,6 @@ class OppgaveApiTest {
                     setBody("""{ "aarsak": "ANNET" }""")
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
-                }
-
-            verify(exactly = 1) {
-                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelseMedÅrsak, saksbehandlerToken)
-            }
-        }
-    }
-
-    @Test
-    fun `Skal feile på send til kontroll hvis oppgaven ikke trenger totrinns`() {
-        val oppgave =
-            TestHelper.lagOppgave(
-                tilstand = Oppgave.UnderBehandling,
-                saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
-            )
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
-        val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = TestHelper.saksbehandler)
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                every {
-                    it.sendTilKontroll(
-                        sendTilKontrollHendelse,
-                        saksbehandlerToken,
-                    )
-                } throws BehandlingKreverIkkeTotrinnskontrollException("Testmelding")
-            }
-        withOppgaveApi(oppgaveMediatorMock) {
-            client
-                .put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
-                    autentisert(token = saksbehandlerToken)
-                    contentType(ContentType.Application.Json)
-                    setBody("{}")
-                }.let { response ->
-                    response.status shouldBe HttpStatusCode.Conflict
                 }
 
             verify(exactly = 1) {

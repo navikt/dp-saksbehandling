@@ -1587,6 +1587,8 @@ components:
       properties:
         aarsak:
           $ref: '#/components/schemas/KvalitetskontrollAarsak'
+      required:
+        - aarsak
 
     KvalitetskontrollAarsak:
       type: string
@@ -1596,6 +1598,7 @@ components:
         - KOMPLISERT_VURDERING
         - SKJØNNSMESSIG_VURDERING
         - ANNET
+        - TOTRINNSKONTROLL
 
     LeggTilbakeOppgave:
       type: object

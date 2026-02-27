@@ -24,4 +24,5 @@ enum class KvalitetskontrollÅrsak(
     KOMPLISERT_VURDERING("Komplisert vurdering"),
     SKJØNNSMESSIG_VURDERING("Skjønnsmessig vurdering"),
     ANNET("Annet"),
+    TOTRINNSKONTROLL("Totrinnskontroll"),
 }
