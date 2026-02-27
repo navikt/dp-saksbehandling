@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
@@ -216,7 +215,7 @@ data class Oppgave private constructor(
 
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
 
-    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse): FerdigstillBehandling {
+    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
@@ -557,14 +556,13 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ): FerdigstillBehandling {
+        ) {
             requireEierskapTilOppgave(
                 oppgave = oppgave,
                 saksbehandler = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
-            return FerdigstillBehandling.GODKJENN
         }
 
         override fun ferdigstill(
@@ -827,7 +825,7 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ): FerdigstillBehandling {
+        ) {
             requireBeslutterTilgang(
                 saksbehandler = godkjentBehandlingHendelse.utførtAv,
                 tilstandType = type,
@@ -848,7 +846,6 @@ data class Oppgave private constructor(
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
-            return BESLUTT
         }
 
         override fun håndterForslagTilVedtak(
@@ -974,11 +971,6 @@ data class Oppgave private constructor(
         message: String,
     ) : RuntimeException(message)
 
-    enum class FerdigstillBehandling {
-        BESLUTT,
-        GODKJENN,
-    }
-
     enum class Handling {
         LAGRE_OPPGAVE,
         INGEN,
@@ -1097,7 +1089,7 @@ data class Oppgave private constructor(
         fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ): FerdigstillBehandling {
+        ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =

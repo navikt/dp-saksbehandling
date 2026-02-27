@@ -25,24 +25,12 @@ import kotlin.time.Duration.Companion.seconds
 private val logger = KotlinLogging.logger {}
 
 interface BehandlingKlient {
-    fun godkjenn(
-        behandlingId: UUID,
-        ident: String,
-        saksbehandlerToken: String,
-    ): Result<Unit>
-
     suspend fun kreverTotrinnskontroll(
         behandlingId: UUID,
         saksbehandlerToken: String,
     ): Result<Boolean>
 
     fun sendTilbake(
-        behandlingId: UUID,
-        ident: String,
-        saksbehandlerToken: String,
-    ): Result<Unit>
-
-    fun beslutt(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
@@ -56,6 +44,18 @@ interface BehandlingKlient {
         hendelseId: String,
         begrunnelse: String,
     ): Result<UUID>
+
+    fun godkjenn(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit>
+
+    fun beslutt(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit>
 }
 
 internal class BehandlingHttpKlient(

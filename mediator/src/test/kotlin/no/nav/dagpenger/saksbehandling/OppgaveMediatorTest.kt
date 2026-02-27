@@ -301,6 +301,7 @@ OppgaveMediatorTest {
             behandlingKlient =
                 mockk<BehandlingKlient>().also {
                     coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(false)
+                    coEvery { it.godkjenn(behandlingId = any(), ident = any(), saksbehandlerToken = any()) } returns Result.success(Unit)
                 },
         ) { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
@@ -333,11 +334,12 @@ OppgaveMediatorTest {
             }
 
             oppgaveMediator.returnerTilSaksbehandling(
-                ReturnerTilSaksbehandlingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = beslutter,
-                ),
-                "testToken",
+                returnerTilSaksbehandlingHendelse =
+                    ReturnerTilSaksbehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = beslutter,
+                    ),
+                beslutterToken = "testToken",
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
@@ -346,6 +348,22 @@ OppgaveMediatorTest {
                 it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
                 it.sisteBeslutter() shouldBe beslutter.navIdent
             }
+            oppgaveMediator.sendTilKontroll(
+                SendTilKontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+                saksbehandlerToken = "testToken",
+            )
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_KONTROLL
+                it.behandlerIdent shouldBe beslutter.navIdent
+            }
+            oppgaveMediator.ferdigstillOppgave(
+                oppgaveId = oppgave.oppgaveId,
+                saksbehandler = beslutter,
+                saksbehandlerToken = "testToken",
+            )
         }
     }
 
@@ -725,6 +743,12 @@ OppgaveMediatorTest {
                         saksbehandlerToken = saksbehandlerToken,
                     )
                 } returns Result.success(Unit)
+                coEvery {
+                    it.kreverTotrinnskontroll(
+                        behandlingId = behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(false)
             }
         settOppOppgaveMediator(
             behandlingKlient = behandlingClientMock,
@@ -790,6 +814,12 @@ OppgaveMediatorTest {
                         saksbehandlerToken = saksbehandlerToken,
                     )
                 } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
+                coEvery {
+                    it.kreverTotrinnskontroll(
+                        behandlingId = behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(false)
             }
 
         settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
@@ -860,6 +890,12 @@ OppgaveMediatorTest {
                         saksbehandlerToken = saksbehandlerToken,
                     )
                 } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
+                coEvery {
+                    it.kreverTotrinnskontroll(
+                        behandlingId = behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(false)
             }
         settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
 
