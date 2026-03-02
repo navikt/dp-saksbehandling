@@ -340,6 +340,6 @@ internal fun Oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTil
 
 internal fun Oppgave.lovligeKvalitetskontrollÅrsaker(): List<KvalitetskontrollAarsakDTO> =
     when (this.tilstand().type) {
-        UNDER_BEHANDLING -> KvalitetskontrollAarsakDTO.entries
+        UNDER_BEHANDLING -> KvalitetskontrollAarsakDTO.entries.minus(KvalitetskontrollAarsakDTO.TOTRINNSKONTROLL)
         else -> emptyList()
     }

@@ -176,15 +176,6 @@ class OppgaveMediator(
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
 
-    fun hentOppgaveHvisTilgang(
-        behandlingId: UUID,
-        saksbehandler: Saksbehandler,
-    ): Oppgave =
-        oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
-            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
-            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
-        }
-
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
         var oppgave: Oppgave? = null
         val sakHistorikk = sakMediator.finnSakHistorikk(forslagTilVedtakHendelse.ident)

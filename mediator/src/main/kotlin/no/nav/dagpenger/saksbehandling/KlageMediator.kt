@@ -338,7 +338,7 @@ class KlageMediator(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): Oppgave =
-        oppgaveMediator.hentOppgaveHvisTilgang(
+        oppgaveMediator.hentOppgaveFor(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
