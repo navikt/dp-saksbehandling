@@ -82,5 +82,8 @@ internal fun Application.installerApis(
             klageDtoMapper = klageDTOMapper,
             applicationCallParser = applicationCallParser,
         )
+        meldingOmVedtakApi(
+            applicationCallParser = applicationCallParser,
+        )
     }
 }
