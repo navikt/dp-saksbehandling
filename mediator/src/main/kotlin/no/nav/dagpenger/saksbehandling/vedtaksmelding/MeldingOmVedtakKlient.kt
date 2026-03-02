@@ -50,16 +50,6 @@ class MeldingOmVedtakKlient(
         utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
-        val utløstAvTypeString =
-            when (utløstAvType) {
-                UtløstAvType.KLAGE -> "KLAGE"
-                UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
-                UtløstAvType.MELDEKORT -> "MELDEKORT"
-                UtløstAvType.MANUELL -> "MANUELL"
-                UtløstAvType.INNSENDING -> "INNSENDING"
-                UtløstAvType.OMGJØRING -> "OMGJØRING"
-            }
-
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(
                 fornavn = person.fornavn,
@@ -67,7 +57,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = utløstAvTypeString,
+                behandlingstype = utløstAvType.tilMeldingOmVedtakBehandlingstype(),
                 sakId = sakId,
             )
         return kotlin
@@ -100,7 +90,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = utløstAv.name,
+                behandlingstype = utløstAv.tilMeldingOmVedtakBehandlingstype(),
                 sakId = sakId,
             )
         return kotlin
@@ -153,16 +143,6 @@ class MeldingOmVedtakKlient(
         utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
-        val utløstAvTypeString =
-            when (utløstAvType) {
-                UtløstAvType.KLAGE -> "KLAGE"
-                UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
-                UtløstAvType.MELDEKORT -> "MELDEKORT"
-                UtløstAvType.MANUELL -> "MANUELL"
-                UtløstAvType.INNSENDING -> "INNSENDING"
-                UtløstAvType.OMGJØRING -> "OMGJØRING"
-            }
-
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(
                 fornavn = person.fornavn,
@@ -170,7 +150,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = utløstAvTypeString,
+                behandlingstype = utløstAvType.tilMeldingOmVedtakBehandlingstype(),
                 sakId = sakId,
             )
         return kotlin
@@ -230,6 +210,16 @@ class MeldingOmVedtakKlient(
         message: String,
     ) : RuntimeException(message)
 }
+
+private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
+    when (this) {
+        UtløstAvType.KLAGE -> "KLAGE"
+        UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
+        UtløstAvType.MELDEKORT -> "MELDEKORT"
+        UtløstAvType.MANUELL -> "MANUELL"
+        UtløstAvType.INNSENDING -> "INNSENDING"
+        UtløstAvType.OMGJØRING -> "OMGJØRING"
+    }
 
 private data class MeldingOmVedtakDataDTO(
     val fornavn: String,
