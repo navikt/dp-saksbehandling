@@ -399,6 +399,121 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/{oppgaveId}/melding-om-vedtak/html:
+    get:
+      tags:
+        - Melding om vedtak
+      summary: Hent forhåndsvisning av melding om vedtak som HTML
+      description: |
+        Henter HTML-forhåndsvisning av melding om vedtak for oppgaven.
+        dp-saksbehandling beriker requesten med person-, saksbehandler- og behandlingsdata,
+        og videresender til dp-melding-om-vedtak.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: HTML-forhåndsvisning av melding om vedtak
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeldingOmVedtakResponse'
+        '404':
+          description: Oppgaven eller behandlingen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/melding-om-vedtak/utvidet-beskrivelse/{brevblokkId}:
+    put:
+      tags:
+        - Melding om vedtak
+      summary: Lagre utvidet beskrivelse for en brevblokk
+      description: Lagrer utvidet beskrivelse (rik tekst) for en gitt brevblokk i meldingen om vedtak.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: brevblokkId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeldingOmVedtakUtvidetBeskrivelseRequest'
+      responses:
+        '200':
+          description: Utvidet beskrivelse er lagret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeldingOmVedtakUtvidetBeskrivelseResponse'
+        '404':
+          description: Oppgaven eller behandlingen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/melding-om-vedtak/brev-variant:
+    put:
+      tags:
+        - Melding om vedtak
+      summary: Lagre brevvariant for melding om vedtak
+      description: Lagrer brevvariant (generert eller egendefinert) for melding om vedtak.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeldingOmVedtakBrevVariantRequest'
+      responses:
+        '204':
+          description: Brevvariant er lagret
+        '404':
+          description: Oppgaven eller behandlingen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/melding-om-vedtak-kilde:
     put:
       summary: Endre kilde for melding om vedtak
@@ -1342,6 +1457,72 @@ components:
         - JA
         - NEI
         - IKKE_RELEVANT
+
+    MeldingOmVedtakResponse:
+      type: object
+      properties:
+        html:
+          type: string
+          description: HTML for melding om vedtak
+        utvidedeBeskrivelser:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeldingOmVedtakUtvidetBeskrivelse'
+        brevVariant:
+          $ref: '#/components/schemas/MeldingOmVedtakBrevVariant'
+      required:
+        - html
+        - utvidedeBeskrivelser
+        - brevVariant
+
+    MeldingOmVedtakUtvidetBeskrivelse:
+      type: object
+      properties:
+        brevblokkId:
+          type: string
+        tekst:
+          type: string
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+        tittel:
+          type: string
+      required:
+        - brevblokkId
+        - tekst
+        - tittel
+
+    MeldingOmVedtakUtvidetBeskrivelseRequest:
+      type: object
+      properties:
+        tekst:
+          type: string
+          description: Utvidet beskrivelse som skal inngå i vedtaksmeldingen
+      required:
+        - tekst
+
+    MeldingOmVedtakUtvidetBeskrivelseResponse:
+      type: object
+      properties:
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+          description: Tidspunkt utvidet beskrivelse sist ble endret
+
+    MeldingOmVedtakBrevVariant:
+      type: string
+      default: "GENERERT"
+      enum:
+        - "GENERERT"
+        - "EGENDEFINERT"
+
+    MeldingOmVedtakBrevVariantRequest:
+      type: object
+      properties:
+        brevVariant:
+          $ref: '#/components/schemas/MeldingOmVedtakBrevVariant'
+      required:
+        - brevVariant
 
     MeldingOmVedtakKildeRequest:
       type: object
