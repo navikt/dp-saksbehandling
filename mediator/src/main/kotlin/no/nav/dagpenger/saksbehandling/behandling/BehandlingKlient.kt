@@ -126,7 +126,12 @@ internal class BehandlingHttpKlient(
                         )
                     }.body<BehandlingDTO>()
                     .behandlingId
-                    .let { UUID.fromString(it) }
+                    .let { behandlingId ->
+                        logger.info {
+                            "Behandling av type ${behandlingstype.verdi} opprettet. HendelseId: $hendelseId. Ny behandling har id: $behandlingId"
+                        }
+                        UUID.fromString(behandlingId)
+                    }
             }
         }.onFailure {
             logger.error(it) { "Kall til dp-behandling for å opprette behandling feilet ${it.message}" }
@@ -143,6 +148,7 @@ internal class BehandlingHttpKlient(
                     accept(ContentType.Application.Json)
                 }.body<BehandlingDTO>()
                 .let { behandlingDTO ->
+                    logger.info { "Behandling $behandlingId krever totrinnskontroll: ${behandlingDTO.kreverTotrinnskontroll}" }
                     behandlingDTO.kreverTotrinnskontroll
                 }
         }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
