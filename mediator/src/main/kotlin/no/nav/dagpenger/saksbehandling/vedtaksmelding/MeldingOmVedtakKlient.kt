@@ -6,6 +6,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -140,6 +141,88 @@ class MeldingOmVedtakKlient(
             }.onFailure {
                 logger.error(it) { "Feil ved henting av automatisk avslag brev for behandlingId: $behandlingId" }
                 throw KanIkkeLageMeldingOmVedtak("Kan ikke lage automatisk avslag brev for behandlingId: $behandlingId")
+            }
+    }
+
+    suspend fun hentMeldingOmVedtakHtml(
+        person: PDLPersonIntern,
+        saksbehandler: BehandlerDTO,
+        beslutter: BehandlerDTO?,
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        sakId: String? = null,
+    ): Result<String> {
+        val utløstAvTypeString =
+            when (utløstAvType) {
+                UtløstAvType.KLAGE -> "KLAGE"
+                UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
+                UtløstAvType.MELDEKORT -> "MELDEKORT"
+                UtløstAvType.MANUELL -> "MANUELL"
+                UtløstAvType.INNSENDING -> "INNSENDING"
+                UtløstAvType.OMGJØRING -> "OMGJØRING"
+            }
+
+        val meldingOmVedtakDataDTO =
+            MeldingOmVedtakDataDTO(
+                fornavn = person.fornavn,
+                etternavn = person.etternavn,
+                fodselsnummer = person.ident,
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
+                behandlingstype = utløstAvTypeString,
+                sakId = sakId,
+            )
+        return kotlin
+            .runCatching {
+                httpClient
+                    .post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/html") {
+                        header("Authorization", "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
+                    }.bodyAsText()
+            }.onFailure {
+                logger.error(it) { "Feil ved henting av melding om vedtak HTML for behandlingId: $behandlingId" }
+            }
+    }
+
+    suspend fun lagreUtvidetBeskrivelse(
+        behandlingId: UUID,
+        brevblokkId: String,
+        tekst: String,
+        saksbehandlerToken: String,
+    ): String =
+        kotlin
+            .runCatching {
+                httpClient
+                    .put("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/$brevblokkId/utvidet-beskrivelse-json") {
+                        header("Authorization", "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(objectMapper.writeValueAsString(mapOf("tekst" to tekst)))
+                    }.bodyAsText()
+            }.getOrElse {
+                logger.error(it) { "Feil ved lagring av utvidet beskrivelse for behandlingId: $behandlingId, brevblokkId: $brevblokkId" }
+                throw KanIkkeLageMeldingOmVedtak(
+                    "Kan ikke lagre utvidet beskrivelse for behandlingId: $behandlingId, brevblokkId: $brevblokkId",
+                )
+            }
+
+    suspend fun lagreBrevVariant(
+        behandlingId: UUID,
+        brevVariant: String,
+        saksbehandlerToken: String,
+    ) {
+        kotlin
+            .runCatching {
+                httpClient
+                    .put("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/brev-variant") {
+                        header("Authorization", "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        setBody(objectMapper.writeValueAsString(mapOf("brevVariant" to brevVariant)))
+                    }
+            }.onFailure {
+                logger.error(it) { "Feil ved lagring av brevvariant for behandlingId: $behandlingId" }
+                throw KanIkkeLageMeldingOmVedtak("Kan ikke lagre brevvariant for behandlingId: $behandlingId")
             }
     }
 
