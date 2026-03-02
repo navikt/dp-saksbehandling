@@ -42,6 +42,7 @@ class StatistikkApiTest {
                     personMediator = mockk(),
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
 
@@ -79,6 +80,7 @@ class StatistikkApiTest {
                     personMediator = mockk(),
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
 
@@ -144,6 +146,7 @@ class StatistikkApiTest {
                     personMediator = mockk(),
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
 
@@ -257,6 +260,7 @@ class StatistikkApiTest {
                     personMediator = mockk(),
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
 

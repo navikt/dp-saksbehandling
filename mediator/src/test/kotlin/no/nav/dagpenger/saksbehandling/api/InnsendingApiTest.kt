@@ -251,6 +251,7 @@ class InnsendingApiTest {
                     personMediator = mockk(),
                     sakMediator = mockk(),
                     innsendingMediator = innsendingMediator,
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
             test()

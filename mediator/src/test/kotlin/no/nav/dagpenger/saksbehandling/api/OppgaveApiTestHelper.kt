@@ -28,6 +28,7 @@ internal object OppgaveApiTestHelper {
                     personMediator = personMediator,
                     sakMediator = mockk(relaxed = true),
                     innsendingMediator = mockk(relaxed = true),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
             test()
@@ -64,6 +65,7 @@ internal object OppgaveApiTestHelper {
                     personMediator = personMediator,
                     sakMediator = mockk(relaxed = true),
                     innsendingMediator = mockk(relaxed = true),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
                 )
             }
             test()

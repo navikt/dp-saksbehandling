@@ -271,4 +271,186 @@ class MeldingOmVedtakKlientTest {
             }
         }
     }
+
+    @Test
+    fun `hentMeldingOmVedtakHtml - happy path`() {
+        val sakId = UUIDv7.ny().toString()
+        runBlocking {
+            val result =
+                meldingOmVedtakKlient.hentMeldingOmVedtakHtml(
+                    person = person,
+                    saksbehandler = saksbehandler,
+                    beslutter = null,
+                    behandlingId = behandlingIdSuksess,
+                    saksbehandlerToken = saksbehandlerToken,
+                    utløstAvType = UtløstAvType.SØKNAD,
+                    sakId = sakId,
+                )
+            result.getOrThrow() shouldBe expectedHtmlResponse
+            requireNotNull(requestData).let {
+                it.url.encodedPath shouldBe "/melding-om-vedtak/$behandlingIdSuksess/html"
+                it.headers["Authorization"] shouldBe "Bearer $saksbehandlerToken"
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                        "fornavn": "Test",
+                        "etternavn": "Person",
+                        "fodselsnummer": "testIdent",
+                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "sakId": "$sakId",
+                        "saksbehandler": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                                "navn": "Enhet",
+                                "enhetNr": "1234",
+                                "postadresse": "Postadresse"
+                            }
+                        }
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `hentMeldingOmVedtakHtml - med beslutter`() {
+        runBlocking {
+            val result =
+                meldingOmVedtakKlient.hentMeldingOmVedtakHtml(
+                    person = person,
+                    saksbehandler = saksbehandler,
+                    beslutter = saksbehandler,
+                    behandlingId = behandlingIdSuksess,
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+            result.getOrThrow() shouldBe expectedHtmlResponse
+            requireNotNull(requestData).let {
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                        "fornavn": "Test",
+                        "etternavn": "Person",
+                        "fodselsnummer": "testIdent",
+                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "saksbehandler": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                                "navn": "Enhet",
+                                "enhetNr": "1234",
+                                "postadresse": "Postadresse"
+                            }
+                        },
+                        "beslutter": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                                "navn": "Enhet",
+                                "enhetNr": "1234",
+                                "postadresse": "Postadresse"
+                            }
+                        }
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `hentMeldingOmVedtakHtml - ved feil`() {
+        runBlocking {
+            val behandlingIdSomFeiler = UUIDv7.ny()
+            val result =
+                meldingOmVedtakKlient.hentMeldingOmVedtakHtml(
+                    person = person,
+                    saksbehandler = saksbehandler,
+                    beslutter = null,
+                    behandlingId = behandlingIdSomFeiler,
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+            result.isFailure shouldBe true
+        }
+    }
+
+    @Test
+    fun `lagreUtvidetBeskrivelse - happy path`() {
+        val brevblokkId = "brevblokk-123"
+        runBlocking {
+            val result =
+                meldingOmVedtakKlient.lagreUtvidetBeskrivelse(
+                    behandlingId = behandlingIdSuksess,
+                    brevblokkId = brevblokkId,
+                    tekst = "En utvidet beskrivelse",
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+            result shouldBe expectedHtmlResponse
+            requireNotNull(requestData).let {
+                it.url.encodedPath shouldBe "/melding-om-vedtak/$behandlingIdSuksess/$brevblokkId/utvidet-beskrivelse-json"
+                it.headers["Authorization"] shouldBe "Bearer $saksbehandlerToken"
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                        "tekst": "En utvidet beskrivelse"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `lagreUtvidetBeskrivelse - ved feil`() {
+        runBlocking {
+            val behandlingIdSomFeiler = UUIDv7.ny()
+            shouldThrow<KanIkkeLageMeldingOmVedtak> {
+                meldingOmVedtakKlient.lagreUtvidetBeskrivelse(
+                    behandlingId = behandlingIdSomFeiler,
+                    brevblokkId = "brevblokk-123",
+                    tekst = "En utvidet beskrivelse",
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `lagreBrevVariant - happy path`() {
+        runBlocking {
+            meldingOmVedtakKlient.lagreBrevVariant(
+                behandlingId = behandlingIdSuksess,
+                brevVariant = "INNVILGELSE",
+                saksbehandlerToken = saksbehandlerToken,
+            )
+            requireNotNull(requestData).let {
+                it.url.encodedPath shouldBe "/melding-om-vedtak/$behandlingIdSuksess/brev-variant"
+                it.headers["Authorization"] shouldBe "Bearer $saksbehandlerToken"
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                        "brevVariant": "INNVILGELSE"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `lagreBrevVariant - ved feil`() {
+        runBlocking {
+            val behandlingIdSomFeiler = UUIDv7.ny()
+            shouldThrow<KanIkkeLageMeldingOmVedtak> {
+                meldingOmVedtakKlient.lagreBrevVariant(
+                    behandlingId = behandlingIdSomFeiler,
+                    brevVariant = "INNVILGELSE",
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+            }
+        }
+    }
 }

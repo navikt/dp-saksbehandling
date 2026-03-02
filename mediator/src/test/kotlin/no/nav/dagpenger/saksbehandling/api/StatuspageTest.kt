@@ -369,6 +369,7 @@ class StatuspageTest {
             personMediator = mockk(),
             sakMediator = mockk(),
             innsendingMediator = mockk(),
+            meldingOmVedtakMediator = mockk(relaxed = true),
         )
     }
 }
