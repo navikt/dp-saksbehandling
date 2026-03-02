@@ -15,7 +15,7 @@ avro {
     outputCharacterEncoding.set("UTF-8")
 }
 
-val kafkaVersion = "4.1.1"
+val kafkaVersion = "4.2.0"
 val confluentVersion = "8.1.0"
 
 dependencies {
