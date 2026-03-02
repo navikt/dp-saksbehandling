@@ -181,7 +181,7 @@ class MeldingOmVedtakKlientTest {
                         "fornavn": "Test",
                         "etternavn": "Person",
                         "fodselsnummer": "testIdent",
-                        "behandlingstype": "SØKNAD",
+                        "behandlingstype": "RETT_TIL_DAGPENGER",
                         "sakId": "$sakId",
                         "saksbehandler": {
                             "ident": "saksbehandlerIdent",
