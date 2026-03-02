@@ -169,6 +169,14 @@ internal class ApplicationBuilder(
             sakMediator = sakMediator,
         )
 
+    private val meldingOmVedtakMediator =
+        MeldingOmVedtakMediator(
+            oppgaveMediator = oppgaveMediator,
+            meldingOmVedtakKlient = meldingOmVedtakKlient,
+            oppslag = oppslag,
+            sakMediator = sakMediator,
+        )
+
     private val innsendingMediator =
         InnsendingMediator(
             sakMediator = sakMediator,
@@ -211,6 +219,7 @@ internal class ApplicationBuilder(
                             personMediator = personMediator,
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
+                            meldingOmVedtakMediator = meldingOmVedtakMediator,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =

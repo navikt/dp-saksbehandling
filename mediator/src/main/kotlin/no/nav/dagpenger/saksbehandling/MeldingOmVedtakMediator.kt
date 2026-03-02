@@ -41,7 +41,7 @@ class MeldingOmVedtakMediator(
                     behandlingId = oppgave.behandling.behandlingId,
                     saksbehandlerToken = saksbehandlerToken,
                     utløstAvType = oppgave.behandling.utløstAv,
-                    sakId = sakIdDeferred.await()?.toString(),
+                    sakId = sakIdDeferred.await().toString(),
                 ).getOrThrow()
         }
     }

@@ -16,6 +16,7 @@ import io.ktor.server.request.path
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.KlageMediator
+import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
@@ -34,6 +35,7 @@ internal fun Application.installerApis(
     personMediator: PersonMediator,
     sakMediator: SakMediator,
     innsendingMediator: InnsendingMediator,
+    meldingOmVedtakMediator: MeldingOmVedtakMediator,
 ) {
     this.authConfig()
     install(CallId) {
@@ -83,6 +85,7 @@ internal fun Application.installerApis(
             applicationCallParser = applicationCallParser,
         )
         meldingOmVedtakApi(
+            meldingOmVedtakMediator = meldingOmVedtakMediator,
             applicationCallParser = applicationCallParser,
         )
     }
