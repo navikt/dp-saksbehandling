@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak
@@ -34,7 +35,23 @@ class MeldingOmVedtakMediatorTest {
     private val oppgaveId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
     private val sakId = UUIDv7.ny()
-    private val oppgave = TestHelper.lagOppgave(oppgaveId = oppgaveId, behandling = TestHelper.lagBehandling(behandlingId = behandlingId))
+    private val oppgave =
+        TestHelper.lagOppgave(
+            oppgaveId = oppgaveId,
+            behandling = TestHelper.lagBehandling(behandlingId = behandlingId),
+            tilstandslogg =
+                OppgaveTilstandslogg().also {
+                    it.leggTil(
+                        Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        hendelse =
+                            SettOppgaveAnsvarHendelse(
+                                oppgaveId = oppgaveId,
+                                ansvarligIdent = saksbehandler.navIdent,
+                                utførtAv = saksbehandler,
+                            ),
+                    )
+                },
+        )
 
     private val behandlerDTO =
         BehandlerDTO(

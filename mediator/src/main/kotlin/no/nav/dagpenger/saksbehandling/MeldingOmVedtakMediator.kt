@@ -6,6 +6,7 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
+import java.lang.RuntimeException
 import java.util.UUID
 
 class MeldingOmVedtakMediator(
@@ -20,10 +21,13 @@ class MeldingOmVedtakMediator(
         saksbehandlerToken: String,
     ): String {
         val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
+        val sisteSaksbehandler =
+            oppgave.sisteSaksbehandler()
+                ?: throw RuntimeException("Oppgave ${oppgave.oppgaveId} har ingen saksbehandler")
 
         return coroutineScope {
             val personDeferred = async(Dispatchers.IO) { oppslag.hentPerson(oppgave.personIdent()) }
-            val saksbehandlerDeferred = async(Dispatchers.IO) { oppslag.hentBehandler(saksbehandler.navIdent) }
+            val sisteSaksbehandler = async(Dispatchers.IO) { oppslag.hentBehandler(sisteSaksbehandler) }
             val beslutterDeferred =
                 async(Dispatchers.IO) {
                     oppgave.sisteBeslutter()?.let { oppslag.hentBehandler(it) }
@@ -36,7 +40,7 @@ class MeldingOmVedtakMediator(
             meldingOmVedtakKlient
                 .hentMeldingOmVedtakHtml(
                     person = personDeferred.await(),
-                    saksbehandler = saksbehandlerDeferred.await(),
+                    saksbehandler = sisteSaksbehandler.await(),
                     beslutter = beslutterDeferred.await(),
                     behandlingId = oppgave.behandling.behandlingId,
                     saksbehandlerToken = saksbehandlerToken,
