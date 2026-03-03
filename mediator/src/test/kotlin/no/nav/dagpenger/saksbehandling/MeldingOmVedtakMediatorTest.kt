@@ -35,10 +35,8 @@ class MeldingOmVedtakMediatorTest {
     private val behandlingId = UUIDv7.ny()
     private val sakId = UUIDv7.ny()
 
-    // API-kaller er en annen person enn oppgavens saksbehandler
-    // for å sikre at testen fanger opp om vi bruker feil ident
-    private val apiKaller = TestHelper.beslutter
-    private val apiKallerToken = "test-beslutter-token"
+    private val beslutter = TestHelper.beslutter
+    private val beslutterToken = "test-beslutter-token"
 
     private val oppgave =
         TestHelper.lagOppgave(
@@ -73,7 +71,7 @@ class MeldingOmVedtakMediatorTest {
 
     @Test
     fun `hentMeldingOmVedtakHtml - bruker oppgavens saksbehandler, ikke API-kalleren`() {
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgave
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgave
         coEvery { oppslag.hentPerson(oppgave.personIdent()) } returns TestHelper.pdlPerson
         coEvery { oppslag.hentBehandler(oppgavensSaksbehandler.navIdent) } returns oppgavensSaksbehandlerDTO
         every { sakMediator.hentSakIdForBehandlingId(behandlingId) } returns sakId
@@ -83,7 +81,7 @@ class MeldingOmVedtakMediatorTest {
                 saksbehandler = oppgavensSaksbehandlerDTO,
                 beslutter = null,
                 behandlingId = behandlingId,
-                saksbehandlerToken = apiKallerToken,
+                saksbehandlerToken = beslutterToken,
                 utløstAvType = UtløstAvType.SØKNAD,
                 sakId = sakId.toString(),
             )
@@ -93,8 +91,8 @@ class MeldingOmVedtakMediatorTest {
             val result =
                 mediator.hentMeldingOmVedtakHtml(
                     oppgaveId = oppgaveId,
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             result shouldBe "<html>Vedtak</html>"
         }
@@ -103,7 +101,7 @@ class MeldingOmVedtakMediatorTest {
             oppslag.hentBehandler(oppgavensSaksbehandler.navIdent)
         }
         coVerify(exactly = 0) {
-            oppslag.hentBehandler(apiKaller.navIdent)
+            oppslag.hentBehandler(beslutter.navIdent)
         }
     }
 
@@ -129,7 +127,7 @@ class MeldingOmVedtakMediatorTest {
                 tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
             )
 
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgaveMedBeslutter
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgaveMedBeslutter
         coEvery { oppslag.hentPerson(oppgaveMedBeslutter.personIdent()) } returns TestHelper.pdlPerson
         coEvery { oppslag.hentBehandler(oppgavensSaksbehandler.navIdent) } returns oppgavensSaksbehandlerDTO
         coEvery { oppslag.hentBehandler(beslutterIdent) } returns beslutterDTO
@@ -140,7 +138,7 @@ class MeldingOmVedtakMediatorTest {
                 saksbehandler = oppgavensSaksbehandlerDTO,
                 beslutter = beslutterDTO,
                 behandlingId = behandlingId,
-                saksbehandlerToken = apiKallerToken,
+                saksbehandlerToken = beslutterToken,
                 utløstAvType = UtløstAvType.SØKNAD,
                 sakId = sakId.toString(),
             )
@@ -150,8 +148,8 @@ class MeldingOmVedtakMediatorTest {
             val result =
                 mediator.hentMeldingOmVedtakHtml(
                     oppgaveId = oppgaveId,
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             result shouldBe "<html>Vedtak med beslutter</html>"
         }
@@ -170,14 +168,14 @@ class MeldingOmVedtakMediatorTest {
                 behandling = TestHelper.lagBehandling(behandlingId = behandlingId),
             )
 
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgaveUtenSaksbehandler
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgaveUtenSaksbehandler
 
         runBlocking {
             shouldThrow<RuntimeException> {
                 mediator.hentMeldingOmVedtakHtml(
                     oppgaveId = oppgaveId,
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             }
         }
@@ -185,7 +183,7 @@ class MeldingOmVedtakMediatorTest {
 
     @Test
     fun `hentMeldingOmVedtakHtml - kaster feil når klient feiler`() {
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgave
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgave
         coEvery { oppslag.hentPerson(oppgave.personIdent()) } returns TestHelper.pdlPerson
         coEvery { oppslag.hentBehandler(oppgavensSaksbehandler.navIdent) } returns oppgavensSaksbehandlerDTO
         every { sakMediator.hentSakIdForBehandlingId(behandlingId) } returns sakId
@@ -205,8 +203,8 @@ class MeldingOmVedtakMediatorTest {
             shouldThrow<KanIkkeLageMeldingOmVedtak> {
                 mediator.hentMeldingOmVedtakHtml(
                     oppgaveId = oppgaveId,
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             }
         }
@@ -216,13 +214,13 @@ class MeldingOmVedtakMediatorTest {
     fun `lagreUtvidetBeskrivelse - henter oppgave og delegerer til klient`() {
         val brevblokkId = "brevblokk-abc"
         val tekst = "En utvidet beskrivelse"
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgave
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgave
         coEvery {
             meldingOmVedtakKlient.lagreUtvidetBeskrivelse(
                 behandlingId = behandlingId,
                 brevblokkId = brevblokkId,
                 tekst = tekst,
-                saksbehandlerToken = apiKallerToken,
+                saksbehandlerToken = beslutterToken,
             )
         } returns """{"sistEndretTidspunkt": "2025-01-01T12:00:00"}"""
 
@@ -232,8 +230,8 @@ class MeldingOmVedtakMediatorTest {
                     oppgaveId = oppgaveId,
                     brevblokkId = brevblokkId,
                     tekst = tekst,
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             result shouldBe """{"sistEndretTidspunkt": "2025-01-01T12:00:00"}"""
         }
@@ -243,7 +241,7 @@ class MeldingOmVedtakMediatorTest {
                 behandlingId = behandlingId,
                 brevblokkId = brevblokkId,
                 tekst = tekst,
-                saksbehandlerToken = apiKallerToken,
+                saksbehandlerToken = beslutterToken,
             )
         }
     }
@@ -251,7 +249,7 @@ class MeldingOmVedtakMediatorTest {
     @Test
     fun `lagreUtvidetBeskrivelse - kaster feil når klient feiler`() {
         val brevblokkId = "brevblokk-abc"
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgave
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgave
         coEvery {
             meldingOmVedtakKlient.lagreUtvidetBeskrivelse(
                 behandlingId = behandlingId,
@@ -267,8 +265,8 @@ class MeldingOmVedtakMediatorTest {
                     oppgaveId = oppgaveId,
                     brevblokkId = brevblokkId,
                     tekst = "tekst",
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             }
         }
@@ -276,12 +274,12 @@ class MeldingOmVedtakMediatorTest {
 
     @Test
     fun `lagreBrevVariant - henter oppgave og delegerer til klient`() {
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgave
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgave
         coEvery {
             meldingOmVedtakKlient.lagreBrevVariant(
                 behandlingId = behandlingId,
                 brevVariant = "GENERERT",
-                saksbehandlerToken = apiKallerToken,
+                saksbehandlerToken = beslutterToken,
             )
         } returns Unit
 
@@ -289,8 +287,8 @@ class MeldingOmVedtakMediatorTest {
             mediator.lagreBrevVariant(
                 oppgaveId = oppgaveId,
                 brevVariant = "GENERERT",
-                saksbehandler = apiKaller,
-                saksbehandlerToken = apiKallerToken,
+                saksbehandler = beslutter,
+                saksbehandlerToken = beslutterToken,
             )
         }
 
@@ -298,14 +296,14 @@ class MeldingOmVedtakMediatorTest {
             meldingOmVedtakKlient.lagreBrevVariant(
                 behandlingId = behandlingId,
                 brevVariant = "GENERERT",
-                saksbehandlerToken = apiKallerToken,
+                saksbehandlerToken = beslutterToken,
             )
         }
     }
 
     @Test
     fun `lagreBrevVariant - kaster feil når klient feiler`() {
-        every { oppgaveMediator.hentOppgave(oppgaveId, apiKaller) } returns oppgave
+        every { oppgaveMediator.hentOppgave(oppgaveId, beslutter) } returns oppgave
         coEvery {
             meldingOmVedtakKlient.lagreBrevVariant(
                 behandlingId = behandlingId,
@@ -319,8 +317,8 @@ class MeldingOmVedtakMediatorTest {
                 mediator.lagreBrevVariant(
                     oppgaveId = oppgaveId,
                     brevVariant = "EGENDEFINERT",
-                    saksbehandler = apiKaller,
-                    saksbehandlerToken = apiKallerToken,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = beslutterToken,
                 )
             }
         }
