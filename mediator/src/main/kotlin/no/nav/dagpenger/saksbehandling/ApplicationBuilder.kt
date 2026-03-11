@@ -49,6 +49,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.TilbakekrevingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -296,6 +297,11 @@ internal class ApplicationBuilder(
                 KlageBehandlingUtførtMottakForOppgave(
                     rapidsConnection = rapidsConnection,
                     oppgaveMediator = oppgaveMediator,
+                )
+                TilbakekrevingOpprettetMottak(
+                    rapidsConnection = rapidsConnection,
+                    oppgaveMediator = oppgaveMediator,
+                    sakMediator = sakMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(

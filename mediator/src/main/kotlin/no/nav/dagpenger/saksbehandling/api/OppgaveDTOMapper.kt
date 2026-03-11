@@ -302,6 +302,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
         UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
         UtløstAvType.OMGJØRING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        UtløstAvType.TILBAKEKREVING -> BehandlingTypeDTO.TILBAKEKREVING
     }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
@@ -312,6 +313,7 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
         UtløstAvType.OMGJØRING -> UtlostAvTypeDTO.OMGJØRING
+        UtløstAvType.TILBAKEKREVING -> UtlostAvTypeDTO.TILBAKEKREVING
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
