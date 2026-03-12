@@ -158,7 +158,7 @@ class OppgaveMediator(
         )
     }
 
-    fun opprettOppgaveForTilbakekreving(hendelse: TilbakekrevingHendelse.Opprettet) {
+    fun opprettOppgaveForTilbakekreving(hendelse: TilbakekrevingHendelse) {
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
                 behandlingId = hendelse.tilbakekrevingBehandlingId,

@@ -28,11 +28,12 @@ class TilbakekrevingMottakTest {
 
         verify(exactly = 1) {
             oppgaveMediatorMock.opprettOppgaveForTilbakekreving(
-                match<TilbakekrevingHendelse.Opprettet> {
+                match<TilbakekrevingHendelse> {
                     it.ident == ident &&
                         it.eksternFagsakId == "100001234" &&
                         it.tilbakekrevingBehandlingId == tilbakekrevingBehandlingId &&
-                        it.totaltFeilutbetaltBeløp.compareTo(java.math.BigDecimal("15000")) == 0
+                        it.totaltFeilutbetaltBeløp.compareTo(java.math.BigDecimal("15000")) == 0 &&
+                        it.status == TilbakekrevingHendelse.BehandlingStatus.OPPRETTET
                 },
             )
         }

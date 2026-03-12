@@ -59,95 +59,41 @@ internal class TilbakekrevingMottak(
                 logger.error { "Mottok tilbakekreving-hendelse uten key (personident). Ignorerer meldingen." }
                 return
             }
-        val status = packet["tilbakekreving.behandlingsstatus"].asText()
+
+        val hendelse =
+            TilbakekrevingHendelse(
+                ident = ident,
+                eksternFagsakId = packet["eksternFagsakId"].asText(),
+                eksternBehandlingId = packet["eksternBehandlingId"].textOrNull(),
+                tilbakekrevingBehandlingId = tilbakekrevingBehandlingId,
+                totaltFeilutbetaltBeløp = BigDecimal(packet["tilbakekreving.totaltFeilutbetaltBeløp"].asText()),
+                opprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
+                status =
+                    TilbakekrevingHendelse.BehandlingStatus.valueOf(
+                        packet["tilbakekreving.behandlingsstatus"].asText(),
+                    ),
+            )
 
         withLoggingContext("tilbakekrevingBehandlingId" to "$tilbakekrevingBehandlingId") {
-            val hendelse = lagHendelse(packet, ident, status)
-
-            when (hendelse) {
-                is TilbakekrevingHendelse.Opprettet -> {
+            when (hendelse.status) {
+                TilbakekrevingHendelse.BehandlingStatus.OPPRETTET -> {
                     logger.info { "Mottok tilbakekreving opprettet hendelse" }
                     sikkerlogger.info { "Mottok tilbakekreving opprettet hendelse for ident $ident" }
                     oppgaveMediator.opprettOppgaveForTilbakekreving(hendelse)
                 }
 
-                is TilbakekrevingHendelse.TilBehandling -> {
+                TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING -> {
                     logger.info { "Mottok tilbakekreving til behandling hendelse" }
                 }
 
-                is TilbakekrevingHendelse.TilGodkjenning -> {
+                TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING -> {
                     logger.info { "Mottok tilbakekreving til godkjenning hendelse" }
                 }
 
-                is TilbakekrevingHendelse.Avsluttet -> {
+                TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET -> {
                     logger.info { "Mottok tilbakekreving avsluttet hendelse" }
                 }
             }
         }
     }
-
-    private fun lagHendelse(
-        packet: JsonMessage,
-        ident: String,
-        status: String,
-    ): TilbakekrevingHendelse {
-        val felter =
-            FellesFelter(
-                ident = ident,
-                eksternFagsakId = packet["eksternFagsakId"].asText(),
-                eksternBehandlingId = packet["eksternBehandlingId"].textOrNull(),
-                tilbakekrevingBehandlingId = packet["tilbakekreving.behandlingId"].asUUID(),
-                totaltFeilutbetaltBeløp = BigDecimal(packet["tilbakekreving.totaltFeilutbetaltBeløp"].asText()),
-                opprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
-            )
-
-        return when (status) {
-            "OPPRETTET" ->
-                TilbakekrevingHendelse.Opprettet(
-                    ident = felter.ident,
-                    eksternFagsakId = felter.eksternFagsakId,
-                    eksternBehandlingId = felter.eksternBehandlingId,
-                    tilbakekrevingBehandlingId = felter.tilbakekrevingBehandlingId,
-                    totaltFeilutbetaltBeløp = felter.totaltFeilutbetaltBeløp,
-                    opprettet = felter.opprettet,
-                )
-            "TIL_BEHANDLING" ->
-                TilbakekrevingHendelse.TilBehandling(
-                    ident = felter.ident,
-                    eksternFagsakId = felter.eksternFagsakId,
-                    eksternBehandlingId = felter.eksternBehandlingId,
-                    tilbakekrevingBehandlingId = felter.tilbakekrevingBehandlingId,
-                    totaltFeilutbetaltBeløp = felter.totaltFeilutbetaltBeløp,
-                    opprettet = felter.opprettet,
-                )
-            "TIL_GODKJENNING" ->
-                TilbakekrevingHendelse.TilGodkjenning(
-                    ident = felter.ident,
-                    eksternFagsakId = felter.eksternFagsakId,
-                    eksternBehandlingId = felter.eksternBehandlingId,
-                    tilbakekrevingBehandlingId = felter.tilbakekrevingBehandlingId,
-                    totaltFeilutbetaltBeløp = felter.totaltFeilutbetaltBeløp,
-                    opprettet = felter.opprettet,
-                )
-            "AVSLUTTET" ->
-                TilbakekrevingHendelse.Avsluttet(
-                    ident = felter.ident,
-                    eksternFagsakId = felter.eksternFagsakId,
-                    eksternBehandlingId = felter.eksternBehandlingId,
-                    tilbakekrevingBehandlingId = felter.tilbakekrevingBehandlingId,
-                    totaltFeilutbetaltBeløp = felter.totaltFeilutbetaltBeløp,
-                    opprettet = felter.opprettet,
-                )
-            else -> error("Ukjent tilbakekreving behandlingsstatus: $status")
-        }
-    }
-
-    private data class FellesFelter(
-        val ident: String,
-        val eksternFagsakId: String,
-        val eksternBehandlingId: String?,
-        val tilbakekrevingBehandlingId: java.util.UUID,
-        val totaltFeilutbetaltBeløp: BigDecimal,
-        val opprettet: LocalDateTime,
-    )
 }
