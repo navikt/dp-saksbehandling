@@ -10,8 +10,12 @@ spec:
   image: "{{ image }}"
   liveness:
     path: /isalive
+    failureThreshold: 6
+    periodSeconds: 10
   readiness:
     path: /isready
+    failureThreshold: 3
+    periodSeconds: 10
   port: 8080
   prometheus:
     enabled: true
