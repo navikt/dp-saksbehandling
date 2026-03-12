@@ -6,6 +6,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
@@ -47,19 +48,24 @@ internal class UtsendingDistribuertMottakForKlage(
             "Mottatt distribusjon for klagebehandling $behandlingId med distribusjonsId $distribusjonId og journalpostId $journalpostId"
         }
 
-        if (behandlingId.toString() in setOf("019ce1aa-cb5e-73dc-8738-03131edc4587")) {
+        if (behandlingId.toString() in setOf("019b97a1-d0a4-7258-b62e-6488be62b206")) {
             logger.warn { "Skipper behandlingId: $behandlingId fra UtsendingDistribuertMottakForKlage" }
             return
         }
-        val utsendingDistribuertHendelse =
-            UtsendingDistribuert(
-                behandlingId = behandlingId,
-                utsendingId = utsendingId,
-                ident = ident,
-                journalpostId = journalpostId,
-                distribusjonId = distribusjonId,
-            )
-
-        klageMediator.vedtakDistribuert(utsendingDistribuertHendelse)
+        withLoggingContext(
+            "behandlingId" to behandlingId.toString(),
+            "distribusjonId" to distribusjonId,
+            "journalpostId" to journalpostId,
+        ) {
+            val utsendingDistribuertHendelse =
+                UtsendingDistribuert(
+                    behandlingId = behandlingId,
+                    utsendingId = utsendingId,
+                    ident = ident,
+                    journalpostId = journalpostId,
+                    distribusjonId = distribusjonId,
+                )
+            klageMediator.vedtakDistribuert(utsendingDistribuertHendelse)
+        }
     }
 }

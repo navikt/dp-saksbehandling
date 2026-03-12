@@ -1,9 +1,13 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 internal class KlageBehandlingUtførtMottakForOppgave(
     rapidsConnection: RapidsConnection,
@@ -18,9 +22,14 @@ internal class KlageBehandlingUtførtMottakForOppgave(
         ident: String,
         saksbehandler: Saksbehandler,
     ) {
-        oppgaveMediator.ferdigstillOppgave(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
-        )
+        withLoggingContext(
+            "behandlingId" to behandlingId.toString(),
+        ) {
+            logger.info { "Ferdigstill oppgave for klageId/behandlingId: $behandlingId" }
+            oppgaveMediator.ferdigstillOppgave(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            )
+        }
     }
 }

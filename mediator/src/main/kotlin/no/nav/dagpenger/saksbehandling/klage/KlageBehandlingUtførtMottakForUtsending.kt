@@ -1,11 +1,15 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 internal class KlageBehandlingUtførtMottakForUtsending(
     rapidsConnection: RapidsConnection,
@@ -20,16 +24,21 @@ internal class KlageBehandlingUtførtMottakForUtsending(
         ident: String,
         saksbehandler: Saksbehandler,
     ) {
-        utsendingMediator.mottaStartUtsending(
-            StartUtsendingHendelse(
-                behandlingId = behandlingId,
-                utsendingSak =
-                    UtsendingSak(
-                        id = sakId.toString(),
-                        kontekst = "Dagpenger",
-                    ),
-                ident = ident,
-            ),
-        )
+        withLoggingContext(
+            "behandlingId" to behandlingId.toString(),
+        ) {
+            logger.info { "Motta start utsending for klageId/behandlingId: $behandlingId" }
+            utsendingMediator.mottaStartUtsending(
+                StartUtsendingHendelse(
+                    behandlingId = behandlingId,
+                    utsendingSak =
+                        UtsendingSak(
+                            id = sakId.toString(),
+                            kontekst = "Dagpenger",
+                        ),
+                    ident = ident,
+                ),
+            )
+        }
     }
 }
