@@ -18,7 +18,6 @@ internal class UtsendingDistribuertMottakForKlage(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val sikkerlogger = KotlinLogging.logger("tjenestekall")
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "utsending_distribuert")
@@ -48,6 +47,10 @@ internal class UtsendingDistribuertMottakForKlage(
             "Mottatt distribusjon for klagebehandling $behandlingId med distribusjonsId $distribusjonId og journalpostId $journalpostId"
         }
 
+        if (behandlingId.toString() in setOf("019ce1aa-cb5e-73dc-8738-03131edc4587")) {
+            logger.warn { "Skipper behandlingId: $behandlingId fra UtsendingDistribuertMottakForKlage" }
+            return
+        }
         val utsendingDistribuertHendelse =
             UtsendingDistribuert(
                 behandlingId = behandlingId,
