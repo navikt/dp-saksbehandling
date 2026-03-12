@@ -10,4 +10,12 @@ data class TilbakekrevingHendelse(
     val hendelseOpprettet: LocalDateTime,
     val tilbakekrevingBehandlingId: UUID,
     val saksbehandlingURL: String,
-)
+    val behandlingsstatus: BehandlingStatus,
+) {
+    enum class BehandlingStatus {
+        OPPRETTET,
+        TIL_BEHANDLING,
+        TIL_GODKJENNING,
+        AVSLUTTET,
+    }
+}

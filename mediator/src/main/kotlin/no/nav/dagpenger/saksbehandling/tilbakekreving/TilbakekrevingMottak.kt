@@ -87,6 +87,7 @@ internal class TilbakekrevingMottak(
                 hendelseOpprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
                 tilbakekrevingBehandlingId = dto.behandlingId,
                 saksbehandlingURL = dto.saksbehandlingURL,
+                behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.valueOf(dto.behandlingsstatus.name),
             )
 
         withLoggingContext("tilbakekrevingBehandlingId" to "${hendelse.tilbakekrevingBehandlingId}") {
