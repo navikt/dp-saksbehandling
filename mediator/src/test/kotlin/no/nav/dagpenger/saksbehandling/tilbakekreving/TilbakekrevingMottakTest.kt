@@ -62,8 +62,16 @@ class TilbakekrevingMottakTest {
           "hendelseOpprettet": "2024-06-01T10:00:00",
           "tilbakekreving": {
             "behandlingId": "$tilbakekrevingBehandlingId",
+            "sakOpprettet": "2024-05-20T08:00:00",
+            "varselSendt": "2024-05-21",
             "behandlingsstatus": "$status",
-            "totaltFeilutbetaltBeløp": "15000"
+            "forrigeBehandlingsstatus": null,
+            "totaltFeilutbetaltBeløp": "15000",
+            "saksbehandlingURL": "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+            "fullstendigPeriode": {
+              "fom": "2025-01-01",
+              "tom": "2025-06-30"
+            }
           }
         }
         """.trimIndent()

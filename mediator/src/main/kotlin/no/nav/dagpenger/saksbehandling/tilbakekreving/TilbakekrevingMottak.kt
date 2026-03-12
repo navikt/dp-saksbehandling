@@ -11,6 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.mottak.textOrNull
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
@@ -30,13 +31,22 @@ internal class TilbakekrevingMottak(
             }
             validate {
                 it.requireKey(
+                    "versjon",
                     "eksternFagsakId",
                     "hendelseOpprettet",
                     "tilbakekreving.behandlingId",
+                    "tilbakekreving.sakOpprettet",
                     "tilbakekreving.behandlingsstatus",
                     "tilbakekreving.totaltFeilutbetaltBeløp",
+                    "tilbakekreving.saksbehandlingURL",
+                    "tilbakekreving.fullstendigPeriode.fom",
+                    "tilbakekreving.fullstendigPeriode.tom",
                 )
-                it.interestedIn("eksternBehandlingId")
+                it.interestedIn(
+                    "eksternBehandlingId",
+                    "tilbakekreving.varselSendt",
+                    "tilbakekreving.forrigeBehandlingsstatus",
+                )
             }
         }
     }
@@ -61,14 +71,27 @@ internal class TilbakekrevingMottak(
         val hendelse =
             TilbakekrevingHendelse(
                 ident = ident,
+                versjon = packet["versjon"].asInt(),
                 eksternFagsakId = packet["eksternFagsakId"].asText(),
                 eksternBehandlingId = packet["eksternBehandlingId"].textOrNull(),
+                hendelseOpprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
                 tilbakekrevingBehandlingId = tilbakekrevingBehandlingId,
-                totaltFeilutbetaltBeløp = BigDecimal(packet["tilbakekreving.totaltFeilutbetaltBeløp"].asText()),
-                opprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
+                sakOpprettet = LocalDateTime.parse(packet["tilbakekreving.sakOpprettet"].asText()),
+                varselSendt = packet["tilbakekreving.varselSendt"].textOrNull()?.let { LocalDate.parse(it) },
                 status =
                     TilbakekrevingHendelse.BehandlingStatus.valueOf(
                         packet["tilbakekreving.behandlingsstatus"].asText(),
+                    ),
+                forrigeStatus =
+                    packet["tilbakekreving.forrigeBehandlingsstatus"].textOrNull()?.let {
+                        TilbakekrevingHendelse.BehandlingStatus.valueOf(it)
+                    },
+                totaltFeilutbetaltBeløp = BigDecimal(packet["tilbakekreving.totaltFeilutbetaltBeløp"].asText()),
+                saksbehandlingURL = packet["tilbakekreving.saksbehandlingURL"].asText(),
+                fullstendigPeriode =
+                    TilbakekrevingHendelse.Periode(
+                        fom = LocalDate.parse(packet["tilbakekreving.fullstendigPeriode.fom"].asText()),
+                        tom = LocalDate.parse(packet["tilbakekreving.fullstendigPeriode.tom"].asText()),
                     ),
             )
 
