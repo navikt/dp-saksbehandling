@@ -300,7 +300,6 @@ internal class ApplicationBuilder(
                 )
                 TilbakekrevingMottak(
                     rapidsConnection = rapidsConnection,
-                    oppgaveMediator = oppgaveMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(

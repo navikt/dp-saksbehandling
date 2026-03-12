@@ -15,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
-import no.nav.dagpenger.saksbehandling.UtløstAvType.TILBAKEKREVING
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -44,7 +43,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -156,49 +154,6 @@ class OppgaveMediator(
             "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
                 "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
         )
-    }
-
-    fun opprettOppgaveForTilbakekreving(hendelse: TilbakekrevingHendelse) {
-        val behandlingOpprettetHendelse =
-            BehandlingOpprettetHendelse(
-                behandlingId = hendelse.tilbakekrevingBehandlingId,
-                ident = hendelse.ident,
-                sakId =
-                    sakMediator.finnSisteSakId(hendelse.ident)
-                        ?: error("Fant ingen sak for ident ved tilbakekreving. Kan ikke opprette oppgave."),
-                opprettet = hendelse.opprettet,
-                type = UtløstAvType.TILBAKEKREVING,
-                utførtAv = Applikasjon("familie-tilbake"),
-            )
-        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
-
-        val sakHistorikk = sakMediator.finnSakHistorikk(hendelse.ident)
-        val behandling = sakHistorikk?.finnBehandling(hendelse.tilbakekrevingBehandlingId)
-
-        if (behandling == null) {
-            val feilmelding =
-                "Mottatt tilbakekreving hendelse for behandling med id ${hendelse.tilbakekrevingBehandlingId}. " +
-                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
-            logger.error { feilmelding }
-            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
-            return
-        }
-
-        val oppgave =
-            Oppgave(
-                emneknagger = setOf("tilbakekreving"),
-                opprettet = behandling.opprettet,
-                person = sakHistorikk.person,
-                behandling = behandling,
-                meldingOmVedtak =
-                    Oppgave.MeldingOmVedtak(
-                        kilde = DP_SAK,
-                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                    ),
-            ).also {
-                it.settKlarTilBehandling(behandlingOpprettetHendelse)
-            }
-        oppgaveRepository.lagre(oppgave)
     }
 
     fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)

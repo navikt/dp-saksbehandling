@@ -8,7 +8,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.mottak.textOrNull
 import java.math.BigDecimal
@@ -19,7 +18,6 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class TilbakekrevingMottak(
     rapidsConnection: RapidsConnection,
-    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -79,7 +77,6 @@ internal class TilbakekrevingMottak(
                 TilbakekrevingHendelse.BehandlingStatus.OPPRETTET -> {
                     logger.info { "Mottok tilbakekreving opprettet hendelse" }
                     sikkerlogger.info { "Mottok tilbakekreving opprettet hendelse for ident $ident" }
-                    oppgaveMediator.opprettOppgaveForTilbakekreving(hendelse)
                 }
 
                 TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING -> {
