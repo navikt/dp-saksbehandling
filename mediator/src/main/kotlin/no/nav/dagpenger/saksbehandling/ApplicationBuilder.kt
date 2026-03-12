@@ -49,7 +49,6 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.TilbakekrevingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -65,6 +64,7 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
+import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMottak
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -298,10 +298,9 @@ internal class ApplicationBuilder(
                     rapidsConnection = rapidsConnection,
                     oppgaveMediator = oppgaveMediator,
                 )
-                TilbakekrevingOpprettetMottak(
+                TilbakekrevingMottak(
                     rapidsConnection = rapidsConnection,
                     oppgaveMediator = oppgaveMediator,
-                    sakMediator = sakMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(

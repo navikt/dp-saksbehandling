@@ -41,10 +41,10 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -158,7 +158,7 @@ class OppgaveMediator(
         )
     }
 
-    fun opprettOppgaveForTilbakekreving(hendelse: TilbakekrevingOpprettetHendelse) {
+    fun opprettOppgaveForTilbakekreving(hendelse: TilbakekrevingHendelse.Opprettet) {
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
                 behandlingId = hendelse.tilbakekrevingBehandlingId,
@@ -168,7 +168,7 @@ class OppgaveMediator(
                         ?: error("Fant ingen sak for ident ved tilbakekreving. Kan ikke opprette oppgave."),
                 opprettet = hendelse.opprettet,
                 type = UtløstAvType.TILBAKEKREVING,
-                utførtAv = hendelse.utførtAv,
+                utførtAv = Applikasjon("familie-tilbake"),
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
 

@@ -1,36 +1,34 @@
-package no.nav.dagpenger.saksbehandling.mottak
+package no.nav.dagpenger.saksbehandling.tilbakekreving
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.util.UUID
 
-class TilbakekrevingOpprettetMottakTest {
+class TilbakekrevingMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
-    private val sakMediatorMock = mockk<SakMediator>(relaxed = true)
     private val ident = "12345678901"
     private val tilbakekrevingBehandlingId = UUID.randomUUID()
 
     init {
-        TilbakekrevingOpprettetMottak(
+        TilbakekrevingMottak(
             rapidsConnection = testRapid,
             oppgaveMediator = oppgaveMediatorMock,
-            sakMediator = sakMediatorMock,
         )
     }
 
     @Test
     fun `Skal opprette oppgave for tilbakekreving med status OPPRETTET`() {
-        testRapid.sendTestMessage(tilbakekrevingOpprettetMelding(), ident)
+        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"), ident)
 
         verify(exactly = 1) {
             oppgaveMediatorMock.opprettOppgaveForTilbakekreving(
-                match<TilbakekrevingOpprettetHendelse> {
+                match<TilbakekrevingHendelse.Opprettet> {
                     it.ident == ident &&
                         it.eksternFagsakId == "100001234" &&
                         it.tilbakekrevingBehandlingId == tilbakekrevingBehandlingId &&
@@ -40,9 +38,10 @@ class TilbakekrevingOpprettetMottakTest {
         }
     }
 
-    @Test
-    fun `Skal ignorere tilbakekreving med annen status enn OPPRETTET`() {
-        testRapid.sendTestMessage(tilbakekrevingMeldingMedStatus("TIL_BEHANDLING"), ident)
+    @ParameterizedTest
+    @ValueSource(strings = ["TIL_BEHANDLING", "TIL_GODKJENNING", "AVSLUTTET"])
+    fun `Skal motta hendelse for alle statuser uten å opprette oppgave`(status: String) {
+        testRapid.sendTestMessage(tilbakekrevingMelding(status), ident)
 
         verify(exactly = 0) {
             oppgaveMediatorMock.opprettOppgaveForTilbakekreving(any())
@@ -51,7 +50,7 @@ class TilbakekrevingOpprettetMottakTest {
 
     @Test
     fun `Skal ignorere meldinger uten key`() {
-        testRapid.sendTestMessage(tilbakekrevingOpprettetMelding())
+        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"))
 
         verify(exactly = 0) {
             oppgaveMediatorMock.opprettOppgaveForTilbakekreving(any())
@@ -83,24 +82,7 @@ class TilbakekrevingOpprettetMottakTest {
     }
 
     //language=json
-    private fun tilbakekrevingOpprettetMelding() =
-        """
-        {
-          "hendelsestype": "behandling_endret",
-          "versjon": 1,
-          "eksternFagsakId": "100001234",
-          "eksternBehandlingId": "dp-behandling-id-123",
-          "hendelseOpprettet": "2024-06-01T10:00:00",
-          "tilbakekreving": {
-            "behandlingId": "$tilbakekrevingBehandlingId",
-            "behandlingsstatus": "OPPRETTET",
-            "totaltFeilutbetaltBeløp": "15000"
-          }
-        }
-        """.trimIndent()
-
-    //language=json
-    private fun tilbakekrevingMeldingMedStatus(status: String) =
+    private fun tilbakekrevingMelding(status: String) =
         """
         {
           "hendelsestype": "behandling_endret",
