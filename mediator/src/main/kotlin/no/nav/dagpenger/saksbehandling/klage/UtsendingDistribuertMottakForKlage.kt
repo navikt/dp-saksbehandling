@@ -48,7 +48,7 @@ internal class UtsendingDistribuertMottakForKlage(
             "Mottatt distribusjon for klagebehandling $behandlingId med distribusjonsId $distribusjonId og journalpostId $journalpostId"
         }
 
-        if (behandlingId.toString() in setOf("019b97a1-d0a4-7258-b62e-6488be62b206")) {
+        if (behandlingId.toString() in setOf("019938f9-23cf-7abe-b3de-797c59c5df0f")) {
             logger.warn { "Skipper behandlingId: $behandlingId fra UtsendingDistribuertMottakForKlage" }
             return
         }

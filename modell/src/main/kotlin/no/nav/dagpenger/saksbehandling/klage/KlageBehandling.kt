@@ -316,7 +316,7 @@ data class KlageBehandling private constructor(
             hendelse: UtsendingDistribuert,
         ): KlageAksjon {
             val utfall =
-                requireNotNull<UtfallType>(klageBehandling.utfall()) {
+                requireNotNull(klageBehandling.utfall()) {
                     "Utfall må være satt for å behandle distribuert vedtak"
                 }
             return when (utfall) {
