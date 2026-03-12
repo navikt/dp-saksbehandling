@@ -128,7 +128,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Avvist klagebehandling får tilstand ferdigstilt når alle synlige og påkrevde opplysninger er utfylt`() {
+    fun `Avvist klagebehandling får tilstand behandling utført når alle synlige og påkrevde opplysninger er utfylt`() {
         val synligOgPåkrevdOpplysning =
             Opplysning(
                 type = OpplysningType.KLAGEFRIST_OPPFYLT,
@@ -189,11 +189,11 @@ class KlageBehandlingTest {
                 hendelse = klageBehandlingUtført,
             )
         }
-        klageBehandling.tilstand().type shouldBe FERDIGSTILT
+        klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
     }
 
     @Test
-    fun `Opprettholdt klagebehandling får behandling utført og kan sendes til KA  når alle synlige og påkrevde opplysninger er utfylt`() {
+    fun `Opprettholdt klagebehandling får behandling utført og kan sendes til KA når alle synlige og påkrevde opplysninger er utfylt`() {
         val synligOgPåkrevdOpplysning =
             Opplysning(
                 type = OpplysningType.KLAGEFRIST_OPPFYLT,
@@ -356,7 +356,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand BehandlingUtført`() {
         val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
         val klageBehandlingUtført =
@@ -368,6 +368,46 @@ class KlageBehandlingTest {
             behandlendeEnhet = "4408",
             hendelse = klageBehandlingUtført,
         )
+
+        klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+
+        shouldThrow<IllegalStateException> {
+            klageBehandling.avbryt(
+                hendelse =
+                    AvbruttHendelse(
+                        behandlingId = klageBehandling.behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+        }
+    }
+
+    @Test
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand Ferdigstilt`() {
+        val klageBehandling = KlageBehandling()
+        svarPåAlleOpplysninger(klageBehandling)
+        val klageBehandlingUtført =
+            KlageBehandlingUtført(
+                behandlingId = klageBehandling.behandlingId,
+                utførtAv = saksbehandler,
+            )
+        klageBehandling.behandlingUtført(
+            behandlendeEnhet = "4408",
+            hendelse = klageBehandlingUtført,
+        )
+
+        klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+
+        val hendelse =
+            UtsendingDistribuert(
+                behandlingId = klageBehandling.behandlingId,
+                utsendingId = UUID.randomUUID(),
+                ident = "fnr",
+                journalpostId = "journalpostId",
+                distribusjonId = "distribusjonId",
+            )
+
+        klageBehandling.vedtakDistribuert(hendelse)
 
         klageBehandling.tilstand().type shouldBe FERDIGSTILT
 

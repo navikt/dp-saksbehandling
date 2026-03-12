@@ -581,7 +581,7 @@ class KlageMediatorTest {
             )
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+            klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
             klageBehandling.utfall() shouldBe UtfallType.AVVIST
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 2
@@ -602,6 +602,21 @@ class KlageMediatorTest {
                       ]
                     }
                     """.trimIndent()
+            }
+
+            klageMediator.vedtakDistribuert(
+                hendelse =
+                    UtsendingDistribuert(
+                        behandlingId = behandlingId,
+                        utsendingId = UUID.randomUUID(),
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdKlageVedtak",
+                        distribusjonId = "distId",
+                    ),
+            )
+
+            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler).let { klageBehandling ->
+                klageBehandling.tilstand().type shouldBe FERDIGSTILT
             }
         }
     }

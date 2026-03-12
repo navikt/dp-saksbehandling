@@ -244,7 +244,7 @@ data class KlageBehandling private constructor(
                     "Utfall må være satt for å ferdigstille klagebehandling"
                 }
             when (utfall) {
-                UtfallType.OPPRETTHOLDELSE -> {
+                UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = BehandlingUtført,
                         hendelse = hendelse,
@@ -258,29 +258,7 @@ data class KlageBehandling private constructor(
                 UtfallType.DELVIS_MEDHOLD -> {
                     throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
                 }
-
-                UtfallType.AVVIST -> {
-                    klageBehandling.endreTilstand(
-                        nyTilstand = Ferdigstilt,
-                        hendelse = hendelse,
-                    )
-                }
             }
-
-//            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
-//                klageBehandling.endreTilstand(
-//                    nyTilstand = OversendKlageinstans,
-//                    hendelse = hendelse,
-//                )
-//            } else if (klageBehandling.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
-//                // TODO: implementer ferdigstilling av disse utfallene
-//                throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
-//            } else {
-//                klageBehandling.endreTilstand(
-//                    nyTilstand = Ferdigstilt,
-//                    hendelse = hendelse,
-//                )
-//            }
         }
 
         override fun avbryt(
