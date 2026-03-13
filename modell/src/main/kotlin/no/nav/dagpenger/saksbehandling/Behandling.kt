@@ -27,12 +27,12 @@ data class Behandling(
 }
 
 enum class UtløstAvType(
-    val system: Applikasjon,
+    val applikasjon: Applikasjon,
 ) {
-    SØKNAD(system = Applikasjon.DpBehandling),
-    MELDEKORT(system = Applikasjon.DpBehandling),
-    MANUELL(system = Applikasjon.DpBehandling),
-    OMGJØRING(system = Applikasjon.DpBehandling),
-    INNSENDING(system = Applikasjon.DpSaksbehandling),
-    KLAGE(system = Applikasjon.DpSaksbehandling),
+    SØKNAD(applikasjon = Applikasjon.DpBehandling),
+    MELDEKORT(applikasjon = Applikasjon.DpBehandling),
+    MANUELL(applikasjon = Applikasjon.DpBehandling),
+    OMGJØRING(applikasjon = Applikasjon.DpBehandling),
+    INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
+    KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
 }

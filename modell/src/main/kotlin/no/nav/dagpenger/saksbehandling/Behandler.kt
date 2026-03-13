@@ -1,12 +1,12 @@
 package no.nav.dagpenger.saksbehandling
 
+sealed interface Behandler
+
 data class Saksbehandler(
     val navIdent: String,
     val grupper: Set<String>,
     val tilganger: Set<TilgangType> = emptySet(),
 ) : Behandler
-
-sealed interface Behandler
 
 sealed class Applikasjon(
     val navn: String,
