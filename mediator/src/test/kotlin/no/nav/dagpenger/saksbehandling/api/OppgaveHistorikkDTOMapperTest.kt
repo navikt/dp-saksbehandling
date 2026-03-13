@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
@@ -30,9 +31,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -77,7 +80,6 @@ class OppgaveHistorikkDTOMapperTest {
                             )
                     },
             ).let { mapper ->
-
                 val historikk =
                     mapper.lagOppgaveHistorikk(
                         tilstandslogg =
@@ -197,7 +199,6 @@ class OppgaveHistorikkDTOMapperTest {
                             )
                     },
             ).let { mapper ->
-
                 val historikk =
                     mapper.lagOppgaveHistorikk(
                         tilstandslogg =
@@ -218,6 +219,58 @@ class OppgaveHistorikkDTOMapperTest {
                 historikk.single().let { historikk ->
                     historikk.tittel shouldBe "Avbrutt"
                     historikk.body shouldBe "Trukket søknad"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal vise årsak til at en oppgave er satt på vent i body`() {
+        runBlocking {
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "saksbehandlerIdent",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+            OppgaveHistorikkDTOMapper(
+                repository =
+                    mockk<OppgaveRepository>(relaxed = true).also {
+                        every { it.finnNotat(any()) } returns null
+                    },
+                saksbehandlerOppslag =
+                    mockk<SaksbehandlerOppslag>().also {
+                        coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "fornavn",
+                                etternavn = "etternavn",
+                                enhet = enhet,
+                            )
+                    },
+            ).let { mapper ->
+                val historikk =
+                    mapper.lagOppgaveHistorikk(
+                        tilstandslogg =
+                            OppgaveTilstandslogg().also {
+                                it.leggTil(
+                                    nyTilstand = PAA_VENT,
+                                    hendelse =
+                                        UtsettOppgaveHendelse(
+                                            oppgaveId = UUIDv7.ny(),
+                                            navIdent = saksbehandler.navIdent,
+                                            utsattTil = LocalDate.now().plusDays(1),
+                                            beholdOppgave = true,
+                                            årsak = Emneknagg.PåVent.AVVENT_DOKUMENTASJON,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                )
+                            },
+                    )
+
+                historikk.single().let { historikk ->
+                    historikk.tittel shouldBe "På vent"
+                    historikk.body shouldBe "Avvent dokumentasjon"
                 }
             }
         }
