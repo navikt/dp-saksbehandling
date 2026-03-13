@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
 internal class OppgaveHistorikkDTOMapper(
@@ -59,6 +60,7 @@ internal class OppgaveHistorikkDTOMapper(
                         when (tilstandsendring.hendelse) {
                             is FjernOppgaveAnsvarHendelse -> (tilstandsendring.hendelse as FjernOppgaveAnsvarHendelse).årsak.visningsnavn
                             is AvbrytOppgaveHendelse -> (tilstandsendring.hendelse as AvbrytOppgaveHendelse).årsak.visningsnavn
+                            is UtsettOppgaveHendelse -> (tilstandsendring.hendelse as UtsettOppgaveHendelse).årsak.visningsnavn
                             else -> null
                         },
                 ),
