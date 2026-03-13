@@ -9,5 +9,5 @@ data class ForslagTilVedtakHendelse(
     val behandletHendelseType: String,
     val behandlingId: UUID,
     val emneknagger: Set<String> = emptySet(),
-    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpBehandling,
 ) : Hendelse(utførtAv)

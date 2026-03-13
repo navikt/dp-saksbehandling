@@ -19,14 +19,27 @@ import no.nav.dagpenger.saksbehandling.TilgangType
 internal val objectMapper: ObjectMapper =
     jacksonObjectMapper().apply {
         val behandlerModule = SimpleModule().addDeserializer(Behandler::class.java, BehandlerDeserializer())
+        val applikasjonModule = SimpleModule().addDeserializer(Applikasjon::class.java, ApplikasjonDeserializer())
 
         registerModule(JavaTimeModule())
+        registerModule(applikasjonModule)
         registerModule(behandlerModule)
         disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
         enable(SerializationFeature.INDENT_OUTPUT)
     }
+
+internal class ApplikasjonDeserializer : JsonDeserializer<Applikasjon>() {
+    override fun deserialize(
+        parser: JsonParser,
+        ctxt: DeserializationContext,
+    ): Applikasjon {
+        val node: JsonNode = parser.codec.readTree(parser)
+
+        return Applikasjon.fra(node["navn"].asText())
+    }
+}
 
 internal class BehandlerDeserializer : JsonDeserializer<Behandler>() {
     override fun deserialize(
@@ -42,9 +55,7 @@ internal class BehandlerDeserializer : JsonDeserializer<Behandler>() {
                 tilganger = node["tilganger"].map { TilgangType.valueOf(it.asText()) }.toSet(),
             )
         } else {
-            Applikasjon(
-                navn = node["navn"].asText(),
-            )
+            Applikasjon.fra(node["navn"].asText())
         }
     }
 }

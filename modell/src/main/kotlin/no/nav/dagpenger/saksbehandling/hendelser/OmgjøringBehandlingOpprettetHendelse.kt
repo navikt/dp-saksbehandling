@@ -10,5 +10,5 @@ data class OmgjøringBehandlingOpprettetHendelse(
     val opprettet: LocalDateTime,
     val basertPåBehandling: UUID,
     val behandlingskjedeId: UUID,
-    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpBehandling,
 ) : Hendelse(utførtAv)

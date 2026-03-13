@@ -34,6 +34,6 @@ sealed class AnsvarHendelse(
     override fun hashCode(): Int = (ansvarligIdent?.hashCode() ?: 0) + super.hashCode()
 }
 
-data object TomHendelse : Hendelse(utførtAv = Applikasjon("dp-saksbehandling")) {
+data object TomHendelse : Hendelse(utførtAv = Applikasjon.DpSaksbehandling) {
     fun tilJson(): String = "{}"
 }

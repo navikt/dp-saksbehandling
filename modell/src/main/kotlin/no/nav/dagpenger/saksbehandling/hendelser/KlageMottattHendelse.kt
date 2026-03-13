@@ -10,5 +10,5 @@ data class KlageMottattHendelse(
     val opprettet: LocalDateTime,
     val journalpostId: String?,
     val sakId: UUID,
-    override val utførtAv: Behandler = Applikasjon("dp-mottak"),
+    override val utførtAv: Behandler = Applikasjon.DpMottak,
 ) : Hendelse(utførtAv)

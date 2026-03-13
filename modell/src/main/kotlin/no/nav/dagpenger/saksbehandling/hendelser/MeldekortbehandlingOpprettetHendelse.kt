@@ -11,5 +11,5 @@ data class MeldekortbehandlingOpprettetHendelse(
     val opprettet: LocalDateTime,
     val basertPåBehandling: UUID,
     val behandlingskjedeId: UUID? = null,
-    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpBehandling,
 ) : Hendelse(utførtAv)

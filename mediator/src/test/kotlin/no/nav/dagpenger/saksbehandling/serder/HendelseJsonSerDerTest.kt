@@ -58,7 +58,7 @@ class HendelseJsonSerDerTest {
 
     @Test
     fun `Kan serialisere og deserialisere hendelser til og fra json`() {
-        behandlingOppretteHendelse(utførtAv = Applikasjon("dp-mottak")).let { hendelse ->
+        behandlingOppretteHendelse(utførtAv = Applikasjon.DpMottak).let { hendelse ->
             val json = hendelse.tilJson()
             json shouldEqualJson
                 //language=Json
@@ -161,7 +161,7 @@ class HendelseJsonSerDerTest {
     fun `Skal kunne serialisere og deserialisere SkriptHendelser`() {
         val skriptHendelse =
             SkriptHendelse(
-                utførtAv = Applikasjon("V87__UPDATE_HENDELSE_TYPE_TIL_SKRIPT_HENDELSE.sql"),
+                utførtAv = Applikasjon.Generell("V87__UPDATE_HENDELSE_TYPE_TIL_SKRIPT_HENDELSE.sql"),
             )
 
         val jsonSkriptHendelse =

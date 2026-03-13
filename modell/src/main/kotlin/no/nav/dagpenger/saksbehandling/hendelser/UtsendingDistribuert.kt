@@ -10,5 +10,5 @@ data class UtsendingDistribuert(
     val ident: String,
     val journalpostId: String,
     val distribusjonId: String,
-    override val utførtAv: Behandler = Applikasjon("dp-saksbehandling"),
+    override val utførtAv: Behandler = Applikasjon.DpSaksbehandling,
 ) : Hendelse(utførtAv)

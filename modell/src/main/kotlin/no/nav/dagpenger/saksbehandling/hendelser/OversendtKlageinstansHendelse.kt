@@ -5,5 +5,5 @@ import java.util.UUID
 
 data class OversendtKlageinstansHendelse(
     val behandlingId: UUID,
-    override val utførtAv: Applikasjon = Applikasjon("dp-kabal-integrasjon"),
+    override val utførtAv: Applikasjon = Applikasjon.DpKabalIntegrasjon,
 ) : Hendelse(utførtAv)

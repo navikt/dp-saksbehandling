@@ -5,5 +5,5 @@ import java.util.UUID
 
 data class PåVentFristUtgåttHendelse(
     val oppgaveId: UUID,
-    override val utførtAv: Applikasjon = Applikasjon("dp-saksbehandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpSaksbehandling,
 ) : Hendelse(utførtAv)
