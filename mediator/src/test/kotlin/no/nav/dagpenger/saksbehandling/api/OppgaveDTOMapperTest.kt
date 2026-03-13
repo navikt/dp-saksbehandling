@@ -152,6 +152,7 @@ class OppgaveDTOMapperTest {
                           "FEIL_UTFALL",
                           "FEIL_HJEMMEL",
                           "HAR_MANGLER",
+                          "FEIL_BRUK_AV_FAGSYSTEM",
                           "ANNET"
                         ],
                         "kvalitetskontrollAarsaker": []
