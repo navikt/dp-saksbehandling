@@ -33,4 +33,5 @@ enum class UtløstAvType {
     MANUELL,
     INNSENDING,
     OMGJØRING,
+    TILBAKEKREVING,
 }
