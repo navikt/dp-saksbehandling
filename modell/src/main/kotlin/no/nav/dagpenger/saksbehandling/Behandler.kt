@@ -19,6 +19,7 @@ sealed class Applikasjon(
                 "dp-mottak" -> DpMottak
                 "dp-kabal-integrasjon" -> DpKabalIntegrasjon
                 "Kabal" -> Kabal
+                "Tilbakekreving" -> Tilbakekreving
                 else -> Generell(navn)
             }
     }
