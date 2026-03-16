@@ -200,7 +200,7 @@ internal class ApplicationBuilder(
     private val oversendKlageinstansAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
-    private val statistikkJob: Timer
+//    private val statistikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
     val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource)
     val statistikkV2Tjeneste = PostgresProduksjonsstatistikkRepository(dataSource)
@@ -330,14 +330,14 @@ internal class ApplicationBuilder(
                         startAt = getNextOccurrence(3, 0),
                         period = 1.Dag,
                     )
-                statistikkJob =
-                    StatistikkJob(
-                        rapidsConnection = rapidsConnection,
-                        saksbehandlingsstatistikkRepository = statistikkTjeneste,
-                    ).startJob(
-                        startAt = now,
-                        period = 5.Minutt,
-                    )
+//                statistikkJob =
+//                    StatistikkJob(
+//                        rapidsConnection = rapidsConnection,
+//                        saksbehandlingsstatistikkRepository = statistikkTjeneste,
+//                    ).startJob(
+//                        startAt = now,
+//                        period = 5.Minutt,
+//                    )
                 metrikkJob =
                     MetrikkJob().startJob(
                         startAt = now,
@@ -364,7 +364,7 @@ internal class ApplicationBuilder(
         oversendKlageinstansAlarmJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
-        statistikkJob.cancel()
+//        statistikkJob.cancel()
         oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
         logger.info { "Skrur av applikasjonen" }
