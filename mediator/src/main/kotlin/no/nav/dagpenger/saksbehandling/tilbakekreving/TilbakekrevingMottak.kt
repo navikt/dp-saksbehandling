@@ -62,7 +62,7 @@ internal class TilbakekrevingMottak(
 
         withLoggingContext(
             "tilbakekrevingBehandlingId" to "${hendelse.tilbakekreving.behandlingId}",
-            "behandlingId" to hendelse.eksternBehandlingId,
+            "behandlingId" to "${hendelse.eksternBehandlingId}",
         ) {
             logger.info { "Mottok tilbakekreving hendelse med status ${hendelse.tilbakekreving.behandlingsstatus}" }
             oppgaveMediator.håndter(hendelse)

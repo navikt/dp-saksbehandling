@@ -42,7 +42,6 @@ data class Sak(
             .map { it.behandlingId }
             .contains(basertPåBehandlingId)
 
-
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat =
         if (this.sakId == søknadsbehandlingOpprettetHendelse.behandlingskjedeId ||
             this.basertPåBehandlingErKnyttetTilSak(

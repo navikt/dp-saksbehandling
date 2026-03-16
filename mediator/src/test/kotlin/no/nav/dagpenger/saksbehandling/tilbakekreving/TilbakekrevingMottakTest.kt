@@ -19,6 +19,7 @@ class TilbakekrevingMottakTest {
     private val oppgaveMediator = mockk<OppgaveMediator>()
     private val ident = "12345678901"
     private val tilbakekrevingBehandlingId = UUID.randomUUID()
+    private val behandlingId = UUID.randomUUID()
 
     init {
         every { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) } just Runs
@@ -70,7 +71,7 @@ class TilbakekrevingMottakTest {
           "hendelsestype": "behandling_endret",
           "versjon": 1,
           "eksternFagsakId": "100001234",
-          "eksternBehandlingId": "dp-behandling-id-123",
+          "eksternBehandlingId": "$behandlingId",
           "hendelseOpprettet": "2024-06-01T10:00:00",
           "tilbakekreving": {
             "behandlingId": "$tilbakekrevingBehandlingId",

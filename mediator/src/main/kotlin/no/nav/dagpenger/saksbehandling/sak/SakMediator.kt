@@ -45,7 +45,7 @@ class SakMediator(
             requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
                 logger.error {
                     "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                            "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
+                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
                 }
             }
         val sak =
@@ -168,7 +168,6 @@ class SakMediator(
         }
     }
 
-
     fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
@@ -201,8 +200,7 @@ class SakMediator(
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentSakIdForBehandlingId(behandlingId)
 
-    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID =
-        sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
     private fun sendAvbrytBehandling(
         søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse,
