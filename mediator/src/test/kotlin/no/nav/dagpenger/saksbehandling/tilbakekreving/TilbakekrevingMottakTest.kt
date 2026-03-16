@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.tilbakekreving
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.util.UUID
@@ -25,9 +26,10 @@ class TilbakekrevingMottakTest {
     }
 
     @Test
-    fun `Skal ignorere meldinger uten key`() {
-        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"))
-        // Verifiserer at meldingen uten key (personident) ikke kaster exception
+    fun `Skal kaste feil for meldinger uten key`() {
+        assertThrows<IllegalArgumentException> {
+            testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"))
+        }
     }
 
     @Test
