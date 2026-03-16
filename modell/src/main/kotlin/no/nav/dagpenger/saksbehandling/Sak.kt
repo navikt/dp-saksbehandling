@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHende
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -41,6 +42,7 @@ data class Sak(
             .map { it.behandlingId }
             .contains(basertPåBehandlingId)
 
+
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat =
         if (this.sakId == søknadsbehandlingOpprettetHendelse.behandlingskjedeId ||
             this.basertPåBehandlingErKnyttetTilSak(
@@ -53,6 +55,24 @@ data class Sak(
                     utløstAv = UtløstAvType.SØKNAD,
                     opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     hendelse = søknadsbehandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+        }
+
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse): KnyttTilSakResultat =
+        if (this.basertPåBehandlingErKnyttetTilSak(
+                tilbakekrevingHendelse.eksternBehandlingId,
+            )
+        ) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = tilbakekrevingHendelse.tilbakekreving.behandlingId,
+                    utløstAv = UtløstAvType.TILBAKEKREVING,
+                    opprettet = tilbakekrevingHendelse.hendelseOpprettet,
+                    hendelse = tilbakekrevingHendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

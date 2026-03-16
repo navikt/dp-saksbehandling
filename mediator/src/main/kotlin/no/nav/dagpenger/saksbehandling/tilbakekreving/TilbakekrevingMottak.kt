@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Periode
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -80,7 +81,7 @@ private fun tilbakekrevingHendelseFraPacket(
         eksternBehandlingId =
             packet["eksternBehandlingId"]
                 .takeIf { !it.isNull && !it.isMissingNode }
-                ?.asText()
+                ?.asUUID()
                 ?: throw IllegalArgumentException("eksternBehandlingId mangler for tilbakekreving dagpenger"),
         hendelseOpprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
         tilbakekreving =

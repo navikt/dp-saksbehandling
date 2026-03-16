@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHende
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
 
@@ -44,7 +45,7 @@ class SakMediator(
             requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
                 logger.error {
                     "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
+                            "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
                 }
             }
         val sak =
@@ -154,6 +155,20 @@ class SakMediator(
         }
     }
 
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse) {
+        sakRepository.hentSakHistorikk(tilbakekrevingHendelse.ident).also {
+            it.knyttTilSak(tilbakekrevingHendelse).also { resultat ->
+                sjekkResultat(
+                    tilbakekrevingHendelse.eksternBehandlingId,
+                    tilbakekrevingHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
+            sakRepository.lagre(it)
+        }
+    }
+
+
     fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
@@ -186,7 +201,8 @@ class SakMediator(
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentSakIdForBehandlingId(behandlingId)
 
-    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID =
+        sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
     private fun sendAvbrytBehandling(
         søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse,
@@ -218,6 +234,7 @@ class SakMediator(
             is KnyttTilSakResultat.KnyttetTilSak -> {
                 logger.info { "Knyttet behandlingId: $behandlingId til sakId: ${resultat.sak.sakId}" }
             }
+
             else -> {
                 logger.warn { "Klarte ikke å knytte behandlingId: $behandlingId av type $hendelseType til noen sak" }
                 rapidsConnection.sendAlertTilRapid(
