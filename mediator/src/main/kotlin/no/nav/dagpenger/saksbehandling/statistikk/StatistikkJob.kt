@@ -25,7 +25,6 @@ class StatistikkJob(
                 logger.info { string + "Start tilstandsendring: ${this.first()} Slutt tilstandsendring: ${this.last()}" }
             }
         }
-
     }
 
     override suspend fun executeJob() {
@@ -59,7 +58,7 @@ class StatistikkJob(
                         )
                         logger.info {
                             "Publisert oppgavetilstandsendring med " +
-                                    "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
                     }
             }
