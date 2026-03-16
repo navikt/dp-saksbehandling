@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.Applikasjon
-import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
@@ -24,7 +23,9 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
@@ -43,7 +44,7 @@ internal class OppgaveHistorikkDTOMapper(
                             type = OppgaveHistorikkDTOTypeDTO.NOTAT,
                             tidspunkt = notat.sistEndretTidspunkt,
                             tittel = "Notat",
-                            behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
+                            behandler = hentOppgavehistorikkBehandler(hendelse = tilstandsendring.hendelse),
                             body = notat.hentTekst(),
                         ),
                     )
@@ -55,7 +56,7 @@ internal class OppgaveHistorikkDTOMapper(
                     type = OppgaveHistorikkDTOTypeDTO.STATUSENDRING,
                     tidspunkt = tilstandsendring.tidspunkt,
                     tittel = tilstandsendringTittel(tilstandsendring),
-                    behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
+                    behandler = hentOppgavehistorikkBehandler(hendelse = tilstandsendring.hendelse),
                     body =
                         when (tilstandsendring.hendelse) {
                             is FjernOppgaveAnsvarHendelse -> (tilstandsendring.hendelse as FjernOppgaveAnsvarHendelse).årsak.visningsnavn
@@ -90,8 +91,9 @@ internal class OppgaveHistorikkDTOMapper(
         }
     }
 
-    private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkDTOBehandlerDTO =
-        when (behandler) {
+    private suspend fun hentOppgavehistorikkBehandler(hendelse: Hendelse): OppgaveHistorikkDTOBehandlerDTO {
+        val behandler = hendelse.utførtAv
+        return when (behandler) {
             is Saksbehandler ->
                 OppgaveHistorikkDTOBehandlerDTO(
                     navn = hentNavn(behandler.navIdent),
@@ -100,10 +102,15 @@ internal class OppgaveHistorikkDTOMapper(
 
             is Applikasjon ->
                 OppgaveHistorikkDTOBehandlerDTO(
-                    navn = behandler.navn,
+                    navn =
+                        when (hendelse is SkriptHendelse) {
+                            true -> "Skript"
+                            false -> behandler.navn
+                        },
                     rolle = BehandlerDTORolleDTO.SYSTEM,
                 )
         }
+    }
 
     private suspend fun hentNavn(ident: String): String =
         saksbehandlerOppslag.hentSaksbehandler(ident).let {

@@ -6,6 +6,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.Notat
@@ -23,6 +24,8 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -31,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -271,6 +275,64 @@ class OppgaveHistorikkDTOMapperTest {
                 historikk.single().let { historikk ->
                     historikk.tittel shouldBe "På vent"
                     historikk.body shouldBe "Avvent dokumentasjon"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal vise Skript som applikasjon hvis tilstandsendring har hendelsetype SkriptHendelse`() {
+        runBlocking {
+            OppgaveHistorikkDTOMapper(
+                repository =
+                    mockk<OppgaveRepository>(relaxed = true).also {
+                        every { it.finnNotat(any()) } returns null
+                    },
+                saksbehandlerOppslag = mockk(),
+            ).let { mapper ->
+                val historikk =
+                    mapper.lagOppgaveHistorikk(
+                        tilstandslogg =
+                            OppgaveTilstandslogg().also {
+                                it.leggTil(
+                                    nyTilstand = KLAR_TIL_BEHANDLING,
+                                    hendelse =
+                                        ForslagTilVedtakHendelse(
+                                            ident = "12345612345",
+                                            behandletHendelseId = UUIDv7.ny().toString(),
+                                            behandletHendelseType = "Søknad",
+                                            behandlingId = UUIDv7.ny(),
+                                            emneknagger = setOf("Knaggen"),
+                                        ),
+                                )
+                                it.leggTil(
+                                    nyTilstand = AVBRUTT,
+                                    hendelse =
+                                        SkriptHendelse(
+                                            utførtAv =
+                                                Applikasjon.Generell(
+                                                    navn = "dette_er_et_skript.sql",
+                                                ),
+                                        ),
+                                )
+                            },
+                    )
+
+                historikk.first().let { historikk ->
+                    historikk.tittel shouldBe "Avbrutt"
+                    historikk.behandler shouldBe
+                        OppgaveHistorikkDTOBehandlerDTO(
+                            navn = "Skript",
+                            rolle = BehandlerDTORolleDTO.SYSTEM,
+                        )
+                }
+                historikk.last().let { historikk ->
+                    historikk.tittel shouldBe "Klar til behandling"
+                    historikk.behandler shouldBe
+                        OppgaveHistorikkDTOBehandlerDTO(
+                            navn = "dp-behandling",
+                            rolle = BehandlerDTORolleDTO.SYSTEM,
+                        )
                 }
             }
         }
