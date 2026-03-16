@@ -28,6 +28,7 @@ import java.util.UUID
 import kotlin.random.Random
 
 internal object TestHelper {
+    val ISO_TIMESTAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
     val personIdent = "41952264877"
     val personId = UUID.fromString("019a2f67-aea7-7b29-84d5-56db0b1dc48a")
     val behandlingId = UUIDv7.ny()

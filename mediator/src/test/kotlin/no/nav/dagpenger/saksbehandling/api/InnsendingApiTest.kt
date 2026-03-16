@@ -16,6 +16,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
@@ -89,7 +90,7 @@ class InnsendingApiTest {
                   "lovligeSaker": [
                     {
                       "sakId": "${sak.sakId}",
-                      "opprettetDato": "${sak.opprettet}"
+                      "opprettetDato": "${sak.opprettet.format(ISO_TIMESTAMP)}"
                     }
                   ]
                 }
