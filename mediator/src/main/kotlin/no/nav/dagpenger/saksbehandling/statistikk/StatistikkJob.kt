@@ -34,7 +34,7 @@ class StatistikkJob(
                             JsonMessage
                                 .newMessage(
                                     mapOf(
-                                        "@event_name" to "oppgave_til_statistikk_v6",
+                                        "@event_name" to "oppgave_til_statistikk_v7",
                                         "oppgave" to oppgaveTilstandsendring.asMap(),
                                     ),
                                 ).toJson(),
