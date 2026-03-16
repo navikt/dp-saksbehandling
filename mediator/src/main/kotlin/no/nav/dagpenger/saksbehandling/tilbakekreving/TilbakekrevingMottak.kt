@@ -48,9 +48,8 @@ internal class TilbakekrevingMottak(
         meterRegistry: MeterRegistry,
     ) {
         val ident =
-            metadata.key ?: run {
-                logger.error { "Mottok tilbakekreving-hendelse uten key (personident). Ignorerer meldingen." }
-                return
+            metadata.key ?: throw IllegalArgumentException("Kan ikke hente ut tilbakekreving-endret metadata").also {
+                logger.error { "Kan ikke hente ut tilbakekreving-endret metadata" }
             }
 
         val tilbakekrevingNode = packet["tilbakekreving"]
