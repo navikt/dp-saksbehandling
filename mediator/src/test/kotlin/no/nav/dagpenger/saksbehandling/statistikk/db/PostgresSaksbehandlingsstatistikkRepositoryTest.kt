@@ -1,10 +1,13 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.LocalDate
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
+import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.beslutter
@@ -14,10 +17,12 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand.Tilstandsendring
 import org.junit.jupiter.api.Test
@@ -105,6 +110,28 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
             }
 
+            oppgave.utsett(
+                utsettOppgaveHendelse =
+                    UtsettOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        navIdent = TestHelper.saksbehandler.navIdent,
+                        utsattTil =
+                            java.time.LocalDate
+                                .now()
+                                .plusDays(1),
+                        beholdOppgave = true,
+                        årsak = Emneknagg.PåVent.AVVENT_MELDEKORT,
+                        utførtAv = TestHelper.saksbehandler,
+                    ),
+            )
+
+            oppgave.oppgaverPåVentMedUtgåttFrist(
+                hendelse =
+                    PåVentFristUtgåttHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                    ),
+            )
+
             oppgave.sendTilKontroll(
                 SendTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -122,18 +149,40 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
-                it.size shouldBe 2
-                it.first().let { tilstandsendring ->
-                    tilstandsendring.tilstandsendring.tilstand shouldBe "KLAR_TIL_KONTROLL"
+                it.size shouldBe 4
+                it[0].let { tilstandsendring ->
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "PAA_VENT"
                     tilstandsendring.beslutterIdent shouldBe null
                     tilstandsendring.saksbehandlerIdent shouldBe null
+                    tilstandsendring.behandlingÅrsak shouldBe "AVVENT_MELDEKORT"
+                    tilstandsendring.resultatBegrunnelse shouldBe null
 
                     postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
                 }
-                it.last().let { tilstandsendring ->
+                it[1].let { tilstandsendring ->
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_BEHANDLING"
+                    tilstandsendring.beslutterIdent shouldBe null
+                    tilstandsendring.saksbehandlerIdent shouldBe null
+                    tilstandsendring.behandlingÅrsak shouldBe null
+                    tilstandsendring.resultatBegrunnelse shouldBe null
+
+                    postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
+                }
+                it[2].let { tilstandsendring ->
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "KLAR_TIL_KONTROLL"
+                    tilstandsendring.beslutterIdent shouldBe null
+                    tilstandsendring.saksbehandlerIdent shouldBe null
+                    tilstandsendring.behandlingÅrsak shouldBe null
+                    tilstandsendring.resultatBegrunnelse shouldBe null
+
+                    postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
+                }
+                it[3].let { tilstandsendring ->
                     tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_KONTROLL"
                     tilstandsendring.beslutterIdent shouldBe beslutter.navIdent
                     tilstandsendring.saksbehandlerIdent shouldBe null
+                    tilstandsendring.behandlingÅrsak shouldBe null
+                    tilstandsendring.resultatBegrunnelse shouldBe null
 
                     postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tilstandsendring.tilstandsendring.tilstandsendringId)
                 }
@@ -143,6 +192,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 ReturnerTilSaksbehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = beslutter,
+                    årsak = ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL,
                 ),
             )
             oppgave.avbryt(
@@ -158,15 +208,18 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                 it.size shouldBe 2
                 it.first().let { tilstandsendring ->
-                    tilstandsendring.tilstandsendring.tilstand shouldBe "UNDER_BEHANDLING"
+                    tilstandsendring.tilstandsendring.tilstand shouldBe "UNDERKJENT_BESLUTTER"
                     tilstandsendring.beslutterIdent shouldBe null
                     tilstandsendring.saksbehandlerIdent shouldBe null
+                    tilstandsendring.behandlingÅrsak shouldBe null
+                    tilstandsendring.resultatBegrunnelse shouldBe "FEIL_HJEMMEL"
                 }
                 it.last().let { tilstandsendring ->
                     tilstandsendring.tilstandsendring.tilstand shouldBe "AVBRUTT_MANUELT"
                     tilstandsendring.beslutterIdent shouldBe null
                     tilstandsendring.saksbehandlerIdent shouldBe null
-                    tilstandsendring.behandlingÅrsak shouldBe AVBRUTT_FLERE_SØKNADER.name
+                    tilstandsendring.behandlingÅrsak shouldBe null
+                    tilstandsendring.resultatBegrunnelse shouldBe "AVBRUTT_FLERE_SØKNADER"
                 }
             }
         }

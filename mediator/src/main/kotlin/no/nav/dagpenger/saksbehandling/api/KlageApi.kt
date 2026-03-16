@@ -35,7 +35,7 @@ fun Route.klageApi(
                             KlageMottattHendelse(
                                 opprettet = klage.opprettet,
                                 journalpostId = klage.journalpostId,
-                                utførtAv = Applikasjon("dp-mottak"),
+                                utførtAv = Applikasjon.DpMottak,
                                 ident = klage.personIdent.ident,
                                 sakId = klage.sakId,
                             ),

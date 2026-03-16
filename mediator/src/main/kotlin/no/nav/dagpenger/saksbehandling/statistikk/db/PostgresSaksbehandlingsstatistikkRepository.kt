@@ -64,6 +64,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         WHEN log.tilstand       = 'AVBRUTT' 
                                         AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
                                             'AVBRUTT_MANUELT'
+                                        WHEN log.tilstand       = 'UNDER_BEHANDLING'
+                                        AND  log.hendelse_type  = 'ReturnerTilSaksbehandlingHendelse' THEN
+                                            'UNDERKJENT_BESLUTTER'
                                         ELSE
                                             log.tilstand
                                         END                     AS tilstand
@@ -84,9 +87,8 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                     , beh.utlost_av             AS utlost_av
                                     , ins.resultat_type         AS behandling_resultat
                                     , CASE
-                                        WHEN log.tilstand       = 'AVBRUTT' 
-                                        AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
-                                             log.hendelse->>'årsak' 
+                                        WHEN log.hendelse_type  = 'UtsettOppgaveHendelse' THEN
+                                            log.hendelse->>'årsak' 
                                         END                     AS behandling_aarsak
                                     , CASE
                                         WHEN sak.er_dp_sak THEN
@@ -98,7 +100,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         END                     AS fagsystem
                                     , sak.arena_sak_id          AS arena_sak_id
                                     , CASE
-                                        WHEN log.hendelse_type IN ('UtsettOppgaveHendelse','ReturnerTilSaksbehandlingHendelse') THEN 
+                                        WHEN log.hendelse_type IN ('ReturnerTilSaksbehandlingHendelse','AvbrytOppgaveHendelse') THEN 
                                             log.hendelse->>'årsak'
                                         END                     AS resultat_begrunnelse 
                             FROM      oppgave_tilstand_logg_v1      log

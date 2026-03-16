@@ -1502,7 +1502,7 @@ OppgaveMediatorTest {
                     ident = testIdent,
                     opprettet = LocalDateTime.now(),
                     behandlingskjedeId = UUIDv7.ny(),
-                    utførtAv = Applikasjon(navn = ""),
+                    utførtAv = Applikasjon.DpBehandling,
                 ),
         )
 

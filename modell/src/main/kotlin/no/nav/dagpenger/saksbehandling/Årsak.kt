@@ -4,6 +4,7 @@ enum class ReturnerTilSaksbehandlingÅrsak {
     FEIL_UTFALL,
     FEIL_HJEMMEL,
     HAR_MANGLER,
+    FEIL_BRUK_AV_FAGSYSTEM,
     ANNET,
 }
 

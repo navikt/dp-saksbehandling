@@ -494,7 +494,7 @@ class PostgresOppgaveRepositoryTest {
                         hendelse =
                             PåVentFristUtgåttHendelse(
                                 oppgaveId = oppgaveId,
-                                utførtAv = Applikasjon("dp-saksbehandling"),
+                                utførtAv = Applikasjon.DpSaksbehandling,
                             ),
                         tidspunkt = LocalDateTime.now().minusHours(1),
                     ),
@@ -1956,7 +1956,7 @@ class PostgresOppgaveRepositoryTest {
         val tilstandsendring =
             Tilstandsendring(
                 tilstand = Oppgave.Tilstand.Type.AVBRUTT,
-                hendelse = SkriptHendelse(Applikasjon("Dette er et skript")),
+                hendelse = SkriptHendelse(Applikasjon.Generell("Dette er et skript")),
                 tidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
             )
         val testOppgave =

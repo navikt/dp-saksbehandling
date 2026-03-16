@@ -104,7 +104,7 @@ class OppgaveMediatorAlertTest {
                                                 sakId = sakId,
                                                 opprettet = opprettet,
                                                 type = UtløstAvType.SØKNAD,
-                                                utførtAv = Applikasjon("test"),
+                                                utførtAv = Applikasjon.DpBehandling,
                                             ),
                                         utløstAv = UtløstAvType.SØKNAD,
                                     ),

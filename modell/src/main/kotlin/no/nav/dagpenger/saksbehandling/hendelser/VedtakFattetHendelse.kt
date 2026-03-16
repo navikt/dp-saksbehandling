@@ -11,5 +11,5 @@ data class VedtakFattetHendelse(
     val ident: String,
     val sak: UtsendingSak?,
     val automatiskBehandlet: Boolean? = null,
-    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpBehandling,
 ) : Hendelse(utførtAv)

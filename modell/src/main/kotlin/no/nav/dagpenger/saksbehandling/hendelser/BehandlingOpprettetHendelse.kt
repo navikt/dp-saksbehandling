@@ -12,5 +12,5 @@ data class BehandlingOpprettetHendelse(
     val sakId: UUID,
     val opprettet: LocalDateTime,
     val type: UtløstAvType,
-    override val utførtAv: Behandler = Applikasjon("dp-mottak"),
+    override val utførtAv: Behandler = Applikasjon.DpMottak,
 ) : Hendelse(utførtAv)

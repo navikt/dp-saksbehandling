@@ -8,5 +8,5 @@ data class BehandlingAvbruttHendelse(
     val behandletHendelseId: String,
     val behandletHendelseType: String,
     val ident: String,
-    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpBehandling,
 ) : Hendelse(utførtAv)

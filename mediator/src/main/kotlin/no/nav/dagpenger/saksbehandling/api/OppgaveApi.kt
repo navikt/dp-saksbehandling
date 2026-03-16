@@ -489,6 +489,7 @@ private fun ReturnerTilSaksbehandlingAarsakDTO.tilReturnerTilSaksbehandlingÅrsa
         ReturnerTilSaksbehandlingAarsakDTO.FEIL_UTFALL -> ReturnerTilSaksbehandlingÅrsak.FEIL_UTFALL
         ReturnerTilSaksbehandlingAarsakDTO.FEIL_HJEMMEL -> ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL
         ReturnerTilSaksbehandlingAarsakDTO.HAR_MANGLER -> ReturnerTilSaksbehandlingÅrsak.HAR_MANGLER
+        ReturnerTilSaksbehandlingAarsakDTO.FEIL_BRUK_AV_FAGSYSTEM -> ReturnerTilSaksbehandlingÅrsak.FEIL_BRUK_AV_FAGSYSTEM
         ReturnerTilSaksbehandlingAarsakDTO.ANNET -> ReturnerTilSaksbehandlingÅrsak.ANNET
     }
 

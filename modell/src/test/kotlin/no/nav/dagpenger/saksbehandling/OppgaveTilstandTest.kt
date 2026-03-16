@@ -106,7 +106,7 @@ class OppgaveTilstandTest {
                 behandletHendelseId = UUIDv7.ny().toString(),
                 behandletHendelseType = "Søknad",
                 behandlingId = UUIDv7.ny(),
-                utførtAv = Applikasjon("dp-behandling"),
+                utførtAv = Applikasjon.DpBehandling,
             )
 
         lagOppgave(tilstandType = OPPRETTET).let { oppgave ->
@@ -518,7 +518,7 @@ class OppgaveTilstandTest {
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandling.behandlingId,
-                    utførtAv = Applikasjon("dp-behandling"),
+                    utførtAv = Applikasjon.DpBehandling,
                     emneknagger = nyeEmneknagger,
                 ),
             )
@@ -538,7 +538,7 @@ class OppgaveTilstandTest {
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandling.behandlingId,
-                    utførtAv = Applikasjon("dp-behandling"),
+                    utførtAv = Applikasjon.DpBehandling,
                     emneknagger = nyeEmneknagger,
                 ),
             )
@@ -558,7 +558,7 @@ class OppgaveTilstandTest {
                     behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandling.behandlingId,
-                    utførtAv = Applikasjon("dp-behandling"),
+                    utførtAv = Applikasjon.DpBehandling,
                     emneknagger = nyeEmneknagger,
                 ),
             )
@@ -886,7 +886,7 @@ class OppgaveTilstandTest {
                 behandletHendelseId = UUIDv7.ny().toString(),
                 behandletHendelseType = "Søknad",
                 behandlingId = UUIDv7.ny(),
-                utførtAv = Applikasjon("dp-behandling"),
+                utførtAv = Applikasjon.DpBehandling,
             ),
         )
 

@@ -26,12 +26,14 @@ data class Behandling(
     }
 }
 
-enum class UtløstAvType {
-    KLAGE,
-    SØKNAD,
-    MELDEKORT,
-    MANUELL,
-    INNSENDING,
-    OMGJØRING,
-    TILBAKEKREVING,
+enum class UtløstAvType(
+    val applikasjon: Applikasjon,
+) {
+    SØKNAD(applikasjon = Applikasjon.DpBehandling),
+    MELDEKORT(applikasjon = Applikasjon.DpBehandling),
+    MANUELL(applikasjon = Applikasjon.DpBehandling),
+    OMGJØRING(applikasjon = Applikasjon.DpBehandling),
+    INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
+    KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
+    TILBAKEKREVING(applikasjon = Applikasjon.Tilbakekreving),
 }

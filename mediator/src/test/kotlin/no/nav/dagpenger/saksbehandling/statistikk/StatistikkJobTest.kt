@@ -7,13 +7,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
-private val ISO_TIMESTAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
 class StatistikkJobTest {
     private val testRapid = TestRapid()
@@ -146,7 +144,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v5",
+              "@event_name": "oppgave_til_statistikk_v7",
               "oppgave": {
                 "oppgaveId": "${søknadKlarTilBehandling.oppgaveId}",
                 "mottatt": "${søknadKlarTilBehandling.mottatt.format(ISO_TIMESTAMP)}",
@@ -167,7 +165,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v5",
+              "@event_name": "oppgave_til_statistikk_v7",
               "oppgave": {
                 "oppgaveId": "${søknadAvbrutt.oppgaveId}",
                 "mottatt": "${søknadAvbrutt.mottatt.format(ISO_TIMESTAMP)}",
@@ -194,7 +192,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v5",
+              "@event_name": "oppgave_til_statistikk_v7",
               "oppgave": {
                 "oppgaveId": "${innsendingFerdigBehandlet.oppgaveId}",
                 "mottatt": "${innsendingFerdigBehandlet.mottatt.format(ISO_TIMESTAMP)}",
@@ -217,7 +215,7 @@ class StatistikkJobTest {
         testRapid.inspektør.message(3).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name": "oppgave_til_statistikk_v5",
+              "@event_name": "oppgave_til_statistikk_v7",
               "oppgave": {
                 "oppgaveId": "${oppgavePåVent.oppgaveId}",
                 "mottatt": "${oppgavePåVent.mottatt.format(ISO_TIMESTAMP)}",

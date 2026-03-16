@@ -201,6 +201,7 @@ internal class ApplicationBuilder(
     private val oversendKlageinstansAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
+
     private val statistikkJob: Timer
     private val oppgaveTilstandAlertJob: Timer
     val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource)
@@ -369,7 +370,7 @@ internal class ApplicationBuilder(
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         statistikkJob.cancel()
-        oppgaveTilstandAlertJob.cancel()
+//        oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }

@@ -11,7 +11,7 @@ data class KlageinstansVedtakHendelse(
     val avsluttet: LocalDateTime,
     val utfall: String,
     val journalpostIder: List<String>,
-    override val utførtAv: Applikasjon = Applikasjon("Kabal"),
+    override val utførtAv: Applikasjon = Applikasjon.Kabal,
 ) : Hendelse(utførtAv) {
     enum class KlageVedtakType {
         KLAGE,

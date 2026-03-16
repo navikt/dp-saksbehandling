@@ -8,6 +8,16 @@ metadata:
     domene: behandling
 spec:
   image: "{{ image }}"
+  startup:
+    path: /isalive
+    initialDelay: 10
+    failureThreshold: 6
+    periodSeconds: 5
+    timeout: 5
+  liveness:
+    path: /isalive
+  readiness:
+    path: /isready
   port: 8080
   prometheus:
     enabled: true
@@ -132,3 +142,5 @@ spec:
             value: "write,ddl,role"
           - name: pgaudit.log_parameter
             value: "on"
+  strategy:
+    type: Recreate

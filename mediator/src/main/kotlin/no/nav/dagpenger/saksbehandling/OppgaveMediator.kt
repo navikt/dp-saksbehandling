@@ -12,9 +12,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -423,7 +420,7 @@ class OppgaveMediator(
             ) {
                 oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
                 oppgaveRepository.lagre(oppgave)
-                if (oppgave.behandling.utløstAv in setOf(SØKNAD, MANUELL, MELDEKORT)) {
+                if (oppgave.behandling.utløstAv.applikasjon == Applikasjon.DpBehandling) {
                     rapidsConnection.publish(
                         key = oppgave.personIdent(),
                         message =

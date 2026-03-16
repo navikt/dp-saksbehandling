@@ -6,5 +6,5 @@ import java.util.UUID
 data class BehandlingLåstHendelse(
     val behandlingId: UUID,
     val ident: String,
-    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
+    override val utførtAv: Applikasjon = Applikasjon.DpBehandling,
 ) : Hendelse(utførtAv)

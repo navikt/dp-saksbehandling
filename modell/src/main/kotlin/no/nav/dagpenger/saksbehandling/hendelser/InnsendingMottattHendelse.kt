@@ -12,7 +12,7 @@ data class InnsendingMottattHendelse(
     val søknadId: UUID?,
     val skjemaKode: String,
     val kategori: Kategori,
-    override val utførtAv: Behandler = Applikasjon("dp-mottak"),
+    override val utførtAv: Behandler = Applikasjon.DpMottak,
 ) : Hendelse(utførtAv) {
     fun erEttersendingMedSøknadId() = kategori == Kategori.ETTERSENDING && søknadId != null
 }
