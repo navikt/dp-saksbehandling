@@ -756,8 +756,31 @@ class OppgaveMediator(
 
     fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
+        val oppgave =
+            oppgaveRepository.finnOppgaveFor(tilbakekrevingHendelse.tilbakekreving.behandlingId) ?: run {
+                // ny tilbakekrevin
+                require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING)
+                // her lager vi en behandling
+                sakMediator.knyttTilSak(tilbakekrevingHendelse)
+                // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
+                val saksHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
+                val behandling =
+                    requireNotNull(saksHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
 
-        tilbakekrevingHendelse.eksternBehandlingId
-        // TODO: Implementer oppgavehåndtering for tilbakekreving
+                Oppgave(
+                    emneknagger = emptySet(),
+                    opprettet = behandling.opprettet,
+                    person = saksHistorikk.person,
+                    behandling = behandling,
+                    meldingOmVedtak =
+                        Oppgave.MeldingOmVedtak(
+                            kilde = DP_SAK,
+                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        ),
+                )
+            }
+
+        oppgave.håndter(tilbakekrevingHendelse)
+        oppgaveRepository.lagre(oppgave)
     }
 }
