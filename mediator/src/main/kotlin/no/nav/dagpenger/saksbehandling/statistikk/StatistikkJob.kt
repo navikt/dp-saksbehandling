@@ -14,6 +14,20 @@ class StatistikkJob(
     override val jobName: String = "StatistikkJob"
     override val logger: KLogger = KotlinLogging.logger {}
 
+    private fun List<OppgaveITilstand>.loggOppgaveTilstandsEndringer() {
+        val string = "Fant ${this.size} oppgavetilstandsendringer som skal publiseres til statistikk. "
+        when (this.size) {
+            0 -> {
+                logger.info { string }
+            }
+
+            else -> {
+                logger.info { string + "Start tilstandsendring: ${this.first()} Slutt tilstandsendring: ${this.last()}" }
+            }
+        }
+
+    }
+
     override suspend fun executeJob() {
         if (saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført()) {
             logger.info { "Starter publisering av oppgavetilstandsendringer til statistikk." }
@@ -24,8 +38,9 @@ class StatistikkJob(
         runCatching {
             val oppgaveTilstandsendringer =
                 saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer().also {
-                    logger.info { "Fant ${it.size} oppgavetilstandsendringer som skal publiseres til statistikk." }
+                    it.loggOppgaveTilstandsEndringer()
                 }
+
             oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
                 rapidsConnection
                     .publish(
@@ -44,7 +59,7 @@ class StatistikkJob(
                         )
                         logger.info {
                             "Publisert oppgavetilstandsendring med " +
-                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+                                    "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
                     }
             }
