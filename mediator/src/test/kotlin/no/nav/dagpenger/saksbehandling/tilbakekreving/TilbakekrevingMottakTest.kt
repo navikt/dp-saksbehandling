@@ -1,6 +1,13 @@
 package no.nav.dagpenger.saksbehandling.tilbakekreving
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -9,20 +16,23 @@ import java.util.UUID
 
 class TilbakekrevingMottakTest {
     private val testRapid = TestRapid()
+    private val oppgaveMediator = mockk<OppgaveMediator>()
     private val ident = "12345678901"
     private val tilbakekrevingBehandlingId = UUID.randomUUID()
 
     init {
+        every { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) } just Runs
         TilbakekrevingMottak(
             rapidsConnection = testRapid,
+            oppgaveMediator = oppgaveMediator,
         )
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["OPPRETTET", "TIL_BEHANDLING", "TIL_GODKJENNING", "AVSLUTTET"])
-    fun `Skal motta hendelse for alle statuser uten feil`(status: String) {
+    fun `Skal motta hendelse for alle statuser og kalle oppgaveMediator`(status: String) {
         testRapid.sendTestMessage(tilbakekrevingMelding(status), ident)
-        // Verifiserer at meldingen ble mottatt uten exceptions (log-only mottak)
+        verify(exactly = 1) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
     @Test
@@ -50,7 +60,7 @@ class TilbakekrevingMottakTest {
             """.trimIndent(),
             ident,
         )
-        // Verifiserer at meldingen med feil hendelsestype blir filtrert bort uten feil
+        verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
     //language=json

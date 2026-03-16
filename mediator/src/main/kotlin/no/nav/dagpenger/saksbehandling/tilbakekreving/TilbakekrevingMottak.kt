@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Periode
@@ -23,6 +24,7 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class TilbakekrevingMottak(
     rapidsConnection: RapidsConnection,
+    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -88,21 +90,8 @@ internal class TilbakekrevingMottak(
             )
 
         withLoggingContext("tilbakekrevingBehandlingId" to "${hendelse.tilbakekreving.behandlingId}") {
-            when (hendelse.tilbakekreving.behandlingsstatus) {
-                BehandlingStatus.OPPRETTET -> {
-                    logger.info { "Mottok tilbakekreving opprettet hendelse" }
-                    sikkerlogger.info { "Mottok tilbakekreving opprettet hendelse for ident $ident" }
-                }
-
-                BehandlingStatus.TIL_BEHANDLING ->
-                    logger.info { "Mottok tilbakekreving til behandling hendelse" }
-
-                BehandlingStatus.TIL_GODKJENNING ->
-                    logger.info { "Mottok tilbakekreving til godkjenning hendelse" }
-
-                BehandlingStatus.AVSLUTTET ->
-                    logger.info { "Mottok tilbakekreving avsluttet hendelse" }
-            }
+            logger.info { "Mottok tilbakekreving hendelse med status ${hendelse.tilbakekreving.behandlingsstatus}" }
+            oppgaveMediator.håndter(hendelse)
         }
     }
 }
