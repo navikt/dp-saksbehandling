@@ -13,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Periode
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Tilbakekreving
-import no.nav.dagpenger.saksbehandling.mottak.textOrNull
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -58,40 +57,53 @@ internal class TilbakekrevingMottak(
                 logger.error { "Kan ikke hente ut tilbakekreving-endret metadata" }
             }
 
-        val tilbakekrevingNode = packet["tilbakekreving"]
-        val hendelse =
-            TilbakekrevingHendelse(
-                ident = ident,
-                eksternFagsakId = packet["eksternFagsakId"].asText(),
-                eksternBehandlingId = packet["eksternBehandlingId"].textOrNull(),
-                hendelseOpprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
-                tilbakekreving =
-                    Tilbakekreving(
-                        behandlingId = UUID.fromString(tilbakekrevingNode["behandlingId"].asText()),
-                        sakOpprettet = LocalDateTime.parse(tilbakekrevingNode["sakOpprettet"].asText()),
-                        varselSendt =
-                            tilbakekrevingNode["varselSendt"]
-                                .takeIf { !it.isNull && !it.isMissingNode }
-                                ?.let { LocalDate.parse(it.asText()) },
-                        behandlingsstatus =
-                            BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].asText()),
-                        forrigeBehandlingsstatus =
-                            tilbakekrevingNode["forrigeBehandlingsstatus"]
-                                .takeIf { !it.isNull && !it.isMissingNode }
-                                ?.let { BehandlingStatus.valueOf(it.asText()) },
-                        totaltFeilutbetaltBeløp = BigDecimal(tilbakekrevingNode["totaltFeilutbetaltBeløp"].asText()),
-                        saksbehandlingURL = tilbakekrevingNode["saksbehandlingURL"].asText(),
-                        fullstendigPeriode =
-                            Periode(
-                                fom = LocalDate.parse(tilbakekrevingNode["fullstendigPeriode"]["fom"].asText()),
-                                tom = LocalDate.parse(tilbakekrevingNode["fullstendigPeriode"]["tom"].asText()),
-                            ),
-                    ),
-            )
+        val hendelse = tilbakekrevingHendelseFraPacket(packet, ident)
 
-        withLoggingContext("tilbakekrevingBehandlingId" to "${hendelse.tilbakekreving.behandlingId}") {
+        withLoggingContext(
+            "tilbakekrevingBehandlingId" to "${hendelse.tilbakekreving.behandlingId}",
+            "behandlingId" to hendelse.eksternBehandlingId,
+        ) {
             logger.info { "Mottok tilbakekreving hendelse med status ${hendelse.tilbakekreving.behandlingsstatus}" }
             oppgaveMediator.håndter(hendelse)
         }
     }
+}
+
+private fun tilbakekrevingHendelseFraPacket(
+    packet: JsonMessage,
+    ident: String,
+): TilbakekrevingHendelse {
+    val tilbakekrevingNode = packet["tilbakekreving"]
+    return TilbakekrevingHendelse(
+        ident = ident,
+        eksternFagsakId = packet["eksternFagsakId"].asText(),
+        eksternBehandlingId =
+            packet["eksternBehandlingId"]
+                .takeIf { !it.isNull && !it.isMissingNode }
+                ?.asText()
+                ?: throw IllegalArgumentException("eksternBehandlingId mangler for tilbakekreving dagpenger"),
+        hendelseOpprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
+        tilbakekreving =
+            Tilbakekreving(
+                behandlingId = UUID.fromString(tilbakekrevingNode["behandlingId"].asText()),
+                sakOpprettet = LocalDateTime.parse(tilbakekrevingNode["sakOpprettet"].asText()),
+                varselSendt =
+                    tilbakekrevingNode["varselSendt"]
+                        .takeIf { !it.isNull && !it.isMissingNode }
+                        ?.let { LocalDate.parse(it.asText()) },
+                behandlingsstatus =
+                    BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].asText()),
+                forrigeBehandlingsstatus =
+                    tilbakekrevingNode["forrigeBehandlingsstatus"]
+                        .takeIf { !it.isNull && !it.isMissingNode }
+                        ?.let { BehandlingStatus.valueOf(it.asText()) },
+                totaltFeilutbetaltBeløp = BigDecimal(tilbakekrevingNode["totaltFeilutbetaltBeløp"].asText()),
+                saksbehandlingURL = tilbakekrevingNode["saksbehandlingURL"].asText(),
+                fullstendigPeriode =
+                    Periode(
+                        fom = LocalDate.parse(tilbakekrevingNode["fullstendigPeriode"]["fom"].asText()),
+                        tom = LocalDate.parse(tilbakekrevingNode["fullstendigPeriode"]["tom"].asText()),
+                    ),
+            ),
+    )
 }

@@ -756,6 +756,8 @@ class OppgaveMediator(
 
     fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
+
+        tilbakekrevingHendelse.eksternBehandlingId
         // TODO: Implementer oppgavehåndtering for tilbakekreving
     }
 }

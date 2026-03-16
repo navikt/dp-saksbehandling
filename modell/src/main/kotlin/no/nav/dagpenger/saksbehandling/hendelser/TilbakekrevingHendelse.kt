@@ -9,7 +9,7 @@ import java.util.UUID
 data class TilbakekrevingHendelse(
     val ident: String,
     val eksternFagsakId: String,
-    val eksternBehandlingId: String?,
+    val eksternBehandlingId: String,
     val hendelseOpprettet: LocalDateTime,
     val tilbakekreving: Tilbakekreving,
     override val utførtAv: Applikasjon = Applikasjon.Tilbakekreving,
