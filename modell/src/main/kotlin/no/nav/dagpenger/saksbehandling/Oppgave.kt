@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -132,7 +133,7 @@ data class Oppgave private constructor(
             require(oppgave.erEierAvOppgave(saksbehandler)) {
                 throw SaksbehandlerErIkkeEier(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
-                        "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+                            "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
             }
         }
@@ -155,8 +156,8 @@ data class Oppgave private constructor(
             require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
                 throw Tilstand.KanIkkeBeslutteEgenSaksbehandling(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
-                        "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
-                        "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
+                            "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
+                            "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
                 )
             }
         }
@@ -169,8 +170,8 @@ data class Oppgave private constructor(
                 require(oppgave.meldingOmVedtak.kontrollertGosysBrev == JA) {
                     throw Tilstand.KreverKontrollAvGosysBrev(
                         "Brev i Gosys må være kontrollert av beslutter for å kunne behandle $hendelseNavn i " +
-                            "tilstand ${oppgave.tilstand.type}. Brevkilde: ${oppgave.meldingOmVedtak.kilde}, " +
-                            "KontrollertGosysBrev: ${oppgave.meldingOmVedtak.kontrollertGosysBrev}",
+                                "tilstand ${oppgave.tilstand.type}. Brevkilde: ${oppgave.meldingOmVedtak.kilde}, " +
+                                "KontrollertGosysBrev: ${oppgave.meldingOmVedtak.kontrollertGosysBrev}",
                     )
                 }
             }
@@ -190,9 +191,11 @@ data class Oppgave private constructor(
 
     fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
 
-    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) = this.person.egneAnsatteTilgangskontroll(saksbehandler)
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) =
+        this.person.egneAnsatteTilgangskontroll(saksbehandler)
 
-    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) =
+        this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
 
     fun utsattTil() = this.utsattTil
 
@@ -214,7 +217,8 @@ data class Oppgave private constructor(
         tilstand.avbryt(this, avbrytOppgaveHendelse)
     }
 
-    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
+    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling =
+        tilstand.ferdigstill(this, vedtakFattetHendelse)
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
@@ -300,7 +304,7 @@ data class Oppgave private constructor(
     ) {
         logger.info {
             "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
-                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
@@ -331,8 +335,8 @@ data class Oppgave private constructor(
                     "Manuell", "Meldekort", "Omgjøring" -> {
                         logger.info {
                             "behandletHendelseType is ${hendelse.behandletHendelseType} " +
-                                "for oppgave: ${this.oppgaveId} " +
-                                "søknadId eksisterer derfor ikke"
+                                    "for oppgave: ${this.oppgaveId} " +
+                                    "søknadId eksisterer derfor ikke"
                         }
                         null
                     }
@@ -359,6 +363,8 @@ data class Oppgave private constructor(
     }
 
     fun håndter(hendelse: TilbakekrevingHendelse) {
+        tilstand.håndter(this, hendelse)
+
     }
 
     object Opprettet : Tilstand {
@@ -393,6 +399,10 @@ data class Oppgave private constructor(
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             return Handling.LAGRE_OPPGAVE
+        }
+
+        override fun håndter(oppgave: Oppgave, hendelse: TilbakekrevingHendelse) {
+            oppgave.endreTilstand(KlarTilBehandling, hendelse)
         }
     }
 
@@ -437,6 +447,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
+
     }
 
     object UnderBehandling : Tilstand {
@@ -496,7 +507,7 @@ data class Oppgave private constructor(
             if (oppgave.behandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
                 sikkerlogg.warn {
                     "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${settOppgaveAnsvarHendelse.ansvarligIdent}. " +
-                        "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
+                            "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
                 }
                 throw AlleredeTildeltException(
                     "Kan ikke tildele oppgave til annen saksbehandler. Oppgaven er allerede tildelt.",
@@ -532,7 +543,7 @@ data class Oppgave private constructor(
         ) {
             logger.info {
                 "Endrer kilde for melding om vedtak fra ${oppgave.meldingOmVedtak.kilde.name} til " +
-                    endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name
+                        endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name
             }
             oppgave.meldingOmVedtak.kilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
             oppgave.meldingOmVedtak.kontrollertGosysBrev = IKKE_RELEVANT
@@ -615,6 +626,12 @@ data class Oppgave private constructor(
                 hendelseNavn = avbrytOppgaveHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(Avbrutt, avbrytOppgaveHendelse)
+        }
+
+        override fun håndter(oppgave: Oppgave, hendelse: TilbakekrevingHendelse) {
+            require(hendelse.tilbakekreving.behandlingsstatus == TIL_GODKJENNING)
+            oppgave.behandlerIdent = oppgave.sisteBeslutter()
+            oppgave.endreTilstand(UnderKontroll(), hendelse)
         }
     }
 
@@ -969,6 +986,18 @@ data class Oppgave private constructor(
         }
 
         override fun notat(): Notat? = notat
+
+        override fun håndter(oppgave: Oppgave, hendelse: TilbakekrevingHendelse) {
+            when(hendelse.tilbakekreving.behandlingsstatus ) {
+                TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET -> {
+                    oppgave.endreTilstand(FerdigBehandlet, hendelse)
+                }
+                TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING -> {
+                    oppgave.endreTilstand(UnderBehandling, hendelse)
+                    oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
+                }
+            }
+        }
     }
 
     class AlleredeTildeltException(
@@ -1062,7 +1091,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke avbryte oppgave i tilstand $type for " +
-                        "${avbruttHendelse.javaClass.simpleName}",
+                            "${avbruttHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1074,7 +1103,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke avbryte oppgave i tilstand $type for " +
-                        "${avbrytOppgaveHendelse.javaClass.simpleName}",
+                            "${avbrytOppgaveHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1086,7 +1115,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${vedtakFattetHendelse.javaClass.simpleName}",
+                            "${vedtakFattetHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1098,7 +1127,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${godkjentBehandlingHendelse.javaClass.simpleName}",
+                            "${godkjentBehandlingHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1110,7 +1139,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${avbruttHendelse.javaClass.simpleName}",
+                            "${avbruttHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1122,7 +1151,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${innsendingFerdigstiltHendelse.javaClass.simpleName}",
+                            "${innsendingFerdigstiltHendelse.javaClass.simpleName}",
             )
         }
 
@@ -1194,7 +1223,8 @@ data class Oppgave private constructor(
         fun endreMeldingOmVedtakKilde(
             oppgave: Oppgave,
             endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
-        ): Unit = throw UlovligEndringAvKildeForMeldingOmVedtak("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
+        ): Unit =
+            throw UlovligEndringAvKildeForMeldingOmVedtak("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
 
         fun lagreNotat(
             oppgave: Oppgave,
@@ -1220,6 +1250,16 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
+        }
+
+        fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere tilbakekrevinghendelse i tilstand $type",
+            )
         }
 
         private fun ulovligTilstandsendring(
