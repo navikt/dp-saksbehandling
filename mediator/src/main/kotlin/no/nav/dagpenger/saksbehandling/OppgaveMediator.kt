@@ -758,7 +758,7 @@ class OppgaveMediator(
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
         val oppgave =
             oppgaveRepository.finnOppgaveFor(tilbakekrevingHendelse.tilbakekreving.behandlingId) ?: run {
-                // ny tilbakekrevin
+                // ny tilbakekreving
                 require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING)
                 // her lager vi en behandling
                 sakMediator.knyttTilSak(tilbakekrevingHendelse)
