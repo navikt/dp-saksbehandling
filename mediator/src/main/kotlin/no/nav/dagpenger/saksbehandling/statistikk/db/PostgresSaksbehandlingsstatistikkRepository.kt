@@ -149,8 +149,8 @@ class PostgresSaksbehandlingsstatistikkRepository(
                 )
             }
 
-    override fun markerTilstandsendringerSomOverført(tilstandId: UUID) {
-        sessionOf(dataSource = dataSource).use { session ->
+    override fun markerTilstandsendringerSomOverført(tilstandId: UUID): Int {
+        return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
