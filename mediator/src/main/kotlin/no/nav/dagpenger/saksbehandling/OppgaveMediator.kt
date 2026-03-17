@@ -68,7 +68,7 @@ class OppgaveMediator(
     ) {
         val forventerBehandlingOpprettet =
             innsendingMottattHendelse.søknadId != null &&
-                innsendingMottattHendelse.kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK)
+                    innsendingMottattHendelse.kategori in setOf(Kategori.NY_SØKNAD, Kategori.GJENOPPTAK)
 
         val oppgave =
             Oppgave(
@@ -125,8 +125,8 @@ class OppgaveMediator(
         if (behandling == null) {
             val feilmelding =
                 "Mottatt hendelse behandlingOpprettetHendelse for behandling med id " +
-                    "${behandlingOpprettetHendelse.behandlingId}." +
-                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
+                        "${behandlingOpprettetHendelse.behandlingId}." +
+                        "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
@@ -150,11 +150,12 @@ class OppgaveMediator(
         // todo Bedre  Exception håndtering
         return oppgave ?: throw IllegalStateException(
             "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
-                "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
+                    "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
+    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> =
+        oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
 
     fun hentOppgave(
         oppgaveId: UUID,
@@ -184,7 +185,7 @@ class OppgaveMediator(
         if (behandling == null) {
             val feilmelding =
                 "Mottatt forslag til vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                    "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
+                        "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
@@ -215,14 +216,14 @@ class OppgaveMediator(
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet forslag til vedtak. Oppgavens tilstand er" +
-                                        " ${oppgave.tilstand().type} etter behandling."
+                                            " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             Handling.INGEN -> {
                                 logger.info {
                                     "Mottatt forslag til vedtak. Oppgavens tilstand er uendret." +
-                                        " ${oppgave.tilstand().type}"
+                                            " ${oppgave.tilstand().type}"
                                 }
                             }
                         }
@@ -334,7 +335,7 @@ class OppgaveMediator(
                                 }.onFailure {
                                     val feil =
                                         "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
-                                            "tilbake til saksbehandling: ${it.message}"
+                                                "tilbake til saksbehandling: ${it.message}"
                                     logger.error { feil }
                                     throw it
                                 }
@@ -606,7 +607,8 @@ class OppgaveMediator(
         }
     }
 
-    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> = oppgaveRepository.finnOppgaverPåVentMedUtgåttFrist(frist)
+    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> =
+        oppgaveRepository.finnOppgaverPåVentMedUtgåttFrist(frist)
 
     fun håndterPåVentFristUtgått(påVentFristUtgåttHendelse: PåVentFristUtgåttHendelse) {
         oppgaveRepository.hentOppgave(påVentFristUtgåttHendelse.oppgaveId).let { oppgave ->
@@ -676,19 +678,19 @@ class OppgaveMediator(
     ): Oppgave {
         require(vedtakFattetHendelse.automatiskBehandlet == true) {
             "Mottatt manuell VedtakFattetHendelse uten tilhørende oppgave for " +
-                "behandlingId ${vedtakFattetHendelse.behandlingId}. " +
-                "Oppgave skal alltid eksistere for manuelle vedtak."
+                    "behandlingId ${vedtakFattetHendelse.behandlingId}. " +
+                    "Oppgave skal alltid eksistere for manuelle vedtak."
         }
 
         val sakHistorikk =
             requireNotNull(sakMediator.finnSakHistorikk(vedtakFattetHendelse.ident)) {
                 sikkerlogger.error {
                     "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
-                        "men fant ingen sakshistorikk for ident ${vedtakFattetHendelse.ident}"
+                            "men fant ingen sakshistorikk for ident ${vedtakFattetHendelse.ident}"
                 }
                 logger.error {
                     "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
-                        "men fant ingen sakshistorikk. Se sikkerlogg for ident "
+                            "men fant ingen sakshistorikk. Se sikkerlogg for ident "
                 }
             }
 
@@ -696,7 +698,7 @@ class OppgaveMediator(
             requireNotNull(sakHistorikk.finnBehandling(vedtakFattetHendelse.behandlingId)) {
                 logger.error {
                     "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}, " +
-                        "men fant ingen behandling i sakshistorikken"
+                            "men fant ingen behandling i sakshistorikken"
                 }
             }
 
@@ -713,7 +715,7 @@ class OppgaveMediator(
         ).also {
             logger.info {
                 "Opprettet oppgave(${it.oppgaveId}) for behandlingId " +
-                    "${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
+                        "${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
             }
         }
     }
@@ -756,31 +758,31 @@ class OppgaveMediator(
 
     fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
-        val oppgave =
-            oppgaveRepository.finnOppgaveFor(tilbakekrevingHendelse.tilbakekreving.behandlingId) ?: run {
-                // ny tilbakekreving
-                require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING)
-                // her lager vi en behandling
-                sakMediator.knyttTilSak(tilbakekrevingHendelse)
-                // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
-                val saksHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
-                val behandling =
-                    requireNotNull(saksHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
+        val oppgave = oppgaveRepository.finnOppgaveFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
+        if (oppgave == null) {
+            require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.OPPRETTET)
+            // her lager vi en behandling
+            sakMediator.knyttTilSak(tilbakekrevingHendelse)
+            // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
+            val saksHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
+            val behandling =
+                requireNotNull(saksHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
 
-                Oppgave(
-                    emneknagger = emptySet(),
-                    opprettet = behandling.opprettet,
-                    person = saksHistorikk.person,
-                    behandling = behandling,
-                    meldingOmVedtak =
-                        Oppgave.MeldingOmVedtak(
-                            kilde = DP_SAK,
-                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                        ),
-                )
-            }
-
-        oppgave.håndter(tilbakekrevingHendelse)
-        oppgaveRepository.lagre(oppgave)
+            val oppgave = Oppgave(
+                emneknagger = emptySet(),
+                opprettet = behandling.opprettet,
+                person = saksHistorikk.person,
+                behandling = behandling,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            )
+            oppgaveRepository.lagre(oppgave)
+        } else {
+            oppgave.håndter(tilbakekrevingHendelse)
+            oppgaveRepository.lagre(oppgave)
+        }
     }
 }
