@@ -2,9 +2,7 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
@@ -125,11 +123,10 @@ class StatistikkJobTest {
                     innsendingFerdigBehandlet,
                     oppgavePåVent,
                 )
-            every { it.markerTilstandsendringerSomOverført(søknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } just Runs
-            every { it.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId) } just Runs
-            every { it.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId) } just Runs
-            every { it.markerTilstandsendringerSomOverført(innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId) } just
-                Runs
+            every { it.markerTilstandsendringerSomOverført(søknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } returns 1
+            every { it.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId) } returns 1
+            every { it.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId) } returns 1
+            every { it.markerTilstandsendringerSomOverført(innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId) } returns 1
         }
 
     @Test

@@ -14,9 +14,8 @@ class StatistikkJob(
     override val jobName: String = "StatistikkJob"
     override val logger: KLogger = KotlinLogging.logger {}
 
-    private fun OppgaveITilstand.Tilstandsendring.prettyPrint(): String {
-        return "Tilstandsendring(id=${this.tilstandsendringId}, tidspunkt=$this.tidspunkt)"
-    }
+    private fun OppgaveITilstand.Tilstandsendring.prettyPrint(): String =
+        "Tilstandsendring(id=${this.tilstandsendringId}, tidspunkt=$this.tidspunkt)"
 
     private fun List<OppgaveITilstand>.loggOppgaveTilstandsEndringer() {
         val string = "Fant ${this.size} oppgavetilstandsendringer som skal publiseres til statistikk. "
@@ -26,10 +25,12 @@ class StatistikkJob(
             }
 
             else -> {
-                logger.info { string + "Start: ${this.first().tilstandsendring.prettyPrint()} Slutt: ${this.last().tilstandsendring.prettyPrint()}" }
+                logger.info {
+                    string +
+                        "Start: ${this.first().tilstandsendring.prettyPrint()} Slutt: ${this.last().tilstandsendring.prettyPrint()}"
+                }
             }
         }
-
     }
 
     override suspend fun executeJob() {
@@ -58,16 +59,19 @@ class StatistikkJob(
                                     ),
                                 ).toJson(),
                     ).also {
-                        saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
-                            tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
-                        ).let {
-                            if (it != 1) {
-                                logger.warn { "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}" }
+                        saksbehandlingsstatistikkRepository
+                            .markerTilstandsendringerSomOverført(
+                                tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
+                            ).let {
+                                if (it != 1) {
+                                    logger.warn {
+                                        "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
+                                    }
+                                }
                             }
-                        }
                         logger.info {
                             "Publisert oppgavetilstandsendring med " +
-                                    "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
                     }
             }
