@@ -74,6 +74,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -303,7 +304,13 @@ OppgaveMediatorTest {
             behandlingKlient =
                 mockk<BehandlingKlient>().also {
                     coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(false)
-                    coEvery { it.godkjenn(behandlingId = any(), ident = any(), saksbehandlerToken = any()) } returns Result.success(Unit)
+                    coEvery {
+                        it.godkjenn(
+                            behandlingId = any(),
+                            ident = any(),
+                            saksbehandlerToken = any(),
+                        )
+                    } returns Result.success(Unit)
                 },
         ) { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
@@ -1483,25 +1490,31 @@ OppgaveMediatorTest {
             val tilbakekrevingBehandlingId = UUIDv7.ny()
 
             // OPPRETTET → oppgave opprettes i Opprettet
-            oppgaveMediator.håndter(
+            val opprettet =
                 lagTilbakekrevingHendelse(
-                    søknadBehandlingId,
-                    tilbakekrevingBehandlingId,
-                    TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
-                ),
-            )
+                    eksternBehandlingId = søknadBehandlingId,
+                    tilbakekrevingBehandlingId = tilbakekrevingBehandlingId,
+                    status = BehandlingStatus.OPPRETTET,
+                )
+            oppgaveMediator.håndter(opprettet)
             val oppgaveId = requireNotNull(oppgaveMediator.hentOppgaveIdFor(tilbakekrevingBehandlingId))
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe OPPRETTET
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe OPPRETTET
+                it.behandling.hendelse shouldBe opprettet
+            }
 
             // TIL_BEHANDLING → KlarTilBehandling
-            oppgaveMediator.håndter(
+            val tilBehandling =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
                     tilbakekrevingBehandlingId,
-                    TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING,
-                ),
-            )
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_BEHANDLING
+                    BehandlingStatus.TIL_BEHANDLING,
+                )
+            oppgaveMediator.håndter(tilBehandling)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+                it.tilstandslogg.first().hendelse shouldBe tilBehandling
+            }
 
             // Saksbehandler tildeler → UnderBehandling
             oppgaveMediator.tildelOppgave(
@@ -1514,14 +1527,17 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
 
             // TIL_GODKJENNING → KlarTilKontroll
-            oppgaveMediator.håndter(
+            val tilGodkjenning =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
                     tilbakekrevingBehandlingId,
-                    TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING,
-                ),
-            )
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_KONTROLL
+                    BehandlingStatus.TIL_GODKJENNING,
+                )
+            oppgaveMediator.håndter(tilGodkjenning)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe KLAR_TIL_KONTROLL
+                it.tilstandslogg.first().hendelse shouldBe tilGodkjenning
+            }
 
             // Beslutter tildeler → UnderKontroll
             oppgaveMediator.tildelOppgave(
@@ -1534,37 +1550,44 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
 
             // Underkjent (TIL_BEHANDLING) → UnderBehandling
-            oppgaveMediator.håndter(
+            val underkjent =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
                     tilbakekrevingBehandlingId,
-                    TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING,
-                ),
-            )
+                    BehandlingStatus.TIL_BEHANDLING,
+                )
+            oppgaveMediator.håndter(underkjent)
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
                 it.tilstand().type shouldBe UNDER_BEHANDLING
                 it.emneknagger shouldContain "Retur fra kontroll"
+                it.tilstandslogg.first().hendelse shouldBe underkjent
             }
 
             // TIL_GODKJENNING igjen → UnderKontroll (beslutter finnes fra forrige runde)
-            oppgaveMediator.håndter(
+            val tilGodkjenning2 =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
                     tilbakekrevingBehandlingId,
-                    TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING,
-                ),
-            )
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
+                    BehandlingStatus.TIL_GODKJENNING,
+                )
+            oppgaveMediator.håndter(tilGodkjenning2)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_KONTROLL
+                it.tilstandslogg.first().hendelse shouldBe tilGodkjenning2
+            }
 
             // AVSLUTTET → FerdigBehandlet
-            oppgaveMediator.håndter(
+            val avsluttet =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
                     tilbakekrevingBehandlingId,
-                    TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET,
-                ),
-            )
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe FERDIG_BEHANDLET
+                    BehandlingStatus.AVSLUTTET,
+                )
+            oppgaveMediator.håndter(avsluttet)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe FERDIG_BEHANDLET
+                it.tilstandslogg.first().hendelse shouldBe avsluttet
+            }
         }
     }
 
@@ -1665,7 +1688,7 @@ OppgaveMediatorTest {
     private fun lagTilbakekrevingHendelse(
         eksternBehandlingId: UUID,
         tilbakekrevingBehandlingId: UUID,
-        status: TilbakekrevingHendelse.BehandlingStatus,
+        status: BehandlingStatus,
     ) = TilbakekrevingHendelse(
         ident = testIdent,
         eksternFagsakId = "100001234",
