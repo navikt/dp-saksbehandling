@@ -222,6 +222,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
+                            oppgaveRepository = oppgaveRepository,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =

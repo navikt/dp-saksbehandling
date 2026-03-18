@@ -9,6 +9,36 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
+  /tilbakekreving/{behandlingId}:
+    get:
+      summary: Hent tilbakekreving for en gitt behandlingId
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med tilbakekreving
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tilbakekreving'
+        '404':
+          description: Tilbakekreving for behandlingId ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /innsending/{behandlingId}/ferdigstill:
     put:
       summary: Ferdigstill innsending for en gitt id
@@ -2396,6 +2426,56 @@ components:
         - title
         - status
         - instance
+
+    Tilbakekreving:
+      type: object
+      properties:
+        tilbakekrevingBehandlingId:
+          type: string
+          format: uuid
+        sakOpprettet:
+          type: string
+          format: date-time
+        varselSendt:
+          type: string
+          format: date
+        behandlingsstatus:
+          $ref: '#/components/schemas/TilbakekrevingBehandlingStatus'
+        totaltFeilutbetaltBelop:
+          type: number
+        saksbehandlingURL:
+          type: string
+          format: uri
+        fullstendigPeriode:
+          $ref: '#/components/schemas/TilbakekrevingPeriode'
+      required:
+        - tilbakekrevingBehandlingId
+        - sakOpprettet
+        - behandlingsstatus
+        - totaltFeilutbetaltBelop
+        - saksbehandlingURL
+        - fullstendigPeriode
+
+    TilbakekrevingBehandlingStatus:
+      type: string
+      enum:
+        - OPPRETTET
+        - TIL_BEHANDLING
+        - TIL_GODKJENNING
+        - AVSLUTTET
+
+    TilbakekrevingPeriode:
+      type: object
+      properties:
+        fom:
+          type: string
+          format: date
+        tom:
+          type: string
+          format: date
+      required:
+        - fom
+        - tom
 
   securitySchemes:
     azureAd:
