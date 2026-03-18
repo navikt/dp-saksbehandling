@@ -1486,7 +1486,7 @@ OppgaveMediatorTest {
                 opprettet = LocalDateTime.now(),
                 behandlingskjedeId = UUIDv7.ny(),
             )
-        settOppOppgaveMediator(hendelse = søknadHendelse) { _, oppgaveMediator ->
+        settOppOppgaveMediator(hendelse = søknadHendelse) { datasource, oppgaveMediator ->
             val tilbakekrevingBehandlingId = UUIDv7.ny()
 
             // OPPRETTET → oppgave opprettes i Opprettet
@@ -1501,6 +1501,20 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
                 it.tilstand().type shouldBe OPPRETTET
                 it.behandling.hendelse shouldBe opprettet
+            }
+
+            // Verifiser at tilbakekreving er knyttet til samme sak som søknaden
+            PostgresSakRepository(datasource).finnSakHistorikk(testIdent).let { sakHistorikk ->
+                requireNotNull(sakHistorikk)
+                sakHistorikk
+                    .saker()
+                    .single()
+                    .behandlinger()
+                    .map { it.behandlingId } shouldBe
+                    listOf(
+                        tilbakekrevingBehandlingId,
+                        søknadBehandlingId,
+                    )
             }
 
             // TIL_BEHANDLING → KlarTilBehandling
