@@ -15,7 +15,7 @@ class StatistikkJob(
     override val logger: KLogger = KotlinLogging.logger {}
 
     private fun OppgaveITilstand.Tilstandsendring.prettyPrint(): String =
-        "Tilstandsendring(id=${this.tilstandsendringId}, tidspunkt=$this.tidspunkt)"
+        "Tilstandsendring(id=${this.tilstandsendringId}, tidspunkt=${this.tidspunkt})"
 
     private fun List<OppgaveITilstand>.loggOppgaveTilstandsEndringer() {
         val string = "Fant ${this.size} oppgavetilstandsendringer som skal publiseres til statistikk. "
