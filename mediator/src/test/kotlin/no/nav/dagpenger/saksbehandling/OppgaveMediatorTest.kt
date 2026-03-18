@@ -1482,36 +1482,25 @@ OppgaveMediatorTest {
         settOppOppgaveMediator(hendelse = søknadHendelse) { _, oppgaveMediator ->
             val tilbakekrevingBehandlingId = UUIDv7.ny()
 
-            fun lagHendelse(status: TilbakekrevingHendelse.BehandlingStatus) =
-                TilbakekrevingHendelse(
-                    ident = testIdent,
-                    eksternFagsakId = "100001234",
-                    eksternBehandlingId = søknadBehandlingId,
-                    hendelseOpprettet = LocalDateTime.now(),
-                    tilbakekreving =
-                        TilbakekrevingHendelse.Tilbakekreving(
-                            behandlingId = tilbakekrevingBehandlingId,
-                            sakOpprettet = LocalDateTime.now(),
-                            varselSendt = LocalDate.now(),
-                            behandlingsstatus = status,
-                            forrigeBehandlingsstatus = null,
-                            totaltFeilutbetaltBeløp = BigDecimal("25000"),
-                            saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
-                            fullstendigPeriode =
-                                TilbakekrevingHendelse.Periode(
-                                    fom = LocalDate.of(2025, 1, 1),
-                                    tom = LocalDate.of(2025, 6, 30),
-                                ),
-                        ),
-                )
-
             // OPPRETTET → oppgave opprettes i Opprettet
-            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.OPPRETTET))
+            oppgaveMediator.håndter(
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
+                ),
+            )
             val oppgaveId = requireNotNull(oppgaveMediator.hentOppgaveIdFor(tilbakekrevingBehandlingId))
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe OPPRETTET
 
             // TIL_BEHANDLING → KlarTilBehandling
-            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING))
+            oppgaveMediator.håndter(
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING,
+                ),
+            )
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
             // Saksbehandler tildeler → UnderBehandling
@@ -1525,7 +1514,13 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
 
             // TIL_GODKJENNING → KlarTilKontroll
-            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING))
+            oppgaveMediator.håndter(
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING,
+                ),
+            )
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_KONTROLL
 
             // Beslutter tildeler → UnderKontroll
@@ -1539,18 +1534,36 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
 
             // Underkjent (TIL_BEHANDLING) → UnderBehandling
-            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING))
+            oppgaveMediator.håndter(
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING,
+                ),
+            )
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
                 it.tilstand().type shouldBe UNDER_BEHANDLING
                 it.emneknagger shouldContain "Retur fra kontroll"
             }
 
             // TIL_GODKJENNING igjen → UnderKontroll (beslutter finnes fra forrige runde)
-            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING))
+            oppgaveMediator.håndter(
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING,
+                ),
+            )
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
 
             // AVSLUTTET → FerdigBehandlet
-            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET))
+            oppgaveMediator.håndter(
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET,
+                ),
+            )
             oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
@@ -1648,6 +1661,32 @@ OppgaveMediatorTest {
 
         return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
     }
+
+    private fun lagTilbakekrevingHendelse(
+        eksternBehandlingId: UUID,
+        tilbakekrevingBehandlingId: UUID,
+        status: TilbakekrevingHendelse.BehandlingStatus,
+    ) = TilbakekrevingHendelse(
+        ident = testIdent,
+        eksternFagsakId = "100001234",
+        eksternBehandlingId = eksternBehandlingId,
+        hendelseOpprettet = LocalDateTime.now(),
+        tilbakekreving =
+            TilbakekrevingHendelse.Tilbakekreving(
+                behandlingId = tilbakekrevingBehandlingId,
+                sakOpprettet = LocalDateTime.now(),
+                varselSendt = LocalDate.now(),
+                behandlingsstatus = status,
+                forrigeBehandlingsstatus = null,
+                totaltFeilutbetaltBeløp = BigDecimal("25000"),
+                saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                fullstendigPeriode =
+                    TilbakekrevingHendelse.Periode(
+                        fom = LocalDate.of(2025, 1, 1),
+                        tom = LocalDate.of(2025, 6, 30),
+                    ),
+            ),
+    )
 
     private fun settOppOppgaveMediator(
         hendelse: Hendelse = TomHendelse,
