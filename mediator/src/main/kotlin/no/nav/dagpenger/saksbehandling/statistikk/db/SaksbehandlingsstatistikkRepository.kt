@@ -8,5 +8,5 @@ interface SaksbehandlingsstatistikkRepository {
 
     fun oppgaveTilstandsendringer(): List<OppgaveITilstand>
 
-    fun markerTilstandsendringerSomOverført(tilstandId: UUID)
+    fun markerTilstandsendringerSomOverført(tilstandId: UUID): Int
 }

@@ -149,7 +149,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                 )
             }
 
-    override fun markerTilstandsendringerSomOverført(tilstandId: UUID) {
+    override fun markerTilstandsendringerSomOverført(tilstandId: UUID): Int =
         sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -166,5 +166,4 @@ class PostgresSaksbehandlingsstatistikkRepository(
                 ).asUpdate,
             )
         }
-    }
 }
