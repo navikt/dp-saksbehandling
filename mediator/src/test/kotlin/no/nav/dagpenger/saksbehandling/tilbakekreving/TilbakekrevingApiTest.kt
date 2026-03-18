@@ -5,13 +5,14 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -56,25 +57,11 @@ class TilbakekrevingApiTest {
     @Test
     fun `Skal returnere 404 når oppgave ikke er tilbakekreving`() {
         val oppgave =
-            Oppgave.rehydrer(
-                oppgaveId = UUIDv7.ny(),
-                behandlerIdent = null,
-                opprettet = LocalDateTime.now(),
-                emneknagger = emptySet(),
-                tilstand = Oppgave.KlarTilBehandling,
-                utsattTil = null,
-                person = testPerson,
+            lagOppgave(
                 behandling =
-                    Behandling(
+                    lagBehandling(
                         behandlingId = tilbakekrevingBehandlingId,
-                        opprettet = LocalDateTime.now(),
-                        utløstAv = UtløstAvType.SØKNAD,
-                        hendelse = mockk(),
-                    ),
-                meldingOmVedtak =
-                    Oppgave.MeldingOmVedtak(
-                        kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
-                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        utløstAvType = UtløstAvType.SØKNAD,
                     ),
             )
         val oppgaveRepository =
@@ -146,13 +133,7 @@ class TilbakekrevingApiTest {
         )
 
     private fun lagOppgaveMedTilbakekreving(hendelse: TilbakekrevingHendelse): Oppgave =
-        Oppgave.rehydrer(
-            oppgaveId = UUIDv7.ny(),
-            behandlerIdent = null,
-            opprettet = LocalDateTime.now(),
-            emneknagger = emptySet(),
-            tilstand = Oppgave.KlarTilBehandling,
-            utsattTil = null,
+        lagOppgave(
             tilstandslogg =
                 OppgaveTilstandslogg(
                     Tilstandsendring(
@@ -160,24 +141,18 @@ class TilbakekrevingApiTest {
                         hendelse = hendelse,
                     ),
                 ),
-            person = testPerson,
             behandling =
-                Behandling(
+                lagBehandling(
                     behandlingId = tilbakekrevingBehandlingId,
                     opprettet = hendelse.hendelseOpprettet,
-                    utløstAv = UtløstAvType.TILBAKEKREVING,
+                    utløstAvType = UtløstAvType.TILBAKEKREVING,
                     hendelse = hendelse,
-                ),
-            meldingOmVedtak =
-                Oppgave.MeldingOmVedtak(
-                    kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                 ),
         )
 
     private fun withTilbakekrevingApi(
         oppgaveRepository: OppgaveRepository,
-        test: suspend io.ktor.server.testing.ApplicationTestBuilder.() -> Unit,
+        test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
             this.application {
