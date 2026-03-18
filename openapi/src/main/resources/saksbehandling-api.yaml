@@ -9,6 +9,36 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
+  /meldekortkorrigering/{behandlingId}:
+    get:
+        summary: Hent meldekortkorrigering for en gitt behandlingId
+        parameters:
+            - in: path
+              name: behandlingId
+              required: true
+              schema:
+                type: string
+                format: uuid
+        responses:
+            '200':
+              description: Vellykket respons med meldekortkorrigering
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/KorrigerteMeldekort'
+            '404':
+              description: Meldekortkorrigering for behandlingId ble ikke funnet
+              content:
+                application/problem+json:
+                  schema:
+                    $ref: '#/components/schemas/HttpProblem'
+            default:
+              description: Feil
+              content:
+                application/problem+json:
+                  schema:
+                    $ref: '#/components/schemas/HttpProblem'
+
   /innsending/{behandlingId}/ferdigstill:
     put:
       summary: Ferdigstill innsending for en gitt id
@@ -1180,6 +1210,38 @@ paths:
 
 components:
   schemas:
+    KorrigerteMeldekort:
+      type: object
+      properties:
+        korrigeringer:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeldekortKorrigering'
+      required:
+        - korrigeringer
+    MeldekortKorrigering:
+        type: object
+        properties:
+            meldekortId:
+              type: string
+              format: uuid
+            meldekortPeriode:
+              $ref: '#/components/schemas/MeldekortPeriode'
+        required:
+            - meldekortId
+            - meldekortPeriode
+    MeldekortPeriode:
+        type: object
+        properties:
+            fom:
+              type: string
+              format: date
+            tom:
+              type: string
+              format: date
+        required:
+            - fom
+            - tom
     Innsending:
       type: object
       properties:
@@ -1599,6 +1661,8 @@ components:
         - RETT_TIL_DAGPENGER
         - KLAGE
         - INNSENDING
+        - MELDEKORT_KORRIGERING
+        - TILBAKEKREVING
 
     BehandlingVariant:
       type: string
