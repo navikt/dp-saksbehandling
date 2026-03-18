@@ -17,7 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
@@ -445,10 +445,10 @@ class PostgresSakRepository(
                     .string("hendelse_data")
                     .tilHendelse<InnsendingMottattHendelse>()
 
-            "OmgjøringBehandlingOpprettetHendelse" ->
+            "RevurderingBehandlingOpprettetHendelse" ->
                 this
                     .string("hendelse_data")
-                    .tilHendelse<OmgjøringBehandlingOpprettetHendelse>()
+                    .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
 
             else -> {
                 logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

@@ -12,7 +12,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -95,7 +95,7 @@ internal class BehandlingOpprettetMottak(
                     logger.info { "Mottok behandling_opprettet hendelse for omgjøring" }
                     if (basertPåBehandling != null) {
                         sakMediator.knyttTilSak(
-                            OmgjøringBehandlingOpprettetHendelse(
+                            RevurderingBehandlingOpprettetHendelse(
                                 behandlingId = behandlingId,
                                 ident = ident,
                                 opprettet = behandletHendelseSkjedde.atStartOfDay(),

@@ -55,9 +55,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
@@ -977,10 +977,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
                 .string("hendelse_data")
                 .tilHendelse<InnsendingMottattHendelse>()
 
-        "OmgjøringBehandlingOpprettetHendelse" ->
+        "RevurderingBehandlingOpprettetHendelse" ->
             this
                 .string("hendelse_data")
-                .tilHendelse<OmgjøringBehandlingOpprettetHendelse>()
+                .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

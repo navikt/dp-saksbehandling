@@ -32,7 +32,7 @@ enum class UtløstAvType(
     SØKNAD(applikasjon = Applikasjon.DpBehandling),
     MELDEKORT(applikasjon = Applikasjon.DpBehandling),
     MANUELL(applikasjon = Applikasjon.DpBehandling),
-    OMGJØRING(applikasjon = Applikasjon.DpBehandling),
+    REVURDERING(applikasjon = Applikasjon.DpBehandling),
     INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
     KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
 }

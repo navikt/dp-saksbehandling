@@ -1678,12 +1678,14 @@ components:
     UtlostAvType:
       type: string
       enum:
-        - KLAGE
         - MELDEKORT
         - SØKNAD
         - MANUELL
+        - REVURDVERING
+        - KLAGE
         - INNSENDING
-        - OMGJØRING
+        - MELDEKORT_KORRIGERING
+        - TILBAKEKREVING
 
     BehandlingType:
       type: string
