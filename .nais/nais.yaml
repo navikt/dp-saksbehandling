@@ -46,8 +46,6 @@ spec:
   env:
     - name: JDK_JAVA_OPTIONS
       value: -XX:+UseParallelGC -XX:MaxRAMPercentage=50.0 -XX:ActiveProcessorCount=4 -XX:+PrintFlagsFinal
-    - name: KAFKA_EXTRA_TOPIC
-      value: "tilbake.privat-tilbakekreving-dagpenger"
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
     - name: GRUPPE_SAKSBEHANDLER
