@@ -4,7 +4,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class OmgjøringBehandlingOpprettetHendelse(
+data class RevurderingBehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,

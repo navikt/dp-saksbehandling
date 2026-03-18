@@ -35,8 +35,8 @@ class RelevanteJournalpostIdOppslag(
 
             UtløstAvType.MELDEKORT -> return emptySet()
             UtløstAvType.MANUELL -> return emptySet()
-            UtløstAvType.OMGJØRING -> return emptySet()
             UtløstAvType.TILBAKEKREVING -> return emptySet()
+            UtløstAvType.REVURDERING -> return emptySet()
             UtløstAvType.INNSENDING -> return coroutineScope {
                 val journalpostIdInnsending: String? =
                     innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId

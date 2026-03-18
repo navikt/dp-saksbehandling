@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OmgjøringBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import java.time.LocalDateTime
@@ -98,18 +98,18 @@ data class Sak(
             KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
 
-    fun knyttTilSak(omgjøringBehandlingOpprettetHendelse: OmgjøringBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == omgjøringBehandlingOpprettetHendelse.behandlingskjedeId ||
+    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == revurderingBehandlingOpprettetHendelse.behandlingskjedeId ||
             this.basertPåBehandlingErKnyttetTilSak(
-                omgjøringBehandlingOpprettetHendelse.basertPåBehandling,
+                revurderingBehandlingOpprettetHendelse.basertPåBehandling,
             )
         ) {
             behandlinger.add(
                 Behandling(
-                    behandlingId = omgjøringBehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.OMGJØRING,
-                    opprettet = omgjøringBehandlingOpprettetHendelse.opprettet,
-                    hendelse = omgjøringBehandlingOpprettetHendelse,
+                    behandlingId = revurderingBehandlingOpprettetHendelse.behandlingId,
+                    utløstAv = UtløstAvType.REVURDERING,
+                    opprettet = revurderingBehandlingOpprettetHendelse.opprettet,
+                    hendelse = revurderingBehandlingOpprettetHendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

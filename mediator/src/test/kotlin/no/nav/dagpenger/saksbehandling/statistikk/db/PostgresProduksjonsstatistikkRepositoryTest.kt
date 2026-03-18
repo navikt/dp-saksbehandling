@@ -18,7 +18,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType.INNSENDING
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
-import no.nav.dagpenger.saksbehandling.UtløstAvType.OMGJØRING
+import no.nav.dagpenger.saksbehandling.UtløstAvType.REVURDERING
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
@@ -219,7 +219,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             utløstAvAlle.single { it.utløstAv == INNSENDING }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == MANUELL }.antall shouldBe 0
-            utløstAvAlle.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == REVURDERING }.antall shouldBe 0
 
             val utløstAvFilterFerdigBehandlet =
                 statistikkTjeneste.hentUtløstAvMedTilstandFilter(
@@ -236,7 +236,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == INNSENDING }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == MANUELL }.antall shouldBe 0
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == OMGJØRING }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == REVURDERING }.antall shouldBe 0
 
             val rettighetAlle = statistikkTjeneste.hentRettigheterMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
