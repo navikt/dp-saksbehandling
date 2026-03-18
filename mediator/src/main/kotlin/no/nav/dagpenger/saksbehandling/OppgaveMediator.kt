@@ -756,8 +756,8 @@ class OppgaveMediator(
 
     fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
-        val oppgave = oppgaveRepository.finnOppgaveFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
-        if (oppgave == null) {
+        val oppgaveId = oppgaveRepository.hentOppgaveIdFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
+        if (oppgaveId == null) {
             require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.OPPRETTET)
             // her lager vi en behandling
             sakMediator.knyttTilSak(tilbakekrevingHendelse)
@@ -780,6 +780,7 @@ class OppgaveMediator(
                 )
             oppgaveRepository.lagre(oppgave)
         } else {
+            val oppgave = oppgaveRepository.hentOppgave(oppgaveId)
             oppgave.håndter(tilbakekrevingHendelse)
             oppgaveRepository.lagre(oppgave)
         }

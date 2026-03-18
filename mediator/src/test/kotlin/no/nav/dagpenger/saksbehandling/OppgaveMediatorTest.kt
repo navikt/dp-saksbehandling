@@ -73,6 +73,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -87,6 +88,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.provider.Arguments
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -1463,6 +1465,93 @@ OppgaveMediatorTest {
                 .single { oppgave ->
                     oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
                 }.tilstand() shouldBe FerdigBehandlet
+        }
+    }
+
+    @Test
+    fun `Livssyklus for tilbakekreving inkludert retur fra kontroll`() {
+        val søknadBehandlingId = UUIDv7.ny()
+        val søknadHendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = UUIDv7.ny(),
+                behandlingId = søknadBehandlingId,
+                ident = testIdent,
+                opprettet = LocalDateTime.now(),
+                behandlingskjedeId = UUIDv7.ny(),
+            )
+        settOppOppgaveMediator(hendelse = søknadHendelse) { _, oppgaveMediator ->
+            val tilbakekrevingBehandlingId = UUIDv7.ny()
+
+            fun lagHendelse(status: TilbakekrevingHendelse.BehandlingStatus) =
+                TilbakekrevingHendelse(
+                    ident = testIdent,
+                    eksternFagsakId = "100001234",
+                    eksternBehandlingId = søknadBehandlingId,
+                    hendelseOpprettet = LocalDateTime.now(),
+                    tilbakekreving =
+                        TilbakekrevingHendelse.Tilbakekreving(
+                            behandlingId = tilbakekrevingBehandlingId,
+                            sakOpprettet = LocalDateTime.now(),
+                            varselSendt = LocalDate.now(),
+                            behandlingsstatus = status,
+                            forrigeBehandlingsstatus = null,
+                            totaltFeilutbetaltBeløp = BigDecimal("25000"),
+                            saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                            fullstendigPeriode =
+                                TilbakekrevingHendelse.Periode(
+                                    fom = LocalDate.of(2025, 1, 1),
+                                    tom = LocalDate.of(2025, 6, 30),
+                                ),
+                        ),
+                )
+
+            // OPPRETTET → oppgave opprettes i Opprettet
+            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.OPPRETTET))
+            val oppgaveId = requireNotNull(oppgaveMediator.hentOppgaveIdFor(tilbakekrevingBehandlingId))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe OPPRETTET
+
+            // TIL_BEHANDLING → KlarTilBehandling
+            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_BEHANDLING
+
+            // Saksbehandler tildeler → UnderBehandling
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
+
+            // TIL_GODKJENNING → KlarTilKontroll
+            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_KONTROLL
+
+            // Beslutter tildeler → UnderKontroll
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
+
+            // Underkjent (TIL_BEHANDLING) → UnderBehandling
+            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_BEHANDLING
+                it.emneknagger shouldContain "Retur fra kontroll"
+            }
+
+            // TIL_GODKJENNING igjen → UnderKontroll (beslutter finnes fra forrige runde)
+            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
+
+            // AVSLUTTET → FerdigBehandlet
+            oppgaveMediator.håndter(lagHendelse(TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 

@@ -104,8 +104,8 @@ class TilbakekrevingApiTest {
                 }
             response.status shouldBe HttpStatusCode.OK
             response.bodyAsText() shouldEqualSpecifiedJson
-                    //language=json
-                    """
+                //language=json
+                """
                 {
                   "tilbakekrevingBehandlingId": "$tilbakekrevingBehandlingId",
                   "sakOpprettet": "2025-01-10T09:00:00",
