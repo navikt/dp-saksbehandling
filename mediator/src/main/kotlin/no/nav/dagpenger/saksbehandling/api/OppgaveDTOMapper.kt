@@ -311,7 +311,7 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
         UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
-        UtløstAvType.REVURDERING -> UtlostAvTypeDTO.REVURDVERING
+        UtløstAvType.REVURDERING -> UtlostAvTypeDTO.REVURDERING
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =

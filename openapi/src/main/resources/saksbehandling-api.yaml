@@ -1681,7 +1681,7 @@ components:
         - MELDEKORT
         - SØKNAD
         - MANUELL
-        - REVURDVERING
+        - REVURDERING
         - KLAGE
         - INNSENDING
         - MELDEKORT_KORRIGERING
