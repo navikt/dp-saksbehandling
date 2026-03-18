@@ -6,6 +6,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.finnUUID
 import no.nav.dagpenger.saksbehandling.api.models.TilbakekrevingBehandlingStatusDTO
 import no.nav.dagpenger.saksbehandling.api.models.TilbakekrevingDTO
@@ -20,17 +21,23 @@ internal fun Route.tilbakekrevingApi(oppgaveRepository: OppgaveRepository) {
             route("{behandlingId}") {
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
-                    val oppgave = oppgaveRepository.finnOppgaveFor(behandlingId)
-                    if (oppgave == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                        return@get
+
+                    val tilbakekrevingDTO =
+                        oppgaveRepository
+                            .finnOppgaveFor(behandlingId)
+                            ?.takeIf {
+                                it.behandling.utløstAv == UtløstAvType.TILBAKEKREVING
+                            }?.tilstandslogg
+                            ?.firstOrNull {
+                                it.hendelse is TilbakekrevingHendelse
+                            }?.let {
+                                (it.hendelse as TilbakekrevingHendelse).tilTilbakekrevingDTO()
+                            }
+
+                    when (tilbakekrevingDTO) {
+                        null -> call.respond(HttpStatusCode.NotFound)
+                        else -> call.respond(HttpStatusCode.OK, tilbakekrevingDTO)
                     }
-                    val hendelse = oppgave.behandling.hendelse as? TilbakekrevingHendelse
-                    if (hendelse == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                        return@get
-                    }
-                    call.respond(HttpStatusCode.OK, hendelse.tilTilbakekrevingDTO())
                 }
             }
         }

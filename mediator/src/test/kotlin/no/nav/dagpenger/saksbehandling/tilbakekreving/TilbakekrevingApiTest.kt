@@ -10,7 +10,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
@@ -52,6 +54,42 @@ class TilbakekrevingApiTest {
     }
 
     @Test
+    fun `Skal returnere 404 når oppgave ikke er tilbakekreving`() {
+        val oppgave =
+            Oppgave.rehydrer(
+                oppgaveId = UUIDv7.ny(),
+                behandlerIdent = null,
+                opprettet = LocalDateTime.now(),
+                emneknagger = emptySet(),
+                tilstand = Oppgave.KlarTilBehandling,
+                utsattTil = null,
+                person = testPerson,
+                behandling =
+                    Behandling(
+                        behandlingId = tilbakekrevingBehandlingId,
+                        opprettet = LocalDateTime.now(),
+                        utløstAv = UtløstAvType.SØKNAD,
+                        hendelse = mockk(),
+                    ),
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            )
+        val oppgaveRepository =
+            mockk<OppgaveRepository>().also {
+                every { it.finnOppgaveFor(tilbakekrevingBehandlingId) } returns oppgave
+            }
+        withTilbakekrevingApi(oppgaveRepository) {
+            client
+                .get("tilbakekreving/$tilbakekrevingBehandlingId") {
+                    autentisert()
+                }.status shouldBe HttpStatusCode.NotFound
+        }
+    }
+
+    @Test
     fun `Skal returnere tilbakekreving for gyldig behandlingId`() {
         val hendelse = lagTilbakekrevingHendelse()
         val oppgave = lagOppgaveMedTilbakekreving(hendelse)
@@ -66,8 +104,8 @@ class TilbakekrevingApiTest {
                 }
             response.status shouldBe HttpStatusCode.OK
             response.bodyAsText() shouldEqualSpecifiedJson
-                //language=json
-                """
+                    //language=json
+                    """
                 {
                   "tilbakekrevingBehandlingId": "$tilbakekrevingBehandlingId",
                   "sakOpprettet": "2025-01-10T09:00:00",
@@ -115,6 +153,13 @@ class TilbakekrevingApiTest {
             emneknagger = emptySet(),
             tilstand = Oppgave.KlarTilBehandling,
             utsattTil = null,
+            tilstandslogg =
+                OppgaveTilstandslogg(
+                    Tilstandsendring(
+                        tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                        hendelse = hendelse,
+                    ),
+                ),
             person = testPerson,
             behandling =
                 Behandling(
