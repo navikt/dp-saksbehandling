@@ -774,7 +774,7 @@ class OppgaveMediator(
                     behandling = behandling,
                     meldingOmVedtak =
                         Oppgave.MeldingOmVedtak(
-                            kilde = DP_SAK,
+                            kilde = Oppgave.MeldingOmVedtakKilde.INGEN,
                             kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                         ),
                 )
