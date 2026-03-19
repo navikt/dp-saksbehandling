@@ -20,6 +20,9 @@ import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
+import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveDataRepository
+import no.nav.dagpenger.saksbehandling.db.generell.NoopGenerellOppgaveDataRepository
+import no.nav.dagpenger.saksbehandling.generell.generellOppgaveApi
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -38,6 +41,7 @@ internal fun Application.installerApis(
     innsendingMediator: InnsendingMediator,
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
     oppgaveRepository: no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository,
+    generellOppgaveDataRepository: GenerellOppgaveDataRepository = NoopGenerellOppgaveDataRepository,
 ) {
     this.authConfig()
     install(CallId) {
@@ -91,5 +95,6 @@ internal fun Application.installerApis(
             applicationCallParser = applicationCallParser,
         )
         tilbakekrevingApi(oppgaveRepository)
+        generellOppgaveApi(generellOppgaveDataRepository)
     }
 }

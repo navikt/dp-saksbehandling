@@ -283,7 +283,7 @@ class PostgresSakRepository(
 
     override fun lagreBehandling(
         personId: UUID,
-        sakId: UUID,
+        sakId: UUID?,
         behandling: Behandling,
     ) {
         sessionOf(dataSource).use { session ->
@@ -347,7 +347,7 @@ class PostgresSakRepository(
 
     private fun TransactionalSession.lagreBehandling(
         personId: UUID,
-        sakId: UUID,
+        sakId: UUID?,
         behandling: Behandling,
     ) {
         run(

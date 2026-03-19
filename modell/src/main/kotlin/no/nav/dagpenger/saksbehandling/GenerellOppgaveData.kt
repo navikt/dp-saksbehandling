@@ -1,0 +1,12 @@
+package no.nav.dagpenger.saksbehandling
+
+import com.fasterxml.jackson.databind.JsonNode
+import java.util.UUID
+
+data class GenerellOppgaveData(
+    val oppgaveId: UUID,
+    val oppgaveType: String,
+    val tittel: String,
+    val beskrivelse: String? = null,
+    val strukturertData: JsonNode? = null,
+)
