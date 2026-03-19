@@ -768,7 +768,7 @@ class OppgaveMediator(
 
             val oppgave =
                 Oppgave(
-                    emneknagger = emptySet(),
+                    emneknagger = setOf("tilbakekreving"),
                     opprettet = behandling.opprettet,
                     person = saksHistorikk.person,
                     behandling = behandling,

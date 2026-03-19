@@ -1538,7 +1538,11 @@ OppgaveMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_BEHANDLING
+                it.behandlerIdent shouldBe saksbehandler.navIdent
+                it.emneknagger shouldContain "tilbakekreving"
+            }
 
             // TIL_GODKJENNING → KlarTilKontroll
             val tilGodkjenning =
@@ -1561,7 +1565,11 @@ OppgaveMediatorTest {
                     utførtAv = beslutter,
                 ),
             )
-            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_KONTROLL
+                it.behandlerIdent shouldBe beslutter.navIdent
+                it.emneknagger shouldContain "tilbakekreving"
+            }
 
             // Underkjent (TIL_BEHANDLING) → UnderBehandling
             val underkjent =
