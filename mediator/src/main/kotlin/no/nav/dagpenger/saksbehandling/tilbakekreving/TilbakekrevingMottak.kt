@@ -1,7 +1,11 @@
 package no.nav.dagpenger.saksbehandling.tilbakekreving
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.asOptionalLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -15,9 +19,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Periode
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -78,32 +79,25 @@ private fun tilbakekrevingHendelseFraPacket(
     return TilbakekrevingHendelse(
         ident = ident,
         eksternFagsakId = packet["eksternFagsakId"].asText(),
-        eksternBehandlingId =
-            packet["eksternBehandlingId"]
-                .takeIf { !it.isNull && !it.isMissingNode }
-                ?.asUUID()
-                ?: throw IllegalArgumentException("eksternBehandlingId mangler for tilbakekreving dagpenger"),
-        hendelseOpprettet = LocalDateTime.parse(packet["hendelseOpprettet"].asText()),
+        eksternBehandlingId = packet["eksternBehandlingId"].asUUID(),
+        hendelseOpprettet = packet["hendelseOpprettet"].asLocalDateTime(),
         tilbakekreving =
             Tilbakekreving(
-                behandlingId = UUID.fromString(tilbakekrevingNode["behandlingId"].asText()),
-                sakOpprettet = LocalDateTime.parse(tilbakekrevingNode["sakOpprettet"].asText()),
-                varselSendt =
-                    tilbakekrevingNode["varselSendt"]
-                        .takeIf { !it.isNull && !it.isMissingNode }
-                        ?.let { LocalDate.parse(it.asText()) },
+                behandlingId = tilbakekrevingNode["behandlingId"].asUUID(),
+                sakOpprettet = tilbakekrevingNode["sakOpprettet"].asLocalDateTime(),
+                varselSendt = tilbakekrevingNode["varselSendt"]?.asOptionalLocalDate(),
                 behandlingsstatus =
                     BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].asText()),
                 forrigeBehandlingsstatus =
                     tilbakekrevingNode["forrigeBehandlingsstatus"]
-                        .takeIf { !it.isNull && !it.isMissingNode }
+                        ?.takeIf(JsonNode::isTextual)
                         ?.let { BehandlingStatus.valueOf(it.asText()) },
                 totaltFeilutbetaltBeløp = BigDecimal(tilbakekrevingNode["totaltFeilutbetaltBeløp"].asText()),
                 saksbehandlingURL = tilbakekrevingNode["saksbehandlingURL"].asText(),
                 fullstendigPeriode =
                     Periode(
-                        fom = LocalDate.parse(tilbakekrevingNode["fullstendigPeriode"]["fom"].asText()),
-                        tom = LocalDate.parse(tilbakekrevingNode["fullstendigPeriode"]["tom"].asText()),
+                        fom = tilbakekrevingNode["fullstendigPeriode"]["fom"].asLocalDate(),
+                        tom = tilbakekrevingNode["fullstendigPeriode"]["tom"].asLocalDate(),
                     ),
             ),
     )
