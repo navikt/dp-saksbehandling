@@ -365,7 +365,7 @@ class MeldingOmVedtakKlientTest {
     fun `hentMeldingOmVedtakHtml - ved feil`() {
         runBlocking {
             val behandlingIdSomFeiler = UUIDv7.ny()
-            val result =
+            shouldThrow<KanIkkeLageMeldingOmVedtak> {
                 meldingOmVedtakKlient.hentMeldingOmVedtakHtml(
                     person = person,
                     saksbehandler = saksbehandler,
@@ -373,7 +373,7 @@ class MeldingOmVedtakKlientTest {
                     behandlingId = behandlingIdSomFeiler,
                     saksbehandlerToken = saksbehandlerToken,
                 )
-            result.isFailure shouldBe true
+            }
         }
     }
 

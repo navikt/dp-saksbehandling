@@ -162,7 +162,9 @@ class MeldingOmVedtakKlient(
                         setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
                     }.bodyAsText()
             }.onFailure {
-                logger.error(it) { "Feil ved henting av melding om vedtak HTML for behandlingId: $behandlingId" }
+                val message = "Feil ved henting av melding om vedtak HTML for behandlingId: $behandlingId"
+                logger.warn(it) { message }
+                throw KanIkkeLageMeldingOmVedtak(message)
             }
     }
 
