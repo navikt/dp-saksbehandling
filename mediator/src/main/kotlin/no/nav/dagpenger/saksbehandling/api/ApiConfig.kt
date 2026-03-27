@@ -20,11 +20,15 @@ import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
+import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveDataRepository
+import no.nav.dagpenger.saksbehandling.db.generell.NoopGenerellOppgaveDataRepository
+import no.nav.dagpenger.saksbehandling.generell.generellOppgaveApi
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.tilbakekreving.tilbakekrevingApi
 
 internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,
@@ -36,6 +40,8 @@ internal fun Application.installerApis(
     sakMediator: SakMediator,
     innsendingMediator: InnsendingMediator,
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
+    oppgaveRepository: no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository,
+    generellOppgaveDataRepository: GenerellOppgaveDataRepository = NoopGenerellOppgaveDataRepository,
 ) {
     this.authConfig()
     install(CallId) {
@@ -88,5 +94,7 @@ internal fun Application.installerApis(
             meldingOmVedtakMediator = meldingOmVedtakMediator,
             applicationCallParser = applicationCallParser,
         )
+        tilbakekrevingApi(oppgaveRepository)
+        generellOppgaveApi(generellOppgaveDataRepository)
     }
 }

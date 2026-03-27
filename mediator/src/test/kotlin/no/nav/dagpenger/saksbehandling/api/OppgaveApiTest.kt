@@ -348,7 +348,7 @@ class OppgaveApiTest {
                             response.bodyAsText(),
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver.size shouldBe 2
                     oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
@@ -391,7 +391,7 @@ class OppgaveApiTest {
                             response.bodyAsText(),
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver.size shouldBe 2
                     oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }

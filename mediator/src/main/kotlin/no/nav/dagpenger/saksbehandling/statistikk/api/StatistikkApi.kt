@@ -195,5 +195,7 @@ private fun UtløstAvType.tilSerieNavn(): String =
         UtløstAvType.MELDEKORT -> "Meldekort"
         UtløstAvType.MANUELL -> "Manuell"
         UtløstAvType.INNSENDING -> "Innsending"
+        UtløstAvType.TILBAKEKREVING -> "Tilbakekreving"
         UtløstAvType.REVURDERING -> "Revurdering"
+        UtløstAvType.GENERELL -> "Generell"
     }

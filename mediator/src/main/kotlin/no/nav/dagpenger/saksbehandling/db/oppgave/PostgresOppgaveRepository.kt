@@ -62,6 +62,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -639,6 +640,7 @@ private fun rehydrerTilstandsendringHendelse(
         "SettOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<SettOppgaveAnsvarHendelse>()
         "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
+        "TilbakekrevingHendelse" -> hendelseJson.tilHendelse<TilbakekrevingHendelse>()
         "TomHendelse" -> hendelseJson.tilHendelse<TomHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
@@ -981,6 +983,11 @@ private fun Row.rehydrerHendelse(): Hendelse {
             this
                 .string("hendelse_data")
                 .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
+
+        "TilbakekrevingHendelse" ->
+            this
+                .string("hendelse_data")
+                .tilHendelse<TilbakekrevingHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
