@@ -19,6 +19,7 @@ sealed class Applikasjon(
                 "dp-mottak" -> DpMottak
                 "dp-kabal-integrasjon" -> DpKabalIntegrasjon
                 "Kabal" -> Kabal
+                "Tilbakekreving" -> Tilbakekreving
                 else -> Generell(navn)
             }
     }
@@ -32,6 +33,8 @@ sealed class Applikasjon(
     object DpKabalIntegrasjon : Applikasjon(navn = "dp-kabal-integrasjon")
 
     object Kabal : Applikasjon(navn = "Kabal")
+
+    object Tilbakekreving : Applikasjon(navn = "Tilbakekreving")
 
     class Generell(
         navn: String,

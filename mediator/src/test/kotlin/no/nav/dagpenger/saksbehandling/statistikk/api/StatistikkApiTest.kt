@@ -43,6 +43,7 @@ class StatistikkApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppgaveRepository = mockk(relaxed = true),
                 )
             }
 
@@ -81,6 +82,7 @@ class StatistikkApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppgaveRepository = mockk(relaxed = true),
                 )
             }
 
@@ -147,6 +149,7 @@ class StatistikkApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppgaveRepository = mockk(relaxed = true),
                 )
             }
 
@@ -261,6 +264,7 @@ class StatistikkApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppgaveRepository = mockk(relaxed = true),
                 )
             }
 

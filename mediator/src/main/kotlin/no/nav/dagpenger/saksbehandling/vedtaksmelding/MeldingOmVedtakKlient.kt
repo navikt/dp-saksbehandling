@@ -220,6 +220,7 @@ private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
         UtløstAvType.MELDEKORT -> "MELDEKORT"
         UtløstAvType.MANUELL -> "MANUELL"
         UtløstAvType.INNSENDING -> "INNSENDING"
+        UtløstAvType.TILBAKEKREVING -> "TILBAKEKREVING"
         UtløstAvType.REVURDERING -> "REVURDERING"
     }
 

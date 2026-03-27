@@ -64,6 +64,7 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
+import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMottak
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -221,6 +222,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
+                            oppgaveRepository = oppgaveRepository,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -295,6 +297,10 @@ internal class ApplicationBuilder(
                     utsendingMediator = utsendingMediator,
                 )
                 KlageBehandlingUtførtMottakForOppgave(
+                    rapidsConnection = rapidsConnection,
+                    oppgaveMediator = oppgaveMediator,
+                )
+                TilbakekrevingMottak(
                     rapidsConnection = rapidsConnection,
                     oppgaveMediator = oppgaveMediator,
                 )
