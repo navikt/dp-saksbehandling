@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHende
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
@@ -282,7 +283,7 @@ class PostgresSakRepository(
 
     override fun lagreBehandling(
         personId: UUID,
-        sakId: UUID,
+        sakId: UUID?,
         behandling: Behandling,
     ) {
         sessionOf(dataSource).use { session ->
@@ -346,7 +347,7 @@ class PostgresSakRepository(
 
     private fun TransactionalSession.lagreBehandling(
         personId: UUID,
-        sakId: UUID,
+        sakId: UUID?,
         behandling: Behandling,
     ) {
         run(
@@ -449,6 +450,11 @@ class PostgresSakRepository(
                 this
                     .string("hendelse_data")
                     .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
+
+            "TilbakekrevingHendelse" ->
+                this
+                    .string("hendelse_data")
+                    .tilHendelse<TilbakekrevingHendelse>()
 
             else -> {
                 logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

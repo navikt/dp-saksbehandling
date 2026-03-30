@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHende
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import java.util.UUID
 
 data class SakHistorikk(
@@ -54,6 +55,12 @@ data class SakHistorikk(
         saker
             .map {
                 it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
+
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(tilbakekrevingHendelse)
             }.knyttTilSakResultat()
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {

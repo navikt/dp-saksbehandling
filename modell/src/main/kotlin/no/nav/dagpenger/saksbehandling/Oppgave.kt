@@ -37,6 +37,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -357,6 +359,10 @@ data class Oppgave private constructor(
         )
     }
 
+    fun håndter(hendelse: TilbakekrevingHendelse) {
+        tilstand.håndter(this, hendelse)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -389,6 +395,13 @@ data class Oppgave private constructor(
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             return Handling.LAGRE_OPPGAVE
+        }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            oppgave.endreTilstand(KlarTilBehandling, hendelse)
         }
     }
 
@@ -611,6 +624,22 @@ data class Oppgave private constructor(
                 hendelseNavn = avbrytOppgaveHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(Avbrutt, avbrytOppgaveHendelse)
+        }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            require(hendelse.tilbakekreving.behandlingsstatus == TIL_GODKJENNING)
+            if (oppgave.sisteBeslutter() == null) {
+                oppgave.behandlerIdent = null
+                oppgave.endreTilstand(KlarTilKontroll, hendelse)
+            } else {
+                oppgave.behandlerIdent = oppgave.sisteBeslutter()
+                oppgave.endreTilstand(UnderKontroll(), hendelse)
+                oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
+                oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
+            }
         }
     }
 
@@ -965,6 +994,28 @@ data class Oppgave private constructor(
         }
 
         override fun notat(): Notat? = notat
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            when (hendelse.tilbakekreving.behandlingsstatus) {
+                TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET -> {
+                    oppgave.endreTilstand(FerdigBehandlet, hendelse)
+                }
+
+                TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING -> {
+                    oppgave.endreTilstand(UnderBehandling, hendelse)
+                    oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
+                    oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
+                    oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
+                }
+
+                else -> {
+                    super.håndter(oppgave, hendelse)
+                }
+            }
+        }
     }
 
     class AlleredeTildeltException(
@@ -1216,6 +1267,16 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
+        }
+
+        fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere tilbakekrevinghendelse i tilstand $type",
+            )
         }
 
         private fun ulovligTilstandsendring(
