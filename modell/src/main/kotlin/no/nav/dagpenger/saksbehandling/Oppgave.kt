@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
@@ -231,6 +232,12 @@ data class Oppgave private constructor(
         adressebeskyttelseTilgangskontroll(innsendingFerdigstiltHendelse.utførtAv)
         egneAnsatteTilgangskontroll(innsendingFerdigstiltHendelse.utførtAv)
         tilstand.ferdigstill(this, innsendingFerdigstiltHendelse)
+    }
+
+    fun ferdigstill(generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse) {
+        adressebeskyttelseTilgangskontroll(generellOppgaveFerdigstiltHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(generellOppgaveFerdigstiltHendelse.utførtAv)
+        tilstand.ferdigstill(this, generellOppgaveFerdigstiltHendelse)
     }
 
     fun fjernAnsvar(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
@@ -575,6 +582,18 @@ data class Oppgave private constructor(
                 hendelseNavn = innsendingFerdigstiltHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, innsendingFerdigstiltHendelse)
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = generellOppgaveFerdigstiltHendelse.utførtAv,
+                hendelseNavn = generellOppgaveFerdigstiltHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(FerdigBehandlet, generellOppgaveFerdigstiltHendelse)
         }
 
         override fun ferdigstill(
@@ -1119,6 +1138,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${innsendingFerdigstiltHendelse.javaClass.simpleName}",
+            )
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${generellOppgaveFerdigstiltHendelse.javaClass.simpleName}",
             )
         }
 
