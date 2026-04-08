@@ -9,9 +9,9 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
-  /generell-oppgave-data/{oppgaveId}:
+  /generell-oppgave/{oppgaveId}:
     get:
-      summary: Hent generell oppgave-data for en gitt oppgaveId
+      summary: Hent generell oppgave for en gitt oppgaveId
       parameters:
         - in: path
           name: oppgaveId
@@ -21,13 +21,13 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Vellykket respons med generell oppgave-data
+          description: Vellykket respons med generell oppgave
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenerellOppgaveData'
         '404':
-          description: Generell oppgave-data for oppgaveId ble ikke funnet
+          description: Generell oppgave for oppgaveId ble ikke funnet
           content:
             application/problem+json:
               schema:

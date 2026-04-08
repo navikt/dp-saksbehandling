@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.api.models.GenerellOppgaveDataDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 
 internal fun Route.generellOppgaveApi(oppgaveRepository: OppgaveRepository) {
-    route("generell-oppgave-data") {
+    route("generell-oppgave") {
         authenticate("azureAd") {
             route("{oppgaveId}") {
                 get {
