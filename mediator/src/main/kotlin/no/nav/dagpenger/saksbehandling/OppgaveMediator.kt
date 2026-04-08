@@ -566,14 +566,19 @@ class OppgaveMediator(
         oppgave: Oppgave,
         saksbehandlerToken: String,
     ) {
-        godkjennEllerBeslutt(
-            behandlingId = oppgave.behandling.behandlingId,
-            ident = oppgave.personIdent(),
-            saksbehandlerToken = saksbehandlerToken,
-        ).onSuccess {
+        if (oppgave.behandling.utløstAv == UtløstAvType.GENERELL) {
+            logger.info { "Ferdigstiller generell oppgave uten dp-behandling-kall" }
             oppgaveRepository.lagre(oppgave)
-        }.onFailure {
-            throw it
+        } else {
+            godkjennEllerBeslutt(
+                behandlingId = oppgave.behandling.behandlingId,
+                ident = oppgave.personIdent(),
+                saksbehandlerToken = saksbehandlerToken,
+            ).onSuccess {
+                oppgaveRepository.lagre(oppgave)
+            }.onFailure {
+                throw it
+            }
         }
     }
 
