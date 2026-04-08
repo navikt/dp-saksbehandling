@@ -30,7 +30,6 @@ class GenerellOppgaveMediator(
         val generellOppgave =
             GenerellOppgave.opprett(
                 person = person,
-                emneknagg = hendelse.emneknagg,
                 tittel = hendelse.tittel,
                 beskrivelse = hendelse.beskrivelse,
                 strukturertData = hendelse.strukturertData,
@@ -56,10 +55,9 @@ class GenerellOppgaveMediator(
             hendelse = hendelse,
             behandling = behandling,
             person = person,
-            emneknagg = generellOppgave.emneknagg,
         )
 
-        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med emneknagg ${generellOppgave.emneknagg}" }
+        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med emneknagg ${hendelse.emneknagg}" }
 
         return generellOppgave
     }

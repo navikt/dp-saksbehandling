@@ -9,7 +9,6 @@ import java.util.UUID
 class GenerellOppgave private constructor(
     val id: UUID = UUIDv7.ny(),
     val person: Person,
-    val emneknagg: String,
     val tittel: String,
     val beskrivelse: String? = null,
     val strukturertData: JsonNode? = null,
@@ -22,14 +21,12 @@ class GenerellOppgave private constructor(
     companion object {
         fun opprett(
             person: Person,
-            emneknagg: String,
             tittel: String,
             beskrivelse: String? = null,
             strukturertData: JsonNode? = null,
         ): GenerellOppgave =
             GenerellOppgave(
                 person = person,
-                emneknagg = emneknagg,
                 tittel = tittel,
                 beskrivelse = beskrivelse,
                 strukturertData = strukturertData,
@@ -38,7 +35,6 @@ class GenerellOppgave private constructor(
         fun rehydrer(
             id: UUID,
             person: Person,
-            emneknagg: String,
             tittel: String,
             beskrivelse: String?,
             strukturertData: JsonNode?,
@@ -51,7 +47,6 @@ class GenerellOppgave private constructor(
             GenerellOppgave(
                 id = id,
                 person = person,
-                emneknagg = emneknagg,
                 tittel = tittel,
                 beskrivelse = beskrivelse,
                 strukturertData = strukturertData,
@@ -142,5 +137,5 @@ class GenerellOppgave private constructor(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString(): String = "GenerellOppgave(id=$id, emneknagg='$emneknagg', tittel='$tittel', tilstand=$tilstand)"
+    override fun toString(): String = "GenerellOppgave(id=$id, tittel='$tittel', tilstand=$tilstand)"
 }

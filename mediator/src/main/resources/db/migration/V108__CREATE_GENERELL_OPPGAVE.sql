@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS generell_oppgave_v1
 (
     id                      UUID        PRIMARY KEY,
     person_id               UUID        NOT NULL REFERENCES person_v1 (id),
-    emneknagg               TEXT        NOT NULL,
     tittel                  TEXT        NOT NULL,
     beskrivelse             TEXT,
     strukturert_data        JSONB,

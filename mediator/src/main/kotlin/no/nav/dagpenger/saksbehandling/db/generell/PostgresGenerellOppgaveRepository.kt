@@ -30,7 +30,6 @@ class PostgresGenerellOppgaveRepository(
                             INSERT INTO generell_oppgave_v1 (
                                 id, 
                                 person_id, 
-                                emneknagg, 
                                 tittel, 
                                 beskrivelse,
                                 strukturert_data,
@@ -44,7 +43,6 @@ class PostgresGenerellOppgaveRepository(
                             VALUES (
                                 :id, 
                                 :person_id, 
-                                :emneknagg, 
                                 :tittel, 
                                 :beskrivelse,
                                 :strukturert_data::jsonb,
@@ -67,7 +65,6 @@ class PostgresGenerellOppgaveRepository(
                             mapOf(
                                 "id" to generellOppgave.id,
                                 "person_id" to generellOppgave.person.id,
-                                "emneknagg" to generellOppgave.emneknagg,
                                 "tittel" to generellOppgave.tittel,
                                 "beskrivelse" to generellOppgave.beskrivelse,
                                 "strukturert_data" to generellOppgave.strukturertData?.let { objectMapper.writeValueAsString(it) },
@@ -100,7 +97,6 @@ class PostgresGenerellOppgaveRepository(
                     statement =
                         """
                         SELECT  go.id,
-                                go.emneknagg,
                                 go.tittel,
                                 go.beskrivelse,
                                 go.strukturert_data,
@@ -132,7 +128,6 @@ class PostgresGenerellOppgaveRepository(
                     statement =
                         """
                         SELECT  go.id,
-                                go.emneknagg,
                                 go.tittel,
                                 go.beskrivelse,
                                 go.strukturert_data,
@@ -166,7 +161,6 @@ class PostgresGenerellOppgaveRepository(
                     skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
                     adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse")),
                 ),
-            emneknagg = this.string("emneknagg"),
             tittel = this.string("tittel"),
             beskrivelse = this.stringOrNull("beskrivelse"),
             strukturertData = this.stringOrNull("strukturert_data")?.let { objectMapper.readValue(it, JsonNode::class.java) },

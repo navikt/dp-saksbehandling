@@ -2589,9 +2589,6 @@ components:
     GenerellOppgave:
       type: object
       properties:
-        emneknagg:
-          type: string
-          description: Emneknagg for oppgaven, brukes til filtrering
         tittel:
           type: string
           description: Visningstittel for oppgaven
@@ -2612,7 +2609,6 @@ components:
         nyBehandling:
           $ref: '#/components/schemas/TynnBehandling'
       required:
-        - emneknagg
         - tittel
 
     FerdigstillGenerellOppgaveRequest:

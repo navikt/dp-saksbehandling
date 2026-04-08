@@ -95,11 +95,10 @@ class OppgaveMediator(
         hendelse: OpprettGenerellOppgaveHendelse,
         behandling: Behandling,
         person: Person,
-        emneknagg: String,
     ) {
         val oppgave =
             Oppgave(
-                emneknagger = setOf(emneknagg),
+                emneknagger = setOf(hendelse.emneknagg),
                 opprettet = hendelse.registrertTidspunkt,
                 behandling = behandling,
                 person = person,
