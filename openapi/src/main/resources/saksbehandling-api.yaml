@@ -25,7 +25,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenerellOppgaveData'
+                $ref: '#/components/schemas/GenerellOppgave'
         '404':
           description: Generell oppgave for oppgaveId ble ikke funnet
           content:
@@ -2553,7 +2553,7 @@ components:
         - saksbehandlingURL
         - fullstendigPeriode
 
-    GenerellOppgaveData:
+    GenerellOppgave:
       type: object
       properties:
         emneknagg:

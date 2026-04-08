@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.GenerellOppgaveData
+import no.nav.dagpenger.saksbehandling.GenerellOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -31,7 +31,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
 
             val strukturertData = objectMapper.readTree("""{"periode": "2024-01", "beløp": 1234}""")
             val data =
-                GenerellOppgaveData(
+                GenerellOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     emneknagg = "MeldekortKorrigering",
                     tittel = "Korrigert meldekort",
@@ -39,9 +39,9 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
                     strukturertData = strukturertData,
                 )
 
-            oppgaveRepository.lagreGenerellOppgaveData(data)
+            oppgaveRepository.lagreGenerellOppgave(data)
 
-            val hentet = oppgaveRepository.hentGenerellOppgaveData(oppgave.oppgaveId)
+            val hentet = oppgaveRepository.hentGenerellOppgave(oppgave.oppgaveId)
             hentet shouldNotBe null
             hentet!!.oppgaveId shouldBe oppgave.oppgaveId
             hentet.emneknagg shouldBe "MeldekortKorrigering"
@@ -65,7 +65,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
             val oppgave = lagOppgave(oppgaveRepository, behandling, person)
 
             val data =
-                GenerellOppgaveData(
+                GenerellOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     emneknagg = "EnkelOppgave",
                     tittel = "En enkel oppgave",
@@ -73,9 +73,9 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
                     strukturertData = null,
                 )
 
-            oppgaveRepository.lagreGenerellOppgaveData(data)
+            oppgaveRepository.lagreGenerellOppgave(data)
 
-            val hentet = oppgaveRepository.hentGenerellOppgaveData(oppgave.oppgaveId)
+            val hentet = oppgaveRepository.hentGenerellOppgave(oppgave.oppgaveId)
             hentet shouldNotBe null
             hentet!!.beskrivelse shouldBe null
             hentet.strukturertData shouldBe null
@@ -86,7 +86,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
     fun `Skal returnere null for ukjent oppgaveId`() {
         withMigratedDb { ds ->
             val oppgaveRepository = PostgresOppgaveRepository(ds)
-            val hentet = oppgaveRepository.hentGenerellOppgaveData(UUIDv7.ny())
+            val hentet = oppgaveRepository.hentGenerellOppgave(UUIDv7.ny())
             hentet shouldBe null
         }
     }

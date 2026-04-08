@@ -7,7 +7,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.api.finnUUID
-import no.nav.dagpenger.saksbehandling.api.models.GenerellOppgaveDataDTO
+import no.nav.dagpenger.saksbehandling.api.models.GenerellOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 
 internal fun Route.generellOppgaveApi(oppgaveRepository: OppgaveRepository) {
@@ -16,13 +16,13 @@ internal fun Route.generellOppgaveApi(oppgaveRepository: OppgaveRepository) {
             route("{oppgaveId}") {
                 get {
                     val oppgaveId = call.finnUUID("oppgaveId")
-                    val data = oppgaveRepository.hentGenerellOppgaveData(oppgaveId)
+                    val data = oppgaveRepository.hentGenerellOppgave(oppgaveId)
                     when (data) {
                         null -> call.respond(HttpStatusCode.NotFound)
                         else ->
                             call.respond(
                                 HttpStatusCode.OK,
-                                GenerellOppgaveDataDTO(
+                                GenerellOppgaveDTO(
                                     emneknagg = data.emneknagg,
                                     tittel = data.tittel,
                                     beskrivelse = data.beskrivelse,

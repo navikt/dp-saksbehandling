@@ -8,7 +8,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.GenerellOppgaveData
+import no.nav.dagpenger.saksbehandling.GenerellOppgave
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
@@ -431,7 +431,7 @@ class PostgresOppgaveRepository(
             )
         }
 
-    override fun lagreGenerellOppgaveData(data: GenerellOppgaveData) {
+    override fun lagreGenerellOppgave(data: GenerellOppgave) {
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -452,7 +452,7 @@ class PostgresOppgaveRepository(
         }
     }
 
-    override fun hentGenerellOppgaveData(oppgaveId: UUID): GenerellOppgaveData? =
+    override fun hentGenerellOppgave(oppgaveId: UUID): GenerellOppgave? =
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -464,7 +464,7 @@ class PostgresOppgaveRepository(
                     """.trimIndent(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    GenerellOppgaveData(
+                    GenerellOppgave(
                         oppgaveId = row.uuid("oppgave_id"),
                         emneknagg = row.string("oppgave_type"),
                         tittel = row.string("tittel"),

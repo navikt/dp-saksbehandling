@@ -66,8 +66,8 @@ class OppgaveMediatorGenerellOppgaveTest {
         oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
         oppgave.meldingOmVedtakKilde() shouldBe Oppgave.MeldingOmVedtakKilde.INGEN
 
-        val dataSlot = slot<GenerellOppgaveData>()
-        verify(exactly = 1) { oppgaveRepository.lagreGenerellOppgaveData(capture(dataSlot)) }
+        val dataSlot = slot<GenerellOppgave>()
+        verify(exactly = 1) { oppgaveRepository.lagreGenerellOppgave(capture(dataSlot)) }
 
         val data = dataSlot.captured
         data.emneknagg shouldBe "MeldekortKorrigering"

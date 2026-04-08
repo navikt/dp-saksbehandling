@@ -781,8 +781,8 @@ class OppgaveMediator(
 
         oppgaveRepository.lagre(oppgave)
 
-        oppgaveRepository.lagreGenerellOppgaveData(
-            GenerellOppgaveData(
+        oppgaveRepository.lagreGenerellOppgave(
+            GenerellOppgave(
                 oppgaveId = oppgave.oppgaveId,
                 emneknagg = hendelse.emneknagg,
                 tittel = hendelse.tittel,
