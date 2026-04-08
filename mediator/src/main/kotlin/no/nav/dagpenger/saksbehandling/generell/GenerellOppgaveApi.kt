@@ -8,15 +8,15 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.api.finnUUID
 import no.nav.dagpenger.saksbehandling.api.models.GenerellOppgaveDataDTO
-import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveDataRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 
-internal fun Route.generellOppgaveApi(generellOppgaveDataRepository: GenerellOppgaveDataRepository) {
+internal fun Route.generellOppgaveApi(oppgaveRepository: OppgaveRepository) {
     route("generell-oppgave-data") {
         authenticate("azureAd") {
             route("{oppgaveId}") {
                 get {
                     val oppgaveId = call.finnUUID("oppgaveId")
-                    val data = generellOppgaveDataRepository.hent(oppgaveId)
+                    val data = oppgaveRepository.hentGenerellOppgaveData(oppgaveId)
                     when (data) {
                         null -> call.respond(HttpStatusCode.NotFound)
                         else ->

@@ -15,6 +15,7 @@ internal object OppgaveApiTestHelper {
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
         personMediator: PersonMediator = mockk(relaxed = true),
+        oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -29,6 +30,7 @@ internal object OppgaveApiTestHelper {
                     sakMediator = mockk(relaxed = true),
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppgaveRepository = oppgaveRepository,
                 )
             }
             test()
@@ -66,6 +68,7 @@ internal object OppgaveApiTestHelper {
                     sakMediator = mockk(relaxed = true),
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppgaveRepository = oppgaveRepository,
                 )
             }
             test()

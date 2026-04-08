@@ -8,6 +8,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.GenerellOppgaveData
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
@@ -55,6 +56,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
@@ -65,6 +67,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
@@ -424,6 +427,50 @@ class PostgresOppgaveRepository(
                     ),
                 ).map { row ->
                     Type.valueOf(row.string("tilstand"))
+                }.asSingle,
+            )
+        }
+
+    override fun lagreGenerellOppgaveData(data: GenerellOppgaveData) {
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    INSERT INTO generell_oppgave_data_v1 (oppgave_id, oppgave_type, tittel, beskrivelse, strukturert_data)
+                    VALUES (:oppgave_id, :oppgave_type, :tittel, :beskrivelse, :strukturert_data::jsonb)
+                    """.trimIndent(),
+                    mapOf(
+                        "oppgave_id" to data.oppgaveId,
+                        "oppgave_type" to data.oppgaveType,
+                        "tittel" to data.tittel,
+                        "beskrivelse" to data.beskrivelse,
+                        "strukturert_data" to data.strukturertData?.toString(),
+                    ),
+                ).asUpdate,
+            )
+        }
+    }
+
+    override fun hentGenerellOppgaveData(oppgaveId: UUID): GenerellOppgaveData? =
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT oppgave_id, oppgave_type, tittel, beskrivelse, strukturert_data
+                    FROM generell_oppgave_data_v1
+                    WHERE oppgave_id = :oppgave_id
+                    """.trimIndent(),
+                    mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    GenerellOppgaveData(
+                        oppgaveId = row.uuid("oppgave_id"),
+                        oppgaveType = row.string("oppgave_type"),
+                        tittel = row.string("tittel"),
+                        beskrivelse = row.stringOrNull("beskrivelse"),
+                        strukturertData = row.stringOrNull("strukturert_data")?.let { objectMapper.readTree(it) },
+                    )
                 }.asSingle,
             )
         }
@@ -981,6 +1028,11 @@ private fun Row.rehydrerHendelse(): Hendelse {
             this
                 .string("hendelse_data")
                 .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
+
+        "OpprettGenerellOppgaveHendelse" ->
+            this
+                .string("hendelse_data")
+                .tilHendelse<OpprettGenerellOppgaveHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

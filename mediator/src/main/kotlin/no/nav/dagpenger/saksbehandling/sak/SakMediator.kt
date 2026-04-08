@@ -10,17 +10,21 @@ import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -266,5 +270,25 @@ class SakMediator(
                     sakRepository.lagre(sakHistorikk)
                 } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
+    }
+
+    fun opprettBehandlingForGenerellOppgave(hendelse: OpprettGenerellOppgaveHendelse): Pair<Person, Behandling> {
+        val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
+
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
+                utløstAv = UtløstAvType.GENERELL,
+            )
+
+        sakRepository.lagreBehandling(
+            personId = person.id,
+            sakId = null,
+            behandling = behandling,
+        )
+
+        return Pair(person, behandling)
     }
 }

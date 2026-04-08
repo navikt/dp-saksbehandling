@@ -18,7 +18,6 @@ import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveDataRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -223,7 +222,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
-                            generellOppgaveDataRepository = PostgresGenerellOppgaveDataRepository(dataSource),
+                            oppgaveRepository = oppgaveRepository,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -303,10 +302,7 @@ internal class ApplicationBuilder(
                 )
                 OpprettOppgaveMottak(
                     rapidsConnection = rapidsConnection,
-                    personMediator = personMediator,
-                    oppgaveRepository = oppgaveRepository,
-                    sakRepository = sakRepository,
-                    generellOppgaveDataRepository = PostgresGenerellOppgaveDataRepository(dataSource),
+                    oppgaveMediator = oppgaveMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.GenerellOppgaveData
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -49,4 +50,8 @@ interface OppgaveRepository {
         ident: String,
         søknadId: UUID,
     ): Oppgave.Tilstand.Type?
+
+    fun lagreGenerellOppgaveData(data: GenerellOppgaveData)
+
+    fun hentGenerellOppgaveData(oppgaveId: UUID): GenerellOppgaveData?
 }

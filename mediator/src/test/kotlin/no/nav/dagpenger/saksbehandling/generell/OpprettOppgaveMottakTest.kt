@@ -1,52 +1,29 @@
 package no.nav.dagpenger.saksbehandling.generell
 
-import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.GenerellOppgaveData
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveDataRepository
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import org.junit.jupiter.api.Test
 
 class OpprettOppgaveMottakTest {
     private val testRapid = TestRapid()
-    private val personMediator = mockk<PersonMediator>()
-    private val oppgaveRepository = mockk<OppgaveRepository>(relaxed = true)
-    private val sakRepository = mockk<SakRepository>(relaxed = true)
-    private val generellOppgaveDataRepository = mockk<GenerellOppgaveDataRepository>(relaxed = true)
+    private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
     private val ident = "12345678901"
-    private val testPerson =
-        Person(
-            id = UUIDv7.ny(),
-            ident = ident,
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-        )
 
     init {
-        every { personMediator.finnEllerOpprettPerson(ident) } returns testPerson
         OpprettOppgaveMottak(
             rapidsConnection = testRapid,
-            personMediator = personMediator,
-            oppgaveRepository = oppgaveRepository,
-            sakRepository = sakRepository,
-            generellOppgaveDataRepository = generellOppgaveDataRepository,
+            oppgaveMediator = oppgaveMediator,
         )
     }
 
     @Test
-    fun `Skal opprette generell oppgave fra opprett_oppgave hendelse`() {
+    fun `Skal parse og delegere opprett_oppgave hendelse til oppgaveMediator`() {
         testRapid.sendTestMessage(
             opprettOppgaveMelding(
                 oppgaveType = "MeldekortKorrigering",
@@ -55,27 +32,18 @@ class OpprettOppgaveMottakTest {
             ),
         )
 
-        val oppgaveSlot = slot<Oppgave>()
-        verify(exactly = 1) { oppgaveRepository.lagre(capture(oppgaveSlot)) }
+        val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
+        verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
 
-        val oppgave = oppgaveSlot.captured
-        oppgave.behandling.utløstAv shouldBe UtløstAvType.GENERELL
-        oppgave.person shouldBe testPerson
-        oppgave.emneknagger shouldBe setOf("MeldekortKorrigering")
-        oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-
-        val dataSlot = slot<GenerellOppgaveData>()
-        verify(exactly = 1) { generellOppgaveDataRepository.lagre(capture(dataSlot)) }
-
-        val data = dataSlot.captured
-        data.oppgaveType shouldBe "MeldekortKorrigering"
-        data.tittel shouldBe "Meldekort trenger korrigering"
-        data.beskrivelse shouldBe "Meldekortet for perioden 01.03-14.03 må gjennomgås"
-        data.oppgaveId shouldBe oppgave.oppgaveId
+        val hendelse = hendelseSlot.captured
+        hendelse.ident shouldBe ident
+        hendelse.oppgaveType shouldBe "MeldekortKorrigering"
+        hendelse.tittel shouldBe "Meldekort trenger korrigering"
+        hendelse.beskrivelse shouldBe "Meldekortet for perioden 01.03-14.03 må gjennomgås"
     }
 
     @Test
-    fun `Skal opprette generell oppgave med strukturert data`() {
+    fun `Skal parse oppgave med strukturert data`() {
         testRapid.sendTestMessage(
             //language=json
             """
@@ -92,17 +60,17 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        val dataSlot = slot<GenerellOppgaveData>()
-        verify(exactly = 1) { generellOppgaveDataRepository.lagre(capture(dataSlot)) }
+        val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
+        verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
 
-        val data = dataSlot.captured
-        data.oppgaveType shouldBe "PDLFlytting"
-        data.strukturertData shouldNotBe null
-        data.strukturertData!!["fraAdresse"].asText() shouldBe "Oslo"
+        val hendelse = hendelseSlot.captured
+        hendelse.oppgaveType shouldBe "PDLFlytting"
+        hendelse.strukturertData shouldNotBe null
+        hendelse.strukturertData!!["fraAdresse"].asText() shouldBe "Oslo"
     }
 
     @Test
-    fun `Skal opprette generell oppgave uten valgfrie felter`() {
+    fun `Skal parse oppgave uten valgfrie felter`() {
         testRapid.sendTestMessage(
             //language=json
             """
@@ -115,12 +83,12 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        val dataSlot = slot<GenerellOppgaveData>()
-        verify(exactly = 1) { generellOppgaveDataRepository.lagre(capture(dataSlot)) }
+        val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
+        verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
 
-        val data = dataSlot.captured
-        data.beskrivelse shouldBe null
-        data.strukturertData shouldBe null
+        val hendelse = hendelseSlot.captured
+        hendelse.beskrivelse shouldBe null
+        hendelse.strukturertData shouldBe null
     }
 
     @Test
@@ -137,25 +105,7 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        verify(exactly = 0) { oppgaveRepository.lagre(any()) }
-    }
-
-    @Test
-    fun `Skal lagre stub-behandling uten sak`() {
-        testRapid.sendTestMessage(
-            opprettOppgaveMelding(
-                oppgaveType = "Test",
-                tittel = "Test oppgave",
-            ),
-        )
-
-        verify(exactly = 1) {
-            sakRepository.lagreBehandling(
-                personId = testPerson.id,
-                sakId = null,
-                behandling = match { it.utløstAv == UtløstAvType.GENERELL },
-            )
-        }
+        verify(exactly = 0) { oppgaveMediator.håndter(any<OpprettGenerellOppgaveHendelse>()) }
     }
 
     //language=json

@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -752,4 +753,39 @@ class OppgaveMediator(
                     }
                 }
         }
+
+    fun håndter(hendelse: OpprettGenerellOppgaveHendelse) {
+        logger.info { "Mottatt OpprettGenerellOppgaveHendelse med type ${hendelse.oppgaveType}" }
+
+        val (person, behandling) = sakMediator.opprettBehandlingForGenerellOppgave(hendelse)
+
+        val oppgave =
+            Oppgave(
+                emneknagger = setOf(hendelse.oppgaveType),
+                opprettet = behandling.opprettet,
+                behandling = behandling,
+                person = person,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = Oppgave.MeldingOmVedtakKilde.INGEN,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            ).also {
+                it.settKlarTilBehandling(hendelse)
+            }
+
+        oppgaveRepository.lagre(oppgave)
+
+        oppgaveRepository.lagreGenerellOppgaveData(
+            GenerellOppgaveData(
+                oppgaveId = oppgave.oppgaveId,
+                oppgaveType = hendelse.oppgaveType,
+                tittel = hendelse.tittel,
+                beskrivelse = hendelse.beskrivelse,
+                strukturertData = hendelse.strukturertData,
+            ),
+        )
+
+        logger.info { "Opprettet generell oppgave ${oppgave.oppgaveId} med type ${hendelse.oppgaveType}" }
+    }
 }
