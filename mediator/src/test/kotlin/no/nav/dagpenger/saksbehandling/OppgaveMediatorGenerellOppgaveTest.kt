@@ -40,7 +40,7 @@ class OppgaveMediatorGenerellOppgaveTest {
         val hendelse =
             OpprettGenerellOppgaveHendelse(
                 ident = testPerson.ident,
-                oppgaveType = "MeldekortKorrigering",
+                emneknagg = "MeldekortKorrigering",
                 tittel = "Korrigert meldekort",
                 beskrivelse = "Beskrivelse",
             )
@@ -70,7 +70,7 @@ class OppgaveMediatorGenerellOppgaveTest {
         verify(exactly = 1) { oppgaveRepository.lagreGenerellOppgaveData(capture(dataSlot)) }
 
         val data = dataSlot.captured
-        data.oppgaveType shouldBe "MeldekortKorrigering"
+        data.emneknagg shouldBe "MeldekortKorrigering"
         data.tittel shouldBe "Korrigert meldekort"
         data.beskrivelse shouldBe "Beskrivelse"
     }
@@ -80,7 +80,7 @@ class OppgaveMediatorGenerellOppgaveTest {
         val hendelse =
             OpprettGenerellOppgaveHendelse(
                 ident = testPerson.ident,
-                oppgaveType = "Test",
+                emneknagg = "Test",
                 tittel = "Test",
             )
 

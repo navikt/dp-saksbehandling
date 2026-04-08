@@ -33,7 +33,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
             val data =
                 GenerellOppgaveData(
                     oppgaveId = oppgave.oppgaveId,
-                    oppgaveType = "MeldekortKorrigering",
+                    emneknagg = "MeldekortKorrigering",
                     tittel = "Korrigert meldekort",
                     beskrivelse = "Meldekortet må gjennomgås",
                     strukturertData = strukturertData,
@@ -44,7 +44,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
             val hentet = oppgaveRepository.hentGenerellOppgaveData(oppgave.oppgaveId)
             hentet shouldNotBe null
             hentet!!.oppgaveId shouldBe oppgave.oppgaveId
-            hentet.oppgaveType shouldBe "MeldekortKorrigering"
+            hentet.emneknagg shouldBe "MeldekortKorrigering"
             hentet.tittel shouldBe "Korrigert meldekort"
             hentet.beskrivelse shouldBe "Meldekortet må gjennomgås"
             hentet.strukturertData shouldNotBe null
@@ -67,7 +67,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
             val data =
                 GenerellOppgaveData(
                     oppgaveId = oppgave.oppgaveId,
-                    oppgaveType = "EnkelOppgave",
+                    emneknagg = "EnkelOppgave",
                     tittel = "En enkel oppgave",
                     beskrivelse = null,
                     strukturertData = null,
@@ -114,7 +114,7 @@ class PostgresOppgaveRepositoryGenerellOppgaveTest {
                 hendelse =
                     OpprettGenerellOppgaveHendelse(
                         ident = person.ident,
-                        oppgaveType = "Test",
+                        emneknagg = "Test",
                         tittel = "Test",
                     ),
                 utløstAv = UtløstAvType.GENERELL,

@@ -442,7 +442,7 @@ class PostgresOppgaveRepository(
                     """.trimIndent(),
                     mapOf(
                         "oppgave_id" to data.oppgaveId,
-                        "oppgave_type" to data.oppgaveType,
+                        "oppgave_type" to data.emneknagg,
                         "tittel" to data.tittel,
                         "beskrivelse" to data.beskrivelse,
                         "strukturert_data" to data.strukturertData?.toString(),
@@ -466,7 +466,7 @@ class PostgresOppgaveRepository(
                 ).map { row ->
                     GenerellOppgaveData(
                         oppgaveId = row.uuid("oppgave_id"),
-                        oppgaveType = row.string("oppgave_type"),
+                        emneknagg = row.string("oppgave_type"),
                         tittel = row.string("tittel"),
                         beskrivelse = row.stringOrNull("beskrivelse"),
                         strukturertData = row.stringOrNull("strukturert_data")?.let { objectMapper.readTree(it) },

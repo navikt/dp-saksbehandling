@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.Behandler
 
 data class OpprettGenerellOppgaveHendelse(
     val ident: String,
-    val oppgaveType: String,
+    val emneknagg: String,
     val tittel: String,
     val beskrivelse: String? = null,
     val strukturertData: JsonNode? = null,

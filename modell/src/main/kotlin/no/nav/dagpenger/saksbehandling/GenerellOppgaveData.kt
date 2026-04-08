@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class GenerellOppgaveData(
     val oppgaveId: UUID,
-    val oppgaveType: String,
+    val emneknagg: String,
     val tittel: String,
     val beskrivelse: String? = null,
     val strukturertData: JsonNode? = null,

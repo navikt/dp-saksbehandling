@@ -26,7 +26,7 @@ class OpprettOppgaveMottakTest {
     fun `Skal parse og delegere opprett_oppgave hendelse til oppgaveMediator`() {
         testRapid.sendTestMessage(
             opprettOppgaveMelding(
-                oppgaveType = "MeldekortKorrigering",
+                emneknagg = "MeldekortKorrigering",
                 tittel = "Meldekort trenger korrigering",
                 beskrivelse = "Meldekortet for perioden 01.03-14.03 må gjennomgås",
             ),
@@ -37,7 +37,7 @@ class OpprettOppgaveMottakTest {
 
         val hendelse = hendelseSlot.captured
         hendelse.ident shouldBe ident
-        hendelse.oppgaveType shouldBe "MeldekortKorrigering"
+        hendelse.emneknagg shouldBe "MeldekortKorrigering"
         hendelse.tittel shouldBe "Meldekort trenger korrigering"
         hendelse.beskrivelse shouldBe "Meldekortet for perioden 01.03-14.03 må gjennomgås"
     }
@@ -50,7 +50,7 @@ class OpprettOppgaveMottakTest {
             {
               "@event_name": "opprett_oppgave",
               "ident": "$ident",
-              "oppgaveType": "PDLFlytting",
+              "emneknagg": "PDLFlytting",
               "tittel": "Person har flyttet",
               "strukturertData": {
                 "fraAdresse": "Oslo",
@@ -64,7 +64,7 @@ class OpprettOppgaveMottakTest {
         verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
-        hendelse.oppgaveType shouldBe "PDLFlytting"
+        hendelse.emneknagg shouldBe "PDLFlytting"
         hendelse.strukturertData shouldNotBe null
         hendelse.strukturertData!!["fraAdresse"].asText() shouldBe "Oslo"
     }
@@ -77,7 +77,7 @@ class OpprettOppgaveMottakTest {
             {
               "@event_name": "opprett_oppgave",
               "ident": "$ident",
-              "oppgaveType": "EnkelOppgave",
+              "emneknagg": "EnkelOppgave",
               "tittel": "En enkel oppgave"
             }
             """.trimIndent(),
@@ -99,7 +99,7 @@ class OpprettOppgaveMottakTest {
             {
               "@event_name": "noe_annet",
               "ident": "$ident",
-              "oppgaveType": "Test",
+              "emneknagg": "Test",
               "tittel": "Test"
             }
             """.trimIndent(),
@@ -110,14 +110,14 @@ class OpprettOppgaveMottakTest {
 
     //language=json
     private fun opprettOppgaveMelding(
-        oppgaveType: String,
+        emneknagg: String,
         tittel: String,
         beskrivelse: String? = null,
     ) = """
         {
           "@event_name": "opprett_oppgave",
           "ident": "$ident",
-          "oppgaveType": "$oppgaveType",
+          "emneknagg": "$emneknagg",
           "tittel": "$tittel"
           ${beskrivelse?.let { ""","beskrivelse": "$it"""" } ?: ""}
         }

@@ -23,7 +23,7 @@ internal fun Route.generellOppgaveApi(oppgaveRepository: OppgaveRepository) {
                             call.respond(
                                 HttpStatusCode.OK,
                                 GenerellOppgaveDataDTO(
-                                    oppgaveType = data.oppgaveType,
+                                    emneknagg = data.emneknagg,
                                     tittel = data.tittel,
                                     beskrivelse = data.beskrivelse,
                                 ),

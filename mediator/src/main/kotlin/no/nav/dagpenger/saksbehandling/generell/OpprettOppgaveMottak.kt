@@ -24,7 +24,7 @@ internal class OpprettOppgaveMottak(
                 it.requireValue("@event_name", "opprett_oppgave")
             }
             validate {
-                it.requireKey("ident", "oppgaveType", "tittel")
+                it.requireKey("ident", "emneknagg", "tittel")
             }
             validate {
                 it.interestedIn("beskrivelse", "strukturertData")
@@ -44,8 +44,8 @@ internal class OpprettOppgaveMottak(
     ) {
         val hendelse = opprettGenerellOppgaveHendelseFraPacket(packet)
 
-        withLoggingContext("oppgaveType" to hendelse.oppgaveType) {
-            logger.info { "Mottok opprett_oppgave hendelse med type ${hendelse.oppgaveType}" }
+        withLoggingContext("emneknagg" to hendelse.emneknagg) {
+            logger.info { "Mottok opprett_oppgave hendelse med emneknagg ${hendelse.emneknagg}" }
             oppgaveMediator.håndter(hendelse)
         }
     }
@@ -54,7 +54,7 @@ internal class OpprettOppgaveMottak(
 private fun opprettGenerellOppgaveHendelseFraPacket(packet: JsonMessage): OpprettGenerellOppgaveHendelse =
     OpprettGenerellOppgaveHendelse(
         ident = packet["ident"].asText(),
-        oppgaveType = packet["oppgaveType"].asText(),
+        emneknagg = packet["emneknagg"].asText(),
         tittel = packet["tittel"].asText(),
         beskrivelse = packet["beskrivelse"].takeIf { !it.isMissingOrNull() }?.asText(),
         strukturertData = packet["strukturertData"].takeIf { !it.isMissingOrNull() },

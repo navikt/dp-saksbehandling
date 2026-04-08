@@ -2556,9 +2556,9 @@ components:
     GenerellOppgaveData:
       type: object
       properties:
-        oppgaveType:
+        emneknagg:
           type: string
-          description: Type oppgave, f.eks. MeldekortKorrigering, PDLFlytting
+          description: Emneknagg for oppgaven, brukes til filtrering
         tittel:
           type: string
           description: Visningstittel for oppgaven
@@ -2566,7 +2566,7 @@ components:
           type: string
           description: Utfyllende beskrivelse av oppgaven
       required:
-        - oppgaveType
+        - emneknagg
         - tittel
 
     TilbakekrevingBehandlingStatus:

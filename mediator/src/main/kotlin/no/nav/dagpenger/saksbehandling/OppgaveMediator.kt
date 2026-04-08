@@ -760,13 +760,13 @@ class OppgaveMediator(
         }
 
     fun håndter(hendelse: OpprettGenerellOppgaveHendelse) {
-        logger.info { "Mottatt OpprettGenerellOppgaveHendelse med type ${hendelse.oppgaveType}" }
+        logger.info { "Mottatt OpprettGenerellOppgaveHendelse med emneknagg ${hendelse.emneknagg}" }
 
         val (person, behandling) = sakMediator.opprettBehandlingForGenerellOppgave(hendelse)
 
         val oppgave =
             Oppgave(
-                emneknagger = setOf(hendelse.oppgaveType),
+                emneknagger = setOf(hendelse.emneknagg),
                 opprettet = behandling.opprettet,
                 behandling = behandling,
                 person = person,
@@ -784,13 +784,13 @@ class OppgaveMediator(
         oppgaveRepository.lagreGenerellOppgaveData(
             GenerellOppgaveData(
                 oppgaveId = oppgave.oppgaveId,
-                oppgaveType = hendelse.oppgaveType,
+                emneknagg = hendelse.emneknagg,
                 tittel = hendelse.tittel,
                 beskrivelse = hendelse.beskrivelse,
                 strukturertData = hendelse.strukturertData,
             ),
         )
 
-        logger.info { "Opprettet generell oppgave ${oppgave.oppgaveId} med type ${hendelse.oppgaveType}" }
+        logger.info { "Opprettet generell oppgave ${oppgave.oppgaveId} med emneknagg ${hendelse.emneknagg}" }
     }
 }
