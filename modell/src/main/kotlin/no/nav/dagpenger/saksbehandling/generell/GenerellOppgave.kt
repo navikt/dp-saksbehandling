@@ -84,7 +84,7 @@ class GenerellOppgave private constructor(
             val behandlingId: UUID,
         ) : Resultat()
 
-        data class ManuellBehandling(
+        data class RettTilDagpenger(
             val behandlingId: UUID,
         ) : Resultat()
     }
@@ -118,7 +118,14 @@ class GenerellOppgave private constructor(
                 requireNotNull(opprettetBehandlingId) {
                     "behandlingId kan ikke være null etter opprettelse av manuell behandling"
                 }
-                this.resultat = Resultat.ManuellBehandling(opprettetBehandlingId)
+                this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
+            }
+
+            GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING -> {
+                requireNotNull(opprettetBehandlingId) {
+                    "behandlingId kan ikke være null etter opprettelse av revurdering"
+                }
+                this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
             }
         }
         this.tilstand = Tilstand.FERDIGSTILT

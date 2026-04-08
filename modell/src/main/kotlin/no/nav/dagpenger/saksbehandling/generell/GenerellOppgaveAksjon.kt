@@ -6,6 +6,7 @@ sealed class GenerellOppgaveAksjon {
     enum class Type {
         AVSLUTT,
         OPPRETT_MANUELL_BEHANDLING,
+        OPPRETT_REVURDERING_BEHANDLING,
         OPPRETT_KLAGE,
     }
 
@@ -23,6 +24,13 @@ sealed class GenerellOppgaveAksjon {
         override val valgtSakId: UUID,
     ) : GenerellOppgaveAksjon() {
         override val type: Type = Type.OPPRETT_MANUELL_BEHANDLING
+    }
+
+    data class OpprettRevurderingBehandling(
+        val saksbehandlerToken: String,
+        override val valgtSakId: UUID,
+    ) : GenerellOppgaveAksjon() {
+        override val type: Type = Type.OPPRETT_REVURDERING_BEHANDLING
     }
 
     data class OpprettKlage(

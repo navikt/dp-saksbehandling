@@ -80,7 +80,7 @@ class PostgresGenerellOppgaveRepository(
                                     when (resultat) {
                                         GenerellOppgave.Resultat.Ingen -> null
                                         is GenerellOppgave.Resultat.Klage -> resultat.behandlingId
-                                        is GenerellOppgave.Resultat.ManuellBehandling -> resultat.behandlingId
+                                        is GenerellOppgave.Resultat.RettTilDagpenger -> resultat.behandlingId
                                         null -> null
                                     },
                             ),
@@ -178,7 +178,7 @@ class PostgresGenerellOppgaveRepository(
                 when (val resultatType = this.stringOrNull("resultat_type")) {
                     "Ingen" -> GenerellOppgave.Resultat.Ingen
                     "Klage" -> GenerellOppgave.Resultat.Klage(this.uuid("resultat_behandling_id"))
-                    "ManuellBehandling" -> GenerellOppgave.Resultat.ManuellBehandling(this.uuid("resultat_behandling_id"))
+                    "RettTilDagpenger" -> GenerellOppgave.Resultat.RettTilDagpenger(this.uuid("resultat_behandling_id"))
                     else -> null
                 },
         )

@@ -58,12 +58,17 @@ internal fun Route.generellOppgaveApi(
                                         valgtSakId = sakId,
                                     )
                                 }
+                                BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING -> {
+                                    val sakId = requireNotNull(request.sakId) { "sakId må være satt for revurdering" }
+                                    GenerellOppgaveAksjon.OpprettRevurderingBehandling(
+                                        saksbehandlerToken = saksbehandlerToken,
+                                        valgtSakId = sakId,
+                                    )
+                                }
                                 BehandlingVariantDTO.KLAGE -> {
                                     val sakId = requireNotNull(request.sakId) { "sakId må være satt for klage" }
                                     GenerellOppgaveAksjon.OpprettKlage(sakId)
                                 }
-                                BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING ->
-                                    throw IllegalArgumentException("Revurdering støttes ikke for generell oppgave")
                             }
 
                         generellOppgaveMediator.ferdigstill(
@@ -109,7 +114,7 @@ private fun GenerellOppgave.toBehandling(): TynnBehandlingDTO? =
                 behandlingType = BehandlingTypeDTO.KLAGE,
             )
 
-        is GenerellOppgave.Resultat.ManuellBehandling ->
+        is GenerellOppgave.Resultat.RettTilDagpenger ->
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,

@@ -35,19 +35,32 @@ class GenerellOppgaveBehandler(
                     generellOppgave = generellOppgave,
                     hendelse = hendelse,
                 )
+
+            is GenerellOppgaveAksjon.OpprettRevurderingBehandling ->
+                opprettBehandling(
+                    generellOppgave = generellOppgave,
+                    hendelse = hendelse,
+                )
         }
 
     private fun opprettBehandling(
         generellOppgave: GenerellOppgave,
         hendelse: FerdigstillGenerellOppgaveHendelse,
     ): GenerellOppgaveFerdigstiltHendelse {
-        val aksjon = hendelse.aksjon as GenerellOppgaveAksjon.OpprettManuellBehandling
+        val (saksbehandlerToken, behandlingstype) =
+            when (val aksjon = hendelse.aksjon) {
+                is GenerellOppgaveAksjon.OpprettManuellBehandling ->
+                    aksjon.saksbehandlerToken to BehandlingstypeDTO.MANUELL
+                is GenerellOppgaveAksjon.OpprettRevurderingBehandling ->
+                    aksjon.saksbehandlerToken to BehandlingstypeDTO.REVURDERING
+                else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: $aksjon")
+            }
 
         behandlingKlient
             .opprettBehandling(
                 personIdent = generellOppgave.person.ident,
-                saksbehandlerToken = aksjon.saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.MANUELL,
+                saksbehandlerToken = saksbehandlerToken,
+                behandlingstype = behandlingstype,
                 hendelseDato = generellOppgave.opprettet.toLocalDate(),
                 hendelseId = generellOppgave.id.toString(),
                 begrunnelse = generellOppgave.vurdering() ?: "Opprettet fra generell oppgave",
