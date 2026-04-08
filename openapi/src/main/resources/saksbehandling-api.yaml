@@ -9,6 +9,37 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
+  /generell-oppgave-data/{oppgaveId}:
+    get:
+      summary: Hent generell oppgave-data for en gitt oppgaveId
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med generell oppgave-data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerellOppgaveData'
+        '404':
+          description: Generell oppgave-data for oppgaveId ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+      security:
+        - azureAd: [ ]
   /tilbakekreving/{behandlingId}:
     get:
       summary: Hent tilbakekreving for en gitt behandlingId
@@ -1686,6 +1717,7 @@ components:
         - INNSENDING
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
+        - GENERELL
 
     BehandlingType:
       type: string
@@ -1695,6 +1727,7 @@ components:
         - INNSENDING
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
+        - GENERELL
 
     BehandlingVariant:
       type: string
@@ -2519,6 +2552,22 @@ components:
         - totaltFeilutbetaltBelop
         - saksbehandlingURL
         - fullstendigPeriode
+
+    GenerellOppgaveData:
+      type: object
+      properties:
+        oppgaveType:
+          type: string
+          description: Type oppgave, f.eks. MeldekortKorrigering, PDLFlytting
+        tittel:
+          type: string
+          description: Visningstittel for oppgaven
+        beskrivelse:
+          type: string
+          description: Utfyllende beskrivelse av oppgaven
+      required:
+        - oppgaveType
+        - tittel
 
     TilbakekrevingBehandlingStatus:
       type: string

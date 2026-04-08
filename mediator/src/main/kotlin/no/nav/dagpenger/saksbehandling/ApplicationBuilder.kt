@@ -18,12 +18,14 @@ import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveDataRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.generell.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
@@ -221,6 +223,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
+                            generellOppgaveDataRepository = PostgresGenerellOppgaveDataRepository(dataSource),
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -297,6 +300,13 @@ internal class ApplicationBuilder(
                 KlageBehandlingUtførtMottakForOppgave(
                     rapidsConnection = rapidsConnection,
                     oppgaveMediator = oppgaveMediator,
+                )
+                OpprettOppgaveMottak(
+                    rapidsConnection = rapidsConnection,
+                    personMediator = personMediator,
+                    oppgaveRepository = oppgaveRepository,
+                    sakRepository = sakRepository,
+                    generellOppgaveDataRepository = PostgresGenerellOppgaveDataRepository(dataSource),
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(
