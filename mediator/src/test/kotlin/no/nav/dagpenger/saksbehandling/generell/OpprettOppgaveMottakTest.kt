@@ -6,24 +6,23 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import org.junit.jupiter.api.Test
 
 class OpprettOppgaveMottakTest {
     private val testRapid = TestRapid()
-    private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
+    private val generellOppgaveMediator = mockk<GenerellOppgaveMediator>(relaxed = true)
     private val ident = "12345678901"
 
     init {
         OpprettOppgaveMottak(
             rapidsConnection = testRapid,
-            oppgaveMediator = oppgaveMediator,
+            generellOppgaveMediator = generellOppgaveMediator,
         )
     }
 
     @Test
-    fun `Skal parse og delegere opprett_oppgave hendelse til oppgaveMediator`() {
+    fun `Skal parse og delegere opprett_oppgave hendelse til generellOppgaveMediator`() {
         testRapid.sendTestMessage(
             opprettOppgaveMelding(
                 emneknagg = "MeldekortKorrigering",
@@ -33,7 +32,7 @@ class OpprettOppgaveMottakTest {
         )
 
         val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
-        verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
+        verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
         hendelse.ident shouldBe ident
@@ -61,7 +60,7 @@ class OpprettOppgaveMottakTest {
         )
 
         val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
-        verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
+        verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
         hendelse.emneknagg shouldBe "PDLFlytting"
@@ -84,7 +83,7 @@ class OpprettOppgaveMottakTest {
         )
 
         val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
-        verify(exactly = 1) { oppgaveMediator.håndter(capture(hendelseSlot)) }
+        verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
         hendelse.beskrivelse shouldBe null
@@ -105,7 +104,7 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        verify(exactly = 0) { oppgaveMediator.håndter(any<OpprettGenerellOppgaveHendelse>()) }
+        verify(exactly = 0) { generellOppgaveMediator.taImot(any()) }
     }
 
     //language=json

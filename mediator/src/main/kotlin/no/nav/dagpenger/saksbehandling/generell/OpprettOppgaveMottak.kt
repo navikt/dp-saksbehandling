@@ -9,14 +9,13 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 
 private val logger = KotlinLogging.logger {}
 
 internal class OpprettOppgaveMottak(
     rapidsConnection: RapidsConnection,
-    private val oppgaveMediator: OppgaveMediator,
+    private val generellOppgaveMediator: GenerellOppgaveMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -46,7 +45,7 @@ internal class OpprettOppgaveMottak(
 
         withLoggingContext("emneknagg" to hendelse.emneknagg) {
             logger.info { "Mottok opprett_oppgave hendelse med emneknagg ${hendelse.emneknagg}" }
-            oppgaveMediator.håndter(hendelse)
+            generellOppgaveMediator.taImot(hendelse)
         }
     }
 }

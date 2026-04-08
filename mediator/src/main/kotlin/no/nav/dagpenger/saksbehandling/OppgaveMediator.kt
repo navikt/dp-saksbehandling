@@ -32,7 +32,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -566,19 +565,14 @@ class OppgaveMediator(
         oppgave: Oppgave,
         saksbehandlerToken: String,
     ) {
-        if (oppgave.behandling.utløstAv == UtløstAvType.GENERELL) {
-            logger.info { "Ferdigstiller generell oppgave uten dp-behandling-kall" }
+        godkjennEllerBeslutt(
+            behandlingId = oppgave.behandling.behandlingId,
+            ident = oppgave.personIdent(),
+            saksbehandlerToken = saksbehandlerToken,
+        ).onSuccess {
             oppgaveRepository.lagre(oppgave)
-        } else {
-            godkjennEllerBeslutt(
-                behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.personIdent(),
-                saksbehandlerToken = saksbehandlerToken,
-            ).onSuccess {
-                oppgaveRepository.lagre(oppgave)
-            }.onFailure {
-                throw it
-            }
+        }.onFailure {
+            throw it
         }
     }
 
@@ -758,39 +752,4 @@ class OppgaveMediator(
                     }
                 }
         }
-
-    fun håndter(hendelse: OpprettGenerellOppgaveHendelse) {
-        logger.info { "Mottatt OpprettGenerellOppgaveHendelse med emneknagg ${hendelse.emneknagg}" }
-
-        val (person, behandling) = sakMediator.opprettBehandlingForGenerellOppgave(hendelse)
-
-        val oppgave =
-            Oppgave(
-                emneknagger = setOf(hendelse.emneknagg),
-                opprettet = behandling.opprettet,
-                behandling = behandling,
-                person = person,
-                meldingOmVedtak =
-                    Oppgave.MeldingOmVedtak(
-                        kilde = Oppgave.MeldingOmVedtakKilde.INGEN,
-                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                    ),
-            ).also {
-                it.settKlarTilBehandling(hendelse)
-            }
-
-        oppgaveRepository.lagre(oppgave)
-
-        oppgaveRepository.lagreGenerellOppgave(
-            GenerellOppgave(
-                oppgaveId = oppgave.oppgaveId,
-                emneknagg = hendelse.emneknagg,
-                tittel = hendelse.tittel,
-                beskrivelse = hendelse.beskrivelse,
-                strukturertData = hendelse.strukturertData,
-            ),
-        )
-
-        logger.info { "Opprettet generell oppgave ${oppgave.oppgaveId} med emneknagg ${hendelse.emneknagg}" }
-    }
 }

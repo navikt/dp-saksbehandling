@@ -18,12 +18,15 @@ import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveBehandler
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
 import no.nav.dagpenger.saksbehandling.generell.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
@@ -170,6 +173,19 @@ internal class ApplicationBuilder(
             sakMediator = sakMediator,
         )
 
+    private val generellOppgaveRepository = PostgresGenerellOppgaveRepository(dataSource)
+    private val generellOppgaveMediator =
+        GenerellOppgaveMediator(
+            generellOppgaveRepository = generellOppgaveRepository,
+            personMediator = personMediator,
+            generellOppgaveBehandler =
+                GenerellOppgaveBehandler(
+                    klageMediator = klageMediator,
+                    behandlingKlient = behandlingKlient,
+                ),
+            sakMediator = sakMediator,
+        )
+
     private val meldingOmVedtakMediator =
         MeldingOmVedtakMediator(
             oppgaveMediator = oppgaveMediator,
@@ -222,7 +238,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
-                            oppgaveRepository = oppgaveRepository,
+                            generellOppgaveMediator = generellOppgaveMediator,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -302,7 +318,7 @@ internal class ApplicationBuilder(
                 )
                 OpprettOppgaveMottak(
                     rapidsConnection = rapidsConnection,
-                    oppgaveMediator = oppgaveMediator,
+                    generellOppgaveMediator = generellOppgaveMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(

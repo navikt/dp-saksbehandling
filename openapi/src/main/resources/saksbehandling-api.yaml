@@ -9,12 +9,12 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
-  /generell-oppgave/{oppgaveId}:
+  /generell-oppgave/{id}:
     get:
-      summary: Hent generell oppgave for en gitt oppgaveId
+      summary: Hent generell oppgave for en gitt id
       parameters:
         - in: path
-          name: oppgaveId
+          name: id
           required: true
           schema:
             type: string
@@ -27,7 +27,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/GenerellOppgave'
         '404':
-          description: Generell oppgave for oppgaveId ble ikke funnet
+          description: Generell oppgave ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+      security:
+        - azureAd: [ ]
+  /generell-oppgave/{id}/ferdigstill:
+    put:
+      summary: Ferdigstill generell oppgave
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FerdigstillGenerellOppgaveRequest'
+      responses:
+        '204':
+          description: Generell oppgave ferdigstilt
+        '404':
+          description: Generell oppgave ble ikke funnet
           content:
             application/problem+json:
               schema:
@@ -2565,9 +2598,33 @@ components:
         beskrivelse:
           type: string
           description: Utfyllende beskrivelse av oppgaven
+        lovligeSaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/TynnSak'
+        sakId:
+          type: string
+          format: uuid
+          description: Valgt sak-id ved ferdigstilling
+        vurdering:
+          type: string
+          description: Saksbehandlers vurdering
+        nyBehandling:
+          $ref: '#/components/schemas/TynnBehandling'
       required:
         - emneknagg
         - tittel
+
+    FerdigstillGenerellOppgaveRequest:
+      type: object
+      properties:
+        sakId:
+          type: string
+          format: uuid
+        vurdering:
+          type: string
+        behandlingsvariant:
+          $ref: '#/components/schemas/BehandlingVariant'
 
     TilbakekrevingBehandlingStatus:
       type: string
