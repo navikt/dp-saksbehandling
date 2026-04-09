@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import PersonMediator
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.JacksonConverter
 import io.ktor.server.application.Application
@@ -20,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
 import no.nav.dagpenger.saksbehandling.generell.generellOppgaveApi
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator

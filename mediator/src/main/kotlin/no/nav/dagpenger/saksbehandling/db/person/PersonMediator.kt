@@ -1,4 +1,4 @@
-
+package no.nav.dagpenger.saksbehandling.db.person
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope

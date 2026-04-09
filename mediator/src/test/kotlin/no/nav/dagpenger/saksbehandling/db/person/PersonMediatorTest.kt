@@ -1,8 +1,5 @@
 package no.nav.dagpenger.saksbehandling.db.person
 
-import AdresseBeeskyttetPersonException
-import PersonMediator
-import SkjermetPersonException
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.coEvery
@@ -13,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import org.junit.jupiter.api.Test
 
 class PersonMediatorTest {

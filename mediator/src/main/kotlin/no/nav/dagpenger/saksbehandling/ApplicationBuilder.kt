@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveReposi
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
@@ -182,6 +182,7 @@ internal class ApplicationBuilder(
                     klageMediator = klageMediator,
                     behandlingKlient = behandlingKlient,
                 ),
+            personMediator = personMediator,
             sakMediator = sakMediator,
             oppgaveMediator = oppgaveMediator,
         )

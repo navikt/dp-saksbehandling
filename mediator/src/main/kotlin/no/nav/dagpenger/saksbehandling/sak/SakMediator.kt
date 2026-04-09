@@ -1,8 +1,5 @@
 package no.nav.dagpenger.saksbehandling.sak
 
-import AdresseBeeskyttetPersonException
-import PersonMediator
-import SkjermetPersonException
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -10,10 +7,12 @@ import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
+import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -269,16 +268,14 @@ class SakMediator(
         }
     }
 
-    fun lagreBehandlingUtenSak(
-        ident: String,
+    fun lagreBehandling(
+        personId: UUID,
         behandling: Behandling,
-    ): Person {
-        val person = personMediator.finnEllerOpprettPerson(ident)
+    ) {
         sakRepository.lagreBehandling(
-            personId = person.id,
+            personId = personId,
             sakId = null,
             behandling = behandling,
         )
-        return person
     }
 }

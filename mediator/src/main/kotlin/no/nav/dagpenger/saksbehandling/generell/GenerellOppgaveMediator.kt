@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -18,11 +19,13 @@ private val logger = KotlinLogging.logger {}
 class GenerellOppgaveMediator(
     private val generellOppgaveRepository: GenerellOppgaveRepository,
     private val generellOppgaveBehandler: GenerellOppgaveBehandler,
+    private val personMediator: PersonMediator,
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
 ) {
     fun taImot(hendelse: OpprettGenerellOppgaveHendelse): GenerellOppgave {
         val generellOppgaveId = UUIDv7.ny()
+        val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
 
         val behandling =
             Behandling(
@@ -32,11 +35,10 @@ class GenerellOppgaveMediator(
                 utløstAv = UtløstAvType.GENERELL,
             )
 
-        val person =
-            sakMediator.lagreBehandlingUtenSak(
-                ident = hendelse.ident,
-                behandling = behandling,
-            )
+        sakMediator.lagreBehandling(
+            personId = person.id,
+            behandling = behandling,
+        )
 
         val generellOppgave =
             GenerellOppgave.opprett(

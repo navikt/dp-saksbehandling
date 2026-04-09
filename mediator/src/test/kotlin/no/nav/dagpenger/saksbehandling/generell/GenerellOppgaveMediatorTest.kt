@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.generell
 
-import PersonMediator
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -11,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
@@ -50,6 +50,7 @@ class GenerellOppgaveMediatorTest {
                 GenerellOppgaveMediator(
                     generellOppgaveRepository = generellOppgaveRepository,
                     generellOppgaveBehandler = mockk(),
+                    personMediator = personMediatorMock,
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                 )
@@ -111,6 +112,7 @@ class GenerellOppgaveMediatorTest {
                 GenerellOppgaveMediator(
                     generellOppgaveRepository = generellOppgaveRepository,
                     generellOppgaveBehandler = generellOppgaveBehandler,
+                    personMediator = personMediatorMock,
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                 )
