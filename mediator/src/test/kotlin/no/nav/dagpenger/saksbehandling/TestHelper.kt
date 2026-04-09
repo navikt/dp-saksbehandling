@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -90,6 +91,33 @@ internal object TestHelper {
         )
 
     val testInnsending = lagInnsending()
+
+    val testGenerellOppgave = lagGenerellOppgave()
+
+    fun lagGenerellOppgave(
+        id: UUID = UUIDv7.ny(),
+        person: Person = testPerson,
+        tittel: String = "Test oppgave",
+        beskrivelse: String = "",
+        strukturertData: Map<String, Any> = emptyMap(),
+        opprettet: LocalDateTime = opprettetNå,
+        tilstand: String = "BEHANDLES",
+        vurdering: String? = null,
+        resultat: GenerellOppgave.Resultat = GenerellOppgave.Resultat.Ingen,
+        valgtSakId: UUID? = null,
+    ): GenerellOppgave =
+        GenerellOppgave.rehydrer(
+            id = id,
+            person = person,
+            tittel = tittel,
+            beskrivelse = beskrivelse,
+            strukturertData = strukturertData,
+            opprettet = opprettet,
+            tilstand = tilstand,
+            vurdering = vurdering,
+            resultat = resultat,
+            valgtSakId = valgtSakId,
+        )
 
     fun lagInnsending(
         innsendingId: UUID = UUIDv7.ny(),

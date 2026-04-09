@@ -1,0 +1,285 @@
+package no.nav.dagpenger.saksbehandling.api
+
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
+import io.kotest.matchers.shouldBe
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.ApplicationTestBuilder
+import io.ktor.server.testing.testApplication
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import no.nav.dagpenger.saksbehandling.Sak
+import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAksjon
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
+import org.junit.jupiter.api.Test
+
+class GenerellOppgaveApiTest {
+    init {
+        mockAzure()
+    }
+
+    private val generellOppgaveId = UUIDv7.ny()
+
+    @Test
+    fun `Skal kaste feil når det mangler autentisering`() {
+        val mediator = mockk<GenerellOppgaveMediator>()
+        withGenerellOppgaveApi(mediator) {
+            client.get("generell-oppgave/$generellOppgaveId").status shouldBe HttpStatusCode.Unauthorized
+            client
+                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                    headers[HttpHeaders.ContentType] = "application/json"
+                    //language=json
+                    setBody("""{ "vurdering": "test" }""".trimIndent())
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Unauthorized
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente en generell oppgave`() {
+        val resultat = GenerellOppgave.Resultat.RettTilDagpenger(UUIDv7.ny())
+        val sak =
+            Sak(
+                sakId = UUIDv7.ny(),
+                søknadId = UUIDv7.ny(),
+                opprettet = TestHelper.opprettetNå,
+            )
+        val generellOppgave =
+            TestHelper.lagGenerellOppgave(
+                id = generellOppgaveId,
+                tittel = "Test oppgave",
+                beskrivelse = "En beskrivelse",
+                vurdering = "Min vurdering",
+                resultat = resultat,
+                valgtSakId = sak.sakId,
+            )
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.hent(generellOppgaveId, any()) } returns generellOppgave
+                every { it.hentLovligeSaker(TestHelper.personIdent) } returns listOf(sak)
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .get("generell-oppgave/$generellOppgaveId") {
+                    autentisert()
+                    this.header(HttpHeaders.Accept, "application/json")
+                }.bodyAsText() shouldEqualSpecifiedJson
+                """
+                {
+                  "tittel": "Test oppgave",
+                  "beskrivelse": "En beskrivelse",
+                  "sakId": "${sak.sakId}",
+                  "vurdering": "Min vurdering",
+                  "nyBehandling": {
+                      "behandlingId": "${resultat.behandlingId}",
+                      "behandlingType": "RETT_TIL_DAGPENGER"
+                    },
+                  "lovligeSaker": [
+                    {
+                      "sakId": "${sak.sakId}",
+                      "opprettetDato": "${sak.opprettet.format(ISO_TIMESTAMP)}"
+                    }
+                  ]
+                }
+                """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente generell oppgave uten resultat`() {
+        val generellOppgave =
+            TestHelper.lagGenerellOppgave(
+                id = generellOppgaveId,
+                tittel = "Enkel oppgave",
+                beskrivelse = "",
+            )
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.hent(generellOppgaveId, any()) } returns generellOppgave
+                every { it.hentLovligeSaker(TestHelper.personIdent) } returns emptyList()
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .get("generell-oppgave/$generellOppgaveId") {
+                    autentisert()
+                    this.header(HttpHeaders.Accept, "application/json")
+                }.bodyAsText() shouldEqualSpecifiedJson
+                """
+                {
+                  "tittel": "Enkel oppgave",
+                  "beskrivelse": "",
+                  "lovligeSaker": []
+                }
+                """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en generell oppgave uten aksjon`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Ferdig vurdert"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.generellOppgaveId shouldBe generellOppgaveId
+                        it.aksjon.valgtSakId shouldBe sakId
+                        it.vurdering shouldBe "Ferdig vurdert"
+                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.AVSLUTT
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille med KLAGE variant`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Opprett klage",
+                            "behandlingsvariant": "KLAGE"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_KLAGE
+                        it.aksjon.valgtSakId shouldBe sakId
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille med RETT_TIL_DAGPENGER_MANUELL variant`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Opprett manuell behandling",
+                            "behandlingsvariant": "RETT_TIL_DAGPENGER_MANUELL"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING
+                        it.aksjon.valgtSakId shouldBe sakId
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille med RETT_TIL_DAGPENGER_REVURDERING variant`() {
+        val sakId = UUIDv7.ny()
+        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Opprett revurdering",
+                            "behandlingsvariant": "RETT_TIL_DAGPENGER_REVURDERING"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING
+                        it.aksjon.valgtSakId shouldBe sakId
+                    }
+                }
+        }
+    }
+
+    private fun withGenerellOppgaveApi(
+        generellOppgaveMediator: GenerellOppgaveMediator,
+        test: suspend ApplicationTestBuilder.() -> Unit,
+    ) {
+        testApplication {
+            this.application {
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    produksjonsstatistikkRepository = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                    sakMediator = mockk(),
+                    innsendingMediator = mockk(relaxed = true),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
+                    generellOppgaveMediator = generellOppgaveMediator,
+                )
+            }
+            test()
+        }
+    }
+}
