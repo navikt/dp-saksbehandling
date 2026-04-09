@@ -136,6 +136,34 @@ Models are generated from `openapi/src/main/resources/saksbehandling-api.yaml`:
 - Repository pattern: interfaces in `modell`, implementations as `PostgresXxxRepository` in `mediator`
 - `UtløstAvType` is stored as text in `behandling_v1.utlost_av` column
 
+#### Timestamps og tidssoner
+
+Alle tabeller bruker `TIMESTAMP WITHOUT TIME ZONE` med eksplisitt Europe/Oslo tidssone:
+- `opprettet` — når entiteten ble opprettet (settes i domenet)
+- `registrert_tidspunkt` — når raden ble lagt inn i databasen (default)
+- `endret_tidspunkt` — når raden sist ble oppdatert (trigger)
+
+```sql
+-- Standard mønster for timestamp-kolonner
+opprettet               TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+registrert_tidspunkt    TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp),
+endret_tidspunkt        TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp)
+```
+
+#### Trigger for automatisk oppdatering
+
+Bruk den eksisterende `oppdater_endret_tidspunkt()` funksjonen for alle tabeller:
+
+```sql
+CREATE OR REPLACE TRIGGER oppdater_endret_tidspunkt
+    BEFORE UPDATE
+    ON <tabellnavn>
+    FOR EACH ROW
+EXECUTE FUNCTION oppdater_endret_tidspunkt();
+```
+
+Funksjonen er definert i `V5__FJERNE_TIMEZONE.sql` og setter `endret_tidspunkt = timezone('Europe/Oslo'::text, current_timestamp)` ved hver UPDATE.
+
 ### Kotlin & Build
 
 - Kotlin JVM toolchain **21** (Temurin via `.sdkmanrc`)
