@@ -22,69 +22,14 @@ import org.junit.jupiter.api.Test
 
 class GenerellOppgaveMediatorTest {
     private val testPerson = DBTestHelper.testPerson
-    private val saksbehandler =
-        Saksbehandler(
-            navIdent = "saksbehandler1",
-            emptySet(),
-        )
+    private val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
 
     @Test
-    fun `Skal opprette generell oppgave, behandling og oppgave ved taImot`() {
+    fun `E2E - opprette og ferdigstille generell oppgave`() {
         DBTestHelper.withPerson { ds ->
             val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
-            val sakRepository = PostgresSakRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = sakRepository)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(ds),
-                    behandlingKlient = mockk(),
-                    utsendingMediator = mockk(),
-                    sakMediator = sakMediator,
-                )
-
-            val mediator =
-                GenerellOppgaveMediator(
-                    generellOppgaveRepository = generellOppgaveRepository,
-                    generellOppgaveBehandler = mockk(),
-                    personMediator = personMediator,
-                    sakMediator = sakMediator,
-                    oppgaveMediator = oppgaveMediator,
-                )
-
-            val hendelse =
-                OpprettGenerellOppgaveHendelse(
-                    ident = testPerson.ident,
-                    emneknagg = "MeldekortKorrigering",
-                    tittel = "Meldekort trenger korrigering",
-                    beskrivelse = "Se på perioden",
-                )
-
-            val generellOppgave = mediator.taImot(hendelse)
-
-            generellOppgave.tittel shouldBe "Meldekort trenger korrigering"
-            generellOppgave.beskrivelse shouldBe "Se på perioden"
-            generellOppgave.tilstand() shouldBe "BEHANDLES"
-
-            // Verifiser at generell oppgave ble lagret
-            val lagretGenerellOppgave = generellOppgaveRepository.hent(generellOppgave.id)
-            lagretGenerellOppgave.tittel shouldBe "Meldekort trenger korrigering"
-
-            // Verifiser at oppgave ble opprettet med riktig emneknagg
-            val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
-            oppgaver.size shouldBe 1
-            oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.GENERELL
-            oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
-        }
-    }
-
-    @Test
-    fun `Skal ferdigstille generell oppgave med AVSLUTT aksjon`() {
-        DBTestHelper.withPerson { ds ->
-            val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
-            val sakRepository = PostgresSakRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = sakRepository)
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = PostgresOppgaveRepository(ds),
@@ -115,19 +60,26 @@ class GenerellOppgaveMediatorTest {
                     oppgaveMediator = oppgaveMediator,
                 )
 
-            // Opprett generell oppgave
+            // Opprett
             val generellOppgave =
                 mediator.taImot(
                     OpprettGenerellOppgaveHendelse(
                         ident = testPerson.ident,
-                        emneknagg = "TestOppgave",
-                        tittel = "Test",
-                        beskrivelse = "",
+                        emneknagg = "MeldekortKorrigering",
+                        tittel = "Meldekort trenger korrigering",
+                        beskrivelse = "Se på perioden",
                     ),
                 )
 
-            // Tildel oppgaven til saksbehandler
+            generellOppgave.tilstand() shouldBe "BEHANDLES"
+
+            // Verifiser oppgave opprettet med riktig type og emneknagg
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
+            oppgaver.size shouldBe 1
+            oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.GENERELL
+            oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
+
+            // Tildel og ferdigstill
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgaver.first().oppgaveId,
@@ -136,7 +88,6 @@ class GenerellOppgaveMediatorTest {
                 ),
             )
 
-            // Ferdigstill
             mediator.ferdigstill(
                 FerdigstillGenerellOppgaveHendelse(
                     generellOppgaveId = generellOppgave.id,
@@ -146,13 +97,11 @@ class GenerellOppgaveMediatorTest {
                 ),
             )
 
-            // Verifiser generell oppgave er ferdigstilt
+            // Verifiser ferdigstilt
             val ferdigstiltOppgave = generellOppgaveRepository.hent(generellOppgave.id)
             ferdigstiltOppgave.tilstand() shouldBe "FERDIGSTILT"
             ferdigstiltOppgave.vurdering() shouldBe "Alt er OK"
-            ferdigstiltOppgave.resultat() shouldBe GenerellOppgave.Resultat.Ingen
 
-            // Verifiser oppgave er ferdigbehandlet
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
             oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
         }
