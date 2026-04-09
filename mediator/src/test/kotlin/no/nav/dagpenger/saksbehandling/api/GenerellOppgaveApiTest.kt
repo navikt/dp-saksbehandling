@@ -62,6 +62,7 @@ class GenerellOppgaveApiTest {
                 id = generellOppgaveId,
                 tittel = "Test oppgave",
                 beskrivelse = "En beskrivelse",
+                strukturertData = mapOf("meldekortId" to "MK-2026-01", "timer" to 40),
                 vurdering = "Min vurdering",
                 resultat = resultat,
                 valgtSakId = sak.sakId,
@@ -81,6 +82,10 @@ class GenerellOppgaveApiTest {
                 {
                   "tittel": "Test oppgave",
                   "beskrivelse": "En beskrivelse",
+                  "strukturertData": {
+                    "meldekortId": "MK-2026-01",
+                    "timer": 40
+                  },
                   "sakId": "${sak.sakId}",
                   "vurdering": "Min vurdering",
                   "nyBehandling": {
@@ -121,6 +126,7 @@ class GenerellOppgaveApiTest {
                 {
                   "tittel": "Enkel oppgave",
                   "beskrivelse": "",
+                  "strukturertData": {},
                   "lovligeSaker": []
                 }
                 """.trimIndent()

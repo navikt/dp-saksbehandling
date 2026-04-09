@@ -2595,6 +2595,10 @@ components:
         beskrivelse:
           type: string
           description: Utfyllende beskrivelse av oppgaven
+        strukturertData:
+          type: object
+          additionalProperties: true
+          description: Strukturert data knyttet til oppgaven
         lovligeSaker:
           type: array
           items:

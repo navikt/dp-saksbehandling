@@ -98,9 +98,9 @@ class GenerellOppgaveMediatorTest {
             )
 
             // Verifiser ferdigstilt
-            val ferdigstiltOppgave = generellOppgaveRepository.hent(generellOppgave.id)
-            ferdigstiltOppgave.tilstand() shouldBe "FERDIGSTILT"
-            ferdigstiltOppgave.vurdering() shouldBe "Alt er OK"
+            val ferdigstiltGenerellOppgave = generellOppgaveRepository.hent(generellOppgave.id)
+            ferdigstiltGenerellOppgave.tilstand() shouldBe "FERDIGSTILT"
+            ferdigstiltGenerellOppgave.vurdering() shouldBe "Alt er OK"
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
             oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet

@@ -93,6 +93,7 @@ private fun GenerellOppgave.tilDTO(lovligeSaker: List<Sak>): GenerellOppgaveDTO 
     GenerellOppgaveDTO(
         tittel = this.tittel,
         beskrivelse = this.beskrivelse,
+        strukturertData = this.strukturertData,
         lovligeSaker =
             lovligeSaker.map {
                 TynnSakDTO(
