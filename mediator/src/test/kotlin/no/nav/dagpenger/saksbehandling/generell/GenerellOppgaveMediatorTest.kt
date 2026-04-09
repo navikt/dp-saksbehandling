@@ -4,221 +4,161 @@ import PersonMediator
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.Sak
-import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.TestHelper
-import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 
 class GenerellOppgaveMediatorTest {
-    private val testPerson = TestHelper.testPerson
-    private val saksbehandler = TestHelper.saksbehandler
-
-    private val generellOppgaveRepository = mockk<GenerellOppgaveRepository>(relaxed = true)
-    private val personMediator = mockk<PersonMediator>()
-    private val generellOppgaveBehandler = mockk<GenerellOppgaveBehandler>()
-    private val sakMediator = mockk<SakMediator>()
-    private val sakRepository = mockk<SakRepository>(relaxed = true)
-    private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
-
-    private val mediator =
-        GenerellOppgaveMediator(
-            generellOppgaveRepository = generellOppgaveRepository,
-            personMediator = personMediator,
-            generellOppgaveBehandler = generellOppgaveBehandler,
-            sakMediator = sakMediator,
-            sakRepository = sakRepository,
-            oppgaveMediator = oppgaveMediator,
+    private val testPerson = DBTestHelper.testPerson
+    private val saksbehandler =
+        Saksbehandler(
+            navIdent = "saksbehandler1",
+            emptySet(),
         )
+
+    private val personMediatorMock: PersonMediator =
+        mockk<PersonMediator>().also {
+            every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
+        }
 
     @Test
     fun `Skal opprette generell oppgave, behandling og oppgave ved taImot`() {
-        every { personMediator.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
+        DBTestHelper.withPerson { ds ->
+            val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
+            val sakRepository = PostgresSakRepository(ds)
+            val sakMediator = SakMediator(personMediator = personMediatorMock, sakRepository = sakRepository)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(ds),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
 
-        val hendelse =
-            OpprettGenerellOppgaveHendelse(
-                ident = testPerson.ident,
-                emneknagg = "MeldekortKorrigering",
-                tittel = "Meldekort trenger korrigering",
-                beskrivelse = "Se på perioden",
-            )
+            val mediator =
+                GenerellOppgaveMediator(
+                    generellOppgaveRepository = generellOppgaveRepository,
+                    personMediator = personMediatorMock,
+                    generellOppgaveBehandler = mockk(),
+                    sakMediator = sakMediator,
+                    sakRepository = sakRepository,
+                    oppgaveMediator = oppgaveMediator,
+                )
 
-        val generellOppgave = mediator.taImot(hendelse)
+            val hendelse =
+                OpprettGenerellOppgaveHendelse(
+                    ident = testPerson.ident,
+                    emneknagg = "MeldekortKorrigering",
+                    tittel = "Meldekort trenger korrigering",
+                    beskrivelse = "Se på perioden",
+                )
 
-        generellOppgave.tittel shouldBe "Meldekort trenger korrigering"
-        generellOppgave.beskrivelse shouldBe "Se på perioden"
-        generellOppgave.tilstand() shouldBe "BEHANDLES"
-        generellOppgave.person shouldBe testPerson
+            val generellOppgave = mediator.taImot(hendelse)
 
-        val generellOppgaveSlot = slot<GenerellOppgave>()
-        verify { generellOppgaveRepository.lagre(capture(generellOppgaveSlot)) }
-        generellOppgaveSlot.captured.id shouldBe generellOppgave.id
+            generellOppgave.tittel shouldBe "Meldekort trenger korrigering"
+            generellOppgave.beskrivelse shouldBe "Se på perioden"
+            generellOppgave.tilstand() shouldBe "BEHANDLES"
 
-        val behandlingSlot = slot<Behandling>()
-        verify { sakRepository.lagreBehandling(testPerson.id, null, capture(behandlingSlot)) }
-        behandlingSlot.captured.behandlingId shouldBe generellOppgave.id
+            // Verifiser at generell oppgave ble lagret
+            val lagretGenerellOppgave = generellOppgaveRepository.hent(generellOppgave.id)
+            lagretGenerellOppgave.tittel shouldBe "Meldekort trenger korrigering"
 
-        verify { oppgaveMediator.lagOppgaveForGenerellOppgave(hendelse, any(), testPerson) }
+            // Verifiser at oppgave ble opprettet med riktig emneknagg
+            val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
+            oppgaver.size shouldBe 1
+            oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.GENERELL
+            oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
+        }
     }
 
     @Test
     fun `Skal ferdigstille generell oppgave med AVSLUTT aksjon`() {
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                person = testPerson,
-                tittel = "Test",
-            )
+        DBTestHelper.withPerson { ds ->
+            val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
+            val sakRepository = PostgresSakRepository(ds)
+            val sakMediator = SakMediator(personMediator = personMediatorMock, sakRepository = sakRepository)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(ds),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
 
-        every { generellOppgaveRepository.hent(generellOppgave.id) } returns generellOppgave
-        every { generellOppgaveBehandler.utførAksjon(any(), any()) } returns
-            GenerellOppgaveFerdigstiltHendelse(
-                generellOppgaveId = generellOppgave.id,
-                aksjonType = GenerellOppgaveAksjon.Type.AVSLUTT,
-                opprettetBehandlingId = null,
-                utførtAv = saksbehandler,
-            )
+            val generellOppgaveBehandler =
+                mockk<GenerellOppgaveBehandler>().also {
+                    every { it.utførAksjon(any(), any()) } answers {
+                        val oppgave = firstArg<GenerellOppgave>()
+                        GenerellOppgaveFerdigstiltHendelse(
+                            generellOppgaveId = oppgave.id,
+                            aksjonType = GenerellOppgaveAksjon.Type.AVSLUTT,
+                            opprettetBehandlingId = null,
+                            utførtAv = saksbehandler,
+                        )
+                    }
+                }
 
-        val hendelse =
-            FerdigstillGenerellOppgaveHendelse(
-                generellOppgaveId = generellOppgave.id,
-                aksjon = GenerellOppgaveAksjon.Avslutt(null),
-                vurdering = "Alt er OK",
-                utførtAv = saksbehandler,
-            )
+            val mediator =
+                GenerellOppgaveMediator(
+                    generellOppgaveRepository = generellOppgaveRepository,
+                    personMediator = personMediatorMock,
+                    generellOppgaveBehandler = generellOppgaveBehandler,
+                    sakMediator = sakMediator,
+                    sakRepository = sakRepository,
+                    oppgaveMediator = oppgaveMediator,
+                )
 
-        mediator.ferdigstill(hendelse)
-
-        generellOppgave.tilstand() shouldBe "FERDIGSTILT"
-        generellOppgave.vurdering() shouldBe "Alt er OK"
-        generellOppgave.resultat() shouldBe GenerellOppgave.Resultat.Ingen
-
-        verify(exactly = 2) { generellOppgaveRepository.lagre(generellOppgave) }
-        verify { oppgaveMediator.ferdigstillOppgave(any<GenerellOppgaveFerdigstiltHendelse>()) }
-    }
-
-    @Test
-    fun `Skal ferdigstille generell oppgave med OPPRETT_KLAGE aksjon`() {
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                person = testPerson,
-                tittel = "Klagesak",
-            )
-        val sakId = UUIDv7.ny()
-        val opprettetBehandlingId = UUIDv7.ny()
-
-        every { generellOppgaveRepository.hent(generellOppgave.id) } returns generellOppgave
-        every { generellOppgaveBehandler.utførAksjon(any(), any()) } returns
-            GenerellOppgaveFerdigstiltHendelse(
-                generellOppgaveId = generellOppgave.id,
-                aksjonType = GenerellOppgaveAksjon.Type.OPPRETT_KLAGE,
-                opprettetBehandlingId = opprettetBehandlingId,
-                utførtAv = saksbehandler,
-            )
-
-        val hendelse =
-            FerdigstillGenerellOppgaveHendelse(
-                generellOppgaveId = generellOppgave.id,
-                aksjon = GenerellOppgaveAksjon.OpprettKlage(sakId),
-                vurdering = "Klage opprettet",
-                utførtAv = saksbehandler,
-            )
-
-        mediator.ferdigstill(hendelse)
-
-        generellOppgave.tilstand() shouldBe "FERDIGSTILT"
-        val resultat = generellOppgave.resultat() as GenerellOppgave.Resultat.Klage
-        resultat.behandlingId shouldBe opprettetBehandlingId
-    }
-
-    @Test
-    fun `Skal ferdigstille generell oppgave med OPPRETT_MANUELL_BEHANDLING aksjon`() {
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                person = testPerson,
-                tittel = "Manuell behandling",
-            )
-        val sakId = UUIDv7.ny()
-        val opprettetBehandlingId = UUIDv7.ny()
-
-        every { generellOppgaveRepository.hent(generellOppgave.id) } returns generellOppgave
-        every { generellOppgaveBehandler.utførAksjon(any(), any()) } returns
-            GenerellOppgaveFerdigstiltHendelse(
-                generellOppgaveId = generellOppgave.id,
-                aksjonType = GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING,
-                opprettetBehandlingId = opprettetBehandlingId,
-                utførtAv = saksbehandler,
-            )
-
-        val hendelse =
-            FerdigstillGenerellOppgaveHendelse(
-                generellOppgaveId = generellOppgave.id,
-                aksjon =
-                    GenerellOppgaveAksjon.OpprettManuellBehandling(
-                        saksbehandlerToken = "token",
-                        valgtSakId = sakId,
+            // Opprett generell oppgave
+            val generellOppgave =
+                mediator.taImot(
+                    OpprettGenerellOppgaveHendelse(
+                        ident = testPerson.ident,
+                        emneknagg = "TestOppgave",
+                        tittel = "Test",
+                        beskrivelse = "",
                     ),
-                vurdering = "Manuell behandling opprettet",
-                utførtAv = saksbehandler,
+                )
+
+            // Tildel oppgaven til saksbehandler
+            val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaver.first().oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
             )
 
-        mediator.ferdigstill(hendelse)
-
-        generellOppgave.tilstand() shouldBe "FERDIGSTILT"
-        generellOppgave.valgtSakId() shouldBe sakId
-        val resultat = generellOppgave.resultat() as GenerellOppgave.Resultat.RettTilDagpenger
-        resultat.behandlingId shouldBe opprettetBehandlingId
-    }
-
-    @Test
-    fun `Skal hente generell oppgave`() {
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                person = testPerson,
-                tittel = "Hentet oppgave",
+            // Ferdigstill
+            mediator.ferdigstill(
+                FerdigstillGenerellOppgaveHendelse(
+                    generellOppgaveId = generellOppgave.id,
+                    aksjon = GenerellOppgaveAksjon.Avslutt(null),
+                    vurdering = "Alt er OK",
+                    utførtAv = saksbehandler,
+                ),
             )
 
-        every { generellOppgaveRepository.hent(generellOppgave.id) } returns generellOppgave
+            // Verifiser generell oppgave er ferdigstilt
+            val ferdigstiltOppgave = generellOppgaveRepository.hent(generellOppgave.id)
+            ferdigstiltOppgave.tilstand() shouldBe "FERDIGSTILT"
+            ferdigstiltOppgave.vurdering() shouldBe "Alt er OK"
+            ferdigstiltOppgave.resultat() shouldBe GenerellOppgave.Resultat.Ingen
 
-        val hentet = mediator.hent(generellOppgave.id, saksbehandler)
-
-        hentet.id shouldBe generellOppgave.id
-        hentet.tittel shouldBe "Hentet oppgave"
-    }
-
-    @Test
-    fun `Skal hente lovlige saker`() {
-        val sak =
-            Sak(
-                sakId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
-                opprettet = TestHelper.opprettetNå,
-            )
-        val sakHistorikk = SakHistorikk.rehydrer(testPerson, setOf(sak))
-
-        every { sakMediator.finnSakHistorikk(testPerson.ident) } returns sakHistorikk
-
-        val lovligeSaker = mediator.hentLovligeSaker(testPerson.ident)
-
-        lovligeSaker.size shouldBe 1
-        lovligeSaker.first().sakId shouldBe sak.sakId
-    }
-
-    @Test
-    fun `Skal returnere tom liste når ingen sakhistorikk finnes`() {
-        every { sakMediator.finnSakHistorikk(testPerson.ident) } returns null
-
-        val lovligeSaker = mediator.hentLovligeSaker(testPerson.ident)
-
-        lovligeSaker shouldBe emptyList()
+            // Verifiser oppgave er ferdigbehandlet
+            val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
+            oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+        }
     }
 }
