@@ -29,6 +29,7 @@ class PostgresGenerellOppgaveRepository(
                                 tittel, 
                                 beskrivelse,
                                 strukturert_data,
+                                frist,
                                 opprettet, 
                                 tilstand, 
                                 vurdering,
@@ -42,6 +43,7 @@ class PostgresGenerellOppgaveRepository(
                                 :tittel, 
                                 :beskrivelse,
                                 :strukturert_data::jsonb,
+                                :frist,
                                 :opprettet, 
                                 :tilstand, 
                                 :vurdering,
@@ -69,6 +71,7 @@ class PostgresGenerellOppgaveRepository(
                                     } else {
                                         objectMapper.writeValueAsString(generellOppgave.strukturertData)
                                     },
+                                "frist" to generellOppgave.frist,
                                 "opprettet" to generellOppgave.opprettet,
                                 "tilstand" to generellOppgave.tilstand(),
                                 "vurdering" to generellOppgave.vurdering(),
@@ -100,6 +103,7 @@ class PostgresGenerellOppgaveRepository(
                                 go.tittel,
                                 go.beskrivelse,
                                 go.strukturert_data,
+                                go.frist,
                                 go.opprettet,
                                 go.tilstand,
                                 go.vurdering,
@@ -131,6 +135,7 @@ class PostgresGenerellOppgaveRepository(
                                 go.tittel,
                                 go.beskrivelse,
                                 go.strukturert_data,
+                                go.frist,
                                 go.opprettet,
                                 go.tilstand,
                                 go.vurdering,
@@ -168,6 +173,7 @@ class PostgresGenerellOppgaveRepository(
                 this.stringOrNull("strukturert_data")?.let {
                     objectMapper.readValue(it, Map::class.java) as Map<String, Any>
                 } ?: emptyMap(),
+            frist = this.localDateOrNull("frist"),
             opprettet = this.localDateTime("opprettet"),
             tilstand = this.string("tilstand"),
             vurdering = this.stringOrNull("vurdering"),

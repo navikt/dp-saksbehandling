@@ -95,23 +95,43 @@ class OppgaveMediator(
         hendelse: OpprettGenerellOppgaveHendelse,
         behandling: Behandling,
         person: Person,
-    ) {
+        utsattTil: LocalDate? = null,
+    ): Oppgave {
+        val oppgaveId = UUIDv7.ny()
+        val tilstand =
+            if (utsattTil != null) {
+                Oppgave.PåVent
+            } else {
+                Oppgave.KlarTilBehandling
+            }
+
         val oppgave =
-            Oppgave(
-                emneknagger = setOf(hendelse.emneknagg),
+            Oppgave.rehydrer(
+                oppgaveId = oppgaveId,
+                behandlerIdent = null,
                 opprettet = hendelse.registrertTidspunkt,
-                behandling = behandling,
+                emneknagger = setOf(hendelse.emneknagg),
+                tilstand = tilstand,
+                utsattTil = utsattTil,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = tilstand.type,
+                            tidspunkt = hendelse.registrertTidspunkt,
+                            hendelse = hendelse,
+                        ),
+                    ),
                 person = person,
+                behandling = behandling,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,
                         kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                     ),
-            ).also {
-                it.settKlarTilBehandling(hendelse)
-            }
+            )
 
         oppgaveRepository.lagre(oppgave)
+        return oppgave
     }
 
     fun taImotEttersending(hendelse: InnsendingMottattHendelse) {

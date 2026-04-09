@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.generell
 
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -11,6 +12,7 @@ class GenerellOppgave private constructor(
     val tittel: String,
     val beskrivelse: String = "",
     val strukturertData: Map<String, Any> = emptyMap(),
+    val frist: LocalDate? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     private var vurdering: String? = null,
     private var tilstand: Tilstand = Tilstand.BEHANDLES,
@@ -24,6 +26,7 @@ class GenerellOppgave private constructor(
             tittel: String,
             beskrivelse: String = "",
             strukturertData: Map<String, Any> = emptyMap(),
+            frist: LocalDate? = null,
             opprettet: LocalDateTime = LocalDateTime.now(),
         ): GenerellOppgave =
             GenerellOppgave(
@@ -32,6 +35,7 @@ class GenerellOppgave private constructor(
                 tittel = tittel,
                 beskrivelse = beskrivelse,
                 strukturertData = strukturertData,
+                frist = frist,
                 opprettet = opprettet,
             )
 
@@ -41,6 +45,7 @@ class GenerellOppgave private constructor(
             tittel: String,
             beskrivelse: String,
             strukturertData: Map<String, Any>,
+            frist: LocalDate?,
             opprettet: LocalDateTime,
             tilstand: String,
             vurdering: String?,
@@ -53,6 +58,7 @@ class GenerellOppgave private constructor(
                 tittel = tittel,
                 beskrivelse = beskrivelse,
                 strukturertData = strukturertData,
+                frist = frist,
                 opprettet = opprettet,
                 tilstand = Tilstand.valueOf(tilstand),
                 vurdering = vurdering,

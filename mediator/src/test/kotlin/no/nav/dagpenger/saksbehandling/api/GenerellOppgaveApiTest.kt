@@ -2,8 +2,10 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -22,8 +24,11 @@ import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
 import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAksjon
 import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
+import no.nav.dagpenger.saksbehandling.generell.OpprettetGenerellOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class GenerellOppgaveApiTest {
     init {
@@ -44,6 +49,96 @@ class GenerellOppgaveApiTest {
                     setBody("""{ "vurdering": "test" }""".trimIndent())
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.Unauthorized
+                }
+        }
+    }
+
+    @Test
+    fun `POST oppretter generell oppgave og returnerer IDs`() {
+        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val opprettetId = UUIDv7.ny()
+        val oppgaveId = UUIDv7.ny()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.taImot(capture(slot)) } returns
+                    OpprettetGenerellOppgave(
+                        generellOppgaveId = opprettetId,
+                        oppgaveId = oppgaveId,
+                    )
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .post("generell-oppgave") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "personIdent": "12345678901",
+                            "tittel": "Sjekk sykemelding",
+                            "beskrivelse": "Kontroller datoer",
+                            "emneknagg": "Sykemelding",
+                            "strukturertData": { "foo": "bar" }
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Created
+                    response.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                            "generellOppgaveId": "$opprettetId",
+                            "oppgaveId": "$oppgaveId"
+                        }
+                        """.trimIndent()
+
+                    slot.captured.let {
+                        it.ident shouldBe "12345678901"
+                        it.tittel shouldBe "Sjekk sykemelding"
+                        it.beskrivelse shouldBe "Kontroller datoer"
+                        it.emneknagg shouldBe "Sykemelding"
+                        it.strukturertData shouldBe mapOf("foo" to "bar")
+                        it.frist shouldBe null
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `POST med frist sender frist til mediator`() {
+        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.taImot(capture(slot)) } returns
+                    OpprettetGenerellOppgave(
+                        generellOppgaveId = UUIDv7.ny(),
+                        oppgaveId = UUIDv7.ny(),
+                    )
+            }
+        val frist = LocalDate.now().plusDays(7)
+        withGenerellOppgaveApi(mediator) {
+            client
+                .post("generell-oppgave") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "personIdent": "12345678901",
+                            "tittel": "Tidskritisk oppgave",
+                            "emneknagg": "Meldekort",
+                            "frist": "$frist"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Created
+                    slot.captured.let {
+                        it.frist shouldBe frist
+                        it.utførtAv shouldNotBe null
+                    }
                 }
         }
     }
@@ -98,6 +193,38 @@ class GenerellOppgaveApiTest {
                       "opprettetDato": "${sak.opprettet.format(ISO_TIMESTAMP)}"
                     }
                   ]
+                }
+                """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente generell oppgave med frist`() {
+        val frist = LocalDate.of(2026, 5, 15)
+        val generellOppgave =
+            TestHelper.lagGenerellOppgave(
+                id = generellOppgaveId,
+                tittel = "Oppgave med frist",
+                frist = frist,
+            )
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.hent(generellOppgaveId, any()) } returns generellOppgave
+                every { it.hentLovligeSaker(TestHelper.personIdent) } returns emptyList()
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .get("generell-oppgave/$generellOppgaveId") {
+                    autentisert()
+                    this.header(HttpHeaders.Accept, "application/json")
+                }.bodyAsText() shouldEqualSpecifiedJson
+                """
+                {
+                  "tittel": "Oppgave med frist",
+                  "frist": "2026-05-15",
+                  "beskrivelse": "",
+                  "strukturertData": {},
+                  "lovligeSaker": []
                 }
                 """.trimIndent()
         }

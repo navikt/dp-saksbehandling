@@ -11,6 +11,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import java.time.LocalDate
 
 private val logger = KotlinLogging.logger {}
 
@@ -27,7 +28,7 @@ internal class OpprettOppgaveMottak(
                 it.requireKey("ident", "emneknagg", "tittel")
             }
             validate {
-                it.interestedIn("beskrivelse", "strukturertData")
+                it.interestedIn("beskrivelse", "strukturertData", "frist")
             }
         }
     }
@@ -58,6 +59,7 @@ private fun opprettGenerellOppgaveHendelseFraPacket(packet: JsonMessage): Oppret
         tittel = packet["tittel"].asText(),
         beskrivelse = packet["beskrivelse"].takeUnless { it.isMissingOrNull() }?.asText() ?: "",
         strukturertData = packet["strukturertData"].takeUnless { it.isMissingOrNull() }?.tilMap() ?: emptyMap(),
+        frist = packet["frist"].takeUnless { it.isMissingOrNull() }?.asText()?.let { LocalDate.parse(it) },
     )
 
 private fun JsonNode.isMissingOrNull(): Boolean = this.isMissingNode || this.isNull

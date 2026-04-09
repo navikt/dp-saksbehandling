@@ -6,6 +6,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Sak
@@ -14,9 +15,12 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingVariantDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillGenerellOppgaveRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.GenerellOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpprettGenerellOppgaveRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpprettGenerellOppgaveResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnBehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnSakDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
 
@@ -26,6 +30,32 @@ internal fun Route.generellOppgaveApi(
 ) {
     route("generell-oppgave") {
         authenticate("azureAd") {
+            post {
+                val saksbehandler = applicationCallParser.saksbehandler(call)
+                val request = call.receive<OpprettGenerellOppgaveRequestDTO>()
+
+                val hendelse =
+                    OpprettGenerellOppgaveHendelse(
+                        ident = request.personIdent,
+                        emneknagg = request.emneknagg,
+                        tittel = request.tittel,
+                        beskrivelse = request.beskrivelse ?: "",
+                        strukturertData = request.strukturertData ?: emptyMap(),
+                        frist = request.frist,
+                        utførtAv = saksbehandler,
+                    )
+
+                val resultat = generellOppgaveMediator.taImot(hendelse)
+
+                call.respond(
+                    HttpStatusCode.Created,
+                    OpprettGenerellOppgaveResponseDTO(
+                        generellOppgaveId = resultat.generellOppgaveId,
+                        oppgaveId = resultat.oppgaveId,
+                    ),
+                )
+            }
+
             route("{id}") {
                 get {
                     val id = call.finnUUID("id")
@@ -93,6 +123,7 @@ private fun GenerellOppgave.tilDTO(lovligeSaker: List<Sak>): GenerellOppgaveDTO 
     GenerellOppgaveDTO(
         tittel = this.tittel,
         beskrivelse = this.beskrivelse,
+        frist = this.frist,
         strukturertData = this.strukturertData,
         lovligeSaker =
             lovligeSaker.map {

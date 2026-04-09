@@ -16,6 +16,11 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
+data class OpprettetGenerellOppgave(
+    val generellOppgaveId: UUID,
+    val oppgaveId: UUID,
+)
+
 class GenerellOppgaveMediator(
     private val generellOppgaveRepository: GenerellOppgaveRepository,
     private val generellOppgaveBehandler: GenerellOppgaveBehandler,
@@ -23,9 +28,15 @@ class GenerellOppgaveMediator(
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
 ) {
-    fun taImot(hendelse: OpprettGenerellOppgaveHendelse): GenerellOppgave {
+    fun taImot(hendelse: OpprettGenerellOppgaveHendelse): OpprettetGenerellOppgave {
         val generellOppgaveId = UUIDv7.ny()
         val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
+
+        // Tilgangskontroll for saksbehandler-opprettelse
+        val saksbehandler = hendelse.utførtAv as? Saksbehandler
+        if (saksbehandler != null) {
+            person.harTilgang(saksbehandler)
+        }
 
         val behandling =
             Behandling(
@@ -47,20 +58,27 @@ class GenerellOppgaveMediator(
                 tittel = hendelse.tittel,
                 beskrivelse = hendelse.beskrivelse,
                 strukturertData = hendelse.strukturertData,
+                frist = hendelse.frist,
                 opprettet = hendelse.registrertTidspunkt,
             )
 
         generellOppgaveRepository.lagre(generellOppgave)
 
-        oppgaveMediator.lagOppgaveForGenerellOppgave(
-            hendelse = hendelse,
-            behandling = behandling,
-            person = person,
+        val oppgave =
+            oppgaveMediator.lagOppgaveForGenerellOppgave(
+                hendelse = hendelse,
+                behandling = behandling,
+                person = person,
+                utsattTil = hendelse.frist,
+            )
+
+        val tilstandInfo = if (hendelse.frist != null) "i PåVent til ${hendelse.frist}" else "i KlarTilBehandling"
+        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med emneknagg ${hendelse.emneknagg} $tilstandInfo" }
+
+        return OpprettetGenerellOppgave(
+            generellOppgaveId = generellOppgave.id,
+            oppgaveId = oppgave.oppgaveId,
         )
-
-        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med emneknagg ${hendelse.emneknagg}" }
-
-        return generellOppgave
     }
 
     fun ferdigstill(hendelse: FerdigstillGenerellOppgaveHendelse) {

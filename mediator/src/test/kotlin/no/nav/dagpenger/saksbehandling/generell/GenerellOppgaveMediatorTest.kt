@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class GenerellOppgaveMediatorTest {
     private val testPerson = DBTestHelper.testPerson
@@ -61,7 +62,7 @@ class GenerellOppgaveMediatorTest {
                 )
 
             // Opprett
-            val generellOppgave =
+            val resultat =
                 mediator.taImot(
                     OpprettGenerellOppgaveHendelse(
                         ident = testPerson.ident,
@@ -71,6 +72,7 @@ class GenerellOppgaveMediatorTest {
                     ),
                 )
 
+            val generellOppgave = generellOppgaveRepository.hent(resultat.generellOppgaveId)
             generellOppgave.tilstand() shouldBe "BEHANDLES"
 
             // Verifiser oppgave opprettet med riktig type og emneknagg
@@ -90,7 +92,7 @@ class GenerellOppgaveMediatorTest {
 
             mediator.ferdigstill(
                 FerdigstillGenerellOppgaveHendelse(
-                    generellOppgaveId = generellOppgave.id,
+                    generellOppgaveId = resultat.generellOppgaveId,
                     aksjon = GenerellOppgaveAksjon.Avslutt(null),
                     vurdering = "Alt er OK",
                     utførtAv = saksbehandler,
@@ -98,12 +100,60 @@ class GenerellOppgaveMediatorTest {
             )
 
             // Verifiser ferdigstilt
-            val ferdigstiltGenerellOppgave = generellOppgaveRepository.hent(generellOppgave.id)
+            val ferdigstiltGenerellOppgave = generellOppgaveRepository.hent(resultat.generellOppgaveId)
             ferdigstiltGenerellOppgave.tilstand() shouldBe "FERDIGSTILT"
             ferdigstiltGenerellOppgave.vurdering() shouldBe "Alt er OK"
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
             oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+        }
+    }
+
+    @Test
+    fun `oppgave med frist opprettes i PåVent tilstand`() {
+        DBTestHelper.withPerson { ds ->
+            val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = oppgaveRepository,
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+
+            val mediator =
+                GenerellOppgaveMediator(
+                    generellOppgaveRepository = generellOppgaveRepository,
+                    generellOppgaveBehandler = mockk(),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val frist = LocalDate.now().plusDays(7)
+
+            val resultat =
+                mediator.taImot(
+                    OpprettGenerellOppgaveHendelse(
+                        ident = testPerson.ident,
+                        emneknagg = "Sykemelding",
+                        tittel = "Sjekk sykemelding",
+                        beskrivelse = "Kontroller datoer",
+                        frist = frist,
+                    ),
+                )
+
+            // Verifiser GenerellOppgave har frist
+            val generellOppgave = generellOppgaveRepository.hent(resultat.generellOppgaveId)
+            generellOppgave.frist shouldBe frist
+
+            // Verifiser Oppgave er i PåVent med utsattTil
+            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
+            oppgave.tilstand() shouldBe Oppgave.PåVent
+            oppgave.utsattTil() shouldBe frist
         }
     }
 }
