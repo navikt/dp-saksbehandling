@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.generell
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
@@ -55,8 +56,8 @@ private fun opprettGenerellOppgaveHendelseFraPacket(packet: JsonMessage): Oppret
         ident = packet["ident"].asText(),
         emneknagg = packet["emneknagg"].asText(),
         tittel = packet["tittel"].asText(),
-        beskrivelse = packet["beskrivelse"].takeIf { !it.isMissingOrNull() }?.asText(),
-        strukturertData = packet["strukturertData"].takeIf { !it.isMissingOrNull() },
+        beskrivelse = packet["beskrivelse"].takeUnless { it.isMissingOrNull() }?.asText() ?: "",
+        strukturertData = packet["strukturertData"].takeUnless { it.isMissingOrNull() } ?: NullNode.instance,
     )
 
 private fun JsonNode.isMissingOrNull(): Boolean = this.isMissingNode || this.isNull

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.generell
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import java.time.LocalDateTime
@@ -10,20 +11,20 @@ class GenerellOppgave private constructor(
     val id: UUID = UUIDv7.ny(),
     val person: Person,
     val tittel: String,
-    val beskrivelse: String? = null,
-    val strukturertData: JsonNode? = null,
+    val beskrivelse: String = "",
+    val strukturertData: JsonNode = NullNode.instance,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     private var vurdering: String? = null,
     private var tilstand: Tilstand = Tilstand.BEHANDLES,
-    private var resultat: Resultat? = null,
+    private var resultat: Resultat = Resultat.Ingen,
     private var valgtSakId: UUID? = null,
 ) {
     companion object {
         fun opprett(
             person: Person,
             tittel: String,
-            beskrivelse: String? = null,
-            strukturertData: JsonNode? = null,
+            beskrivelse: String = "",
+            strukturertData: JsonNode = NullNode.instance,
         ): GenerellOppgave =
             GenerellOppgave(
                 person = person,
@@ -36,12 +37,12 @@ class GenerellOppgave private constructor(
             id: UUID,
             person: Person,
             tittel: String,
-            beskrivelse: String?,
-            strukturertData: JsonNode?,
+            beskrivelse: String,
+            strukturertData: JsonNode,
             opprettet: LocalDateTime,
             tilstand: String,
             vurdering: String?,
-            resultat: Resultat?,
+            resultat: Resultat,
             valgtSakId: UUID?,
         ): GenerellOppgave =
             GenerellOppgave(

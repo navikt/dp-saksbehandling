@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db.generell
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.github.oshai.kotlinlogging.KotlinLogging
+import com.fasterxml.jackson.databind.node.NullNode
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -12,8 +12,6 @@ import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.util.UUID
 import javax.sql.DataSource
-
-private val logger = KotlinLogging.logger {}
 
 class PostgresGenerellOppgaveRepository(
     private val dataSource: DataSource,
@@ -67,18 +65,17 @@ class PostgresGenerellOppgaveRepository(
                                 "person_id" to generellOppgave.person.id,
                                 "tittel" to generellOppgave.tittel,
                                 "beskrivelse" to generellOppgave.beskrivelse,
-                                "strukturert_data" to generellOppgave.strukturertData?.let { objectMapper.writeValueAsString(it) },
+                                "strukturert_data" to objectMapper.writeValueAsString(generellOppgave.strukturertData),
                                 "opprettet" to generellOppgave.opprettet,
                                 "tilstand" to generellOppgave.tilstand(),
                                 "vurdering" to generellOppgave.vurdering(),
                                 "valgt_sak_id" to generellOppgave.valgtSakId(),
-                                "resultat_type" to resultat?.javaClass?.simpleName,
+                                "resultat_type" to resultat.javaClass.simpleName,
                                 "resultat_behandling_id" to
                                     when (resultat) {
                                         GenerellOppgave.Resultat.Ingen -> null
                                         is GenerellOppgave.Resultat.Klage -> resultat.behandlingId
                                         is GenerellOppgave.Resultat.RettTilDagpenger -> resultat.behandlingId
-                                        null -> null
                                     },
                             ),
                     ).asUpdate,
@@ -162,8 +159,9 @@ class PostgresGenerellOppgaveRepository(
                     adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse")),
                 ),
             tittel = this.string("tittel"),
-            beskrivelse = this.stringOrNull("beskrivelse"),
-            strukturertData = this.stringOrNull("strukturert_data")?.let { objectMapper.readValue(it, JsonNode::class.java) },
+            beskrivelse = this.stringOrNull("beskrivelse") ?: "",
+            strukturertData =
+                this.stringOrNull("strukturert_data")?.let { objectMapper.readValue(it, JsonNode::class.java) } ?: NullNode.instance,
             opprettet = this.localDateTime("opprettet"),
             tilstand = this.string("tilstand"),
             vurdering = this.stringOrNull("vurdering"),
@@ -173,7 +171,7 @@ class PostgresGenerellOppgaveRepository(
                     "Ingen" -> GenerellOppgave.Resultat.Ingen
                     "Klage" -> GenerellOppgave.Resultat.Klage(this.uuid("resultat_behandling_id"))
                     "RettTilDagpenger" -> GenerellOppgave.Resultat.RettTilDagpenger(this.uuid("resultat_behandling_id"))
-                    else -> null
+                    else -> GenerellOppgave.Resultat.Ingen
                 },
         )
 }

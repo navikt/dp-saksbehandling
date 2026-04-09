@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.generell
 
+import com.fasterxml.jackson.databind.node.NullNode
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -29,9 +30,9 @@ class GenerellOppgaveTest {
         oppgave.id shouldNotBe null
         oppgave.person shouldBe testPerson
         oppgave.tittel shouldBe "Test oppgave"
-        oppgave.beskrivelse shouldBe null
+        oppgave.beskrivelse shouldBe ""
         oppgave.tilstand() shouldBe "BEHANDLES"
-        oppgave.resultat() shouldBe null
+        oppgave.resultat() shouldBe GenerellOppgave.Resultat.Ingen
     }
 
     @Test
@@ -180,7 +181,7 @@ class GenerellOppgaveTest {
                 person = testPerson,
                 tittel = "Rehydrert",
                 beskrivelse = "Beskrivelse",
-                strukturertData = null,
+                strukturertData = NullNode.instance,
                 opprettet = java.time.LocalDateTime.now(),
                 tilstand = "FERDIGSTILT",
                 vurdering = "En vurdering",

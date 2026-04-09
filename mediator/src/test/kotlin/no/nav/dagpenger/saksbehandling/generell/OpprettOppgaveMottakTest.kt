@@ -86,8 +86,8 @@ class OpprettOppgaveMottakTest {
         verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
-        hendelse.beskrivelse shouldBe null
-        hendelse.strukturertData shouldBe null
+        hendelse.beskrivelse shouldBe ""
+        hendelse.strukturertData.isNull shouldBe true
     }
 
     @Test
