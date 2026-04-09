@@ -1,7 +1,5 @@
 package no.nav.dagpenger.saksbehandling.generell
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import java.time.LocalDateTime
@@ -12,7 +10,7 @@ class GenerellOppgave private constructor(
     val person: Person,
     val tittel: String,
     val beskrivelse: String = "",
-    val strukturertData: JsonNode = NullNode.instance,
+    val strukturertData: Map<String, Any> = emptyMap(),
     val opprettet: LocalDateTime = LocalDateTime.now(),
     private var vurdering: String? = null,
     private var tilstand: Tilstand = Tilstand.BEHANDLES,
@@ -24,7 +22,7 @@ class GenerellOppgave private constructor(
             person: Person,
             tittel: String,
             beskrivelse: String = "",
-            strukturertData: JsonNode = NullNode.instance,
+            strukturertData: Map<String, Any> = emptyMap(),
         ): GenerellOppgave =
             GenerellOppgave(
                 person = person,
@@ -38,7 +36,7 @@ class GenerellOppgave private constructor(
             person: Person,
             tittel: String,
             beskrivelse: String,
-            strukturertData: JsonNode,
+            strukturertData: Map<String, Any>,
             opprettet: LocalDateTime,
             tilstand: String,
             vurdering: String?,

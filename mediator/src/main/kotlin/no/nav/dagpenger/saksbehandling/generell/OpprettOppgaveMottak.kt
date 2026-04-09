@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.generell
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
@@ -11,6 +10,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 
 private val logger = KotlinLogging.logger {}
 
@@ -57,7 +57,10 @@ private fun opprettGenerellOppgaveHendelseFraPacket(packet: JsonMessage): Oppret
         emneknagg = packet["emneknagg"].asText(),
         tittel = packet["tittel"].asText(),
         beskrivelse = packet["beskrivelse"].takeUnless { it.isMissingOrNull() }?.asText() ?: "",
-        strukturertData = packet["strukturertData"].takeUnless { it.isMissingOrNull() } ?: NullNode.instance,
+        strukturertData = packet["strukturertData"].takeUnless { it.isMissingOrNull() }?.tilMap() ?: emptyMap(),
     )
 
 private fun JsonNode.isMissingOrNull(): Boolean = this.isMissingNode || this.isNull
+
+@Suppress("UNCHECKED_CAST")
+private fun JsonNode.tilMap(): Map<String, Any> = objectMapper.convertValue(this, Map::class.java) as Map<String, Any>

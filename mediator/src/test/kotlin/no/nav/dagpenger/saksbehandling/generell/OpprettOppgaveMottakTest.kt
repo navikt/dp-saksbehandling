@@ -64,8 +64,8 @@ class OpprettOppgaveMottakTest {
 
         val hendelse = hendelseSlot.captured
         hendelse.emneknagg shouldBe "PDLFlytting"
-        hendelse.strukturertData shouldNotBe null
-        hendelse.strukturertData!!["fraAdresse"].asText() shouldBe "Oslo"
+        hendelse.strukturertData shouldNotBe emptyMap<String, Any>()
+        hendelse.strukturertData["fraAdresse"] shouldBe "Oslo"
     }
 
     @Test
@@ -87,7 +87,7 @@ class OpprettOppgaveMottakTest {
 
         val hendelse = hendelseSlot.captured
         hendelse.beskrivelse shouldBe ""
-        hendelse.strukturertData.isNull shouldBe true
+        hendelse.strukturertData shouldBe emptyMap()
     }
 
     @Test

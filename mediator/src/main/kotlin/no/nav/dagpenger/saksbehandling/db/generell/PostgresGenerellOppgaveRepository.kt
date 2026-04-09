@@ -1,7 +1,5 @@
 package no.nav.dagpenger.saksbehandling.db.generell
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -65,7 +63,12 @@ class PostgresGenerellOppgaveRepository(
                                 "person_id" to generellOppgave.person.id,
                                 "tittel" to generellOppgave.tittel,
                                 "beskrivelse" to generellOppgave.beskrivelse,
-                                "strukturert_data" to objectMapper.writeValueAsString(generellOppgave.strukturertData),
+                                "strukturert_data" to
+                                    if (generellOppgave.strukturertData.isEmpty()) {
+                                        null
+                                    } else {
+                                        objectMapper.writeValueAsString(generellOppgave.strukturertData)
+                                    },
                                 "opprettet" to generellOppgave.opprettet,
                                 "tilstand" to generellOppgave.tilstand(),
                                 "vurdering" to generellOppgave.vurdering(),
@@ -148,6 +151,7 @@ class PostgresGenerellOppgaveRepository(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun Row.generellOppgave(): GenerellOppgave =
         GenerellOppgave.rehydrer(
             id = this.uuid("id"),
@@ -161,7 +165,9 @@ class PostgresGenerellOppgaveRepository(
             tittel = this.string("tittel"),
             beskrivelse = this.stringOrNull("beskrivelse") ?: "",
             strukturertData =
-                this.stringOrNull("strukturert_data")?.let { objectMapper.readValue(it, JsonNode::class.java) } ?: NullNode.instance,
+                this.stringOrNull("strukturert_data")?.let {
+                    objectMapper.readValue(it, Map::class.java) as Map<String, Any>
+                } ?: emptyMap(),
             opprettet = this.localDateTime("opprettet"),
             tilstand = this.string("tilstand"),
             vurdering = this.stringOrNull("vurdering"),
