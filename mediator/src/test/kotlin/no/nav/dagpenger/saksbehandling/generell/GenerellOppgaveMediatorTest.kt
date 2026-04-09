@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
@@ -27,17 +28,13 @@ class GenerellOppgaveMediatorTest {
             emptySet(),
         )
 
-    private val personMediatorMock: PersonMediator =
-        mockk<PersonMediator>().also {
-            every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
-        }
-
     @Test
     fun `Skal opprette generell oppgave, behandling og oppgave ved taImot`() {
         DBTestHelper.withPerson { ds ->
             val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
             val sakRepository = PostgresSakRepository(ds)
-            val sakMediator = SakMediator(personMediator = personMediatorMock, sakRepository = sakRepository)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = sakRepository)
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = PostgresOppgaveRepository(ds),
@@ -50,7 +47,7 @@ class GenerellOppgaveMediatorTest {
                 GenerellOppgaveMediator(
                     generellOppgaveRepository = generellOppgaveRepository,
                     generellOppgaveBehandler = mockk(),
-                    personMediator = personMediatorMock,
+                    personMediator = personMediator,
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                 )
@@ -86,7 +83,8 @@ class GenerellOppgaveMediatorTest {
         DBTestHelper.withPerson { ds ->
             val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
             val sakRepository = PostgresSakRepository(ds)
-            val sakMediator = SakMediator(personMediator = personMediatorMock, sakRepository = sakRepository)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = sakRepository)
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = PostgresOppgaveRepository(ds),
@@ -112,7 +110,7 @@ class GenerellOppgaveMediatorTest {
                 GenerellOppgaveMediator(
                     generellOppgaveRepository = generellOppgaveRepository,
                     generellOppgaveBehandler = generellOppgaveBehandler,
-                    personMediator = personMediatorMock,
+                    personMediator = personMediator,
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                 )
