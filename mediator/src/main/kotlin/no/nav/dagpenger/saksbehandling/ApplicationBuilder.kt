@@ -177,7 +177,6 @@ internal class ApplicationBuilder(
     private val generellOppgaveMediator =
         GenerellOppgaveMediator(
             generellOppgaveRepository = generellOppgaveRepository,
-            personMediator = personMediator,
             generellOppgaveBehandler =
                 GenerellOppgaveBehandler(
                     klageMediator = klageMediator,

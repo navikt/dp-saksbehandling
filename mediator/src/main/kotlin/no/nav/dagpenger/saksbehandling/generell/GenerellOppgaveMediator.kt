@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.generell
 
-import PersonMediator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
@@ -17,36 +17,38 @@ private val logger = KotlinLogging.logger {}
 
 class GenerellOppgaveMediator(
     private val generellOppgaveRepository: GenerellOppgaveRepository,
-    private val personMediator: PersonMediator,
     private val generellOppgaveBehandler: GenerellOppgaveBehandler,
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
 ) {
     fun taImot(hendelse: OpprettGenerellOppgaveHendelse): GenerellOppgave {
-        val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
-
-        val generellOppgave =
-            GenerellOppgave.opprett(
-                person = person,
-                tittel = hendelse.tittel,
-                beskrivelse = hendelse.beskrivelse,
-                strukturertData = hendelse.strukturertData,
-            )
-
-        generellOppgaveRepository.lagre(generellOppgave)
+        val generellOppgaveId = UUIDv7.ny()
 
         val behandling =
             Behandling(
-                behandlingId = generellOppgave.id,
-                opprettet = generellOppgave.opprettet,
+                behandlingId = generellOppgaveId,
+                opprettet = hendelse.registrertTidspunkt,
                 hendelse = hendelse,
                 utløstAv = UtløstAvType.GENERELL,
             )
 
-        sakMediator.lagreBehandlingUtenSak(
-            ident = hendelse.ident,
-            behandling = behandling,
-        )
+        val person =
+            sakMediator.lagreBehandlingUtenSak(
+                ident = hendelse.ident,
+                behandling = behandling,
+            )
+
+        val generellOppgave =
+            GenerellOppgave.opprett(
+                id = generellOppgaveId,
+                person = person,
+                tittel = hendelse.tittel,
+                beskrivelse = hendelse.beskrivelse,
+                strukturertData = hendelse.strukturertData,
+                opprettet = hendelse.registrertTidspunkt,
+            )
+
+        generellOppgaveRepository.lagre(generellOppgave)
 
         oppgaveMediator.lagOppgaveForGenerellOppgave(
             hendelse = hendelse,

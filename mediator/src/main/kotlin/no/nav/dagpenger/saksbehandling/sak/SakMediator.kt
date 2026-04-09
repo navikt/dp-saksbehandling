@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -271,12 +272,13 @@ class SakMediator(
     fun lagreBehandlingUtenSak(
         ident: String,
         behandling: Behandling,
-    ) {
+    ): Person {
         val person = personMediator.finnEllerOpprettPerson(ident)
         sakRepository.lagreBehandling(
             personId = person.id,
             sakId = null,
             behandling = behandling,
         )
+        return person
     }
 }

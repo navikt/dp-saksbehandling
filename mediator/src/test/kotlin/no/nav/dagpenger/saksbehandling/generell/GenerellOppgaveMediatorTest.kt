@@ -49,7 +49,6 @@ class GenerellOppgaveMediatorTest {
             val mediator =
                 GenerellOppgaveMediator(
                     generellOppgaveRepository = generellOppgaveRepository,
-                    personMediator = personMediatorMock,
                     generellOppgaveBehandler = mockk(),
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
@@ -111,7 +110,6 @@ class GenerellOppgaveMediatorTest {
             val mediator =
                 GenerellOppgaveMediator(
                     generellOppgaveRepository = generellOppgaveRepository,
-                    personMediator = personMediatorMock,
                     generellOppgaveBehandler = generellOppgaveBehandler,
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,

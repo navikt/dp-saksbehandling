@@ -19,16 +19,20 @@ class GenerellOppgave private constructor(
 ) {
     companion object {
         fun opprett(
+            id: UUID = UUIDv7.ny(),
             person: Person,
             tittel: String,
             beskrivelse: String = "",
             strukturertData: Map<String, Any> = emptyMap(),
+            opprettet: LocalDateTime = LocalDateTime.now(),
         ): GenerellOppgave =
             GenerellOppgave(
+                id = id,
                 person = person,
                 tittel = tittel,
                 beskrivelse = beskrivelse,
                 strukturertData = strukturertData,
+                opprettet = opprettet,
             )
 
         fun rehydrer(
