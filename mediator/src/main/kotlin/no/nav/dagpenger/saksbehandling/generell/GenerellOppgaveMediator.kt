@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -21,7 +20,6 @@ class GenerellOppgaveMediator(
     private val personMediator: PersonMediator,
     private val generellOppgaveBehandler: GenerellOppgaveBehandler,
     private val sakMediator: SakMediator,
-    private val sakRepository: SakRepository,
     private val oppgaveMediator: OppgaveMediator,
 ) {
     fun taImot(hendelse: OpprettGenerellOppgaveHendelse): GenerellOppgave {
@@ -45,9 +43,8 @@ class GenerellOppgaveMediator(
                 utløstAv = UtløstAvType.GENERELL,
             )
 
-        sakRepository.lagreBehandling(
-            personId = person.id,
-            sakId = null,
+        sakMediator.lagreBehandlingUtenSak(
+            ident = hendelse.ident,
             behandling = behandling,
         )
 

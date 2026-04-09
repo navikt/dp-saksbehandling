@@ -184,7 +184,6 @@ internal class ApplicationBuilder(
                     behandlingKlient = behandlingKlient,
                 ),
             sakMediator = sakMediator,
-            sakRepository = sakRepository,
             oppgaveMediator = oppgaveMediator,
         )
 

@@ -267,4 +267,16 @@ class SakMediator(
                 } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
     }
+
+    fun lagreBehandlingUtenSak(
+        ident: String,
+        behandling: Behandling,
+    ) {
+        val person = personMediator.finnEllerOpprettPerson(ident)
+        sakRepository.lagreBehandling(
+            personId = person.id,
+            sakId = null,
+            behandling = behandling,
+        )
+    }
 }
