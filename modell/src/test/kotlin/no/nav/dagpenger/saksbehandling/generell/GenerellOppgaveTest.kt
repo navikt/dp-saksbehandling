@@ -184,6 +184,7 @@ class GenerellOppgaveTest {
                 tittel = "Rehydrert",
                 beskrivelse = "Beskrivelse",
                 strukturertData = mapOf("key" to "value"),
+                frist = null,
                 opprettet = java.time.LocalDateTime.now(),
                 tilstand = "FERDIGSTILT",
                 vurdering = "En vurdering",

@@ -1810,6 +1810,7 @@ components:
         - RETT_TIL_DAGPENGER_MANUELL
         - RETT_TIL_DAGPENGER_REVURDERING
         - KLAGE
+        - GENERELL_OPPGAVE
 
     LovligeEndringer:
       type: object
@@ -2715,6 +2716,33 @@ components:
           type: string
         behandlingsvariant:
           $ref: '#/components/schemas/BehandlingVariant'
+        nyOppgave:
+          $ref: '#/components/schemas/NyGenerellOppgave'
+
+    NyGenerellOppgave:
+      type: object
+      description: Data for ny generell oppgave (kun ved behandlingsvariant=GENERELL_OPPGAVE)
+      properties:
+        tittel:
+          type: string
+          description: Tittel på den nye oppgaven
+        beskrivelse:
+          type: string
+          description: Beskrivelse av den nye oppgaven
+        emneknagg:
+          type: string
+          description: Emneknagg for den nye oppgaven
+        frist:
+          type: string
+          format: date
+          description: Frist for den nye oppgaven
+        tildelSammeSaksbehandler:
+          type: boolean
+          default: false
+          description: Om den nye oppgaven skal tildeles samme saksbehandler
+      required:
+        - tittel
+        - emneknagg
 
     TilbakekrevingBehandlingStatus:
       type: string

@@ -76,6 +76,8 @@ fun Route.innsendingApi(
                                         requireNotNull(valgtSakId)
                                         Aksjon.OpprettKlage(valgtSakId)
                                     }
+                                    BehandlingVariantDTO.GENERELL_OPPGAVE ->
+                                        throw IllegalArgumentException("GENERELL_OPPGAVE er ikke gyldig for innsending")
                                 }
                             mediator.ferdigstill(
                                 hendelse =

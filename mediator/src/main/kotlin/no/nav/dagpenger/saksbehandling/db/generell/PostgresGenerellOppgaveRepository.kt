@@ -82,6 +82,7 @@ class PostgresGenerellOppgaveRepository(
                                         GenerellOppgave.Resultat.Ingen -> null
                                         is GenerellOppgave.Resultat.Klage -> resultat.behandlingId
                                         is GenerellOppgave.Resultat.RettTilDagpenger -> resultat.behandlingId
+                                        is GenerellOppgave.Resultat.GenerellOppgave -> resultat.behandlingId
                                     },
                             ),
                     ).asUpdate,

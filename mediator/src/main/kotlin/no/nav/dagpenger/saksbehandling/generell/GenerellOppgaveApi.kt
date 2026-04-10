@@ -99,6 +99,17 @@ internal fun Route.generellOppgaveApi(
                                     val sakId = requireNotNull(request.sakId) { "sakId må være satt for klage" }
                                     GenerellOppgaveAksjon.OpprettKlage(sakId)
                                 }
+                                BehandlingVariantDTO.GENERELL_OPPGAVE -> {
+                                    val nyOppgave = requireNotNull(request.nyOppgave) { "nyOppgave må være satt for generell oppgave" }
+                                    GenerellOppgaveAksjon.OpprettGenerellOppgave(
+                                        valgtSakId = request.sakId,
+                                        tittel = nyOppgave.tittel,
+                                        beskrivelse = nyOppgave.beskrivelse ?: "",
+                                        emneknagg = nyOppgave.emneknagg,
+                                        frist = nyOppgave.frist,
+                                        tildelSammeSaksbehandler = nyOppgave.tildelSammeSaksbehandler ?: false,
+                                    )
+                                }
                             }
 
                         generellOppgaveMediator.ferdigstill(
@@ -149,6 +160,12 @@ private fun GenerellOppgave.toBehandling(): TynnBehandlingDTO? =
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+            )
+
+        is GenerellOppgave.Resultat.GenerellOppgave ->
+            TynnBehandlingDTO(
+                behandlingId = resultat.behandlingId,
+                behandlingType = BehandlingTypeDTO.GENERELL,
             )
 
         else -> null

@@ -8,5 +8,7 @@ data class GenerellOppgaveFerdigstiltHendelse(
     val generellOppgaveId: UUID,
     val aksjonType: GenerellOppgaveAksjon.Type,
     val opprettetBehandlingId: UUID?,
+    val opprettetOppgaveId: UUID? = null,
+    val tildelSammeSaksbehandler: Boolean = false,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

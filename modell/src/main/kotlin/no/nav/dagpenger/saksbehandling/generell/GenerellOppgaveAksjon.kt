@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.generell
 
+import java.time.LocalDate
 import java.util.UUID
 
 sealed class GenerellOppgaveAksjon {
@@ -8,6 +9,7 @@ sealed class GenerellOppgaveAksjon {
         OPPRETT_MANUELL_BEHANDLING,
         OPPRETT_REVURDERING_BEHANDLING,
         OPPRETT_KLAGE,
+        OPPRETT_GENERELL_OPPGAVE,
     }
 
     abstract val valgtSakId: UUID?
@@ -37,5 +39,16 @@ sealed class GenerellOppgaveAksjon {
         override val valgtSakId: UUID,
     ) : GenerellOppgaveAksjon() {
         override val type: Type = Type.OPPRETT_KLAGE
+    }
+
+    data class OpprettGenerellOppgave(
+        override val valgtSakId: UUID?,
+        val tittel: String,
+        val beskrivelse: String = "",
+        val emneknagg: String,
+        val frist: LocalDate? = null,
+        val tildelSammeSaksbehandler: Boolean = false,
+    ) : GenerellOppgaveAksjon() {
+        override val type: Type = Type.OPPRETT_GENERELL_OPPGAVE
     }
 }

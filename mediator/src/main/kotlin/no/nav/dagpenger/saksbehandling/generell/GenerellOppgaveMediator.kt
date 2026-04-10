@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -90,7 +91,7 @@ class GenerellOppgaveMediator(
         )
         generellOppgaveRepository.lagre(generellOppgave)
 
-        val ferdigstiltHendelse = generellOppgaveBehandler.utførAksjon(generellOppgave, hendelse)
+        val ferdigstiltHendelse = generellOppgaveBehandler.utførAksjon(generellOppgave, hendelse, this)
         logger.info { "Ferdigstiller generell oppgave ${generellOppgave.id} med aksjon ${hendelse.aksjon.type}" }
 
         generellOppgave.ferdigstill(
@@ -100,6 +101,20 @@ class GenerellOppgaveMediator(
         generellOppgaveRepository.lagre(generellOppgave)
 
         oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
+
+        if (ferdigstiltHendelse.tildelSammeSaksbehandler) {
+            val oppgaveId = ferdigstiltHendelse.opprettetOppgaveId
+            if (oppgaveId != null) {
+                oppgaveMediator.tildelOppgave(
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgaveId,
+                        ansvarligIdent = hendelse.utførtAv.navIdent,
+                        utførtAv = hendelse.utførtAv,
+                    ),
+                )
+                logger.info { "Tildelte ny oppgave $oppgaveId til ${hendelse.utførtAv.navIdent}" }
+            }
+        }
     }
 
     fun hent(

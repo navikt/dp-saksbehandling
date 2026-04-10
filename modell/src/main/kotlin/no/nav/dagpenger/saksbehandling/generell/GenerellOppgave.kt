@@ -91,6 +91,10 @@ class GenerellOppgave private constructor(
         data class RettTilDagpenger(
             val behandlingId: UUID,
         ) : Resultat()
+
+        data class GenerellOppgave(
+            val behandlingId: UUID,
+        ) : Resultat()
     }
 
     fun startFerdigstilling(
@@ -130,6 +134,13 @@ class GenerellOppgave private constructor(
                     "behandlingId kan ikke være null etter opprettelse av revurdering"
                 }
                 this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
+            }
+
+            GenerellOppgaveAksjon.Type.OPPRETT_GENERELL_OPPGAVE -> {
+                requireNotNull(opprettetBehandlingId) {
+                    "behandlingId kan ikke være null etter opprettelse av generell oppgave"
+                }
+                this.resultat = Resultat.GenerellOppgave(opprettetBehandlingId)
             }
         }
         this.tilstand = Tilstand.FERDIGSTILT

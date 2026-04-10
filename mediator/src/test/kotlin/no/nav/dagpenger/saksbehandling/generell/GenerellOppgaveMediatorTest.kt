@@ -41,7 +41,7 @@ class GenerellOppgaveMediatorTest {
 
             val generellOppgaveBehandler =
                 mockk<GenerellOppgaveBehandler>().also {
-                    every { it.utførAksjon(any(), any()) } answers {
+                    every { it.utførAksjon(any(), any(), any()) } answers {
                         val oppgave = firstArg<GenerellOppgave>()
                         GenerellOppgaveFerdigstiltHendelse(
                             generellOppgaveId = oppgave.id,

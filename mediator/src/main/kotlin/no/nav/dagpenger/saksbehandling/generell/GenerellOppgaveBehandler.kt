@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 
 class GenerellOppgaveBehandler(
     private val klageMediator: KlageMediator,
@@ -14,6 +15,7 @@ class GenerellOppgaveBehandler(
     fun utførAksjon(
         generellOppgave: GenerellOppgave,
         hendelse: FerdigstillGenerellOppgaveHendelse,
+        generellOppgaveMediator: GenerellOppgaveMediator,
     ): GenerellOppgaveFerdigstiltHendelse =
         when (hendelse.aksjon) {
             is GenerellOppgaveAksjon.Avslutt ->
@@ -40,6 +42,13 @@ class GenerellOppgaveBehandler(
                 opprettBehandling(
                     generellOppgave = generellOppgave,
                     hendelse = hendelse,
+                )
+
+            is GenerellOppgaveAksjon.OpprettGenerellOppgave ->
+                opprettNyGenerellOppgave(
+                    generellOppgave = generellOppgave,
+                    hendelse = hendelse,
+                    generellOppgaveMediator = generellOppgaveMediator,
                 )
         }
 
@@ -96,6 +105,35 @@ class GenerellOppgaveBehandler(
             generellOppgaveId = generellOppgave.id,
             aksjonType = hendelse.aksjon.type,
             opprettetBehandlingId = klageOppgave.behandling.behandlingId,
+            utførtAv = hendelse.utførtAv,
+        )
+    }
+
+    private fun opprettNyGenerellOppgave(
+        generellOppgave: GenerellOppgave,
+        hendelse: FerdigstillGenerellOppgaveHendelse,
+        generellOppgaveMediator: GenerellOppgaveMediator,
+    ): GenerellOppgaveFerdigstiltHendelse {
+        val aksjon = hendelse.aksjon as GenerellOppgaveAksjon.OpprettGenerellOppgave
+
+        val nyOppgaveHendelse =
+            OpprettGenerellOppgaveHendelse(
+                ident = generellOppgave.person.ident,
+                emneknagg = aksjon.emneknagg,
+                tittel = aksjon.tittel,
+                beskrivelse = aksjon.beskrivelse,
+                frist = aksjon.frist,
+                utførtAv = hendelse.utførtAv,
+            )
+
+        val opprettet = generellOppgaveMediator.taImot(nyOppgaveHendelse)
+
+        return GenerellOppgaveFerdigstiltHendelse(
+            generellOppgaveId = generellOppgave.id,
+            aksjonType = aksjon.type,
+            opprettetBehandlingId = opprettet.generellOppgaveId,
+            opprettetOppgaveId = opprettet.oppgaveId,
+            tildelSammeSaksbehandler = aksjon.tildelSammeSaksbehandler,
             utførtAv = hendelse.utførtAv,
         )
     }
