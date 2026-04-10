@@ -97,38 +97,23 @@ class OppgaveMediator(
         person: Person,
         utsattTil: LocalDate? = null,
     ): Oppgave {
-        val oppgaveId = UUIDv7.ny()
-        val tilstand =
-            if (utsattTil != null) {
-                Oppgave.PåVent
-            } else {
-                Oppgave.KlarTilBehandling
-            }
-
         val oppgave =
-            Oppgave.rehydrer(
-                oppgaveId = oppgaveId,
-                behandlerIdent = null,
-                opprettet = hendelse.registrertTidspunkt,
+            Oppgave(
                 emneknagger = setOf(hendelse.emneknagg),
-                tilstand = tilstand,
-                utsattTil = utsattTil,
-                tilstandslogg =
-                    OppgaveTilstandslogg(
-                        Tilstandsendring(
-                            tilstand = tilstand.type,
-                            tidspunkt = hendelse.registrertTidspunkt,
-                            hendelse = hendelse,
-                        ),
-                    ),
-                person = person,
+                opprettet = hendelse.registrertTidspunkt,
                 behandling = behandling,
+                person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,
                         kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                     ),
-            )
+            ).also {
+                it.settKlarTilBehandling(hendelse)
+                if (utsattTil != null) {
+                    it.settPåVent(hendelse, utsattTil)
+                }
+            }
 
         oppgaveRepository.lagre(oppgave)
         return oppgave

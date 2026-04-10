@@ -364,6 +364,17 @@ data class Oppgave private constructor(
         )
     }
 
+    fun settPåVent(
+        hendelse: Hendelse,
+        utsattTil: LocalDate,
+    ) {
+        tilstand.settPåVent(
+            oppgave = this,
+            hendelse = hendelse,
+            utsattTil = utsattTil,
+        )
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -439,6 +450,16 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
+        }
+
+        // TODO: Avklar om settPåVent skal legge til årsak-emneknagg slik utsett() gjør
+        override fun settPåVent(
+            oppgave: Oppgave,
+            hendelse: Hendelse,
+            utsattTil: LocalDate,
+        ) {
+            oppgave.utsattTil = utsattTil
+            oppgave.endreTilstand(PåVent, hendelse)
         }
     }
 
@@ -1266,6 +1287,17 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
+            )
+        }
+
+        fun settPåVent(
+            oppgave: Oppgave,
+            hendelse: Hendelse,
+            utsattTil: LocalDate,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke sette oppgave på vent i tilstand $type",
             )
         }
 
