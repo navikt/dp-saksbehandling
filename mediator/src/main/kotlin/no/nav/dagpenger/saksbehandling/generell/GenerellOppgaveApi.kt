@@ -132,6 +132,7 @@ internal fun Route.generellOppgaveApi(
 
 private fun GenerellOppgave.tilDTO(lovligeSaker: List<Sak>): GenerellOppgaveDTO =
     GenerellOppgaveDTO(
+        behandlingId = this.id,
         tittel = this.tittel,
         beskrivelse = this.beskrivelse,
         frist = this.frist,

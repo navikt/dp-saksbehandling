@@ -2632,6 +2632,10 @@ components:
     GenerellOppgave:
       type: object
       properties:
+        behandlingId:
+          type: string
+          format: uuid
+          description: Behandling-ID for den generelle oppgaven
         tittel:
           type: string
           description: Visningstittel for oppgaven
