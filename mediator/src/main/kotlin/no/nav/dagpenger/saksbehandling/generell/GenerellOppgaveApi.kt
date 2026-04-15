@@ -56,12 +56,12 @@ internal fun Route.generellOppgaveApi(
                 )
             }
 
-            route("{id}") {
+            route("{behandlingId}") {
                 get {
-                    val id = call.finnUUID("id")
+                    val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
 
-                    val generellOppgave = generellOppgaveMediator.hent(id, saksbehandler)
+                    val generellOppgave = generellOppgaveMediator.hent(behandlingId, saksbehandler)
                     val lovligeSaker = generellOppgaveMediator.hentLovligeSaker(generellOppgave.person.ident)
 
                     call.respond(
@@ -72,7 +72,7 @@ internal fun Route.generellOppgaveApi(
 
                 route("ferdigstill") {
                     put {
-                        val id = call.finnUUID("id")
+                        val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         val saksbehandlerToken = call.request.jwt()
 
@@ -115,7 +115,7 @@ internal fun Route.generellOppgaveApi(
                         generellOppgaveMediator.ferdigstill(
                             hendelse =
                                 FerdigstillGenerellOppgaveHendelse(
-                                    generellOppgaveId = id,
+                                    generellOppgaveId = behandlingId,
                                     aksjon = aksjon,
                                     vurdering = request.vurdering,
                                     utførtAv = saksbehandler,

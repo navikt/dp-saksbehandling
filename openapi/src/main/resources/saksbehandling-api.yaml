@@ -51,12 +51,12 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
       security:
         - azureAd: [ ]
-  /generell-oppgave/{id}:
+  /generell-oppgave/{behandlingId}:
     get:
-      summary: Hent generell oppgave for en gitt id
+      summary: Hent generell oppgave for en gitt behandlingId
       parameters:
         - in: path
-          name: id
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -82,12 +82,12 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
       security:
         - azureAd: [ ]
-  /generell-oppgave/{id}/ferdigstill:
+  /generell-oppgave/{behandlingId}/ferdigstill:
     put:
       summary: Ferdigstill generell oppgave
       parameters:
         - in: path
-          name: id
+          name: behandlingId
           required: true
           schema:
             type: string
