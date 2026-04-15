@@ -371,7 +371,7 @@ class GenerellOppgaveApiTest {
                                 "beskrivelse": "Sjekk timer neste periode",
                                 "aarsak": "Meldekort",
                                 "frist": "$frist",
-                                "tildelSammeSaksbehandler": true
+                                "beholdOppgaven": true
                             }
                         }
                         """.trimIndent(),
@@ -388,7 +388,7 @@ class GenerellOppgaveApiTest {
                         it.beskrivelse shouldBe "Sjekk timer neste periode"
                         it.aarsak shouldBe "Meldekort"
                         it.frist shouldBe frist
-                        it.tildelSammeSaksbehandler shouldBe true
+                        it.beholdOppgaven shouldBe true
                     }
                 }
         }

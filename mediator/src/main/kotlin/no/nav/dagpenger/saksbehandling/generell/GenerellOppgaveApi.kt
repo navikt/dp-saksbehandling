@@ -107,7 +107,7 @@ internal fun Route.generellOppgaveApi(
                                         beskrivelse = nyOppgave.beskrivelse ?: "",
                                         aarsak = nyOppgave.aarsak,
                                         frist = nyOppgave.frist,
-                                        tildelSammeSaksbehandler = nyOppgave.tildelSammeSaksbehandler ?: false,
+                                        beholdOppgaven = nyOppgave.beholdOppgaven ?: false,
                                     )
                                 }
                             }

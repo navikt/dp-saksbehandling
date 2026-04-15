@@ -133,7 +133,7 @@ class GenerellOppgaveBehandler(
             aksjonType = aksjon.type,
             opprettetBehandlingId = opprettet.generellOppgaveId,
             opprettetOppgaveId = opprettet.oppgaveId,
-            tildelSammeSaksbehandler = aksjon.tildelSammeSaksbehandler,
+            beholdOppgaven = aksjon.beholdOppgaven,
             utførtAv = hendelse.utførtAv,
         )
     }

@@ -2740,7 +2740,7 @@ components:
           type: string
           format: date
           description: Frist for den nye oppgaven
-        tildelSammeSaksbehandler:
+        beholdOppgaven:
           type: boolean
           default: false
           description: Om den nye oppgaven skal tildeles samme saksbehandler

@@ -47,7 +47,7 @@ sealed class GenerellOppgaveAksjon {
         val beskrivelse: String = "",
         val aarsak: String,
         val frist: LocalDate? = null,
-        val tildelSammeSaksbehandler: Boolean = false,
+        val beholdOppgaven: Boolean = false,
     ) : GenerellOppgaveAksjon() {
         override val type: Type = Type.OPPRETT_GENERELL_OPPGAVE
     }

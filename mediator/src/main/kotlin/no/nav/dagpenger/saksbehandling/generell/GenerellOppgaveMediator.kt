@@ -102,7 +102,7 @@ class GenerellOppgaveMediator(
 
         oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
 
-        if (ferdigstiltHendelse.tildelSammeSaksbehandler) {
+        if (ferdigstiltHendelse.beholdOppgaven) {
             val oppgaveId = ferdigstiltHendelse.opprettetOppgaveId
             if (oppgaveId != null) {
                 oppgaveMediator.tildelOppgave(
