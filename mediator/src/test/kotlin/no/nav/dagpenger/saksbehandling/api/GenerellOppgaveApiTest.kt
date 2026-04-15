@@ -345,6 +345,55 @@ class GenerellOppgaveApiTest {
         }
     }
 
+    @Test
+    fun `Skal kunne ferdigstille med GENERELL_OPPGAVE variant og nyOppgave`() {
+        val sakId = UUIDv7.ny()
+        val frist = LocalDate.now().plusDays(14)
+        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.ferdigstill(capture(slot)) } returns Unit
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "sakId": "$sakId",
+                            "vurdering": "Opprett ny generell oppgave",
+                            "behandlingsvariant": "GENERELL_OPPGAVE",
+                            "nyOppgave": {
+                                "tittel": "Følg opp meldekort",
+                                "beskrivelse": "Sjekk timer neste periode",
+                                "emneknagg": "Meldekort",
+                                "frist": "$frist",
+                                "tildelSammeSaksbehandler": true
+                            }
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_GENERELL_OPPGAVE
+                        it.aksjon.valgtSakId shouldBe sakId
+                        it.vurdering shouldBe "Opprett ny generell oppgave"
+                    }
+                    (slot.captured.aksjon as GenerellOppgaveAksjon.OpprettGenerellOppgave).let {
+                        it.tittel shouldBe "Følg opp meldekort"
+                        it.beskrivelse shouldBe "Sjekk timer neste periode"
+                        it.emneknagg shouldBe "Meldekort"
+                        it.frist shouldBe frist
+                        it.tildelSammeSaksbehandler shouldBe true
+                    }
+                }
+        }
+    }
+
     private fun withGenerellOppgaveApi(
         generellOppgaveMediator: GenerellOppgaveMediator,
         test: suspend ApplicationTestBuilder.() -> Unit,
