@@ -45,7 +45,7 @@ sealed class GenerellOppgaveAksjon {
         override val valgtSakId: UUID?,
         val tittel: String,
         val beskrivelse: String = "",
-        val emneknagg: String,
+        val aarsak: String,
         val frist: LocalDate? = null,
         val tildelSammeSaksbehandler: Boolean = false,
     ) : GenerellOppgaveAksjon() {

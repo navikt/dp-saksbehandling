@@ -66,7 +66,7 @@ class GenerellOppgaveMediatorTest {
                 mediator.taImot(
                     OpprettGenerellOppgaveHendelse(
                         ident = testPerson.ident,
-                        emneknagg = "MeldekortKorrigering",
+                        aarsak = "MeldekortKorrigering",
                         tittel = "Meldekort trenger korrigering",
                         beskrivelse = "Se på perioden",
                     ),
@@ -75,7 +75,7 @@ class GenerellOppgaveMediatorTest {
             val generellOppgave = generellOppgaveRepository.hent(resultat.generellOppgaveId)
             generellOppgave.tilstand() shouldBe "BEHANDLES"
 
-            // Verifiser oppgave opprettet med riktig type og emneknagg
+            // Verifiser oppgave opprettet med riktig type og årsak
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
             oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.GENERELL
@@ -139,7 +139,7 @@ class GenerellOppgaveMediatorTest {
                 mediator.taImot(
                     OpprettGenerellOppgaveHendelse(
                         ident = testPerson.ident,
-                        emneknagg = "Sykemelding",
+                        aarsak = "Sykemelding",
                         tittel = "Sjekk sykemelding",
                         beskrivelse = "Kontroller datoer",
                         frist = frist,

@@ -45,8 +45,8 @@ internal class OpprettOppgaveMottak(
     ) {
         val hendelse = opprettGenerellOppgaveHendelseFraPacket(packet)
 
-        withLoggingContext("emneknagg" to hendelse.emneknagg) {
-            logger.info { "Mottok opprett_oppgave hendelse med emneknagg ${hendelse.emneknagg}" }
+        withLoggingContext("aarsak" to hendelse.aarsak) {
+            logger.info { "Mottok opprett_oppgave hendelse med årsak ${hendelse.aarsak}" }
             generellOppgaveMediator.taImot(hendelse)
         }
     }
@@ -55,7 +55,7 @@ internal class OpprettOppgaveMottak(
 private fun opprettGenerellOppgaveHendelseFraPacket(packet: JsonMessage): OpprettGenerellOppgaveHendelse =
     OpprettGenerellOppgaveHendelse(
         ident = packet["ident"].asText(),
-        emneknagg = packet["emneknagg"].asText(),
+        aarsak = packet["emneknagg"].asText(),
         tittel = packet["tittel"].asText(),
         beskrivelse = packet["beskrivelse"].takeUnless { it.isMissingOrNull() }?.asText() ?: "",
         strukturertData = packet["strukturertData"].takeUnless { it.isMissingOrNull() }?.tilMap() ?: emptyMap(),

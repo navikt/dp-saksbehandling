@@ -37,7 +37,7 @@ internal fun Route.generellOppgaveApi(
                 val hendelse =
                     OpprettGenerellOppgaveHendelse(
                         ident = request.personIdent,
-                        emneknagg = request.emneknagg,
+                        aarsak = request.aarsak,
                         tittel = request.tittel,
                         beskrivelse = request.beskrivelse ?: "",
                         strukturertData = request.strukturertData ?: emptyMap(),
@@ -105,7 +105,7 @@ internal fun Route.generellOppgaveApi(
                                         valgtSakId = request.sakId,
                                         tittel = nyOppgave.tittel,
                                         beskrivelse = nyOppgave.beskrivelse ?: "",
-                                        emneknagg = nyOppgave.aarsak,
+                                        aarsak = nyOppgave.aarsak,
                                         frist = nyOppgave.frist,
                                         tildelSammeSaksbehandler = nyOppgave.tildelSammeSaksbehandler ?: false,
                                     )

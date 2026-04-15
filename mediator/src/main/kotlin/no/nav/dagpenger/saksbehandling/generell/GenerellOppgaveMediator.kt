@@ -74,7 +74,7 @@ class GenerellOppgaveMediator(
             )
 
         val tilstandInfo = if (hendelse.frist != null) "i PåVent til ${hendelse.frist}" else "i KlarTilBehandling"
-        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med emneknagg ${hendelse.emneknagg} $tilstandInfo" }
+        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med årsak ${hendelse.aarsak} $tilstandInfo" }
 
         return OpprettetGenerellOppgave(
             generellOppgaveId = generellOppgave.id,

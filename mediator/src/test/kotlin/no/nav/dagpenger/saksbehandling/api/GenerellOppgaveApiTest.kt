@@ -92,7 +92,7 @@ class GenerellOppgaveApiTest {
                             "personIdent": "12345678901",
                             "tittel": "Sjekk sykemelding",
                             "beskrivelse": "Kontroller datoer",
-                            "emneknagg": "Sykemelding",
+                            "aarsak": "Sykemelding",
                             "strukturertData": { "foo": "bar" }
                         }
                         """.trimIndent(),
@@ -111,7 +111,7 @@ class GenerellOppgaveApiTest {
                         it.ident shouldBe "12345678901"
                         it.tittel shouldBe "Sjekk sykemelding"
                         it.beskrivelse shouldBe "Kontroller datoer"
-                        it.emneknagg shouldBe "Sykemelding"
+                        it.aarsak shouldBe "Sykemelding"
                         it.strukturertData shouldBe mapOf("foo" to "bar")
                         it.frist shouldBe null
                     }
@@ -142,7 +142,7 @@ class GenerellOppgaveApiTest {
                         {
                             "personIdent": "12345678901",
                             "tittel": "Tidskritisk oppgave",
-                            "emneknagg": "Meldekort",
+                            "aarsak": "Meldekort",
                             "frist": "$frist"
                         }
                         """.trimIndent(),
@@ -386,7 +386,7 @@ class GenerellOppgaveApiTest {
                     (slot.captured.aksjon as GenerellOppgaveAksjon.OpprettGenerellOppgave).let {
                         it.tittel shouldBe "Følg opp meldekort"
                         it.beskrivelse shouldBe "Sjekk timer neste periode"
-                        it.emneknagg shouldBe "Meldekort"
+                        it.aarsak shouldBe "Meldekort"
                         it.frist shouldBe frist
                         it.tildelSammeSaksbehandler shouldBe true
                     }

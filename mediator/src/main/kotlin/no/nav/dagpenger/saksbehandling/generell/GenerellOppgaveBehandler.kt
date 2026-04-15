@@ -119,7 +119,7 @@ class GenerellOppgaveBehandler(
         val nyOppgaveHendelse =
             OpprettGenerellOppgaveHendelse(
                 ident = generellOppgave.person.ident,
-                emneknagg = aksjon.emneknagg,
+                aarsak = aksjon.aarsak,
                 tittel = aksjon.tittel,
                 beskrivelse = aksjon.beskrivelse,
                 frist = aksjon.frist,

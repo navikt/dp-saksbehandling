@@ -36,7 +36,7 @@ class OpprettOppgaveMottakTest {
 
         val hendelse = hendelseSlot.captured
         hendelse.ident shouldBe ident
-        hendelse.emneknagg shouldBe "MeldekortKorrigering"
+        hendelse.aarsak shouldBe "MeldekortKorrigering"
         hendelse.tittel shouldBe "Meldekort trenger korrigering"
         hendelse.beskrivelse shouldBe "Meldekortet for perioden 01.03-14.03 må gjennomgås"
     }
@@ -63,7 +63,7 @@ class OpprettOppgaveMottakTest {
         verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
-        hendelse.emneknagg shouldBe "PDLFlytting"
+        hendelse.aarsak shouldBe "PDLFlytting"
         hendelse.strukturertData shouldNotBe emptyMap<String, Any>()
         hendelse.strukturertData["fraAdresse"] shouldBe "Oslo"
     }

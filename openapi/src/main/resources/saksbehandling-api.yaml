@@ -2679,9 +2679,9 @@ components:
         beskrivelse:
           type: string
           description: Utfyllende beskrivelse av oppgaven
-        emneknagg:
+        aarsak:
           type: string
-          description: Emneknagg for kategorisering av oppgaven
+          description: Årsak/kategori for oppgaven
         frist:
           type: string
           format: date
@@ -2693,7 +2693,7 @@ components:
       required:
         - personIdent
         - tittel
-        - emneknagg
+        - aarsak
 
     OpprettGenerellOppgaveResponse:
       type: object

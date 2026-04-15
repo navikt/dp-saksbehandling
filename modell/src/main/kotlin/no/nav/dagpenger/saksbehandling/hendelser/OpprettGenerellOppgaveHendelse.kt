@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 
 data class OpprettGenerellOppgaveHendelse(
     val ident: String,
-    val emneknagg: String,
+    val aarsak: String,
     val tittel: String,
     val beskrivelse: String = "",
     val strukturertData: Map<String, Any> = emptyMap(),
