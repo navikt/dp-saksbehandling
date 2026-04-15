@@ -35,8 +35,9 @@ echo "<token>" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq .
 # Fetch Azure AD OpenID config
 curl -s "https://login.microsoftonline.com/nav.no/.well-known/openid-configuration" | jq .
 
-# Check auth env vars in running pod
-kubectl exec -it <pod> -n <namespace> -- env | grep -E 'AZURE|TOKEN_X|IDPORTEN'
+# Check auth env vars in running pod (works with distroless/Chainguard)
+kubectl get pod <pod> -n <namespace> -o jsonpath='{range .spec.containers[0].env[*]}{.name}={.value}{"\n"}{end}' | grep -E 'AZURE|TOKEN_X|IDPORTEN'
+# Or use Nais Console: https://console.nav.cloud.nais.io → App → Env vars
 
 # Test if JWKS endpoint is reachable
 curl -s "$AZURE_OPENID_CONFIG_JWKS_URI" | jq '.keys | length'
@@ -95,6 +96,33 @@ routing {
 }
 ```
 
+**TypeScript/Next.js with `@navikt/oasis`**:
+
+```typescript
+import { validateAzureToken } from "@navikt/oasis";
+
+export async function GET(request: Request) {
+  const token = getToken(request);
+  if (!token) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const validation = await validateAzureToken(token);
+  if (!validation.ok) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  // Token is valid — access claims via validation.payload
+  const userId = validation.payload.sub;
+  return Response.json({ userId });
+}
+
+function getToken(request: Request): string | null {
+  const auth = request.headers.get("Authorization");
+  return auth?.replace("Bearer ", "") ?? null;
+}
+```
+
 **Environment Variables** (auto-injected by Nais):
 
 - `AZURE_APP_CLIENT_ID`
@@ -147,6 +175,35 @@ suspend fun exchangeToken(token: String, targetApp: String): String {
     val tokenResponse = response.body<TokenResponse>()
     return tokenResponse.access_token
 }
+```
+
+**TypeScript/Next.js with `@navikt/oasis`**:
+
+```typescript
+import { requestOboToken, getToken } from "@navikt/oasis";
+
+export async function GET(request: Request) {
+  const token = getToken(request);
+  if (!token) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // TokenX audience format: "cluster:namespace:app-name"
+  const obo = await requestOboToken(token, "dev-gcp:team-namespace:downstream-service");
+  if (!obo.ok) {
+    return new Response("Token exchange failed", { status: 403 });
+  }
+
+  // Use obo.token to call downstream service
+  const response = await fetch("http://downstream-service/api/data", {
+    headers: { Authorization: `Bearer ${obo.token}` },
+  });
+
+  return Response.json(await response.json());
+}
+```
+
+> **Note**: `@navikt/oasis` auto-caches OBO tokens. Azure AD audience uses different format: `"api://dev-gcp.namespace.app-name/.default"`
 ```
 
 **Environment Variables** (auto-injected):
@@ -237,6 +294,27 @@ install(Authentication) {
 }
 ```
 
+**TypeScript/Next.js with `@navikt/oasis`**:
+
+```typescript
+import { validateToken, parseAzureUserToken } from "@navikt/oasis";
+
+// Simple validation (any issuer configured in Nais)
+const validation = await validateToken(token);
+if (!validation.ok) {
+  return new Response("Invalid token", { status: 401 });
+}
+
+// Azure-specific validation with user info parsing
+const azure = await parseAzureUserToken(token);
+if (!azure.ok) {
+  return new Response("Invalid Azure token", { status: 401 });
+}
+
+const { name, NAVident, preferred_username } = azure;
+console.log(`User: ${name} (${NAVident})`);
+```
+
 ## Authorization Patterns
 
 ### Role-Based Access Control
@@ -316,6 +394,46 @@ class AuthenticationTest {
         response.status shouldBe HttpStatusCode.Unauthorized
     }
 }
+```
+
+### Testing with Vitest (TypeScript)
+
+```typescript
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import { validateAzureToken, requestOboToken } from "@navikt/oasis";
+
+vi.mock("@navikt/oasis", () => ({
+  validateAzureToken: vi.fn(),
+  requestOboToken: vi.fn(),
+  getToken: vi.fn(),
+}));
+
+describe("auth middleware", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should accept valid Azure token", async () => {
+    vi.mocked(validateAzureToken).mockResolvedValue({
+      ok: true,
+      payload: { sub: "user-123", aud: "client-id" },
+    });
+
+    const response = await GET(mockRequest("valid-token"));
+    expect(response.status).toBe(200);
+  });
+
+  it("should reject invalid token", async () => {
+    vi.mocked(validateAzureToken).mockResolvedValue({
+      ok: false,
+      error: new Error("Invalid signature"),
+      errorType: "token validation failed",
+    });
+
+    const response = await GET(mockRequest("invalid-token"));
+    expect(response.status).toBe(403);
+  });
+});
 ```
 
 ## Security Best Practices
