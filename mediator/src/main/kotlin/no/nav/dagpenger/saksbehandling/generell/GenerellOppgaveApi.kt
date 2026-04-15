@@ -105,7 +105,7 @@ internal fun Route.generellOppgaveApi(
                                         valgtSakId = request.sakId,
                                         tittel = nyOppgave.tittel,
                                         beskrivelse = nyOppgave.beskrivelse ?: "",
-                                        emneknagg = nyOppgave.emneknagg,
+                                        emneknagg = nyOppgave.aarsak,
                                         frist = nyOppgave.frist,
                                         tildelSammeSaksbehandler = nyOppgave.tildelSammeSaksbehandler ?: false,
                                     )

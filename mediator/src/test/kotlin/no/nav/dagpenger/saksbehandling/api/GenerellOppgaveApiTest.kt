@@ -369,7 +369,7 @@ class GenerellOppgaveApiTest {
                             "nyOppgave": {
                                 "tittel": "Følg opp meldekort",
                                 "beskrivelse": "Sjekk timer neste periode",
-                                "emneknagg": "Meldekort",
+                                "aarsak": "Meldekort",
                                 "frist": "$frist",
                                 "tildelSammeSaksbehandler": true
                             }

@@ -2733,9 +2733,9 @@ components:
         beskrivelse:
           type: string
           description: Beskrivelse av den nye oppgaven
-        emneknagg:
+        aarsak:
           type: string
-          description: Emneknagg for den nye oppgaven
+          description: Årsak/kategori for den nye oppgaven
         frist:
           type: string
           format: date
@@ -2746,7 +2746,7 @@ components:
           description: Om den nye oppgaven skal tildeles samme saksbehandler
       required:
         - tittel
-        - emneknagg
+        - aarsak
 
     TilbakekrevingBehandlingStatus:
       type: string
