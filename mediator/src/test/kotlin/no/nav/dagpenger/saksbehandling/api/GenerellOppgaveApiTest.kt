@@ -28,9 +28,23 @@ import no.nav.dagpenger.saksbehandling.generell.OpprettetGenerellOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import java.util.stream.Stream
 
 class GenerellOppgaveApiTest {
+    companion object {
+        @JvmStatic
+        fun behandlingsvarianter(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of("KLAGE", GenerellOppgaveAksjon.Type.OPPRETT_KLAGE),
+                Arguments.of("RETT_TIL_DAGPENGER_MANUELL", GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING),
+                Arguments.of("RETT_TIL_DAGPENGER_REVURDERING", GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING),
+            )
+    }
+
     init {
         mockAzure()
     }
@@ -294,8 +308,12 @@ class GenerellOppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne ferdigstille med KLAGE variant`() {
+    @ParameterizedTest
+    @MethodSource("behandlingsvarianter")
+    fun `Skal kunne ferdigstille med behandlingsvariant`(
+        behandlingsvariant: String,
+        forventetAksjonsType: GenerellOppgaveAksjon.Type,
+    ) {
         val sakId = UUIDv7.ny()
         val slot = slot<FerdigstillGenerellOppgaveHendelse>()
         val mediator =
@@ -312,81 +330,15 @@ class GenerellOppgaveApiTest {
                         """
                         {
                             "sakId": "$sakId",
-                            "vurdering": "Opprett klage",
-                            "behandlingsvariant": "KLAGE"
+                            "vurdering": "Ferdig vurdert",
+                            "behandlingsvariant": "$behandlingsvariant"
                         }
                         """.trimIndent(),
                     )
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                     slot.captured.let {
-                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_KLAGE
-                        it.aksjon.valgtSakId shouldBe sakId
-                    }
-                }
-        }
-    }
-
-    @Test
-    fun `Skal kunne ferdigstille med RETT_TIL_DAGPENGER_MANUELL variant`() {
-        val sakId = UUIDv7.ny()
-        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
-        val mediator =
-            mockk<GenerellOppgaveMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
-            }
-        withGenerellOppgaveApi(mediator) {
-            client
-                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
-                    autentisert()
-                    this.header(HttpHeaders.ContentType, "application/json")
-                    //language=json
-                    setBody(
-                        """
-                        {
-                            "sakId": "$sakId",
-                            "vurdering": "Opprett manuell behandling",
-                            "behandlingsvariant": "RETT_TIL_DAGPENGER_MANUELL"
-                        }
-                        """.trimIndent(),
-                    )
-                }.let { response ->
-                    response.status shouldBe HttpStatusCode.NoContent
-                    slot.captured.let {
-                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING
-                        it.aksjon.valgtSakId shouldBe sakId
-                    }
-                }
-        }
-    }
-
-    @Test
-    fun `Skal kunne ferdigstille med RETT_TIL_DAGPENGER_REVURDERING variant`() {
-        val sakId = UUIDv7.ny()
-        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
-        val mediator =
-            mockk<GenerellOppgaveMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
-            }
-        withGenerellOppgaveApi(mediator) {
-            client
-                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
-                    autentisert()
-                    this.header(HttpHeaders.ContentType, "application/json")
-                    //language=json
-                    setBody(
-                        """
-                        {
-                            "sakId": "$sakId",
-                            "vurdering": "Opprett revurdering",
-                            "behandlingsvariant": "RETT_TIL_DAGPENGER_REVURDERING"
-                        }
-                        """.trimIndent(),
-                    )
-                }.let { response ->
-                    response.status shouldBe HttpStatusCode.NoContent
-                    slot.captured.let {
-                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING
+                        it.aksjon.type shouldBe forventetAksjonsType
                         it.aksjon.valgtSakId shouldBe sakId
                     }
                 }
