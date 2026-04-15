@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS generell_oppgave_v1
     tittel                  TEXT        NOT NULL,
     beskrivelse             TEXT,
     strukturert_data        JSONB,
+    frist                   DATE,
     opprettet               TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     tilstand                TEXT        NOT NULL DEFAULT 'BEHANDLES',
     vurdering               TEXT,
@@ -18,6 +19,8 @@ CREATE TABLE IF NOT EXISTS generell_oppgave_v1
 
 CREATE INDEX IF NOT EXISTS idx_generell_oppgave_person_id ON generell_oppgave_v1 (person_id);
 CREATE INDEX IF NOT EXISTS idx_generell_oppgave_tilstand ON generell_oppgave_v1 (tilstand);
+
+COMMENT ON COLUMN generell_oppgave_v1.frist IS 'Frist for oppgaven. Oppgave settes til PåVent med utsattTil = frist';
 
 CREATE OR REPLACE TRIGGER oppdater_endret_tidspunkt
     BEFORE UPDATE
