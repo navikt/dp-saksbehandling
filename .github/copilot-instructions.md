@@ -45,7 +45,9 @@ The domain follows Norwegian terminology. Key aggregate relationships:
 ```
 Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
                                     ↓
-                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE)
+                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|GENERELL)
+
+Person ← GenerellOppgave* → (creates) Behandling + Oppgave
 ```
 
 - **Sak** (Case): Contains multiple behandlinger, identified by `sakId`
@@ -53,6 +55,7 @@ Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
 - **Behandling** (Treatment): A specific processing instance, typed by `UtløstAvType`
 - **Oppgave** (Task): Work item with state machine. Always belongs to a Behandling
 - **KlageBehandling**: Separate entity for appeal workflows (not a Behandling subclass)
+- **GenerellOppgave**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (BEHANDLES → FERDIGSTILT) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`
 - **Innsending/Utsending**: Document submission/distribution handling
 
 ### Oppgave State Machine
@@ -100,6 +103,7 @@ Seven primary mediators orchestrate domain operations:
 - `KlageMediator` — Appeal handling
 - `PersonMediator` — Person data sync (PDL lookup, skjerming)
 - `MeldingOmVedtakMediator` — Verdict message HTML generation
+- `GenerellOppgaveMediator` — Generic task lifecycle (create, ferdigstill with actions)
 
 ### Emneknagger (Tags)
 
@@ -170,3 +174,12 @@ Funksjonen er definert i `V5__FJERNE_TIMEZONE.sql` og setter `endret_tidspunkt =
 - All modules apply `common` convention plugin from `buildSrc/` (configures Kotlin, ktlint, JUnit Platform, parallel test execution)
 - `streams-consumer` uses Avro plugin for Kafka schema code generation
 - Gradle configuration cache and parallel builds enabled
+
+### Oppdatering av AI-instruksjoner
+
+Når en stor feature eller ny domeneentitet bygges, oppdater denne filen (`copilot-instructions.md`) og relevante instruction-filer i `.github/instructions/` slik at AI-assistenten kjenner til:
+- Nye domeneentiteter og deres relasjoner i Domain Model Hierarchy
+- Nye mediator-klasser i Mediator Pattern-seksjonen
+- Nye API-endepunkter og mønstre
+- Nye Kafka-mottak/behovløsere
+- Eventuelle nye konvensjoner eller mønstre som ble etablert
