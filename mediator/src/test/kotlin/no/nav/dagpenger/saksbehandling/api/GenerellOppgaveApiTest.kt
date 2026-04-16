@@ -120,6 +120,73 @@ class GenerellOppgaveApiTest {
     }
 
     @Test
+    fun `POST med beholdOppgaven=true sender flagget til mediator`() {
+        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.taImot(capture(slot)) } returns
+                    OpprettetGenerellOppgave(
+                        generellOppgaveId = UUIDv7.ny(),
+                        oppgaveId = UUIDv7.ny(),
+                    )
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .post("generell-oppgave") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "personIdent": "12345678901",
+                            "tittel": "Sjekk sykemelding",
+                            "aarsak": "Sykemelding",
+                            "beholdOppgaven": true
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Created
+                    slot.captured.beholdOppgaven shouldBe true
+                }
+        }
+    }
+
+    @Test
+    fun `POST uten beholdOppgaven defaulter til false`() {
+        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val mediator =
+            mockk<GenerellOppgaveMediator>().also {
+                every { it.taImot(capture(slot)) } returns
+                    OpprettetGenerellOppgave(
+                        generellOppgaveId = UUIDv7.ny(),
+                        oppgaveId = UUIDv7.ny(),
+                    )
+            }
+        withGenerellOppgaveApi(mediator) {
+            client
+                .post("generell-oppgave") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "personIdent": "12345678901",
+                            "tittel": "Sjekk sykemelding",
+                            "aarsak": "Sykemelding"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.Created
+                    slot.captured.beholdOppgaven shouldBe false
+                }
+        }
+    }
+
+    @Test
     fun `POST med frist sender frist til mediator`() {
         val slot = slot<OpprettGenerellOppgaveHendelse>()
         val mediator =

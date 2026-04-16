@@ -110,6 +110,86 @@ class GenerellOppgaveMediatorTest {
     }
 
     @Test
+    fun `oppgave med beholdOppgaven tildeles opprettende saksbehandler`() {
+        DBTestHelper.withPerson { ds ->
+            val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = oppgaveRepository,
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+
+            val mediator =
+                GenerellOppgaveMediator(
+                    generellOppgaveRepository = generellOppgaveRepository,
+                    generellOppgaveBehandler = mockk(),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val resultat =
+                mediator.taImot(
+                    OpprettGenerellOppgaveHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "Sykemelding",
+                        tittel = "Tildel til meg",
+                        beholdOppgaven = true,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+
+            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
+            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        }
+    }
+
+    @Test
+    fun `oppgave uten beholdOppgaven tildeles ikke saksbehandler`() {
+        DBTestHelper.withPerson { ds ->
+            val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = oppgaveRepository,
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+
+            val mediator =
+                GenerellOppgaveMediator(
+                    generellOppgaveRepository = generellOppgaveRepository,
+                    generellOppgaveBehandler = mockk(),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val resultat =
+                mediator.taImot(
+                    OpprettGenerellOppgaveHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "Sykemelding",
+                        tittel = "Ikke tildel til meg",
+                        beholdOppgaven = false,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+
+            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
+            oppgave.behandlerIdent shouldBe null
+        }
+    }
+
+    @Test
     fun `oppgave med frist opprettes i PåVent tilstand`() {
         DBTestHelper.withPerson { ds ->
             val generellOppgaveRepository = PostgresGenerellOppgaveRepository(ds)
