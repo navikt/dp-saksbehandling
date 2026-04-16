@@ -266,7 +266,7 @@ class SakMediatorTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
                     behandletHendelseId = "id",
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = testIdent,
                     sak =
                         UtsendingSak(
@@ -282,7 +282,7 @@ class SakMediatorTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
                     behandletHendelseId = "id",
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = testIdent,
                     sak =
                         UtsendingSak(
@@ -329,7 +329,7 @@ class SakMediatorTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
                     behandletHendelseId = "id",
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = testIdent,
                     sak =
                         UtsendingSak(
@@ -464,7 +464,7 @@ class SakMediatorTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
                     behandletHendelseId = søknadIdNyRett.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = testIdent,
                     sak = null,
                 ),
@@ -483,7 +483,7 @@ class SakMediatorTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdEndaEnSøknad,
                     behandletHendelseId = endaEnSøknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = testIdent,
                     sak = null,
                 ),

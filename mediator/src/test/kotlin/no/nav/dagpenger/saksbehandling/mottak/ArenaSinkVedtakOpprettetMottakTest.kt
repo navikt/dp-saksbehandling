@@ -10,6 +10,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -33,7 +34,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
             VedtakFattetHendelse(
                 behandlingId = testOppgave.behandling.behandlingId,
                 behandletHendelseId = søknadId.toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
                 ident = testOppgave.person.ident,
                 sak =
                     UtsendingSak(

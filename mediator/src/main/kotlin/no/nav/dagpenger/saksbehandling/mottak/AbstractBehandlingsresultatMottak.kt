@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
@@ -90,7 +91,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
 internal data class Behandlingsresultat(
     val behandlingId: UUID,
     val basertPåBehandlingId: UUID? = null,
-    val behandletHendelseType: String,
+    val behandletHendelseType: UtløstAvType,
     val behandletHendelseId: String,
     val rettighetsperioder: List<Rettighetsperiode>,
     val automatiskBehandlet: Boolean,
@@ -98,7 +99,7 @@ internal data class Behandlingsresultat(
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
         basertPåBehandlingId = packet["basertPå"].uuidOrNull(),
-        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+        behandletHendelseType = UtløstAvType.fraNavn(packet["behandletHendelse"]["type"].asText()),
         behandletHendelseId = packet["behandletHendelse"]["id"].asText(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
         rettighetsperioder =
@@ -110,7 +111,7 @@ internal data class Behandlingsresultat(
     )
 
     private fun dagpengerInnvilget(): Boolean =
-        behandletHendelseType == "Søknad" &&
+        behandletHendelseType == UtløstAvType.SØKNAD &&
             rettighetsperioder.any { it.harRett }
 
     fun nyDagpengerettInnvilget(): Boolean = basertPåBehandlingId == null && dagpengerInnvilget()

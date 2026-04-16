@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GenerellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
@@ -154,6 +155,65 @@ class SakMediator(
         }
     }
 
+    fun opprettEllerKnyttTilSak(hendelse: GenerellBehandlingOpprettetHendelse) {
+        if (hendelse.type == UtløstAvType.SØKNAD && hendelse.basertPåBehandling == null) {
+            opprettSakForSøknad(hendelse)
+        } else {
+            sakRepository.hentSakHistorikk(hendelse.ident).also {
+                it.knyttTilSak(hendelse).also { resultat ->
+                    sjekkResultat(hendelse.behandlingId, hendelse.javaClass.simpleName, resultat)
+                }
+                sakRepository.lagre(it)
+            }
+        }
+    }
+
+    private fun opprettSakForSøknad(hendelse: GenerellBehandlingOpprettetHendelse) {
+        val sakId =
+            requireNotNull(hendelse.behandlingskjedeId) {
+                logger.error {
+                    "Mottok GenerellBehandlingOpprettetHendelse av type SØKNAD uten behandlingskjedeId for " +
+                        "behandlingId ${hendelse.behandlingId}"
+                }
+            }
+        val sak =
+            Sak(
+                sakId = sakId,
+                søknadId = UUID.fromString(hendelse.behandletHendelseId),
+                opprettet = hendelse.opprettet,
+            ).also {
+                it.leggTilBehandling(
+                    Behandling(
+                        behandlingId = hendelse.behandlingId,
+                        utløstAv = UtløstAvType.SØKNAD,
+                        opprettet = hendelse.opprettet,
+                        hendelse = hendelse,
+                    ),
+                )
+            }
+
+        runCatching {
+            personMediator.finnEllerOpprettPerson(hendelse.ident)
+        }.onFailure { e ->
+            when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
+                true -> {
+                    sendAvbrytBehandling(
+                        behandlingId = hendelse.behandlingId,
+                        ident = hendelse.ident,
+                        årsak = "Skjermet eller adressebeskyttet person",
+                    )
+                }
+
+                else -> throw e
+            }
+        }.onSuccess { person ->
+            val sakHistorikk =
+                sakRepository.finnSakHistorikk(hendelse.ident) ?: SakHistorikk(person = person)
+            sakHistorikk.leggTilSak(sak)
+            sakRepository.lagre(sakHistorikk)
+        }
+    }
+
     fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
@@ -192,16 +252,28 @@ class SakMediator(
         søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse,
         årsak: String,
     ) {
+        sendAvbrytBehandling(
+            behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+            ident = søknadsbehandlingOpprettetHendelse.ident,
+            årsak = årsak,
+        )
+    }
+
+    private fun sendAvbrytBehandling(
+        behandlingId: UUID,
+        ident: String,
+        årsak: String,
+    ) {
         rapidsConnection.publish(
-            key = søknadsbehandlingOpprettetHendelse.ident,
+            key = ident,
             message =
                 JsonMessage
                     .newMessage(
                         eventName = "avbryt_behandling",
                         map =
                             mapOf(
-                                "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
-                                "ident" to søknadsbehandlingOpprettetHendelse.ident,
+                                "behandlingId" to behandlingId,
+                                "ident" to ident,
                                 "årsak" to årsak,
                             ),
                     ).toJson(),

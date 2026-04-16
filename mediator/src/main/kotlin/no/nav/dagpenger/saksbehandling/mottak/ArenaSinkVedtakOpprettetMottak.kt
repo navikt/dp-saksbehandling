@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -83,7 +84,7 @@ class ArenaSinkVedtakOpprettetMottak(
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = behandletHendelseId,
-                        behandletHendelseType = "Søknad",
+                        behandletHendelseType = UtløstAvType.SØKNAD,
                         ident = ident,
                         sak =
                             UtsendingSak(

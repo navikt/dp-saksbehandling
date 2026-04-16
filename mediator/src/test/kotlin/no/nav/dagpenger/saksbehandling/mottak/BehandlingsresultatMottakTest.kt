@@ -9,6 +9,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -37,14 +38,14 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for søknad og automatisk behandlet`() {
-        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Søknad"))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = UtløstAvType.SØKNAD.rapidNavn))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = søknadId.toString(),
-                        behandletHendelseType = "Søknad",
+                        behandletHendelseType = UtløstAvType.SØKNAD,
                         ident = TestHelper.testPerson.ident,
                         automatiskBehandlet = true,
                         sak = null,
@@ -56,14 +57,14 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for søknad og ikke automatisk `() {
-        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Søknad", automatisk = false))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = UtløstAvType.SØKNAD.rapidNavn, automatisk = false))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = søknadId.toString(),
-                        behandletHendelseType = "Søknad",
+                        behandletHendelseType = UtløstAvType.SØKNAD,
                         ident = TestHelper.testPerson.ident,
                         automatiskBehandlet = false,
                         sak = null,
@@ -75,14 +76,14 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for meldekort`() {
-        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = UtløstAvType.MELDEKORT.rapidNavn))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = søknadId.toString(),
-                        behandletHendelseType = "Meldekort",
+                        behandletHendelseType = UtløstAvType.MELDEKORT,
                         ident = TestHelper.testPerson.ident,
                         automatiskBehandlet = true,
                         sak = null,
@@ -94,14 +95,14 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat event og ferdigstille oppgave for manuell`() {
-        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = "Manuell"))
+        testRapid.sendTestMessage(behandlingsresultatEvent(behandletHendelseType = UtløstAvType.MANUELL.rapidNavn))
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = søknadId.toString(),
-                        behandletHendelseType = "Manuell",
+                        behandletHendelseType = UtløstAvType.MANUELL,
                         ident = TestHelper.testPerson.ident,
                         automatiskBehandlet = true,
                         sak = null,

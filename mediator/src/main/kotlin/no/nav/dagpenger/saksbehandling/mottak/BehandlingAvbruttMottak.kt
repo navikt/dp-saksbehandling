@@ -9,6 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 
 internal class BehandlingAvbruttMottak(
@@ -20,7 +21,7 @@ internal class BehandlingAvbruttMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behandling_avbrutt")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring"))
+                it.requireAny(key = "behandletHendelse.type", values = UtløstAvType.entries.map { t -> t.rapidNavn })
             }
             validate { it.requireKey("ident", "behandlingId") }
             validate { it.interestedIn("behandletHendelse") }
@@ -46,7 +47,7 @@ internal class BehandlingAvbruttMottak(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
                     behandletHendelseId = behandletHendelseId,
-                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+                    behandletHendelseType = UtløstAvType.fraNavn(packet["behandletHendelse"]["type"].asText()),
                     ident = packet["ident"].asText(),
                 ),
             )

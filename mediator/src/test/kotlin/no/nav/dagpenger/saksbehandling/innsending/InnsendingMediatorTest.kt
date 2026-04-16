@@ -180,7 +180,7 @@ class InnsendingMediatorTest {
                     VedtakFattetHendelse(
                         behandlingId = sak.behandlinger().first().behandlingId,
                         behandletHendelseId = sak.søknadId.toString(),
-                        behandletHendelseType = "Søknad",
+                        behandletHendelseType = UtløstAvType.SØKNAD,
                         ident = testPerson.ident,
                         sak =
                             UtsendingSak(

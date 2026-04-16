@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -26,7 +27,7 @@ class OppgaveMediatorAlertTest {
             ForslagTilVedtakHendelse(
                 ident = "12345678910",
                 behandletHendelseId = UUIDv7.ny().toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
                 behandlingId = behandlingId,
                 emneknagger = emptySet(),
             )
@@ -73,7 +74,7 @@ class OppgaveMediatorAlertTest {
             ForslagTilVedtakHendelse(
                 ident = "12345678910",
                 behandletHendelseId = UUIDv7.ny().toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
                 behandlingId = behandlingId,
                 emneknagger = emptySet(),
             )

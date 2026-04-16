@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -48,7 +49,7 @@ class BehandlingsresultatMottakForSakTest {
         hendelse.captured.ident shouldBe ident
         hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
-        hendelse.captured.behandletHendelseType shouldBe "Søknad"
+        hendelse.captured.behandletHendelseType shouldBe UtløstAvType.SØKNAD
         hendelse.captured.sak.let {
             require(it != null)
             it.id shouldBe sakId.toString()

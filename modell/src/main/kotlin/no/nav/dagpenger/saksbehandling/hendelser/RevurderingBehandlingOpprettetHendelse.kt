@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import java.time.LocalDateTime
 import java.util.UUID
 
+@Deprecated("Bruk GenerellBehandlingOpprettetHendelse i stedet. Beholdes for deserialisering av eksisterende DB-poster.")
 data class RevurderingBehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
