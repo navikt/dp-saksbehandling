@@ -141,7 +141,7 @@ class InnsendingBehovløserTest {
         skjemaKode: String = "NAV 04-07.08",
         kategori: Kategori,
     ) = when (søknadId == null) {
-        true ->
+        true -> {
             //language=JSON
             """
             {
@@ -150,13 +150,15 @@ class InnsendingBehovløserTest {
               "@behov" : [ "HåndterInnsending" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$ident",
+              "søknadId" : "null",
               "kategori" : "${kategori.name}",
               "skjemaKode" : "$skjemaKode",
               "registrertDato" : "$registrertTidspunkt"
             }
             """.trimIndent()
+        }
 
-        false ->
+        false -> {
             //language=JSON
             """
             {
@@ -171,5 +173,6 @@ class InnsendingBehovløserTest {
               "registrertDato" : "$registrertTidspunkt"
             }
             """.trimIndent()
+        }
     }
 }
