@@ -68,7 +68,7 @@ class HendelseJsonSerDerTest {
                 "ident": "1234",
                 "sakId": "${hendelse.sakId}",
                 "opprettet": "-999999999-01-01T00:00:00",
-                "type": "SØKNAD",
+                "type": "Søknad",
                 "utførtAv": { "navn": "dp-mottak" }
              }
             """
@@ -91,7 +91,7 @@ class HendelseJsonSerDerTest {
                 "behandlingId": "$aUUID",
                 "ident": "1234",
                 "opprettet": "-999999999-01-01T00:00:00",
-                "type": "SØKNAD",
+                "type": "Søknad",
                 "sakId": "$aUUID",
                 "utførtAv": {
                   "navIdent": "navIdent",
@@ -130,7 +130,7 @@ class HendelseJsonSerDerTest {
             VedtakFattetHendelse(
                 behandlingId = UUIDv7.ny(),
                 behandletHendelseId = UUIDv7.ny().toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
                 ident = "12345678901",
                 sak =
                     UtsendingSak(
@@ -143,7 +143,7 @@ class HendelseJsonSerDerTest {
             {
                 "behandlingId": "${vedtakFattetHendelse.behandlingId}",
                 "behandletHendelseId": "${vedtakFattetHendelse.behandletHendelseId}",
-                "behandletHendelseType": "${vedtakFattetHendelse.behandletHendelseType}",
+                "behandletHendelseType": "${vedtakFattetHendelse.behandletHendelseType.rapidNavn}",
                 "ident": "${vedtakFattetHendelse.ident}",
                 "sak": {
                     "id": "${vedtakFattetHendelse.sak!!.id}",

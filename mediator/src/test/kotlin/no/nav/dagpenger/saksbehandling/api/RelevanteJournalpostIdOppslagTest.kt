@@ -33,7 +33,7 @@ class RelevanteJournalpostIdOppslagTest {
                             hendelse =
                                 ForslagTilVedtakHendelse(
                                     behandletHendelseId = UUIDv7.ny().toString(),
-                                    behandletHendelseType = "Søknad",
+                                    behandletHendelseType = UtløstAvType.SØKNAD,
                                     behandlingId = UUIDv7.ny(),
                                     ident = ident,
                                 ),

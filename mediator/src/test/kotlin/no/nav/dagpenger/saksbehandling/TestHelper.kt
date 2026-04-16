@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -147,7 +148,7 @@ internal object TestHelper {
                     ForslagTilVedtakHendelse(
                         ident = personIdent,
                         behandletHendelseId = søknadId.toString(),
-                        behandletHendelseType = "Søknad",
+                        behandletHendelseType = UtløstAvType.SØKNAD,
                         behandlingId = UUID.randomUUID(),
                     ),
                 tidspunkt = opprettetNå.minusDays(3),

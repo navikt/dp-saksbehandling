@@ -48,6 +48,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GenerellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
@@ -415,8 +416,8 @@ class PostgresOppgaveRepository(
                         JOIN    person_v1       pers ON pers.id = beha.person_id
                         JOIN    hendelse_v1     hend ON beha.id = hend.behandling_id
                         WHERE   pers.ident = :ident
-                        AND     hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse'
-                        AND     hend.hendelse_data->>'søknadId' = :soknad_id
+                        AND     hend.hendelse_type IN ('SøknadsbehandlingOpprettetHendelse', 'GenerellBehandlingOpprettetHendelse')
+                        AND     (hend.hendelse_data->>'søknadId' = :soknad_id OR hend.hendelse_data->>'behandletHendelseId' = :soknad_id)
                     """.trimMargin(),
                     mapOf(
                         "ident" to ident,
@@ -487,8 +488,8 @@ class PostgresOppgaveRepository(
             val søknadIdClause =
                 søkeFilter.søknadId?.let {
                     """
-                    AND hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
-                    AND hend.hendelse_data ->> 'søknadId' = :soknad_id 
+                    AND hend.hendelse_type IN ('SøknadsbehandlingOpprettetHendelse', 'GenerellBehandlingOpprettetHendelse')
+                    AND (hend.hendelse_data ->> 'søknadId' = :soknad_id OR hend.hendelse_data ->> 'behandletHendelseId' = :soknad_id)
                     """.trimIndent()
                 } ?: ""
 
@@ -627,6 +628,7 @@ private fun rehydrerTilstandsendringHendelse(
         "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
         "BehandlingOpplåstHendelse" -> hendelseJson.tilHendelse<BehandlingOpplåstHendelse>()
         "BehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<BehandlingOpprettetHendelse>()
+        "GenerellBehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<GenerellBehandlingOpprettetHendelse>()
         "FjernOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<FjernOppgaveAnsvarHendelse>()
         "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
         "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
@@ -962,6 +964,11 @@ private fun Row.rehydrerHendelse(): Hendelse {
                 .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
 
         "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
+        "GenerellBehandlingOpprettetHendelse" ->
+            this
+                .string("hendelse_data")
+                .tilHendelse<GenerellBehandlingOpprettetHendelse>()
+
         "MeldekortbehandlingOpprettetHendelse" ->
             this
                 .string("hendelse_data")

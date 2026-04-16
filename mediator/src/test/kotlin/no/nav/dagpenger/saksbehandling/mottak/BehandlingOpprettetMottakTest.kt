@@ -4,9 +4,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.hendelser.GenerellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -22,23 +21,6 @@ class BehandlingOpprettetMottakTest {
     val behandlingIdGjenopptak = UUID.randomUUID()
     val behandletHendelseSkjedde = LocalDate.parse("2024-02-27")
     val behandlingskjedeId = UUIDv7.ny()
-    private val søknadsbehandlingOpprettetHendelseNyRett =
-        SøknadsbehandlingOpprettetHendelse(
-            søknadId = søknadId,
-            behandlingId = behandlingIdNyRett,
-            ident = testIdent,
-            opprettet = behandletHendelseSkjedde.atStartOfDay(),
-            behandlingskjedeId = behandlingskjedeId,
-        )
-    private val søknadsbehandlingOpprettetHendelseGjenopptak =
-        SøknadsbehandlingOpprettetHendelse(
-            søknadId = søknadId,
-            behandlingId = behandlingIdGjenopptak,
-            ident = testIdent,
-            opprettet = behandletHendelseSkjedde.atStartOfDay(),
-            basertPåBehandling = behandlingIdNyRett,
-            behandlingskjedeId = behandlingskjedeId,
-        )
 
     private val testRapid = TestRapid()
     private val sakMediatorMock = mockk<SakMediator>(relaxed = true)
@@ -51,8 +33,16 @@ class BehandlingOpprettetMottakTest {
     fun `Skal behandle behandling_opprettet hendelse for søknadsbehandling av ny dagpengerett`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMeldingNyRett())
         verify(exactly = 1) {
-            sakMediatorMock.opprettSak(
-                søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelseNyRett,
+            sakMediatorMock.opprettEllerKnyttTilSak(
+                GenerellBehandlingOpprettetHendelse(
+                    behandlingId = behandlingIdNyRett,
+                    ident = testIdent,
+                    opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                    type = UtløstAvType.SØKNAD,
+                    behandletHendelseId = søknadId.toString(),
+                    basertPåBehandling = null,
+                    behandlingskjedeId = behandlingskjedeId,
+                ),
             )
         }
     }
@@ -61,8 +51,16 @@ class BehandlingOpprettetMottakTest {
     fun `Skal behandle behandling_opprettet hendelse for søknadsbehandling som er basert på en annen behandling`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMeldingBasertPåBehandling())
         verify(exactly = 1) {
-            sakMediatorMock.knyttTilSak(
-                søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelseGjenopptak,
+            sakMediatorMock.opprettEllerKnyttTilSak(
+                GenerellBehandlingOpprettetHendelse(
+                    behandlingId = behandlingIdGjenopptak,
+                    ident = testIdent,
+                    opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                    type = UtløstAvType.SØKNAD,
+                    behandletHendelseId = søknadId.toString(),
+                    basertPåBehandling = behandlingIdNyRett,
+                    behandlingskjedeId = behandlingskjedeId,
+                ),
             )
         }
     }
@@ -77,16 +75,16 @@ class BehandlingOpprettetMottakTest {
             ),
         )
         verify(exactly = 1) {
-            sakMediatorMock.knyttTilSak(
-                meldekortbehandlingOpprettetHendelse =
-                    MeldekortbehandlingOpprettetHendelse(
-                        meldekortId = meldekortId,
-                        behandlingId = behandlingIdNyRett,
-                        ident = testIdent,
-                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
-                        basertPåBehandling = basertPåBehandling,
-                        behandlingskjedeId = behandlingskjedeId,
-                    ),
+            sakMediatorMock.opprettEllerKnyttTilSak(
+                GenerellBehandlingOpprettetHendelse(
+                    behandlingId = behandlingIdNyRett,
+                    ident = testIdent,
+                    opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                    type = UtløstAvType.MELDEKORT,
+                    behandletHendelseId = meldekortId,
+                    basertPåBehandling = basertPåBehandling,
+                    behandlingskjedeId = behandlingskjedeId,
+                ),
             )
         }
     }
@@ -101,16 +99,16 @@ class BehandlingOpprettetMottakTest {
             ),
         )
         verify(exactly = 1) {
-            sakMediatorMock.knyttTilSak(
-                manuellBehandlingOpprettetHendelse =
-                    ManuellBehandlingOpprettetHendelse(
-                        manuellId = manuellId,
-                        behandlingId = behandlingIdNyRett,
-                        ident = testIdent,
-                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
-                        basertPåBehandling = basertPåBehandling,
-                        behandlingskjedeId = behandlingskjedeId,
-                    ),
+            sakMediatorMock.opprettEllerKnyttTilSak(
+                GenerellBehandlingOpprettetHendelse(
+                    behandlingId = behandlingIdNyRett,
+                    ident = testIdent,
+                    opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                    type = UtløstAvType.MANUELL,
+                    behandletHendelseId = manuellId.toString(),
+                    basertPåBehandling = basertPåBehandling,
+                    behandlingskjedeId = behandlingskjedeId,
+                ),
             )
         }
     }

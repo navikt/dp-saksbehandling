@@ -7,6 +7,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import org.junit.jupiter.api.Test
 import kotlin.also
@@ -26,19 +27,25 @@ class ForslagTilBehandlingsresultatMottakTest {
             }
         ForslagTilBehandlingsresultatMottak(testRapid, oppgaveMediator)
 
-        listOf("Søknad", "Meldekort", "Manuell").forEachIndexed { index, behandletHendelseType ->
-            testRapid.sendTestMessage(testMessage(behandletHendelseType = behandletHendelseType))
+        val typeMapping =
+            listOf(
+                "Søknad" to UtløstAvType.SØKNAD,
+                "Meldekort" to UtløstAvType.MELDEKORT,
+                "Manuell" to UtløstAvType.MANUELL,
+            )
+        typeMapping.forEachIndexed { index, (rapidNavn, enumType) ->
+            testRapid.sendTestMessage(testMessage(behandletHendelseType = rapidNavn))
             slots[index].let { hendelse ->
                 hendelse.ident shouldBe ident
                 hendelse.behandletHendelseId shouldBe søknadId.toString()
                 hendelse.behandlingId shouldBe behandlingId
-                hendelse.behandletHendelseType shouldBe behandletHendelseType
+                hendelse.behandletHendelseType shouldBe enumType
             }
         }
 
-        slots.single { it.behandletHendelseType == "Søknad" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
-        slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe emptySet()
-        slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe emptySet()
+        slots.single { it.behandletHendelseType == UtløstAvType.SØKNAD }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
+        slots.single { it.behandletHendelseType == UtløstAvType.MELDEKORT }.emneknagger shouldBe emptySet()
+        slots.single { it.behandletHendelseType == UtløstAvType.MANUELL }.emneknagger shouldBe emptySet()
     }
 
     private fun testMessage(behandletHendelseType: String): String {

@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -34,12 +35,13 @@ class BehandlingAvbruttMottakTest {
         testRapid.sendTestMessage(behandlingAvbruttHendelse(hendelseType = hendelseType))
         when (skalBehandles) {
             true -> {
+                val utløstAvType = UtløstAvType.fraNavn(hendelseType)
                 verify(exactly = 1) {
                     oppgaveMediatorMock.avbrytOppgave(
                         BehandlingAvbruttHendelse(
                             behandlingId = behandlingId,
                             behandletHendelseId = behandletHendelseId.toString(),
-                            behandletHendelseType = hendelseType,
+                            behandletHendelseType = utløstAvType,
                             ident = ident,
                         ),
                     )
@@ -48,14 +50,7 @@ class BehandlingAvbruttMottakTest {
 
             false -> {
                 verify(exactly = 0) {
-                    oppgaveMediatorMock.avbrytOppgave(
-                        BehandlingAvbruttHendelse(
-                            behandlingId = behandlingId,
-                            behandletHendelseId = behandletHendelseId.toString(),
-                            behandletHendelseType = hendelseType,
-                            ident = ident,
-                        ),
-                    )
+                    oppgaveMediatorMock.avbrytOppgave(any())
                 }
             }
         }

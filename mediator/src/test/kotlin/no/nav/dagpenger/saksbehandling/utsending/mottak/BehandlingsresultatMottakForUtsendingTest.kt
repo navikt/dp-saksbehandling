@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
@@ -55,7 +56,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         hendelse.captured.ident shouldBe ident
         hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
-        hendelse.captured.behandletHendelseType shouldBe "Søknad"
+        hendelse.captured.behandletHendelseType shouldBe UtløstAvType.SØKNAD
         hendelse.captured.sak.let {
             require(it != null)
             it.id shouldBe sakId.toString()
@@ -98,7 +99,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultat(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingsresultat(behandletHendelseType = UtløstAvType.MELDEKORT.rapidNavn))
 
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -122,7 +123,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultat(behandletHendelseType = "Manuell"))
+        testRapid.sendTestMessage(behandlingsresultat(behandletHendelseType = UtløstAvType.MANUELL.rapidNavn))
 
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -174,7 +175,7 @@ class BehandlingsresultatMottakForUtsendingTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = ident,
                     sak =
                         UtsendingSak(

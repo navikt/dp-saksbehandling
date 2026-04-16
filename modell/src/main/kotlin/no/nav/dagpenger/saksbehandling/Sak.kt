@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GenerellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
@@ -125,6 +126,23 @@ data class Sak(
                     utløstAv = behandlingOpprettetHendelse.type,
                     opprettet = behandlingOpprettetHendelse.opprettet,
                     hendelse = behandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+        }
+
+    fun knyttTilSak(hendelse: GenerellBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == hendelse.behandlingskjedeId ||
+            this.basertPåBehandlingErKnyttetTilSak(hendelse.basertPåBehandling)
+        ) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = hendelse.type,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

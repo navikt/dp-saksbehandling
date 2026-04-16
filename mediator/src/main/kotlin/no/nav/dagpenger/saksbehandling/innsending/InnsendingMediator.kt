@@ -137,7 +137,7 @@ class InnsendingMediator(
                         BehandlingAvbruttHendelse(
                             behandlingId = innsending.innsendingId,
                             behandletHendelseId = hendelse.søknadId.toString(),
-                            behandletHendelseType = "Søknad",
+                            behandletHendelseType = UtløstAvType.SØKNAD,
                             ident = hendelse.ident,
                             utførtAv = hendelse.utførtAv,
                         ),

@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -300,7 +301,7 @@ class OppgaveHistorikkDTOMapperTest {
                                         ForslagTilVedtakHendelse(
                                             ident = "12345612345",
                                             behandletHendelseId = UUIDv7.ny().toString(),
-                                            behandletHendelseType = "Søknad",
+                                            behandletHendelseType = UtløstAvType.SØKNAD,
                                             behandlingId = UUIDv7.ny(),
                                             emneknagger = setOf("Knaggen"),
                                         ),
@@ -356,7 +357,7 @@ class OppgaveHistorikkDTOMapperTest {
                                     ForslagTilVedtakHendelse(
                                         ident = TestHelper.personIdent,
                                         behandletHendelseId = søknadId.toString(),
-                                        behandletHendelseType = "Søknad",
+                                        behandletHendelseType = UtløstAvType.SØKNAD,
                                         behandlingId = UUID.randomUUID(),
                                     ),
                             ),
@@ -380,7 +381,7 @@ class OppgaveHistorikkDTOMapperTest {
                 ForslagTilVedtakHendelse(
                     ident = oppgave.personIdent(),
                     behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = oppgave.behandling.behandlingId,
                 ),
             )

@@ -44,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -253,7 +254,7 @@ OppgaveMediatorTest {
                 ident = personUtenBehandling,
                 behandlingId = UUIDv7.ny(),
                 behandletHendelseId = UUIDv7.ny().toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
             ),
         ) shouldBe null
 
@@ -262,7 +263,7 @@ OppgaveMediatorTest {
                 ident = personUtenSakHistorikk,
                 behandlingId = UUIDv7.ny(),
                 behandletHendelseId = UUIDv7.ny().toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
             ),
         ) shouldBe null
 
@@ -425,7 +426,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = "ad",
                     behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = UUIDv7.ny(),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
@@ -456,7 +457,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = behandling.behandlingId,
                     emneknagger = forventedeEmneknagger,
                 )
@@ -489,7 +490,7 @@ OppgaveMediatorTest {
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
                 behandletHendelseId = søknadId.toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
                 ident = testIdent,
                 sak = null,
                 automatiskBehandlet = automatiskBehandlet,
@@ -561,7 +562,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger1,
                 ),
@@ -571,7 +572,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger2,
                 ),
@@ -827,7 +828,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),
@@ -948,7 +949,7 @@ OppgaveMediatorTest {
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandling.behandlingId,
                     behandletHendelseId = oppgave.søknadId()!!.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = testIdent,
                 ),
             )
@@ -976,7 +977,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),
@@ -1409,7 +1410,7 @@ OppgaveMediatorTest {
                     VedtakFattetHendelse(
                         behandlingId = sak.behandlinger().first().behandlingId,
                         behandletHendelseId = sak.søknadId.toString(),
-                        behandletHendelseType = "Søknad",
+                        behandletHendelseType = UtløstAvType.SØKNAD,
                         ident = testPerson.ident,
                         sak =
                             UtsendingSak(
@@ -1511,7 +1512,7 @@ OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     behandletHendelseId = UUIDv7.ny().toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),

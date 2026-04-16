@@ -109,7 +109,7 @@ class UtsendingMediatorTest {
                     ident = person.ident,
                     behandlingId = behandling.behandlingId.toString(),
                     behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD.rapidNavn,
                     harRett = true,
                 )
 
@@ -696,7 +696,7 @@ class UtsendingMediatorTest {
             VedtakFattetHendelse(
                 behandlingId = utsending.behandlingId,
                 behandletHendelseId = UUIDv7.ny().toString(),
-                behandletHendelseType = "Søknad",
+                behandletHendelseType = UtløstAvType.SØKNAD,
                 ident = utsending.ident,
                 sak =
                     UtsendingSak(

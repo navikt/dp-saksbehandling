@@ -9,6 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 
 internal class ForslagTilBehandlingsresultatMottak(
@@ -22,7 +23,7 @@ internal class ForslagTilBehandlingsresultatMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "forslag_til_behandlingsresultat")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring"))
+                it.requireAny(key = "behandletHendelse.type", values = UtløstAvType.entries.map { t -> t.rapidNavn })
                 it.requireKey("ident", "behandlingId")
                 it.requireKey("opplysninger")
                 it.requireKey("behandletHendelse")
@@ -56,7 +57,7 @@ internal class ForslagTilBehandlingsresultatMottak(
                     ForslagTilVedtakHendelse(
                         ident = ident,
                         behandletHendelseId = behandletHendelseId,
-                        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+                        behandletHendelseType = UtløstAvType.fraNavn(packet["behandletHendelse"]["type"].asText()),
                         behandlingId = behandlingId,
                         emneknagger = emneknagger,
                     )

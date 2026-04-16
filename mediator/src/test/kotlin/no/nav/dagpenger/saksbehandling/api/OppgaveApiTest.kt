@@ -45,6 +45,7 @@ import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
@@ -604,7 +605,7 @@ class OppgaveApiTest {
                                 ForslagTilVedtakHendelse(
                                     ident = TestHelper.personIdent,
                                     behandletHendelseId = TestHelper.søknadId.toString(),
-                                    behandletHendelseType = "Søknad",
+                                    behandletHendelseType = UtløstAvType.SØKNAD,
                                     behandlingId = UUID.randomUUID(),
                                 ),
                             tidspunkt = TestHelper.opprettetNå,

@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -58,7 +59,7 @@ class BehandlingsresultatMottakForAutomatiskVedtakUtsendingTest {
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     behandletHendelseId = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    behandletHendelseType = UtløstAvType.SØKNAD,
                     ident = ident,
                     sak =
                         UtsendingSak(

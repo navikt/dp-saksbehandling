@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -28,11 +30,21 @@ data class Behandling(
 
 enum class UtløstAvType(
     val applikasjon: Applikasjon,
+    @get:JsonValue val rapidNavn: String,
 ) {
-    SØKNAD(applikasjon = Applikasjon.DpBehandling),
-    MELDEKORT(applikasjon = Applikasjon.DpBehandling),
-    MANUELL(applikasjon = Applikasjon.DpBehandling),
-    REVURDERING(applikasjon = Applikasjon.DpBehandling),
-    INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
-    KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
+    SØKNAD(applikasjon = Applikasjon.DpBehandling, rapidNavn = "Søknad"),
+    MELDEKORT(applikasjon = Applikasjon.DpBehandling, rapidNavn = "Meldekort"),
+    MANUELL(applikasjon = Applikasjon.DpBehandling, rapidNavn = "Manuell"),
+    REVURDERING(applikasjon = Applikasjon.DpBehandling, rapidNavn = "Omgjøring"),
+    INNSENDING(applikasjon = Applikasjon.DpSaksbehandling, rapidNavn = "Innsending"),
+    KLAGE(applikasjon = Applikasjon.DpSaksbehandling, rapidNavn = "Klage"),
+    ;
+
+    companion object {
+        @JsonCreator
+        @JvmStatic
+        fun fraNavn(navn: String): UtløstAvType =
+            entries.firstOrNull { it.rapidNavn == navn }
+                ?: throw IllegalArgumentException("Ukjent UtløstAvType: '$navn'. Gyldige verdier: ${entries.map { it.rapidNavn }}")
+    }
 }
