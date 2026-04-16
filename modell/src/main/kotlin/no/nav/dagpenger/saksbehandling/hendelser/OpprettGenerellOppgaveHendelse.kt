@@ -12,6 +12,7 @@ data class OpprettGenerellOppgaveHendelse(
     val beskrivelse: String = "",
     val strukturertData: Map<String, Any> = emptyMap(),
     val frist: LocalDate? = null,
+    val beholdOppgaven: Boolean = false,
     val registrertTidspunkt: LocalDateTime = LocalDateTime.now(),
     override val utførtAv: Behandler = Applikasjon.DpSaksbehandling,
 ) : Hendelse(utførtAv)

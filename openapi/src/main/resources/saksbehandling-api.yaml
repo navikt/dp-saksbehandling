@@ -2686,6 +2686,10 @@ components:
           type: string
           format: date
           description: Frist for oppgaven (YYYY-MM-DD). Oppgaven settes på vent til denne dato.
+        beholdOppgaven:
+          type: boolean
+          default: false
+          description: Om oppgaven skal tildeles saksbehandleren som oppretter den
         strukturertData:
           type: object
           additionalProperties: true
