@@ -1,8 +1,10 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -63,11 +65,10 @@ internal class InnsendingBehovløser(
 
         withLoggingContext("journalpostId" to journalpostId, "kategori" to kategori.name) {
             val søknadId: UUID? =
-                if (!packet["søknadId"].isMissingNode && !packet["søknadId"].isNull) {
-                    packet["søknadId"].asUUID()
-                } else {
-                    null
-                }
+                packet["søknadId"]
+                    .takeUnless(JsonNode::isMissingOrNull)
+                    .takeUnless { søknadIdJsonNode -> søknadIdJsonNode?.asText() == "null" }
+                    ?.asUUID()
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
                     ident = ident,

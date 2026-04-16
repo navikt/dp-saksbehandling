@@ -133,6 +133,44 @@ class InnsendingBehovløserTest {
             """.trimIndent()
     }
 
+    @Test
+    fun `Håndterer tilfeller der søknadId er "null" `() {
+        val slot = slot<InnsendingMottattHendelse>()
+        InnsendingBehovløser(
+            rapidsConnection = testRapid,
+            innsendingMediator =
+                mockk<InnsendingMediator>(relaxed = true).also {
+                    every { it.taImotInnsending(capture(slot)) } returns HåndterInnsendingResultat.UhåndtertInnsending
+                },
+        )
+        testRapid.sendTestMessage(
+            key = testIdent,
+            //language=Json
+            message =
+                """
+                {
+                  "@event_name" : "behov",
+                  "@behovId" : "${UUIDv7.ny()}",
+                  "@behov" : [ "HåndterInnsending" ],
+                  "journalpostId" : "$journalpostId",
+                  "fødselsnummer" : "$testIdent",
+                  "søknadId" : "null",
+                  "kategori" : "${Kategori.KLAGE.name}",
+                  "skjemaKode" : "NAVe",
+                  "registrertDato" : "$nå"
+                }
+                """.trimIndent(),
+        )
+        slot.captured.let {
+            it.ident shouldBe testIdent
+            it.journalpostId shouldBe journalpostId
+            it.registrertTidspunkt shouldBe nå
+            it.søknadId shouldBe null
+            it.skjemaKode shouldBe "NAVe"
+            it.kategori shouldBe Kategori.KLAGE
+        }
+    }
+
     private fun håndterInnsendingBehov(
         ident: String,
         journalpostId: String,
@@ -141,7 +179,7 @@ class InnsendingBehovløserTest {
         skjemaKode: String = "NAV 04-07.08",
         kategori: Kategori,
     ) = when (søknadId == null) {
-        true ->
+        true -> {
             //language=JSON
             """
             {
@@ -155,8 +193,9 @@ class InnsendingBehovløserTest {
               "registrertDato" : "$registrertTidspunkt"
             }
             """.trimIndent()
+        }
 
-        false ->
+        false -> {
             //language=JSON
             """
             {
@@ -171,5 +210,6 @@ class InnsendingBehovløserTest {
               "registrertDato" : "$registrertTidspunkt"
             }
             """.trimIndent()
+        }
     }
 }
