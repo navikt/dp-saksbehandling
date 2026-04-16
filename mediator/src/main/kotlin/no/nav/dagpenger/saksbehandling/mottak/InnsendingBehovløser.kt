@@ -63,7 +63,7 @@ internal class InnsendingBehovløser(
 
         withLoggingContext("journalpostId" to journalpostId, "kategori" to kategori.name) {
             val søknadId: UUID? =
-                if (!packet["søknadId"].isMissingNode && !packet["søknadId"].isNull) {
+                if (packet.harSøknadId()) {
                     packet["søknadId"].asUUID()
                 } else {
                     null
@@ -115,4 +115,7 @@ internal class InnsendingBehovløser(
                 }
         }
     }
+
+    private fun JsonMessage.harSøknadId(): Boolean =
+        !this["søknadId"].isMissingNode && !this["søknadId"].isNull && this["søknadId"].asText() != "null"
 }
