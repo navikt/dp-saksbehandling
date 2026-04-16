@@ -1,8 +1,10 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -46,7 +48,7 @@ internal class InnsendingBehovløser(
                         "skjemaKode",
                         "registrertDato",
                     )
-                    it.interestedIn("søknadId")
+                    it.interestedIn("søknadId") { søknadId -> UUID.fromString(søknadId.asText()) }
                 }
             }.register(this)
     }
@@ -62,12 +64,7 @@ internal class InnsendingBehovløser(
         val journalpostId = packet["journalpostId"].asText()
 
         withLoggingContext("journalpostId" to journalpostId, "kategori" to kategori.name) {
-            val søknadId: UUID? =
-                if (packet.harSøknadId()) {
-                    packet["søknadId"].asUUID()
-                } else {
-                    null
-                }
+            val søknadId: UUID? = packet["søknadId"].takeUnless(JsonNode::isMissingOrNull)?.asUUID()
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
                     ident = ident,
@@ -115,7 +112,4 @@ internal class InnsendingBehovløser(
                 }
         }
     }
-
-    private fun JsonMessage.harSøknadId(): Boolean =
-        !this["søknadId"].isMissingNode && !this["søknadId"].isNull && this["søknadId"].asText() != "null"
 }
