@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -150,7 +151,6 @@ class InnsendingBehovløserTest {
               "@behov" : [ "HåndterInnsending" ],
               "journalpostId" : "$journalpostId",
               "fødselsnummer" : "$ident",
-              "søknadId" : "null",
               "kategori" : "${kategori.name}",
               "skjemaKode" : "$skjemaKode",
               "registrertDato" : "$registrertTidspunkt"
@@ -174,5 +174,35 @@ class InnsendingBehovløserTest {
             }
             """.trimIndent()
         }
+    }
+
+    @Test
+    fun `Håndterer tilfeller der søknadId er "null" `() {
+        val innsendingMediator = mockk<InnsendingMediator>(relaxed = true)
+        InnsendingBehovløser(
+            rapidsConnection = testRapid,
+            innsendingMediator =
+            innsendingMediator,
+        )
+        testRapid.sendTestMessage(
+            key = testIdent,
+            //language=Json
+            message =
+                """
+                {
+                  "@event_name" : "behov",
+                  "@behovId" : "${UUIDv7.ny()}",
+                  "@behov" : [ "HåndterInnsending" ],
+                  "journalpostId" : "$journalpostId",
+                  "fødselsnummer" : "$testIdent",
+                  "søknadId" : "null",
+                  "kategori" : "${Kategori.KLAGE.name}",
+                  "skjemaKode" : "NAVe",
+                  "registrertDato" : "$nå"
+                }
+                """.trimIndent(),
+        )
+        //  "søknadId" : "null" blir filtrert av river filteret og skal ikke nå inn til løsningen, og dermed skal ikke innsendingMediator.taImotInnsending bli kalt
+        verify(exactly = 0) { innsendingMediator.taImotInnsending(any()) }
     }
 }
