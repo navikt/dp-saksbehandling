@@ -48,7 +48,7 @@ internal class InnsendingBehovløser(
                         "skjemaKode",
                         "registrertDato",
                     )
-                    it.interestedIn("søknadId") { søknadId -> UUID.fromString(søknadId.asText()) }
+                    it.interestedIn("søknadId")
                 }
             }.register(this)
     }
@@ -64,7 +64,11 @@ internal class InnsendingBehovløser(
         val journalpostId = packet["journalpostId"].asText()
 
         withLoggingContext("journalpostId" to journalpostId, "kategori" to kategori.name) {
-            val søknadId: UUID? = packet["søknadId"].takeUnless(JsonNode::isMissingOrNull)?.asUUID()
+            val søknadId: UUID? =
+                packet["søknadId"]
+                    .takeUnless(JsonNode::isMissingOrNull)
+                    .takeUnless { søknadIdJsonNode -> søknadIdJsonNode?.asText() == "null" }
+                    ?.asUUID()
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
                     ident = ident,
