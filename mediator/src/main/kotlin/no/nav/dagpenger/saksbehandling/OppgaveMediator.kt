@@ -25,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -33,7 +32,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -91,8 +91,8 @@ class OppgaveMediator(
         oppgaveRepository.lagre(oppgave)
     }
 
-    fun lagOppgaveForGenerellOppgave(
-        hendelse: OpprettGenerellOppgaveHendelse,
+    fun lagOppgaveForOppfølging(
+        hendelse: OpprettOppfølgingHendelse,
         behandling: Behandling,
         person: Person,
         utsattTil: LocalDate? = null,
@@ -488,19 +488,19 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse) {
-        oppgaveRepository.hentOppgaveFor(generellOppgaveFerdigstiltHendelse.generellOppgaveId).let { oppgave ->
+    fun ferdigstillOppgave(oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse) {
+        oppgaveRepository.hentOppgaveFor(oppfølgingFerdigstiltHendelse.oppfølgingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
                 logger.info {
-                    "Mottatt GenerellOppgaveFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                    "Mottatt OppfølgingFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
-                oppgave.ferdigstill(generellOppgaveFerdigstiltHendelse)
+                oppgave.ferdigstill(oppfølgingFerdigstiltHendelse)
                 oppgaveRepository.lagre(oppgave)
                 logger.info {
-                    "Behandlet GenerellOppgaveFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    "Behandlet OppfølgingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }

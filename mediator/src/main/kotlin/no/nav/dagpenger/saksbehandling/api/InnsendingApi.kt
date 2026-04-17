@@ -76,12 +76,12 @@ fun Route.innsendingApi(
                                         requireNotNull(valgtSakId)
                                         Aksjon.OpprettKlage(valgtSakId)
                                     }
-                                    BehandlingVariantDTO.GENERELL_OPPGAVE -> {
+                                    BehandlingVariantDTO.OPPFOLGING -> {
                                         val nyOppgave =
                                             requireNotNull(requestDTO.nyOppgave) {
-                                                "nyOppgave må være satt ved behandlingsvariant GENERELL_OPPGAVE"
+                                                "nyOppgave må være satt ved behandlingsvariant OPPFOLGING"
                                             }
-                                        Aksjon.OpprettGenerellOppgave(
+                                        Aksjon.OpprettOppfølging(
                                             valgtSakId = requestDTO.sakId,
                                             tittel = nyOppgave.tittel,
                                             beskrivelse = nyOppgave.beskrivelse ?: "",

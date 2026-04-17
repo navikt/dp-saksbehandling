@@ -26,13 +26,13 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GenerellOppgaveFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -234,10 +234,10 @@ data class Oppgave private constructor(
         tilstand.ferdigstill(this, innsendingFerdigstiltHendelse)
     }
 
-    fun ferdigstill(generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse) {
-        adressebeskyttelseTilgangskontroll(generellOppgaveFerdigstiltHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(generellOppgaveFerdigstiltHendelse.utførtAv)
-        tilstand.ferdigstill(this, generellOppgaveFerdigstiltHendelse)
+    fun ferdigstill(oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse) {
+        adressebeskyttelseTilgangskontroll(oppfølgingFerdigstiltHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(oppfølgingFerdigstiltHendelse.utførtAv)
+        tilstand.ferdigstill(this, oppfølgingFerdigstiltHendelse)
     }
 
     fun fjernAnsvar(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
@@ -607,14 +607,14 @@ data class Oppgave private constructor(
 
         override fun ferdigstill(
             oppgave: Oppgave,
-            generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse,
+            oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
         ) {
             requireEierskapTilOppgave(
                 oppgave = oppgave,
-                saksbehandler = generellOppgaveFerdigstiltHendelse.utførtAv,
-                hendelseNavn = generellOppgaveFerdigstiltHendelse.javaClass.simpleName,
+                saksbehandler = oppfølgingFerdigstiltHendelse.utførtAv,
+                hendelseNavn = oppfølgingFerdigstiltHendelse.javaClass.simpleName,
             )
-            oppgave.endreTilstand(FerdigBehandlet, generellOppgaveFerdigstiltHendelse)
+            oppgave.endreTilstand(FerdigBehandlet, oppfølgingFerdigstiltHendelse)
         }
 
         override fun ferdigstill(
@@ -1164,13 +1164,13 @@ data class Oppgave private constructor(
 
         fun ferdigstill(
             oppgave: Oppgave,
-            generellOppgaveFerdigstiltHendelse: GenerellOppgaveFerdigstiltHendelse,
+            oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${generellOppgaveFerdigstiltHendelse.javaClass.simpleName}",
+                        "${oppfølgingFerdigstiltHendelse.javaClass.simpleName}",
             )
         }
 

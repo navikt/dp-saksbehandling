@@ -21,12 +21,12 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAksjon
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
-import no.nav.dagpenger.saksbehandling.generell.OpprettetGenerellOppgave
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAksjon
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
+import no.nav.dagpenger.saksbehandling.oppfolging.OpprettetOppfølging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -34,14 +34,14 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.util.stream.Stream
 
-class GenerellOppgaveApiTest {
+class OppfølgingApiTest {
     companion object {
         @JvmStatic
         fun behandlingsvarianter(): Stream<Arguments> =
             Stream.of(
-                Arguments.of("KLAGE", GenerellOppgaveAksjon.Type.OPPRETT_KLAGE),
-                Arguments.of("RETT_TIL_DAGPENGER_MANUELL", GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING),
-                Arguments.of("RETT_TIL_DAGPENGER_REVURDERING", GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING),
+                Arguments.of("KLAGE", OppfølgingAksjon.Type.OPPRETT_KLAGE),
+                Arguments.of("RETT_TIL_DAGPENGER_MANUELL", OppfølgingAksjon.Type.OPPRETT_MANUELL_BEHANDLING),
+                Arguments.of("RETT_TIL_DAGPENGER_REVURDERING", OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING),
             )
     }
 
@@ -49,15 +49,15 @@ class GenerellOppgaveApiTest {
         mockAzure()
     }
 
-    private val generellOppgaveId = UUIDv7.ny()
+    private val oppfølgingId = UUIDv7.ny()
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
-        val mediator = mockk<GenerellOppgaveMediator>()
-        withGenerellOppgaveApi(mediator) {
-            client.get("generell-oppgave/$generellOppgaveId").status shouldBe HttpStatusCode.Unauthorized
+        val mediator = mockk<OppfølgingMediator>()
+        withOppfølgingApi(mediator) {
+            client.get("oppfolging/$oppfølgingId").status shouldBe HttpStatusCode.Unauthorized
             client
-                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                .put("oppfolging/$oppfølgingId/ferdigstill") {
                     headers[HttpHeaders.ContentType] = "application/json"
                     //language=json
                     setBody("""{ "vurdering": "test" }""".trimIndent())
@@ -69,20 +69,20 @@ class GenerellOppgaveApiTest {
 
     @Test
     fun `POST oppretter generell oppgave og returnerer IDs`() {
-        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val slot = slot<OpprettOppfølgingHendelse>()
         val opprettetId = UUIDv7.ny()
         val oppgaveId = UUIDv7.ny()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.taImot(capture(slot)) } returns
-                    OpprettetGenerellOppgave(
-                        generellOppgaveId = opprettetId,
+                    OpprettetOppfølging(
+                        oppfølgingId = opprettetId,
                         oppgaveId = oppgaveId,
                     )
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .post("generell-oppgave") {
+                .post("oppfolging") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -102,7 +102,7 @@ class GenerellOppgaveApiTest {
                     response.bodyAsText() shouldEqualSpecifiedJson
                         """
                         {
-                            "generellOppgaveId": "$opprettetId",
+                            "oppfølgingId": "$opprettetId",
                             "oppgaveId": "$oppgaveId"
                         }
                         """.trimIndent()
@@ -121,18 +121,18 @@ class GenerellOppgaveApiTest {
 
     @Test
     fun `POST med beholdOppgaven=true sender flagget til mediator`() {
-        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val slot = slot<OpprettOppfølgingHendelse>()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.taImot(capture(slot)) } returns
-                    OpprettetGenerellOppgave(
-                        generellOppgaveId = UUIDv7.ny(),
+                    OpprettetOppfølging(
+                        oppfølgingId = UUIDv7.ny(),
                         oppgaveId = UUIDv7.ny(),
                     )
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .post("generell-oppgave") {
+                .post("oppfolging") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -155,18 +155,18 @@ class GenerellOppgaveApiTest {
 
     @Test
     fun `POST uten beholdOppgaven defaulter til false`() {
-        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val slot = slot<OpprettOppfølgingHendelse>()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.taImot(capture(slot)) } returns
-                    OpprettetGenerellOppgave(
-                        generellOppgaveId = UUIDv7.ny(),
+                    OpprettetOppfølging(
+                        oppfølgingId = UUIDv7.ny(),
                         oppgaveId = UUIDv7.ny(),
                     )
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .post("generell-oppgave") {
+                .post("oppfolging") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -188,19 +188,19 @@ class GenerellOppgaveApiTest {
 
     @Test
     fun `POST med frist sender frist til mediator`() {
-        val slot = slot<OpprettGenerellOppgaveHendelse>()
+        val slot = slot<OpprettOppfølgingHendelse>()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.taImot(capture(slot)) } returns
-                    OpprettetGenerellOppgave(
-                        generellOppgaveId = UUIDv7.ny(),
+                    OpprettetOppfølging(
+                        oppfølgingId = UUIDv7.ny(),
                         oppgaveId = UUIDv7.ny(),
                     )
             }
         val frist = LocalDate.now().plusDays(7)
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .post("generell-oppgave") {
+                .post("oppfolging") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -226,16 +226,16 @@ class GenerellOppgaveApiTest {
 
     @Test
     fun `Skal kunne hente en generell oppgave`() {
-        val resultat = GenerellOppgave.Resultat.RettTilDagpenger(UUIDv7.ny())
+        val resultat = Oppfølging.Resultat.RettTilDagpenger(UUIDv7.ny())
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
                 søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             )
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                id = generellOppgaveId,
+        val oppfølging =
+            TestHelper.lagOppfølging(
+                id = oppfølgingId,
                 tittel = "Test oppgave",
                 beskrivelse = "En beskrivelse",
                 strukturertData = mapOf("meldekortId" to "MK-2026-01", "timer" to 40),
@@ -244,13 +244,13 @@ class GenerellOppgaveApiTest {
                 valgtSakId = sak.sakId,
             )
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
-                every { it.hent(generellOppgaveId, any()) } returns generellOppgave
+            mockk<OppfølgingMediator>().also {
+                every { it.hent(oppfølgingId, any()) } returns oppfølging
                 every { it.hentLovligeSaker(TestHelper.personIdent) } returns listOf(sak)
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .get("generell-oppgave/$generellOppgaveId") {
+                .get("oppfolging/$oppfølgingId") {
                     autentisert()
                     this.header(HttpHeaders.Accept, "application/json")
                 }.bodyAsText() shouldEqualSpecifiedJson
@@ -282,20 +282,20 @@ class GenerellOppgaveApiTest {
     @Test
     fun `Skal kunne hente generell oppgave med frist`() {
         val frist = LocalDate.of(2026, 5, 15)
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                id = generellOppgaveId,
+        val oppfølging =
+            TestHelper.lagOppfølging(
+                id = oppfølgingId,
                 tittel = "Oppgave med frist",
                 frist = frist,
             )
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
-                every { it.hent(generellOppgaveId, any()) } returns generellOppgave
+            mockk<OppfølgingMediator>().also {
+                every { it.hent(oppfølgingId, any()) } returns oppfølging
                 every { it.hentLovligeSaker(TestHelper.personIdent) } returns emptyList()
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .get("generell-oppgave/$generellOppgaveId") {
+                .get("oppfolging/$oppfølgingId") {
                     autentisert()
                     this.header(HttpHeaders.Accept, "application/json")
                 }.bodyAsText() shouldEqualSpecifiedJson
@@ -313,20 +313,20 @@ class GenerellOppgaveApiTest {
 
     @Test
     fun `Skal kunne hente generell oppgave uten resultat`() {
-        val generellOppgave =
-            TestHelper.lagGenerellOppgave(
-                id = generellOppgaveId,
+        val oppfølging =
+            TestHelper.lagOppfølging(
+                id = oppfølgingId,
                 tittel = "Enkel oppgave",
                 beskrivelse = "",
             )
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
-                every { it.hent(generellOppgaveId, any()) } returns generellOppgave
+            mockk<OppfølgingMediator>().also {
+                every { it.hent(oppfølgingId, any()) } returns oppfølging
                 every { it.hentLovligeSaker(TestHelper.personIdent) } returns emptyList()
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .get("generell-oppgave/$generellOppgaveId") {
+                .get("oppfolging/$oppfølgingId") {
                     autentisert()
                     this.header(HttpHeaders.Accept, "application/json")
                 }.bodyAsText() shouldEqualSpecifiedJson
@@ -344,14 +344,14 @@ class GenerellOppgaveApiTest {
     @Test
     fun `Skal kunne ferdigstille en generell oppgave uten aksjon`() {
         val sakId = UUIDv7.ny()
-        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.ferdigstill(capture(slot)) } returns Unit
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                .put("oppfolging/$oppfølgingId/ferdigstill") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -366,10 +366,10 @@ class GenerellOppgaveApiTest {
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                     slot.captured.let {
-                        it.generellOppgaveId shouldBe generellOppgaveId
+                        it.oppfølgingId shouldBe oppfølgingId
                         it.aksjon.valgtSakId shouldBe sakId
                         it.vurdering shouldBe "Ferdig vurdert"
-                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.AVSLUTT
+                        it.aksjon.type shouldBe OppfølgingAksjon.Type.AVSLUTT
                     }
                 }
         }
@@ -379,17 +379,17 @@ class GenerellOppgaveApiTest {
     @MethodSource("behandlingsvarianter")
     fun `Skal kunne ferdigstille med behandlingsvariant`(
         behandlingsvariant: String,
-        forventetAksjonsType: GenerellOppgaveAksjon.Type,
+        forventetAksjonsType: OppfølgingAksjon.Type,
     ) {
         val sakId = UUIDv7.ny()
-        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.ferdigstill(capture(slot)) } returns Unit
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                .put("oppfolging/$oppfølgingId/ferdigstill") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -413,17 +413,17 @@ class GenerellOppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille med GENERELL_OPPGAVE variant og nyOppgave`() {
+    fun `Skal kunne ferdigstille med OPPFOLGING variant og nyOppgave`() {
         val sakId = UUIDv7.ny()
         val frist = LocalDate.now().plusDays(14)
-        val slot = slot<FerdigstillGenerellOppgaveHendelse>()
+        val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
-            mockk<GenerellOppgaveMediator>().also {
+            mockk<OppfølgingMediator>().also {
                 every { it.ferdigstill(capture(slot)) } returns Unit
             }
-        withGenerellOppgaveApi(mediator) {
+        withOppfølgingApi(mediator) {
             client
-                .put("generell-oppgave/$generellOppgaveId/ferdigstill") {
+                .put("oppfolging/$oppfølgingId/ferdigstill") {
                     autentisert()
                     this.header(HttpHeaders.ContentType, "application/json")
                     //language=json
@@ -432,7 +432,7 @@ class GenerellOppgaveApiTest {
                         {
                             "sakId": "$sakId",
                             "vurdering": "Opprett ny generell oppgave",
-                            "behandlingsvariant": "GENERELL_OPPGAVE",
+                            "behandlingsvariant": "OPPFOLGING",
                             "nyOppgave": {
                                 "tittel": "Følg opp meldekort",
                                 "beskrivelse": "Sjekk timer neste periode",
@@ -446,11 +446,11 @@ class GenerellOppgaveApiTest {
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                     slot.captured.let {
-                        it.aksjon.type shouldBe GenerellOppgaveAksjon.Type.OPPRETT_GENERELL_OPPGAVE
+                        it.aksjon.type shouldBe OppfølgingAksjon.Type.OPPRETT_OPPFOLGING
                         it.aksjon.valgtSakId shouldBe sakId
                         it.vurdering shouldBe "Opprett ny generell oppgave"
                     }
-                    (slot.captured.aksjon as GenerellOppgaveAksjon.OpprettGenerellOppgave).let {
+                    (slot.captured.aksjon as OppfølgingAksjon.OpprettOppfølging).let {
                         it.tittel shouldBe "Følg opp meldekort"
                         it.beskrivelse shouldBe "Sjekk timer neste periode"
                         it.aarsak shouldBe "Meldekort"
@@ -461,8 +461,8 @@ class GenerellOppgaveApiTest {
         }
     }
 
-    private fun withGenerellOppgaveApi(
-        generellOppgaveMediator: GenerellOppgaveMediator,
+    private fun withOppfølgingApi(
+        oppfølgingMediator: OppfølgingMediator,
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -477,7 +477,7 @@ class GenerellOppgaveApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
-                    generellOppgaveMediator = generellOppgaveMediator,
+                    oppfølgingMediator = oppfølgingMediator,
                 )
             }
             test()

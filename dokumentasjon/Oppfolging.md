@@ -15,11 +15,11 @@ Generell oppgave er en fleksibel oppgavetype som lar saksbehandlere håndtere ar
 ### Datamodell
 
 ```
-Person ← GenerellOppgave ──→ Behandling (UtløstAvType.GENERELL)
+Person ← Oppfølging ──→ Behandling (UtløstAvType.GENERELL)
                          └──→ Oppgave (emneknagger = { aarsak })
 ```
 
-`GenerellOppgave` er et selvstendig domeneobjekt som oppretter et `Behandling + Oppgave`-par. Dette er et bevisst valg for å gjenbruke eksisterende infrastruktur (tilstandsmaskiner, tilgangskontroll, saksbehandler-tildeling) uten å refaktorere `Oppgave` til å eksistere uten `Behandling`.
+`Oppfølging` er et selvstendig domeneobjekt som oppretter et `Behandling + Oppgave`-par. Dette er et bevisst valg for å gjenbruke eksisterende infrastruktur (tilstandsmaskiner, tilgangskontroll, saksbehandler-tildeling) uten å refaktorere `Oppgave` til å eksistere uten `Behandling`.
 
 ### Tilstandsmaskin
 
@@ -31,12 +31,12 @@ Enklere enn `Oppgave`s 11-tilstands maskin. `BEHANDLES` er eneste aktive tilstan
 
 ### Inngangsporter
 
-Samme `OpprettGenerellOppgaveHendelse` brukes fra begge kildetyper:
+Samme `OpprettOppfølgingHendelse` brukes fra begge kildetyper:
 
 ```
 Kafka (opprett_oppgave) ──→ OpprettOppgaveMottak ──┐
-                                                    ├──→ GenerellOppgaveMediator.taImot()
-REST POST /generell-oppgave  ─────────────────────┘
+                                                    ├──→ OppfølgingMediator.taImot()
+REST POST /oppfolging  ─────────────────────┘
 ```
 
 ### Kafka-format
@@ -60,9 +60,9 @@ REST POST /generell-oppgave  ─────────────────
 ### REST API
 
 ```
-POST   /generell-oppgave              Opprett ny generell oppgave
-GET    /generell-oppgave/{behandlingId}  Hent generell oppgave
-PUT    /generell-oppgave/{behandlingId}/ferdigstill  Ferdigstill
+POST   /oppfolging              Opprett ny generell oppgave
+GET    /oppfolging/{behandlingId}  Hent generell oppgave
+PUT    /oppfolging/{behandlingId}/ferdigstill  Ferdigstill
 ```
 
 ## Ferdigstill-aksjonene
@@ -75,11 +75,11 @@ Saksbehandler velger utfall ved ferdigstilling:
 | `OPPRETT_KLAGE` | Opprett klage på eksisterende sak |
 | `OPPRETT_MANUELL_BEHANDLING` | Opprett ny manuell dagpengebehandling |
 | `OPPRETT_REVURDERING_BEHANDLING` | Opprett revurdering |
-| `OPPRETT_GENERELL_OPPGAVE` | Opprett ny generell oppgave som oppfølging |
+| `OPPRETT_OPPFOLGING` | Opprett ny generell oppgave som oppfølging |
 
 ### beholdOppgaven
 
-Både ved opprettelse og ved `OPPRETT_GENERELL_OPPGAVE`-aksjon kan saksbehandler velge å få den nye oppgaven tildelt seg selv (`beholdOppgaven: true`).
+Både ved opprettelse og ved `OPPRETT_OPPFOLGING`-aksjon kan saksbehandler velge å få den nye oppgaven tildelt seg selv (`beholdOppgaven: true`).
 
 ## Frist-støtte
 
@@ -100,16 +100,16 @@ Fri JSON-blob for domene-spesifikk kontekst. Backend lagrer og eksponerer den ut
 
 | Fil | Beskrivelse |
 |-----|-------------|
-| `modell/.../generell/GenerellOppgave.kt` | Domeneobjekt med tilstandsmaskin |
-| `modell/.../generell/GenerellOppgaveAksjon.kt` | 5 aksjontyper |
-| `modell/.../hendelser/OpprettGenerellOppgaveHendelse.kt` | Felles hendelse for Kafka og REST |
-| `mediator/.../generell/GenerellOppgaveMediator.kt` | Orkestrator |
-| `mediator/.../generell/GenerellOppgaveApi.kt` | REST-endepunkter |
-| `mediator/.../generell/GenerellOppgaveBehandler.kt` | Utfører aksjonene |
+| `modell/.../generell/Oppfølging.kt` | Domeneobjekt med tilstandsmaskin |
+| `modell/.../generell/OppfølgingAksjon.kt` | 5 aksjontyper |
+| `modell/.../hendelser/OpprettOppfølgingHendelse.kt` | Felles hendelse for Kafka og REST |
+| `mediator/.../generell/OppfølgingMediator.kt` | Orkestrator |
+| `mediator/.../generell/OppfølgingApi.kt` | REST-endepunkter |
+| `mediator/.../generell/OppfølgingBehandler.kt` | Utfører aksjonene |
 | `mediator/.../generell/OpprettOppgaveMottak.kt` | Kafka-konsument |
-| `db/migration/V109__CREATE_GENERELL_OPPGAVE.sql` | Databaseskjema |
+| `db/migration/V109__CREATE_OPPFOLGING.sql` | Databaseskjema |
 
 ## Gjenstår / on hold
 
 - **årsak-emneknagg for `settPåVent`**: `settPåVent()` legger ikke til årsak-emneknagg. Avventer avklaring med frontend om behovet.
-- **`FerdigstillGenerellOppgaveRequest` på Innsending-endepunktet**: Utsatt til etter første versjon.
+- **`FerdigstillOppfølgingRequest` på Innsending-endepunktet**: Utsatt til etter første versjon.

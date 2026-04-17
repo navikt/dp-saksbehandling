@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.generell
+package no.nav.dagpenger.saksbehandling.oppfolging
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
@@ -9,7 +9,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.time.LocalDate
 
@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger {}
 
 internal class OpprettOppgaveMottak(
     rapidsConnection: RapidsConnection,
-    private val generellOppgaveMediator: GenerellOppgaveMediator,
+    private val oppfølgingMediator: OppfølgingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -43,17 +43,17 @@ internal class OpprettOppgaveMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val hendelse = opprettGenerellOppgaveHendelseFraPacket(packet)
+        val hendelse = opprettOppfølgingHendelseFraPacket(packet)
 
         withLoggingContext("aarsak" to hendelse.aarsak) {
             logger.info { "Mottok opprett_oppgave hendelse med årsak ${hendelse.aarsak}" }
-            generellOppgaveMediator.taImot(hendelse)
+            oppfølgingMediator.taImot(hendelse)
         }
     }
 }
 
-private fun opprettGenerellOppgaveHendelseFraPacket(packet: JsonMessage): OpprettGenerellOppgaveHendelse =
-    OpprettGenerellOppgaveHendelse(
+private fun opprettOppfølgingHendelseFraPacket(packet: JsonMessage): OpprettOppfølgingHendelse =
+    OpprettOppfølgingHendelse(
         ident = packet["ident"].asText(),
         aarsak = packet["emneknagg"].asText(),
         tittel = packet["tittel"].asText(),

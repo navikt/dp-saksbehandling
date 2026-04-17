@@ -17,19 +17,14 @@ import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.saksbehandling.db.generell.PostgresGenerellOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
+import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAlarmJob
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAlarmRepository
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveBehandler
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
-import no.nav.dagpenger.saksbehandling.generell.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
@@ -55,6 +50,11 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmJob
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmRepository
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingBehandler
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
+import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -175,12 +175,12 @@ internal class ApplicationBuilder(
             sakMediator = sakMediator,
         )
 
-    private val generellOppgaveRepository = PostgresGenerellOppgaveRepository(dataSource)
-    private val generellOppgaveMediator =
-        GenerellOppgaveMediator(
-            generellOppgaveRepository = generellOppgaveRepository,
-            generellOppgaveBehandler =
-                GenerellOppgaveBehandler(
+    private val oppfølgingRepository = PostgresOppfølgingRepository(dataSource)
+    private val oppfølgingMediator =
+        OppfølgingMediator(
+            oppfølgingRepository = oppfølgingRepository,
+            oppfølgingBehandler =
+                OppfølgingBehandler(
                     klageMediator = klageMediator,
                     behandlingKlient = behandlingKlient,
                 ),
@@ -207,7 +207,7 @@ internal class ApplicationBuilder(
                 InnsendingBehandler(
                     klageMediator = klageMediator,
                     behandlingKlient = behandlingKlient,
-                    generellOppgaveMediator = generellOppgaveMediator,
+                    oppfølgingMediator = oppfølgingMediator,
                 ),
         )
     private val oppgaveDTOMapper =
@@ -219,7 +219,7 @@ internal class ApplicationBuilder(
     private val innsendingAlarmJob: Timer
     private val utsendingAlarmJob: Timer
     private val oversendKlageinstansAlarmJob: Timer
-    private val generellOppgaveAlarmJob: Timer
+    private val oppfølgingAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
 
@@ -243,7 +243,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
-                            generellOppgaveMediator = generellOppgaveMediator,
+                            oppfølgingMediator = oppfølgingMediator,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -323,7 +323,7 @@ internal class ApplicationBuilder(
                 )
                 OpprettOppgaveMottak(
                     rapidsConnection = rapidsConnection,
-                    generellOppgaveMediator = generellOppgaveMediator,
+                    oppfølgingMediator = oppfølgingMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(
@@ -339,10 +339,10 @@ internal class ApplicationBuilder(
                     ).startJob(
                         period = 1.Dag,
                     )
-                generellOppgaveAlarmJob =
-                    GenerellOppgaveAlarmJob(
+                oppfølgingAlarmJob =
+                    OppfølgingAlarmJob(
                         rapidsConnection = rapidsConnection,
-                        generellOppgaveAlarmRepository = GenerellOppgaveAlarmRepository(dataSource),
+                        oppfølgingAlarmRepository = OppfølgingAlarmRepository(dataSource),
                     ).startJob(
                         period = 1.Dag,
                     )
@@ -397,7 +397,7 @@ internal class ApplicationBuilder(
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
         oversendKlageinstansAlarmJob.cancel()
-        generellOppgaveAlarmJob.cancel()
+        oppfølgingAlarmJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         statistikkJob.cancel()

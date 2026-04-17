@@ -20,9 +20,9 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
-import no.nav.dagpenger.saksbehandling.generell.generellOppgaveApi
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
+import no.nav.dagpenger.saksbehandling.oppfolging.oppfølgingApi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
@@ -38,7 +38,7 @@ internal fun Application.installerApis(
     sakMediator: SakMediator,
     innsendingMediator: InnsendingMediator,
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
-    generellOppgaveMediator: GenerellOppgaveMediator,
+    oppfølgingMediator: OppfølgingMediator,
 ) {
     this.authConfig()
     install(CallId) {
@@ -91,6 +91,6 @@ internal fun Application.installerApis(
             meldingOmVedtakMediator = meldingOmVedtakMediator,
             applicationCallParser = applicationCallParser,
         )
-        generellOppgaveApi(generellOppgaveMediator, applicationCallParser)
+        oppfølgingApi(oppfølgingMediator, applicationCallParser)
     }
 }

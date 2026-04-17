@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.generell
+package no.nav.dagpenger.saksbehandling.oppfolging
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
@@ -6,23 +6,23 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import org.junit.jupiter.api.Test
 
 class OpprettOppgaveMottakTest {
     private val testRapid = TestRapid()
-    private val generellOppgaveMediator = mockk<GenerellOppgaveMediator>(relaxed = true)
+    private val oppfølgingMediator = mockk<OppfølgingMediator>(relaxed = true)
     private val ident = "12345678901"
 
     init {
         OpprettOppgaveMottak(
             rapidsConnection = testRapid,
-            generellOppgaveMediator = generellOppgaveMediator,
+            oppfølgingMediator = oppfølgingMediator,
         )
     }
 
     @Test
-    fun `Skal parse og delegere opprett_oppgave hendelse til generellOppgaveMediator`() {
+    fun `Skal parse og delegere opprett_oppgave hendelse til oppfølgingMediator`() {
         testRapid.sendTestMessage(
             opprettOppgaveMelding(
                 emneknagg = "MeldekortKorrigering",
@@ -31,8 +31,8 @@ class OpprettOppgaveMottakTest {
             ),
         )
 
-        val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
-        verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
+        val hendelseSlot = slot<OpprettOppfølgingHendelse>()
+        verify(exactly = 1) { oppfølgingMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
         hendelse.ident shouldBe ident
@@ -59,8 +59,8 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
-        verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
+        val hendelseSlot = slot<OpprettOppfølgingHendelse>()
+        verify(exactly = 1) { oppfølgingMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
         hendelse.aarsak shouldBe "PDLFlytting"
@@ -82,8 +82,8 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        val hendelseSlot = slot<OpprettGenerellOppgaveHendelse>()
-        verify(exactly = 1) { generellOppgaveMediator.taImot(capture(hendelseSlot)) }
+        val hendelseSlot = slot<OpprettOppfølgingHendelse>()
+        verify(exactly = 1) { oppfølgingMediator.taImot(capture(hendelseSlot)) }
 
         val hendelse = hendelseSlot.captured
         hendelse.beskrivelse shouldBe ""
@@ -104,7 +104,7 @@ class OpprettOppgaveMottakTest {
             """.trimIndent(),
         )
 
-        verify(exactly = 0) { generellOppgaveMediator.taImot(any()) }
+        verify(exactly = 0) { oppfølgingMediator.taImot(any()) }
     }
 
     //language=json

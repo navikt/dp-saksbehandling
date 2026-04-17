@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.generell
+package no.nav.dagpenger.saksbehandling.oppfolging
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class GenerellOppgaveTest {
+class OppfølgingTest {
     private val testPerson =
         Person(
             id = UUIDv7.ny(),
@@ -21,7 +21,7 @@ class GenerellOppgaveTest {
     @Test
     fun `Skal opprette generell oppgave med påkrevde felter`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test oppgave",
             )
@@ -32,13 +32,13 @@ class GenerellOppgaveTest {
         oppgave.beskrivelse shouldBe ""
         oppgave.strukturertData shouldBe emptyMap()
         oppgave.tilstand() shouldBe "BEHANDLES"
-        oppgave.resultat() shouldBe GenerellOppgave.Resultat.Ingen
+        oppgave.resultat() shouldBe Oppfølging.Resultat.Ingen
     }
 
     @Test
     fun `Skal opprette generell oppgave med alle felter`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Komplett oppgave",
                 beskrivelse = "En beskrivelse",
@@ -53,7 +53,7 @@ class GenerellOppgaveTest {
     @Test
     fun `Skal starte ferdigstilling og endre tilstand`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
@@ -70,22 +70,22 @@ class GenerellOppgaveTest {
     @Test
     fun `Skal ferdigstille med AVSLUTT aksjon`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
 
         oppgave.startFerdigstilling(vurdering = "Vurdering", valgtSakId = null)
-        oppgave.ferdigstill(aksjonType = GenerellOppgaveAksjon.Type.AVSLUTT)
+        oppgave.ferdigstill(aksjonType = OppfølgingAksjon.Type.AVSLUTT)
 
         oppgave.tilstand() shouldBe "FERDIGSTILT"
-        oppgave.resultat() shouldBe GenerellOppgave.Resultat.Ingen
+        oppgave.resultat() shouldBe Oppfølging.Resultat.Ingen
     }
 
     @Test
     fun `Skal ferdigstille med OPPRETT_KLAGE aksjon`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
@@ -93,19 +93,19 @@ class GenerellOppgaveTest {
 
         oppgave.startFerdigstilling(vurdering = "Klage", valgtSakId = null)
         oppgave.ferdigstill(
-            aksjonType = GenerellOppgaveAksjon.Type.OPPRETT_KLAGE,
+            aksjonType = OppfølgingAksjon.Type.OPPRETT_KLAGE,
             opprettetBehandlingId = behandlingId,
         )
 
         oppgave.tilstand() shouldBe "FERDIGSTILT"
-        val resultat = oppgave.resultat() as GenerellOppgave.Resultat.Klage
+        val resultat = oppgave.resultat() as Oppfølging.Resultat.Klage
         resultat.behandlingId shouldBe behandlingId
     }
 
     @Test
     fun `Skal ferdigstille med OPPRETT_MANUELL_BEHANDLING aksjon`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
@@ -113,19 +113,19 @@ class GenerellOppgaveTest {
 
         oppgave.startFerdigstilling(vurdering = "Manuell", valgtSakId = UUID.randomUUID())
         oppgave.ferdigstill(
-            aksjonType = GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING,
+            aksjonType = OppfølgingAksjon.Type.OPPRETT_MANUELL_BEHANDLING,
             opprettetBehandlingId = behandlingId,
         )
 
         oppgave.tilstand() shouldBe "FERDIGSTILT"
-        val resultat = oppgave.resultat() as GenerellOppgave.Resultat.RettTilDagpenger
+        val resultat = oppgave.resultat() as Oppfølging.Resultat.RettTilDagpenger
         resultat.behandlingId shouldBe behandlingId
     }
 
     @Test
     fun `Skal ferdigstille med OPPRETT_REVURDERING_BEHANDLING aksjon`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
@@ -133,19 +133,19 @@ class GenerellOppgaveTest {
 
         oppgave.startFerdigstilling(vurdering = "Revurdering", valgtSakId = UUID.randomUUID())
         oppgave.ferdigstill(
-            aksjonType = GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING,
+            aksjonType = OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING,
             opprettetBehandlingId = behandlingId,
         )
 
         oppgave.tilstand() shouldBe "FERDIGSTILT"
-        val resultat = oppgave.resultat() as GenerellOppgave.Resultat.RettTilDagpenger
+        val resultat = oppgave.resultat() as Oppfølging.Resultat.RettTilDagpenger
         resultat.behandlingId shouldBe behandlingId
     }
 
     @Test
     fun `Skal feile ved OPPRETT_KLAGE uten behandlingId`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
@@ -153,14 +153,14 @@ class GenerellOppgaveTest {
         oppgave.startFerdigstilling(vurdering = "Klage", valgtSakId = null)
 
         shouldThrow<IllegalArgumentException> {
-            oppgave.ferdigstill(aksjonType = GenerellOppgaveAksjon.Type.OPPRETT_KLAGE)
+            oppgave.ferdigstill(aksjonType = OppfølgingAksjon.Type.OPPRETT_KLAGE)
         }
     }
 
     @Test
     fun `Skal lagre valgt sakId ved ferdigstilling`() {
         val oppgave =
-            GenerellOppgave.opprett(
+            Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Test",
             )
@@ -178,7 +178,7 @@ class GenerellOppgaveTest {
         val behandlingId = UUID.randomUUID()
 
         val oppgave =
-            GenerellOppgave.rehydrer(
+            Oppfølging.rehydrer(
                 id = id,
                 person = testPerson,
                 tittel = "Rehydrert",
@@ -188,7 +188,7 @@ class GenerellOppgaveTest {
                 opprettet = java.time.LocalDateTime.now(),
                 tilstand = "FERDIGSTILT",
                 vurdering = "En vurdering",
-                resultat = GenerellOppgave.Resultat.RettTilDagpenger(behandlingId),
+                resultat = Oppfølging.Resultat.RettTilDagpenger(behandlingId),
                 valgtSakId = sakId,
             )
 
@@ -196,6 +196,6 @@ class GenerellOppgaveTest {
         oppgave.tilstand() shouldBe "FERDIGSTILT"
         oppgave.vurdering() shouldBe "En vurdering"
         oppgave.valgtSakId() shouldBe sakId
-        (oppgave.resultat() as GenerellOppgave.Resultat.RettTilDagpenger).behandlingId shouldBe behandlingId
+        (oppgave.resultat() as Oppfølging.Resultat.RettTilDagpenger).behandlingId shouldBe behandlingId
     }
 }

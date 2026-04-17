@@ -17,7 +17,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
+import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
@@ -81,16 +81,16 @@ fun Application.statusPages() {
                     call.respond(HttpStatusCode.Conflict, problem)
                 }
 
-                is GenerellOppgave.UlovligTilstandsendringException -> {
+                is Oppfølging.UlovligTilstandsendringException -> {
                     val problem =
                         HttpProblemDTO(
-                            title = "Ulovlig tilstandsendring på generell oppgave",
+                            title = "Ulovlig tilstandsendring på oppfølging",
                             detail = cause.message,
                             status = HttpStatusCode.Conflict.value,
                             instance = call.request.path(),
                             type =
                                 URI
-                                    .create("dagpenger.nav.no/saksbehandling:problem:generell-oppgave-ulovlig-tilstandsendring")
+                                    .create("dagpenger.nav.no/saksbehandling:problem:oppfolging-ulovlig-tilstandsendring")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)

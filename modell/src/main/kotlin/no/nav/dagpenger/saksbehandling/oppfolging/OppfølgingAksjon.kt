@@ -1,15 +1,15 @@
-package no.nav.dagpenger.saksbehandling.generell
+package no.nav.dagpenger.saksbehandling.oppfolging
 
 import java.time.LocalDate
 import java.util.UUID
 
-sealed class GenerellOppgaveAksjon {
+sealed class OppfølgingAksjon {
     enum class Type {
         AVSLUTT,
         OPPRETT_MANUELL_BEHANDLING,
         OPPRETT_REVURDERING_BEHANDLING,
         OPPRETT_KLAGE,
-        OPPRETT_GENERELL_OPPGAVE,
+        OPPRETT_OPPFOLGING,
     }
 
     abstract val valgtSakId: UUID?
@@ -17,14 +17,14 @@ sealed class GenerellOppgaveAksjon {
 
     data class Avslutt(
         override val valgtSakId: UUID?,
-    ) : GenerellOppgaveAksjon() {
+    ) : OppfølgingAksjon() {
         override val type: Type = Type.AVSLUTT
     }
 
     data class OpprettManuellBehandling(
         val saksbehandlerToken: String,
         override val valgtSakId: UUID,
-    ) : GenerellOppgaveAksjon() {
+    ) : OppfølgingAksjon() {
         override val type: Type = Type.OPPRETT_MANUELL_BEHANDLING
 
         override fun toString() = "OpprettManuellBehandling(valgtSakId=$valgtSakId)"
@@ -33,7 +33,7 @@ sealed class GenerellOppgaveAksjon {
     data class OpprettRevurderingBehandling(
         val saksbehandlerToken: String,
         override val valgtSakId: UUID,
-    ) : GenerellOppgaveAksjon() {
+    ) : OppfølgingAksjon() {
         override val type: Type = Type.OPPRETT_REVURDERING_BEHANDLING
 
         override fun toString() = "OpprettRevurderingBehandling(valgtSakId=$valgtSakId)"
@@ -41,18 +41,18 @@ sealed class GenerellOppgaveAksjon {
 
     data class OpprettKlage(
         override val valgtSakId: UUID,
-    ) : GenerellOppgaveAksjon() {
+    ) : OppfølgingAksjon() {
         override val type: Type = Type.OPPRETT_KLAGE
     }
 
-    data class OpprettGenerellOppgave(
+    data class OpprettOppfølging(
         override val valgtSakId: UUID?,
         val tittel: String,
         val beskrivelse: String = "",
         val aarsak: String,
         val frist: LocalDate? = null,
         val beholdOppgaven: Boolean = false,
-    ) : GenerellOppgaveAksjon() {
-        override val type: Type = Type.OPPRETT_GENERELL_OPPGAVE
+    ) : OppfølgingAksjon() {
+        override val type: Type = Type.OPPRETT_OPPFOLGING
     }
 }

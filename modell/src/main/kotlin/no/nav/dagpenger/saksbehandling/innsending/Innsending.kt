@@ -174,7 +174,7 @@ class Innsending private constructor(
                 this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
 
-            Aksjon.Type.OPPRETT_GENERELL_OPPGAVE -> {
+            Aksjon.Type.OPPRETT_OPPFOLGING -> {
                 this.innsendingResultat = InnsendingResultat.Ingen
             }
         }

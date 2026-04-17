@@ -245,7 +245,7 @@ class MeldingOmVedtakApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = meldingOmVedtakMediator,
-                    generellOppgaveMediator = mockk(relaxed = true),
+                    oppfølgingMediator = mockk(relaxed = true),
                 )
             }
             test()

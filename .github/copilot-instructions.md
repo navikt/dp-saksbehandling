@@ -47,7 +47,7 @@ Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
                                     ↓
                               UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|GENERELL)
 
-Person ← GenerellOppgave* → (creates) Behandling + Oppgave
+Person ← Oppfølging* → (creates) Behandling + Oppgave
 ```
 
 - **Sak** (Case): Contains multiple behandlinger, identified by `sakId`
@@ -55,15 +55,15 @@ Person ← GenerellOppgave* → (creates) Behandling + Oppgave
 - **Behandling** (Treatment): A specific processing instance, typed by `UtløstAvType`
 - **Oppgave** (Task): Work item with state machine. Always belongs to a Behandling
 - **KlageBehandling**: Separate entity for appeal workflows (not a Behandling subclass)
-- **GenerellOppgave**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
-  - **Stub-Behandling pattern**: GenerellOppgave always creates a real Behandling to satisfy FK constraints and reuse existing infrastructure (no nullable Behandling refactoring needed)
-  - **Dual entry**: same `OpprettGenerellOppgaveHendelse` used by both Kafka (`OpprettOppgaveMottak`) and REST (`POST /generell-oppgave`)
+- **Oppfølging**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
+  - **Stub-Behandling pattern**: Oppfølging always creates a real Behandling to satisfy FK constraints and reuse existing infrastructure (no nullable Behandling refactoring needed)
+  - **Dual entry**: same `OpprettOppfølgingHendelse` used by both Kafka (`OpprettOppgaveMottak`) and REST (`POST /oppfolging`)
   - **Kafka field mapping**: Kafka event uses `emneknagg` field (backwards compat with producers), mapped internally to `aarsak`
   - **Frist via PåVent**: when frist is set, Oppgave is created in PåVent state with `utsattTil=frist`; existing `OppgaveFristUtgåttJob` reactivates automatically
   - **beholdOppgaven**: both opprett and ferdigstill support auto-assigning the new oppgave to the creating saksbehandler
-  - **5 ferdigstill-aksjontyper**: `AVSLUTT`, `OPPRETT_KLAGE`, `OPPRETT_MANUELL_BEHANDLING`, `OPPRETT_REVURDERING_BEHANDLING`, `OPPRETT_GENERELL_OPPGAVE`
+  - **5 ferdigstill-aksjontyper**: `AVSLUTT`, `OPPRETT_KLAGE`, `OPPRETT_MANUELL_BEHANDLING`, `OPPRETT_REVURDERING_BEHANDLING`, `OPPRETT_OPPFOLGING`
   - **strukturertData**: free JSONB blob for domain-specific context; backend stores/exposes without interpreting
-  - See `dokumentasjon/GenerellOppgave.md` for full documentation
+  - See `dokumentasjon/Oppfølging.md` for full documentation
 - **Innsending/Utsending**: Document submission/distribution handling
 
 ### Oppgave State Machine
@@ -101,7 +101,7 @@ Follow the `BehandlingAvbruttMottak` pattern (simplest example):
 
 Mediators publish `behov` messages with `@behov` specifying what's needed. Behovløsere listen and add solutions. Common behov: `MeldingOmVedtakProdusent`, `Innsending`, `OversendKlageinstans`.
 
-#### GenerellOppgave Kafka Event
+#### Oppfølging Kafka Event
 
 External systems can create tasks by publishing `opprett_oppgave` events:
 ```json
@@ -126,7 +126,7 @@ Seven primary mediators orchestrate domain operations:
 - `KlageMediator` — Appeal handling
 - `PersonMediator` — Person data sync (PDL lookup, skjerming)
 - `MeldingOmVedtakMediator` — Verdict message HTML generation
-- `GenerellOppgaveMediator` — Generic task lifecycle (create, ferdigstill with actions)
+- `OppfølgingMediator` — Generic task lifecycle (create, ferdigstill with actions)
 
 ### Emneknagger (Tags)
 

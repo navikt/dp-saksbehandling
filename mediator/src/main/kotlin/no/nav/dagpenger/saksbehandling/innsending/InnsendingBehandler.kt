@@ -3,16 +3,16 @@ package no.nav.dagpenger.saksbehandling.innsending
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 
 class InnsendingBehandler(
     private val klageMediator: KlageMediator,
     private val behandlingKlient: BehandlingKlient,
-    private val generellOppgaveMediator: GenerellOppgaveMediator,
+    private val oppfølgingMediator: OppfølgingMediator,
 ) {
     fun utførAksjon(
         hendelse: FerdigstillInnsendingHendelse,
@@ -45,8 +45,8 @@ class InnsendingBehandler(
                     innsending = innsending,
                 )
 
-            is Aksjon.OpprettGenerellOppgave ->
-                opprettGenerellOppgave(
+            is Aksjon.OpprettOppfølging ->
+                opprettOppfølging(
                     hendelse = hendelse,
                     innsending = innsending,
                 )
@@ -107,14 +107,14 @@ class InnsendingBehandler(
         )
     }
 
-    private fun opprettGenerellOppgave(
+    private fun opprettOppfølging(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
-        val aksjon = hendelse.aksjon as Aksjon.OpprettGenerellOppgave
+        val aksjon = hendelse.aksjon as Aksjon.OpprettOppfølging
         val opprettet =
-            generellOppgaveMediator.taImot(
-                OpprettGenerellOppgaveHendelse(
+            oppfølgingMediator.taImot(
+                OpprettOppfølgingHendelse(
                     ident = innsending.person.ident,
                     tittel = aksjon.tittel,
                     beskrivelse = aksjon.beskrivelse,

@@ -9,7 +9,7 @@ sealed class Aksjon {
         OPPRETT_MANUELL_BEHANDLING,
         OPPRETT_REVURDERING_BEHANDLING,
         OPPRETT_KLAGE,
-        OPPRETT_GENERELL_OPPGAVE,
+        OPPRETT_OPPFOLGING,
     }
 
     abstract val valgtSakId: UUID?
@@ -41,7 +41,7 @@ sealed class Aksjon {
         override val type: Type = Type.OPPRETT_KLAGE
     }
 
-    data class OpprettGenerellOppgave(
+    data class OpprettOppfølging(
         override val valgtSakId: UUID?,
         val tittel: String,
         val beskrivelse: String = "",
@@ -49,6 +49,6 @@ sealed class Aksjon {
         val frist: LocalDate? = null,
         val beholdOppgaven: Boolean = false,
     ) : Aksjon() {
-        override val type: Type = Type.OPPRETT_GENERELL_OPPGAVE
+        override val type: Type = Type.OPPRETT_OPPFOLGING
     }
 }

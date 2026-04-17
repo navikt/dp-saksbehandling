@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.generell
+package no.nav.dagpenger.saksbehandling.oppfolging
 
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -6,7 +6,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-class GenerellOppgave private constructor(
+class Oppfølging private constructor(
     val id: UUID = UUIDv7.ny(),
     val person: Person,
     val tittel: String,
@@ -28,8 +28,8 @@ class GenerellOppgave private constructor(
             strukturertData: Map<String, Any> = emptyMap(),
             frist: LocalDate? = null,
             opprettet: LocalDateTime = LocalDateTime.now(),
-        ): GenerellOppgave =
-            GenerellOppgave(
+        ): Oppfølging =
+            Oppfølging(
                 id = id,
                 person = person,
                 tittel = tittel,
@@ -51,8 +51,8 @@ class GenerellOppgave private constructor(
             vurdering: String?,
             resultat: Resultat,
             valgtSakId: UUID?,
-        ): GenerellOppgave =
-            GenerellOppgave(
+        ): Oppfølging =
+            Oppfølging(
                 id = id,
                 person = person,
                 tittel = tittel,
@@ -92,7 +92,7 @@ class GenerellOppgave private constructor(
             val behandlingId: UUID,
         ) : Resultat()
 
-        data class GenerellOppgave(
+        data class Oppfølging(
             val behandlingId: UUID,
         ) : Resultat()
     }
@@ -110,43 +110,43 @@ class GenerellOppgave private constructor(
     }
 
     fun ferdigstill(
-        aksjonType: GenerellOppgaveAksjon.Type,
+        aksjonType: OppfølgingAksjon.Type,
         opprettetBehandlingId: UUID? = null,
     ) {
         if (tilstand != Tilstand.FERDIGSTILL_STARTET) {
             throw UlovligTilstandsendringException("Kan ikke ferdigstille fra tilstand $tilstand")
         }
         when (aksjonType) {
-            GenerellOppgaveAksjon.Type.AVSLUTT -> {
+            OppfølgingAksjon.Type.AVSLUTT -> {
                 this.resultat = Resultat.Ingen
             }
 
-            GenerellOppgaveAksjon.Type.OPPRETT_KLAGE -> {
+            OppfølgingAksjon.Type.OPPRETT_KLAGE -> {
                 requireNotNull(opprettetBehandlingId) {
                     "behandlingId kan ikke være null etter opprettelse av klage"
                 }
                 this.resultat = Resultat.Klage(opprettetBehandlingId)
             }
 
-            GenerellOppgaveAksjon.Type.OPPRETT_MANUELL_BEHANDLING -> {
+            OppfølgingAksjon.Type.OPPRETT_MANUELL_BEHANDLING -> {
                 requireNotNull(opprettetBehandlingId) {
                     "behandlingId kan ikke være null etter opprettelse av manuell behandling"
                 }
                 this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
             }
 
-            GenerellOppgaveAksjon.Type.OPPRETT_REVURDERING_BEHANDLING -> {
+            OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING -> {
                 requireNotNull(opprettetBehandlingId) {
                     "behandlingId kan ikke være null etter opprettelse av revurdering"
                 }
                 this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
             }
 
-            GenerellOppgaveAksjon.Type.OPPRETT_GENERELL_OPPGAVE -> {
+            OppfølgingAksjon.Type.OPPRETT_OPPFOLGING -> {
                 requireNotNull(opprettetBehandlingId) {
-                    "behandlingId kan ikke være null etter opprettelse av generell oppgave"
+                    "behandlingId kan ikke være null etter opprettelse av oppfølging"
                 }
-                this.resultat = Resultat.GenerellOppgave(opprettetBehandlingId)
+                this.resultat = Resultat.Oppfølging(opprettetBehandlingId)
             }
         }
         this.tilstand = Tilstand.FERDIGSTILT
@@ -156,14 +156,14 @@ class GenerellOppgave private constructor(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as GenerellOppgave
+        other as Oppfølging
 
         return id == other.id
     }
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString(): String = "GenerellOppgave(id=$id, tittel='$tittel', tilstand=$tilstand)"
+    override fun toString(): String = "Oppfølging(id=$id, tittel='$tittel', tilstand=$tilstand)"
 
     class UlovligTilstandsendringException(
         message: String,

@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.generell
+package no.nav.dagpenger.saksbehandling.oppfolging
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -7,30 +7,30 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.db.generell.GenerellOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillGenerellOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-data class OpprettetGenerellOppgave(
-    val generellOppgaveId: UUID,
+data class OpprettetOppfølging(
+    val oppfølgingId: UUID,
     val oppgaveId: UUID,
 )
 
-class GenerellOppgaveMediator(
-    private val generellOppgaveRepository: GenerellOppgaveRepository,
-    private val generellOppgaveBehandler: GenerellOppgaveBehandler,
+class OppfølgingMediator(
+    private val oppfølgingRepository: OppfølgingRepository,
+    private val oppfølgingBehandler: OppfølgingBehandler,
     private val personMediator: PersonMediator,
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
 ) {
-    fun taImot(hendelse: OpprettGenerellOppgaveHendelse): OpprettetGenerellOppgave {
-        val generellOppgaveId = UUIDv7.ny()
+    fun taImot(hendelse: OpprettOppfølgingHendelse): OpprettetOppfølging {
+        val oppfølgingId = UUIDv7.ny()
         val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
 
         // Tilgangskontroll for saksbehandler-opprettelse
@@ -41,7 +41,7 @@ class GenerellOppgaveMediator(
 
         val behandling =
             Behandling(
-                behandlingId = generellOppgaveId,
+                behandlingId = oppfølgingId,
                 opprettet = hendelse.registrertTidspunkt,
                 hendelse = hendelse,
                 utløstAv = UtløstAvType.GENERELL,
@@ -52,9 +52,9 @@ class GenerellOppgaveMediator(
             behandling = behandling,
         )
 
-        val generellOppgave =
-            GenerellOppgave.opprett(
-                id = generellOppgaveId,
+        val oppfølging =
+            Oppfølging.opprett(
+                id = oppfølgingId,
                 person = person,
                 tittel = hendelse.tittel,
                 beskrivelse = hendelse.beskrivelse,
@@ -63,10 +63,10 @@ class GenerellOppgaveMediator(
                 opprettet = hendelse.registrertTidspunkt,
             )
 
-        generellOppgaveRepository.lagre(generellOppgave)
+        oppfølgingRepository.lagre(oppfølging)
 
         val oppgave =
-            oppgaveMediator.lagOppgaveForGenerellOppgave(
+            oppgaveMediator.lagOppgaveForOppfølging(
                 hendelse = hendelse,
                 behandling = behandling,
                 person = person,
@@ -74,7 +74,7 @@ class GenerellOppgaveMediator(
             )
 
         val tilstandInfo = if (hendelse.frist != null) "i PåVent til ${hendelse.frist}" else "i KlarTilBehandling"
-        logger.info { "Opprettet generell oppgave ${generellOppgave.id} med årsak ${hendelse.aarsak} $tilstandInfo" }
+        logger.info { "Opprettet oppfølging ${oppfølging.id} med årsak ${hendelse.aarsak} $tilstandInfo" }
 
         if (hendelse.beholdOppgaven && saksbehandler != null) {
             oppgaveMediator.tildelOppgave(
@@ -87,30 +87,30 @@ class GenerellOppgaveMediator(
             logger.info { "Tildelte ny oppgave ${oppgave.oppgaveId} til ${saksbehandler.navIdent}" }
         }
 
-        return OpprettetGenerellOppgave(
-            generellOppgaveId = generellOppgave.id,
+        return OpprettetOppfølging(
+            oppfølgingId = oppfølging.id,
             oppgaveId = oppgave.oppgaveId,
         )
     }
 
-    fun ferdigstill(hendelse: FerdigstillGenerellOppgaveHendelse) {
-        val generellOppgave = hent(id = hendelse.generellOppgaveId, saksbehandler = hendelse.utførtAv)
+    fun ferdigstill(hendelse: FerdigstillOppfølgingHendelse) {
+        val oppfølging = hent(id = hendelse.oppfølgingId, saksbehandler = hendelse.utførtAv)
 
-        generellOppgave.startFerdigstilling(
+        oppfølging.startFerdigstilling(
             vurdering = hendelse.vurdering,
             valgtSakId = hendelse.aksjon.valgtSakId,
         )
-        generellOppgaveRepository.lagre(generellOppgave)
+        oppfølgingRepository.lagre(oppfølging)
 
-        val ferdigstiltHendelse = generellOppgaveBehandler.utførAksjon(generellOppgave, hendelse, this)
-        logger.info { "Ferdigstiller generell oppgave ${generellOppgave.id} med aksjon ${hendelse.aksjon.type}" }
+        val ferdigstiltHendelse = oppfølgingBehandler.utførAksjon(oppfølging, hendelse, this)
+        logger.info { "Ferdigstiller oppfølging ${oppfølging.id} med aksjon ${hendelse.aksjon.type}" }
 
-        generellOppgave.ferdigstill(
+        oppfølging.ferdigstill(
             aksjonType = ferdigstiltHendelse.aksjonType,
             opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
         )
         oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
-        generellOppgaveRepository.lagre(generellOppgave)
+        oppfølgingRepository.lagre(oppfølging)
 
         if (ferdigstiltHendelse.beholdOppgaven) {
             val oppgaveId =
@@ -131,9 +131,9 @@ class GenerellOppgaveMediator(
     fun hent(
         id: UUID,
         saksbehandler: Saksbehandler,
-    ): GenerellOppgave =
-        generellOppgaveRepository.hent(id).also { oppgave ->
-            oppgave.person.harTilgang(saksbehandler)
+    ): Oppfølging =
+        oppfølgingRepository.hent(id).also { oppfølging ->
+            oppfølging.person.harTilgang(saksbehandler)
         }
 
     fun hentLovligeSaker(ident: String): List<Sak> = sakMediator.finnSakHistorikk(ident)?.saker() ?: emptyList()

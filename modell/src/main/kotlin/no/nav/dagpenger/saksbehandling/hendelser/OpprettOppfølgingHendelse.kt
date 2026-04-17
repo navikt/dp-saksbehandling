@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class OpprettGenerellOppgaveHendelse(
+data class OpprettOppfølgingHendelse(
     val ident: String,
     val aarsak: String,
     val tittel: String,

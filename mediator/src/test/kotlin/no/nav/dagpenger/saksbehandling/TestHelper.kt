@@ -11,13 +11,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
-import no.nav.dagpenger.saksbehandling.generell.GenerellOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
+import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDate
@@ -92,9 +92,9 @@ internal object TestHelper {
 
     val testInnsending = lagInnsending()
 
-    val testGenerellOppgave = lagGenerellOppgave()
+    val testOppfølging = lagOppfølging()
 
-    fun lagGenerellOppgave(
+    fun lagOppfølging(
         id: UUID = UUIDv7.ny(),
         person: Person = testPerson,
         tittel: String = "Test oppgave",
@@ -104,10 +104,10 @@ internal object TestHelper {
         opprettet: LocalDateTime = opprettetNå,
         tilstand: String = "BEHANDLES",
         vurdering: String? = null,
-        resultat: GenerellOppgave.Resultat = GenerellOppgave.Resultat.Ingen,
+        resultat: Oppfølging.Resultat = Oppfølging.Resultat.Ingen,
         valgtSakId: UUID? = null,
-    ): GenerellOppgave =
-        GenerellOppgave.rehydrer(
+    ): Oppfølging =
+        Oppfølging.rehydrer(
             id = id,
             person = person,
             tittel = tittel,

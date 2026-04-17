@@ -9,9 +9,9 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
-  /generell-oppgave:
+  /oppfolging:
     post:
-      operationId: opprettGenerellOppgave
+      operationId: opprettOppfølging
       summary: Opprett en ny generell oppgave
       description: |
         Oppretter en generell oppgave for en person.
@@ -23,14 +23,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpprettGenerellOppgaveRequest'
+              $ref: '#/components/schemas/OpprettOppfolgingRequest'
       responses:
         '201':
           description: Generell oppgave opprettet
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpprettGenerellOppgaveResponse'
+                $ref: '#/components/schemas/OpprettOppfolgingResponse'
         '400':
           description: Ugyldig request
           content:
@@ -51,7 +51,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
       security:
         - azureAd: [ ]
-  /generell-oppgave/{behandlingId}:
+  /oppfolging/{behandlingId}:
     get:
       summary: Hent generell oppgave for en gitt behandlingId
       parameters:
@@ -67,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenerellOppgave'
+                $ref: '#/components/schemas/Oppfolging'
         '404':
           description: Generell oppgave ble ikke funnet
           content:
@@ -82,7 +82,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
       security:
         - azureAd: [ ]
-  /generell-oppgave/{behandlingId}/ferdigstill:
+  /oppfolging/{behandlingId}/ferdigstill:
     put:
       summary: Ferdigstill generell oppgave
       parameters:
@@ -97,7 +97,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FerdigstillGenerellOppgaveRequest'
+              $ref: '#/components/schemas/FerdigstillOppfolgingRequest'
       responses:
         '204':
           description: Generell oppgave ferdigstilt
@@ -1810,7 +1810,7 @@ components:
         - RETT_TIL_DAGPENGER_MANUELL
         - RETT_TIL_DAGPENGER_REVURDERING
         - KLAGE
-        - GENERELL_OPPGAVE
+        - OPPFOLGING
 
     LovligeEndringer:
       type: object
@@ -2578,7 +2578,7 @@ components:
         behandlingsvariant:
           $ref: '#/components/schemas/BehandlingVariant'
         nyOppgave:
-          $ref: '#/components/schemas/NyGenerellOppgave'
+          $ref: '#/components/schemas/NyOppfolging'
       required:
         - vurdering
 
@@ -2631,7 +2631,7 @@ components:
         - saksbehandlingURL
         - fullstendigPeriode
 
-    GenerellOppgave:
+    Oppfolging:
       type: object
       properties:
         behandlingId:
@@ -2668,7 +2668,7 @@ components:
       required:
         - tittel
 
-    OpprettGenerellOppgaveRequest:
+    OpprettOppfolgingRequest:
       type: object
       properties:
         personIdent:
@@ -2701,10 +2701,10 @@ components:
         - tittel
         - aarsak
 
-    OpprettGenerellOppgaveResponse:
+    OpprettOppfolgingResponse:
       type: object
       properties:
-        generellOppgaveId:
+        oppfølgingId:
           type: string
           format: uuid
           description: ID til den opprettede generelle oppgaven
@@ -2713,10 +2713,10 @@ components:
           format: uuid
           description: ID til den opprettede oppgaven (for oppgavelisten)
       required:
-        - generellOppgaveId
+        - oppfølgingId
         - oppgaveId
 
-    FerdigstillGenerellOppgaveRequest:
+    FerdigstillOppfolgingRequest:
       type: object
       properties:
         sakId:
@@ -2727,11 +2727,11 @@ components:
         behandlingsvariant:
           $ref: '#/components/schemas/BehandlingVariant'
         nyOppgave:
-          $ref: '#/components/schemas/NyGenerellOppgave'
+          $ref: '#/components/schemas/NyOppfolging'
 
-    NyGenerellOppgave:
+    NyOppfolging:
       type: object
-      description: Data for ny generell oppgave (kun ved behandlingsvariant=GENERELL_OPPGAVE)
+      description: Data for ny oppfølging (kun ved behandlingsvariant=OPPFOLGING)
       properties:
         tittel:
           type: string
