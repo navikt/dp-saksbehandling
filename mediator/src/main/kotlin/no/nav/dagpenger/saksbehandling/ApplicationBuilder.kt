@@ -25,6 +25,8 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAlarmJob
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveAlarmRepository
 import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveBehandler
 import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
 import no.nav.dagpenger.saksbehandling.generell.OpprettOppgaveMottak
@@ -216,6 +218,7 @@ internal class ApplicationBuilder(
     private val innsendingAlarmJob: Timer
     private val utsendingAlarmJob: Timer
     private val oversendKlageinstansAlarmJob: Timer
+    private val generellOppgaveAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
 
@@ -335,6 +338,13 @@ internal class ApplicationBuilder(
                     ).startJob(
                         period = 1.Dag,
                     )
+                generellOppgaveAlarmJob =
+                    GenerellOppgaveAlarmJob(
+                        rapidsConnection = rapidsConnection,
+                        generellOppgaveAlarmRepository = GenerellOppgaveAlarmRepository(dataSource),
+                    ).startJob(
+                        period = 1.Dag,
+                    )
                 oppgaveTilstandAlertJob =
                     OppgaveTilstandAlertJob(
                         rapidsConnection = rapidsConnection,
@@ -386,6 +396,7 @@ internal class ApplicationBuilder(
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
         oversendKlageinstansAlarmJob.cancel()
+        generellOppgaveAlarmJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         statistikkJob.cancel()

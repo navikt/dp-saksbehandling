@@ -109,9 +109,8 @@ class GenerellOppgaveMediator(
             aksjonType = ferdigstiltHendelse.aksjonType,
             opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
         )
-        generellOppgaveRepository.lagre(generellOppgave)
-
         oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
+        generellOppgaveRepository.lagre(generellOppgave)
 
         if (ferdigstiltHendelse.beholdOppgaven) {
             val oppgaveId = ferdigstiltHendelse.opprettetOppgaveId

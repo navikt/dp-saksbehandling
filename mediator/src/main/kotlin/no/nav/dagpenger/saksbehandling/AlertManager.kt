@@ -94,6 +94,25 @@ object AlertManager {
         override val type: String = "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
     }
 
+    data class GenerellOppgaveIkkeFerdigstilt(
+        val generellOppgaveId: UUID,
+        val tilstand: String,
+        val sistEndret: LocalDateTime,
+        val personId: UUID,
+    ) : AlertType {
+        override val feilMelding by lazy {
+            """
+            GenerellOppgave ikke fullført for generellOppgaveId: $generellOppgaveId.
+            Den har vært i tilstand $tilstand i ${timerSiden()} timer (sist endret: $sistEndret)
+            PersonId: $personId
+            """.trimIndent()
+        }
+
+        private fun timerSiden(): String = ChronoUnit.HOURS.between(sistEndret, LocalDateTime.now()).toString()
+
+        override val type: String = "GENERELL_OPPGAVE_IKKE_FERDIGSTILT"
+    }
+
     enum class OppgaveAlertType : AlertType {
         BEHANDLING_IKKE_FUNNET {
             override val feilMelding = "Behandling ikke funnet"
