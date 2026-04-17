@@ -101,8 +101,8 @@ class GenerellOppgave private constructor(
         vurdering: String?,
         valgtSakId: UUID?,
     ) {
-        check(tilstand == Tilstand.BEHANDLES) {
-            "Kan ikke starte ferdigstilling fra tilstand $tilstand"
+        if (tilstand != Tilstand.BEHANDLES) {
+            throw UlovligTilstandsendringException("Kan ikke starte ferdigstilling fra tilstand $tilstand")
         }
         this.vurdering = vurdering
         this.valgtSakId = valgtSakId
@@ -113,8 +113,8 @@ class GenerellOppgave private constructor(
         aksjonType: GenerellOppgaveAksjon.Type,
         opprettetBehandlingId: UUID? = null,
     ) {
-        check(tilstand == Tilstand.FERDIGSTILL_STARTET) {
-            "Kan ikke ferdigstille fra tilstand $tilstand"
+        if (tilstand != Tilstand.FERDIGSTILL_STARTET) {
+            throw UlovligTilstandsendringException("Kan ikke ferdigstille fra tilstand $tilstand")
         }
         when (aksjonType) {
             GenerellOppgaveAksjon.Type.AVSLUTT -> {
@@ -164,4 +164,8 @@ class GenerellOppgave private constructor(
     override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "GenerellOppgave(id=$id, tittel='$tittel', tilstand=$tilstand)"
+
+    class UlovligTilstandsendringException(
+        message: String,
+    ) : RuntimeException(message)
 }

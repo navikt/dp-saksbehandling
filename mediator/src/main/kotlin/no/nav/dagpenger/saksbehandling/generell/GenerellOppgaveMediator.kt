@@ -113,17 +113,18 @@ class GenerellOppgaveMediator(
         generellOppgaveRepository.lagre(generellOppgave)
 
         if (ferdigstiltHendelse.beholdOppgaven) {
-            val oppgaveId = ferdigstiltHendelse.opprettetOppgaveId
-            if (oppgaveId != null) {
-                oppgaveMediator.tildelOppgave(
-                    SettOppgaveAnsvarHendelse(
-                        oppgaveId = oppgaveId,
-                        ansvarligIdent = hendelse.utførtAv.navIdent,
-                        utførtAv = hendelse.utførtAv,
-                    ),
-                )
-                logger.info { "Tildelte ny oppgave $oppgaveId til ${hendelse.utførtAv.navIdent}" }
-            }
+            val oppgaveId =
+                requireNotNull(ferdigstiltHendelse.opprettetOppgaveId) {
+                    "opprettetOppgaveId må være satt når beholdOppgaven=true"
+                }
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    ansvarligIdent = hendelse.utførtAv.navIdent,
+                    utførtAv = hendelse.utførtAv,
+                ),
+            )
+            logger.info { "Tildelte ny oppgave $oppgaveId til ${hendelse.utførtAv.navIdent}" }
         }
     }
 
