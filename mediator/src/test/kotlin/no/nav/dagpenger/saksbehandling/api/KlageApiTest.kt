@@ -481,6 +481,7 @@ class KlageApiTest {
                     sakMediator = mockk(),
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppfølgingMediator = mockk(relaxed = true),
                 )
             }
             test()

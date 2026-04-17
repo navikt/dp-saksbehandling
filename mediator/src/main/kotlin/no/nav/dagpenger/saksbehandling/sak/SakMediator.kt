@@ -1,8 +1,5 @@
 package no.nav.dagpenger.saksbehandling.sak
 
-import AdresseBeeskyttetPersonException
-import PersonMediator
-import SkjermetPersonException
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -13,6 +10,9 @@ import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
+import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -266,5 +266,16 @@ class SakMediator(
                     sakRepository.lagre(sakHistorikk)
                 } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
+    }
+
+    fun lagreBehandling(
+        personId: UUID,
+        behandling: Behandling,
+    ) {
+        sakRepository.lagreBehandling(
+            personId = personId,
+            sakId = null,
+            behandling = behandling,
+        )
     }
 }

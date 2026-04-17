@@ -178,6 +178,41 @@ class AuthenticationTest {
 }
 ```
 
+### Parameterized Tests (JUnit 5)
+
+When multiple tests share the same structure but differ only in input/expected values, use `@ParameterizedTest` with `@MethodSource`:
+
+```kotlin
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
+
+class BehandlingTest {
+    companion object {
+        @JvmStatic
+        fun varianter(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of("KLAGE", AksjonType.OPPRETT_KLAGE),
+                Arguments.of("MANUELL", AksjonType.OPPRETT_MANUELL),
+                Arguments.of("REVURDERING", AksjonType.OPPRETT_REVURDERING),
+            )
+    }
+
+    @ParameterizedTest
+    @MethodSource("varianter")
+    fun `skal håndtere behandlingsvariant`(variant: String, forventet: AksjonType) {
+        val resultat = service.ferdigstill(variant)
+        resultat.type shouldBe forventet
+    }
+}
+```
+
+Prefer parameterized tests over duplicated test methods when:
+- Tests differ only in input values and expected results
+- The test logic (arrange/act/assert) is identical across cases
+- Adding a new variant should only require adding a data row, not a new method
+
 ## TypeScript/Next.js Testing (Vitest)
 
 ### Test Structure

@@ -173,6 +173,10 @@ class Innsending private constructor(
                 ) { "behandlingId kan ikke være null etter opprettelse av klage" }
                 this.innsendingResultat = InnsendingResultat.Klage(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
+
+            Aksjon.Type.OPPRETT_OPPFOLGING -> {
+                this.innsendingResultat = InnsendingResultat.Ingen
+            }
         }
         this.tilstand = Tilstand.FERDIGSTILT
     }

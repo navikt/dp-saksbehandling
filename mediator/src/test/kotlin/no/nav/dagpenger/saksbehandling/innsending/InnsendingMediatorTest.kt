@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
-import PersonMediator
 import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -29,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepositor
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
@@ -650,6 +650,7 @@ class InnsendingMediatorTest {
                         InnsendingBehandler(
                             klageMediator = mockk(),
                             behandlingKlient = behandlingKlientMock,
+                            oppfølgingMediator = mockk(),
                         ),
                 )
             val innsendingMottattHendelse =
@@ -793,6 +794,7 @@ class InnsendingMediatorTest {
                         InnsendingBehandler(
                             klageMediator = mockk(),
                             behandlingKlient = behandlingKlientMock,
+                            oppfølgingMediator = mockk(),
                         ),
                 )
             val innsendingMottattHendelse =

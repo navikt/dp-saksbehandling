@@ -91,6 +91,7 @@ class SakApiTest {
                     sakMediator = sakMediator,
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppfølgingMediator = mockk(relaxed = true),
                 )
             }
             test()

@@ -55,6 +55,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
@@ -630,9 +632,15 @@ private fun rehydrerTilstandsendringHendelse(
         "FjernOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<FjernOppgaveAnsvarHendelse>()
         "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
         "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
+        "OppfølgingFerdigstiltHendelse",
+        "GenerellOppgaveFerdigstiltHendelse",
+        -> hendelseJson.tilHendelse<OppfølgingFerdigstiltHendelse>()
         "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
         "InnsendingMottattHendelse" -> hendelseJson.tilHendelse<InnsendingMottattHendelse>()
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
+        "OpprettOppfølgingHendelse",
+        "OpprettGenerellOppgaveHendelse",
+        -> hendelseJson.tilHendelse<OpprettOppfølgingHendelse>()
         "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
         "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
         "SendTilKontrollHendelse" -> hendelseJson.tilHendelse<SendTilKontrollHendelse>()
@@ -981,6 +989,13 @@ private fun Row.rehydrerHendelse(): Hendelse {
             this
                 .string("hendelse_data")
                 .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
+
+        "OpprettOppfølgingHendelse",
+        "OpprettGenerellOppgaveHendelse",
+        ->
+            this
+                .string("hendelse_data")
+                .tilHendelse<OpprettOppfølgingHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

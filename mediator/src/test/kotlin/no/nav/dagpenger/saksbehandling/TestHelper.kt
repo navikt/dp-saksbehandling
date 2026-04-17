@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
+import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDate
@@ -90,6 +91,35 @@ internal object TestHelper {
         )
 
     val testInnsending = lagInnsending()
+
+    val testOppfølging = lagOppfølging()
+
+    fun lagOppfølging(
+        id: UUID = UUIDv7.ny(),
+        person: Person = testPerson,
+        tittel: String = "Test oppgave",
+        beskrivelse: String = "",
+        strukturertData: Map<String, Any> = emptyMap(),
+        frist: LocalDate? = null,
+        opprettet: LocalDateTime = opprettetNå,
+        tilstand: String = "BEHANDLES",
+        vurdering: String? = null,
+        resultat: Oppfølging.Resultat = Oppfølging.Resultat.Ingen,
+        valgtSakId: UUID? = null,
+    ): Oppfølging =
+        Oppfølging.rehydrer(
+            id = id,
+            person = person,
+            tittel = tittel,
+            beskrivelse = beskrivelse,
+            strukturertData = strukturertData,
+            frist = frist,
+            opprettet = opprettet,
+            tilstand = tilstand,
+            vurdering = vurdering,
+            resultat = resultat,
+            valgtSakId = valgtSakId,
+        )
 
     fun lagInnsending(
         innsendingId: UUID = UUIDv7.ny(),

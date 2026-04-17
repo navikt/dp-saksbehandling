@@ -41,6 +41,7 @@ class RelevanteJournalpostIdOppslag(
                     innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
                 setOf(journalpostIdInnsending).filterNotNull().toSet()
             }
+            UtløstAvType.GENERELL -> return emptySet()
         }
     }
 

@@ -24,7 +24,7 @@ interface SakRepository {
 
     fun lagreBehandling(
         personId: UUID,
-        sakId: UUID,
+        sakId: UUID?,
         behandling: Behandling,
     )
 

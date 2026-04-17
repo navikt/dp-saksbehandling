@@ -76,6 +76,20 @@ fun Route.innsendingApi(
                                         requireNotNull(valgtSakId)
                                         Aksjon.OpprettKlage(valgtSakId)
                                     }
+                                    BehandlingVariantDTO.OPPFOLGING -> {
+                                        val nyOppgave =
+                                            requireNotNull(requestDTO.nyOppgave) {
+                                                "nyOppgave må være satt ved behandlingsvariant OPPFOLGING"
+                                            }
+                                        Aksjon.OpprettOppfølging(
+                                            valgtSakId = requestDTO.sakId,
+                                            tittel = nyOppgave.tittel,
+                                            beskrivelse = nyOppgave.beskrivelse ?: "",
+                                            aarsak = nyOppgave.aarsak,
+                                            frist = nyOppgave.frist,
+                                            beholdOppgaven = nyOppgave.beholdOppgaven ?: false,
+                                        )
+                                    }
                                 }
                             mediator.ferdigstill(
                                 hendelse =

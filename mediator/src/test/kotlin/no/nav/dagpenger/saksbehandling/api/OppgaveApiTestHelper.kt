@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import PersonMediator
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -15,6 +15,7 @@ internal object OppgaveApiTestHelper {
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
         personMediator: PersonMediator = mockk(relaxed = true),
+        oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -29,6 +30,7 @@ internal object OppgaveApiTestHelper {
                     sakMediator = mockk(relaxed = true),
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppfølgingMediator = mockk(relaxed = true),
                 )
             }
             test()
@@ -66,6 +68,7 @@ internal object OppgaveApiTestHelper {
                     sakMediator = mockk(relaxed = true),
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppfølgingMediator = mockk(relaxed = true),
                 )
             }
             test()

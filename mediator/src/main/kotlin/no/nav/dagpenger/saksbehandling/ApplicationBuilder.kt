@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -20,7 +19,9 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
+import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
@@ -49,6 +50,11 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmJob
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmRepository
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingBehandler
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
+import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -169,6 +175,20 @@ internal class ApplicationBuilder(
             sakMediator = sakMediator,
         )
 
+    private val oppfølgingRepository = PostgresOppfølgingRepository(dataSource)
+    private val oppfølgingMediator =
+        OppfølgingMediator(
+            oppfølgingRepository = oppfølgingRepository,
+            oppfølgingBehandler =
+                OppfølgingBehandler(
+                    klageMediator = klageMediator,
+                    behandlingKlient = behandlingKlient,
+                ),
+            personMediator = personMediator,
+            sakMediator = sakMediator,
+            oppgaveMediator = oppgaveMediator,
+        )
+
     private val meldingOmVedtakMediator =
         MeldingOmVedtakMediator(
             oppgaveMediator = oppgaveMediator,
@@ -187,6 +207,7 @@ internal class ApplicationBuilder(
                 InnsendingBehandler(
                     klageMediator = klageMediator,
                     behandlingKlient = behandlingKlient,
+                    oppfølgingMediator = oppfølgingMediator,
                 ),
         )
     private val oppgaveDTOMapper =
@@ -198,6 +219,7 @@ internal class ApplicationBuilder(
     private val innsendingAlarmJob: Timer
     private val utsendingAlarmJob: Timer
     private val oversendKlageinstansAlarmJob: Timer
+    private val oppfølgingAlarmJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
 
@@ -221,6 +243,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
+                            oppfølgingMediator = oppfølgingMediator,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -298,6 +321,10 @@ internal class ApplicationBuilder(
                     rapidsConnection = rapidsConnection,
                     oppgaveMediator = oppgaveMediator,
                 )
+                OpprettOppgaveMottak(
+                    rapidsConnection = rapidsConnection,
+                    oppfølgingMediator = oppfølgingMediator,
+                )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(
                         rapidsConnection = rapidsConnection,
@@ -309,6 +336,13 @@ internal class ApplicationBuilder(
                     InnsendingAlarmJob(
                         rapidsConnection = rapidsConnection,
                         innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
+                    ).startJob(
+                        period = 1.Dag,
+                    )
+                oppfølgingAlarmJob =
+                    OppfølgingAlarmJob(
+                        rapidsConnection = rapidsConnection,
+                        oppfølgingAlarmRepository = OppfølgingAlarmRepository(dataSource),
                     ).startJob(
                         period = 1.Dag,
                     )
@@ -363,6 +397,7 @@ internal class ApplicationBuilder(
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
         oversendKlageinstansAlarmJob.cancel()
+        oppfølgingAlarmJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         statistikkJob.cancel()

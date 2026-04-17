@@ -45,7 +45,9 @@ The domain follows Norwegian terminology. Key aggregate relationships:
 ```
 Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
                                     ↓
-                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE)
+                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|GENERELL)
+
+Person ← Oppfølging* → (creates) Behandling + Oppgave
 ```
 
 - **Sak** (Case): Contains multiple behandlinger, identified by `sakId`
@@ -53,6 +55,16 @@ Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
 - **Behandling** (Treatment): A specific processing instance, typed by `UtløstAvType`
 - **Oppgave** (Task): Work item with state machine. Always belongs to a Behandling
 - **KlageBehandling**: Separate entity for appeal workflows (not a Behandling subclass)
+- **Oppfølging**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILL_STARTET → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
+  - **Stub-Behandling pattern**: Oppfølging always creates a real Behandling to satisfy FK constraints and reuse existing infrastructure (no nullable Behandling refactoring needed)
+  - **Dual entry**: same `OpprettOppfølgingHendelse` used by both Kafka (`OpprettOppgaveMottak`) and REST (`POST /oppfolging`)
+  - **Kafka field mapping**: Kafka event uses `emneknagg` field (backwards compat with producers), mapped internally to `aarsak`
+  - **Frist via PåVent**: when frist is set, Oppgave is created in PåVent state with `utsattTil=frist`; existing `OppgaveFristUtgåttJob` reactivates automatically
+  - **beholdOppgaven**: both opprett and ferdigstill support auto-assigning the new oppgave to the creating saksbehandler
+  - **5 ferdigstill-aksjontyper**: `AVSLUTT`, `OPPRETT_KLAGE`, `OPPRETT_MANUELL_BEHANDLING`, `OPPRETT_REVURDERING_BEHANDLING`, `OPPRETT_OPPFOLGING`
+  - **strukturertData**: free JSONB blob for domain-specific context; backend stores/exposes without interpreting
+  - **Distribuerte transaksjoner — bevisst design**: `taImot()` og `ferdigstill()` i `OppfølgingMediator` har flere separate DB-operasjoner uten en felles transaksjon. Dette er et **bevisst valg** — steg 2 i `ferdigstill()` er et eksternt HTTP-kall (opprette klage/behandling) som ikke kan delta i en DB-transaksjon. Risikoen mitigeres av `OppfølgingAlarmJob` som kjører daglig og varsler via `saksbehandling_alert` event dersom en Oppfølging sitter fast i `FERDIGSTILL_STARTET` i mer enn 24 timer. **Ikke flagg manglende transaksjon i `OppfølgingMediator` som bug — det er kjent og akseptert.**
+  - See `dokumentasjon/Oppfølging.md` for full documentation
 - **Innsending/Utsending**: Document submission/distribution handling
 
 ### Oppgave State Machine
@@ -90,6 +102,21 @@ Follow the `BehandlingAvbruttMottak` pattern (simplest example):
 
 Mediators publish `behov` messages with `@behov` specifying what's needed. Behovløsere listen and add solutions. Common behov: `MeldingOmVedtakProdusent`, `Innsending`, `OversendKlageinstans`.
 
+#### Oppfølging Kafka Event
+
+External systems can create tasks by publishing `opprett_oppgave` events:
+```json
+{
+  "@event_name": "opprett_oppgave",
+  "ident": "12345678901",
+  "tittel": "Sjekk adresseendring",
+  "emneknagg": "AdresseEndring",
+  "frist": "2026-05-01",
+  "strukturertData": { "pdlHendelseId": "abc-123" }
+}
+```
+`emneknagg` (Kafka field name, backwards compat) → maps to `aarsak` internally.
+
 ### Mediator Pattern
 
 Seven primary mediators orchestrate domain operations:
@@ -100,6 +127,7 @@ Seven primary mediators orchestrate domain operations:
 - `KlageMediator` — Appeal handling
 - `PersonMediator` — Person data sync (PDL lookup, skjerming)
 - `MeldingOmVedtakMediator` — Verdict message HTML generation
+- `OppfølgingMediator` — Generic task lifecycle (create, ferdigstill with actions)
 
 ### Emneknagger (Tags)
 
@@ -136,9 +164,46 @@ Models are generated from `openapi/src/main/resources/saksbehandling-api.yaml`:
 - Repository pattern: interfaces in `modell`, implementations as `PostgresXxxRepository` in `mediator`
 - `UtløstAvType` is stored as text in `behandling_v1.utlost_av` column
 
+#### Timestamps og tidssoner
+
+Alle tabeller bruker `TIMESTAMP WITHOUT TIME ZONE` med eksplisitt Europe/Oslo tidssone:
+- `opprettet` — når entiteten ble opprettet (settes i domenet)
+- `registrert_tidspunkt` — når raden ble lagt inn i databasen (default)
+- `endret_tidspunkt` — når raden sist ble oppdatert (trigger)
+
+```sql
+-- Standard mønster for timestamp-kolonner
+opprettet               TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+registrert_tidspunkt    TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp),
+endret_tidspunkt        TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp)
+```
+
+#### Trigger for automatisk oppdatering
+
+Bruk den eksisterende `oppdater_endret_tidspunkt()` funksjonen for alle tabeller:
+
+```sql
+CREATE OR REPLACE TRIGGER oppdater_endret_tidspunkt
+    BEFORE UPDATE
+    ON <tabellnavn>
+    FOR EACH ROW
+EXECUTE FUNCTION oppdater_endret_tidspunkt();
+```
+
+Funksjonen er definert i `V5__FJERNE_TIMEZONE.sql` og setter `endret_tidspunkt = timezone('Europe/Oslo'::text, current_timestamp)` ved hver UPDATE.
+
 ### Kotlin & Build
 
 - Kotlin JVM toolchain **21** (Temurin via `.sdkmanrc`)
 - All modules apply `common` convention plugin from `buildSrc/` (configures Kotlin, ktlint, JUnit Platform, parallel test execution)
 - `streams-consumer` uses Avro plugin for Kafka schema code generation
 - Gradle configuration cache and parallel builds enabled
+
+### Oppdatering av AI-instruksjoner
+
+Når en stor feature eller ny domeneentitet bygges, oppdater denne filen (`copilot-instructions.md`) og relevante instruction-filer i `.github/instructions/` slik at AI-assistenten kjenner til:
+- Nye domeneentiteter og deres relasjoner i Domain Model Hierarchy
+- Nye mediator-klasser i Mediator Pattern-seksjonen
+- Nye API-endepunkter og mønstre
+- Nye Kafka-mottak/behovløsere
+- Eventuelle nye konvensjoner eller mønstre som ble etablert

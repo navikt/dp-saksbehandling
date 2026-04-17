@@ -6,10 +6,13 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 
 class InnsendingBehandler(
     private val klageMediator: KlageMediator,
     private val behandlingKlient: BehandlingKlient,
+    private val oppfølgingMediator: OppfølgingMediator,
 ) {
     fun utførAksjon(
         hendelse: FerdigstillInnsendingHendelse,
@@ -38,6 +41,12 @@ class InnsendingBehandler(
 
             is Aksjon.OpprettRevurderingBehandling ->
                 opprettBehandling(
+                    hendelse = hendelse,
+                    innsending = innsending,
+                )
+
+            is Aksjon.OpprettOppfølging ->
+                opprettOppfølging(
                     hendelse = hendelse,
                     innsending = innsending,
                 )
@@ -94,6 +103,32 @@ class InnsendingBehandler(
             innsendingId = innsending.innsendingId,
             aksjonType = hendelse.aksjon.type,
             opprettetBehandlingId = klageOppgave.behandling.behandlingId,
+            utførtAv = hendelse.utførtAv,
+        )
+    }
+
+    private fun opprettOppfølging(
+        hendelse: FerdigstillInnsendingHendelse,
+        innsending: Innsending,
+    ): InnsendingFerdigstiltHendelse {
+        val aksjon = hendelse.aksjon as Aksjon.OpprettOppfølging
+        val opprettet =
+            oppfølgingMediator.taImot(
+                OpprettOppfølgingHendelse(
+                    ident = innsending.person.ident,
+                    tittel = aksjon.tittel,
+                    beskrivelse = aksjon.beskrivelse,
+                    aarsak = aksjon.aarsak,
+                    frist = aksjon.frist,
+                    beholdOppgaven = aksjon.beholdOppgaven,
+                    utførtAv = hendelse.utførtAv,
+                ),
+            )
+        return InnsendingFerdigstiltHendelse(
+            innsendingId = innsending.innsendingId,
+            aksjonType = hendelse.aksjon.type,
+            opprettetBehandlingId = null,
+            opprettetOppgaveId = opprettet.oppgaveId,
             utførtAv = hendelse.utførtAv,
         )
     }

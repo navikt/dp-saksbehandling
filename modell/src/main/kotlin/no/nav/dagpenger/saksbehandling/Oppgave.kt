@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -233,6 +234,12 @@ data class Oppgave private constructor(
         tilstand.ferdigstill(this, innsendingFerdigstiltHendelse)
     }
 
+    fun ferdigstill(oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse) {
+        adressebeskyttelseTilgangskontroll(oppfølgingFerdigstiltHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(oppfølgingFerdigstiltHendelse.utførtAv)
+        tilstand.ferdigstill(this, oppfølgingFerdigstiltHendelse)
+    }
+
     fun fjernAnsvar(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
         tilstand.fjernAnsvar(this, fjernOppgaveAnsvarHendelse)
     }
@@ -357,6 +364,17 @@ data class Oppgave private constructor(
         )
     }
 
+    fun settPåVent(
+        hendelse: Hendelse,
+        utsattTil: LocalDate,
+    ) {
+        tilstand.settPåVent(
+            oppgave = this,
+            hendelse = hendelse,
+            utsattTil = utsattTil,
+        )
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -432,6 +450,16 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
+        }
+
+        // TODO: Avklar om settPåVent skal legge til årsak-emneknagg slik utsett() gjør
+        override fun settPåVent(
+            oppgave: Oppgave,
+            hendelse: Hendelse,
+            utsattTil: LocalDate,
+        ) {
+            oppgave.utsattTil = utsattTil
+            oppgave.endreTilstand(PåVent, hendelse)
         }
     }
 
@@ -575,6 +603,18 @@ data class Oppgave private constructor(
                 hendelseNavn = innsendingFerdigstiltHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, innsendingFerdigstiltHendelse)
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = oppfølgingFerdigstiltHendelse.utførtAv,
+                hendelseNavn = oppfølgingFerdigstiltHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(FerdigBehandlet, oppfølgingFerdigstiltHendelse)
         }
 
         override fun ferdigstill(
@@ -1122,6 +1162,18 @@ data class Oppgave private constructor(
             )
         }
 
+        fun ferdigstill(
+            oppgave: Oppgave,
+            oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${oppfølgingFerdigstiltHendelse.javaClass.simpleName}",
+            )
+        }
+
         fun fjernAnsvar(
             oppgave: Oppgave,
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
@@ -1235,6 +1287,17 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
+            )
+        }
+
+        fun settPåVent(
+            oppgave: Oppgave,
+            hendelse: Hendelse,
+            utsattTil: LocalDate,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke sette oppgave på vent i tilstand $type",
             )
         }
 

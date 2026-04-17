@@ -8,5 +8,6 @@ data class InnsendingFerdigstiltHendelse(
     val innsendingId: UUID,
     val aksjonType: Aksjon.Type,
     val opprettetBehandlingId: UUID?,
+    val opprettetOppgaveId: UUID? = null,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

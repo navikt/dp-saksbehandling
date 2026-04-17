@@ -196,4 +196,5 @@ private fun UtløstAvType.tilSerieNavn(): String =
         UtløstAvType.MANUELL -> "Manuell"
         UtløstAvType.INNSENDING -> "Innsending"
         UtløstAvType.REVURDERING -> "Revurdering"
+        UtløstAvType.GENERELL -> "Generell"
     }

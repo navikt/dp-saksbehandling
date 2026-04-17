@@ -9,6 +9,112 @@ servers:
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
 paths:
+  /oppfolging:
+    post:
+      operationId: opprettOppfølging
+      summary: Opprett en ny oppfølging
+      description: |
+        Oppretter en oppfølging for en person.
+        Oppgaven opprettes i KLAR_TIL_BEHANDLING, eller PÅ_VENT hvis frist er satt.
+      tags:
+        - Saksbehandling
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpprettOppfolgingRequest'
+      responses:
+        '201':
+          description: Oppfølging opprettet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpprettOppfolgingResponse'
+        '400':
+          description: Ugyldig request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '403':
+          description: Ingen tilgang til person
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+      security:
+        - azureAd: [ ]
+  /oppfolging/{behandlingId}:
+    get:
+      summary: Hent oppfølging for en gitt behandlingId
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med oppfølging
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppfolging'
+        '404':
+          description: Oppfølging ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+      security:
+        - azureAd: [ ]
+  /oppfolging/{behandlingId}/ferdigstill:
+    put:
+      summary: Ferdigstill oppfølging
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FerdigstillOppfolgingRequest'
+      responses:
+        '204':
+          description: Oppfølging ferdigstilt
+        '404':
+          description: Oppfølging ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+      security:
+        - azureAd: [ ]
   /tilbakekreving/{behandlingId}:
     get:
       summary: Hent tilbakekreving for en gitt behandlingId
@@ -1686,6 +1792,7 @@ components:
         - INNSENDING
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
+        - GENERELL
 
     BehandlingType:
       type: string
@@ -1695,6 +1802,7 @@ components:
         - INNSENDING
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
+        - GENERELL
 
     BehandlingVariant:
       type: string
@@ -1702,6 +1810,7 @@ components:
         - RETT_TIL_DAGPENGER_MANUELL
         - RETT_TIL_DAGPENGER_REVURDERING
         - KLAGE
+        - OPPFOLGING
 
     LovligeEndringer:
       type: object
@@ -2468,6 +2577,8 @@ components:
           type: string
         behandlingsvariant:
           $ref: '#/components/schemas/BehandlingVariant'
+        nyOppgave:
+          $ref: '#/components/schemas/NyOppfolging'
       required:
         - vurdering
 
@@ -2519,6 +2630,129 @@ components:
         - totaltFeilutbetaltBelop
         - saksbehandlingURL
         - fullstendigPeriode
+
+    Oppfolging:
+      type: object
+      properties:
+        behandlingId:
+          type: string
+          format: uuid
+          description: Behandling-ID for oppfølgingen
+        tittel:
+          type: string
+          description: Visningstittel for oppgaven
+        beskrivelse:
+          type: string
+          description: Utfyllende beskrivelse av oppgaven
+        frist:
+          type: string
+          format: date
+          description: Frist for oppgaven (YYYY-MM-DD). Oppgaven settes på vent til denne dato.
+        strukturertData:
+          type: object
+          additionalProperties: true
+          description: Strukturert data knyttet til oppgaven
+        lovligeSaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/TynnSak'
+        sakId:
+          type: string
+          format: uuid
+          description: Valgt sak-id ved ferdigstilling
+        vurdering:
+          type: string
+          description: Saksbehandlers vurdering
+        nyBehandling:
+          $ref: '#/components/schemas/TynnBehandling'
+      required:
+        - tittel
+
+    OpprettOppfolgingRequest:
+      type: object
+      properties:
+        personIdent:
+          type: string
+          description: Fødselsnummer eller D-nummer for personen oppgaven gjelder
+        tittel:
+          type: string
+          description: Kort tittel for oppgaven
+          maxLength: 200
+        beskrivelse:
+          type: string
+          description: Utfyllende beskrivelse av oppgaven
+        aarsak:
+          type: string
+          description: Årsak/kategori for oppgaven
+        frist:
+          type: string
+          format: date
+          description: Frist for oppgaven (YYYY-MM-DD). Oppgaven settes på vent til denne dato.
+        beholdOppgaven:
+          type: boolean
+          default: false
+          description: Om oppgaven skal tildeles saksbehandleren som oppretter den
+        strukturertData:
+          type: object
+          additionalProperties: true
+          description: Strukturert data knyttet til oppgaven
+      required:
+        - personIdent
+        - tittel
+        - aarsak
+
+    OpprettOppfolgingResponse:
+      type: object
+      properties:
+        oppfølgingId:
+          type: string
+          format: uuid
+          description: ID til den opprettede oppfølgingen
+        oppgaveId:
+          type: string
+          format: uuid
+          description: ID til den opprettede oppgaven (for oppgavelisten)
+      required:
+        - oppfølgingId
+        - oppgaveId
+
+    FerdigstillOppfolgingRequest:
+      type: object
+      properties:
+        sakId:
+          type: string
+          format: uuid
+        vurdering:
+          type: string
+        behandlingsvariant:
+          $ref: '#/components/schemas/BehandlingVariant'
+        nyOppgave:
+          $ref: '#/components/schemas/NyOppfolging'
+
+    NyOppfolging:
+      type: object
+      description: Data for ny oppfølging (kun ved behandlingsvariant=OPPFOLGING)
+      properties:
+        tittel:
+          type: string
+          description: Tittel på den nye oppgaven
+        beskrivelse:
+          type: string
+          description: Beskrivelse av den nye oppgaven
+        aarsak:
+          type: string
+          description: Årsak/kategori for den nye oppgaven
+        frist:
+          type: string
+          format: date
+          description: Frist for den nye oppgaven
+        beholdOppgaven:
+          type: boolean
+          default: false
+          description: Om den nye oppgaven skal tildeles samme saksbehandler
+      required:
+        - tittel
+        - aarsak
 
     TilbakekrevingBehandlingStatus:
       type: string
