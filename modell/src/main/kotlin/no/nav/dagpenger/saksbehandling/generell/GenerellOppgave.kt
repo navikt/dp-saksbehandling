@@ -101,6 +101,9 @@ class GenerellOppgave private constructor(
         vurdering: String?,
         valgtSakId: UUID?,
     ) {
+        check(tilstand == Tilstand.BEHANDLES) {
+            "Kan ikke starte ferdigstilling fra tilstand $tilstand"
+        }
         this.vurdering = vurdering
         this.valgtSakId = valgtSakId
         this.tilstand = Tilstand.FERDIGSTILL_STARTET
@@ -110,6 +113,9 @@ class GenerellOppgave private constructor(
         aksjonType: GenerellOppgaveAksjon.Type,
         opprettetBehandlingId: UUID? = null,
     ) {
+        check(tilstand == Tilstand.FERDIGSTILL_STARTET) {
+            "Kan ikke ferdigstille fra tilstand $tilstand"
+        }
         when (aksjonType) {
             GenerellOppgaveAksjon.Type.AVSLUTT -> {
                 this.resultat = Resultat.Ingen

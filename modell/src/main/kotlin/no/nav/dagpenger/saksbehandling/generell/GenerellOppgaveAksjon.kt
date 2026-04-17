@@ -26,6 +26,8 @@ sealed class GenerellOppgaveAksjon {
         override val valgtSakId: UUID,
     ) : GenerellOppgaveAksjon() {
         override val type: Type = Type.OPPRETT_MANUELL_BEHANDLING
+
+        override fun toString() = "OpprettManuellBehandling(valgtSakId=$valgtSakId)"
     }
 
     data class OpprettRevurderingBehandling(
@@ -33,6 +35,8 @@ sealed class GenerellOppgaveAksjon {
         override val valgtSakId: UUID,
     ) : GenerellOppgaveAksjon() {
         override val type: Type = Type.OPPRETT_REVURDERING_BEHANDLING
+
+        override fun toString() = "OpprettRevurderingBehandling(valgtSakId=$valgtSakId)"
     }
 
     data class OpprettKlage(

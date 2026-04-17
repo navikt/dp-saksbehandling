@@ -184,7 +184,9 @@ class PostgresGenerellOppgaveRepository(
                     "Ingen" -> GenerellOppgave.Resultat.Ingen
                     "Klage" -> GenerellOppgave.Resultat.Klage(this.uuid("resultat_behandling_id"))
                     "RettTilDagpenger" -> GenerellOppgave.Resultat.RettTilDagpenger(this.uuid("resultat_behandling_id"))
-                    else -> GenerellOppgave.Resultat.Ingen
+                    "GenerellOppgave" -> GenerellOppgave.Resultat.GenerellOppgave(this.uuid("resultat_behandling_id"))
+                    null -> GenerellOppgave.Resultat.Ingen
+                    else -> throw IllegalStateException("Ukjent resultat_type: $resultatType")
                 },
         )
 }
