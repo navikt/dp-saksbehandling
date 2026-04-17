@@ -12,9 +12,9 @@ paths:
   /oppfolging:
     post:
       operationId: opprettOppfølging
-      summary: Opprett en ny generell oppgave
+      summary: Opprett en ny oppfølging
       description: |
-        Oppretter en generell oppgave for en person.
+        Oppretter en oppfølging for en person.
         Oppgaven opprettes i KLAR_TIL_BEHANDLING, eller PÅ_VENT hvis frist er satt.
       tags:
         - Saksbehandling
@@ -26,7 +26,7 @@ paths:
               $ref: '#/components/schemas/OpprettOppfolgingRequest'
       responses:
         '201':
-          description: Generell oppgave opprettet
+          description: Oppfølging opprettet
           content:
             application/json:
               schema:
@@ -53,7 +53,7 @@ paths:
         - azureAd: [ ]
   /oppfolging/{behandlingId}:
     get:
-      summary: Hent generell oppgave for en gitt behandlingId
+      summary: Hent oppfølging for en gitt behandlingId
       parameters:
         - in: path
           name: behandlingId
@@ -63,13 +63,13 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Vellykket respons med generell oppgave
+          description: Vellykket respons med oppfølging
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Oppfolging'
         '404':
-          description: Generell oppgave ble ikke funnet
+          description: Oppfølging ble ikke funnet
           content:
             application/problem+json:
               schema:
@@ -84,7 +84,7 @@ paths:
         - azureAd: [ ]
   /oppfolging/{behandlingId}/ferdigstill:
     put:
-      summary: Ferdigstill generell oppgave
+      summary: Ferdigstill oppfølging
       parameters:
         - in: path
           name: behandlingId
@@ -100,9 +100,9 @@ paths:
               $ref: '#/components/schemas/FerdigstillOppfolgingRequest'
       responses:
         '204':
-          description: Generell oppgave ferdigstilt
+          description: Oppfølging ferdigstilt
         '404':
-          description: Generell oppgave ble ikke funnet
+          description: Oppfølging ble ikke funnet
           content:
             application/problem+json:
               schema:
@@ -2637,7 +2637,7 @@ components:
         behandlingId:
           type: string
           format: uuid
-          description: Behandling-ID for den generelle oppgaven
+          description: Behandling-ID for oppfølgingen
         tittel:
           type: string
           description: Visningstittel for oppgaven
@@ -2707,7 +2707,7 @@ components:
         oppfølgingId:
           type: string
           format: uuid
-          description: ID til den opprettede generelle oppgaven
+          description: ID til den opprettede oppfølgingen
         oppgaveId:
           type: string
           format: uuid

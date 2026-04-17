@@ -26,9 +26,9 @@ class OppfølgingMediatorTest {
     private val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
 
     @Test
-    fun `E2E - opprette og ferdigstille generell oppgave`() {
+    fun `E2E - opprette og ferdigstille oppfølging`() {
         DBTestHelper.withPerson { ds ->
-            val generellOppgaveRepository = PostgresOppfølgingRepository(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
             val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
             val oppgaveMediator =
@@ -39,7 +39,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                 )
 
-            val generellOppgaveBehandler =
+            val oppfølgingBehandler =
                 mockk<OppfølgingBehandler>().also {
                     every { it.utførAksjon(any(), any(), any()) } answers {
                         val oppgave = firstArg<Oppfølging>()
@@ -54,8 +54,8 @@ class OppfølgingMediatorTest {
 
             val mediator =
                 OppfølgingMediator(
-                    oppfølgingRepository = generellOppgaveRepository,
-                    oppfølgingBehandler = generellOppgaveBehandler,
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
                     personMediator = personMediator,
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
@@ -72,8 +72,8 @@ class OppfølgingMediatorTest {
                     ),
                 )
 
-            val generellOppgave = generellOppgaveRepository.hent(resultat.oppfølgingId)
-            generellOppgave.tilstand() shouldBe "BEHANDLES"
+            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
+            oppfølging.tilstand() shouldBe "BEHANDLES"
 
             // Verifiser oppgave opprettet med riktig type og årsak
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
@@ -100,7 +100,7 @@ class OppfølgingMediatorTest {
             )
 
             // Verifiser ferdigstilt
-            val ferdigstiltOppfølging = generellOppgaveRepository.hent(resultat.oppfølgingId)
+            val ferdigstiltOppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
             ferdigstiltOppfølging.tilstand() shouldBe "FERDIGSTILT"
             ferdigstiltOppfølging.vurdering() shouldBe "Alt er OK"
 
@@ -112,7 +112,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `oppgave med beholdOppgaven tildeles opprettende saksbehandler`() {
         DBTestHelper.withPerson { ds ->
-            val generellOppgaveRepository = PostgresOppfølgingRepository(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
             val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
             val oppgaveRepository = PostgresOppgaveRepository(ds)
@@ -126,7 +126,7 @@ class OppfølgingMediatorTest {
 
             val mediator =
                 OppfølgingMediator(
-                    oppfølgingRepository = generellOppgaveRepository,
+                    oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = mockk(),
                     personMediator = personMediator,
                     sakMediator = sakMediator,
@@ -152,7 +152,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `oppgave uten beholdOppgaven tildeles ikke saksbehandler`() {
         DBTestHelper.withPerson { ds ->
-            val generellOppgaveRepository = PostgresOppfølgingRepository(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
             val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
             val oppgaveRepository = PostgresOppgaveRepository(ds)
@@ -166,7 +166,7 @@ class OppfølgingMediatorTest {
 
             val mediator =
                 OppfølgingMediator(
-                    oppfølgingRepository = generellOppgaveRepository,
+                    oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = mockk(),
                     personMediator = personMediator,
                     sakMediator = sakMediator,
@@ -192,7 +192,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `oppgave med frist opprettes i PåVent tilstand`() {
         DBTestHelper.withPerson { ds ->
-            val generellOppgaveRepository = PostgresOppfølgingRepository(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
             val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
             val oppgaveRepository = PostgresOppgaveRepository(ds)
@@ -206,7 +206,7 @@ class OppfølgingMediatorTest {
 
             val mediator =
                 OppfølgingMediator(
-                    oppfølgingRepository = generellOppgaveRepository,
+                    oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = mockk(),
                     personMediator = personMediator,
                     sakMediator = sakMediator,
@@ -227,8 +227,8 @@ class OppfølgingMediatorTest {
                 )
 
             // Verifiser Oppfølging har frist
-            val generellOppgave = generellOppgaveRepository.hent(resultat.oppfølgingId)
-            generellOppgave.frist shouldBe frist
+            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
+            oppfølging.frist shouldBe frist
 
             // Verifiser Oppgave er i PåVent med utsattTil
             val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
