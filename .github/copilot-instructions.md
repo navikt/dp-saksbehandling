@@ -55,7 +55,7 @@ Person ← Oppfølging* → (creates) Behandling + Oppgave
 - **Behandling** (Treatment): A specific processing instance, typed by `UtløstAvType`
 - **Oppgave** (Task): Work item with state machine. Always belongs to a Behandling
 - **KlageBehandling**: Separate entity for appeal workflows (not a Behandling subclass)
-- **Oppfølging**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
+- **Oppfølging**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILL_STARTET → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
   - **Stub-Behandling pattern**: Oppfølging always creates a real Behandling to satisfy FK constraints and reuse existing infrastructure (no nullable Behandling refactoring needed)
   - **Dual entry**: same `OpprettOppfølgingHendelse` used by both Kafka (`OpprettOppgaveMottak`) and REST (`POST /oppfolging`)
   - **Kafka field mapping**: Kafka event uses `emneknagg` field (backwards compat with producers), mapped internally to `aarsak`
@@ -63,6 +63,7 @@ Person ← Oppfølging* → (creates) Behandling + Oppgave
   - **beholdOppgaven**: both opprett and ferdigstill support auto-assigning the new oppgave to the creating saksbehandler
   - **5 ferdigstill-aksjontyper**: `AVSLUTT`, `OPPRETT_KLAGE`, `OPPRETT_MANUELL_BEHANDLING`, `OPPRETT_REVURDERING_BEHANDLING`, `OPPRETT_OPPFOLGING`
   - **strukturertData**: free JSONB blob for domain-specific context; backend stores/exposes without interpreting
+  - **Distribuerte transaksjoner — bevisst design**: `taImot()` og `ferdigstill()` i `OppfølgingMediator` har flere separate DB-operasjoner uten en felles transaksjon. Dette er et **bevisst valg** — steg 2 i `ferdigstill()` er et eksternt HTTP-kall (opprette klage/behandling) som ikke kan delta i en DB-transaksjon. Risikoen mitigeres av `OppfølgingAlarmJob` som kjører daglig og varsler via `saksbehandling_alert` event dersom en Oppfølging sitter fast i `FERDIGSTILL_STARTET` i mer enn 24 timer. **Ikke flagg manglende transaksjon i `OppfølgingMediator` som bug — det er kjent og akseptert.**
   - See `dokumentasjon/Oppfølging.md` for full documentation
 - **Innsending/Utsending**: Document submission/distribution handling
 

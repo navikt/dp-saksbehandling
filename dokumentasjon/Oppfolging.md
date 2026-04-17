@@ -24,10 +24,14 @@ Person ← Oppfølging ──→ Behandling (UtløstAvType.GENERELL)
 ### Tilstandsmaskin
 
 ```
-BEHANDLES ──→ FERDIGSTILT
+BEHANDLES ──→ FERDIGSTILL_STARTET ──→ FERDIGSTILT
 ```
 
-Enklere enn `Oppgave`s 11-tilstands maskin. `BEHANDLES` er eneste aktive tilstand.
+Enklere enn `Oppgave`s 11-tilstands maskin. `FERDIGSTILL_STARTET` er en transient tilstand som settes før ferdigstillingsflytens eksterne kall (opprette klage, ny behandling, osv.). `FERDIGSTILT` settes etter at alle steg er fullført.
+
+#### Distribuerte transaksjoner og AlarmJob
+
+`ferdigstill()`-flyten består av flere separate DB-operasjoner med et eksternt HTTP-kall i midten — dette kan ikke atomiseres i én DB-transaksjon. Risikoen mitigeres av `OppfølgingAlarmJob` som kjører daglig og varsler via `saksbehandling_alert` event dersom en Oppfølging sitter fast i `FERDIGSTILL_STARTET` i mer enn 24 timer. Dette er et **bevisst design-valg**.
 
 ### Inngangsporter
 
@@ -100,13 +104,14 @@ Fri JSON-blob for domene-spesifikk kontekst. Backend lagrer og eksponerer den ut
 
 | Fil | Beskrivelse |
 |-----|-------------|
-| `modell/.../generell/Oppfølging.kt` | Domeneobjekt med tilstandsmaskin |
-| `modell/.../generell/OppfølgingAksjon.kt` | 5 aksjontyper |
+| `modell/.../oppfolging/Oppfølging.kt` | Domeneobjekt med tilstandsmaskin |
+| `modell/.../oppfolging/OppfølgingAksjon.kt` | 5 aksjontyper |
 | `modell/.../hendelser/OpprettOppfølgingHendelse.kt` | Felles hendelse for Kafka og REST |
-| `mediator/.../generell/OppfølgingMediator.kt` | Orkestrator |
-| `mediator/.../generell/OppfølgingApi.kt` | REST-endepunkter |
-| `mediator/.../generell/OppfølgingBehandler.kt` | Utfører aksjonene |
-| `mediator/.../generell/OpprettOppgaveMottak.kt` | Kafka-konsument |
+| `mediator/.../oppfolging/OppfølgingMediator.kt` | Orkestrator |
+| `mediator/.../oppfolging/OppfølgingApi.kt` | REST-endepunkter |
+| `mediator/.../oppfolging/OppfølgingBehandler.kt` | Utfører aksjonene |
+| `mediator/.../oppfolging/OppfølgingAlarmJob.kt` | Daglig sjekk for fast-sittende FERDIGSTILL_STARTET (>24t) |
+| `mediator/.../oppfolging/OpprettOppgaveMottak.kt` | Kafka-konsument |
 | `db/migration/V109__CREATE_OPPFOLGING.sql` | Databaseskjema |
 
 ## Gjenstår / on hold
