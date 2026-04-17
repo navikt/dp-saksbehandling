@@ -650,6 +650,7 @@ class InnsendingMediatorTest {
                         InnsendingBehandler(
                             klageMediator = mockk(),
                             behandlingKlient = behandlingKlientMock,
+                            generellOppgaveMediator = mockk(),
                         ),
                 )
             val innsendingMottattHendelse =
@@ -793,6 +794,7 @@ class InnsendingMediatorTest {
                         InnsendingBehandler(
                             klageMediator = mockk(),
                             behandlingKlient = behandlingKlientMock,
+                            generellOppgaveMediator = mockk(),
                         ),
                 )
             val innsendingMottattHendelse =

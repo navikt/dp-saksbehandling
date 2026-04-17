@@ -3,13 +3,16 @@ package no.nav.dagpenger.saksbehandling.innsending
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
+import no.nav.dagpenger.saksbehandling.generell.GenerellOppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettGenerellOppgaveHendelse
 
 class InnsendingBehandler(
     private val klageMediator: KlageMediator,
     private val behandlingKlient: BehandlingKlient,
+    private val generellOppgaveMediator: GenerellOppgaveMediator,
 ) {
     fun utførAksjon(
         hendelse: FerdigstillInnsendingHendelse,
@@ -38,6 +41,12 @@ class InnsendingBehandler(
 
             is Aksjon.OpprettRevurderingBehandling ->
                 opprettBehandling(
+                    hendelse = hendelse,
+                    innsending = innsending,
+                )
+
+            is Aksjon.OpprettGenerellOppgave ->
+                opprettGenerellOppgave(
                     hendelse = hendelse,
                     innsending = innsending,
                 )
@@ -94,6 +103,32 @@ class InnsendingBehandler(
             innsendingId = innsending.innsendingId,
             aksjonType = hendelse.aksjon.type,
             opprettetBehandlingId = klageOppgave.behandling.behandlingId,
+            utførtAv = hendelse.utførtAv,
+        )
+    }
+
+    private fun opprettGenerellOppgave(
+        hendelse: FerdigstillInnsendingHendelse,
+        innsending: Innsending,
+    ): InnsendingFerdigstiltHendelse {
+        val aksjon = hendelse.aksjon as Aksjon.OpprettGenerellOppgave
+        val opprettet =
+            generellOppgaveMediator.taImot(
+                OpprettGenerellOppgaveHendelse(
+                    ident = innsending.person.ident,
+                    tittel = aksjon.tittel,
+                    beskrivelse = aksjon.beskrivelse,
+                    aarsak = aksjon.aarsak,
+                    frist = aksjon.frist,
+                    beholdOppgaven = aksjon.beholdOppgaven,
+                    utførtAv = hendelse.utførtAv,
+                ),
+            )
+        return InnsendingFerdigstiltHendelse(
+            innsendingId = innsending.innsendingId,
+            aksjonType = hendelse.aksjon.type,
+            opprettetBehandlingId = null,
+            opprettetOppgaveId = opprettet.oppgaveId,
             utførtAv = hendelse.utførtAv,
         )
     }

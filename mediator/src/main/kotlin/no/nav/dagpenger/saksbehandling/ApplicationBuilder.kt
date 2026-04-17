@@ -207,6 +207,7 @@ internal class ApplicationBuilder(
                 InnsendingBehandler(
                     klageMediator = klageMediator,
                     behandlingKlient = behandlingKlient,
+                    generellOppgaveMediator = generellOppgaveMediator,
                 ),
         )
     private val oppgaveDTOMapper =

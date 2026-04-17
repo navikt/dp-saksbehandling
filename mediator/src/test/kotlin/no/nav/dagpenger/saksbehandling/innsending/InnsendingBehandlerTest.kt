@@ -26,6 +26,7 @@ class InnsendingBehandlerTest {
             InnsendingBehandler(
                 klageMediator = mockk(),
                 behandlingKlient = mockk(),
+                generellOppgaveMediator = mockk(),
             )
 
         innsendingBehandler
@@ -59,6 +60,7 @@ class InnsendingBehandlerTest {
             InnsendingBehandler(
                 klageMediator = klageMediator,
                 behandlingKlient = mockk(),
+                generellOppgaveMediator = mockk(),
             )
 
         innsendingBehandler
@@ -106,6 +108,7 @@ class InnsendingBehandlerTest {
             InnsendingBehandler(
                 klageMediator = mockk<KlageMediator>(),
                 behandlingKlient = behandlingKlient,
+                generellOppgaveMediator = mockk(),
             )
 
         innsendingBehandler
@@ -161,6 +164,7 @@ class InnsendingBehandlerTest {
             InnsendingBehandler(
                 klageMediator = mockk<KlageMediator>(),
                 behandlingKlient = behandlingKlient,
+                generellOppgaveMediator = mockk(),
             )
 
         innsendingBehandler
