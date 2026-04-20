@@ -10,6 +10,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.hendelser.FerietilleggbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
@@ -31,7 +32,7 @@ internal class BehandlingOpprettetMottak(
                 it.requireValue("@event_name", "behandling_opprettet")
                 it.requireAny(
                     key = "behandletHendelse.type",
-                    values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring"),
+                    values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring", "Ferietillegg"),
                 )
             }
             validate {
@@ -138,6 +139,25 @@ internal class BehandlingOpprettetMottak(
                         sakMediator.knyttTilSak(
                             ManuellBehandlingOpprettetHendelse(
                                 manuellId = manuellId,
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                                basertPåBehandling = basertPåBehandling,
+                                behandlingskjedeId = behandlingskjedeId,
+                            ),
+                        )
+                    } else {
+                        logger.warn { "Mottok behandling_opprettet av type manuell, uten 'basertPåBehandling'. Opprettes ikke!" }
+                    }
+                }
+            }
+
+            "Ferietillegg" -> {
+                withLoggingContext("behandlingId" to "$behandlingId") {
+                    logger.info { "Mottok behandling_opprettet hendelse for ferietillegg-behandling" }
+                    if (basertPåBehandling != null) {
+                        sakMediator.knyttTilSak(
+                            FerietilleggbehandlingOpprettetHendelse(
                                 behandlingId = behandlingId,
                                 ident = ident,
                                 opprettet = behandletHendelseSkjedde.atStartOfDay(),

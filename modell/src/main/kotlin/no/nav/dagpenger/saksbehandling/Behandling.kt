@@ -36,4 +36,5 @@ enum class UtløstAvType(
     INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
     KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
     OPPFØLGING(applikasjon = Applikasjon.DpSaksbehandling),
+    FERIETILLEGG(applikasjon = Applikasjon.DpSaksbehandling),
 }

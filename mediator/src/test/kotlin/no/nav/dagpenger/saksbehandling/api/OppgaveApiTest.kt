@@ -1429,6 +1429,7 @@ class OppgaveApiTest {
                             utsattTilDato = null,
                         ),
                     ),
+                ferietilleggSaker = emptyList(),
             )
         val oppgaveDTOMapperMock =
             mockk<OppgaveDTOMapper>().also {

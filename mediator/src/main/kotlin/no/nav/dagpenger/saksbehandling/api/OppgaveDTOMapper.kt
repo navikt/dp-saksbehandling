@@ -69,11 +69,30 @@ internal class OppgaveDTOMapper(
                 }
         }
 
+    private fun SakHistorikk?.ferietilleggSaker(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
+        when (this) {
+            null -> emptyList()
+            else ->
+                this.saker().map { sak ->
+                    val behandlingIder =
+                        sak
+                            .behandlinger()
+                            .filter { it.utløstAv == UtløstAvType.FERIETILLEGG }
+                            .map { it.behandlingId }
+                            .toSet()
+                    SakDTO(
+                        id = sak.sakId,
+                        oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
+                    )
+                }
+        }
+
     suspend fun lagPersonDTO(person: Person): PersonDTO {
         val pdlPerson = oppslag.hentPerson(person.ident)
         return lagPersonDTO(person, pdlPerson)
     }
 
+    // TODO fix ferietilleggSaker og saker
     suspend fun lagPersonOversiktDTO(
         person: Person,
         oppgaver: List<OppgaveOversiktDTO>,
@@ -83,6 +102,7 @@ internal class OppgaveDTOMapper(
             person = lagPersonDTO(person = person),
             saker = sakHistorikk.saker(oppgaver),
             oppgaver = oppgaver,
+            ferietilleggSaker = emptyList(),
         )
     }
 
@@ -300,6 +320,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.REVURDERING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        UtløstAvType.FERIETILLEGG -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
         UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
         UtløstAvType.OPPFØLGING -> BehandlingTypeDTO.OPPFØLGING
@@ -314,6 +335,7 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
         UtløstAvType.REVURDERING -> UtlostAvTypeDTO.REVURDERING
         UtløstAvType.OPPFØLGING -> UtlostAvTypeDTO.OPPFØLGING
+        UtløstAvType.FERIETILLEGG -> UtlostAvTypeDTO.FERIETILLEGG
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =

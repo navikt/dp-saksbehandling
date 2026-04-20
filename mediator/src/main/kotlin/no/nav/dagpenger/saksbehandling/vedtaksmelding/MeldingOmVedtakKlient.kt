@@ -221,6 +221,7 @@ private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
         UtløstAvType.MANUELL -> "MANUELL"
         UtløstAvType.INNSENDING -> "INNSENDING"
         UtløstAvType.REVURDERING -> "REVURDERING"
+        UtløstAvType.FERIETILLEGG -> "FERIETILLEGG"
         UtløstAvType.OPPFØLGING -> "OPPFØLGING"
     }
 

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerietilleggbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
@@ -110,6 +111,25 @@ data class Sak(
                     utløstAv = UtløstAvType.MANUELL,
                     opprettet = manuellBehandlingOpprettetHendelse.opprettet,
                     hendelse = manuellBehandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+        }
+
+    fun knyttTilSak(ferietilleggbehandlingOpprettetHendelse: FerietilleggbehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == ferietilleggbehandlingOpprettetHendelse.behandlingskjedeId ||
+            this.basertPåBehandlingErKnyttetTilSak(
+                ferietilleggbehandlingOpprettetHendelse.basertPåBehandling,
+            )
+        ) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = ferietilleggbehandlingOpprettetHendelse.behandlingId,
+                    utløstAv = UtløstAvType.FERIETILLEGG,
+                    opprettet = ferietilleggbehandlingOpprettetHendelse.opprettet,
+                    hendelse = ferietilleggbehandlingOpprettetHendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

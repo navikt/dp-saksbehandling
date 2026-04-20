@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerietilleggbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
@@ -439,6 +440,11 @@ class PostgresSakRepository(
                 this
                     .string("hendelse_data")
                     .tilHendelse<ManuellBehandlingOpprettetHendelse>()
+
+            "FerietilleggbehandlingOpprettetHendelse" ->
+                this
+                    .string("hendelse_data")
+                    .tilHendelse<FerietilleggbehandlingOpprettetHendelse>()
 
             "InnsendingMottattHendelse" ->
                 this

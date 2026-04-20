@@ -19,7 +19,8 @@ internal class BehandlingsresultatMottakForSak(
     private val sakRepository: SakRepository,
     private val sakMediator: SakMediator,
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
+    // TODO fix sak for ferietillegg
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Ferietillegg")
 
     override val mottakNavn: String = "BehandlingsresultatMottakForSak"
 

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerietilleggbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
@@ -42,6 +43,12 @@ data class SakHistorikk(
         saker
             .map {
                 it.knyttTilSak(manuellBehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
+
+    fun knyttTilSak(ferietilleggbehandlingOpprettetHendelse: FerietilleggbehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(ferietilleggbehandlingOpprettetHendelse)
             }.knyttTilSakResultat()
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =

@@ -197,4 +197,5 @@ private fun UtløstAvType.tilSerieNavn(): String =
         UtløstAvType.INNSENDING -> "Innsending"
         UtløstAvType.REVURDERING -> "Revurdering"
         UtløstAvType.OPPFØLGING -> "Oppfølging"
+        UtløstAvType.FERIETILLEGG -> "Ferietillegg"
     }

@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerietilleggbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
@@ -121,6 +122,19 @@ class SakMediator(
                 sjekkResultat(
                     manuellBehandlingOpprettetHendelse.behandlingId,
                     manuellBehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun knyttTilSak(feriepengetilleggBehandlingOpprettetHendelse: FerietilleggbehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(feriepengetilleggBehandlingOpprettetHendelse.ident).also {
+            it.knyttTilSak(feriepengetilleggBehandlingOpprettetHendelse).also { resultat ->
+                sjekkResultat(
+                    feriepengetilleggBehandlingOpprettetHendelse.behandlingId,
+                    feriepengetilleggBehandlingOpprettetHendelse.javaClass.simpleName,
                     resultat,
                 )
             }

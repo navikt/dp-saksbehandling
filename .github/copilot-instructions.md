@@ -45,7 +45,7 @@ The domain follows Norwegian terminology. Key aggregate relationships:
 ```
 Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
                                     ↓
-                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|OPPFØLGING)
+                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|OPPFØLGING|FERIETILLEGG)
 
 Person ← Oppfølging* → (creates) Behandling + Oppgave
 ```
