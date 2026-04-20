@@ -1,6 +1,6 @@
-# Generell Oppgave
+# Oppfølging
 
-Generell oppgave er en fleksibel oppgavetype som lar saksbehandlere håndtere arbeid som ikke passer inn i eksisterende behandlingsflyter (søknad, meldekort, klage etc.). Oppgaver kan opprettes automatisk via Kafka-hendelser fra andre systemer, eller manuelt av saksbehandler via REST API.
+Oppfølging er en fleksibel oppgavetype som lar saksbehandlere håndtere arbeid som ikke passer inn i eksisterende behandlingsflyter (søknad, meldekort, klage etc.). Oppgaver kan opprettes automatisk via Kafka-hendelser fra andre systemer, eller manuelt av saksbehandler via REST API.
 
 ## Typiske brukstilfeller
 
@@ -15,7 +15,7 @@ Generell oppgave er en fleksibel oppgavetype som lar saksbehandlere håndtere ar
 ### Datamodell
 
 ```
-Person ← Oppfølging ──→ Behandling (UtløstAvType.GENERELL)
+Person ← Oppfølging ──→ Behandling (UtløstAvType.OPPFØLGING)
                          └──→ Oppgave (emneknagger = { aarsak })
 ```
 
@@ -27,7 +27,7 @@ Person ← Oppfølging ──→ Behandling (UtløstAvType.GENERELL)
 BEHANDLES ──→ FERDIGSTILL_STARTET ──→ FERDIGSTILT
 ```
 
-Enklere enn `Oppgave`s 11-tilstands maskin. `FERDIGSTILL_STARTET` er en transient tilstand som settes før ferdigstillingsflytens eksterne kall (opprette klage, ny behandling, osv.). `FERDIGSTILT` settes etter at alle steg er fullført.
+Enklere enn `Oppgave`s tilstands maskin. `FERDIGSTILL_STARTET` er en transient tilstand som settes før ferdigstillingsflytens eksterne kall (opprette klage, ny behandling, osv.). `FERDIGSTILT` settes etter at alle steg er fullført.
 
 #### Distribuerte transaksjoner og AlarmJob
 
