@@ -1792,7 +1792,7 @@ components:
         - INNSENDING
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
-        - GENERELL
+        - OPPFØLGING
 
     BehandlingType:
       type: string
@@ -1802,7 +1802,7 @@ components:
         - INNSENDING
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
-        - GENERELL
+        - OPPFØLGING
 
     BehandlingVariant:
       type: string

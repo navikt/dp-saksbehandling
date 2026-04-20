@@ -632,15 +632,11 @@ private fun rehydrerTilstandsendringHendelse(
         "FjernOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<FjernOppgaveAnsvarHendelse>()
         "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
         "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
-        "OppfølgingFerdigstiltHendelse",
-        "GenerellOppgaveFerdigstiltHendelse",
-        -> hendelseJson.tilHendelse<OppfølgingFerdigstiltHendelse>()
+        "OppfølgingFerdigstiltHendelse" -> hendelseJson.tilHendelse<OppfølgingFerdigstiltHendelse>()
         "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
         "InnsendingMottattHendelse" -> hendelseJson.tilHendelse<InnsendingMottattHendelse>()
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
-        "OpprettOppfølgingHendelse",
-        "OpprettGenerellOppgaveHendelse",
-        -> hendelseJson.tilHendelse<OpprettOppfølgingHendelse>()
+        "OpprettOppfølgingHendelse" -> hendelseJson.tilHendelse<OpprettOppfølgingHendelse>()
         "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
         "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
         "SendTilKontrollHendelse" -> hendelseJson.tilHendelse<SendTilKontrollHendelse>()
@@ -990,9 +986,7 @@ private fun Row.rehydrerHendelse(): Hendelse {
                 .string("hendelse_data")
                 .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
 
-        "OpprettOppfølgingHendelse",
-        "OpprettGenerellOppgaveHendelse",
-        ->
+        "OpprettOppfølgingHendelse" ->
             this
                 .string("hendelse_data")
                 .tilHendelse<OpprettOppfølgingHendelse>()

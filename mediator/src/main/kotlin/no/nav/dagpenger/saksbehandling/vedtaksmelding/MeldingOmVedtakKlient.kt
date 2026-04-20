@@ -221,7 +221,7 @@ private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
         UtløstAvType.MANUELL -> "MANUELL"
         UtløstAvType.INNSENDING -> "INNSENDING"
         UtløstAvType.REVURDERING -> "REVURDERING"
-        UtløstAvType.GENERELL -> "GENERELL"
+        UtløstAvType.OPPFØLGING -> "OPPFØLGING"
     }
 
 private data class MeldingOmVedtakDataDTO(

@@ -167,7 +167,7 @@ private fun Oppfølging.toBehandling(): TynnBehandlingDTO? =
         is Oppfølging.Resultat.Oppfølging ->
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
-                behandlingType = BehandlingTypeDTO.GENERELL,
+                behandlingType = BehandlingTypeDTO.OPPFØLGING,
             )
 
         else -> null

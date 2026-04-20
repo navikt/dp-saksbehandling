@@ -35,5 +35,5 @@ enum class UtløstAvType(
     REVURDERING(applikasjon = Applikasjon.DpBehandling),
     INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
     KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
-    GENERELL(applikasjon = Applikasjon.DpSaksbehandling),
+    OPPFØLGING(applikasjon = Applikasjon.DpSaksbehandling),
 }
