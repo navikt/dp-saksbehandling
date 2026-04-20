@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -752,4 +753,36 @@ class OppgaveMediator(
                     }
                 }
         }
+
+    fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
+        logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
+        val oppgaveId = oppgaveRepository.hentOppgaveIdFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
+        if (oppgaveId == null) {
+            require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.OPPRETTET)
+            // her lager vi en behandling
+            sakMediator.knyttTilSak(tilbakekrevingHendelse)
+            // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
+            val saksHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
+            val behandling =
+                requireNotNull(saksHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
+
+            val oppgave =
+                Oppgave(
+                    emneknagger = setOf("tilbakekreving"),
+                    opprettet = behandling.opprettet,
+                    person = saksHistorikk.person,
+                    behandling = behandling,
+                    meldingOmVedtak =
+                        Oppgave.MeldingOmVedtak(
+                            kilde = Oppgave.MeldingOmVedtakKilde.INGEN,
+                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        ),
+                )
+            oppgaveRepository.lagre(oppgave)
+        } else {
+            val oppgave = oppgaveRepository.hentOppgave(oppgaveId)
+            oppgave.håndter(tilbakekrevingHendelse)
+            oppgaveRepository.lagre(oppgave)
+        }
+    }
 }

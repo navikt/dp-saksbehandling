@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHende
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
 
@@ -154,6 +155,19 @@ class SakMediator(
         }
     }
 
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse) {
+        sakRepository.hentSakHistorikk(tilbakekrevingHendelse.ident).also {
+            it.knyttTilSak(tilbakekrevingHendelse).also { resultat ->
+                sjekkResultat(
+                    tilbakekrevingHendelse.eksternBehandlingId,
+                    tilbakekrevingHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
+            sakRepository.lagre(it)
+        }
+    }
+
     fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
@@ -218,6 +232,7 @@ class SakMediator(
             is KnyttTilSakResultat.KnyttetTilSak -> {
                 logger.info { "Knyttet behandlingId: $behandlingId til sakId: ${resultat.sak.sakId}" }
             }
+
             else -> {
                 logger.warn { "Klarte ikke å knytte behandlingId: $behandlingId av type $hendelseType til noen sak" }
                 rapidsConnection.sendAlertTilRapid(
