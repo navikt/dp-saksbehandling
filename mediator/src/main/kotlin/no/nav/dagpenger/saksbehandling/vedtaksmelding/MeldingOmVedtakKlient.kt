@@ -223,6 +223,7 @@ private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
         is UtløstAvType.DpBehandling.Revurdering -> "REVURDERING"
         is UtløstAvType.Intern.Oppfølging -> "OPPFØLGING"
         is UtløstAvType.DpBehandling.Ferietillegg -> "FERIETILLEGG"
+        is UtløstAvType.DpBehandling.Arbeidssøkerperiode -> "ARBEIDSSØKERPERIODE"
     }
 
 private data class MeldingOmVedtakDataDTO(

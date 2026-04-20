@@ -68,9 +68,19 @@ class UtløstAvTypeTest {
 
     @Test
     fun `entries inneholder alle kjente typer`() {
-        UtløstAvType.entries.size shouldBe 8
+        UtløstAvType.entries.size shouldBe 9
         UtløstAvType.entries.map { it.name }.toSet() shouldBe
-            setOf("SØKNAD", "MELDEKORT", "MANUELL", "REVURDERING", "FERIETILLEGG", "INNSENDING", "KLAGE", "OPPFØLGING")
+            setOf(
+                "SØKNAD",
+                "MELDEKORT",
+                "MANUELL",
+                "REVURDERING",
+                "FERIETILLEGG",
+                "ARBEIDSSØKERPERIODE",
+                "INNSENDING",
+                "KLAGE",
+                "OPPFØLGING",
+            )
     }
 
     @Test

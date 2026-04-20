@@ -208,7 +208,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
-            utløstAvAlle.size shouldBe 8
+            utløstAvAlle.size shouldBe 9
             utløstAvAlle.single { it.utløstAv == UtløstAvType.DpBehandling.Søknad }.antall shouldBe 4
             utløstAvAlle.single { it.utløstAv == UtløstAvType.Intern.Klage }.antall shouldBe 2
             utløstAvAlle.single { it.utløstAv == UtløstAvType.Intern.Innsending }.antall shouldBe 0
@@ -217,6 +217,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             utløstAvAlle.single { it.utløstAv == UtløstAvType.DpBehandling.Revurdering }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == UtløstAvType.Intern.Oppfølging }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == UtløstAvType.DpBehandling.Ferietillegg }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == UtløstAvType.DpBehandling.Arbeidssøkerperiode }.antall shouldBe 0
 
             val utløstAvFilterFerdigBehandlet =
                 statistikkTjeneste.hentUtløstAvMedTilstandFilter(
@@ -227,7 +228,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ),
                 )
 
-            utløstAvFilterFerdigBehandlet.size shouldBe 8
+            utløstAvFilterFerdigBehandlet.size shouldBe 9
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.DpBehandling.Søknad }.antall shouldBe 2
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.Intern.Klage }.antall shouldBe 1
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.Intern.Innsending }.antall shouldBe 0
@@ -236,6 +237,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.DpBehandling.Revurdering }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.Intern.Oppfølging }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.DpBehandling.Ferietillegg }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == UtløstAvType.DpBehandling.Arbeidssøkerperiode }.antall shouldBe 0
 
             val rettighetAlle = statistikkTjeneste.hentRettigheterMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 

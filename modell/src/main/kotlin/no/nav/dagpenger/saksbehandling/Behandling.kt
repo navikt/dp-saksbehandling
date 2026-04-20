@@ -43,9 +43,11 @@ sealed class UtløstAvType(
 
         data object Ferietillegg : DpBehandling("FERIETILLEGG", "Ferietillegg")
 
+        data object Arbeidssøkerperiode : DpBehandling("ARBEIDSSØKERPERIODE", "AvsluttetArbeidssøkerperiode")
+
         companion object {
             private val behandletHendelseTyper by lazy {
-                listOf(Søknad, Meldekort, Manuell, Revurdering, Ferietillegg)
+                listOf(Søknad, Meldekort, Manuell, Revurdering, Ferietillegg, Arbeidssøkerperiode)
                     .associateBy { it.behandletHendelseType }
             }
 
@@ -73,6 +75,7 @@ sealed class UtløstAvType(
                 DpBehandling.Manuell,
                 DpBehandling.Revurdering,
                 DpBehandling.Ferietillegg,
+                DpBehandling.Arbeidssøkerperiode,
                 Intern.Innsending,
                 Intern.Klage,
                 Intern.Oppfølging,

@@ -119,6 +119,31 @@ class BehandlingOpprettetMottakTest {
     }
 
     @Test
+    fun `Skal behandle behandling_opprettet hendelse for avsluttet arbeidssøkerperiode`() {
+        val basertPåBehandling = UUIDv7.ny()
+        testRapid.sendTestMessage(
+            arbeidssøkerperiodeBehandlingOpprettetMelding(
+                basertPåBehandling = basertPåBehandling,
+                behandlingskjedeId = behandlingskjedeId,
+            ),
+        )
+        verify(exactly = 1) {
+            sakMediatorMock.knyttTilSak(
+                hendelse =
+                    DpBehandlingOpprettetHendelse(
+                        behandlingId = behandlingIdNyRett,
+                        ident = testIdent,
+                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                        basertPåBehandling = basertPåBehandling,
+                        behandlingskjedeId = behandlingskjedeId,
+                        type = UtløstAvType.DpBehandling.Arbeidssøkerperiode,
+                        eksternId = "ekstern-999",
+                    ),
+            )
+        }
+    }
+
+    @Test
     fun `Skal kaste exception for ukjent behandletHendelseType`() {
         shouldThrow<IllegalStateException> {
             testRapid.sendTestMessage(
@@ -144,7 +169,7 @@ class BehandlingOpprettetMottakTest {
     }
 
     @Language("JSON")
-    private fun ukjentTypeBehandlingOpprettetMelding(
+    private fun arbeidssøkerperiodeBehandlingOpprettetMelding(
         ident: String = testIdent,
         basertPåBehandling: UUID,
         behandlingskjedeId: UUID,
@@ -157,6 +182,28 @@ class BehandlingOpprettetMottakTest {
                 "datatype": "String",
                 "id": "ekstern-999",
                 "type": "AvsluttetArbeidssøkerperiode",
+                "skjedde": "$behandletHendelseSkjedde"
+            },
+            "basertPåBehandling": "$basertPåBehandling",
+            "behandlingId": "$behandlingIdNyRett",
+            "ident": "$ident"
+        }
+        """
+
+    @Language("JSON")
+    private fun ukjentTypeBehandlingOpprettetMelding(
+        ident: String = testIdent,
+        basertPåBehandling: UUID,
+        behandlingskjedeId: UUID,
+    ) = """
+        {
+            "@event_name": "behandling_opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
+            "behandletHendelse": {
+                "datatype": "String",
+                "id": "ekstern-999",
+                "type": "HeltUkjentType",
                 "skjedde": "$behandletHendelseSkjedde"
             },
             "basertPåBehandling": "$basertPåBehandling",

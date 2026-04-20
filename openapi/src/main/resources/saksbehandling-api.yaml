@@ -1794,6 +1794,7 @@ components:
         - TILBAKEKREVING
         - OPPFØLGING
         - FERIETILLEGG
+        - ARBEIDSSØKERPERIODE
 
     BehandlingType:
       type: string

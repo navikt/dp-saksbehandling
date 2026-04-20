@@ -312,6 +312,7 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         is UtløstAvType.DpBehandling.Revurdering -> UtlostAvTypeDTO.REVURDERING
         is UtløstAvType.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
         is UtløstAvType.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
+        is UtløstAvType.DpBehandling.Arbeidssøkerperiode -> UtlostAvTypeDTO.ARBEIDSSØKERPERIODE
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
