@@ -44,7 +44,7 @@ class OppfølgingMediator(
                 behandlingId = oppfølgingId,
                 opprettet = hendelse.registrertTidspunkt,
                 hendelse = hendelse,
-                utløstAv = UtløstAvType.OPPFØLGING,
+                utløstAv = UtløstAvType.Intern.Oppfølging,
             )
 
         sakMediator.lagreBehandling(

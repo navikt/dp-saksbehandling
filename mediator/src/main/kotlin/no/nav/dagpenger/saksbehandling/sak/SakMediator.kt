@@ -15,10 +15,8 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
@@ -56,7 +54,7 @@ class SakMediator(
                 it.leggTilBehandling(
                     Behandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        utløstAv = UtløstAvType.SØKNAD,
+                        utløstAv = UtløstAvType.DpBehandling.Søknad,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelse,
                     ),
@@ -89,45 +87,6 @@ class SakMediator(
         return sak
     }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(meldekortbehandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    meldekortbehandlingOpprettetHendelse.behandlingId,
-                    meldekortbehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
-        }
-    }
-
-    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(revurderingBehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(revurderingBehandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    revurderingBehandlingOpprettetHendelse.behandlingId,
-                    revurderingBehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
-        }
-    }
-
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(manuellBehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(manuellBehandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    manuellBehandlingOpprettetHendelse.behandlingId,
-                    manuellBehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
-        }
-    }
-
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
@@ -147,6 +106,19 @@ class SakMediator(
                 sjekkResultat(
                     søknadsbehandlingOpprettetHendelse.behandlingId,
                     søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(hendelse.ident).also {
+            it.knyttTilSak(hendelse).also { resultat ->
+                sjekkResultat(
+                    hendelse.behandlingId,
+                    hendelse.javaClass.simpleName,
                     resultat,
                 )
             }

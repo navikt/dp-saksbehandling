@@ -78,7 +78,7 @@ class PostgresKlageRepositoryTest {
                         ident = testPerson.ident,
                         sakId = sak.sakId,
                         opprettet = LocalDateTime.now(),
-                        type = UtløstAvType.KLAGE,
+                        type = UtløstAvType.Intern.Klage,
                     ),
             )
             val klageRepository = PostgresKlageRepository(datasource = ds)

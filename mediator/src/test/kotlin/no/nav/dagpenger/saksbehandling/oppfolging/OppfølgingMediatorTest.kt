@@ -78,7 +78,7 @@ class OppfølgingMediatorTest {
             // Verifiser oppgave opprettet med riktig type og årsak
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
-            oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.OPPFØLGING
+            oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.Intern.Oppfølging
             oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
 
             // Tildel og ferdigstill

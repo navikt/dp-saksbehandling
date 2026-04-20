@@ -51,7 +51,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.SØKNAD,
+                utløstAv = UtløstAvType.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -217,7 +217,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.SØKNAD,
+                utløstAv = UtløstAvType.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -385,7 +385,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.SØKNAD,
+                utløstAv = UtløstAvType.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -533,7 +533,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.KLAGE,
+                utløstAv = UtløstAvType.Intern.Klage,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )

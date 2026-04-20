@@ -90,20 +90,10 @@ class EmneknaggBuilder(
         }
 
     private val opplysningerNode =
-        jsonNode["opplysninger"].also {
-            require(it.finnesMedVerdi() && it.isArray) {
-                sikkerLogg.error { "Kunne ikke parse opplysninger: $it" }
-                "Forventet at opplysninger er en liste"
-            }
-        }
+        jsonNode["opplysninger"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
 
     private val rettighetsperioderNode =
-        jsonNode["rettighetsperioder"].also {
-            require(it.finnesMedVerdi() && it.isArray) {
-                sikkerLogg.error { "Kunne ikke parse rettighetsperioder: $it" }
-                "Forventet at rettighetsperioder er en liste"
-            }
-        }
+        jsonNode["rettighetsperioder"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
 
     private val behandletHendelseNode =
         jsonNode["behandletHendelse"].also {

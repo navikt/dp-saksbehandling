@@ -46,6 +46,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -96,7 +97,7 @@ class PostgresOppgaveRepository(
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
-                val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'$it'" }
+                val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'${it.name}'" }
                 val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
                 val utløstAvTypeClause =
                     if (filter.utløstAvTyper.isNotEmpty()) {
@@ -469,7 +470,7 @@ class PostgresOppgaveRepository(
                     true -> " AND oppg.tilstand IN ($tilstanderAsText) "
                     false -> ""
                 }
-            val utløstAvTyperAsText: String = søkeFilter.utløstAvTyper.joinToString { "'$it'" }
+            val utløstAvTyperAsText: String = søkeFilter.utløstAvTyper.joinToString { "'${it.name}'" }
             val utløstAvTypeClause =
                 when (søkeFilter.utløstAvTyper.isNotEmpty()) {
                     true -> " AND beha.utlost_av IN ($utløstAvTyperAsText) "
@@ -990,6 +991,11 @@ private fun Row.rehydrerHendelse(): Hendelse {
             this
                 .string("hendelse_data")
                 .tilHendelse<OpprettOppfølgingHendelse>()
+
+        "DpBehandlingOpprettetHendelse" ->
+            this
+                .string("hendelse_data")
+                .tilHendelse<DpBehandlingOpprettetHendelse>()
 
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

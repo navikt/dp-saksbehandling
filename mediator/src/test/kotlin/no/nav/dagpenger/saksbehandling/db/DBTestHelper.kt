@@ -10,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -102,7 +101,7 @@ class DBTestHelper private constructor(
             behandling: Behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
-                    utløstAv = SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     opprettet = opprettetNå,
                     hendelse = TomHendelse,
                 ),
@@ -183,7 +182,7 @@ class DBTestHelper private constructor(
         emneknagger: Set<String> = emptySet(),
         person: Person = testPerson,
         opprettet: LocalDateTime = opprettetNå,
-        type: UtløstAvType = SØKNAD,
+        type: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         saksbehandlerIdent: String? = null,
     ): Oppgave {
@@ -232,7 +231,7 @@ class DBTestHelper private constructor(
     fun leggTilOppgave(
         oppgaveId: UUID,
         behandlingId: UUID,
-        utløstAvType: UtløstAvType = SØKNAD,
+        utløstAvType: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
         person: Person = testPerson,
     ) {
         val behandling =

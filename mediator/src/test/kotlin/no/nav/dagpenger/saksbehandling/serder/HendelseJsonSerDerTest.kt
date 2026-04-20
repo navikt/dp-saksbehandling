@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
@@ -40,7 +41,7 @@ class HendelseJsonSerDerTest {
             ident = "1234",
             sakId = uuid,
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
-            type = UtløstAvType.SØKNAD,
+            type = UtløstAvType.DpBehandling.Søknad,
             utførtAv = utførtAv,
         )
     }
@@ -226,6 +227,68 @@ class HendelseJsonSerDerTest {
                 årsak = ReturnerTilSaksbehandlingÅrsak.ANNET,
                 utførtAv = saksbehandler,
             )
+    }
+
+    @Test
+    fun `Kan serialisere og deserialisere DpBehandlingOpprettetHendelse med kjent type`() {
+        val hendelse =
+            DpBehandlingOpprettetHendelse(
+                behandlingId = UUID.fromString(aUUID),
+                ident = "1234",
+                opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
+                basertPåBehandling = UUID.fromString(aUUID),
+                behandlingskjedeId = UUID.fromString(aUUID),
+                type = UtløstAvType.DpBehandling.Ferietillegg,
+                eksternId = "ekstern-123",
+            )
+
+        val json = hendelse.tilJson()
+        json shouldEqualJson
+            //language=Json
+            """
+            {
+                "behandlingId": "$aUUID",
+                "ident": "1234",
+                "opprettet": "-999999999-01-01T00:00:00",
+                "basertPåBehandling": "$aUUID",
+                "behandlingskjedeId": "$aUUID",
+                "type": "FERIETILLEGG",
+                "eksternId": "ekstern-123",
+                "utførtAv": { "navn": "dp-behandling" }
+            }
+            """
+        json.tilHendelse<DpBehandlingOpprettetHendelse>() shouldBe hendelse
+    }
+
+    @Test
+    fun `Kan serialisere og deserialisere DpBehandlingOpprettetHendelse med Revurdering`() {
+        val hendelse =
+            DpBehandlingOpprettetHendelse(
+                behandlingId = UUID.fromString(aUUID),
+                ident = "1234",
+                opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
+                basertPåBehandling = null,
+                behandlingskjedeId = UUID.fromString(aUUID),
+                type = UtløstAvType.DpBehandling.Revurdering,
+                eksternId = null,
+            )
+
+        val json = hendelse.tilJson()
+        json shouldEqualJson
+            //language=Json
+            """
+            {
+                "behandlingId": "$aUUID",
+                "ident": "1234",
+                "opprettet": "-999999999-01-01T00:00:00",
+                "behandlingskjedeId": "$aUUID",
+                "type": "REVURDERING",
+                "utførtAv": { "navn": "dp-behandling" }
+            }
+            """
+        val deserialisert = json.tilHendelse<DpBehandlingOpprettetHendelse>()
+        deserialisert shouldBe hendelse
+        deserialisert.type shouldBe UtløstAvType.DpBehandling.Revurdering
     }
 
     @Test

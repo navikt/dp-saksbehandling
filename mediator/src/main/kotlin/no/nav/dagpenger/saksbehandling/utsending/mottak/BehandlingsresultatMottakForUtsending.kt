@@ -20,8 +20,6 @@ internal class BehandlingsresultatMottakForUtsending(
     private val utsendingMediator: UtsendingMediator,
     private val sakRepository: SakRepository,
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Manuell", "Meldekort", "Omgjøring")
-
     override val mottakNavn: String = "BehandlingsresultatMottakForUtsending"
 
     override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry")

@@ -25,10 +25,9 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
@@ -81,23 +80,25 @@ class SakMediatorTest {
             behandlingskjedeId = behandlingskjedeId,
         )
     private val meldekortbehandlingOpprettetHendelse =
-        MeldekortbehandlingOpprettetHendelse(
-            meldekortId = meldekortId,
+        DpBehandlingOpprettetHendelse(
+            eksternId = meldekortId,
             behandlingId = behandlingIdMeldekort,
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = behandlingIdSøknadNyRett,
             behandlingskjedeId = behandlingskjedeId,
+            type = UtløstAvType.DpBehandling.Meldekort,
         )
 
     private val manuellBehandlingOpprettetHendelse =
-        ManuellBehandlingOpprettetHendelse(
-            manuellId = manuellId,
+        DpBehandlingOpprettetHendelse(
+            eksternId = manuellId.toString(),
             behandlingId = behandlingIdManuell,
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandling = behandlingIdSøknadNyRett,
             behandlingskjedeId = behandlingskjedeId,
+            type = UtløstAvType.DpBehandling.Manuell,
         )
 
     private val oppslagMock: Oppslag =
@@ -136,7 +137,7 @@ class SakMediatorTest {
                     sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
-                    sak.behandlinger().single().utløstAv shouldBe UtløstAvType.SØKNAD
+                    sak.behandlinger().single().utløstAv shouldBe UtløstAvType.DpBehandling.Søknad
                 }
             }
         }
@@ -217,7 +218,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdMeldekort
-                behandlinger.first().utløstAv shouldBe UtløstAvType.MELDEKORT
+                behandlinger.first().utløstAv shouldBe UtløstAvType.DpBehandling.Meldekort
             }
         }
     }
@@ -242,7 +243,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdManuell
-                behandlinger.first().utløstAv shouldBe UtløstAvType.MANUELL
+                behandlinger.first().utløstAv shouldBe UtløstAvType.DpBehandling.Manuell
             }
         }
     }
@@ -506,7 +507,7 @@ class SakMediatorTest {
                     behandlingId = UUIDv7.ny(),
                     opprettet = opprettetNå,
                     hendelse = innsendingMottattHendelse,
-                    utløstAv = UtløstAvType.INNSENDING,
+                    utløstAv = UtløstAvType.Intern.Innsending,
                 )
 
             sakMediator.knyttEttersendingTilSammeSakSomSøknad(
@@ -566,7 +567,7 @@ class SakMediatorTest {
                     behandlingId = UUIDv7.ny(),
                     opprettet = opprettetNå,
                     hendelse = hendelse,
-                    utløstAv = UtløstAvType.INNSENDING,
+                    utløstAv = UtløstAvType.Intern.Innsending,
                 )
 
             sakMediator.knyttBehandlingTilSak(

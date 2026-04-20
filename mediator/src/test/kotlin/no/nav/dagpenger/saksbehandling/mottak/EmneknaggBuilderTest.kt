@@ -52,7 +52,7 @@ class EmneknaggBuilderTest {
             EmneknaggBuilder("""{ "rettighetsperioder": [] }""")
         }
 
-        shouldThrow<IllegalArgumentException> {
+        shouldNotThrowAny {
             //language=JSON
             EmneknaggBuilder("""{ "behandletHendelse":{} }""")
         }

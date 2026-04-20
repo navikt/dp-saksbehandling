@@ -296,24 +296,22 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
     when (this.behandling.utløstAv) {
-        UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.REVURDERING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
-        UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
-        UtløstAvType.OPPFØLGING -> BehandlingTypeDTO.OPPFØLGING
+        is UtløstAvType.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        is UtløstAvType.Intern.Klage -> BehandlingTypeDTO.KLAGE
+        is UtløstAvType.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
+        is UtløstAvType.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
     }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
     when (this.behandling.utløstAv) {
-        UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
-        UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
-        UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
-        UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
-        UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
-        UtløstAvType.REVURDERING -> UtlostAvTypeDTO.REVURDERING
-        UtløstAvType.OPPFØLGING -> UtlostAvTypeDTO.OPPFØLGING
+        is UtløstAvType.DpBehandling.Søknad -> UtlostAvTypeDTO.SØKNAD
+        is UtløstAvType.Intern.Klage -> UtlostAvTypeDTO.KLAGE
+        is UtløstAvType.DpBehandling.Meldekort -> UtlostAvTypeDTO.MELDEKORT
+        is UtløstAvType.DpBehandling.Manuell -> UtlostAvTypeDTO.MANUELL
+        is UtløstAvType.Intern.Innsending -> UtlostAvTypeDTO.INNSENDING
+        is UtløstAvType.DpBehandling.Revurdering -> UtlostAvTypeDTO.REVURDERING
+        is UtløstAvType.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
+        is UtløstAvType.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =

@@ -232,7 +232,7 @@ OppgaveMediatorTest {
                     sakId = UUIDv7.ny(),
                     ident = personUtenSakHistorikk,
                     opprettet = LocalDateTime.now(),
-                    type = UtløstAvType.KLAGE,
+                    type = UtløstAvType.Intern.Klage,
                 ),
             )
         }
@@ -243,7 +243,7 @@ OppgaveMediatorTest {
                     sakId = UUIDv7.ny(),
                     ident = personUtenBehandling,
                     opprettet = LocalDateTime.now(),
-                    type = UtløstAvType.KLAGE,
+                    type = UtløstAvType.Intern.Klage,
                 ),
             )
         }
@@ -438,7 +438,7 @@ OppgaveMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.SØKNAD,
+                utløstAv = UtløstAvType.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -1305,7 +1305,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for behandling av klage som ferdigstilles`() {
-        val behandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val behandling = lagBehandling(utløstAvType = UtløstAvType.Intern.Klage)
         val oppgave =
             TestHelper.lagOppgave(
                 tilstand = UnderBehandling,
@@ -1370,7 +1370,7 @@ OppgaveMediatorTest {
                             opprettet = DBTestHelper.opprettetNå,
                             behandlingskjedeId = behandlingskjedeId,
                         ),
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -1432,7 +1432,7 @@ OppgaveMediatorTest {
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
                 oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
-                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                    oppgave.behandling.utløstAv == UtløstAvType.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe KlarTilBehandling
 
@@ -1447,7 +1447,7 @@ OppgaveMediatorTest {
             oppgaveMediator
                 .finnOppgaverFor(ident = testPerson.ident)
                 .single { oppgave ->
-                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                    oppgave.behandling.utløstAv == UtløstAvType.Intern.Innsending
                 }.tilstand() shouldBe UnderBehandling
 
             oppgaveMediator.ferdigstillOppgave(
@@ -1461,7 +1461,7 @@ OppgaveMediatorTest {
             oppgaveMediator
                 .finnOppgaverFor(ident = testPerson.ident)
                 .single { oppgave ->
-                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                    oppgave.behandling.utløstAv == UtløstAvType.Intern.Innsending
                 }.tilstand() shouldBe FerdigBehandlet
         }
     }
@@ -1604,7 +1604,7 @@ OppgaveMediatorTest {
                             ident = hendelse.ident,
                             sakId = sak.sakId,
                             opprettet = hendelse.opprettet,
-                            type = UtløstAvType.SØKNAD,
+                            type = UtløstAvType.DpBehandling.Søknad,
                         ),
                 )
             }

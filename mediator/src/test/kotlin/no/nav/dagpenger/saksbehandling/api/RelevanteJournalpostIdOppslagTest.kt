@@ -65,7 +65,7 @@ class RelevanteJournalpostIdOppslagTest {
 
     @Test
     fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
-        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE))
+        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.Intern.Klage))
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient = mockk(),
@@ -100,7 +100,7 @@ class RelevanteJournalpostIdOppslagTest {
         val behandling =
             TestHelper.lagBehandling(
                 behandlingId = innsending.innsendingId,
-                utløstAvType = UtløstAvType.INNSENDING,
+                utløstAvType = UtløstAvType.Intern.Innsending,
             )
         val oppgave =
             TestHelper.lagOppgave(

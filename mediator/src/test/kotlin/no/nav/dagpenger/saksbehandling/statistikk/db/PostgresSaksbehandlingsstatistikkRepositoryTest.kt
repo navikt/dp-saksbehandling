@@ -376,7 +376,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
     @Test
     fun `Tilstandsendringer på oppgave utløst av Innsending skal oversendes saksbehandlingsstatistikk`() {
-        val innsendingBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.INNSENDING)
+        val innsendingBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.Intern.Innsending)
         val innsendingOppgave =
             TestHelper.lagOppgave(
                 behandling = innsendingBehandling,
@@ -421,7 +421,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
     @Test
     fun `Tilstandsendringer på oppgave utløst av Klage skal ikke oversendes saksbehandlingsstatistikk`() {
-        val klageBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val klageBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.Intern.Klage)
         val klageOppgave =
             TestHelper.lagOppgave(
                 behandling = klageBehandling,

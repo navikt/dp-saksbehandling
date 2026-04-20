@@ -1,11 +1,12 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.intellij.lang.annotations.Language
@@ -78,14 +79,15 @@ class BehandlingOpprettetMottakTest {
         )
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
-                meldekortbehandlingOpprettetHendelse =
-                    MeldekortbehandlingOpprettetHendelse(
-                        meldekortId = meldekortId,
+                hendelse =
+                    DpBehandlingOpprettetHendelse(
                         behandlingId = behandlingIdNyRett,
                         ident = testIdent,
                         opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
+                        type = UtløstAvType.DpBehandling.Meldekort,
+                        eksternId = meldekortId,
                     ),
             )
         }
@@ -102,18 +104,85 @@ class BehandlingOpprettetMottakTest {
         )
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
-                manuellBehandlingOpprettetHendelse =
-                    ManuellBehandlingOpprettetHendelse(
-                        manuellId = manuellId,
+                hendelse =
+                    DpBehandlingOpprettetHendelse(
                         behandlingId = behandlingIdNyRett,
                         ident = testIdent,
                         opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
+                        type = UtløstAvType.DpBehandling.Manuell,
+                        eksternId = manuellId.toString(),
                     ),
             )
         }
     }
+
+    @Test
+    fun `Skal kaste exception for ukjent behandletHendelseType`() {
+        shouldThrow<IllegalStateException> {
+            testRapid.sendTestMessage(
+                ukjentTypeBehandlingOpprettetMelding(
+                    basertPåBehandling = UUIDv7.ny(),
+                    behandlingskjedeId = behandlingskjedeId,
+                ),
+            )
+        }
+        verify(exactly = 0) { sakMediatorMock.opprettSak(any<SøknadsbehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
+    }
+
+    @Test
+    fun `Skal kaste exception for intern type i behandling_opprettet`() {
+        shouldThrow<IllegalStateException> {
+            testRapid.sendTestMessage(internTypeBehandlingOpprettetMelding())
+        }
+        verify(exactly = 0) { sakMediatorMock.opprettSak(any<SøknadsbehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
+    }
+
+    @Language("JSON")
+    private fun ukjentTypeBehandlingOpprettetMelding(
+        ident: String = testIdent,
+        basertPåBehandling: UUID,
+        behandlingskjedeId: UUID,
+    ) = """
+        {
+            "@event_name": "behandling_opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
+            "behandletHendelse": {
+                "datatype": "String",
+                "id": "ekstern-999",
+                "type": "AvsluttetArbeidssøkerperiode",
+                "skjedde": "$behandletHendelseSkjedde"
+            },
+            "basertPåBehandling": "$basertPåBehandling",
+            "behandlingId": "$behandlingIdNyRett",
+            "ident": "$ident"
+        }
+        """
+
+    @Language("JSON")
+    private fun internTypeBehandlingOpprettetMelding(ident: String = testIdent) =
+        """
+        {
+            "@event_name": "behandling_opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "${UUIDv7.ny()}",
+            "behandletHendelse": {
+                "datatype": "String",
+                "id": "intern-123",
+                "type": "Innsending",
+                "skjedde": "$behandletHendelseSkjedde"
+            },
+            "basertPåBehandling": "${UUIDv7.ny()}",
+            "behandlingId": "${UUIDv7.ny()}",
+            "ident": "$ident"
+        }
+        """
 
     @Language("JSON")
     private fun søknadsbehandlingOpprettetMeldingNyRett(ident: String = testIdent) =

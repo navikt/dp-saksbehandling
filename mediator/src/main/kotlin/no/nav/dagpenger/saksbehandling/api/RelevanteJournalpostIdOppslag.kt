@@ -17,7 +17,7 @@ class RelevanteJournalpostIdOppslag(
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
         when (oppgave.behandling.utløstAv) {
-            UtløstAvType.KLAGE -> return coroutineScope {
+            is UtløstAvType.Intern.Klage -> return coroutineScope {
                 val journalpostIderKlage: String? =
                     klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
                 val journalpostMeldingOmVedtak =
@@ -25,7 +25,15 @@ class RelevanteJournalpostIdOppslag(
                 (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
             }
 
-            UtløstAvType.SØKNAD ->
+            is UtløstAvType.Intern.Innsending -> return coroutineScope {
+                val journalpostIdInnsending: String? =
+                    innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
+                setOf(journalpostIdInnsending).filterNotNull().toSet()
+            }
+
+            is UtløstAvType.Intern.Oppfølging -> return emptySet()
+
+            is UtløstAvType.DpBehandling.Søknad ->
                 return coroutineScope {
                     val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
                     val journalpostMeldingOmVedtak =
@@ -33,15 +41,7 @@ class RelevanteJournalpostIdOppslag(
                     (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
                 }
 
-            UtløstAvType.MELDEKORT -> return emptySet()
-            UtløstAvType.MANUELL -> return emptySet()
-            UtløstAvType.REVURDERING -> return emptySet()
-            UtløstAvType.INNSENDING -> return coroutineScope {
-                val journalpostIdInnsending: String? =
-                    innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
-                setOf(journalpostIdInnsending).filterNotNull().toSet()
-            }
-            UtløstAvType.OPPFØLGING -> return emptySet()
+            is UtløstAvType.DpBehandling -> return emptySet()
         }
     }
 

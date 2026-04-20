@@ -68,7 +68,7 @@ class InnsendingMediator(
                     behandlingId = innsending.innsendingId,
                     opprettet = innsending.mottatt,
                     hendelse = hendelse,
-                    utløstAv = UtløstAvType.INNSENDING,
+                    utløstAv = UtløstAvType.Intern.Innsending,
                 )
             sakMediator.knyttEttersendingTilSammeSakSomSøknad(
                 behandling = behandling,
@@ -94,7 +94,7 @@ class InnsendingMediator(
                 behandlingId = innsending.innsendingId,
                 opprettet = innsending.mottatt,
                 hendelse = hendelse,
-                utløstAv = UtløstAvType.INNSENDING,
+                utløstAv = UtløstAvType.Intern.Innsending,
             )
 
         sakMediator.knyttBehandlingTilSak(

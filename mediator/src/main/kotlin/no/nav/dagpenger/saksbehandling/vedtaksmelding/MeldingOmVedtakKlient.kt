@@ -47,7 +47,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
-        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAvType: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -80,7 +80,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         maskinToken: String,
-        utløstAv: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAv: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -140,7 +140,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
-        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAvType: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -215,13 +215,14 @@ class MeldingOmVedtakKlient(
 
 private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
     when (this) {
-        UtløstAvType.KLAGE -> "KLAGE"
-        UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
-        UtløstAvType.MELDEKORT -> "MELDEKORT"
-        UtløstAvType.MANUELL -> "MANUELL"
-        UtløstAvType.INNSENDING -> "INNSENDING"
-        UtløstAvType.REVURDERING -> "REVURDERING"
-        UtløstAvType.OPPFØLGING -> "OPPFØLGING"
+        is UtløstAvType.Intern.Klage -> "KLAGE"
+        is UtløstAvType.DpBehandling.Søknad -> "RETT_TIL_DAGPENGER"
+        is UtløstAvType.DpBehandling.Meldekort -> "MELDEKORT"
+        is UtløstAvType.DpBehandling.Manuell -> "MANUELL"
+        is UtløstAvType.Intern.Innsending -> "INNSENDING"
+        is UtløstAvType.DpBehandling.Revurdering -> "REVURDERING"
+        is UtløstAvType.Intern.Oppfølging -> "OPPFØLGING"
+        is UtløstAvType.DpBehandling.Ferietillegg -> "FERIETILLEGG"
     }
 
 private data class MeldingOmVedtakDataDTO(

@@ -23,7 +23,7 @@ class PostgresUtsendingRepositoryTest {
     val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.DpBehandling.Søknad,
             opprettet = LocalDateTime.now(),
             hendelse = TomHendelse,
         )

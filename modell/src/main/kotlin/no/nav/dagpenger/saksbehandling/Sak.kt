@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -50,7 +48,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     hendelse = søknadsbehandlingOpprettetHendelse,
                 ),
@@ -60,56 +58,16 @@ data class Sak(
             KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == meldekortbehandlingOpprettetHendelse.behandlingskjedeId ||
-            this.basertPåBehandlingErKnyttetTilSak(
-                meldekortbehandlingOpprettetHendelse.basertPåBehandling,
-            )
+    fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == hendelse.behandlingskjedeId ||
+            this.basertPåBehandlingErKnyttetTilSak(hendelse.basertPåBehandling)
         ) {
             behandlinger.add(
                 Behandling(
-                    behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.MELDEKORT,
-                    opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
-                    hendelse = meldekortbehandlingOpprettetHendelse,
-                ),
-            )
-            KnyttTilSakResultat.KnyttetTilSak(this)
-        } else {
-            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-        }
-
-    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == revurderingBehandlingOpprettetHendelse.behandlingskjedeId ||
-            this.basertPåBehandlingErKnyttetTilSak(
-                revurderingBehandlingOpprettetHendelse.basertPåBehandling,
-            )
-        ) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = revurderingBehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.REVURDERING,
-                    opprettet = revurderingBehandlingOpprettetHendelse.opprettet,
-                    hendelse = revurderingBehandlingOpprettetHendelse,
-                ),
-            )
-            KnyttTilSakResultat.KnyttetTilSak(this)
-        } else {
-            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-        }
-
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == manuellBehandlingOpprettetHendelse.behandlingskjedeId ||
-            this.basertPåBehandlingErKnyttetTilSak(
-                manuellBehandlingOpprettetHendelse.basertPåBehandling,
-            )
-        ) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.MANUELL,
-                    opprettet = manuellBehandlingOpprettetHendelse.opprettet,
-                    hendelse = manuellBehandlingOpprettetHendelse,
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = hendelse.type,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

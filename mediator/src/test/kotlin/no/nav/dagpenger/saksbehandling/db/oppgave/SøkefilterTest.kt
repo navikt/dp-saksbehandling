@@ -37,8 +37,8 @@ class SøkefilterTest {
                     )
                 søkefilter.utløstAvTyper shouldBe
                     setOf(
-                        UtløstAvType.SØKNAD,
-                        UtløstAvType.KLAGE,
+                        UtløstAvType.DpBehandling.Søknad,
+                        UtløstAvType.Intern.Klage,
                     )
                 søkefilter.emneknaggGruppertPerKategori shouldBe
                     mapOf(

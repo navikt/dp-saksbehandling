@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
 
@@ -26,24 +24,6 @@ data class SakHistorikk(
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat =
-        saker
-            .map {
-                it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
-            }.knyttTilSakResultat()
-
-    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        saker
-            .map {
-                it.knyttTilSak(revurderingBehandlingOpprettetHendelse)
-            }.knyttTilSakResultat()
-
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        saker
-            .map {
-                it.knyttTilSak(manuellBehandlingOpprettetHendelse)
-            }.knyttTilSakResultat()
-
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
         saker
             .map {
@@ -54,6 +34,12 @@ data class SakHistorikk(
         saker
             .map {
                 it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
+
+    fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(hendelse)
             }.knyttTilSakResultat()
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {

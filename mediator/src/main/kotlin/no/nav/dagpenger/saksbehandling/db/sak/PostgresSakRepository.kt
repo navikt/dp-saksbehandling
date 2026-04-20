@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
@@ -449,6 +450,11 @@ class PostgresSakRepository(
                 this
                     .string("hendelse_data")
                     .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
+
+            "DpBehandlingOpprettetHendelse" ->
+                this
+                    .string("hendelse_data")
+                    .tilHendelse<DpBehandlingOpprettetHendelse>()
 
             else -> {
                 logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

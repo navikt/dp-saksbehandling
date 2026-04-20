@@ -29,7 +29,7 @@ class PostgresSakRepositoryTest {
     private val behandling1iSak1 =
         Behandling(
             behandlingId = behandlingId1iSak1,
-            utløstAv = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.DpBehandling.Søknad,
             opprettet = nå.minusDays(9),
             oppgaveId = oppgaveId,
             hendelse =
@@ -44,7 +44,7 @@ class PostgresSakRepositoryTest {
     private val behandling2iSak1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.DpBehandling.Søknad,
             opprettet = nå.minusDays(5),
             hendelse = TomHendelse,
         )
@@ -56,7 +56,7 @@ class PostgresSakRepositoryTest {
     private val behandling1iSak2 =
         Behandling(
             behandlingId = behandlingId1iSak2,
-            utløstAv = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.DpBehandling.Søknad,
             opprettet = nå.minusDays(1),
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -70,7 +70,7 @@ class PostgresSakRepositoryTest {
     private val behandling2iSak2 =
         Behandling(
             behandlingId = behandlingId2iSak2,
-            utløstAv = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.DpBehandling.Søknad,
             opprettet = nå.minusDays(3),
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(

@@ -87,7 +87,7 @@ class KlageMediator(
                 ident = klageMottattHendelse.ident,
                 sakId = klageMottattHendelse.sakId,
                 opprettet = klageMottattHendelse.opprettet,
-                type = UtløstAvType.KLAGE,
+                type = UtløstAvType.Intern.Klage,
                 utførtAv = klageMottattHendelse.utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
@@ -142,7 +142,7 @@ class KlageMediator(
                 ident = manuellKlageMottattHendelse.ident,
                 sakId = manuellKlageMottattHendelse.sakId,
                 opprettet = manuellKlageMottattHendelse.opprettet,
-                type = UtløstAvType.KLAGE,
+                type = UtløstAvType.Intern.Klage,
                 utførtAv = utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
@@ -229,7 +229,7 @@ class KlageMediator(
                         beslutter = null,
                         behandlingId = oppgave.behandling.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
-                        utløstAvType = UtløstAvType.KLAGE,
+                        utløstAvType = UtløstAvType.Intern.Klage,
                         sakId = sakId.toString(),
                     )
                 }

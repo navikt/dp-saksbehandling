@@ -14,8 +14,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -383,7 +382,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = MANUELL),
+                    behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Manuell),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
@@ -550,7 +549,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = MELDEKORT),
+                    behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Meldekort),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(

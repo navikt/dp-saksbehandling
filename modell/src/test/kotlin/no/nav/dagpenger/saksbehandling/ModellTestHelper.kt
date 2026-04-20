@@ -55,7 +55,7 @@ object ModellTestHelper {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
-                utløstAv = UtløstAvType.SØKNAD,
+                utløstAv = UtløstAvType.DpBehandling.Søknad,
                 hendelse = hendelse,
             )
         return Oppgave.rehydrer(

@@ -188,13 +188,4 @@ private fun Oppgave.Tilstand.Type.tilTilstandNavn(): String =
         Oppgave.Tilstand.Type.AVBRUTT_MASKINELT -> "Avbrutt maskinelt"
     }
 
-private fun UtløstAvType.tilSerieNavn(): String =
-    when (this) {
-        UtløstAvType.KLAGE -> "Klage"
-        UtløstAvType.SØKNAD -> "Søknad"
-        UtløstAvType.MELDEKORT -> "Meldekort"
-        UtløstAvType.MANUELL -> "Manuell"
-        UtløstAvType.INNSENDING -> "Innsending"
-        UtløstAvType.REVURDERING -> "Revurdering"
-        UtløstAvType.OPPFØLGING -> "Oppfølging"
-    }
+private fun UtløstAvType.tilSerieNavn(): String = name

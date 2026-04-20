@@ -43,7 +43,7 @@ class TildelNesteOppgaveFilterTest {
                 tom = LocalDate.of(2023, 1, 1),
             )
         filter.tilstander shouldBe setOf(Type.KLAR_TIL_KONTROLL, Type.UNDER_KONTROLL)
-        filter.utløstAvTyper shouldBe setOf(UtløstAvType.KLAGE)
+        filter.utløstAvTyper shouldBe setOf(UtløstAvType.Intern.Klage)
         filter.emneknaggGruppertPerKategori shouldBe
             mapOf(
                 EmneknaggKategori.RETTIGHET to setOf("knagg1", "knagg2"),

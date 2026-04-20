@@ -167,7 +167,7 @@ class MeldingOmVedtakKlientTest {
                     saksbehandler = saksbehandler,
                     beslutter = saksbehandler,
                     behandlingId = behandlingIdSuksess,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     maskinToken = "tulletoken",
                     sakId = sakId,
                 )
@@ -220,7 +220,7 @@ class MeldingOmVedtakKlientTest {
                     saksbehandler = saksbehandler,
                     beslutter = saksbehandler,
                     behandlingId = behandlingIdSomFeiler,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     maskinToken = "tulletoken",
                     sakId = sakId,
                 )
@@ -283,7 +283,7 @@ class MeldingOmVedtakKlientTest {
                     beslutter = null,
                     behandlingId = behandlingIdSuksess,
                     saksbehandlerToken = saksbehandlerToken,
-                    utløstAvType = UtløstAvType.SØKNAD,
+                    utløstAvType = UtløstAvType.DpBehandling.Søknad,
                     sakId = sakId,
                 )
             result.getOrThrow() shouldBe expectedHtmlResponse

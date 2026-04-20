@@ -74,39 +74,39 @@ class ProduksjonsstatistikkMapperTest {
             listOf(
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     antall = 4,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                    utløstAv = UtløstAvType.MANUELL,
+                    utløstAv = UtløstAvType.DpBehandling.Manuell,
                     antall = 2,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.PAA_VENT,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     antall = 0,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.PAA_VENT,
-                    utløstAv = UtløstAvType.MANUELL,
+                    utløstAv = UtløstAvType.DpBehandling.Manuell,
                     antall = 0,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = UtløstAvType.DpBehandling.Søknad,
                     antall = 166,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    utløstAv = UtløstAvType.MANUELL,
+                    utløstAv = UtløstAvType.DpBehandling.Manuell,
                     antall = 67,
                 ),
             )
         val utløstAvSerier =
             listOf(
                 StatistikkResultatSerieDTO(
-                    navn = "Søknad",
+                    navn = "SØKNAD",
                     verdier =
                         listOf(
                             StatistikkGruppeMedAntallDTO(
@@ -124,7 +124,7 @@ class ProduksjonsstatistikkMapperTest {
                         ),
                 ),
                 StatistikkResultatSerieDTO(
-                    navn = "Manuell",
+                    navn = "MANUELL",
                     verdier =
                         listOf(
                             StatistikkGruppeMedAntallDTO(

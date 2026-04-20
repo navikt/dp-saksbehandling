@@ -26,14 +26,65 @@ data class Behandling(
     }
 }
 
-enum class UtløstAvType(
-    val applikasjon: Applikasjon,
+sealed class UtløstAvType(
+    open val name: String,
 ) {
-    SØKNAD(applikasjon = Applikasjon.DpBehandling),
-    MELDEKORT(applikasjon = Applikasjon.DpBehandling),
-    MANUELL(applikasjon = Applikasjon.DpBehandling),
-    REVURDERING(applikasjon = Applikasjon.DpBehandling),
-    INNSENDING(applikasjon = Applikasjon.DpSaksbehandling),
-    KLAGE(applikasjon = Applikasjon.DpSaksbehandling),
-    OPPFØLGING(applikasjon = Applikasjon.DpSaksbehandling),
+    sealed class DpBehandling(
+        override val name: String,
+        open val behandletHendelseType: String,
+    ) : UtløstAvType(name) {
+        data object Søknad : DpBehandling("SØKNAD", "Søknad")
+
+        data object Meldekort : DpBehandling("MELDEKORT", "Meldekort")
+
+        data object Manuell : DpBehandling("MANUELL", "Manuell")
+
+        data object Revurdering : DpBehandling("REVURDERING", "Omgjøring")
+
+        data object Ferietillegg : DpBehandling("FERIETILLEGG", "Ferietillegg")
+
+        companion object {
+            private val behandletHendelseTyper by lazy {
+                listOf(Søknad, Meldekort, Manuell, Revurdering, Ferietillegg)
+                    .associateBy { it.behandletHendelseType }
+            }
+
+            fun fraBehandletHendelseType(type: String): DpBehandling =
+                behandletHendelseTyper[type]
+                    ?: error("Ukjent behandletHendelseType: '$type'. Legg til nytt data object i DpBehandling.")
+        }
+    }
+
+    sealed class Intern(
+        override val name: String,
+    ) : UtløstAvType(name) {
+        data object Innsending : Intern("INNSENDING")
+
+        data object Klage : Intern("KLAGE")
+
+        data object Oppfølging : Intern("OPPFØLGING")
+    }
+
+    companion object {
+        private val kjente by lazy {
+            listOf(
+                DpBehandling.Søknad,
+                DpBehandling.Meldekort,
+                DpBehandling.Manuell,
+                DpBehandling.Revurdering,
+                DpBehandling.Ferietillegg,
+                Intern.Innsending,
+                Intern.Klage,
+                Intern.Oppfølging,
+            ).associateBy { it.name }
+        }
+
+        val entries: List<UtløstAvType> get() = kjente.values.toList()
+
+        fun valueOf(name: String): UtløstAvType =
+            kjente[name]
+                ?: error("Ukjent UtløstAvType: '$name'. Gyldige verdier: ${kjente.keys}")
+    }
+
+    override fun toString(): String = name
 }
