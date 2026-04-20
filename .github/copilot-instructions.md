@@ -45,7 +45,7 @@ The domain follows Norwegian terminology. Key aggregate relationships:
 ```
 Person ← SakHistorikk → Sak* → Behandling* → Oppgave (0..1)
                                     ↓
-                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|GENERELL)
+                              UtløstAvType (SØKNAD|MELDEKORT|MANUELL|OMGJØRING|INNSENDING|KLAGE|OPPFØLGING)
 
 Person ← Oppfølging* → (creates) Behandling + Oppgave
 ```
@@ -55,7 +55,7 @@ Person ← Oppfølging* → (creates) Behandling + Oppgave
 - **Behandling** (Treatment): A specific processing instance, typed by `UtløstAvType`
 - **Oppgave** (Task): Work item with state machine. Always belongs to a Behandling
 - **KlageBehandling**: Separate entity for appeal workflows (not a Behandling subclass)
-- **Oppfølging**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILL_STARTET → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.GENERELL`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
+- **Oppfølging**: Generic task entity for flexible saksbehandler work (not tied to a specific behandlingstype). Has own tilstandsmaskin (`BEHANDLES → FERDIGSTILL_STARTET → FERDIGSTILT`) and creates a Behandling+Oppgave pair with `UtløstAvType.OPPFØLGING`. The Oppgave gets `emneknagger = setOf(aarsak)`. Key design choices:
   - **Stub-Behandling pattern**: Oppfølging always creates a real Behandling to satisfy FK constraints and reuse existing infrastructure (no nullable Behandling refactoring needed)
   - **Dual entry**: same `OpprettOppfølgingHendelse` used by both Kafka (`OpprettOppgaveMottak`) and REST (`POST /oppfolging`)
   - **Kafka field mapping**: Kafka event uses `emneknagg` field (backwards compat with producers), mapped internally to `aarsak`
