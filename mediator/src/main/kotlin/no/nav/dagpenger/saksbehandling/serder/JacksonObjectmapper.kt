@@ -13,9 +13,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 
 internal val objectMapper: ObjectMapper =
     jacksonObjectMapper().apply {
@@ -23,8 +23,8 @@ internal val objectMapper: ObjectMapper =
         val applikasjonModule = SimpleModule().addDeserializer(Applikasjon::class.java, ApplikasjonDeserializer())
         val utløstAvTypeModule =
             SimpleModule()
-                .addSerializer(UtløstAvType::class.java, UtløstAvTypeSerializer())
-                .addDeserializer(UtløstAvType::class.java, UtløstAvTypeDeserializer())
+                .addSerializer(HendelseBehandler::class.java, HendelseBehandlerSerializer())
+                .addDeserializer(HendelseBehandler::class.java, HendelseBehandlerDeserializer())
 
         registerModule(JavaTimeModule())
         registerModule(applikasjonModule)
@@ -66,9 +66,9 @@ internal class BehandlerDeserializer : JsonDeserializer<Behandler>() {
     }
 }
 
-internal class UtløstAvTypeSerializer : com.fasterxml.jackson.databind.JsonSerializer<UtløstAvType>() {
+internal class HendelseBehandlerSerializer : com.fasterxml.jackson.databind.JsonSerializer<HendelseBehandler>() {
     override fun serialize(
-        value: UtløstAvType,
+        value: HendelseBehandler,
         gen: com.fasterxml.jackson.core.JsonGenerator,
         serializers: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
@@ -76,9 +76,9 @@ internal class UtløstAvTypeSerializer : com.fasterxml.jackson.databind.JsonSeri
     }
 }
 
-internal class UtløstAvTypeDeserializer : JsonDeserializer<UtløstAvType>() {
+internal class HendelseBehandlerDeserializer : JsonDeserializer<HendelseBehandler>() {
     override fun deserialize(
         parser: JsonParser,
         ctxt: DeserializationContext,
-    ): UtløstAvType = UtløstAvType.valueOf(parser.text)
+    ): HendelseBehandler = HendelseBehandler.valueOf(parser.text)
 }

@@ -5,8 +5,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -37,8 +37,8 @@ class SøkefilterTest {
                     )
                 søkefilter.utløstAvTyper shouldBe
                     setOf(
-                        UtløstAvType.DpBehandling.Søknad,
-                        UtløstAvType.Intern.Klage,
+                        HendelseBehandler.DpBehandling.Søknad,
+                        HendelseBehandler.Intern.Klage,
                     )
                 søkefilter.emneknaggGruppertPerKategori shouldBe
                     mapOf(

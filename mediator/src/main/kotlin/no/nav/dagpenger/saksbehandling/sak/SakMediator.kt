@@ -6,10 +6,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
@@ -54,7 +54,7 @@ class SakMediator(
                 it.leggTilBehandling(
                     Behandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        utløstAv = UtløstAvType.DpBehandling.Søknad,
+                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelse,
                     ),

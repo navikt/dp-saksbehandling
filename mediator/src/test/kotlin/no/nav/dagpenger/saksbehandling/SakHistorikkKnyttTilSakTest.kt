@@ -17,9 +17,9 @@ class SakHistorikkKnyttTilSakTest {
         @JvmStatic
         fun dpBehandlingTyper(): Stream<Arguments> =
             Stream.of(
-                Arguments.of(UtløstAvType.DpBehandling.Meldekort, "id"),
-                Arguments.of(UtløstAvType.DpBehandling.Manuell, UUIDv7.ny().toString()),
-                Arguments.of(UtløstAvType.DpBehandling.Ferietillegg, "ferie-1"),
+                Arguments.of(HendelseBehandler.DpBehandling.Meldekort, "id"),
+                Arguments.of(HendelseBehandler.DpBehandling.Manuell, UUIDv7.ny().toString()),
+                Arguments.of(HendelseBehandler.DpBehandling.Ferietillegg, "ferie-1"),
             )
     }
 
@@ -35,7 +35,7 @@ class SakHistorikkKnyttTilSakTest {
     private val søknadOmNyRettBehandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = now,
             hendelse = TomHendelse,
         )
@@ -84,7 +84,7 @@ class SakHistorikkKnyttTilSakTest {
     @ParameterizedTest
     @MethodSource("dpBehandlingTyper")
     fun `knyttTilSak med DpBehandlingOpprettetHendelse`(
-        type: UtløstAvType.DpBehandling,
+        type: HendelseBehandler.DpBehandling,
         eksternId: String,
     ) {
         val hendelse =
@@ -127,7 +127,7 @@ class SakHistorikkKnyttTilSakTest {
                 ident = "12345678910",
                 opprettet = now,
                 sakId = UUIDv7.ny(),
-                type = UtløstAvType.DpBehandling.Søknad,
+                type = HendelseBehandler.DpBehandling.Søknad,
             )
 
         sakHistorikk.knyttTilSak(hendelse) shouldBe

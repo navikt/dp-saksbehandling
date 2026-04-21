@@ -17,9 +17,9 @@ class SakTest {
         @JvmStatic
         fun dpBehandlingTyper(): Stream<Arguments> =
             Stream.of(
-                Arguments.of(UtløstAvType.DpBehandling.Meldekort, "id-123"),
-                Arguments.of(UtløstAvType.DpBehandling.Manuell, UUIDv7.ny().toString()),
-                Arguments.of(UtløstAvType.DpBehandling.Ferietillegg, "ferie-1"),
+                Arguments.of(HendelseBehandler.DpBehandling.Meldekort, "id-123"),
+                Arguments.of(HendelseBehandler.DpBehandling.Manuell, UUIDv7.ny().toString()),
+                Arguments.of(HendelseBehandler.DpBehandling.Ferietillegg, "ferie-1"),
             )
     }
 
@@ -27,7 +27,7 @@ class SakTest {
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = now,
             hendelse = TomHendelse,
         )
@@ -75,7 +75,7 @@ class SakTest {
     @ParameterizedTest
     @MethodSource("dpBehandlingTyper")
     fun `knyttTilSak med DpBehandlingOpprettetHendelse`(
-        type: UtløstAvType.DpBehandling,
+        type: HendelseBehandler.DpBehandling,
         eksternId: String,
     ) {
         val behandlingskjedeId = UUIDv7.ny()
@@ -131,7 +131,7 @@ class SakTest {
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",
                 opprettet = now,
-                type = UtløstAvType.DpBehandling.Søknad,
+                type = HendelseBehandler.DpBehandling.Søknad,
             ),
         ) shouldBe KnyttTilSakResultat.IkkeKnyttetTilSak(sak.sakId)
 
@@ -141,7 +141,7 @@ class SakTest {
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",
                 opprettet = now,
-                type = UtløstAvType.DpBehandling.Søknad,
+                type = HendelseBehandler.DpBehandling.Søknad,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
     }

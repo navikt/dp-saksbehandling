@@ -5,11 +5,11 @@ import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
@@ -24,7 +24,7 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknaggGruppertPerKategori: Map<EmneknaggKategori, Set<String>> = emptyMap(),
-    val utløstAvTyper: Set<UtløstAvType> = emptySet(),
+    val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
     val sortering: Sortering = Sortering.ASC,
@@ -82,7 +82,7 @@ data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknaggGruppertPerKategori: Map<EmneknaggKategori, Set<String>> = emptyMap(),
     val tilstander: Set<Tilstand.Type> = emptySet(),
-    val utløstAvTyper: Set<UtløstAvType> = emptySet(),
+    val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
     val harBeslutterRolle: Boolean = false,
@@ -199,7 +199,7 @@ class FilterBuilder {
 
     fun tilstander(): Set<Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
 
-    fun utløstAvTyper(): Set<UtløstAvType>? = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
+    fun utløstAvTyper(): Set<HendelseBehandler>? = stringValues.getAll("utlostAv")?.map { HendelseBehandler.valueOf(it) }?.toSet()
 
     fun sortering(): Søkefilter.Sortering = stringValues["sortering"]?.let { Søkefilter.Sortering.valueOf(it) } ?: Søkefilter.Sortering.ASC
 }

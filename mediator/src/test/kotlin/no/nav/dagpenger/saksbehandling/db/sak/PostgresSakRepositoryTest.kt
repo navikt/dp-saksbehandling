@@ -5,10 +5,10 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -29,7 +29,7 @@ class PostgresSakRepositoryTest {
     private val behandling1iSak1 =
         Behandling(
             behandlingId = behandlingId1iSak1,
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå.minusDays(9),
             oppgaveId = oppgaveId,
             hendelse =
@@ -44,7 +44,7 @@ class PostgresSakRepositoryTest {
     private val behandling2iSak1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå.minusDays(5),
             hendelse = TomHendelse,
         )
@@ -56,7 +56,7 @@ class PostgresSakRepositoryTest {
     private val behandling1iSak2 =
         Behandling(
             behandlingId = behandlingId1iSak2,
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå.minusDays(1),
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -70,7 +70,7 @@ class PostgresSakRepositoryTest {
     private val behandling2iSak2 =
         Behandling(
             behandlingId = behandlingId2iSak2,
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå.minusDays(3),
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(

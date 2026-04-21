@@ -4,11 +4,11 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
@@ -26,12 +26,12 @@ class UtsendingAlarmRepositoryTest {
         val nå = LocalDateTime.now()
         val tjueFireTimerSiden = nå.minusHours(24)
         val person = lagPerson()
-        val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = UtløstAvType.DpBehandling.Søknad)
-        val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = UtløstAvType.DpBehandling.Søknad)
-        val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = UtløstAvType.Intern.Klage)
-        val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = UtløstAvType.Intern.Klage)
-        val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = UtløstAvType.DpBehandling.Søknad)
-        val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = UtløstAvType.DpBehandling.Søknad)
+        val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+        val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+        val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.Intern.Klage)
+        val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.Intern.Klage)
+        val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+        val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
 
         DBTestHelper.withBehandlinger(
             person = person,
@@ -88,7 +88,7 @@ class UtsendingAlarmRepositoryTest {
     private fun DataSource.lagreUtsending(
         tilstand: Utsending.Tilstand.Type,
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-        behandling: Behandling = lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Søknad),
+        behandling: Behandling = lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Søknad),
         person: Person = lagPerson(),
     ): Utsending {
         val utsending =

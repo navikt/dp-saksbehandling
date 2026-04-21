@@ -7,10 +7,10 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
@@ -411,7 +411,7 @@ class PostgresSakRepository(
                 sak.leggTilBehandling(
                     Behandling(
                         behandlingId = behandlingId,
-                        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
+                        utløstAv = HendelseBehandler.valueOf(this.string("utlost_av")),
                         opprettet = this.localDateTime("behandling_opprettet"),
                         oppgaveId = this.uuidOrNull("oppgave_id"),
                         hendelse = this.rehydrerHendelse(),

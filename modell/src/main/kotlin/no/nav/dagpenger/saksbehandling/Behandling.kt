@@ -8,7 +8,7 @@ data class Behandling(
     val behandlingId: UUID,
     val opprettet: LocalDateTime,
     val hendelse: Hendelse,
-    val utløstAv: UtløstAvType,
+    val utløstAv: HendelseBehandler,
     val oppgaveId: UUID? = null,
 ) {
     companion object {
@@ -16,7 +16,7 @@ data class Behandling(
             behandlingId: UUID,
             opprettet: LocalDateTime,
             hendelse: Hendelse,
-            utløstAv: UtløstAvType,
+            utløstAv: HendelseBehandler,
         ) = Behandling(
             behandlingId = behandlingId,
             opprettet = opprettet,
@@ -26,13 +26,13 @@ data class Behandling(
     }
 }
 
-sealed class UtløstAvType(
+sealed class HendelseBehandler(
     open val name: String,
 ) {
     sealed class DpBehandling(
         override val name: String,
         open val behandletHendelseType: String,
-    ) : UtløstAvType(name) {
+    ) : HendelseBehandler(name) {
         data object Søknad : DpBehandling("SØKNAD", "Søknad")
 
         data object Meldekort : DpBehandling("MELDEKORT", "Meldekort")
@@ -59,7 +59,7 @@ sealed class UtløstAvType(
 
     sealed class Intern(
         override val name: String,
-    ) : UtløstAvType(name) {
+    ) : HendelseBehandler(name) {
         data object Innsending : Intern("INNSENDING")
 
         data object Klage : Intern("KLAGE")
@@ -82,11 +82,11 @@ sealed class UtløstAvType(
             ).associateBy { it.name }
         }
 
-        val entries: List<UtløstAvType> get() = kjente.values.toList()
+        val entries: List<HendelseBehandler> get() = kjente.values.toList()
 
-        fun valueOf(name: String): UtløstAvType =
+        fun valueOf(name: String): HendelseBehandler =
             kjente[name]
-                ?: error("Ukjent UtløstAvType: '$name'. Gyldige verdier: ${kjente.keys}")
+                ?: error("Ukjent HendelseBehandler: '$name'. Gyldige verdier: ${kjente.keys}")
     }
 
     override fun toString(): String = name

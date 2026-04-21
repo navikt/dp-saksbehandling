@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -16,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import org.junit.jupiter.api.Test
@@ -25,10 +25,10 @@ import java.time.LocalDate
 class OppgaveFristUtgåttJobTest {
     @Test
     fun `Sett utgåtte oppgaver klare igjen`() {
-        val behandling1 = lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Søknad)
-        val behandling2 = lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Søknad)
-        val behandling3 = lagBehandling(utløstAvType = UtløstAvType.Intern.Klage)
-        val behandling4 = lagBehandling(utløstAvType = UtløstAvType.Intern.Klage)
+        val behandling1 = lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+        val behandling2 = lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+        val behandling3 = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
+        val behandling4 = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
         DBTestHelper.withBehandlinger(
             person = TestHelper.testPerson,
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4),

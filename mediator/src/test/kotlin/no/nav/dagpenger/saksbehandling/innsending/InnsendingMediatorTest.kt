@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -19,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
@@ -106,7 +106,7 @@ class InnsendingMediatorTest {
                                     ident = testPerson.ident,
                                     opprettet = DBTestHelper.opprettetNå,
                                 ),
-                            utløstAv = UtløstAvType.DpBehandling.Søknad,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
                     ),
             )
@@ -129,7 +129,7 @@ class InnsendingMediatorTest {
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -203,13 +203,13 @@ class InnsendingMediatorTest {
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
                 sak.behandlinger().size shouldBe 2
-                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.Intern.Innsending
+                sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
                 oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             val innsending =
@@ -283,7 +283,7 @@ class InnsendingMediatorTest {
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -335,13 +335,13 @@ class InnsendingMediatorTest {
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
                 sak.behandlinger().size shouldBe 2
-                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.Intern.Innsending
+                sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
                 oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
@@ -369,7 +369,7 @@ class InnsendingMediatorTest {
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -497,7 +497,7 @@ class InnsendingMediatorTest {
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -548,12 +548,12 @@ class InnsendingMediatorTest {
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
                 sak.behandlinger().size shouldBe 2
-                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.Intern.Innsending
+                sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val oppgaveFørAvbryt =
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             oppgaveFørAvbryt.tilstand() shouldBe Oppgave.Opprettet
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
@@ -568,7 +568,7 @@ class InnsendingMediatorTest {
             )
             val oppgaveEtterAvbryt =
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.AvbruttMaskinelt
             val innsendingEtterAvbryt =
@@ -608,7 +608,7 @@ class InnsendingMediatorTest {
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -669,12 +669,12 @@ class InnsendingMediatorTest {
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
                 sak.behandlinger().size shouldBe 2
-                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.Intern.Innsending
+                sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val innsendingOppgave =
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             val innsending = innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
@@ -710,7 +710,7 @@ class InnsendingMediatorTest {
 
             val ferdigbehandletOppgave =
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             ferdigbehandletOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
             ferdigbehandletOppgave.tilstandslogg.size shouldBe 4
@@ -752,7 +752,7 @@ class InnsendingMediatorTest {
                             ident = testPerson.ident,
                             opprettet = DBTestHelper.opprettetNå,
                         ),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -813,12 +813,12 @@ class InnsendingMediatorTest {
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
                 sak.behandlinger().size shouldBe 2
-                sak.behandlinger().first().utløstAv shouldBe UtløstAvType.Intern.Innsending
+                sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val innsendingOppgave =
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             val innsending = innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
@@ -854,7 +854,7 @@ class InnsendingMediatorTest {
 
             val ferdigbehandletOppgave =
                 oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == UtløstAvType.Intern.Innsending
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             ferdigbehandletOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
             ferdigbehandletOppgave.tilstandslogg.size shouldBe 4

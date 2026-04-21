@@ -7,9 +7,9 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.installerApis
@@ -113,7 +113,7 @@ class StatistikkApiTest {
                 every { it.hentUtløstAvMedTilstandFilter(any()) } returns
                     listOf(
                         AntallOppgaverForUtløstAv(
-                            utløstAv = UtløstAvType.DpBehandling.Søknad,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
                             antall = 1,
                         ),
                     )
@@ -121,7 +121,7 @@ class StatistikkApiTest {
                     listOf(
                         AntallOppgaverForTilstandOgUtløstAv(
                             tilstand = KLAR_TIL_BEHANDLING,
-                            utløstAv = UtløstAvType.DpBehandling.Søknad,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
                             antall = 1,
                         ),
                     )

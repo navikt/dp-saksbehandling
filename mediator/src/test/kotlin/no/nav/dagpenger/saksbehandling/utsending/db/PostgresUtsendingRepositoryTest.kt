@@ -4,10 +4,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.TestHelper.lagUtsending
 import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.withBehandling
@@ -23,7 +23,7 @@ class PostgresUtsendingRepositoryTest {
     val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = LocalDateTime.now(),
             hendelse = TomHendelse,
         )

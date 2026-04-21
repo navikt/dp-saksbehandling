@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.db
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
@@ -9,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -101,7 +101,7 @@ class DBTestHelper private constructor(
             behandling: Behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = opprettetNå,
                     hendelse = TomHendelse,
                 ),
@@ -182,7 +182,7 @@ class DBTestHelper private constructor(
         emneknagger: Set<String> = emptySet(),
         person: Person = testPerson,
         opprettet: LocalDateTime = opprettetNå,
-        type: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
+        type: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         saksbehandlerIdent: String? = null,
     ): Oppgave {
@@ -231,7 +231,7 @@ class DBTestHelper private constructor(
     fun leggTilOppgave(
         oppgaveId: UUID,
         behandlingId: UUID,
-        utløstAvType: UtløstAvType = UtløstAvType.DpBehandling.Søknad,
+        utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         person: Person = testPerson,
     ) {
         val behandling =

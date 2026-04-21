@@ -1,8 +1,8 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeMedAntallDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkResultatSerieDTO
 import no.nav.dagpenger.saksbehandling.statistikk.api.tilStatistikkResultatSerieDTOForRettighet
@@ -74,32 +74,32 @@ class ProduksjonsstatistikkMapperTest {
             listOf(
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     antall = 4,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                    utløstAv = UtløstAvType.DpBehandling.Manuell,
+                    utløstAv = HendelseBehandler.DpBehandling.Manuell,
                     antall = 2,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.PAA_VENT,
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     antall = 0,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.PAA_VENT,
-                    utløstAv = UtløstAvType.DpBehandling.Manuell,
+                    utløstAv = HendelseBehandler.DpBehandling.Manuell,
                     antall = 0,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     antall = 166,
                 ),
                 AntallOppgaverForTilstandOgUtløstAv(
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                    utløstAv = UtløstAvType.DpBehandling.Manuell,
+                    utløstAv = HendelseBehandler.DpBehandling.Manuell,
                     antall = 67,
                 ),
             )

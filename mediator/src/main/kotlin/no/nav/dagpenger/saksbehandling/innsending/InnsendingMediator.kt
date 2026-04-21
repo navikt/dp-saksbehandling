@@ -2,11 +2,11 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -68,7 +68,7 @@ class InnsendingMediator(
                     behandlingId = innsending.innsendingId,
                     opprettet = innsending.mottatt,
                     hendelse = hendelse,
-                    utløstAv = UtløstAvType.Intern.Innsending,
+                    utløstAv = HendelseBehandler.Intern.Innsending,
                 )
             sakMediator.knyttEttersendingTilSammeSakSomSøknad(
                 behandling = behandling,
@@ -94,7 +94,7 @@ class InnsendingMediator(
                 behandlingId = innsending.innsendingId,
                 opprettet = innsending.mottatt,
                 hendelse = hendelse,
-                utløstAv = UtløstAvType.Intern.Innsending,
+                utløstAv = HendelseBehandler.Intern.Innsending,
             )
 
         sakMediator.knyttBehandlingTilSak(

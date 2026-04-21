@@ -20,10 +20,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
@@ -97,7 +97,7 @@ class KlageApiTest {
         val sakId = UUIDv7.ny()
         val oppgave =
             TestHelper.lagOppgave(
-                behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.Intern.Klage),
+                behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage),
                 opprettet = dato,
             )
         val ident = oppgave.personIdent()
@@ -167,7 +167,7 @@ class KlageApiTest {
         val token = gyldigSaksbehandlerToken()
         val oppgave =
             TestHelper.lagOppgave(
-                behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.Intern.Klage),
+                behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage),
                 opprettet = dato,
             )
         val ident = oppgave.personIdent()

@@ -5,11 +5,11 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -65,7 +65,7 @@ class RelevanteJournalpostIdOppslagTest {
 
     @Test
     fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
-        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.Intern.Klage))
+        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage))
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient = mockk(),
@@ -100,7 +100,7 @@ class RelevanteJournalpostIdOppslagTest {
         val behandling =
             TestHelper.lagBehandling(
                 behandlingId = innsending.innsendingId,
-                utløstAvType = UtløstAvType.Intern.Innsending,
+                utløstAvType = HendelseBehandler.Intern.Innsending,
             )
         val oppgave =
             TestHelper.lagOppgave(

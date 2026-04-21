@@ -82,7 +82,7 @@ class MeldingOmVedtakMediatorTest {
                 beslutter = null,
                 behandlingId = behandlingId,
                 saksbehandlerToken = beslutterToken,
-                utløstAvType = UtløstAvType.DpBehandling.Søknad,
+                utløstAvType = HendelseBehandler.DpBehandling.Søknad,
                 sakId = sakId.toString(),
             )
         } returns Result.success("<html>Vedtak</html>")
@@ -139,7 +139,7 @@ class MeldingOmVedtakMediatorTest {
                 beslutter = beslutterDTO,
                 behandlingId = behandlingId,
                 saksbehandlerToken = beslutterToken,
-                utløstAvType = UtløstAvType.DpBehandling.Søknad,
+                utløstAvType = HendelseBehandler.DpBehandling.Søknad,
                 sakId = sakId.toString(),
             )
         } returns Result.success("<html>Vedtak med beslutter</html>")

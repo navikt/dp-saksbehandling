@@ -450,7 +450,7 @@ class OppgaveMediator(
             ) {
                 oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
                 oppgaveRepository.lagre(oppgave)
-                if (oppgave.behandling.utløstAv is UtløstAvType.DpBehandling) {
+                if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
                     rapidsConnection.publish(
                         key = oppgave.personIdent(),
                         message =

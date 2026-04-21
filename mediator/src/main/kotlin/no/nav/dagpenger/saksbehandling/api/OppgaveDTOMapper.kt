@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -17,7 +18,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -296,23 +296,23 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
     when (this.behandling.utløstAv) {
-        is UtløstAvType.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        is UtløstAvType.Intern.Klage -> BehandlingTypeDTO.KLAGE
-        is UtløstAvType.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
-        is UtløstAvType.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
+        is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
+        is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
+        is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
     }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
     when (this.behandling.utløstAv) {
-        is UtløstAvType.DpBehandling.Søknad -> UtlostAvTypeDTO.SØKNAD
-        is UtløstAvType.Intern.Klage -> UtlostAvTypeDTO.KLAGE
-        is UtløstAvType.DpBehandling.Meldekort -> UtlostAvTypeDTO.MELDEKORT
-        is UtløstAvType.DpBehandling.Manuell -> UtlostAvTypeDTO.MANUELL
-        is UtløstAvType.Intern.Innsending -> UtlostAvTypeDTO.INNSENDING
-        is UtløstAvType.DpBehandling.Revurdering -> UtlostAvTypeDTO.REVURDERING
-        is UtløstAvType.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
-        is UtløstAvType.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
-        is UtløstAvType.DpBehandling.Arbeidssøkerperiode -> UtlostAvTypeDTO.ARBEIDSSØKERPERIODE
+        is HendelseBehandler.DpBehandling.Søknad -> UtlostAvTypeDTO.SØKNAD
+        is HendelseBehandler.Intern.Klage -> UtlostAvTypeDTO.KLAGE
+        is HendelseBehandler.DpBehandling.Meldekort -> UtlostAvTypeDTO.MELDEKORT
+        is HendelseBehandler.DpBehandling.Manuell -> UtlostAvTypeDTO.MANUELL
+        is HendelseBehandler.Intern.Innsending -> UtlostAvTypeDTO.INNSENDING
+        is HendelseBehandler.DpBehandling.Revurdering -> UtlostAvTypeDTO.REVURDERING
+        is HendelseBehandler.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
+        is HendelseBehandler.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
+        is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> UtlostAvTypeDTO.ARBEIDSSØKERPERIODE
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =

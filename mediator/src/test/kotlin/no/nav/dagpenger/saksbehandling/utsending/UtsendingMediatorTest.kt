@@ -11,10 +11,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -51,7 +51,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.DpBehandling.Søknad,
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -217,7 +217,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.DpBehandling.Søknad,
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -385,7 +385,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.DpBehandling.Søknad,
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -533,7 +533,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.Intern.Klage,
+                utløstAv = HendelseBehandler.Intern.Klage,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )

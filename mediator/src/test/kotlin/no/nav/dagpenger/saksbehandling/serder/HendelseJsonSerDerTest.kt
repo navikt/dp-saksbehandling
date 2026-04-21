@@ -5,11 +5,11 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
@@ -41,7 +41,7 @@ class HendelseJsonSerDerTest {
             ident = "1234",
             sakId = uuid,
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
-            type = UtløstAvType.DpBehandling.Søknad,
+            type = HendelseBehandler.DpBehandling.Søknad,
             utførtAv = utførtAv,
         )
     }
@@ -238,7 +238,7 @@ class HendelseJsonSerDerTest {
                 opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
                 basertPåBehandling = UUID.fromString(aUUID),
                 behandlingskjedeId = UUID.fromString(aUUID),
-                type = UtløstAvType.DpBehandling.Ferietillegg,
+                type = HendelseBehandler.DpBehandling.Ferietillegg,
                 eksternId = "ekstern-123",
             )
 
@@ -269,7 +269,7 @@ class HendelseJsonSerDerTest {
                 opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
                 basertPåBehandling = null,
                 behandlingskjedeId = UUID.fromString(aUUID),
-                type = UtløstAvType.DpBehandling.Revurdering,
+                type = HendelseBehandler.DpBehandling.Revurdering,
                 eksternId = null,
             )
 
@@ -288,7 +288,7 @@ class HendelseJsonSerDerTest {
             """
         val deserialisert = json.tilHendelse<DpBehandlingOpprettetHendelse>()
         deserialisert shouldBe hendelse
-        deserialisert.type shouldBe UtløstAvType.DpBehandling.Revurdering
+        deserialisert.type shouldBe HendelseBehandler.DpBehandling.Revurdering
     }
 
     @Test

@@ -2,8 +2,8 @@ package no.nav.dagpenger.saksbehandling.api
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
@@ -17,7 +17,7 @@ class RelevanteJournalpostIdOppslag(
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
         when (oppgave.behandling.utløstAv) {
-            is UtløstAvType.Intern.Klage -> return coroutineScope {
+            is HendelseBehandler.Intern.Klage -> return coroutineScope {
                 val journalpostIderKlage: String? =
                     klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
                 val journalpostMeldingOmVedtak =
@@ -25,15 +25,15 @@ class RelevanteJournalpostIdOppslag(
                 (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
             }
 
-            is UtløstAvType.Intern.Innsending -> return coroutineScope {
+            is HendelseBehandler.Intern.Innsending -> return coroutineScope {
                 val journalpostIdInnsending: String? =
                     innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
                 setOf(journalpostIdInnsending).filterNotNull().toSet()
             }
 
-            is UtløstAvType.Intern.Oppfølging -> return emptySet()
+            is HendelseBehandler.Intern.Oppfølging -> return emptySet()
 
-            is UtløstAvType.DpBehandling.Søknad ->
+            is HendelseBehandler.DpBehandling.Søknad ->
                 return coroutineScope {
                     val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
                     val journalpostMeldingOmVedtak =
@@ -41,7 +41,7 @@ class RelevanteJournalpostIdOppslag(
                     (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
                 }
 
-            is UtløstAvType.DpBehandling -> return emptySet()
+            is HendelseBehandler.DpBehandling -> return emptySet()
         }
     }
 

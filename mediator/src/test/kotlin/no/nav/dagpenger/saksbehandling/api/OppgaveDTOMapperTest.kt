@@ -8,13 +8,13 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -382,7 +382,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Manuell),
+                    behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Manuell),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
@@ -549,7 +549,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.DpBehandling.Meldekort),
+                    behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Meldekort),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(

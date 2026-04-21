@@ -48,7 +48,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.DpBehandling.Søknad,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     hendelse = søknadsbehandlingOpprettetHendelse,
                 ),

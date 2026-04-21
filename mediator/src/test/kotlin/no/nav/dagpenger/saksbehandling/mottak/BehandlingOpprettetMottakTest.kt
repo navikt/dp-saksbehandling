@@ -4,8 +4,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -86,7 +86,7 @@ class BehandlingOpprettetMottakTest {
                         opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
-                        type = UtløstAvType.DpBehandling.Meldekort,
+                        type = HendelseBehandler.DpBehandling.Meldekort,
                         eksternId = meldekortId,
                     ),
             )
@@ -111,7 +111,7 @@ class BehandlingOpprettetMottakTest {
                         opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
-                        type = UtløstAvType.DpBehandling.Manuell,
+                        type = HendelseBehandler.DpBehandling.Manuell,
                         eksternId = manuellId.toString(),
                     ),
             )
@@ -136,7 +136,7 @@ class BehandlingOpprettetMottakTest {
                         opprettet = behandletHendelseSkjedde.atStartOfDay(),
                         basertPåBehandling = basertPåBehandling,
                         behandlingskjedeId = behandlingskjedeId,
-                        type = UtløstAvType.DpBehandling.Arbeidssøkerperiode,
+                        type = HendelseBehandler.DpBehandling.Arbeidssøkerperiode,
                         eksternId = "ekstern-999",
                     ),
             )

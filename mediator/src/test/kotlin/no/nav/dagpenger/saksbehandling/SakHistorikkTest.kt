@@ -12,7 +12,7 @@ class SakHistorikkTest {
     private val behandling1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå,
             oppgaveId = oppgaveId,
             hendelse = TomHendelse,
@@ -20,21 +20,21 @@ class SakHistorikkTest {
     private val behandling2 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling3 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling4 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.DpBehandling.Søknad,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = nå,
             hendelse = TomHendelse,
         )

@@ -14,10 +14,10 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -87,7 +87,7 @@ class SakMediatorTest {
             opprettet = opprettet,
             basertPåBehandling = behandlingIdSøknadNyRett,
             behandlingskjedeId = behandlingskjedeId,
-            type = UtløstAvType.DpBehandling.Meldekort,
+            type = HendelseBehandler.DpBehandling.Meldekort,
         )
 
     private val manuellBehandlingOpprettetHendelse =
@@ -98,7 +98,7 @@ class SakMediatorTest {
             opprettet = opprettet,
             basertPåBehandling = behandlingIdSøknadNyRett,
             behandlingskjedeId = behandlingskjedeId,
-            type = UtløstAvType.DpBehandling.Manuell,
+            type = HendelseBehandler.DpBehandling.Manuell,
         )
 
     private val oppslagMock: Oppslag =
@@ -137,7 +137,7 @@ class SakMediatorTest {
                     sak.søknadId shouldBe søknadIdNyRett
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
-                    sak.behandlinger().single().utløstAv shouldBe UtløstAvType.DpBehandling.Søknad
+                    sak.behandlinger().single().utløstAv shouldBe HendelseBehandler.DpBehandling.Søknad
                 }
             }
         }
@@ -218,7 +218,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdMeldekort
-                behandlinger.first().utløstAv shouldBe UtløstAvType.DpBehandling.Meldekort
+                behandlinger.first().utløstAv shouldBe HendelseBehandler.DpBehandling.Meldekort
             }
         }
     }
@@ -243,7 +243,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdManuell
-                behandlinger.first().utløstAv shouldBe UtløstAvType.DpBehandling.Manuell
+                behandlinger.first().utløstAv shouldBe HendelseBehandler.DpBehandling.Manuell
             }
         }
     }
@@ -507,7 +507,7 @@ class SakMediatorTest {
                     behandlingId = UUIDv7.ny(),
                     opprettet = opprettetNå,
                     hendelse = innsendingMottattHendelse,
-                    utløstAv = UtløstAvType.Intern.Innsending,
+                    utløstAv = HendelseBehandler.Intern.Innsending,
                 )
 
             sakMediator.knyttEttersendingTilSammeSakSomSøknad(
@@ -567,7 +567,7 @@ class SakMediatorTest {
                     behandlingId = UUIDv7.ny(),
                     opprettet = opprettetNå,
                     hendelse = hendelse,
-                    utløstAv = UtløstAvType.Intern.Innsending,
+                    utløstAv = HendelseBehandler.Intern.Innsending,
                 )
 
             sakMediator.knyttBehandlingTilSak(
