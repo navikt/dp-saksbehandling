@@ -15,6 +15,7 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -438,7 +439,7 @@ OppgaveMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                utløstAv = DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -1353,7 +1354,6 @@ OppgaveMediatorTest {
         val sak =
             Sak(
                 sakId = behandlingskjedeId,
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
@@ -1370,7 +1370,7 @@ OppgaveMediatorTest {
                             opprettet = DBTestHelper.opprettetNå,
                             behandlingskjedeId = behandlingskjedeId,
                         ),
-                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                    utløstAv = DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -1408,7 +1408,7 @@ OppgaveMediatorTest {
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = sak.behandlinger().first().behandlingId,
-                        behandletHendelseId = sak.søknadId.toString(),
+                        behandletHendelseId = søknadId.toString(),
                         behandletHendelseType = "Søknad",
                         ident = testPerson.ident,
                         sak =
@@ -1494,15 +1494,23 @@ OppgaveMediatorTest {
                 it.setRapidsConnection(testRapid)
             }
 
+        val hendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                ident = testIdent,
+                opprettet = LocalDateTime.now(),
+                behandlingskjedeId = UUIDv7.ny(),
+            )
         sakMediator.opprettSak(
-            søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                    behandlingskjedeId = UUIDv7.ny(),
-                    utførtAv = Applikasjon.DpBehandling,
+            ident = hendelse.ident,
+            behandlingskjedeId = hendelse.behandlingskjedeId!!,
+            behandling =
+                Behandling(
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = DpBehandling.Søknad,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
                 ),
         )
 
@@ -1595,7 +1603,15 @@ OppgaveMediatorTest {
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {
                 val sak =
                     sakMediator.opprettSak(
-                        søknadsbehandlingOpprettetHendelse = hendelse,
+                        ident = hendelse.ident,
+                        behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                        behandling =
+                            Behandling(
+                                behandlingId = hendelse.behandlingId,
+                                opprettet = hendelse.opprettet,
+                                hendelse = hendelse,
+                                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            ),
                     )
                 sakMediator.knyttTilSak(
                     behandlingOpprettetHendelse =
@@ -1604,7 +1620,7 @@ OppgaveMediatorTest {
                             ident = hendelse.ident,
                             sakId = sak.sakId,
                             opprettet = hendelse.opprettet,
-                            type = HendelseBehandler.DpBehandling.Søknad,
+                            type = DpBehandling.Søknad,
                         ),
                 )
             }

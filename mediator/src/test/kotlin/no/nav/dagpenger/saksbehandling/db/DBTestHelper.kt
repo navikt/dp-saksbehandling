@@ -80,7 +80,6 @@ class DBTestHelper private constructor(
             sak: Sak =
                 Sak(
                     sakId = sakId,
-                    søknadId = søknadId,
                     opprettet = opprettetNå,
                 ),
             block: DBTestHelper.(DataSource) -> Unit,
@@ -108,7 +107,6 @@ class DBTestHelper private constructor(
             sak: Sak =
                 Sak(
                     sakId = sakId,
-                    søknadId = søknadId,
                     opprettet = opprettetNå,
                     behandlinger = mutableSetOf(behandling),
                 ),
@@ -125,7 +123,6 @@ class DBTestHelper private constructor(
             sak: Sak =
                 Sak(
                     sakId = sakId,
-                    søknadId = søknadId,
                     opprettet = opprettetNå,
                     behandlinger = behandlinger.toMutableSet(),
                 ),
@@ -198,7 +195,6 @@ class DBTestHelper private constructor(
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = søknadId,
                 opprettet = opprettet,
                 behandlinger = mutableSetOf(behandling),
             )

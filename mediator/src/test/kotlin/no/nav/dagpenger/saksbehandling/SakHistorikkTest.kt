@@ -40,7 +40,6 @@ class SakHistorikkTest {
         )
     private val sak1 =
         Sak(
-            søknadId = UUIDv7.ny(),
             opprettet = nå,
         ).also {
             it.leggTilBehandling(behandling1)
@@ -48,7 +47,6 @@ class SakHistorikkTest {
         }
     private val sak2 =
         Sak(
-            søknadId = UUIDv7.ny(),
             opprettet = nå,
         ).also {
             it.leggTilBehandling(behandling3)

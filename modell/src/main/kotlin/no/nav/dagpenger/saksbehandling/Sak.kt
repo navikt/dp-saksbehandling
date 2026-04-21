@@ -26,7 +26,6 @@ sealed class KnyttTilSakResultat {
 
 data class Sak(
     val sakId: UUID = UUIDv7.ny(),
-    val søknadId: UUID,
     val opprettet: LocalDateTime,
     private val behandlinger: MutableSet<Behandling> = mutableSetOf(),
 ) {
@@ -95,7 +94,6 @@ data class Sak(
         if (other !is Sak) return false
 
         if (sakId != other.sakId) return false
-        if (søknadId != other.søknadId) return false
         if (!opprettet.isEqual(other.opprettet)) return false
         if (this.behandlinger().sortedBy { it.behandlingId } !=
             other

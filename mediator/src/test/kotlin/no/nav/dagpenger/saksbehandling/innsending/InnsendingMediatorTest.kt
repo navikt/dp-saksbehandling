@@ -92,7 +92,6 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger =
                     mutableSetOf(
@@ -179,7 +178,7 @@ class InnsendingMediatorTest {
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = sak.behandlinger().first().behandlingId,
-                        behandletHendelseId = sak.søknadId.toString(),
+                        behandletHendelseId = søknadId.toString(),
                         behandletHendelseType = "Søknad",
                         ident = testPerson.ident,
                         sak =
@@ -267,7 +266,6 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
@@ -353,7 +351,6 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
@@ -481,7 +478,6 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
@@ -592,7 +588,6 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
@@ -736,7 +731,6 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )

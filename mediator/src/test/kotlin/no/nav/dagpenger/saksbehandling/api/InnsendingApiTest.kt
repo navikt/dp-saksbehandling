@@ -54,7 +54,6 @@ class InnsendingApiTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             )
         val innsending =

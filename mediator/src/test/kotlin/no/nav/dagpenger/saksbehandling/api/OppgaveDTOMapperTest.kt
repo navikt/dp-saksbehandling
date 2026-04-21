@@ -721,12 +721,10 @@ class OppgaveDTOMapperTest {
         val behandling2 = TestHelper.lagBehandling(behandlingId = UUIDv7.ny())
         val sak1 =
             Sak(
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             ).also { it.leggTilBehandling(behandling1) }
         val sak2 =
             Sak(
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             ).also { it.leggTilBehandling(behandling2) }
 

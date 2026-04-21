@@ -40,12 +40,12 @@ class SakHistorikkKnyttTilSakTest {
             hendelse = TomHendelse,
         )
     private val sakMedBehandling =
-        Sak(søknadId = UUIDv7.ny(), opprettet = now).also {
+        Sak(opprettet = now).also {
             it.leggTilBehandling(
                 søknadOmNyRettBehandling,
             )
         }
-    private val sakUtenBehandling = Sak(søknadId = UUIDv7.ny(), opprettet = now)
+    private val sakUtenBehandling = Sak(opprettet = now)
 
     private val sakHistorikk =
         SakHistorikk(

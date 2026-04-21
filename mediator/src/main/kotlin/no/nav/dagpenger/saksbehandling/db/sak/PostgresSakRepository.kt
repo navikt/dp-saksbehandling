@@ -54,7 +54,6 @@ class PostgresSakRepository(
                             per.adressebeskyttelse_gradering AS person_adressebeskyttelse_gradering,
                             per.skjermes_som_egne_ansatte AS person_skjermes_som_egne_ansatte,
                             sak.id AS sak_id,
-                            sak.soknad_id AS sak_soknad_id,
                             sak.opprettet AS sak_opprettet,
                             beh.id AS behandling_id,
                             beh.utlost_av AS utlost_av,
@@ -202,23 +201,24 @@ class PostgresSakRepository(
         personId: UUID,
         sak: Sak,
     ) {
+        val erDpSak: Boolean = sak.behandlinger().any { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }
         run(
             queryOf(
                 //language=PostgreSQL
                 statement =
                     """
                     INSERT INTO sak_v2
-                        (id, person_id, soknad_id, opprettet) 
+                        (id, person_id, opprettet, er_dp_sak) 
                     VALUES
-                        (:id,:person_id, :soknad_id, :opprettet) 
+                        (:id,:person_id, :opprettet, :er_dp_sak) 
                     ON CONFLICT (id) DO NOTHING 
                     """.trimIndent(),
                 paramMap =
                     mapOf(
                         "id" to sak.sakId,
                         "person_id" to personId,
-                        "soknad_id" to sak.søknadId,
                         "opprettet" to sak.opprettet,
+                        "er_dp_sak" to erDpSak,
                     ),
             ).asUpdate,
         )
@@ -390,7 +390,6 @@ class PostgresSakRepository(
             val sak =
                 sakHistorikk.saker().singleOrNull { it.sakId == sakId } ?: Sak(
                     sakId = sakId,
-                    søknadId = this.uuid("sak_soknad_id"),
                     opprettet = this.localDateTime("sak_opprettet"),
                 ).also {
                     sakHistorikk.leggTilSak(it)

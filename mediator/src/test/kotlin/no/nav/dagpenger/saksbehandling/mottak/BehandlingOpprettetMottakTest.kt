@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
@@ -53,7 +54,15 @@ class BehandlingOpprettetMottakTest {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMeldingNyRett())
         verify(exactly = 1) {
             sakMediatorMock.opprettSak(
-                søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelseNyRett,
+                ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
+                behandlingskjedeId = søknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
+                behandling =
+                    Behandling(
+                        behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
+                        opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
+                        hendelse = søknadsbehandlingOpprettetHendelseNyRett,
+                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                    ),
             )
         }
     }
@@ -153,7 +162,7 @@ class BehandlingOpprettetMottakTest {
                 ),
             )
         }
-        verify(exactly = 0) { sakMediatorMock.opprettSak(any<SøknadsbehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.opprettSak(any(), any(), any()) }
         verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
         verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
     }
@@ -163,7 +172,7 @@ class BehandlingOpprettetMottakTest {
         shouldThrow<IllegalStateException> {
             testRapid.sendTestMessage(internTypeBehandlingOpprettetMelding())
         }
-        verify(exactly = 0) { sakMediatorMock.opprettSak(any<SøknadsbehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.opprettSak(any(), any(), any()) }
         verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
         verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
     }

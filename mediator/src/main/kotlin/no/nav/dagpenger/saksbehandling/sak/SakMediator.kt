@@ -6,7 +6,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
@@ -37,48 +36,37 @@ class SakMediator(
 
     fun finnSakHistorikk(ident: String): SakHistorikk? = sakRepository.finnSakHistorikk(ident)
 
-    fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
-        val sakId =
-            requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
-                logger.error {
-                    "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
-                }
-            }
+    fun opprettSak(
+        ident: String,
+        behandlingskjedeId: UUID,
+        behandling: Behandling,
+    ): Sak {
         val sak =
             Sak(
-                sakId = sakId,
-                søknadId = søknadsbehandlingOpprettetHendelse.søknadId,
-                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                sakId = behandlingskjedeId,
+                opprettet = behandling.opprettet,
             ).also {
-                it.leggTilBehandling(
-                    Behandling(
-                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                        hendelse = søknadsbehandlingOpprettetHendelse,
-                    ),
-                )
+                it.leggTilBehandling(behandling)
             }
 
         runCatching {
-            personMediator.finnEllerOpprettPerson(søknadsbehandlingOpprettetHendelse.ident)
+            personMediator.finnEllerOpprettPerson(ident)
         }.onFailure { e ->
             when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
                 true -> {
                     sendAvbrytBehandling(
-                        søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse,
+                        behandlingId = behandling.behandlingId,
+                        ident = ident,
                         årsak = "Skjermet eller adressebeskyttet person",
                     )
                 }
-
                 else -> {
                     throw e
                 }
             }
         }.onSuccess { person ->
             val sakHistorikk =
-                sakRepository.finnSakHistorikk(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
+                sakRepository.finnSakHistorikk(ident) ?: SakHistorikk(
                     person = person,
                 )
             sakHistorikk.leggTilSak(sak)
@@ -86,6 +74,54 @@ class SakMediator(
         }
         return sak
     }
+//    fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
+//        val sakId =
+//            requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
+//                logger.error {
+//                    "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
+//                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
+//                }
+//            }
+//        val sak =
+//            Sak(
+//                sakId = sakId,
+//                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+//            ).also {
+//                it.leggTilBehandling(
+//                    Behandling(
+//                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+//                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+//                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+//                        hendelse = søknadsbehandlingOpprettetHendelse,
+//                    ),
+//                )
+//            }
+//
+//        runCatching {
+//            personMediator.finnEllerOpprettPerson(søknadsbehandlingOpprettetHendelse.ident)
+//        }.onFailure { e ->
+//            when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
+//                true -> {
+//                    sendAvbrytBehandling(
+//                        søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse,
+//                        årsak = "Skjermet eller adressebeskyttet person",
+//                    )
+//                }
+//
+//                else -> {
+//                    throw e
+//                }
+//            }
+//        }.onSuccess { person ->
+//            val sakHistorikk =
+//                sakRepository.finnSakHistorikk(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
+//                    person = person,
+//                )
+//            sakHistorikk.leggTilSak(sak)
+//            sakRepository.lagre(sakHistorikk)
+//        }
+//        return sak
+//    }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
@@ -161,19 +197,20 @@ class SakMediator(
     fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
     private fun sendAvbrytBehandling(
-        søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse,
+        behandlingId: UUID,
+        ident: String,
         årsak: String,
     ) {
         rapidsConnection.publish(
-            key = søknadsbehandlingOpprettetHendelse.ident,
+            key = ident,
             message =
                 JsonMessage
                     .newMessage(
                         eventName = "avbryt_behandling",
                         map =
                             mapOf(
-                                "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
-                                "ident" to søknadsbehandlingOpprettetHendelse.ident,
+                                "behandlingId" to behandlingId,
+                                "ident" to ident,
                                 "årsak" to årsak,
                             ),
                     ).toJson(),

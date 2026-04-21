@@ -10,6 +10,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -83,8 +84,54 @@ internal class BehandlingOpprettetMottak(
                         )
                     if (basertPåBehandling == null) {
                         withLoggingContext("søknadId" to "$søknadId") {
-                            sakMediator.opprettSak(hendelse)
+                            val sakId =
+                                requireNotNull(hendelse.behandlingskjedeId) {
+                                    logger.error {
+                                        "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
+                                            "behandlingId ${hendelse.behandlingId}"
+                                    }
+                                }
+
+                            sakMediator.opprettSak(
+                                ident = ident,
+                                behandlingskjedeId = sakId,
+                                behandling =
+                                    Behandling(
+                                        behandlingId = hendelse.behandlingId,
+                                        utløstAv = DpBehandling.Søknad,
+                                        opprettet = hendelse.opprettet,
+                                        hendelse = hendelse,
+                                    ),
+                            )
                         }
+                    } else {
+                        sakMediator.knyttTilSak(hendelse)
+                    }
+                }
+
+                is DpBehandling.Ferietillegg -> {
+                    val hendelse =
+                        DpBehandlingOpprettetHendelse(
+                            behandlingId = behandlingId,
+                            ident = ident,
+                            opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                            basertPåBehandling = basertPåBehandling,
+                            behandlingskjedeId = behandlingskjedeId,
+                            type = utløstAv,
+                            eksternId = packet.eksternId(),
+                        )
+                    if (basertPåBehandling == null) {
+                        sakMediator.opprettSak(
+                            ident = ident,
+                            behandlingskjedeId = hendelse.behandlingskjedeId,
+                            behandling =
+                                Behandling(
+                                    behandlingId = hendelse.behandlingId,
+                                    utløstAv = DpBehandling.Søknad,
+                                    opprettet = hendelse.opprettet,
+                                    hendelse = hendelse,
+                                ),
+                        )
                     } else {
                         sakMediator.knyttTilSak(hendelse)
                     }

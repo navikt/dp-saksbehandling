@@ -1400,7 +1400,6 @@ class PostgresOppgaveRepositoryTest {
             sak =
                 Sak(
                     sakId = UUIDv7.ny(),
-                    søknadId = hendelse.søknadId,
                     opprettet = hendelse.opprettet,
                     behandlinger = mutableSetOf(behandling),
                 ),

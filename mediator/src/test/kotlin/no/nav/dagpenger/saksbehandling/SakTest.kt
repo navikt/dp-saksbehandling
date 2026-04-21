@@ -35,7 +35,7 @@ class SakTest {
     @Test
     fun `knyttTilSak med SøknadsbehandlingOpprettetHendelse`() {
         val behandlingskjedeId = UUIDv7.ny()
-        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = UUIDv7.ny())
+        val sak = Sak(opprettet = now, sakId = UUIDv7.ny())
         sak.knyttTilSak(
             SøknadsbehandlingOpprettetHendelse(
                 søknadId = UUIDv7.ny(),
@@ -58,7 +58,7 @@ class SakTest {
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
 
-        val sak2 = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = behandlingskjedeId)
+        val sak2 = Sak(opprettet = now, sakId = behandlingskjedeId)
         sak2.knyttTilSak(
             søknadsbehandlingOpprettetHendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -79,7 +79,7 @@ class SakTest {
         eksternId: String,
     ) {
         val behandlingskjedeId = UUIDv7.ny()
-        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now)
+        val sak = Sak(opprettet = now)
 
         sak.knyttTilSak(
             DpBehandlingOpprettetHendelse(
@@ -106,7 +106,7 @@ class SakTest {
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
 
-        val sak2 = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = behandlingskjedeId)
+        val sak2 = Sak(opprettet = now, sakId = behandlingskjedeId)
         sak2.knyttTilSak(
             DpBehandlingOpprettetHendelse(
                 behandlingId = UUIDv7.ny(),
@@ -123,7 +123,7 @@ class SakTest {
     @Test
     fun `knyttTilSak med BehandlingOpprettetHendelse`() {
         val sakId = UUIDv7.ny()
-        val sak = Sak(søknadId = UUIDv7.ny(), opprettet = now, sakId = sakId)
+        val sak = Sak(opprettet = now, sakId = sakId)
 
         sak.knyttTilSak(
             BehandlingOpprettetHendelse(

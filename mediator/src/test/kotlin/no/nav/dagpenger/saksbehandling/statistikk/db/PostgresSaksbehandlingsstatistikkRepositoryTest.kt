@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.LocalDate
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
@@ -46,7 +45,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->
@@ -242,7 +240,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->
@@ -391,7 +388,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->
@@ -436,7 +432,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->

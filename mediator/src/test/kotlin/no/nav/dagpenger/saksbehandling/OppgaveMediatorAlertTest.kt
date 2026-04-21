@@ -43,7 +43,6 @@ class OppgaveMediatorAlertTest {
                     mutableSetOf(
                         Sak(
                             sakId = UUIDv7.ny(),
-                            søknadId = UUIDv7.ny(),
                             opprettet = LocalDateTime.now(),
                             behandlinger = mutableSetOf(),
                         ),
@@ -90,7 +89,6 @@ class OppgaveMediatorAlertTest {
                     mutableSetOf(
                         Sak(
                             sakId = sakId,
-                            søknadId = UUIDv7.ny(),
                             opprettet = opprettet,
                             behandlinger =
                                 mutableSetOf(

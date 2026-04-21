@@ -83,7 +83,6 @@ class PostgresSakRepositoryTest {
         )
     private val sak1 =
         Sak(
-            søknadId = søknadIdSak1,
             opprettet = nå,
         ).also {
             it.leggTilBehandling(behandling1iSak1)
@@ -91,7 +90,6 @@ class PostgresSakRepositoryTest {
         }
     private val sak2 =
         Sak(
-            søknadId = søknadId1Sak2,
             opprettet = nå,
         ).also {
             // Emulerer out of order lesing
@@ -175,22 +173,27 @@ class PostgresSakRepositoryTest {
             val sakRepository = PostgresSakRepository(ds)
 
             sakRepository.finnSakIdForSøknad(
-                søknadId = sak1.søknadId,
+                søknadId = søknadIdSak1,
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe null
 
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(
-                søknadId = sak1.søknadId,
+                søknadId = søknadIdSak1,
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe sak1.sakId
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(
-                søknadId = sak2.søknadId,
+                søknadId = søknadId1Sak2,
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe sak2.sakId
         }
+    }
+
+    @Test
+    fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg`() {
+        TODO()
     }
 
     private fun DataSource.avbrytOppgave(behandlingId: UUID) =
