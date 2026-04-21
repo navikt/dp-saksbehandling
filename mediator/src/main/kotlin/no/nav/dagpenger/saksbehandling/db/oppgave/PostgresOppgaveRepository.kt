@@ -646,6 +646,7 @@ private fun rehydrerTilstandsendringHendelse(
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
         "TomHendelse" -> hendelseJson.tilHendelse<TomHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
+        "DpBehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<DpBehandlingOpprettetHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
         else -> {
             logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
