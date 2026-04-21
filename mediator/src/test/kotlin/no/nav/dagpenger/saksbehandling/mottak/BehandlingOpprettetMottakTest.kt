@@ -181,7 +181,7 @@ class BehandlingOpprettetMottakTest {
             "behandletHendelse": {
                 "datatype": "String",
                 "id": "ekstern-999",
-                "type": "AvsluttetArbeidssøkerperiode",
+                "type": "Arbeidssøkerperiode",
                 "skjedde": "$behandletHendelseSkjedde"
             },
             "basertPåBehandling": "$basertPåBehandling",

@@ -43,7 +43,7 @@ sealed class HendelseBehandler(
 
         data object Ferietillegg : DpBehandling("FERIETILLEGG", "Ferietillegg")
 
-        data object Arbeidssøkerperiode : DpBehandling("ARBEIDSSØKERPERIODE", "AvsluttetArbeidssøkerperiode")
+        data object Arbeidssøkerperiode : DpBehandling("ARBEIDSSØKERPERIODE", "Arbeidssøkerperiode")
 
         companion object {
             private val behandletHendelseTyper by lazy {
