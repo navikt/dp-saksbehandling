@@ -12,16 +12,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
 import java.util.UUID
@@ -423,44 +414,9 @@ class PostgresSakRepository(
     }
 
     private fun Row.rehydrerHendelse(): Hendelse {
-        return when (val hendelseType = this.string("hendelse_type")) {
-            "TomHendelse" -> return TomHendelse
-            "SøknadsbehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-
-            "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
-            "MeldekortbehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
-
-            "ManuellBehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<ManuellBehandlingOpprettetHendelse>()
-
-            "InnsendingMottattHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<InnsendingMottattHendelse>()
-
-            "RevurderingBehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
-
-            "DpBehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<DpBehandlingOpprettetHendelse>()
-
-            else -> {
-                logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
-                sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
-                throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
-            }
-        }
+        val hendelseType = this.string("hendelse_type")
+        val hendelseData = this.string("hendelse_data")
+        return no.nav.dagpenger.saksbehandling.serder
+            .rehydrerHendelse(hendelseType, hendelseData)
     }
 }
