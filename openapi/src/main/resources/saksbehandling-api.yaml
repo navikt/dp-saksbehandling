@@ -1483,10 +1483,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OppgaveOversikt'
+        ferietilleggSaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sak'
       required:
         - person
         - saker
         - oppgaver
+        - ferietilleggSaker
 
     Sak:
       type: object

@@ -56,17 +56,42 @@ internal class OppgaveDTOMapper(
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
     private val sakMediator: SakMediator,
 ) {
-    private fun SakHistorikk?.saker(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
+    private fun SakHistorikk?.tilSakDTOListe(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
         when (this) {
             null -> emptyList()
             else ->
-                this.saker().map { sak ->
-                    val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
-                    SakDTO(
-                        id = sak.sakId,
-                        oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
-                    )
-                }
+                this
+                    .saker()
+                    .filter { sak ->
+                        sak.behandlinger().none { behandling ->
+                            behandling.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg
+                        }
+                    }.map { sak ->
+                        val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
+                        SakDTO(
+                            id = sak.sakId,
+                            oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
+                        )
+                    }
+        }
+
+    private fun SakHistorikk?.tilFerietilleggsakDTOListe(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
+        when (this) {
+            null -> emptyList()
+            else ->
+                this
+                    .saker()
+                    .filter { sak ->
+                        sak.behandlinger().any { behandling ->
+                            behandling.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg
+                        }
+                    }.map { sak ->
+                        val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
+                        SakDTO(
+                            id = sak.sakId,
+                            oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
+                        )
+                    }
         }
 
     suspend fun lagPersonDTO(person: Person): PersonDTO {
@@ -81,8 +106,9 @@ internal class OppgaveDTOMapper(
         val sakHistorikk = sakMediator.finnSakHistorikk(ident = person.ident)
         return PersonOversiktDTO(
             person = lagPersonDTO(person = person),
-            saker = sakHistorikk.saker(oppgaver),
+            saker = sakHistorikk.tilSakDTOListe(oppgaver),
             oppgaver = oppgaver,
+            ferietilleggSaker = sakHistorikk.tilFerietilleggsakDTOListe(oppgaver),
         )
     }
 
