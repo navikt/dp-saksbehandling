@@ -19,7 +19,7 @@ class OppfølgingTest {
         )
 
     @Test
-    fun `Skal opprette generell oppgave med påkrevde felter`() {
+    fun `Skal opprette oppfølging med påkrevde felter`() {
         val oppgave =
             Oppfølging.opprett(
                 person = testPerson,
@@ -36,7 +36,7 @@ class OppfølgingTest {
     }
 
     @Test
-    fun `Skal opprette generell oppgave med alle felter`() {
+    fun `Skal opprette oppfølging med alle felter`() {
         val oppgave =
             Oppfølging.opprett(
                 person = testPerson,
@@ -172,7 +172,7 @@ class OppfølgingTest {
     }
 
     @Test
-    fun `Skal rehydrere generell oppgave fra database`() {
+    fun `Skal rehydrere oppfølging fra database`() {
         val id = UUIDv7.ny()
         val sakId = UUID.randomUUID()
         val behandlingId = UUID.randomUUID()

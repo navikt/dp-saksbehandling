@@ -64,8 +64,8 @@ REST POST /oppfolging  ───────────────────
 ### REST API
 
 ```
-POST   /oppfolging              Opprett ny generell oppgave
-GET    /oppfolging/{behandlingId}  Hent generell oppgave
+POST   /oppfolging              Opprett ny oppfølging
+GET    /oppfolging/{behandlingId}  Hent oppfølging
 PUT    /oppfolging/{behandlingId}/ferdigstill  Ferdigstill
 ```
 
@@ -79,7 +79,7 @@ Saksbehandler velger utfall ved ferdigstilling:
 | `OPPRETT_KLAGE` | Opprett klage på eksisterende sak |
 | `OPPRETT_MANUELL_BEHANDLING` | Opprett ny manuell dagpengebehandling |
 | `OPPRETT_REVURDERING_BEHANDLING` | Opprett revurdering |
-| `OPPRETT_OPPFOLGING` | Opprett ny generell oppgave som oppfølging |
+| `OPPRETT_OPPFOLGING` | Opprett ny oppfølging som oppfølging av denne |
 
 ### beholdOppgaven
 
