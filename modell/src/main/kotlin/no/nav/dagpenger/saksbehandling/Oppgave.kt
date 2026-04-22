@@ -263,6 +263,16 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
+    fun settTilstandFor(hendelse: OpprettOppfølgingHendelse) {
+        val saksbehandler = hendelse.utførtAv as? Saksbehandler
+        saksbehandler?.let {
+            egneAnsatteTilgangskontroll(it)
+            adressebeskyttelseTilgangskontroll(it)
+        }
+
+        tilstand.settTilstandFor(this, hendelse)
+    }
+
     fun avbryt(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
         tilstand.avbryt(this, behandlingAvbruttHendelse)
     }
@@ -365,33 +375,6 @@ data class Oppgave private constructor(
         )
     }
 
-    fun settTilstandFor(hendelse: OpprettOppfølgingHendelse) {
-        val saksbehandler = hendelse.utførtAv as? Saksbehandler
-        saksbehandler?.let {
-            egneAnsatteTilgangskontroll(it)
-            adressebeskyttelseTilgangskontroll(it)
-        }
-
-        utsattTil = hendelse.frist
-
-        behandlerIdent =
-            if (hendelse.beholdOppgaven) {
-                requireNotNull(saksbehandler) {
-                    "Saksbehandler må være satt når beholdOppgaven=true"
-                }.navIdent
-            } else {
-                null
-            }
-
-        val nyTilstand =
-            when {
-                hendelse.frist != null -> PåVent
-                hendelse.beholdOppgaven -> UnderBehandling
-                else -> KlarTilBehandling
-            }
-        endreTilstand(nyTilstand, hendelse)
-    }
-
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -424,6 +407,31 @@ data class Oppgave private constructor(
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             return Handling.LAGRE_OPPGAVE
+        }
+
+        override fun settTilstandFor(
+            oppgave: Oppgave,
+            hendelse: OpprettOppfølgingHendelse,
+        ) {
+            when {
+                hendelse.frist != null -> {
+                    oppgave.utsattTil = hendelse.frist
+                    oppgave.behandlerIdent = hendelse.behandlerIdent
+                    oppgave.endreTilstand(PåVent, hendelse)
+                }
+
+                hendelse.beholdOppgaven -> {
+                    requireNotNull(
+                        hendelse.behandlerIdent,
+                    ) { "behandlerIdent må være satt for å kunne beholde oppgaven ved opprettelse av oppfølging" }
+                    oppgave.behandlerIdent = hendelse.behandlerIdent
+                    oppgave.endreTilstand(UnderBehandling, hendelse)
+                }
+
+                else -> {
+                    oppgave.endreTilstand(KlarTilBehandling, hendelse)
+                }
+            }
         }
     }
 
@@ -1290,6 +1298,16 @@ data class Oppgave private constructor(
         fun settKlarTilBehandling(
             oppgave: Oppgave,
             hendelse: Hendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
+            )
+        }
+
+        fun settTilstandFor(
+            oppgave: Oppgave,
+            hendelse: OpprettOppfølgingHendelse,
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
