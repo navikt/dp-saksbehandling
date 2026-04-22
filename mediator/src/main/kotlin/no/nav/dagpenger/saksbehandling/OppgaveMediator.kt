@@ -101,6 +101,7 @@ class OppgaveMediator(
                 emneknagger = setOf(hendelse.aarsak),
                 opprettet = hendelse.registrertTidspunkt,
                 behandling = behandling,
+                hendelse = hendelse,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
