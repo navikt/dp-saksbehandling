@@ -95,8 +95,6 @@ class OppgaveMediator(
         hendelse: OpprettOppfølgingHendelse,
         behandling: Behandling,
         person: Person,
-        utsattTil: LocalDate? = null,
-        behandlerIdent: String? = null,
     ): Oppgave {
         val oppgave =
             Oppgave(
@@ -109,16 +107,9 @@ class OppgaveMediator(
                         kilde = DP_SAK,
                         kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                     ),
-            ).also {
-                it.settKlarTilBehandling(hendelse)
-                if (utsattTil != null) {
-                    it.settPåVent(hendelse, utsattTil)
-                    // Pre-assign saksbehandler while keeping PåVent state.
-                    // OppgaveFristUtgåttJob vil sette oppgaven til UnderBehandling når fristen utløper.
-                    it.behandlerIdent = behandlerIdent
-                }
-            }
+            )
 
+        oppgave.settTilstandFor(hendelse)
         oppgaveRepository.lagre(oppgave)
         return oppgave
     }

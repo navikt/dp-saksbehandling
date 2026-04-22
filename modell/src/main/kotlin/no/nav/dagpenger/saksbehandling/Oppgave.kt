@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -364,15 +365,30 @@ data class Oppgave private constructor(
         )
     }
 
-    fun settPåVent(
-        hendelse: Hendelse,
-        utsattTil: LocalDate,
-    ) {
-        tilstand.settPåVent(
-            oppgave = this,
-            hendelse = hendelse,
-            utsattTil = utsattTil,
-        )
+    fun settTilstandFor(hendelse: OpprettOppfølgingHendelse) {
+        val saksbehandler = hendelse.utførtAv as? Saksbehandler
+        saksbehandler?.let {
+            egneAnsatteTilgangskontroll(it)
+            adressebeskyttelseTilgangskontroll(it)
+        }
+
+        utsattTil = hendelse.frist
+
+        behandlerIdent =
+            if (hendelse.beholdOppgaven) {
+                requireNotNull(saksbehandler) {
+                    "Saksbehandler må være satt når beholdOppgaven=true"
+                }.navIdent
+            } else {
+                null
+            }
+
+        tilstand =
+            when {
+                hendelse.frist != null -> PåVent
+                hendelse.beholdOppgaven -> UnderBehandling
+                else -> KlarTilBehandling
+            }
     }
 
     object Opprettet : Tilstand {
@@ -450,16 +466,6 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
-        }
-
-        // TODO: Avklar om settPåVent skal legge til årsak-emneknagg slik utsett() gjør
-        override fun settPåVent(
-            oppgave: Oppgave,
-            hendelse: Hendelse,
-            utsattTil: LocalDate,
-        ) {
-            oppgave.utsattTil = utsattTil
-            oppgave.endreTilstand(PåVent, hendelse)
         }
     }
 
@@ -1287,17 +1293,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
-            )
-        }
-
-        fun settPåVent(
-            oppgave: Oppgave,
-            hendelse: Hendelse,
-            utsattTil: LocalDate,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke sette oppgave på vent i tilstand $type",
             )
         }
 
