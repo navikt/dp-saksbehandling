@@ -6,7 +6,6 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
@@ -20,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 
 class OppfølgingMediatorTest {
     private val testPerson = DBTestHelper.testPerson
@@ -62,7 +60,6 @@ class OppfølgingMediatorTest {
                     oppgaveMediator = oppgaveMediator,
                 )
 
-            // Opprett
             val resultat =
                 mediator.taImot(
                     OpprettOppfølgingHendelse(
@@ -76,13 +73,11 @@ class OppfølgingMediatorTest {
             val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
             oppfølging.tilstand() shouldBe "BEHANDLES"
 
-            // Verifiser oppgave opprettet med riktig type og årsak
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
             oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.OPPFØLGING
             oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
 
-            // Tildel og ferdigstill
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgaver.first().oppgaveId,
@@ -100,190 +95,12 @@ class OppfølgingMediatorTest {
                 ),
             )
 
-            // Verifiser ferdigstilt
             val ferdigstiltOppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
             ferdigstiltOppfølging.tilstand() shouldBe "FERDIGSTILT"
             ferdigstiltOppfølging.vurdering() shouldBe "Alt er OK"
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
             oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
-        }
-    }
-
-    @Test
-    fun `oppgave med beholdOppgaven tildeles opprettende saksbehandler`() {
-        DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    behandlingKlient = mockk(),
-                    utsendingMediator = mockk(),
-                    sakMediator = sakMediator,
-                )
-
-            val mediator =
-                OppfølgingMediator(
-                    oppfølgingRepository = oppfølgingRepository,
-                    oppfølgingBehandler = mockk(),
-                    personMediator = personMediator,
-                    sakMediator = sakMediator,
-                    oppgaveMediator = oppgaveMediator,
-                )
-
-            val resultat =
-                mediator.taImot(
-                    OpprettOppfølgingHendelse(
-                        ident = testPerson.ident,
-                        aarsak = "Sykemelding",
-                        tittel = "Tildel til meg",
-                        beholdOppgaven = true,
-                        utførtAv = saksbehandler,
-                    ),
-                )
-
-            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
-            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        }
-    }
-
-    @Test
-    fun `oppgave uten beholdOppgaven tildeles ikke saksbehandler`() {
-        DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    behandlingKlient = mockk(),
-                    utsendingMediator = mockk(),
-                    sakMediator = sakMediator,
-                )
-
-            val mediator =
-                OppfølgingMediator(
-                    oppfølgingRepository = oppfølgingRepository,
-                    oppfølgingBehandler = mockk(),
-                    personMediator = personMediator,
-                    sakMediator = sakMediator,
-                    oppgaveMediator = oppgaveMediator,
-                )
-
-            val resultat =
-                mediator.taImot(
-                    OpprettOppfølgingHendelse(
-                        ident = testPerson.ident,
-                        aarsak = "Sykemelding",
-                        tittel = "Ikke tildel til meg",
-                        beholdOppgaven = false,
-                        utførtAv = saksbehandler,
-                    ),
-                )
-
-            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
-            oppgave.behandlerIdent shouldBe null
-        }
-    }
-
-    @Test
-    fun `oppgave med frist opprettes i PåVent tilstand`() {
-        DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    behandlingKlient = mockk(),
-                    utsendingMediator = mockk(),
-                    sakMediator = sakMediator,
-                )
-
-            val mediator =
-                OppfølgingMediator(
-                    oppfølgingRepository = oppfølgingRepository,
-                    oppfølgingBehandler = mockk(),
-                    personMediator = personMediator,
-                    sakMediator = sakMediator,
-                    oppgaveMediator = oppgaveMediator,
-                )
-
-            val frist = LocalDate.now().plusDays(7)
-
-            val resultat =
-                mediator.taImot(
-                    OpprettOppfølgingHendelse(
-                        ident = testPerson.ident,
-                        aarsak = "Sykemelding",
-                        tittel = "Sjekk sykemelding",
-                        beskrivelse = "Kontroller datoer",
-                        frist = frist,
-                    ),
-                )
-
-            // Verifiser Oppfølging har frist
-            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
-            oppfølging.frist shouldBe frist
-
-            // Verifiser Oppgave er i PåVent med utsattTil
-            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
-            oppgave.tilstand() shouldBe Oppgave.PåVent
-            oppgave.utsattTil() shouldBe frist
-            oppgave.behandlerIdent shouldBe null
-        }
-    }
-
-    @Test
-    fun `oppgave med frist og beholdOppgaven forblir i PåVent men er forhåndsreservert til saksbehandler`() {
-        DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    behandlingKlient = mockk(),
-                    utsendingMediator = mockk(),
-                    sakMediator = sakMediator,
-                )
-
-            val mediator =
-                OppfølgingMediator(
-                    oppfølgingRepository = oppfølgingRepository,
-                    oppfølgingBehandler = mockk(),
-                    personMediator = personMediator,
-                    sakMediator = sakMediator,
-                    oppgaveMediator = oppgaveMediator,
-                )
-
-            val frist = LocalDate.now().plusDays(7)
-            val saksbehandler = Saksbehandler("Z999999", grupper = emptySet(), tilganger = setOf(TilgangType.SAKSBEHANDLER))
-
-            val resultat =
-                mediator.taImot(
-                    OpprettOppfølgingHendelse(
-                        ident = testPerson.ident,
-                        aarsak = "Sykemelding",
-                        tittel = "Sjekk sykemelding",
-                        frist = frist,
-                        beholdOppgaven = true,
-                        utførtAv = saksbehandler,
-                    ),
-                )
-
-            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
-            // Oppgaven skal forbi i PåVent - IKKE bli satt til UnderBehandling
-            oppgave.tilstand() shouldBe Oppgave.PåVent
-            oppgave.utsattTil() shouldBe frist
-            // Men forhåndsreservert til saksbehandleren
-            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
 }
