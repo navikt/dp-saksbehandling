@@ -3,10 +3,13 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -19,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class OppfølgingMediatorTest {
     private val testPerson = DBTestHelper.testPerson
@@ -101,6 +105,69 @@ class OppfølgingMediatorTest {
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
             oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+        }
+    }
+
+    @Test
+    fun `ferdigstill med OpprettOppfølging - frist og beholdOppgaven gir ny oppgave i PåVent`() {
+        DBTestHelper.withPerson { ds ->
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = oppgaveRepository,
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
+            val mediator =
+                OppfølgingMediator(
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = OppfølgingBehandler(mockk<KlageMediator>(), mockk<BehandlingKlient>()),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val original =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(ident = testPerson.ident, aarsak = "Test", tittel = "Original"),
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = original.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val frist = LocalDate.now().plusDays(7)
+
+            mediator.ferdigstill(
+                FerdigstillOppfølgingHendelse(
+                    oppfølgingId = original.oppfølgingId,
+                    aksjon =
+                        OppfølgingAksjon.OpprettOppfølging(
+                            valgtSakId = null,
+                            aarsak = "Ny",
+                            tittel = "Ny oppfølging",
+                            frist = frist,
+                            beholdOppgaven = true,
+                        ),
+                    vurdering = "Trenger ny sjekk",
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
+            val nyOppgave = oppgaver.first { it.tilstand() == Oppgave.PåVent }
+            nyOppgave.tilstand() shouldBe Oppgave.PåVent
+            nyOppgave.utsattTil() shouldBe frist
+            nyOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
 }
