@@ -36,7 +36,7 @@ class InnsendingMediator(
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
         oppgaveMediator.taImotEttersending(hendelse)
 
-        val sisteSakId = sakMediator.finnSisteSakId(hendelse.ident)
+        val sisteSakId = sakMediator.finnSisteDagpengeSakId(hendelse.ident)
 
         if (sisteSakId != null) {
             if (hendelse.erEttersendingMedSøknadId()) {

@@ -126,7 +126,7 @@ class PostgresSakRepositoryTest {
     }
 
     @Test
-    fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg`() {
+    fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg, men skal ikke hentes ifm siste sak`() {
         DBTestHelper.withPerson(person) { dataSource ->
             val behandlingIdFerietillegg = UUIDv7.ny()
             val hendelse =
@@ -162,16 +162,19 @@ class PostgresSakRepositoryTest {
             sakRepository.lagre(sakHistorikkMedFerietillegg)
             val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
-            // Sjekker at saker og behandling blir sortert kronologisk, med saken som har den nyeste behandlingen først
+            // Sjekker at saker og behandling blir sortert kronologisk, med nyeste sak og behandling først
             sakHistorikkFraDB
                 .saker()
                 .first()
                 .behandlinger()
                 .single() shouldBe behandlingFerietillegg
 
-            sakRepository.finnSisteSakId(person.ident) shouldBe sakFerietillegg.sakId
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
 
-            //sakHistorikkFraDB shouldBe sakHistorikkMedFerietillegg
+            sakRepository.merkSakenSomDpSak(sak1.sakId, true)
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe sak1.sakId
+            // sakHistorikkFraDB shouldBe sakHistorikkMedFerietillegg
         }
     }
 
@@ -202,19 +205,19 @@ class PostgresSakRepositoryTest {
             ds.opprettOppgaveForBehandling(behandlingId = behandling1iSak2.behandlingId)
             ds.opprettOppgaveForBehandling(behandlingId = behandling2iSak2.behandlingId)
 
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe null
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe null
 
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak1.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak1.sakId
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak2.sakId
 
             ds.avbrytOppgave(behandlingId = behandling2iSak2.behandlingId)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak2.sakId
 
             ds.avbrytOppgave(behandlingId = behandling1iSak2.behandlingId)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak1.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak1.sakId
         }
     }
 

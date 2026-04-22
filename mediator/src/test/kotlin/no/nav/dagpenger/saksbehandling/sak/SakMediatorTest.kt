@@ -364,7 +364,7 @@ class SakMediatorTest {
                         ),
                 )
 
-            sakMediator.finnSisteSakId(ident = testIdent) shouldBe null
+            sakMediator.finnSisteDagpengeSakId(ident = testIdent) shouldBe null
 
             ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe false
             sakMediator.merkSakenSomDpSak(
@@ -383,7 +383,7 @@ class SakMediatorTest {
             )
             ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe true
 
-            sakMediator.finnSisteSakId(ident = testIdent) shouldBe sak.sakId
+            sakMediator.finnSisteDagpengeSakId(ident = testIdent) shouldBe sak.sakId
             sakMediator.finnSakIdForSøknad(
                 søknadId = søknadsbehandlingOpprettetHendelseNyRett.søknadId,
                 ident = testIdent,

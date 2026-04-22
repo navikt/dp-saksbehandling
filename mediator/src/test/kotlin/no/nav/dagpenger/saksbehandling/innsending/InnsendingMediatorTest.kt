@@ -69,8 +69,8 @@ class InnsendingMediatorTest {
     private val skjemaKode = "NAVe"
     private val sakMediatorMock: SakMediator =
         mockk<SakMediator>(relaxed = true).also {
-            coEvery { it.finnSisteSakId(personMedSak.ident) } returns sakId
-            coEvery { it.finnSisteSakId(personUtenSak.ident) } returns null
+            coEvery { it.finnSisteDagpengeSakId(personMedSak.ident) } returns sakId
+            coEvery { it.finnSisteDagpengeSakId(personUtenSak.ident) } returns null
         }
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {

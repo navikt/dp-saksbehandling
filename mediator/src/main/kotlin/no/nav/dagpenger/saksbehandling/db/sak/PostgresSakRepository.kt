@@ -80,7 +80,7 @@ class PostgresSakRepository(
         }
     }
 
-    override fun finnSisteSakId(ident: String): UUID? =
+    override fun finnSisteDagpengeSakId(ident: String): UUID? =
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -93,6 +93,12 @@ class PostgresSakRepository(
                         JOIN     behandling_v1 beh ON beh.sak_id    = sak.id
                         WHERE    per.ident = :ident
                         AND      sak.er_dp_sak
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM   behandling_v1 feri
+                            WHERE  feri.sak_id = sak.id
+                            AND    feri.utlost_av = 'FERIETILLEGG'
+                        )
                         AND NOT EXISTS (
                             SELECT 1
                             FROM   oppgave_v1 opp
@@ -178,7 +184,7 @@ class PostgresSakRepository(
                         FROM    sak_v2 sak
                         JOIN    behandling_v1 beh ON beh.sak_id = sak.id
                         WHERE   beh.id = :behandling_id
-                        AND   sak.er_dp_sak = true
+                        AND     sak.er_dp_sak = true
                         """.trimIndent(),
                     paramMap =
                         mapOf(

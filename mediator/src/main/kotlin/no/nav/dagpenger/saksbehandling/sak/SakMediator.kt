@@ -185,7 +185,7 @@ class SakMediator(
         }
     }
 
-    fun finnSisteSakId(ident: String): UUID? = sakRepository.finnSisteSakId(ident)
+    fun finnSisteDagpengeSakId(ident: String): UUID? = sakRepository.finnSisteDagpengeSakId(ident)
 
     fun finnSakIdForSøknad(
         søknadId: UUID,
