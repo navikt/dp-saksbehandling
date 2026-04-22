@@ -135,7 +135,6 @@ class OppfølgingBehandler(
             aksjonType = aksjon.type,
             opprettetBehandlingId = opprettet.oppfølgingId,
             opprettetOppgaveId = opprettet.oppgaveId,
-            beholdOppgaven = aksjon.beholdOppgaven && aksjon.frist == null,
             utførtAv = hendelse.utførtAv,
         )
     }

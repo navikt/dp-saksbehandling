@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -101,21 +100,6 @@ class OppfølgingMediator(
         )
         oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
         oppfølgingRepository.lagre(oppfølging)
-
-        if (ferdigstiltHendelse.beholdOppgaven) {
-            val oppgaveId =
-                requireNotNull(ferdigstiltHendelse.opprettetOppgaveId) {
-                    "opprettetOppgaveId må være satt når beholdOppgaven=true"
-                }
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgaveId,
-                    ansvarligIdent = hendelse.utførtAv.navIdent,
-                    utførtAv = hendelse.utførtAv,
-                ),
-            )
-            logger.info { "Tildelte ny oppgave $oppgaveId til ${hendelse.utførtAv.navIdent}" }
-        }
     }
 
     fun hent(
