@@ -139,6 +139,12 @@ private fun Innsending.toBehandling(): TynnBehandlingDTO? =
                 behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
             )
 
+        is Innsending.InnsendingResultat.Oppfølging ->
+            TynnBehandlingDTO(
+                behandlingId = resultat.behandlingId,
+                behandlingType = BehandlingTypeDTO.OPPFØLGING,
+            )
+
         else -> null
     }
 

@@ -95,6 +95,10 @@ class Innsending private constructor(
         data class RettTilDagpenger(
             val behandlingId: UUID,
         ) : InnsendingResultat()
+
+        data class Oppfølging(
+            val behandlingId: UUID,
+        ) : InnsendingResultat()
     }
 
     fun gjelderSøknadMedId(søknadId: UUID): Boolean =
@@ -175,7 +179,10 @@ class Innsending private constructor(
             }
 
             Aksjon.Type.OPPRETT_OPPFOLGING -> {
-                this.innsendingResultat = InnsendingResultat.Ingen
+                requireNotNull(
+                    innsendingFerdigstiltHendelse.opprettetBehandlingId,
+                ) { "behandlingId kan ikke være null etter opprettelse av oppfølging" }
+                this.innsendingResultat = InnsendingResultat.Oppfølging(innsendingFerdigstiltHendelse.opprettetBehandlingId)
             }
         }
         this.tilstand = Tilstand.FERDIGSTILT
