@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
@@ -30,14 +31,14 @@ class PostgresSakRepositoryTest {
         Behandling(
             behandlingId = behandlingId1iSak1,
             utløstAv = HendelseBehandler.DpBehandling.Søknad,
-            opprettet = nå.minusDays(9),
+            opprettet = nå,
             oppgaveId = oppgaveId,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadIdSak1,
                     behandlingId = behandlingId1iSak1,
                     ident = DBTestHelper.testPerson.ident,
-                    opprettet = nå.minusDays(9),
+                    opprettet = nå,
                     basertPåBehandling = null,
                 ),
         )
@@ -45,7 +46,7 @@ class PostgresSakRepositoryTest {
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = HendelseBehandler.DpBehandling.Søknad,
-            opprettet = nå.minusDays(5),
+            opprettet = nå,
             hendelse = TomHendelse,
         )
 
@@ -57,13 +58,13 @@ class PostgresSakRepositoryTest {
         Behandling(
             behandlingId = behandlingId1iSak2,
             utløstAv = HendelseBehandler.DpBehandling.Søknad,
-            opprettet = nå.minusDays(1),
+            opprettet = nå,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId1Sak2,
                     behandlingId = behandlingId1iSak1,
                     ident = DBTestHelper.testPerson.ident,
-                    opprettet = nå.minusDays(1),
+                    opprettet = nå,
                     basertPåBehandling = null,
                 ),
         )
@@ -71,13 +72,13 @@ class PostgresSakRepositoryTest {
         Behandling(
             behandlingId = behandlingId2iSak2,
             utløstAv = HendelseBehandler.DpBehandling.Søknad,
-            opprettet = nå.minusDays(3),
+            opprettet = nå,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId2Sak2,
                     behandlingId = behandlingId2iSak2,
                     ident = DBTestHelper.testPerson.ident,
-                    opprettet = nå.minusDays(3),
+                    opprettet = nå,
                     basertPåBehandling = behandlingId1iSak2,
                 ),
         )
@@ -121,6 +122,58 @@ class PostgresSakRepositoryTest {
                 .behandlinger()
                 .first()
                 .behandlingId shouldBe behandling2iSak2.behandlingId
+        }
+    }
+
+    @Test
+    fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val behandlingIdFerietillegg = UUIDv7.ny()
+            val hendelse =
+                DpBehandlingOpprettetHendelse(
+                    behandlingId = behandlingIdFerietillegg,
+                    ident = DBTestHelper.testPerson.ident,
+                    opprettet = nå,
+                    basertPåBehandling = null,
+                    behandlingskjedeId = behandlingIdFerietillegg,
+                    type = HendelseBehandler.DpBehandling.Ferietillegg,
+                )
+            val behandlingFerietillegg =
+                Behandling(
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = hendelse.type,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
+                )
+            val sakFerietillegg =
+                Sak(
+                    opprettet = behandlingFerietillegg.opprettet,
+                ).also {
+                    it.leggTilBehandling(behandlingFerietillegg)
+                }
+            val sakHistorikkMedFerietillegg =
+                SakHistorikk(
+                    person = person,
+                ).also {
+                    it.leggTilSak(sak1)
+                        it.leggTilSak(
+
+                        )
+                }
+            val sakRepository = PostgresSakRepository(dataSource = dataSource)
+            sakRepository.lagre(sakHistorikkMedFerietillegg)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+
+            sakHistorikkFraDB shouldBe sakHistorikkMedFerietillegg
+
+            // Sjekker at saker og behandling blir sortert kronologisk, med saken som har den nyeste behandlingen først
+            sakHistorikkFraDB
+                .saker()
+                .first()
+                .behandlinger()
+                .single() shouldBe behandlingFerietillegg
+
+            sakRepository.finnSisteSakId(person.ident) shouldBe sakFerietillegg.sakId
         }
     }
 
@@ -189,11 +242,6 @@ class PostgresSakRepositoryTest {
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe sak2.sakId
         }
-    }
-
-    @Test
-    fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg`() {
-        TODO()
     }
 
     private fun DataSource.avbrytOppgave(behandlingId: UUID) =
