@@ -65,18 +65,24 @@ class OppfølgingMediator(
 
         oppfølgingRepository.lagre(oppfølging)
 
+        // Når frist er satt, sendes behandlerIdent direkte til lagOppgaveForOppfølging slik at oppgaven
+        // forblir i PåVent men er pre-assignet. OppgaveFristUtgåttJob setter den til UnderBehandling
+        // (tildelt) når fristen utløper. Uten frist tildeles oppgaven normalt via tildelOppgave.
+        val behandlerIdentVedFrist = if (hendelse.frist != null && hendelse.beholdOppgaven) saksbehandler?.navIdent else null
+
         val oppgave =
             oppgaveMediator.lagOppgaveForOppfølging(
                 hendelse = hendelse,
                 behandling = behandling,
                 person = person,
                 utsattTil = hendelse.frist,
+                behandlerIdent = behandlerIdentVedFrist,
             )
 
         val tilstandInfo = if (hendelse.frist != null) "i PåVent til ${hendelse.frist}" else "i KlarTilBehandling"
         logger.info { "Opprettet oppfølging ${oppfølging.id} med årsak ${hendelse.aarsak} $tilstandInfo" }
 
-        if (hendelse.beholdOppgaven && saksbehandler != null) {
+        if (hendelse.beholdOppgaven && saksbehandler != null && hendelse.frist == null) {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -85,6 +91,10 @@ class OppfølgingMediator(
                 ),
             )
             logger.info { "Tildelte ny oppgave ${oppgave.oppgaveId} til ${saksbehandler.navIdent}" }
+        } else if (behandlerIdentVedFrist != null) {
+            logger.info {
+                "Forhåndsreserverte PåVent-oppgave ${oppgave.oppgaveId} til ${saksbehandler?.navIdent} - aktiveres ved frist ${hendelse.frist}"
+            }
         }
 
         return OpprettetOppfølging(

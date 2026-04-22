@@ -6,6 +6,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
@@ -234,6 +235,55 @@ class OppfølgingMediatorTest {
             val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
             oppgave.tilstand() shouldBe Oppgave.PåVent
             oppgave.utsattTil() shouldBe frist
+            oppgave.behandlerIdent shouldBe null
+        }
+    }
+
+    @Test
+    fun `oppgave med frist og beholdOppgaven forblir i PåVent men er forhåndsreservert til saksbehandler`() {
+        DBTestHelper.withPerson { ds ->
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = oppgaveRepository,
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+
+            val mediator =
+                OppfølgingMediator(
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = mockk(),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val frist = LocalDate.now().plusDays(7)
+            val saksbehandler = Saksbehandler("Z999999", grupper = emptySet(), tilganger = setOf(TilgangType.SAKSBEHANDLER))
+
+            val resultat =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "Sykemelding",
+                        tittel = "Sjekk sykemelding",
+                        frist = frist,
+                        beholdOppgaven = true,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+
+            val oppgave = oppgaveRepository.hentOppgave(resultat.oppgaveId)
+            // Oppgaven skal forbi i PåVent - IKKE bli satt til UnderBehandling
+            oppgave.tilstand() shouldBe Oppgave.PåVent
+            oppgave.utsattTil() shouldBe frist
+            // Men forhåndsreservert til saksbehandleren
+            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
 }
