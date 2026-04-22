@@ -383,12 +383,13 @@ data class Oppgave private constructor(
                 null
             }
 
-        tilstand =
+        val nyTilstand =
             when {
                 hendelse.frist != null -> PåVent
                 hendelse.beholdOppgaven -> UnderBehandling
                 else -> KlarTilBehandling
             }
+        endreTilstand(nyTilstand, hendelse)
     }
 
     object Opprettet : Tilstand {
