@@ -156,9 +156,7 @@ class PostgresSakRepositoryTest {
                     person = person,
                 ).also {
                     it.leggTilSak(sak1)
-                        it.leggTilSak(
-
-                        )
+                    it.leggTilSak(sakFerietillegg)
                 }
             val sakRepository = PostgresSakRepository(dataSource = dataSource)
             sakRepository.lagre(sakHistorikkMedFerietillegg)
