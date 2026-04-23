@@ -88,7 +88,7 @@ internal class BehandlingOpprettetMottak(
                                 requireNotNull(hendelse.behandlingskjedeId) {
                                     logger.error {
                                         "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                                            "behandlingId ${hendelse.behandlingId}"
+                                                "behandlingId ${hendelse.behandlingId}"
                                     }
                                 }
 
@@ -109,36 +109,8 @@ internal class BehandlingOpprettetMottak(
                     }
                 }
 
-                is DpBehandling.Ferietillegg -> {
-                    val hendelse =
-                        DpBehandlingOpprettetHendelse(
-                            behandlingId = behandlingId,
-                            ident = ident,
-                            opprettet = behandletHendelseSkjedde.atStartOfDay(),
-                            basertPåBehandling = basertPåBehandling,
-                            behandlingskjedeId = behandlingskjedeId,
-                            type = utløstAv,
-                            eksternId = packet.eksternId(),
-                        )
-                    if (basertPåBehandling == null) {
-                        sakMediator.opprettSak(
-                            ident = ident,
-                            behandlingskjedeId = hendelse.behandlingskjedeId,
-                            behandling =
-                                Behandling(
-                                    behandlingId = hendelse.behandlingId,
-                                    utløstAv = DpBehandling.Søknad,
-                                    opprettet = hendelse.opprettet,
-                                    hendelse = hendelse,
-                                ),
-                        )
-                    } else {
-                        sakMediator.knyttTilSak(hendelse)
-                    }
-                }
-
                 else -> {
-                    sakMediator.knyttTilSak(
+                    sakMediator.opprettEllerKnyttTilSak(
                         DpBehandlingOpprettetHendelse(
                             behandlingId = behandlingId,
                             ident = ident,

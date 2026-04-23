@@ -717,7 +717,7 @@ class OppgaveDTOMapperTest {
 
     @Test
     fun `lagPersonOversiktDTO med ferietilleggsak`() {
-        //todo
+        // todo
     }
 
     @Test

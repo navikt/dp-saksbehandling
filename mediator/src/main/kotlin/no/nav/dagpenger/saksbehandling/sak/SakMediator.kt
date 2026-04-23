@@ -36,6 +36,24 @@ class SakMediator(
 
     fun finnSakHistorikk(ident: String): SakHistorikk? = sakRepository.finnSakHistorikk(ident)
 
+    fun opprettEllerKnyttTilSak(hendelse: DpBehandlingOpprettetHendelse) {
+        if (hendelse.basertPåBehandling == null) {
+            opprettSak(
+                ident = hendelse.ident,
+                behandlingskjedeId = hendelse.behandlingskjedeId,
+                behandling =
+                    Behandling(
+                        behandlingId = hendelse.behandlingId,
+                        utløstAv = hendelse.type,
+                        opprettet = hendelse.opprettet,
+                        hendelse = hendelse,
+                    ),
+            )
+        } else {
+            knyttTilSak(hendelse)
+        }
+    }
+
     fun opprettSak(
         ident: String,
         behandlingskjedeId: UUID,
@@ -74,54 +92,6 @@ class SakMediator(
         }
         return sak
     }
-//    fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
-//        val sakId =
-//            requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
-//                logger.error {
-//                    "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-//                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
-//                }
-//            }
-//        val sak =
-//            Sak(
-//                sakId = sakId,
-//                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-//            ).also {
-//                it.leggTilBehandling(
-//                    Behandling(
-//                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-//                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
-//                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-//                        hendelse = søknadsbehandlingOpprettetHendelse,
-//                    ),
-//                )
-//            }
-//
-//        runCatching {
-//            personMediator.finnEllerOpprettPerson(søknadsbehandlingOpprettetHendelse.ident)
-//        }.onFailure { e ->
-//            when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
-//                true -> {
-//                    sendAvbrytBehandling(
-//                        søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse,
-//                        årsak = "Skjermet eller adressebeskyttet person",
-//                    )
-//                }
-//
-//                else -> {
-//                    throw e
-//                }
-//            }
-//        }.onSuccess { person ->
-//            val sakHistorikk =
-//                sakRepository.finnSakHistorikk(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
-//                    person = person,
-//                )
-//            sakHistorikk.leggTilSak(sak)
-//            sakRepository.lagre(sakHistorikk)
-//        }
-//        return sak
-//    }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {

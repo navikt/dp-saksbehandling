@@ -87,7 +87,7 @@ class BehandlingOpprettetMottakTest {
             ),
         )
         verify(exactly = 1) {
-            sakMediatorMock.knyttTilSak(
+            sakMediatorMock.opprettEllerKnyttTilSak(
                 hendelse =
                     DpBehandlingOpprettetHendelse(
                         behandlingId = behandlingIdNyRett,
@@ -112,7 +112,7 @@ class BehandlingOpprettetMottakTest {
             ),
         )
         verify(exactly = 1) {
-            sakMediatorMock.knyttTilSak(
+            sakMediatorMock.opprettEllerKnyttTilSak(
                 hendelse =
                     DpBehandlingOpprettetHendelse(
                         behandlingId = behandlingIdNyRett,
@@ -137,7 +137,7 @@ class BehandlingOpprettetMottakTest {
             ),
         )
         verify(exactly = 1) {
-            sakMediatorMock.knyttTilSak(
+            sakMediatorMock.opprettEllerKnyttTilSak(
                 hendelse =
                     DpBehandlingOpprettetHendelse(
                         behandlingId = behandlingIdNyRett,
@@ -164,7 +164,7 @@ class BehandlingOpprettetMottakTest {
         }
         verify(exactly = 0) { sakMediatorMock.opprettSak(any(), any(), any()) }
         verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
-        verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.opprettEllerKnyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
     }
 
     @Test
@@ -174,7 +174,7 @@ class BehandlingOpprettetMottakTest {
         }
         verify(exactly = 0) { sakMediatorMock.opprettSak(any(), any(), any()) }
         verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
-        verify(exactly = 0) { sakMediatorMock.knyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
+        verify(exactly = 0) { sakMediatorMock.opprettEllerKnyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
     }
 
     @Language("JSON")
