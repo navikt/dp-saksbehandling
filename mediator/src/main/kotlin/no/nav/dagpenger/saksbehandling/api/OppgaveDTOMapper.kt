@@ -231,6 +231,7 @@ private fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
         EmneknaggKategori.AVBRUTT_GRUNN -> EmneknaggKategoriDTO.AVBRUTT_GRUNN
         EmneknaggKategori.PÅ_VENT -> EmneknaggKategoriDTO.PAA_VENT
         EmneknaggKategori.ETTERSENDING -> EmneknaggKategoriDTO.ETTERSENDING
+        EmneknaggKategori.OPPFØLGING_ÅRSAK -> EmneknaggKategoriDTO.OPPFOLGING_ARSAK
         EmneknaggKategori.UDEFINERT -> EmneknaggKategoriDTO.UDEFINERT
     }
 

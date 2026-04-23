@@ -1763,6 +1763,7 @@ components:
         - AVBRUTT_GRUNN
         - PAA_VENT
         - ETTERSENDING
+        - OPPFOLGING_ARSAK
         - UDEFINERT
 
 
