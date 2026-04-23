@@ -31,6 +31,7 @@ class HendelseBehandlerTest {
                 Arguments.of("Manuell", HendelseBehandler.DpBehandling.Manuell),
                 Arguments.of("Omgjøring", HendelseBehandler.DpBehandling.Revurdering),
                 Arguments.of("Ferietillegg", HendelseBehandler.DpBehandling.Ferietillegg),
+                Arguments.of("Arbeidssøkerperiode", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
             )
     }
 

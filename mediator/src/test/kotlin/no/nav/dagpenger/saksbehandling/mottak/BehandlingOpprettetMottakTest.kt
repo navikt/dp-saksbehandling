@@ -119,6 +119,31 @@ class BehandlingOpprettetMottakTest {
     }
 
     @Test
+    fun `Skal behandle behandling_opprettet hendelse for ferietillegg`() {
+        val basertPåBehandling = UUIDv7.ny()
+        testRapid.sendTestMessage(
+            ferietilleggBehandlingOpprettetMelding(
+                basertPåBehandling = basertPåBehandling,
+                behandlingskjedeId = behandlingskjedeId,
+            ),
+        )
+        verify(exactly = 1) {
+            sakMediatorMock.opprettEllerKnyttTilSak(
+                hendelse =
+                    DpBehandlingOpprettetHendelse(
+                        behandlingId = behandlingIdNyRett,
+                        ident = testIdent,
+                        opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                        basertPåBehandling = basertPåBehandling,
+                        behandlingskjedeId = behandlingskjedeId,
+                        type = HendelseBehandler.DpBehandling.Ferietillegg,
+                        eksternId = "ferie-1",
+                    ),
+            )
+        }
+    }
+
+    @Test
     fun `Skal behandle behandling_opprettet hendelse for avsluttet arbeidssøkerperiode`() {
         val basertPåBehandling = UUIDv7.ny()
         testRapid.sendTestMessage(
@@ -165,6 +190,28 @@ class BehandlingOpprettetMottakTest {
         verify(exactly = 0) { sakMediatorMock.opprettEllerKnyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) }
         verify(exactly = 0) { sakMediatorMock.opprettEllerKnyttTilSak(any<DpBehandlingOpprettetHendelse>()) }
     }
+
+    @Language("JSON")
+    private fun ferietilleggBehandlingOpprettetMelding(
+        ident: String = testIdent,
+        basertPåBehandling: UUID,
+        behandlingskjedeId: UUID,
+    ) = """
+        {
+            "@event_name": "behandling_opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandlingskjedeId" : "$behandlingskjedeId",
+            "behandletHendelse": {
+                "datatype": "String",
+                "id": "ferie-1",
+                "type": "Ferietillegg",
+                "skjedde": "$behandletHendelseSkjedde"
+            },
+            "basertPåBehandling": "$basertPåBehandling",
+            "behandlingId": "$behandlingIdNyRett",
+            "ident": "$ident"
+        }
+        """
 
     @Language("JSON")
     private fun arbeidssøkerperiodeBehandlingOpprettetMelding(
