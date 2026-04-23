@@ -221,7 +221,7 @@ class SakMediator(
             finnSakIdForSøknad(søknadId = hendelse.søknadId!!, ident = hendelse.ident)
                 ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
-            sakHistorikk?.saker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
+            sakHistorikk?.dagpengeSaker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
                 sak.leggTilBehandling(behandling)
                 sakRepository.lagre(sakHistorikk)
             } ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
@@ -235,7 +235,7 @@ class SakMediator(
     ) {
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
             sakHistorikk
-                ?.saker()
+                ?.alleSaker()
                 ?.find { sak ->
                     sak.sakId == sakId
                 }?.let { sak ->

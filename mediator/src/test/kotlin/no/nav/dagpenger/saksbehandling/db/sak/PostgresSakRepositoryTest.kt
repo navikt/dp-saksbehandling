@@ -117,7 +117,7 @@ class PostgresSakRepositoryTest {
 
             // Sjekker at saker og behandling blir sortert kronologisk, med nyeste først
             sakHistorikkFraDB
-                .saker()
+                .alleSaker()
                 .first()
                 .behandlinger()
                 .first()
@@ -164,7 +164,7 @@ class PostgresSakRepositoryTest {
 
             // Sjekker at saker og behandling blir sortert kronologisk, med nyeste sak og behandling først
             sakHistorikkFraDB
-                .saker()
+                .alleSaker()
                 .first()
                 .behandlinger()
                 .single() shouldBe behandlingFerietillegg
