@@ -170,4 +170,64 @@ class OppfølgingMediatorTest {
             nyOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
+
+    @Test
+    fun `ferdigstill med OpprettOppfølging uten beholdOppgaven gir ny oppgave i KlarTilBehandling uten behandler`() {
+        DBTestHelper.withPerson { ds ->
+            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
+            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = oppgaveRepository,
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                )
+            val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
+            val mediator =
+                OppfølgingMediator(
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = OppfølgingBehandler(mockk<KlageMediator>(), mockk<BehandlingKlient>()),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val original =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(ident = testPerson.ident, aarsak = "Test", tittel = "Original"),
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = original.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            mediator.ferdigstill(
+                FerdigstillOppfølgingHendelse(
+                    oppfølgingId = original.oppfølgingId,
+                    aksjon =
+                        OppfølgingAksjon.OpprettOppfølging(
+                            valgtSakId = null,
+                            aarsak = "Ny",
+                            tittel = "Ny oppfølging",
+                            frist = null,
+                            beholdOppgaven = false,
+                        ),
+                    vurdering = "Trenger ny sjekk",
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
+            val nyOppgave = oppgaver.first { it.tilstand() == Oppgave.KlarTilBehandling }
+            nyOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            nyOppgave.behandlerIdent shouldBe null
+        }
+    }
 }
