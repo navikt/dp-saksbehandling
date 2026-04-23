@@ -64,6 +64,20 @@ object Emneknagg {
 
         val kategori = EmneknaggKategori.AVBRUTT_GRUNN
     }
+
+    enum class Oppfølging(
+        val visningsnavn: String,
+    ) {
+        AVVENTER_NY_INFORMASJON("Avventer ny informasjon"),
+        OPPFØLGING_AV_MELDEKORT("Oppfølging av meldekort"),
+        OPPFØLGING_AV_VEDTAK("Oppfølging av vedtak"),
+        KOPI_AV_VEDTAK_TIL_FULLMEKTIG("Kopi av vedtak til fullmektig"),
+        VURDERE_FEILUTBETALING("Vurdere feilutbetaling"),
+        ANNEN_ÅRSAK("Annen årsak"),
+        ;
+
+        val kategori = EmneknaggKategori.OPPFØLGING_ÅRSAK
+    }
 }
 
 fun hentEmneknaggKategori(visningsnavn: String): EmneknaggKategori {
@@ -83,6 +97,10 @@ fun hentEmneknaggKategori(visningsnavn: String): EmneknaggKategori {
         return EmneknaggKategori.AVBRUTT_GRUNN
     }
 
+    Emneknagg.Oppfølging.entries.find { it.visningsnavn == visningsnavn }?.let {
+        return EmneknaggKategori.OPPFØLGING_ÅRSAK
+    }
+
     return EmneknaggKategori.UDEFINERT
 }
 
@@ -94,5 +112,6 @@ enum class EmneknaggKategori {
     AVBRUTT_GRUNN,
     PÅ_VENT,
     ETTERSENDING,
+    OPPFØLGING_ÅRSAK,
     UDEFINERT,
 }
