@@ -207,7 +207,6 @@ class PostgresSakRepository(
         personId: UUID,
         sak: Sak,
     ) {
-        val erDpSak: Boolean = sak.behandlinger().any { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }
         run(
             queryOf(
                 //language=PostgreSQL
@@ -224,7 +223,7 @@ class PostgresSakRepository(
                         "id" to sak.sakId,
                         "person_id" to personId,
                         "opprettet" to sak.opprettet,
-                        "er_dp_sak" to erDpSak,
+                        "er_dp_sak" to sak.erFerietilleggsSak(),
                     ),
             ).asUpdate,
         )
