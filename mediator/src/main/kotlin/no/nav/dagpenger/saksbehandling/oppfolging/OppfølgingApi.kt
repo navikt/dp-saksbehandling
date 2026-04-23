@@ -63,7 +63,7 @@ internal fun Route.oppfølgingApi(
                     val saksbehandler = applicationCallParser.saksbehandler(call)
 
                     val oppfølging = oppfølgingMediator.hent(behandlingId, saksbehandler)
-                    val lovligeSaker = oppfølgingMediator.hentLovligeSaker(oppfølging.person.ident)
+                    val lovligeSaker = oppfølgingMediator.hentAlleSaker(oppfølging.person.ident)
 
                     call.respond(
                         HttpStatusCode.OK,

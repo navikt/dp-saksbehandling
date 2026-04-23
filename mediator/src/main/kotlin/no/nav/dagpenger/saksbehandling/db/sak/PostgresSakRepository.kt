@@ -30,7 +30,7 @@ class PostgresSakRepository(
             session.transaction { tx ->
                 tx.lagreSakHistorikk(
                     personId = sakHistorikk.person.id,
-                    saker = sakHistorikk.saker(),
+                    saker = sakHistorikk.alleSaker(),
                 )
             }
         }
@@ -394,7 +394,7 @@ class PostgresSakRepository(
         val sakId = this.uuidOrNull("sak_id")
         if (sakId != null) {
             val sak =
-                sakHistorikk.saker().singleOrNull { it.sakId == sakId } ?: Sak(
+                sakHistorikk.alleSaker().singleOrNull { it.sakId == sakId } ?: Sak(
                     sakId = sakId,
                     opprettet = this.localDateTime("sak_opprettet"),
                 ).also {

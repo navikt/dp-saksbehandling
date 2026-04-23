@@ -154,5 +154,5 @@ class InnsendingMediator(
             innsending
         }
 
-    fun hentLovligeSaker(ident: String): List<Sak> = sakMediator.finnSakHistorikk(ident)?.saker() ?: emptyList()
+    fun hentAlleSaker(ident: String): List<Sak> = sakMediator.finnSakHistorikk(ident)?.alleSaker() ?: emptyList()
 }

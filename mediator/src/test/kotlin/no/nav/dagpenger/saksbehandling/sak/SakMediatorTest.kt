@@ -142,7 +142,7 @@ class SakMediatorTest {
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
-                it.saker().single().let { sak ->
+                it.alleSaker().single().let { sak ->
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                     sak.behandlinger().single().utløstAv shouldBe HendelseBehandler.DpBehandling.Søknad
@@ -180,7 +180,7 @@ class SakMediatorTest {
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
-                it.saker().single().let { sak ->
+                it.alleSaker().single().let { sak ->
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                 }
@@ -188,7 +188,7 @@ class SakMediatorTest {
             sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelseGjenopptak)
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
-                it.saker().single().let { sak ->
+                it.alleSaker().single().let { sak ->
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().map { it.behandlingId } shouldContain behandlingIdSøknadNyRett
                     sak.behandlinger().map { it.behandlingId } shouldContain behandlingIdSøknadGjenopptak
@@ -224,7 +224,7 @@ class SakMediatorTest {
             )
             sakMediator.knyttTilSak(meldekortbehandlingOpprettetHendelse)
 
-            sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
+            sakMediator.hentSakHistorikk(testIdent).alleSaker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdMeldekort
                 behandlinger.first().utløstAv shouldBe HendelseBehandler.DpBehandling.Meldekort
@@ -259,7 +259,7 @@ class SakMediatorTest {
             )
             sakMediator.knyttTilSak(manuellBehandlingOpprettetHendelse)
 
-            sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
+            sakMediator.hentSakHistorikk(testIdent).alleSaker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdManuell
                 behandlinger.first().utløstAv shouldBe HendelseBehandler.DpBehandling.Manuell
@@ -547,7 +547,7 @@ class SakMediatorTest {
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
-                it.saker().single().let { sak ->
+                it.alleSaker().single().let { sak ->
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                 }
@@ -576,7 +576,7 @@ class SakMediatorTest {
             )
             val sakHistorikkFørEttersending =
                 sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
-            sakHistorikkFørEttersending.saker().size shouldBe 2
+            sakHistorikkFørEttersending.alleSaker().size shouldBe 2
 
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -638,7 +638,7 @@ class SakMediatorTest {
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
-                it.saker().single().let { sak ->
+                it.alleSaker().single().let { sak ->
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                 }
@@ -656,7 +656,7 @@ class SakMediatorTest {
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
                 )
-            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident).saker().size shouldBe 2
+            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident).alleSaker().size shouldBe 2
 
             val hendelse =
                 InnsendingMottattHendelse(

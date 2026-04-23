@@ -61,12 +61,8 @@ internal class OppgaveDTOMapper(
             null -> emptyList()
             else ->
                 this
-                    .saker()
-                    .filter { sak ->
-                        sak.behandlinger().none { behandling ->
-                            behandling.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg
-                        }
-                    }.map { sak ->
+                    .dagpengeSaker()
+                    .map { sak ->
                         val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
                         SakDTO(
                             id = sak.sakId,
@@ -80,12 +76,8 @@ internal class OppgaveDTOMapper(
             null -> emptyList()
             else ->
                 this
-                    .saker()
-                    .filter { sak ->
-                        sak.behandlinger().any { behandling ->
-                            behandling.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg
-                        }
-                    }.map { sak ->
+                    .ferietilleggSaker()
+                    .map { sak ->
                         val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
                         SakDTO(
                             id = sak.sakId,
