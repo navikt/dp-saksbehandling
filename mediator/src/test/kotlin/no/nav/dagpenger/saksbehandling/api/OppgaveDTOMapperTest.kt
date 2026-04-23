@@ -716,6 +716,7 @@ class OppgaveDTOMapperTest {
     }
 
     @Test
+    fun `lagPersonOversiktDTO skal koble oppgaver til riktig sak via behandlingId`() {
         val behandling1 = TestHelper.lagBehandling(behandlingId = UUIDv7.ny())
         val behandling2 = TestHelper.lagBehandling(behandlingId = UUIDv7.ny())
         val sak1 =

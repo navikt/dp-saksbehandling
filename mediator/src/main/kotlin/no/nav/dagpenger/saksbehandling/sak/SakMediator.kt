@@ -6,6 +6,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
@@ -54,6 +55,31 @@ class SakMediator(
         }
     }
 
+    fun opprettEllerKnyttTilSak(hendelse: SøknadsbehandlingOpprettetHendelse) {
+        if (hendelse.basertPåBehandling == null) {
+            val behandlingskjedeId =
+                requireNotNull(hendelse.behandlingskjedeId) {
+                    logger.error {
+                        "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
+                            "behandlingId ${hendelse.behandlingId}"
+                    }
+                }
+            opprettSak(
+                ident = hendelse.ident,
+                behandlingskjedeId = behandlingskjedeId,
+                behandling =
+                    Behandling(
+                        behandlingId = hendelse.behandlingId,
+                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        opprettet = hendelse.opprettet,
+                        hendelse = hendelse,
+                    ),
+            )
+        } else {
+            knyttTilSak(hendelse)
+        }
+    }
+
     fun opprettSak(
         ident: String,
         behandlingskjedeId: UUID,
@@ -78,6 +104,7 @@ class SakMediator(
                         årsak = "Skjermet eller adressebeskyttet person",
                     )
                 }
+
                 else -> {
                     throw e
                 }
@@ -197,6 +224,7 @@ class SakMediator(
             is KnyttTilSakResultat.KnyttetTilSak -> {
                 logger.info { "Knyttet behandlingId: $behandlingId til sakId: ${resultat.sak.sakId}" }
             }
+
             else -> {
                 logger.warn { "Klarte ikke å knytte behandlingId: $behandlingId av type $hendelseType til noen sak" }
                 rapidsConnection.sendAlertTilRapid(

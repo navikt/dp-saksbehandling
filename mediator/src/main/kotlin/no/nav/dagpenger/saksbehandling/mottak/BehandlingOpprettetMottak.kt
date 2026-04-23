@@ -10,7 +10,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -66,7 +65,6 @@ internal class BehandlingOpprettetMottak(
         }
 
         val utløstAv = DpBehandling.fraBehandletHendelseType(behandletHendelseType)
-
         withLoggingContext("behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_opprettet hendelse av type $behandletHendelseType (utløstAv=$utløstAv)" }
 
@@ -82,31 +80,7 @@ internal class BehandlingOpprettetMottak(
                             basertPåBehandling = basertPåBehandling,
                             behandlingskjedeId = behandlingskjedeId,
                         )
-                    if (basertPåBehandling == null) {
-                        withLoggingContext("søknadId" to "$søknadId") {
-                            val sakId =
-                                requireNotNull(hendelse.behandlingskjedeId) {
-                                    logger.error {
-                                        "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                                                "behandlingId ${hendelse.behandlingId}"
-                                    }
-                                }
-
-                            sakMediator.opprettSak(
-                                ident = ident,
-                                behandlingskjedeId = sakId,
-                                behandling =
-                                    Behandling(
-                                        behandlingId = hendelse.behandlingId,
-                                        utløstAv = DpBehandling.Søknad,
-                                        opprettet = hendelse.opprettet,
-                                        hendelse = hendelse,
-                                    ),
-                            )
-                        }
-                    } else {
-                        sakMediator.knyttTilSak(hendelse)
-                    }
+                    sakMediator.opprettEllerKnyttTilSak(hendelse)
                 }
 
                 else -> {
