@@ -97,7 +97,7 @@ class PostgresSakRepository(
                             SELECT 1
                             FROM   behandling_v1 feri
                             WHERE  feri.sak_id = sak.id
-                            AND    feri.utlost_av = 'FERIETILLEGG'
+                            AND    feri.utlost_av = :ferietillegg
                         )
                         AND NOT EXISTS (
                             SELECT 1
@@ -111,6 +111,7 @@ class PostgresSakRepository(
                     paramMap =
                         mapOf(
                             "ident" to ident,
+                            "ferietillegg" to HendelseBehandler.DpBehandling.Ferietillegg.name,
                         ),
                 ).map { row ->
                     row.uuid("id")
