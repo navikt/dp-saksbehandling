@@ -95,26 +95,22 @@ class OppgaveMediator(
         hendelse: OpprettOppfølgingHendelse,
         behandling: Behandling,
         person: Person,
-        utsattTil: LocalDate? = null,
     ): Oppgave {
         val oppgave =
             Oppgave(
                 emneknagger = setOf(hendelse.aarsak),
                 opprettet = hendelse.registrertTidspunkt,
                 behandling = behandling,
+                hendelse = hendelse,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,
                         kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
                     ),
-            ).also {
-                it.settKlarTilBehandling(hendelse)
-                if (utsattTil != null) {
-                    it.settPåVent(hendelse, utsattTil)
-                }
-            }
+            )
 
+        oppgave.settTilstandFor(hendelse)
         oppgaveRepository.lagre(oppgave)
         return oppgave
     }

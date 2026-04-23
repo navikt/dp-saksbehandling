@@ -68,7 +68,7 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `POST oppretter generell oppgave og returnerer IDs`() {
+    fun `POST oppretter oppfølging og returnerer IDs`() {
         val slot = slot<OpprettOppfølgingHendelse>()
         val opprettetId = UUIDv7.ny()
         val oppgaveId = UUIDv7.ny()
@@ -225,7 +225,7 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `Skal kunne hente en generell oppgave`() {
+    fun `Skal kunne hente en oppfølging`() {
         val resultat = Oppfølging.Resultat.RettTilDagpenger(UUIDv7.ny())
         val sak =
             Sak(
@@ -279,7 +279,7 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `Skal kunne hente generell oppgave med frist`() {
+    fun `Skal kunne hente oppfølging med frist`() {
         val frist = LocalDate.of(2026, 5, 15)
         val oppfølging =
             TestHelper.lagOppfølging(
@@ -311,7 +311,7 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `Skal kunne hente generell oppgave uten resultat`() {
+    fun `Skal kunne hente oppfølging uten resultat`() {
         val oppfølging =
             TestHelper.lagOppfølging(
                 id = oppfølgingId,
@@ -341,7 +341,7 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en generell oppgave uten aksjon`() {
+    fun `Skal kunne ferdigstille en oppfølging uten aksjon`() {
         val sakId = UUIDv7.ny()
         val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
@@ -430,7 +430,7 @@ class OppfølgingApiTest {
                         """
                         {
                             "sakId": "$sakId",
-                            "vurdering": "Opprett ny generell oppgave",
+                            "vurdering": "Opprett ny oppfølging",
                             "behandlingsvariant": "OPPFOLGING",
                             "nyOppgave": {
                                 "tittel": "Følg opp meldekort",
@@ -447,7 +447,7 @@ class OppfølgingApiTest {
                     slot.captured.let {
                         it.aksjon.type shouldBe OppfølgingAksjon.Type.OPPRETT_OPPFOLGING
                         it.aksjon.valgtSakId shouldBe sakId
-                        it.vurdering shouldBe "Opprett ny generell oppgave"
+                        it.vurdering shouldBe "Opprett ny oppfølging"
                     }
                     (slot.captured.aksjon as OppfølgingAksjon.OpprettOppfølging).let {
                         it.tittel shouldBe "Følg opp meldekort"

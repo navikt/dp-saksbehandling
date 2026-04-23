@@ -21,7 +21,7 @@ class PostgresOppfølgingRepositoryTest {
         )
 
     @Test
-    fun `Skal lagre og hente generell oppgave`() {
+    fun `Skal lagre og hente oppfølging`() {
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
             val repository = PostgresOppfølgingRepository(ds)
@@ -48,7 +48,7 @@ class PostgresOppfølgingRepositoryTest {
     }
 
     @Test
-    fun `Skal oppdatere generell oppgave ved ferdigstilling`() {
+    fun `Skal oppdatere oppfølging ved ferdigstilling`() {
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
             val repository = PostgresOppfølgingRepository(ds)

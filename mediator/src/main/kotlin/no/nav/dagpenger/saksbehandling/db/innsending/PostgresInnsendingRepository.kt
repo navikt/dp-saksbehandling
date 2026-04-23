@@ -81,6 +81,7 @@ class PostgresInnsendingRepository(
                                         Innsending.InnsendingResultat.Ingen -> null
                                         is Innsending.InnsendingResultat.Klage -> innsendingResultat.behandlingId
                                         is Innsending.InnsendingResultat.RettTilDagpenger -> innsendingResultat.behandlingId
+                                        is Innsending.InnsendingResultat.Oppfølging -> innsendingResultat.behandlingId
                                         null -> null
                                     },
                             ),
@@ -191,6 +192,7 @@ class PostgresInnsendingRepository(
                     "Ingen" -> Innsending.InnsendingResultat.Ingen
                     "Klage" -> Innsending.InnsendingResultat.Klage(this.uuid("resultat_behandling_id"))
                     "RettTilDagpenger" -> Innsending.InnsendingResultat.RettTilDagpenger(this.uuid("resultat_behandling_id"))
+                    "Oppfølging" -> Innsending.InnsendingResultat.Oppfølging(this.uuid("resultat_behandling_id"))
                     else -> null
                 },
         )

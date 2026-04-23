@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -70,21 +69,11 @@ class OppfølgingMediator(
                 hendelse = hendelse,
                 behandling = behandling,
                 person = person,
-                utsattTil = hendelse.frist,
             )
 
-        val tilstandInfo = if (hendelse.frist != null) "i PåVent til ${hendelse.frist}" else "i KlarTilBehandling"
-        logger.info { "Opprettet oppfølging ${oppfølging.id} med årsak ${hendelse.aarsak} $tilstandInfo" }
-
-        if (hendelse.beholdOppgaven && saksbehandler != null) {
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-            )
-            logger.info { "Tildelte ny oppgave ${oppgave.oppgaveId} til ${saksbehandler.navIdent}" }
+        logger.info {
+            "Opprettet oppfølging ${oppfølging.id} med årsak ${hendelse.aarsak} i tilstand ${oppgave.tilstand()}" +
+                (oppgave.utsattTil()?.let { " med frist $it" } ?: "")
         }
 
         return OpprettetOppfølging(
@@ -111,21 +100,6 @@ class OppfølgingMediator(
         )
         oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
         oppfølgingRepository.lagre(oppfølging)
-
-        if (ferdigstiltHendelse.beholdOppgaven) {
-            val oppgaveId =
-                requireNotNull(ferdigstiltHendelse.opprettetOppgaveId) {
-                    "opprettetOppgaveId må være satt når beholdOppgaven=true"
-                }
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgaveId,
-                    ansvarligIdent = hendelse.utførtAv.navIdent,
-                    utførtAv = hendelse.utførtAv,
-                ),
-            )
-            logger.info { "Tildelte ny oppgave $oppgaveId til ${hendelse.utførtAv.navIdent}" }
-        }
     }
 
     fun hent(

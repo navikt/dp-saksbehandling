@@ -127,7 +127,7 @@ class InnsendingBehandler(
         return InnsendingFerdigstiltHendelse(
             innsendingId = innsending.innsendingId,
             aksjonType = hendelse.aksjon.type,
-            opprettetBehandlingId = null,
+            opprettetBehandlingId = opprettet.oppfølgingId,
             opprettetOppgaveId = opprettet.oppgaveId,
             utførtAv = hendelse.utførtAv,
         )
