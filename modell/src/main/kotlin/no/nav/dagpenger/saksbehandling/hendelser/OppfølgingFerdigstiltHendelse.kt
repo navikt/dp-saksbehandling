@@ -9,6 +9,5 @@ data class OppfølgingFerdigstiltHendelse(
     val aksjonType: OppfølgingAksjon.Type,
     val opprettetBehandlingId: UUID?,
     val opprettetOppgaveId: UUID? = null,
-    val beholdOppgaven: Boolean = false,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

@@ -12,7 +12,11 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
+import no.nav.dagpenger.saksbehandling.oppfolging.OpprettetOppfølging
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.UUID
 
 class InnsendingBehandlerTest {
@@ -196,6 +200,62 @@ class InnsendingBehandlerTest {
                 begrunnelse = testInnsending.vurdering()!!,
             )
         }
+    }
+
+    @Test
+    fun `Behandle en innsending med aksjon av type OpprettOppfølging`() {
+        val oppfølgingId = UUID.randomUUID()
+        val oppgaveId = UUID.randomUUID()
+        val frist = LocalDate.now().plusDays(7)
+
+        val hendelseSlot = slot<OpprettOppfølgingHendelse>()
+        val oppfølgingMediator =
+            mockk<OppfølgingMediator>().also {
+                every { it.taImot(capture(hendelseSlot)) } returns
+                    OpprettetOppfølging(
+                        oppfølgingId = oppfølgingId,
+                        oppgaveId = oppgaveId,
+                    )
+            }
+        val innsendingBehandler =
+            InnsendingBehandler(
+                klageMediator = mockk(),
+                behandlingKlient = mockk(),
+                oppfølgingMediator = oppfølgingMediator,
+            )
+
+        innsendingBehandler
+            .utførAksjon(
+                hendelse =
+                    lagHendelse(
+                        aksjon =
+                            Aksjon.OpprettOppfølging(
+                                valgtSakId = null,
+                                tittel = "Sjekk meldekort",
+                                aarsak = "MeldekortKorrigering",
+                                frist = frist,
+                                beholdOppgaven = true,
+                            ),
+                        vurdering = "Dette er en vurdering",
+                    ),
+                innsending = testInnsending,
+            ).let {
+                it.innsendingId shouldBe testInnsending.innsendingId
+                it.aksjonType shouldBe Aksjon.Type.OPPRETT_OPPFOLGING
+                it.opprettetBehandlingId shouldBe oppfølgingId
+                it.opprettetOppgaveId shouldBe oppgaveId
+                it.utførtAv shouldBe saksbehandler
+            }
+
+        with(hendelseSlot.captured) {
+            ident shouldBe testInnsending.person.ident
+            tittel shouldBe "Sjekk meldekort"
+            aarsak shouldBe "MeldekortKorrigering"
+            this.frist shouldBe frist
+            beholdOppgaven shouldBe true
+        }
+
+        verify(exactly = 1) { oppfølgingMediator.taImot(any()) }
     }
 
     private fun lagHendelse(
