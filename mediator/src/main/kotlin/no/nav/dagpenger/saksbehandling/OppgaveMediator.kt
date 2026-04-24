@@ -110,7 +110,7 @@ class OppgaveMediator(
                     ),
             )
 
-        oppgave.settTilstandFor(hendelse)
+        oppgave.klargjørForBehandling(hendelse)
         oppgaveRepository.lagre(oppgave)
         return oppgave
     }

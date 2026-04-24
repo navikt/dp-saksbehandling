@@ -263,14 +263,14 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
-    fun settTilstandFor(hendelse: OpprettOppfølgingHendelse) {
+    fun klargjørForBehandling(hendelse: OpprettOppfølgingHendelse) {
         val saksbehandler = hendelse.utførtAv as? Saksbehandler
         saksbehandler?.let {
             egneAnsatteTilgangskontroll(it)
             adressebeskyttelseTilgangskontroll(it)
         }
 
-        tilstand.settTilstandFor(this, hendelse)
+        tilstand.klargjørForBehandling(this, hendelse)
     }
 
     fun avbryt(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
@@ -409,7 +409,7 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        override fun settTilstandFor(
+        override fun klargjørForBehandling(
             oppgave: Oppgave,
             hendelse: OpprettOppfølgingHendelse,
         ) {
@@ -1305,7 +1305,7 @@ data class Oppgave private constructor(
             )
         }
 
-        fun settTilstandFor(
+        fun klargjørForBehandling(
             oppgave: Oppgave,
             hendelse: OpprettOppfølgingHendelse,
         ) {
