@@ -15,8 +15,8 @@ import kotlinx.html.li
 import kotlinx.html.p
 import kotlinx.html.title
 import kotlinx.html.ul
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.api.models.ProduksjonsstatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
@@ -188,13 +188,4 @@ private fun Oppgave.Tilstand.Type.tilTilstandNavn(): String =
         Oppgave.Tilstand.Type.AVBRUTT_MASKINELT -> "Avbrutt maskinelt"
     }
 
-private fun UtløstAvType.tilSerieNavn(): String =
-    when (this) {
-        UtløstAvType.KLAGE -> "Klage"
-        UtløstAvType.SØKNAD -> "Søknad"
-        UtløstAvType.MELDEKORT -> "Meldekort"
-        UtløstAvType.MANUELL -> "Manuell"
-        UtløstAvType.INNSENDING -> "Innsending"
-        UtløstAvType.REVURDERING -> "Revurdering"
-        UtløstAvType.OPPFØLGING -> "Oppfølging"
-    }
+private fun HendelseBehandler.tilSerieNavn(): String = name

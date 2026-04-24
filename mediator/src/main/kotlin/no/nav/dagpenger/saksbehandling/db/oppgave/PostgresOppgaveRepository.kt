@@ -8,6 +8,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
@@ -38,36 +39,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
-import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.serder.tilHendelse
+import no.nav.dagpenger.saksbehandling.serder.rehydrerHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
 import java.time.LocalDate
@@ -96,7 +71,7 @@ class PostgresOppgaveRepository(
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
-                val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'$it'" }
+                val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'${it.name}'" }
                 val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
                 val utløstAvTypeClause =
                     if (filter.utløstAvTyper.isNotEmpty()) {
@@ -469,7 +444,7 @@ class PostgresOppgaveRepository(
                     true -> " AND oppg.tilstand IN ($tilstanderAsText) "
                     false -> ""
                 }
-            val utløstAvTyperAsText: String = søkeFilter.utløstAvTyper.joinToString { "'$it'" }
+            val utløstAvTyperAsText: String = søkeFilter.utløstAvTyper.joinToString { "'${it.name}'" }
             val utløstAvTypeClause =
                 when (søkeFilter.utløstAvTyper.isNotEmpty()) {
                     true -> " AND beha.utlost_av IN ($utløstAvTyperAsText) "
@@ -621,37 +596,7 @@ class PostgresOppgaveRepository(
 private fun rehydrerTilstandsendringHendelse(
     hendelseType: String,
     hendelseJson: String,
-): Hendelse =
-    when (hendelseType) {
-        "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
-        "AvbrytOppgaveHendelse" -> hendelseJson.tilHendelse<AvbrytOppgaveHendelse>()
-        "BehandlingAvbruttHendelse" -> hendelseJson.tilHendelse<BehandlingAvbruttHendelse>()
-        "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
-        "BehandlingOpplåstHendelse" -> hendelseJson.tilHendelse<BehandlingOpplåstHendelse>()
-        "BehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<BehandlingOpprettetHendelse>()
-        "FjernOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<FjernOppgaveAnsvarHendelse>()
-        "ForslagTilVedtakHendelse" -> hendelseJson.tilHendelse<ForslagTilVedtakHendelse>()
-        "GodkjentBehandlingHendelse" -> hendelseJson.tilHendelse<GodkjentBehandlingHendelse>()
-        "OppfølgingFerdigstiltHendelse" -> hendelseJson.tilHendelse<OppfølgingFerdigstiltHendelse>()
-        "InnsendingFerdigstiltHendelse" -> hendelseJson.tilHendelse<InnsendingFerdigstiltHendelse>()
-        "InnsendingMottattHendelse" -> hendelseJson.tilHendelse<InnsendingMottattHendelse>()
-        "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
-        "OpprettOppfølgingHendelse" -> hendelseJson.tilHendelse<OpprettOppfølgingHendelse>()
-        "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
-        "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
-        "SendTilKontrollHendelse" -> hendelseJson.tilHendelse<SendTilKontrollHendelse>()
-        "SettOppgaveAnsvarHendelse" -> hendelseJson.tilHendelse<SettOppgaveAnsvarHendelse>()
-        "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
-        "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-        "TomHendelse" -> hendelseJson.tilHendelse<TomHendelse>()
-        "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
-        "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
-        else -> {
-            logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
-            sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
-            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
-        }
-    }
+): Hendelse = rehydrerHendelse(hendelseType, hendelseJson)
 
 private fun hentEmneknaggerForOppgave(
     oppgaveId: UUID,
@@ -940,7 +885,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
                 behandlingId = this.uuid("behandling_id"),
                 opprettet = this.localDateTime("behandling_opprettet"),
                 hendelse = this.rehydrerHendelse(),
-                utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
+                utløstAv = HendelseBehandler.valueOf(this.string("utlost_av")),
             ),
         person = person,
         meldingOmVedtak =
@@ -954,50 +899,11 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
 private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering =
     AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
 
-private fun Row.rehydrerHendelse(): Hendelse {
-    val hendelseType = this.stringOrNull("hendelse_type")
-
-    return when (hendelseType) {
-        null -> TomHendelse
-        "TomHendelse" -> TomHendelse
-        "SøknadsbehandlingOpprettetHendelse" ->
-            this
-                .string("hendelse_data")
-                .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-
-        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
-        "MeldekortbehandlingOpprettetHendelse" ->
-            this
-                .string("hendelse_data")
-                .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
-
-        "ManuellBehandlingOpprettetHendelse" ->
-            this
-                .string("hendelse_data")
-                .tilHendelse<ManuellBehandlingOpprettetHendelse>()
-
-        "InnsendingMottattHendelse" ->
-            this
-                .string("hendelse_data")
-                .tilHendelse<InnsendingMottattHendelse>()
-
-        "RevurderingBehandlingOpprettetHendelse" ->
-            this
-                .string("hendelse_data")
-                .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
-
-        "OpprettOppfølgingHendelse" ->
-            this
-                .string("hendelse_data")
-                .tilHendelse<OpprettOppfølgingHendelse>()
-
-        else -> {
-            logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
-            sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
-            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
-        }
-    }
-}
+private fun Row.rehydrerHendelse(): Hendelse =
+    rehydrerHendelse(
+        hendelseType = this.stringOrNull("hendelse_type"),
+        hendelseJson = this.stringOrNull("hendelse_data") ?: "{}",
+    )
 
 class DataNotFoundException(
     message: String,

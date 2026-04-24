@@ -13,7 +13,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
-import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -47,7 +47,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
-        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -80,7 +80,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         maskinToken: String,
-        utløstAv: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAv: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -140,7 +140,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
-        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -213,15 +213,17 @@ class MeldingOmVedtakKlient(
     ) : RuntimeException(message)
 }
 
-private fun UtløstAvType.tilMeldingOmVedtakBehandlingstype(): String =
+private fun HendelseBehandler.tilMeldingOmVedtakBehandlingstype(): String =
     when (this) {
-        UtløstAvType.KLAGE -> "KLAGE"
-        UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
-        UtløstAvType.MELDEKORT -> "MELDEKORT"
-        UtløstAvType.MANUELL -> "MANUELL"
-        UtløstAvType.INNSENDING -> "INNSENDING"
-        UtløstAvType.REVURDERING -> "REVURDERING"
-        UtløstAvType.OPPFØLGING -> "OPPFØLGING"
+        is HendelseBehandler.Intern.Klage -> "KLAGE"
+        is HendelseBehandler.DpBehandling.Søknad -> "RETT_TIL_DAGPENGER"
+        is HendelseBehandler.DpBehandling.Meldekort -> "MELDEKORT"
+        is HendelseBehandler.DpBehandling.Manuell -> "MANUELL"
+        is HendelseBehandler.Intern.Innsending -> "INNSENDING"
+        is HendelseBehandler.DpBehandling.Revurdering -> "REVURDERING"
+        is HendelseBehandler.Intern.Oppfølging -> "OPPFØLGING"
+        is HendelseBehandler.DpBehandling.Ferietillegg -> "FERIETILLEGG"
+        is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> "ARBEIDSSØKERPERIODE"
     }
 
 private data class MeldingOmVedtakDataDTO(

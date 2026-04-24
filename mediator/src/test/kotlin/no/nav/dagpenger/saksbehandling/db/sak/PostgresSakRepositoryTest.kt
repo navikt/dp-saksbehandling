@@ -5,12 +5,13 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
@@ -29,23 +30,23 @@ class PostgresSakRepositoryTest {
     private val behandling1iSak1 =
         Behandling(
             behandlingId = behandlingId1iSak1,
-            utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå.minusDays(9),
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+            opprettet = nå,
             oppgaveId = oppgaveId,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadIdSak1,
                     behandlingId = behandlingId1iSak1,
                     ident = DBTestHelper.testPerson.ident,
-                    opprettet = nå.minusDays(9),
+                    opprettet = nå,
                     basertPåBehandling = null,
                 ),
         )
     private val behandling2iSak1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå.minusDays(5),
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+            opprettet = nå,
             hendelse = TomHendelse,
         )
 
@@ -56,34 +57,33 @@ class PostgresSakRepositoryTest {
     private val behandling1iSak2 =
         Behandling(
             behandlingId = behandlingId1iSak2,
-            utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå.minusDays(1),
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+            opprettet = nå,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId1Sak2,
                     behandlingId = behandlingId1iSak1,
                     ident = DBTestHelper.testPerson.ident,
-                    opprettet = nå.minusDays(1),
+                    opprettet = nå,
                     basertPåBehandling = null,
                 ),
         )
     private val behandling2iSak2 =
         Behandling(
             behandlingId = behandlingId2iSak2,
-            utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå.minusDays(3),
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+            opprettet = nå,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId2Sak2,
                     behandlingId = behandlingId2iSak2,
                     ident = DBTestHelper.testPerson.ident,
-                    opprettet = nå.minusDays(3),
+                    opprettet = nå,
                     basertPåBehandling = behandlingId1iSak2,
                 ),
         )
     private val sak1 =
         Sak(
-            søknadId = søknadIdSak1,
             opprettet = nå,
         ).also {
             it.leggTilBehandling(behandling1iSak1)
@@ -91,7 +91,6 @@ class PostgresSakRepositoryTest {
         }
     private val sak2 =
         Sak(
-            søknadId = søknadId1Sak2,
             opprettet = nå,
         ).also {
             // Emulerer out of order lesing
@@ -118,11 +117,64 @@ class PostgresSakRepositoryTest {
 
             // Sjekker at saker og behandling blir sortert kronologisk, med nyeste først
             sakHistorikkFraDB
-                .saker()
+                .alleSaker()
                 .first()
                 .behandlinger()
                 .first()
                 .behandlingId shouldBe behandling2iSak2.behandlingId
+        }
+    }
+
+    @Test
+    fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg, men skal ikke hentes ifm siste sak`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val behandlingIdFerietillegg = UUIDv7.ny()
+            val hendelse =
+                DpBehandlingOpprettetHendelse(
+                    behandlingId = behandlingIdFerietillegg,
+                    ident = DBTestHelper.testPerson.ident,
+                    opprettet = nå,
+                    basertPåBehandling = null,
+                    behandlingskjedeId = behandlingIdFerietillegg,
+                    type = HendelseBehandler.DpBehandling.Ferietillegg,
+                )
+            val behandlingFerietillegg =
+                Behandling(
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = hendelse.type,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
+                )
+            val sakFerietillegg =
+                Sak(
+                    opprettet = behandlingFerietillegg.opprettet,
+                ).also {
+                    it.leggTilBehandling(behandlingFerietillegg)
+                }
+            val sakHistorikkMedFerietillegg =
+                SakHistorikk(
+                    person = person,
+                ).also {
+                    it.leggTilSak(sak1)
+                    it.leggTilSak(sakFerietillegg)
+                }
+            val sakRepository = PostgresSakRepository(dataSource = dataSource)
+            sakRepository.lagre(sakHistorikkMedFerietillegg)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+
+            // Sjekker at saker og behandling blir sortert kronologisk, med nyeste sak og behandling først
+            sakHistorikkFraDB
+                .alleSaker()
+                .first()
+                .behandlinger()
+                .single() shouldBe behandlingFerietillegg
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+
+            sakRepository.merkSakenSomDpSak(sak1.sakId, true)
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe sak1.sakId
+            // sakHistorikkFraDB shouldBe sakHistorikkMedFerietillegg
         }
     }
 
@@ -153,19 +205,19 @@ class PostgresSakRepositoryTest {
             ds.opprettOppgaveForBehandling(behandlingId = behandling1iSak2.behandlingId)
             ds.opprettOppgaveForBehandling(behandlingId = behandling2iSak2.behandlingId)
 
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe null
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe null
 
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak1.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak1.sakId
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak2.sakId
 
             ds.avbrytOppgave(behandlingId = behandling2iSak2.behandlingId)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak2.sakId
 
             ds.avbrytOppgave(behandlingId = behandling1iSak2.behandlingId)
-            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak1.sakId
+            sakRepository.finnSisteDagpengeSakId(ident = person.ident) shouldBe sak1.sakId
         }
     }
 
@@ -175,19 +227,19 @@ class PostgresSakRepositoryTest {
             val sakRepository = PostgresSakRepository(ds)
 
             sakRepository.finnSakIdForSøknad(
-                søknadId = sak1.søknadId,
+                søknadId = søknadIdSak1,
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe null
 
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(
-                søknadId = sak1.søknadId,
+                søknadId = søknadIdSak1,
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe sak1.sakId
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(
-                søknadId = sak2.søknadId,
+                søknadId = søknadId1Sak2,
                 ident = DBTestHelper.testPerson.ident,
             ) shouldBe sak2.sakId
         }

@@ -8,14 +8,13 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -383,7 +382,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = MANUELL),
+                    behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Manuell),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
@@ -550,7 +549,7 @@ class OppgaveDTOMapperTest {
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = TestHelper.lagBehandling(utløstAvType = MELDEKORT),
+                    behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Meldekort),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
@@ -722,12 +721,10 @@ class OppgaveDTOMapperTest {
         val behandling2 = TestHelper.lagBehandling(behandlingId = UUIDv7.ny())
         val sak1 =
             Sak(
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             ).also { it.leggTilBehandling(behandling1) }
         val sak2 =
             Sak(
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             ).also { it.leggTilBehandling(behandling2) }
 

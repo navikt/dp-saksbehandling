@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -262,6 +263,16 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
+    fun klargjørForBehandling(hendelse: OpprettOppfølgingHendelse) {
+        val saksbehandler = hendelse.utførtAv as? Saksbehandler
+        saksbehandler?.let {
+            egneAnsatteTilgangskontroll(it)
+            adressebeskyttelseTilgangskontroll(it)
+        }
+
+        tilstand.klargjørForBehandling(this, hendelse)
+    }
+
     fun avbryt(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
         tilstand.avbryt(this, behandlingAvbruttHendelse)
     }
@@ -364,17 +375,6 @@ data class Oppgave private constructor(
         )
     }
 
-    fun settPåVent(
-        hendelse: Hendelse,
-        utsattTil: LocalDate,
-    ) {
-        tilstand.settPåVent(
-            oppgave = this,
-            hendelse = hendelse,
-            utsattTil = utsattTil,
-        )
-    }
-
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -407,6 +407,31 @@ data class Oppgave private constructor(
         ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             return Handling.LAGRE_OPPGAVE
+        }
+
+        override fun klargjørForBehandling(
+            oppgave: Oppgave,
+            hendelse: OpprettOppfølgingHendelse,
+        ) {
+            when {
+                hendelse.frist != null -> {
+                    oppgave.utsattTil = hendelse.frist
+                    oppgave.behandlerIdent = hendelse.ansvarligIdent
+                    oppgave.endreTilstand(PåVent, hendelse)
+                }
+
+                hendelse.beholdOppgaven -> {
+                    requireNotNull(
+                        hendelse.ansvarligIdent,
+                    ) { "ansvarligIdent må være satt for å kunne beholde oppgaven ved opprettelse av oppfølging" }
+                    oppgave.behandlerIdent = hendelse.ansvarligIdent
+                    oppgave.endreTilstand(UnderBehandling, hendelse)
+                }
+
+                else -> {
+                    oppgave.endreTilstand(KlarTilBehandling, hendelse)
+                }
+            }
         }
     }
 
@@ -450,16 +475,6 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
-        }
-
-        // TODO: Avklar om settPåVent skal legge til årsak-emneknagg slik utsett() gjør
-        override fun settPåVent(
-            oppgave: Oppgave,
-            hendelse: Hendelse,
-            utsattTil: LocalDate,
-        ) {
-            oppgave.utsattTil = utsattTil
-            oppgave.endreTilstand(PåVent, hendelse)
         }
     }
 
@@ -1290,14 +1305,13 @@ data class Oppgave private constructor(
             )
         }
 
-        fun settPåVent(
+        fun klargjørForBehandling(
             oppgave: Oppgave,
-            hendelse: Hendelse,
-            utsattTil: LocalDate,
+            hendelse: OpprettOppfølgingHendelse,
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke sette oppgave på vent i tilstand $type",
+                message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
             )
         }
 

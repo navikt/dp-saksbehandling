@@ -41,7 +41,7 @@ fun Route.innsendingApi(
                             call.respond(
                                 HttpStatusCode.OK,
                                 it.tilInnsendingDTO(
-                                    mediator.hentLovligeSaker(it.person.ident),
+                                    mediator.hentAlleSaker(it.person.ident),
                                 ),
                             )
                         }
@@ -87,7 +87,7 @@ fun Route.innsendingApi(
                                             beskrivelse = nyOppgave.beskrivelse ?: "",
                                             aarsak = nyOppgave.aarsak,
                                             frist = nyOppgave.frist,
-                                            beholdOppgaven = nyOppgave.beholdOppgaven ?: false,
+                                            beholdOppgaven = nyOppgave.beholdOppgaven,
                                         )
                                     }
                                 }

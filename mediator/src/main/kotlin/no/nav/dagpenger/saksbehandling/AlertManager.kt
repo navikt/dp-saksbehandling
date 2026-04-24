@@ -17,7 +17,7 @@ object AlertManager {
     internal class OppgaveOpprettetTilstandAlert(
         private val oppgaveId: UUID,
         private val sistEndret: LocalDateTime,
-        private val utløstAvType: UtløstAvType,
+        private val utløstAvType: HendelseBehandler,
     ) : AlertType {
         override val feilMelding: String
             get() {

@@ -15,7 +15,7 @@ Oppfølging er en fleksibel oppgavetype som lar saksbehandlere håndtere arbeid 
 ### Datamodell
 
 ```
-Person ← Oppfølging ──→ Behandling (UtløstAvType.OPPFØLGING)
+Person ← Oppfølging ──→ Behandling (HendelseBehandler.OPPFØLGING)
                          └──→ Oppgave (emneknagger = { aarsak })
 ```
 

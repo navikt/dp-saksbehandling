@@ -7,9 +7,9 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.installerApis
@@ -69,13 +69,15 @@ class StatistikkApiTest {
     }
 
     @Test
-    fun `API skal svare med status 400 og http problem ved ugyldig utlostAv i queryparam`() {
+    fun `Ukjent utlostAv i queryparam gir feil`() {
+        val mockProduksjonsstatistikkRepository =
+            mockk<ProduksjonsstatistikkRepository>(relaxed = true)
         testApplication {
             application {
                 installerApis(
                     oppgaveMediator = mockk(),
                     oppgaveDTOMapper = mockk(),
-                    produksjonsstatistikkRepository = mockk(),
+                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
@@ -90,19 +92,7 @@ class StatistikkApiTest {
                 .get("produksjonsstatistikk?utlostAv=FEIL") {
                     autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
-                    httpResponse.status.value shouldBe 400
-                    val json = httpResponse.bodyAsText()
-                    json shouldEqualJson
-                        //language=json
-                        """
-                        {
-                          "type" : "dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi",
-                          "title" : "Ugyldig verdi",
-                          "status" : 400,
-                          "detail" : "No enum constant no.nav.dagpenger.saksbehandling.UtløstAvType.FEIL",
-                          "instance" : "/produksjonsstatistikk"
-                        }
-                        """.trimIndent()
+                    httpResponse.status.value shouldBe 500
                 }
         }
     }
@@ -123,7 +113,7 @@ class StatistikkApiTest {
                 every { it.hentUtløstAvMedTilstandFilter(any()) } returns
                     listOf(
                         AntallOppgaverForUtløstAv(
-                            utløstAv = SØKNAD,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
                             antall = 1,
                         ),
                     )
@@ -131,7 +121,7 @@ class StatistikkApiTest {
                     listOf(
                         AntallOppgaverForTilstandOgUtløstAv(
                             tilstand = KLAR_TIL_BEHANDLING,
-                            utløstAv = SØKNAD,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
                             antall = 1,
                         ),
                     )
@@ -181,7 +171,7 @@ class StatistikkApiTest {
                             ],
                             "serier" : [ 
                               {
-                                "navn" : "Søknad",
+                                "navn" : "SØKNAD",
                                 "verdier" : [ 
                                   {
                                     "gruppe" : "Klar til behandling",

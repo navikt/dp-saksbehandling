@@ -6,19 +6,17 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
@@ -39,37 +37,70 @@ class SakMediator(
 
     fun finnSakHistorikk(ident: String): SakHistorikk? = sakRepository.finnSakHistorikk(ident)
 
-    fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): Sak {
-        val sakId =
-            requireNotNull(søknadsbehandlingOpprettetHendelse.behandlingskjedeId) {
-                logger.error {
-                    "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                        "behandlingId ${søknadsbehandlingOpprettetHendelse.behandlingId}"
+    fun opprettEllerKnyttTilSak(hendelse: DpBehandlingOpprettetHendelse) {
+        if (hendelse.basertPåBehandling == null) {
+            opprettSak(
+                ident = hendelse.ident,
+                behandlingskjedeId = hendelse.behandlingskjedeId,
+                behandling =
+                    Behandling(
+                        behandlingId = hendelse.behandlingId,
+                        utløstAv = hendelse.type,
+                        opprettet = hendelse.opprettet,
+                        hendelse = hendelse,
+                    ),
+            )
+        } else {
+            knyttTilSak(hendelse)
+        }
+    }
+
+    fun opprettEllerKnyttTilSak(hendelse: SøknadsbehandlingOpprettetHendelse) {
+        if (hendelse.basertPåBehandling == null) {
+            val behandlingskjedeId =
+                requireNotNull(hendelse.behandlingskjedeId) {
+                    logger.error {
+                        "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
+                            "behandlingId ${hendelse.behandlingId}"
+                    }
                 }
-            }
+            opprettSak(
+                ident = hendelse.ident,
+                behandlingskjedeId = behandlingskjedeId,
+                behandling =
+                    Behandling(
+                        behandlingId = hendelse.behandlingId,
+                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        opprettet = hendelse.opprettet,
+                        hendelse = hendelse,
+                    ),
+            )
+        } else {
+            knyttTilSak(hendelse)
+        }
+    }
+
+    fun opprettSak(
+        ident: String,
+        behandlingskjedeId: UUID,
+        behandling: Behandling,
+    ): Sak {
         val sak =
             Sak(
-                sakId = sakId,
-                søknadId = søknadsbehandlingOpprettetHendelse.søknadId,
-                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                sakId = behandlingskjedeId,
+                opprettet = behandling.opprettet,
             ).also {
-                it.leggTilBehandling(
-                    Behandling(
-                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        utløstAv = UtløstAvType.SØKNAD,
-                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                        hendelse = søknadsbehandlingOpprettetHendelse,
-                    ),
-                )
+                it.leggTilBehandling(behandling)
             }
 
         runCatching {
-            personMediator.finnEllerOpprettPerson(søknadsbehandlingOpprettetHendelse.ident)
+            personMediator.finnEllerOpprettPerson(ident)
         }.onFailure { e ->
             when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
                 true -> {
                     sendAvbrytBehandling(
-                        søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse,
+                        behandlingId = behandling.behandlingId,
+                        ident = ident,
                         årsak = "Skjermet eller adressebeskyttet person",
                     )
                 }
@@ -80,52 +111,13 @@ class SakMediator(
             }
         }.onSuccess { person ->
             val sakHistorikk =
-                sakRepository.finnSakHistorikk(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
+                sakRepository.finnSakHistorikk(ident) ?: SakHistorikk(
                     person = person,
                 )
             sakHistorikk.leggTilSak(sak)
             sakRepository.lagre(sakHistorikk)
         }
         return sak
-    }
-
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(meldekortbehandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    meldekortbehandlingOpprettetHendelse.behandlingId,
-                    meldekortbehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
-        }
-    }
-
-    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(revurderingBehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(revurderingBehandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    revurderingBehandlingOpprettetHendelse.behandlingId,
-                    revurderingBehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
-        }
-    }
-
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(manuellBehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(manuellBehandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    manuellBehandlingOpprettetHendelse.behandlingId,
-                    manuellBehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
-        }
     }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
@@ -147,6 +139,19 @@ class SakMediator(
                 sjekkResultat(
                     søknadsbehandlingOpprettetHendelse.behandlingId,
                     søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(hendelse.ident).also {
+            it.knyttTilSak(hendelse).also { resultat ->
+                sjekkResultat(
+                    hendelse.behandlingId,
+                    hendelse.javaClass.simpleName,
                     resultat,
                 )
             }
@@ -177,7 +182,7 @@ class SakMediator(
         }
     }
 
-    fun finnSisteSakId(ident: String): UUID? = sakRepository.finnSisteSakId(ident)
+    fun finnSisteDagpengeSakId(ident: String): UUID? = sakRepository.finnSisteDagpengeSakId(ident)
 
     fun finnSakIdForSøknad(
         søknadId: UUID,
@@ -189,19 +194,20 @@ class SakMediator(
     fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
     private fun sendAvbrytBehandling(
-        søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse,
+        behandlingId: UUID,
+        ident: String,
         årsak: String,
     ) {
         rapidsConnection.publish(
-            key = søknadsbehandlingOpprettetHendelse.ident,
+            key = ident,
             message =
                 JsonMessage
                     .newMessage(
                         eventName = "avbryt_behandling",
                         map =
                             mapOf(
-                                "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
-                                "ident" to søknadsbehandlingOpprettetHendelse.ident,
+                                "behandlingId" to behandlingId,
+                                "ident" to ident,
                                 "årsak" to årsak,
                             ),
                     ).toJson(),
@@ -218,6 +224,7 @@ class SakMediator(
             is KnyttTilSakResultat.KnyttetTilSak -> {
                 logger.info { "Knyttet behandlingId: $behandlingId til sakId: ${resultat.sak.sakId}" }
             }
+
             else -> {
                 logger.warn { "Klarte ikke å knytte behandlingId: $behandlingId av type $hendelseType til noen sak" }
                 rapidsConnection.sendAlertTilRapid(
@@ -242,7 +249,7 @@ class SakMediator(
             finnSakIdForSøknad(søknadId = hendelse.søknadId!!, ident = hendelse.ident)
                 ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
-            sakHistorikk?.saker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
+            sakHistorikk?.dagpengeSaker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
                 sak.leggTilBehandling(behandling)
                 sakRepository.lagre(sakHistorikk)
             } ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
@@ -256,7 +263,7 @@ class SakMediator(
     ) {
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
             sakHistorikk
-                ?.saker()
+                ?.alleSaker()
                 ?.find { sak ->
                     sak.sakId == sakId
                 }?.let { sak ->

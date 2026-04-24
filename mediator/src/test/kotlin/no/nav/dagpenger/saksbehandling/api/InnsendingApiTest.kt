@@ -54,7 +54,6 @@ class InnsendingApiTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             )
         val innsending =
@@ -66,7 +65,7 @@ class InnsendingApiTest {
         val mediator =
             mockk<InnsendingMediator>().also {
                 every { it.hentInnsending(innsendingId, any()) } returns innsending
-                every { it.hentLovligeSaker(TestHelper.personIdent) } returns
+                every { it.hentAlleSaker(TestHelper.personIdent) } returns
                     listOf(
                         sak,
                     )

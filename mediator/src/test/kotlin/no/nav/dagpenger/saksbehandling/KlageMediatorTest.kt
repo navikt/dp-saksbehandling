@@ -13,6 +13,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -141,7 +142,7 @@ class KlageMediatorTest {
                     beslutter = null,
                     behandlingId = any(),
                     saksbehandlerToken = any(),
-                    utløstAvType = UtløstAvType.KLAGE,
+                    utløstAvType = HendelseBehandler.Intern.Klage,
                     sakId = any(),
                 )
             } returns Result.success(html)
@@ -1132,15 +1133,25 @@ class KlageMediatorTest {
                     adressebeskyttelseGradering = UGRADERT,
                 ),
             )
+            val hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                    ident = testPersonIdent,
+                    opprettet = nå,
+                    behandlingskjedeId = UUIDv7.ny(),
+                )
             val sak =
                 sakMediator.opprettSak(
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = UUIDv7.ny(),
-                        behandlingId = UUIDv7.ny(),
-                        ident = testPersonIdent,
-                        opprettet = nå,
-                        behandlingskjedeId = UUIDv7.ny(),
-                    ),
+                    ident = hendelse.ident,
+                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                    behandling =
+                        Behandling(
+                            behandlingId = hendelse.behandlingId,
+                            utløstAv = DpBehandling.Søknad,
+                            opprettet = hendelse.opprettet,
+                            hendelse = hendelse,
+                        ),
                 )
 
             test(klageMediator, oppgaveMediator, sak.sakId)

@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.EmneknaggKategori
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -17,7 +18,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -56,17 +56,34 @@ internal class OppgaveDTOMapper(
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
     private val sakMediator: SakMediator,
 ) {
-    private fun SakHistorikk?.saker(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
+    private fun SakHistorikk?.tilSakDTOListe(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
         when (this) {
             null -> emptyList()
             else ->
-                this.saker().map { sak ->
-                    val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
-                    SakDTO(
-                        id = sak.sakId,
-                        oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
-                    )
-                }
+                this
+                    .dagpengeSaker()
+                    .map { sak ->
+                        val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
+                        SakDTO(
+                            id = sak.sakId,
+                            oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
+                        )
+                    }
+        }
+
+    private fun SakHistorikk?.tilFerietilleggsakDTOListe(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
+        when (this) {
+            null -> emptyList()
+            else ->
+                this
+                    .ferietilleggSaker()
+                    .map { sak ->
+                        val behandlingIder = sak.behandlinger().map { it.behandlingId }.toSet()
+                        SakDTO(
+                            id = sak.sakId,
+                            oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
+                        )
+                    }
         }
 
     suspend fun lagPersonDTO(person: Person): PersonDTO {
@@ -81,8 +98,9 @@ internal class OppgaveDTOMapper(
         val sakHistorikk = sakMediator.finnSakHistorikk(ident = person.ident)
         return PersonOversiktDTO(
             person = lagPersonDTO(person = person),
-            saker = sakHistorikk.saker(oppgaver),
+            saker = sakHistorikk.tilSakDTOListe(oppgaver),
             oppgaver = oppgaver,
+            ferietilleggSaker = sakHistorikk.tilFerietilleggsakDTOListe(oppgaver),
         )
     }
 
@@ -231,7 +249,9 @@ private fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
         EmneknaggKategori.AVBRUTT_GRUNN -> EmneknaggKategoriDTO.AVBRUTT_GRUNN
         EmneknaggKategori.PÅ_VENT -> EmneknaggKategoriDTO.PAA_VENT
         EmneknaggKategori.ETTERSENDING -> EmneknaggKategoriDTO.ETTERSENDING
+        EmneknaggKategori.OPPFØLGING_ÅRSAK -> EmneknaggKategoriDTO.OPPFOLGING_ARSAK
         EmneknaggKategori.UDEFINERT -> EmneknaggKategoriDTO.UDEFINERT
+        EmneknaggKategori.BEHANDLET_HENDELSE_TYPE -> EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =
@@ -296,24 +316,23 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
     when (this.behandling.utløstAv) {
-        UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.REVURDERING -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
-        UtløstAvType.INNSENDING -> BehandlingTypeDTO.INNSENDING
-        UtløstAvType.OPPFØLGING -> BehandlingTypeDTO.OPPFØLGING
+        is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
+        is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
+        is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
     }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
     when (this.behandling.utløstAv) {
-        UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
-        UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
-        UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
-        UtløstAvType.MANUELL -> UtlostAvTypeDTO.MANUELL
-        UtløstAvType.INNSENDING -> UtlostAvTypeDTO.INNSENDING
-        UtløstAvType.REVURDERING -> UtlostAvTypeDTO.REVURDERING
-        UtløstAvType.OPPFØLGING -> UtlostAvTypeDTO.OPPFØLGING
+        is HendelseBehandler.DpBehandling.Søknad -> UtlostAvTypeDTO.SØKNAD
+        is HendelseBehandler.Intern.Klage -> UtlostAvTypeDTO.KLAGE
+        is HendelseBehandler.DpBehandling.Meldekort -> UtlostAvTypeDTO.MELDEKORT
+        is HendelseBehandler.DpBehandling.Manuell -> UtlostAvTypeDTO.MANUELL
+        is HendelseBehandler.Intern.Innsending -> UtlostAvTypeDTO.INNSENDING
+        is HendelseBehandler.DpBehandling.Revurdering -> UtlostAvTypeDTO.REVURDERING
+        is HendelseBehandler.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
+        is HendelseBehandler.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
+        is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> UtlostAvTypeDTO.ARBEIDSSØKERPERIODE
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =

@@ -25,7 +25,7 @@ class BehandlingAvbruttMottakTest {
         "Søknad, true",
         "Manuell, true",
         "Meldekort, true",
-        "Brevdue, false",
+        "Brevdue, true",
     )
     fun `Skal behandle BehandlingAvbruttHendelse for gitte hendelsetyper`(
         hendelseType: String,

@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.db
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
@@ -9,8 +10,6 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -81,7 +80,6 @@ class DBTestHelper private constructor(
             sak: Sak =
                 Sak(
                     sakId = sakId,
-                    søknadId = søknadId,
                     opprettet = opprettetNå,
                 ),
             block: DBTestHelper.(DataSource) -> Unit,
@@ -102,14 +100,13 @@ class DBTestHelper private constructor(
             behandling: Behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
-                    utløstAv = SØKNAD,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = opprettetNå,
                     hendelse = TomHendelse,
                 ),
             sak: Sak =
                 Sak(
                     sakId = sakId,
-                    søknadId = søknadId,
                     opprettet = opprettetNå,
                     behandlinger = mutableSetOf(behandling),
                 ),
@@ -126,7 +123,6 @@ class DBTestHelper private constructor(
             sak: Sak =
                 Sak(
                     sakId = sakId,
-                    søknadId = søknadId,
                     opprettet = opprettetNå,
                     behandlinger = behandlinger.toMutableSet(),
                 ),
@@ -183,7 +179,7 @@ class DBTestHelper private constructor(
         emneknagger: Set<String> = emptySet(),
         person: Person = testPerson,
         opprettet: LocalDateTime = opprettetNå,
-        type: UtløstAvType = SØKNAD,
+        type: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         saksbehandlerIdent: String? = null,
     ): Oppgave {
@@ -199,7 +195,6 @@ class DBTestHelper private constructor(
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = søknadId,
                 opprettet = opprettet,
                 behandlinger = mutableSetOf(behandling),
             )
@@ -232,7 +227,7 @@ class DBTestHelper private constructor(
     fun leggTilOppgave(
         oppgaveId: UUID,
         behandlingId: UUID,
-        utløstAvType: UtløstAvType = SØKNAD,
+        utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         person: Person = testPerson,
     ) {
         val behandling =

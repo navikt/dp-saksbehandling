@@ -1346,9 +1346,13 @@ class OppgaveApiTest {
             }
 
         val behandlingId = UUIDv7.ny()
+        val ferietilleggBehandlingId = UUIDv7.ny()
         val oppgaveId = UUIDv7.ny()
+        val ferietilleggOppgaveId = UUIDv7.ny()
         val sakId = UUIDv7.ny()
+        val ferietilleggSakId = UUIDv7.ny()
         val opprettet = LocalDateTime.of(2025, 1, 15, 10, 30, 0)
+        val ferietilleggOpprettet = LocalDateTime.of(2025, 6, 10, 14, 24, 0)
 
         val forventetPersonOversikt =
             PersonOversiktDTO(
@@ -1407,6 +1411,28 @@ class OppgaveApiTest {
                 oppgaver =
                     listOf(
                         OppgaveOversiktDTO(
+                            oppgaveId = ferietilleggOppgaveId,
+                            behandlingId = ferietilleggBehandlingId,
+                            personIdent = person.ident,
+                            behandlerIdent = "saksbehandlerIdent",
+                            tidspunktOpprettet = ferietilleggOpprettet,
+                            behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+                            utlostAv = UtlostAvTypeDTO.FERIETILLEGG,
+                            emneknagger = emptyList(),
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                            tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
+                            lovligeEndringer =
+                                LovligeEndringerDTO(
+                                    paaVentAarsaker = emptyList(),
+                                    avbrytAarsaker = emptyList(),
+                                    leggTilbakeAarsaker = emptyList(),
+                                    returnerTilSaksbehandlingAarsaker = emptyList(),
+                                    kvalitetskontrollAarsaker = emptyList(),
+                                ),
+                            utsattTilDato = null,
+                        ),
+                        OppgaveOversiktDTO(
                             oppgaveId = oppgaveId,
                             behandlingId = behandlingId,
                             personIdent = person.ident,
@@ -1427,6 +1453,37 @@ class OppgaveApiTest {
                                     kvalitetskontrollAarsaker = KvalitetskontrollAarsakDTO.entries,
                                 ),
                             utsattTilDato = null,
+                        ),
+                    ),
+                ferietilleggSaker =
+                    listOf(
+                        SakDTO(
+                            id = ferietilleggSakId,
+                            oppgaver =
+                                listOf(
+                                    OppgaveOversiktDTO(
+                                        oppgaveId = ferietilleggOppgaveId,
+                                        behandlingId = ferietilleggBehandlingId,
+                                        personIdent = person.ident,
+                                        behandlerIdent = "saksbehandlerIdent",
+                                        tidspunktOpprettet = ferietilleggOpprettet,
+                                        behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+                                        utlostAv = UtlostAvTypeDTO.FERIETILLEGG,
+                                        emneknagger = emptyList(),
+                                        skjermesSomEgneAnsatte = false,
+                                        adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                                        tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
+                                        lovligeEndringer =
+                                            LovligeEndringerDTO(
+                                                paaVentAarsaker = emptyList(),
+                                                avbrytAarsaker = emptyList(),
+                                                leggTilbakeAarsaker = emptyList(),
+                                                returnerTilSaksbehandlingAarsaker = emptyList(),
+                                                kvalitetskontrollAarsaker = emptyList(),
+                                            ),
+                                        utsattTilDato = null,
+                                    ),
+                                ),
                         ),
                     ),
             )
@@ -1495,6 +1552,26 @@ class OppgaveApiTest {
                           ],
                           "oppgaver": [
                             {
+                              "oppgaveId": "$ferietilleggOppgaveId",
+                              "behandlingId": "$ferietilleggBehandlingId",
+                              "personIdent": "${person.ident}",
+                              "behandlerIdent": "saksbehandlerIdent",
+                              "tidspunktOpprettet": "2025-06-10T14:24:00",
+                              "behandlingType": "RETT_TIL_DAGPENGER",
+                              "utlostAv": "FERIETILLEGG",
+                              "emneknagger": [],
+                              "skjermesSomEgneAnsatte": false,
+                              "adressebeskyttelseGradering": "UGRADERT",
+                              "tilstand": "FERDIG_BEHANDLET",
+                              "lovligeEndringer": {
+                                "paaVentAarsaker": [],
+                                "avbrytAarsaker": [],
+                                "leggTilbakeAarsaker": [],
+                                "returnerTilSaksbehandlingAarsaker": [],
+                                "kvalitetskontrollAarsaker": []
+                              }
+                            },
+                            {
                               "oppgaveId": "$oppgaveId",
                               "behandlingId": "$behandlingId",
                               "personIdent": "${person.ident}",
@@ -1513,6 +1590,33 @@ class OppgaveApiTest {
                                 "returnerTilSaksbehandlingAarsaker": [],
                                 "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
                               }
+                            }
+                          ],
+                          "ferietilleggSaker": [
+                            {
+                              "id": "$ferietilleggSakId",
+                              "oppgaver": [
+                                {
+                                  "oppgaveId": "$ferietilleggOppgaveId",
+                                  "behandlingId": "$ferietilleggBehandlingId",
+                                  "personIdent": "${person.ident}",
+                                  "behandlerIdent": "saksbehandlerIdent",
+                                  "tidspunktOpprettet": "2025-06-10T14:24:00",
+                                  "behandlingType": "RETT_TIL_DAGPENGER",
+                                  "utlostAv": "FERIETILLEGG",
+                                  "emneknagger": [],
+                                  "skjermesSomEgneAnsatte": false,
+                                  "adressebeskyttelseGradering": "UGRADERT",
+                                  "tilstand": "FERDIG_BEHANDLET",
+                                  "lovligeEndringer": {
+                                    "paaVentAarsaker": [],
+                                    "avbrytAarsaker": [],
+                                    "leggTilbakeAarsaker": [],
+                                    "returnerTilSaksbehandlingAarsaker": [],
+                                    "kvalitetskontrollAarsaker": []
+                                  }
+                                }
+                              ]
                             }
                           ]
                         }

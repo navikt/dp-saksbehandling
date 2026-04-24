@@ -57,7 +57,7 @@ internal object TestHelper {
             behandlingId = behandlingId,
             opprettet = opprettetNå,
             hendelse = TomHendelse,
-            utløstAvType = UtløstAvType.SØKNAD,
+            utløstAvType = HendelseBehandler.DpBehandling.Søknad,
         )
 
     val testOppgave =
@@ -251,7 +251,7 @@ internal object TestHelper {
         behandlingId: UUID = UUIDv7.ny(),
         opprettet: LocalDateTime = opprettetNå,
         hendelse: Hendelse = TomHendelse,
-        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
     ): Behandling =
         Behandling(
             behandlingId = behandlingId,

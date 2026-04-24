@@ -34,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -1016,5 +1017,71 @@ class OppgaveTilstandTest {
             it.taImotEttersending(innsendingMottattHendelse)
             it.tilstand() shouldBe Oppgave.UnderBehandling
         }
+    }
+
+    @Test
+    fun `klargjørForBehandling - uten frist og uten beholdOppgaven gir KlarTilBehandling`() {
+        val oppgave = lagOppgave(OPPRETTET)
+        oppgave.klargjørForBehandling(OpprettOppfølgingHendelse(ident = "12345678910", aarsak = "Test", tittel = "Test"))
+        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        oppgave.behandlerIdent shouldBe null
+        oppgave.utsattTil() shouldBe null
+    }
+
+    @Test
+    fun `klargjørForBehandling - uten frist med beholdOppgaven gir UnderBehandling tildelt saksbehandler`() {
+        val oppgave = lagOppgave(OPPRETTET)
+        val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
+        oppgave.klargjørForBehandling(
+            OpprettOppfølgingHendelse(
+                ident = "12345678910",
+                aarsak = "Test",
+                tittel = "Test",
+                beholdOppgaven = true,
+                utførtAv = saksbehandler,
+            ),
+        )
+        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.utsattTil() shouldBe null
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+    }
+
+    @Test
+    fun `klargjørForBehandling - med frist uten beholdOppgaven gir PåVent`() {
+        val oppgave = lagOppgave(OPPRETTET)
+        val frist = LocalDate.now().plusDays(7)
+        oppgave.klargjørForBehandling(
+            OpprettOppfølgingHendelse(
+                ident = "12345678910",
+                aarsak = "Test",
+                tittel = "Test",
+                beholdOppgaven = false,
+                frist = frist,
+            ),
+        )
+        oppgave.tilstand() shouldBe Oppgave.PåVent
+        oppgave.utsattTil() shouldBe frist
+        oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `klargjørForBehandling - med frist og beholdOppgaven gir PåVent forhåndsreservert til saksbehandler`() {
+        val oppgave = lagOppgave(OPPRETTET)
+        val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
+        val frist = LocalDate.now().plusDays(7)
+        oppgave.klargjørForBehandling(
+            OpprettOppfølgingHendelse(
+                ident = "12345678910",
+                aarsak = "Test",
+                tittel = "Test",
+                frist = frist,
+                beholdOppgaven = true,
+                utførtAv = saksbehandler,
+            ),
+        )
+        oppgave.tilstand() shouldBe Oppgave.PåVent
+        oppgave.utsattTil() shouldBe frist
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
 }

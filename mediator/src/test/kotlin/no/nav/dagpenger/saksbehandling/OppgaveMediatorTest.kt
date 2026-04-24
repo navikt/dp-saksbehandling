@@ -15,6 +15,7 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -232,7 +233,7 @@ OppgaveMediatorTest {
                     sakId = UUIDv7.ny(),
                     ident = personUtenSakHistorikk,
                     opprettet = LocalDateTime.now(),
-                    type = UtløstAvType.KLAGE,
+                    type = HendelseBehandler.Intern.Klage,
                 ),
             )
         }
@@ -243,7 +244,7 @@ OppgaveMediatorTest {
                     sakId = UUIDv7.ny(),
                     ident = personUtenBehandling,
                     opprettet = LocalDateTime.now(),
-                    type = UtløstAvType.KLAGE,
+                    type = HendelseBehandler.Intern.Klage,
                 ),
             )
         }
@@ -438,7 +439,7 @@ OppgaveMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAv = UtløstAvType.SØKNAD,
+                utløstAv = DpBehandling.Søknad,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -1305,7 +1306,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for behandling av klage som ferdigstilles`() {
-        val behandling = lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
         val oppgave =
             TestHelper.lagOppgave(
                 tilstand = UnderBehandling,
@@ -1353,7 +1354,6 @@ OppgaveMediatorTest {
         val sak =
             Sak(
                 sakId = behandlingskjedeId,
-                søknadId = søknadId,
                 opprettet = DBTestHelper.opprettetNå,
                 behandlinger = mutableSetOf(),
             )
@@ -1370,7 +1370,7 @@ OppgaveMediatorTest {
                             opprettet = DBTestHelper.opprettetNå,
                             behandlingskjedeId = behandlingskjedeId,
                         ),
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = DpBehandling.Søknad,
                 )
             opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
@@ -1408,7 +1408,7 @@ OppgaveMediatorTest {
                 vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = sak.behandlinger().first().behandlingId,
-                        behandletHendelseId = sak.søknadId.toString(),
+                        behandletHendelseId = søknadId.toString(),
                         behandletHendelseType = "Søknad",
                         ident = testPerson.ident,
                         sak =
@@ -1432,7 +1432,7 @@ OppgaveMediatorTest {
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
                 oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
-                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                    oppgave.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe KlarTilBehandling
 
@@ -1447,7 +1447,7 @@ OppgaveMediatorTest {
             oppgaveMediator
                 .finnOppgaverFor(ident = testPerson.ident)
                 .single { oppgave ->
-                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                    oppgave.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }.tilstand() shouldBe UnderBehandling
 
             oppgaveMediator.ferdigstillOppgave(
@@ -1461,7 +1461,7 @@ OppgaveMediatorTest {
             oppgaveMediator
                 .finnOppgaverFor(ident = testPerson.ident)
                 .single { oppgave ->
-                    oppgave.behandling.utløstAv == UtløstAvType.INNSENDING
+                    oppgave.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }.tilstand() shouldBe FerdigBehandlet
         }
     }
@@ -1494,15 +1494,23 @@ OppgaveMediatorTest {
                 it.setRapidsConnection(testRapid)
             }
 
+        val hendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                ident = testIdent,
+                opprettet = LocalDateTime.now(),
+                behandlingskjedeId = UUIDv7.ny(),
+            )
         sakMediator.opprettSak(
-            søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                    behandlingskjedeId = UUIDv7.ny(),
-                    utførtAv = Applikasjon.DpBehandling,
+            ident = hendelse.ident,
+            behandlingskjedeId = hendelse.behandlingskjedeId!!,
+            behandling =
+                Behandling(
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = DpBehandling.Søknad,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
                 ),
         )
 
@@ -1595,7 +1603,15 @@ OppgaveMediatorTest {
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {
                 val sak =
                     sakMediator.opprettSak(
-                        søknadsbehandlingOpprettetHendelse = hendelse,
+                        ident = hendelse.ident,
+                        behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                        behandling =
+                            Behandling(
+                                behandlingId = hendelse.behandlingId,
+                                opprettet = hendelse.opprettet,
+                                hendelse = hendelse,
+                                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            ),
                     )
                 sakMediator.knyttTilSak(
                     behandlingOpprettetHendelse =
@@ -1604,7 +1620,7 @@ OppgaveMediatorTest {
                             ident = hendelse.ident,
                             sakId = sak.sakId,
                             opprettet = hendelse.opprettet,
-                            type = UtløstAvType.SØKNAD,
+                            type = DpBehandling.Søknad,
                         ),
                 )
             }

@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
 
@@ -26,24 +24,6 @@ data class SakHistorikk(
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat =
-        saker
-            .map {
-                it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
-            }.knyttTilSakResultat()
-
-    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        saker
-            .map {
-                it.knyttTilSak(revurderingBehandlingOpprettetHendelse)
-            }.knyttTilSakResultat()
-
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        saker
-            .map {
-                it.knyttTilSak(manuellBehandlingOpprettetHendelse)
-            }.knyttTilSakResultat()
-
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
         saker
             .map {
@@ -54,6 +34,12 @@ data class SakHistorikk(
         saker
             .map {
                 it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
+            }.knyttTilSakResultat()
+
+    fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(hendelse)
             }.knyttTilSakResultat()
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
@@ -76,13 +62,17 @@ data class SakHistorikk(
 
     fun leggTilSak(sak: Sak) = saker.add(sak)
 
-    fun saker(): List<Sak> = saker.toList()
+    fun alleSaker(): List<Sak> = saker.toList()
+
+    fun dagpengeSaker(): List<Sak> = saker.toList().filterNot { it.erFerietilleggsSak() }
+
+    fun ferietilleggSaker(): List<Sak> = saker.toList().filter { it.erFerietilleggsSak() }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SakHistorikk) return false
         if (this.person != other.person) return false
-        if (this.saker().sortedBy { it.sakId } != other.saker().sortedBy { it.sakId }) return false
+        if (this.alleSaker().sortedBy { it.sakId } != other.alleSaker().sortedBy { it.sakId }) return false
 
         return true
     }

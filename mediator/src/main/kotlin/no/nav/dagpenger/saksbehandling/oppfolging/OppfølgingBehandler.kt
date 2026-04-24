@@ -123,17 +123,18 @@ class OppfølgingBehandler(
                 tittel = aksjon.tittel,
                 beskrivelse = aksjon.beskrivelse,
                 frist = aksjon.frist,
+                beholdOppgaven = aksjon.beholdOppgaven,
                 utførtAv = hendelse.utførtAv,
             )
 
         val opprettet = oppfølgingMediator.taImot(nyOppgaveHendelse)
 
+        // Når frist er satt håndterer klargjørForBehandling beholdOppgaven — tildelOppgave skal ikke kalles
         return OppfølgingFerdigstiltHendelse(
             oppfølgingId = oppfølging.id,
             aksjonType = aksjon.type,
             opprettetBehandlingId = opprettet.oppfølgingId,
             opprettetOppgaveId = opprettet.oppgaveId,
-            beholdOppgaven = aksjon.beholdOppgaven,
             utførtAv = hendelse.utførtAv,
         )
     }

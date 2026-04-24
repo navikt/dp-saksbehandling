@@ -5,10 +5,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -60,15 +61,24 @@ class PostgresKlageRepositoryTest {
                     sakRepository = PostgresSakRepository(dataSource = ds),
                 )
 
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    ident = testPerson.ident,
+                    behandlingId = UUIDv7.ny(),
+                    søknadId = UUIDv7.ny(),
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = UUIDv7.ny(),
+                )
             val sak =
                 sakMediator.opprettSak(
-                    søknadsbehandlingOpprettetHendelse =
-                        SøknadsbehandlingOpprettetHendelse(
-                            ident = testPerson.ident,
-                            behandlingId = UUIDv7.ny(),
-                            søknadId = UUIDv7.ny(),
-                            opprettet = LocalDateTime.now(),
-                            behandlingskjedeId = UUIDv7.ny(),
+                    ident = testPerson.ident,
+                    behandlingskjedeId = UUIDv7.ny(),
+                    behandling =
+                        Behandling(
+                            behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                            opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                            hendelse = søknadsbehandlingOpprettetHendelse,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
                 )
             sakMediator.knyttTilSak(
@@ -78,7 +88,7 @@ class PostgresKlageRepositoryTest {
                         ident = testPerson.ident,
                         sakId = sak.sakId,
                         opprettet = LocalDateTime.now(),
-                        type = UtløstAvType.KLAGE,
+                        type = HendelseBehandler.Intern.Klage,
                     ),
             )
             val klageRepository = PostgresKlageRepository(datasource = ds)

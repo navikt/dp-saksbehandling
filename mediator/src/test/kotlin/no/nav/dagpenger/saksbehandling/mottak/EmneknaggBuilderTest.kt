@@ -52,7 +52,7 @@ class EmneknaggBuilderTest {
             EmneknaggBuilder("""{ "rettighetsperioder": [] }""")
         }
 
-        shouldThrow<IllegalArgumentException> {
+        shouldNotThrowAny {
             //language=JSON
             EmneknaggBuilder("""{ "behandletHendelse":{} }""")
         }
@@ -437,6 +437,36 @@ class EmneknaggBuilderTest {
                 ),
             )
         EmneknaggBuilder(behandlingsresultat).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
+    }
+
+    @Test
+    fun `Skal sette behandletHendelseType som emneknagg hvis type er Arbeidssøkerperiode`() {
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "behandletHendelse": { "type": "Arbeidssøkerperiode" },
+                  "rettighetsperioder": [{"harRett": false, "opprinnelse": "Ny"}],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn)
+    }
+
+    @Test
+    fun `Skal sette behandletHendelseType som emneknagg hvis type er Ferietillegg`() {
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "behandletHendelse": { "type": "Ferietillegg" },
+                  "rettighetsperioder": [{"harRett": true, "opprinnelse": "Ny"}],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn)
     }
 
     private val objectMapper =

@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -14,12 +15,6 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.INNSENDING
-import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
-import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
-import no.nav.dagpenger.saksbehandling.UtløstAvType.REVURDERING
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -42,11 +37,11 @@ class PostgresProduksjonsstatistikkRepositoryTest {
         val filterPeriodeFomIGårTomIDag = ProduksjonsstatistikkFilter(periode = periodeFomIGårTomIDag)
         val behandling1 = lagBehandling(opprettet = iGår)
         val behandling2 = lagBehandling(opprettet = iDag)
-        val behandling3 = lagBehandling(opprettet = iDag, utløstAvType = KLAGE)
+        val behandling3 = lagBehandling(opprettet = iDag, utløstAvType = HendelseBehandler.Intern.Klage)
         val behandling4 = lagBehandling(opprettet = iDag)
         val behandling5 = lagBehandling(opprettet = iDag)
         val behandling6 = lagBehandling(opprettet = iGår.minusDays(1))
-        val behandling7 = lagBehandling(opprettet = iDag, utløstAvType = KLAGE)
+        val behandling7 = lagBehandling(opprettet = iDag, utløstAvType = HendelseBehandler.Intern.Klage)
 
         val oppgave1FerdigBehandlet =
             lagOppgave(
@@ -141,7 +136,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                 statistikkTjeneste.hentTilstanderMedUtløstAvFilter(
                     ProduksjonsstatistikkFilter(
                         periode = periodeFomIGårTomIDag,
-                        utløstAvTyper = setOf(KLAGE),
+                        utløstAvTyper = setOf(HendelseBehandler.Intern.Klage),
                     ),
                 )
 
@@ -213,13 +208,16 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
-            utløstAvAlle.size shouldBe 6
-            utløstAvAlle.single { it.utløstAv == SØKNAD }.antall shouldBe 4
-            utløstAvAlle.single { it.utløstAv == KLAGE }.antall shouldBe 2
-            utløstAvAlle.single { it.utløstAv == INNSENDING }.antall shouldBe 0
-            utløstAvAlle.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
-            utløstAvAlle.single { it.utløstAv == MANUELL }.antall shouldBe 0
-            utløstAvAlle.single { it.utløstAv == REVURDERING }.antall shouldBe 0
+            utløstAvAlle.size shouldBe 9
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Søknad }.antall shouldBe 4
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 2
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Innsending }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Meldekort }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Manuell }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Revurdering }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Oppfølging }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Arbeidssøkerperiode }.antall shouldBe 0
 
             val utløstAvFilterFerdigBehandlet =
                 statistikkTjeneste.hentUtløstAvMedTilstandFilter(
@@ -230,13 +228,16 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ),
                 )
 
-            utløstAvFilterFerdigBehandlet.size shouldBe 6
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == SØKNAD }.antall shouldBe 2
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == KLAGE }.antall shouldBe 1
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == INNSENDING }.antall shouldBe 0
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == MELDEKORT }.antall shouldBe 0
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == MANUELL }.antall shouldBe 0
-            utløstAvFilterFerdigBehandlet.single { it.utløstAv == REVURDERING }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.size shouldBe 9
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Søknad }.antall shouldBe 2
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 1
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Innsending }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Meldekort }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Manuell }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Revurdering }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Oppfølging }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Arbeidssøkerperiode }.antall shouldBe 0
 
             val rettighetAlle = statistikkTjeneste.hentRettigheterMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
@@ -270,17 +271,37 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ProduksjonsstatistikkFilter(
                             periode = periodeFomIGårTomIDag,
                             tilstander = setOf(FERDIG_BEHANDLET, PAA_VENT, KLAR_TIL_KONTROLL),
-                            utløstAvTyper = setOf(SØKNAD, KLAGE),
+                            utløstAvTyper = setOf(HendelseBehandler.DpBehandling.Søknad, HendelseBehandler.Intern.Klage),
                             grupperEtter = GrupperEtterDTO.OPPGAVETYPE.name,
                         ),
                 )
             resultatSerieForUtløstAv.size shouldBe 6
-            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == SØKNAD }.antall shouldBe 2
-            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == SØKNAD }.antall shouldBe 0
-            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == SØKNAD }.antall shouldBe 1
-            resultatSerieForUtløstAv.single { it.tilstand == FERDIG_BEHANDLET && it.utløstAv == KLAGE }.antall shouldBe 1
-            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == KLAGE }.antall shouldBe 0
-            resultatSerieForUtløstAv.single { it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == KLAGE }.antall shouldBe 0
+            resultatSerieForUtløstAv
+                .single {
+                    it.tilstand == FERDIG_BEHANDLET && it.utløstAv == HendelseBehandler.DpBehandling.Søknad
+                }.antall shouldBe
+                2
+            resultatSerieForUtløstAv
+                .single {
+                    it.tilstand == PAA_VENT && it.utløstAv == HendelseBehandler.DpBehandling.Søknad
+                }.antall shouldBe
+                0
+            resultatSerieForUtløstAv
+                .single {
+                    it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == HendelseBehandler.DpBehandling.Søknad
+                }.antall shouldBe
+                1
+            resultatSerieForUtløstAv
+                .single {
+                    it.tilstand == FERDIG_BEHANDLET && it.utløstAv == HendelseBehandler.Intern.Klage
+                }.antall shouldBe
+                1
+            resultatSerieForUtløstAv.single { it.tilstand == PAA_VENT && it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 0
+            resultatSerieForUtløstAv
+                .single {
+                    it.tilstand == KLAR_TIL_KONTROLL && it.utløstAv == HendelseBehandler.Intern.Klage
+                }.antall shouldBe
+                0
 
             val resultatSerieForRettigheter =
                 statistikkTjeneste.hentResultatSerierForRettigheter(

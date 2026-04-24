@@ -10,9 +10,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -29,10 +28,6 @@ internal class BehandlingOpprettetMottak(
 
             precondition {
                 it.requireValue("@event_name", "behandling_opprettet")
-                it.requireAny(
-                    key = "behandletHendelse.type",
-                    values = listOf("Søknad", "Meldekort", "Manuell", "Omgjøring"),
-                )
             }
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "behandlingskjedeId")
@@ -68,12 +63,15 @@ internal class BehandlingOpprettetMottak(
             logger.info { "Skipper behandlingId: $behandlingId fra BehandlingOpprettetMottak" }
             return
         }
-        when (behandletHendelseType) {
-            "Søknad" -> {
-                val søknadId = packet.søknadId()
-                withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for søknad" }
-                    val søknadsbehandlingOpprettetHendelse =
+
+        val utløstAv = DpBehandling.fraBehandletHendelseType(behandletHendelseType)
+        withLoggingContext("behandlingId" to "$behandlingId") {
+            logger.info { "Mottok behandling_opprettet hendelse av type $behandletHendelseType (utløstAv=$utløstAv)" }
+
+            when (utløstAv) {
+                is DpBehandling.Søknad -> {
+                    val søknadId = packet.søknadId()
+                    val hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingId,
@@ -82,78 +80,22 @@ internal class BehandlingOpprettetMottak(
                             basertPåBehandling = basertPåBehandling,
                             behandlingskjedeId = behandlingskjedeId,
                         )
-                    if (basertPåBehandling != null) {
-                        sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelse)
-                    } else {
-                        sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
-                    }
+                    sakMediator.opprettEllerKnyttTilSak(hendelse)
                 }
-            }
 
-            "Omgjøring" -> {
-                withLoggingContext("behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for omgjøring" }
-                    if (basertPåBehandling != null) {
-                        sakMediator.knyttTilSak(
-                            RevurderingBehandlingOpprettetHendelse(
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = behandletHendelseSkjedde.atStartOfDay(),
-                                basertPåBehandling = basertPåBehandling,
-                                behandlingskjedeId = behandlingskjedeId,
-                            ),
-                        )
-                    } else {
-                        logger.warn { "Mottok behandling_opprettet av type omgjøring, uten 'basertPåBehandling'. Opprettes ikke!" }
-                    }
+                else -> {
+                    sakMediator.opprettEllerKnyttTilSak(
+                        DpBehandlingOpprettetHendelse(
+                            behandlingId = behandlingId,
+                            ident = ident,
+                            opprettet = behandletHendelseSkjedde.atStartOfDay(),
+                            basertPåBehandling = basertPåBehandling,
+                            behandlingskjedeId = behandlingskjedeId,
+                            type = utløstAv,
+                            eksternId = packet.eksternId(),
+                        ),
+                    )
                 }
-            }
-
-            "Meldekort" -> {
-                val meldekortId = packet.meldekortId()
-                withLoggingContext("meldekortId" to meldekortId, "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
-                    if (basertPåBehandling != null) {
-                        sakMediator.knyttTilSak(
-                            MeldekortbehandlingOpprettetHendelse(
-                                meldekortId = meldekortId,
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = behandletHendelseSkjedde.atStartOfDay(),
-                                basertPåBehandling = basertPåBehandling,
-                                behandlingskjedeId = behandlingskjedeId,
-                            ),
-                        )
-                    } else {
-                        logger.warn { "Mottok behandling_opprettet av type meldekort, uten 'basertPåBehandling'. Opprettes ikke!" }
-                    }
-                }
-            }
-
-            "Manuell" -> {
-                val manuellId = packet.manuellId()
-                withLoggingContext("manuellId" to "$manuellId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for manuell behandling" }
-                    if (basertPåBehandling != null) {
-                        sakMediator.knyttTilSak(
-                            ManuellBehandlingOpprettetHendelse(
-                                manuellId = manuellId,
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = behandletHendelseSkjedde.atStartOfDay(),
-                                basertPåBehandling = basertPåBehandling,
-                                behandlingskjedeId = behandlingskjedeId,
-                            ),
-                        )
-                    } else {
-                        logger.warn { "Mottok behandling_opprettet av type manuell, uten 'basertPåBehandling'. Opprettes ikke!" }
-                    }
-                }
-            }
-
-            else -> {
-                logger.error { "Mottok behandling opprettet for ukjent hendelsetype. Se sikker logg for detaljer." }
-                sikkerlogger.error { "Mottok behandling opprettet for ukjent hendelsetype. ${packet.toJson()}" }
             }
         }
     }
@@ -161,6 +103,4 @@ internal class BehandlingOpprettetMottak(
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
 
-private fun JsonMessage.manuellId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.meldekortId(): String = this["behandletHendelse"]["id"].asText()
+private fun JsonMessage.eksternId(): String = this["behandletHendelse"]["id"].asText()
