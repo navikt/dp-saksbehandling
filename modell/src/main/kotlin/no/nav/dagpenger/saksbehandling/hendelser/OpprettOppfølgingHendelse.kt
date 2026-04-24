@@ -16,13 +16,13 @@ data class OpprettOppfølgingHendelse(
     val beholdOppgaven: Boolean = false,
     val registrertTidspunkt: LocalDateTime = LocalDateTime.now(),
     override val utførtAv: Behandler = Applikasjon.DpSaksbehandling,
-) : Hendelse(utførtAv) {
+) : AnsvarHendelse(utførtAv, ansvarligIdent = null) {
     init {
         require(!beholdOppgaven || utførtAv is Saksbehandler) {
             "Saksbehandler må være satt når beholdOppgaven=true"
         }
     }
 
-    val behandlerIdent: String?
+    override val ansvarligIdent: String?
         get() = if (beholdOppgaven) (utførtAv as Saksbehandler).navIdent else null
 }

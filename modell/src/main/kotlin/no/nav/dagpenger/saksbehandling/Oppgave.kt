@@ -416,15 +416,15 @@ data class Oppgave private constructor(
             when {
                 hendelse.frist != null -> {
                     oppgave.utsattTil = hendelse.frist
-                    oppgave.behandlerIdent = hendelse.behandlerIdent
+                    oppgave.behandlerIdent = hendelse.ansvarligIdent
                     oppgave.endreTilstand(PåVent, hendelse)
                 }
 
                 hendelse.beholdOppgaven -> {
                     requireNotNull(
-                        hendelse.behandlerIdent,
-                    ) { "behandlerIdent må være satt for å kunne beholde oppgaven ved opprettelse av oppfølging" }
-                    oppgave.behandlerIdent = hendelse.behandlerIdent
+                        hendelse.ansvarligIdent,
+                    ) { "ansvarligIdent må være satt for å kunne beholde oppgaven ved opprettelse av oppfølging" }
+                    oppgave.behandlerIdent = hendelse.ansvarligIdent
                     oppgave.endreTilstand(UnderBehandling, hendelse)
                 }
 
