@@ -14,10 +14,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
 
 object ModellTestHelper {
+    internal const val PERSON_IDENT = "12345612345"
+
     internal fun lagOppgave(
         tilstandType: Type = KLAR_TIL_BEHANDLING,
         behandler: Saksbehandler? = null,
@@ -84,8 +87,44 @@ object ModellTestHelper {
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     ) = Person(
         id = UUIDv7.ny(),
-        ident = "12345678910",
+        ident = PERSON_IDENT,
         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
         adressebeskyttelseGradering = adressebeskyttelseGradering,
     )
+
+    internal val søknadId = UUIDv7.ny()
+    internal val behandlingId = UUIDv7.ny()
+    internal val søknadsbehandlingOpprettetHendelse =
+        SøknadsbehandlingOpprettetHendelse(
+            søknadId = søknadId,
+            behandlingId = behandlingId,
+            ident = PERSON_IDENT,
+            opprettet = LocalDateTime.now(),
+            basertPåBehandling = null,
+            behandlingskjedeId = behandlingId,
+        )
+
+    internal fun lagSøknadBehandling(hendelse: SøknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse) =
+        Behandling(
+            behandlingId = behandlingId,
+            opprettet = hendelse.opprettet,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+            hendelse = hendelse,
+        )
+
+    internal fun lagSak(behandlinger: Set<Behandling> = setOf(lagSøknadBehandling())): Sak =
+        Sak(
+            sakId = behandlinger.first().behandlingId,
+            opprettet = behandlinger.first().opprettet,
+            behandlinger = behandlinger.toMutableSet(),
+        )
+
+    internal fun lagSakHistorikk(
+        person: Person = lagPerson(),
+        saker: Set<Sak> = setOf(lagSak()),
+    ): SakHistorikk =
+        SakHistorikk(
+            person = person,
+            saker = saker.toMutableSet(),
+        )
 }
