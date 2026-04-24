@@ -1044,6 +1044,7 @@ class OppgaveTilstandTest {
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.utsattTil() shouldBe null
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
     }
 
     @Test
