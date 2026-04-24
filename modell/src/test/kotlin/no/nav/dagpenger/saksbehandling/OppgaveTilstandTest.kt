@@ -1050,7 +1050,15 @@ class OppgaveTilstandTest {
     fun `settTilstandFor - med frist uten beholdOppgaven gir PåVent`() {
         val oppgave = lagOppgave(OPPRETTET)
         val frist = LocalDate.now().plusDays(7)
-        oppgave.settTilstandFor(OpprettOppfølgingHendelse(ident = "12345678910", aarsak = "Test", tittel = "Test", frist = frist))
+        oppgave.settTilstandFor(
+            OpprettOppfølgingHendelse(
+                ident = "12345678910",
+                aarsak = "Test",
+                tittel = "Test",
+                beholdOppgaven = false,
+                frist = frist,
+            ),
+        )
         oppgave.tilstand() shouldBe Oppgave.PåVent
         oppgave.utsattTil() shouldBe frist
         oppgave.behandlerIdent shouldBe null

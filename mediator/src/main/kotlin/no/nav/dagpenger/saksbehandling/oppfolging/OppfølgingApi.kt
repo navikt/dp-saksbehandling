@@ -42,7 +42,7 @@ internal fun Route.oppfølgingApi(
                         beskrivelse = request.beskrivelse ?: "",
                         strukturertData = request.strukturertData ?: emptyMap(),
                         frist = request.frist,
-                        beholdOppgaven = request.beholdOppgaven ?: false,
+                        beholdOppgaven = request.beholdOppgaven ,
                         utførtAv = saksbehandler,
                     )
 
