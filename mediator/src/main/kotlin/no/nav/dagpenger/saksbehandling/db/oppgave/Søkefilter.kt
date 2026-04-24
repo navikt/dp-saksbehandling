@@ -175,6 +175,7 @@ class FilterBuilder {
                         EmneknaggKategoriDTO.PAA_VENT -> map[EmneknaggKategori.PÅ_VENT] = emneknagger.toSet()
                         EmneknaggKategoriDTO.ETTERSENDING -> map[EmneknaggKategori.ETTERSENDING] = emneknagger.toSet()
                         EmneknaggKategoriDTO.OPPFOLGING_ARSAK -> map[EmneknaggKategori.OPPFØLGING_ÅRSAK] = emneknagger.toSet()
+                        EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE -> map[EmneknaggKategori.BEHANDLET_HENDELSE_TYPE] = emneknagger.toSet()
                         EmneknaggKategoriDTO.UDEFINERT -> map[EmneknaggKategori.UDEFINERT] = emneknagger.toSet()
                     }
                 }

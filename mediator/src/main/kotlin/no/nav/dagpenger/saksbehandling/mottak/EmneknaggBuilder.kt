@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
@@ -40,6 +40,7 @@ class EmneknaggBuilder(
         buildSet {
             addAll(rettighetEmneknagger())
             addAll(søknadEmneknagger())
+            addAll(behandletHendelseEmneknagger())
         }
 
     private fun rettighetEmneknagger(): Set<String> =
@@ -61,7 +62,7 @@ class EmneknaggBuilder(
             ) {
                 emneknagger.add(INNVILGELSE.visningsnavn)
             } else {
-                emneknagger.add(Emneknagg.Regelknagg.AVSLAG.visningsnavn)
+                emneknagger.add(Regelknagg.AVSLAG.visningsnavn)
                 emneknagger.addAll(avslåtteVilkårEmneknagger())
             }
             if (jsonNode["basertPå"].finnesMedVerdi()) {
@@ -70,6 +71,13 @@ class EmneknaggBuilder(
         }
         return emneknagger.toSet()
     }
+
+    private fun behandletHendelseEmneknagger(): Set<String> =
+        when (behandletHendelseNode["type"].asText()) {
+            "Arbeidssøkerperiode" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn)
+            "Ferietillegg" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn)
+            else -> emptySet()
+        }
 
     private val objectMapper =
         ObjectMapper().also {

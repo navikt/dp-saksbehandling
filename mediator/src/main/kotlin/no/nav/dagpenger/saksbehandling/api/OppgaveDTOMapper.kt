@@ -251,6 +251,7 @@ private fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
         EmneknaggKategori.ETTERSENDING -> EmneknaggKategoriDTO.ETTERSENDING
         EmneknaggKategori.OPPFØLGING_ÅRSAK -> EmneknaggKategoriDTO.OPPFOLGING_ARSAK
         EmneknaggKategori.UDEFINERT -> EmneknaggKategoriDTO.UDEFINERT
+        EmneknaggKategori.BEHANDLET_HENDELSE_TYPE -> EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =
