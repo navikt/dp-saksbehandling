@@ -87,7 +87,7 @@ fun Route.innsendingApi(
                                             beskrivelse = nyOppgave.beskrivelse ?: "",
                                             aarsak = nyOppgave.aarsak,
                                             frist = nyOppgave.frist,
-                                            beholdOppgaven = nyOppgave.beholdOppgaven ?: false,
+                                            beholdOppgaven = nyOppgave.beholdOppgaven,
                                         )
                                     }
                                 }

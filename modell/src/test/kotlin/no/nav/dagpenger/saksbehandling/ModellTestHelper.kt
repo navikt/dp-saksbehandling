@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -93,35 +94,72 @@ object ModellTestHelper {
     )
 
     internal val søknadId = UUIDv7.ny()
-    internal val behandlingId = UUIDv7.ny()
+    internal val søknadBehandlingId = UUIDv7.ny()
+    internal val ferietilleggBehandlingId = UUIDv7.ny()
     internal val søknadsbehandlingOpprettetHendelse =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
-            behandlingId = behandlingId,
+            behandlingId = søknadBehandlingId,
             ident = PERSON_IDENT,
             opprettet = LocalDateTime.now(),
             basertPåBehandling = null,
-            behandlingskjedeId = behandlingId,
+            behandlingskjedeId = søknadBehandlingId,
         )
+    internal val ferietilleggOpprettetHendelse =
+        DpBehandlingOpprettetHendelse(
+            behandlingId = ferietilleggBehandlingId,
+            ident = PERSON_IDENT,
+            opprettet = LocalDateTime.now(),
+            basertPåBehandling = null,
+            behandlingskjedeId = ferietilleggBehandlingId,
+            type = HendelseBehandler.DpBehandling.Ferietillegg,
+            eksternId = UUIDv7.ny().toString(),
+        )
+    internal val søknadBehandling = lagSøknadBehandling()
+    internal val ferietilleggBehandling = lagFerietilleggBehandling()
+    internal val dagpengeSak = lagDagpengeSak()
+    internal val ferietilleggSak = lagFerietilleggSak()
 
     internal fun lagSøknadBehandling(hendelse: SøknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse) =
         Behandling(
-            behandlingId = behandlingId,
+            behandlingId = søknadBehandlingId,
             opprettet = hendelse.opprettet,
             utløstAv = HendelseBehandler.DpBehandling.Søknad,
             hendelse = hendelse,
         )
 
-    internal fun lagSak(behandlinger: Set<Behandling> = setOf(lagSøknadBehandling())): Sak =
+    internal fun lagFerietilleggBehandling(
+        ferietilleggOpprettetHendelse: DpBehandlingOpprettetHendelse = ModellTestHelper.ferietilleggOpprettetHendelse,
+    ) = Behandling(
+        behandlingId = ferietilleggOpprettetHendelse.behandlingId,
+        opprettet = ferietilleggOpprettetHendelse.opprettet,
+        utløstAv = ferietilleggOpprettetHendelse.type,
+        hendelse = ferietilleggOpprettetHendelse,
+    )
+
+    internal fun lagDagpengeSak(behandlinger: Set<Behandling> = setOf(søknadBehandling)): Sak =
         Sak(
             sakId = behandlinger.first().behandlingId,
             opprettet = behandlinger.first().opprettet,
             behandlinger = behandlinger.toMutableSet(),
         )
 
+    internal fun lagFerietilleggSak(behandlinger: Set<Behandling> = setOf(ferietilleggBehandling)): Sak =
+        Sak(
+            sakId =
+                behandlinger
+                    .single {
+                        it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg &&
+                            it.hendelse is DpBehandlingOpprettetHendelse &&
+                            it.hendelse.basertPåBehandling == null
+                    }.behandlingId,
+            opprettet = behandlinger.first().opprettet,
+            behandlinger = behandlinger.toMutableSet(),
+        )
+
     internal fun lagSakHistorikk(
         person: Person = lagPerson(),
-        saker: Set<Sak> = setOf(lagSak()),
+        saker: Set<Sak> = setOf(dagpengeSak, ferietilleggSak),
     ): SakHistorikk =
         SakHistorikk(
             person = person,

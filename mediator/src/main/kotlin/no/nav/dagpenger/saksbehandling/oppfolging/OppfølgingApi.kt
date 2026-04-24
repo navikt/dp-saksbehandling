@@ -33,7 +33,6 @@ internal fun Route.oppfølgingApi(
             post {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val request = call.receive<OpprettOppfolgingRequestDTO>()
-
                 val hendelse =
                     OpprettOppfølgingHendelse(
                         ident = request.personIdent,
@@ -42,7 +41,7 @@ internal fun Route.oppfølgingApi(
                         beskrivelse = request.beskrivelse ?: "",
                         strukturertData = request.strukturertData ?: emptyMap(),
                         frist = request.frist,
-                        beholdOppgaven = request.beholdOppgaven ?: false,
+                        beholdOppgaven = request.beholdOppgaven,
                         utførtAv = saksbehandler,
                     )
 
@@ -61,10 +60,8 @@ internal fun Route.oppfølgingApi(
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
-
                     val oppfølging = oppfølgingMediator.hent(behandlingId, saksbehandler)
                     val lovligeSaker = oppfølgingMediator.hentAlleSaker(oppfølging.person.ident)
-
                     call.respond(
                         HttpStatusCode.OK,
                         oppfølging.tilDTO(lovligeSaker),
@@ -76,9 +73,7 @@ internal fun Route.oppfølgingApi(
                         val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         val saksbehandlerToken = call.request.jwt()
-
                         val request = call.receive<FerdigstillOppfolgingRequestDTO>()
-
                         val aksjon =
                             when (request.behandlingsvariant) {
                                 null -> OppfølgingAksjon.Avslutt(request.sakId)
@@ -108,7 +103,7 @@ internal fun Route.oppfølgingApi(
                                         beskrivelse = nyOppgave.beskrivelse ?: "",
                                         aarsak = nyOppgave.aarsak,
                                         frist = nyOppgave.frist,
-                                        beholdOppgaven = nyOppgave.beholdOppgaven ?: false,
+                                        beholdOppgaven = nyOppgave.beholdOppgaven,
                                     )
                                 }
                             }
@@ -122,7 +117,6 @@ internal fun Route.oppfølgingApi(
                                     utførtAv = saksbehandler,
                                 ),
                         )
-
                         call.respond(HttpStatusCode.NoContent, "Oppfølging ferdigstilt")
                     }
                 }

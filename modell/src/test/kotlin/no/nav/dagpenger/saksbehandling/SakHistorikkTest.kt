@@ -1,17 +1,12 @@
 package no.nav.dagpenger.saksbehandling
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class SakHistorikkTest {
     @Test
     fun `SakHistorikk med ulike type saker`() {
-        val søknadBehandling = ModellTestHelper.lagSøknadBehandling()
-        val dagpengeSak = ModellTestHelper.lagSak()
-        val sakHistorikk = ModellTestHelper.lagSakHistorikk(saker = setOf(
-            Sak(
-                sakId = TODO(),
-                opprettet = TODO(),
-                behandlinger = TODO()
-            )
-        ))
+        val sakHistorikk = ModellTestHelper.lagSakHistorikk()
+        sakHistorikk.ferietilleggSaker() shouldBe listOf(ModellTestHelper.ferietilleggSak)
+        sakHistorikk.dagpengeSaker() shouldBe listOf(ModellTestHelper.dagpengeSak)
     }
 }
