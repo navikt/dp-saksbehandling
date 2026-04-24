@@ -1020,19 +1020,19 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `settTilstandFor - uten frist og uten beholdOppgaven gir KlarTilBehandling`() {
+    fun `klargjørForBehandling - uten frist og uten beholdOppgaven gir KlarTilBehandling`() {
         val oppgave = lagOppgave(OPPRETTET)
-        oppgave.settTilstandFor(OpprettOppfølgingHendelse(ident = "12345678910", aarsak = "Test", tittel = "Test"))
+        oppgave.klargjørForBehandling(OpprettOppfølgingHendelse(ident = "12345678910", aarsak = "Test", tittel = "Test"))
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         oppgave.behandlerIdent shouldBe null
         oppgave.utsattTil() shouldBe null
     }
 
     @Test
-    fun `settTilstandFor - uten frist med beholdOppgaven gir UnderBehandling tildelt saksbehandler`() {
+    fun `klargjørForBehandling - uten frist med beholdOppgaven gir UnderBehandling tildelt saksbehandler`() {
         val oppgave = lagOppgave(OPPRETTET)
         val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
-        oppgave.settTilstandFor(
+        oppgave.klargjørForBehandling(
             OpprettOppfølgingHendelse(
                 ident = "12345678910",
                 aarsak = "Test",
@@ -1047,10 +1047,10 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `settTilstandFor - med frist uten beholdOppgaven gir PåVent`() {
+    fun `klargjørForBehandling - med frist uten beholdOppgaven gir PåVent`() {
         val oppgave = lagOppgave(OPPRETTET)
         val frist = LocalDate.now().plusDays(7)
-        oppgave.settTilstandFor(
+        oppgave.klargjørForBehandling(
             OpprettOppfølgingHendelse(
                 ident = "12345678910",
                 aarsak = "Test",
@@ -1065,11 +1065,11 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `settTilstandFor - med frist og beholdOppgaven gir PåVent forhåndsreservert til saksbehandler`() {
+    fun `klargjørForBehandling - med frist og beholdOppgaven gir PåVent forhåndsreservert til saksbehandler`() {
         val oppgave = lagOppgave(OPPRETTET)
         val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
         val frist = LocalDate.now().plusDays(7)
-        oppgave.settTilstandFor(
+        oppgave.klargjørForBehandling(
             OpprettOppfølgingHendelse(
                 ident = "12345678910",
                 aarsak = "Test",
