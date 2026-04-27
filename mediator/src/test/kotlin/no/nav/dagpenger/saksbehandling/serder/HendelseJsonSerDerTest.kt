@@ -2,36 +2,36 @@ package no.nav.dagpenger.saksbehandling.serder
 
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import java.util.stream.Stream
 
 class HendelseJsonSerDerTest {
     private val aUUID = "018fa4fe-8450-7fa2-9e47-cafa81f718cd"
-    private val søknadsbehandlingOpprettetHendelse =
-        SøknadsbehandlingOpprettetHendelse(
-            søknadId = UUID.fromString(aUUID),
-            behandlingId = UUID.fromString(aUUID),
-            ident = "ident",
-            opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
-        )
 
     private fun behandlingOppretteHendelse(utførtAv: Behandler): BehandlingOpprettetHendelse {
         val uuid = UUID.fromString(aUUID)
@@ -40,24 +40,143 @@ class HendelseJsonSerDerTest {
             ident = "1234",
             sakId = uuid,
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
-            type = UtløstAvType.SØKNAD,
+            type = HendelseBehandler.DpBehandling.Søknad,
             utførtAv = utførtAv,
         )
     }
 
-    private val søknadsbehandlingOpprettetHendelseJson =
-        """
-            { 
-               "søknadId": "$aUUID",
-               "behandlingId": "$aUUID",
-               "ident": "ident",
-               "opprettet": "-999999999-01-01T00:00:00",
-               "utførtAv": { "navn": "dp-behandling" }
-            }
-            """
+    companion object {
+        private val aUUID = "018fa4fe-8450-7fa2-9e47-cafa81f718cd"
+        private val fixedUUID = UUID.fromString(aUUID)
+        private val fixedTime = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS)
+
+        @JvmStatic
+        fun roundtripHendelser(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(
+                    "TomHendelse",
+                    TomHendelse,
+                ),
+                Arguments.of(
+                    "SkriptHendelse",
+                    SkriptHendelse(utførtAv = Applikasjon.Generell("test-skript")),
+                ),
+                Arguments.of(
+                    "SøknadsbehandlingOpprettetHendelse",
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = fixedUUID,
+                        behandlingId = fixedUUID,
+                        ident = "ident",
+                        opprettet = fixedTime,
+                    ),
+                ),
+                Arguments.of(
+                    "BehandlingOpprettetHendelse",
+                    BehandlingOpprettetHendelse(
+                        behandlingId = fixedUUID,
+                        ident = "1234",
+                        sakId = fixedUUID,
+                        opprettet = fixedTime,
+                        type = HendelseBehandler.DpBehandling.Søknad,
+                        utførtAv = Applikasjon.DpMottak,
+                    ),
+                ),
+                Arguments.of(
+                    "VedtakFattetHendelse",
+                    VedtakFattetHendelse(
+                        behandlingId = fixedUUID,
+                        behandletHendelseId = fixedUUID.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = "12345678901",
+                        sak = UtsendingSak(id = fixedUUID.toString()),
+                    ),
+                ),
+                Arguments.of(
+                    "ReturnerTilSaksbehandlingHendelse",
+                    ReturnerTilSaksbehandlingHendelse(
+                        oppgaveId = fixedUUID,
+                        årsak = ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL,
+                        utførtAv =
+                            Saksbehandler(
+                                navIdent = "navIdent",
+                                grupper = emptySet(),
+                                tilganger = setOf(TilgangType.SAKSBEHANDLER),
+                            ),
+                    ),
+                ),
+                Arguments.of(
+                    "FjernOppgaveAnsvarHendelse",
+                    FjernOppgaveAnsvarHendelse(
+                        oppgaveId = fixedUUID,
+                        årsak = FjernOppgaveAnsvarÅrsak.MANGLER_KOMPETANSE,
+                        utførtAv =
+                            Saksbehandler(
+                                navIdent = "navIdent",
+                                grupper = emptySet(),
+                                tilganger = setOf(TilgangType.SAKSBEHANDLER),
+                            ),
+                    ),
+                ),
+            )
+
+        @JvmStatic
+        fun dpBehandlingVarianter(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(
+                    HendelseBehandler.DpBehandling.Ferietillegg,
+                    fixedUUID,
+                    "ekstern-123",
+                ),
+                Arguments.of(
+                    HendelseBehandler.DpBehandling.Revurdering,
+                    null,
+                    null,
+                ),
+                Arguments.of(
+                    HendelseBehandler.DpBehandling.Arbeidssøkerperiode,
+                    null,
+                    null,
+                ),
+            )
+    }
+
+    @ParameterizedTest
+    @MethodSource("roundtripHendelser")
+    fun `rehydrerHendelse skal serialisere og deserialisere alle hendelsestyper`(
+        hendelseType: String,
+        hendelse: Hendelse,
+    ) {
+        val json = hendelse.tilJson()
+        val rehydrert = rehydrerHendelse(hendelseType, json)
+        rehydrert shouldBe hendelse
+    }
+
+    @ParameterizedTest
+    @MethodSource("dpBehandlingVarianter")
+    fun `Kan serialisere og deserialisere DpBehandlingOpprettetHendelse`(
+        type: HendelseBehandler.DpBehandling,
+        basertPåBehandling: UUID?,
+        eksternId: String?,
+    ) {
+        val hendelse =
+            DpBehandlingOpprettetHendelse(
+                behandlingId = fixedUUID,
+                ident = "1234",
+                opprettet = fixedTime,
+                basertPåBehandling = basertPåBehandling,
+                behandlingskjedeId = fixedUUID,
+                type = type,
+                eksternId = eksternId,
+            )
+
+        val json = hendelse.tilJson()
+        val deserialisert = json.tilHendelse<DpBehandlingOpprettetHendelse>()
+        deserialisert shouldBe hendelse
+        deserialisert.type shouldBe type
+    }
 
     @Test
-    fun `Kan serialisere og deserialisere hendelser til og fra json`() {
+    fun `Kan serialisere og deserialisere BehandlingOpprettetHendelse med polymorf utførtAv`() {
         behandlingOppretteHendelse(utførtAv = Applikasjon.DpMottak).let { hendelse ->
             val json = hendelse.tilJson()
             json shouldEqualJson
@@ -111,21 +230,7 @@ class HendelseJsonSerDerTest {
     }
 
     @Test
-    fun `should serialize hendelse to json`() {
-        TomHendelse.tilJson() shouldEqualJson "{}"
-        val tilJson = søknadsbehandlingOpprettetHendelse.tilJson()
-        tilJson shouldEqualJson søknadsbehandlingOpprettetHendelseJson
-    }
-
-    @Test
-    fun `should deserialize hendelse to json`() {
-        """{}""".tilHendelse<TomHendelse>() shouldBe TomHendelse
-        søknadsbehandlingOpprettetHendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>() shouldBe søknadsbehandlingOpprettetHendelse
-    }
-
-    @Test
     fun `skal ignorere ukjente felter ved deserialisering av Json`() {
-        //language=JSON
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = UUIDv7.ny(),
@@ -158,27 +263,7 @@ class HendelseJsonSerDerTest {
     }
 
     @Test
-    fun `Skal kunne serialisere og deserialisere SkriptHendelser`() {
-        val skriptHendelse =
-            SkriptHendelse(
-                utførtAv = Applikasjon.Generell("V87__UPDATE_HENDELSE_TYPE_TIL_SKRIPT_HENDELSE.sql"),
-            )
-
-        val jsonSkriptHendelse =
-            skriptHendelse.tilJson().also {
-                it shouldEqualJson """{
-              "utførtAv": {
-                "navn": "V87__UPDATE_HENDELSE_TYPE_TIL_SKRIPT_HENDELSE.sql"
-              }
-            }
-        """
-            }
-
-        jsonSkriptHendelse.tilHendelse<SkriptHendelse>() shouldBe skriptHendelse
-    }
-
-    @Test
-    fun `Skal kunne serialisere og deserialisere ReturnerTilSaksbehandlingHendelse`() {
+    fun `Skal deserialisere ReturnerTilSaksbehandlingHendelse med default årsak`() {
         val oppgaveId = UUIDv7.ny()
         val saksbehandler =
             Saksbehandler(
@@ -186,41 +271,17 @@ class HendelseJsonSerDerTest {
                 grupper = emptySet(),
                 tilganger = setOf(TilgangType.SAKSBEHANDLER),
             )
-        val hendelse =
-            ReturnerTilSaksbehandlingHendelse(
-                oppgaveId = oppgaveId,
-                årsak = ReturnerTilSaksbehandlingÅrsak.FEIL_HJEMMEL,
-                utførtAv = saksbehandler,
-            )
-
-        val jsonHendelse =
-            hendelse.tilJson().also {
-                it shouldEqualJson
-                    //language=Json
-                    """{
-                          "oppgaveId": "$oppgaveId",
-                          "årsak": "FEIL_HJEMMEL",
-                          "utførtAv": {
-                              "navIdent": "navIdent",
-                              "grupper": [],
-                              "tilganger": [ "SAKSBEHANDLER" ]
-                          }
-                        }
-                        """
-            }
-
-        jsonHendelse.tilHendelse<ReturnerTilSaksbehandlingHendelse>() shouldBe hendelse
 
         //language=Json
         """{
-                          "oppgaveId": "$oppgaveId",
-                          "utførtAv": {
-                              "navIdent": "navIdent",
-                              "grupper": [],
-                              "tilganger": [ "SAKSBEHANDLER" ]
-                          }
-                        }
-                        """.tilHendelse<ReturnerTilSaksbehandlingHendelse>() shouldBe
+              "oppgaveId": "$oppgaveId",
+              "utførtAv": {
+                  "navIdent": "navIdent",
+                  "grupper": [],
+                  "tilganger": [ "SAKSBEHANDLER" ]
+              }
+            }
+            """.tilHendelse<ReturnerTilSaksbehandlingHendelse>() shouldBe
             ReturnerTilSaksbehandlingHendelse(
                 oppgaveId = oppgaveId,
                 årsak = ReturnerTilSaksbehandlingÅrsak.ANNET,
@@ -229,7 +290,7 @@ class HendelseJsonSerDerTest {
     }
 
     @Test
-    fun `Skal kunne serialisere og deserialisere FjernOppgaveAnsvarHendelse`() {
+    fun `Skal deserialisere FjernOppgaveAnsvarHendelse med default årsak`() {
         val oppgaveId = UUIDv7.ny()
         val saksbehandler =
             Saksbehandler(
@@ -237,45 +298,43 @@ class HendelseJsonSerDerTest {
                 grupper = emptySet(),
                 tilganger = setOf(TilgangType.SAKSBEHANDLER),
             )
-        val hendelse =
-            FjernOppgaveAnsvarHendelse(
-                oppgaveId = oppgaveId,
-                årsak = FjernOppgaveAnsvarÅrsak.MANGLER_KOMPETANSE,
-                utførtAv = saksbehandler,
-            )
-
-        val jsonHendelse =
-            hendelse.tilJson().also {
-                it shouldEqualJson
-                    //language=Json
-                    """{
-                          "oppgaveId": "$oppgaveId",
-                          "årsak": "MANGLER_KOMPETANSE",
-                          "utførtAv": {
-                              "navIdent": "navIdent",
-                              "grupper": [],
-                              "tilganger": [ "SAKSBEHANDLER" ]
-                          }
-                        }
-                        """
-            }
-
-        jsonHendelse.tilHendelse<FjernOppgaveAnsvarHendelse>() shouldBe hendelse
 
         //language=Json
         """{
-                          "oppgaveId": "$oppgaveId",
-                          "utførtAv": {
-                              "navIdent": "navIdent",
-                              "grupper": [],
-                              "tilganger": [ "SAKSBEHANDLER" ]
-                          }
-                        }
-                        """.tilHendelse<FjernOppgaveAnsvarHendelse>() shouldBe
+              "oppgaveId": "$oppgaveId",
+              "utførtAv": {
+                  "navIdent": "navIdent",
+                  "grupper": [],
+                  "tilganger": [ "SAKSBEHANDLER" ]
+              }
+            }
+            """.tilHendelse<FjernOppgaveAnsvarHendelse>() shouldBe
             FjernOppgaveAnsvarHendelse(
                 oppgaveId = oppgaveId,
                 årsak = FjernOppgaveAnsvarÅrsak.ANNET,
                 utførtAv = saksbehandler,
             )
     }
+
+    @Test
+    fun `rehydrerHendelse-registeret finner alle konkrete Hendelse-subklasser`() {
+        val alleKonkreteTyper = finnAlleKonkreteSubklasser(Hendelse::class)
+        alleKonkreteTyper.size shouldNotBe 0
+
+        for (klass in alleKonkreteTyper) {
+            val typeName = klass.simpleName!!
+            // Verifiser at rehydrerHendelse kjenner til typen — Jackson-feil er OK, "Ukjent hendelse type" er ikke
+            val result = runCatching { rehydrerHendelse(typeName, "{}") }
+            result.exceptionOrNull()?.let { error ->
+                if (error is IllegalArgumentException && error.message?.contains("Ukjent hendelse type") == true) {
+                    throw AssertionError("$typeName mangler i hendelse-registeret", error)
+                }
+            }
+        }
+    }
+
+    private fun finnAlleKonkreteSubklasser(klass: kotlin.reflect.KClass<out Hendelse>): List<kotlin.reflect.KClass<out Hendelse>> =
+        klass.sealedSubclasses.flatMap { sub ->
+            if (sub.isSealed) finnAlleKonkreteSubklasser(sub) else listOf(sub)
+        }
 }

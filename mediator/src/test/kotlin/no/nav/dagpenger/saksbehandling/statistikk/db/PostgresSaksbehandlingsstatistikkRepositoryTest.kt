@@ -1,17 +1,16 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.LocalDate
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.beslutter
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -46,7 +45,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->
@@ -242,7 +240,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->
@@ -376,7 +373,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
     @Test
     fun `Tilstandsendringer på oppgave utløst av Innsending skal oversendes saksbehandlingsstatistikk`() {
-        val innsendingBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.INNSENDING)
+        val innsendingBehandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Innsending)
         val innsendingOppgave =
             TestHelper.lagOppgave(
                 behandling = innsendingBehandling,
@@ -391,7 +388,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->
@@ -421,7 +417,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
     @Test
     fun `Tilstandsendringer på oppgave utløst av Klage skal ikke oversendes saksbehandlingsstatistikk`() {
-        val klageBehandling = TestHelper.lagBehandling(utløstAvType = UtløstAvType.KLAGE)
+        val klageBehandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
         val klageOppgave =
             TestHelper.lagOppgave(
                 behandling = klageBehandling,
@@ -436,7 +432,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         val sak =
             Sak(
-                søknadId = DBTestHelper.søknadId,
                 opprettet = LocalDateTime.now(),
             )
         DBTestHelper.withMigratedDb { ds ->

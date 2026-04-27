@@ -230,7 +230,6 @@ class OppfølgingApiTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
                 opprettet = TestHelper.opprettetNå,
             )
         val oppfølging =
@@ -246,7 +245,7 @@ class OppfølgingApiTest {
         val mediator =
             mockk<OppfølgingMediator>().also {
                 every { it.hent(oppfølgingId, any()) } returns oppfølging
-                every { it.hentLovligeSaker(TestHelper.personIdent) } returns listOf(sak)
+                every { it.hentAlleSaker(TestHelper.personIdent) } returns listOf(sak)
             }
         withOppfølgingApi(mediator) {
             client
@@ -291,7 +290,7 @@ class OppfølgingApiTest {
         val mediator =
             mockk<OppfølgingMediator>().also {
                 every { it.hent(oppfølgingId, any()) } returns oppfølging
-                every { it.hentLovligeSaker(TestHelper.personIdent) } returns emptyList()
+                every { it.hentAlleSaker(TestHelper.personIdent) } returns emptyList()
             }
         withOppfølgingApi(mediator) {
             client
@@ -322,7 +321,7 @@ class OppfølgingApiTest {
         val mediator =
             mockk<OppfølgingMediator>().also {
                 every { it.hent(oppfølgingId, any()) } returns oppfølging
-                every { it.hentLovligeSaker(TestHelper.personIdent) } returns emptyList()
+                every { it.hentAlleSaker(TestHelper.personIdent) } returns emptyList()
             }
         withOppfølgingApi(mediator) {
             client

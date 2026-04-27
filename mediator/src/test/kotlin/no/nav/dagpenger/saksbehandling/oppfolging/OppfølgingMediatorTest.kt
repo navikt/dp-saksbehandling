@@ -3,12 +3,12 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
@@ -79,7 +79,7 @@ class OppfølgingMediatorTest {
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
-            oppgaver.first().behandling.utløstAv shouldBe UtløstAvType.OPPFØLGING
+            oppgaver.first().behandling.utløstAv shouldBe HendelseBehandler.Intern.Oppfølging
             oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
 
             oppgaveMediator.tildelOppgave(

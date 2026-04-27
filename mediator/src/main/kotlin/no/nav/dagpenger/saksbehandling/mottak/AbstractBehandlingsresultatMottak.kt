@@ -26,11 +26,14 @@ internal abstract class AbstractBehandlingsresultatMottak(
         {
             precondition {
                 it.requireAny("@event_name", requiredEventNames())
-                it.requireAny("behandletHendelse.type", requiredBehandletHendelseType())
-                it.requireKey("rettighetsperioder")
+                val typer = requiredBehandletHendelseType()
+                if (typer.isNotEmpty()) {
+                    it.requireAny("behandletHendelse.type", typer)
+                }
             }
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
+                it.interestedIn("rettighetsperioder")
                 it.valideringsregler()
                 it.interestedIn("basertPå")
             }
@@ -41,7 +44,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
     protected open fun JsonMessage.valideringsregler() {
     }
 
-    protected abstract fun requiredBehandletHendelseType(): List<String>
+    protected open fun requiredBehandletHendelseType(): List<String> = emptyList()
 
     protected abstract val mottakNavn: String
 
@@ -102,11 +105,11 @@ internal data class Behandlingsresultat(
         behandletHendelseId = packet["behandletHendelse"]["id"].asText(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
         rettighetsperioder =
-            packet["rettighetsperioder"].map {
+            packet["rettighetsperioder"].takeIf { it.isArray }?.map {
                 Rettighetsperiode(
                     harRett = it["harRett"].asBoolean(),
                 )
-            },
+            } ?: emptyList(),
     )
 
     private fun dagpengerInnvilget(): Boolean =

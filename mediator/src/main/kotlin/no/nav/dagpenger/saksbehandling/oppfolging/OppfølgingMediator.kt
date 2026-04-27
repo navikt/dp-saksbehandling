@@ -2,11 +2,11 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
@@ -43,7 +43,7 @@ class OppfølgingMediator(
                 behandlingId = oppfølgingId,
                 opprettet = hendelse.registrertTidspunkt,
                 hendelse = hendelse,
-                utløstAv = UtløstAvType.OPPFØLGING,
+                utløstAv = HendelseBehandler.Intern.Oppfølging,
             )
 
         sakMediator.lagreBehandling(
@@ -110,5 +110,5 @@ class OppfølgingMediator(
             oppfølging.person.harTilgang(saksbehandler)
         }
 
-    fun hentLovligeSaker(ident: String): List<Sak> = sakMediator.finnSakHistorikk(ident)?.saker() ?: emptyList()
+    fun hentAlleSaker(ident: String): List<Sak> = sakMediator.finnSakHistorikk(ident)?.alleSaker() ?: emptyList()
 }

@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.statistikk
 import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 
@@ -12,7 +12,7 @@ data class ProduksjonsstatistikkFilter(
     val periode: Periode,
     val tilstander: Set<Oppgave.Tilstand.Type> = emptySet(),
     val rettighetstyper: Set<String> = emptySet(),
-    val utløstAvTyper: Set<UtløstAvType> = emptySet(),
+    val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val grupperEtter: String = GrupperEtterDTO.OPPGAVETYPE.name,
 ) {
     companion object {
@@ -45,7 +45,8 @@ data class ProduksjonsstatistikkFilter(
 
         fun rettighetstyper(): Set<String> = stringValues.getAll("rettighet")?.toSet() ?: emptySet()
 
-        fun utløstAvTyper(): Set<UtløstAvType> = stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet() ?: emptySet()
+        fun utløstAvTyper(): Set<HendelseBehandler> =
+            stringValues.getAll("utlostAv")?.map { HendelseBehandler.valueOf(it) }?.toSet() ?: emptySet()
 
         fun grupperEtter(): String = stringValues.get("grupperEtter") ?: GrupperEtterDTO.OPPGAVETYPE.name
     }

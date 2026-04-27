@@ -7,20 +7,12 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
 import java.util.UUID
@@ -38,7 +30,7 @@ class PostgresSakRepository(
             session.transaction { tx ->
                 tx.lagreSakHistorikk(
                     personId = sakHistorikk.person.id,
-                    saker = sakHistorikk.saker(),
+                    saker = sakHistorikk.alleSaker(),
                 )
             }
         }
@@ -62,7 +54,6 @@ class PostgresSakRepository(
                             per.adressebeskyttelse_gradering AS person_adressebeskyttelse_gradering,
                             per.skjermes_som_egne_ansatte AS person_skjermes_som_egne_ansatte,
                             sak.id AS sak_id,
-                            sak.soknad_id AS sak_soknad_id,
                             sak.opprettet AS sak_opprettet,
                             beh.id AS behandling_id,
                             beh.utlost_av AS utlost_av,
@@ -89,7 +80,7 @@ class PostgresSakRepository(
         }
     }
 
-    override fun finnSisteSakId(ident: String): UUID? =
+    override fun finnSisteDagpengeSakId(ident: String): UUID? =
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -104,6 +95,12 @@ class PostgresSakRepository(
                         AND      sak.er_dp_sak
                         AND NOT EXISTS (
                             SELECT 1
+                            FROM   behandling_v1 feri
+                            WHERE  feri.sak_id = sak.id
+                            AND    feri.utlost_av = :ferietillegg
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1
                             FROM   oppgave_v1 opp
                             WHERE  opp.behandling_id = beh.id
                             AND    opp.tilstand = 'AVBRUTT'
@@ -114,6 +111,7 @@ class PostgresSakRepository(
                     paramMap =
                         mapOf(
                             "ident" to ident,
+                            "ferietillegg" to HendelseBehandler.DpBehandling.Ferietillegg.name,
                         ),
                 ).map { row ->
                     row.uuid("id")
@@ -187,7 +185,7 @@ class PostgresSakRepository(
                         FROM    sak_v2 sak
                         JOIN    behandling_v1 beh ON beh.sak_id = sak.id
                         WHERE   beh.id = :behandling_id
-                        AND   sak.er_dp_sak = true
+                        AND     sak.er_dp_sak = true
                         """.trimIndent(),
                     paramMap =
                         mapOf(
@@ -216,17 +214,17 @@ class PostgresSakRepository(
                 statement =
                     """
                     INSERT INTO sak_v2
-                        (id, person_id, soknad_id, opprettet) 
+                        (id, person_id, opprettet, er_dp_sak) 
                     VALUES
-                        (:id,:person_id, :soknad_id, :opprettet) 
+                        (:id,:person_id, :opprettet, :er_dp_sak) 
                     ON CONFLICT (id) DO NOTHING 
                     """.trimIndent(),
                 paramMap =
                     mapOf(
                         "id" to sak.sakId,
                         "person_id" to personId,
-                        "soknad_id" to sak.søknadId,
                         "opprettet" to sak.opprettet,
+                        "er_dp_sak" to sak.erFerietilleggsSak(),
                     ),
             ).asUpdate,
         )
@@ -396,9 +394,8 @@ class PostgresSakRepository(
         val sakId = this.uuidOrNull("sak_id")
         if (sakId != null) {
             val sak =
-                sakHistorikk.saker().singleOrNull { it.sakId == sakId } ?: Sak(
+                sakHistorikk.alleSaker().singleOrNull { it.sakId == sakId } ?: Sak(
                     sakId = sakId,
-                    søknadId = this.uuid("sak_soknad_id"),
                     opprettet = this.localDateTime("sak_opprettet"),
                 ).also {
                     sakHistorikk.leggTilSak(it)
@@ -410,7 +407,7 @@ class PostgresSakRepository(
                 sak.leggTilBehandling(
                     Behandling(
                         behandlingId = behandlingId,
-                        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
+                        utløstAv = HendelseBehandler.valueOf(this.string("utlost_av")),
                         opprettet = this.localDateTime("behandling_opprettet"),
                         oppgaveId = this.uuidOrNull("oppgave_id"),
                         hendelse = this.rehydrerHendelse(),
@@ -422,39 +419,9 @@ class PostgresSakRepository(
     }
 
     private fun Row.rehydrerHendelse(): Hendelse {
-        return when (val hendelseType = this.string("hendelse_type")) {
-            "TomHendelse" -> return TomHendelse
-            "SøknadsbehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-
-            "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
-            "MeldekortbehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
-
-            "ManuellBehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<ManuellBehandlingOpprettetHendelse>()
-
-            "InnsendingMottattHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<InnsendingMottattHendelse>()
-
-            "RevurderingBehandlingOpprettetHendelse" ->
-                this
-                    .string("hendelse_data")
-                    .tilHendelse<RevurderingBehandlingOpprettetHendelse>()
-
-            else -> {
-                logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
-                sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
-                throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
-            }
-        }
+        val hendelseType = this.string("hendelse_type")
+        val hendelseData = this.string("hendelse_data")
+        return no.nav.dagpenger.saksbehandling.serder
+            .rehydrerHendelse(hendelseType, hendelseData)
     }
 }

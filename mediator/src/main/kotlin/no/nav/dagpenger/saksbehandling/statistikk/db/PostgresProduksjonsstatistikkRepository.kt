@@ -7,8 +7,8 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -34,7 +34,7 @@ class PostgresProduksjonsstatistikkRepository(
     override fun hentTilstanderMedUtløstAvFilter(produksjonsstatistikkFilter: ProduksjonsstatistikkFilter): List<TilstandStatistikk> {
         val utløstAvTyper =
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
-                UtløstAvType.entries.toSet()
+                HendelseBehandler.entries.toSet()
             }
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
@@ -111,6 +111,9 @@ class PostgresProduksjonsstatistikkRepository(
                                    , ('REVURDERING')
                                    , ('KLAGE')
                                    , ('INNSENDING')
+                                   , ('OPPFØLGING')
+                                   , ('FERIETILLEGG')
+                                   , ('ARBEIDSSØKERPERIODE')
                              ) AS utlo(utlost_av)
                         """.trimIndent(),
                     paramMap =
@@ -121,7 +124,7 @@ class PostgresProduksjonsstatistikkRepository(
                         ),
                 ).map { row ->
                     AntallOppgaverForUtløstAv(
-                        utløstAv = UtløstAvType.valueOf(row.string("utlost_av")),
+                        utløstAv = HendelseBehandler.valueOf(row.string("utlost_av")),
                         antall = row.int("antall"),
                     )
                 }.asList,
@@ -255,7 +258,7 @@ class PostgresProduksjonsstatistikkRepository(
     ): List<AntallOppgaverForTilstandOgUtløstAv> {
         val utløstAvTyper =
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
-                UtløstAvType.entries.toSet()
+                HendelseBehandler.entries.toSet()
             }
         val tilstander =
             produksjonsstatistikkFilter.tilstander.ifEmpty {
@@ -290,7 +293,7 @@ class PostgresProduksjonsstatistikkRepository(
                 ).map { row ->
                     AntallOppgaverForTilstandOgUtløstAv(
                         tilstand = Oppgave.Tilstand.Type.valueOf(row.string("tilstand")),
-                        utløstAv = UtløstAvType.valueOf(row.string("utlost_av")),
+                        utløstAv = HendelseBehandler.valueOf(row.string("utlost_av")),
                         antall = row.int("antall"),
                     )
                 }.asList,
@@ -361,7 +364,7 @@ class PostgresProduksjonsstatistikkRepository(
 
 data class AntallOppgaverForTilstandOgUtløstAv(
     val tilstand: Oppgave.Tilstand.Type,
-    val utløstAv: UtløstAvType,
+    val utløstAv: HendelseBehandler,
     val antall: Int,
 )
 
@@ -377,7 +380,7 @@ data class AntallOppgaverForRettighet(
 )
 
 data class AntallOppgaverForUtløstAv(
-    val utløstAv: UtløstAvType,
+    val utløstAv: HendelseBehandler,
     val antall: Int,
 )
 

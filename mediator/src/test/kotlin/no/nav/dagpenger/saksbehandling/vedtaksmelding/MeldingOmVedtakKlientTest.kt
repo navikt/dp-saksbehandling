@@ -12,9 +12,9 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -167,7 +167,7 @@ class MeldingOmVedtakKlientTest {
                     saksbehandler = saksbehandler,
                     beslutter = saksbehandler,
                     behandlingId = behandlingIdSuksess,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     maskinToken = "tulletoken",
                     sakId = sakId,
                 )
@@ -220,7 +220,7 @@ class MeldingOmVedtakKlientTest {
                     saksbehandler = saksbehandler,
                     beslutter = saksbehandler,
                     behandlingId = behandlingIdSomFeiler,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     maskinToken = "tulletoken",
                     sakId = sakId,
                 )
@@ -283,7 +283,7 @@ class MeldingOmVedtakKlientTest {
                     beslutter = null,
                     behandlingId = behandlingIdSuksess,
                     saksbehandlerToken = saksbehandlerToken,
-                    utløstAvType = UtløstAvType.SØKNAD,
+                    utløstAvType = HendelseBehandler.DpBehandling.Søknad,
                     sakId = sakId,
                 )
             result.getOrThrow() shouldBe expectedHtmlResponse

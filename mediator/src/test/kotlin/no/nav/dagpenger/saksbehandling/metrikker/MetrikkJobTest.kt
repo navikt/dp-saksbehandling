@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -16,8 +17,6 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.TestHelper.lagUtsending
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
@@ -26,14 +25,14 @@ import org.junit.jupiter.api.Test
 
 class MetrikkJobTest {
     val person = lagPerson()
-    val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
-    val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
-    val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling7 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
-    val behandling8 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+    val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+    val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.Intern.Klage)
+    val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.Intern.Klage)
+    val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+    val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+    val behandling7 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+    val behandling8 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
 
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {

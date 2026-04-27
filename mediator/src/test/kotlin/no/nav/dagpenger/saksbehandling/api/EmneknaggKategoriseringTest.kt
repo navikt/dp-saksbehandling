@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import org.junit.jupiter.api.Test
 
@@ -10,11 +11,12 @@ class EmneknaggKategoriseringTest {
     fun `Regelknagger skal mappes til riktig kategori`() {
         val emneknagger =
             setOf(
-                Emneknagg.Regelknagg.AVSLAG.visningsnavn,
-                Emneknagg.Regelknagg.INNVILGELSE.visningsnavn,
-                Emneknagg.Regelknagg.GJENOPPTAK.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
+                Regelknagg.AVSLAG.visningsnavn,
+                Regelknagg.INNVILGELSE.visningsnavn,
+                Regelknagg.GJENOPPTAK.visningsnavn,
+                Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn,
+                Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
+                Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn,
             )
 
         val result = emneknagger.tilOppgaveEmneknaggerDTOListe()
@@ -24,24 +26,25 @@ class EmneknaggKategoriseringTest {
         result.single { it.visningsnavn == "Gjenopptak" }.kategori shouldBe EmneknaggKategoriDTO.GJENOPPTAK
         result.single { it.visningsnavn == "Minsteinntekt" }.kategori shouldBe EmneknaggKategoriDTO.AVSLAGSGRUNN
         result.single { it.visningsnavn == "Ordinær" }.kategori shouldBe EmneknaggKategoriDTO.RETTIGHET
+        result.single { it.visningsnavn == "Ferietillegg" }.kategori shouldBe EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE
     }
 
     @Test
     fun `Alle avslagsgrunner skal ha kategori AVSLAGSGRUNN`() {
         val avslagsgrunner =
             setOf(
-                Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_ALDER.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_STREIK.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_UTESTENGT.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_UTDANNING.visningsnavn,
-                Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP.visningsnavn,
+                Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn,
+                Regelknagg.AVSLAG_ARBEIDSINNTEKT.visningsnavn,
+                Regelknagg.AVSLAG_ARBEIDSTID.visningsnavn,
+                Regelknagg.AVSLAG_ALDER.visningsnavn,
+                Regelknagg.AVSLAG_ANDRE_YTELSER.visningsnavn,
+                Regelknagg.AVSLAG_STREIK.visningsnavn,
+                Regelknagg.AVSLAG_OPPHOLD_UTLAND.visningsnavn,
+                Regelknagg.AVSLAG_REELL_ARBEIDSSØKER.visningsnavn,
+                Regelknagg.AVSLAG_IKKE_REGISTRERT.visningsnavn,
+                Regelknagg.AVSLAG_UTESTENGT.visningsnavn,
+                Regelknagg.AVSLAG_UTDANNING.visningsnavn,
+                Regelknagg.AVSLAG_MEDLEMSKAP.visningsnavn,
             )
 
         val result = avslagsgrunner.tilOppgaveEmneknaggerDTOListe()
@@ -55,17 +58,32 @@ class EmneknaggKategoriseringTest {
     fun `Alle rettighetsknagger skal ha kategori RETTIGHET`() {
         val rettigheter =
             setOf(
-                Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+                Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
+                Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
+                Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
+                Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                Regelknagg.RETTIGHET_KONKURS.visningsnavn,
             )
 
         val result = rettigheter.tilOppgaveEmneknaggerDTOListe()
 
         result.forEach { emneknagg ->
             emneknagg.kategori shouldBe EmneknaggKategoriDTO.RETTIGHET
+        }
+    }
+
+    @Test
+    fun `Alle behandletHendelseType emneknagger skal ha kategori BEHANDLET_HENDELSE_TYPE`() {
+        val rettigheter =
+            setOf(
+                Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn,
+                Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn,
+            )
+
+        val result = rettigheter.tilOppgaveEmneknaggerDTOListe()
+
+        result.forEach { emneknagg ->
+            emneknagg.kategori shouldBe EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE
         }
     }
 
@@ -136,7 +154,7 @@ class EmneknaggKategoriseringTest {
     fun `Mikset liste av emneknagger skal kategoriseres riktig`() {
         val miksedeKnagger =
             setOf(
-                Emneknagg.Regelknagg.AVSLAG.visningsnavn,
+                Regelknagg.AVSLAG.visningsnavn,
                 Emneknagg.PåVent.AVVENT_SVAR.visningsnavn,
                 "Ettersending(2024-01-15)",
                 Emneknagg.AvbrytBehandling.AVBRUTT_ANNET.visningsnavn,

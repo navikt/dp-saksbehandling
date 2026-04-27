@@ -1483,10 +1483,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OppgaveOversikt'
+        ferietilleggSaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sak'
       required:
         - person
         - saker
         - oppgaver
+        - ferietilleggSaker
 
     Sak:
       type: object
@@ -1764,6 +1769,7 @@ components:
         - PAA_VENT
         - ETTERSENDING
         - OPPFOLGING_ARSAK
+        - BEHANDLET_HENDELSE_TYPE
         - UDEFINERT
 
 
@@ -1794,6 +1800,8 @@ components:
         - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
         - OPPFØLGING
+        - FERIETILLEGG
+        - ARBEIDSSØKERPERIODE
 
     BehandlingType:
       type: string

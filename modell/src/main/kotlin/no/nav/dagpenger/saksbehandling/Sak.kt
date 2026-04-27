@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.RevurderingBehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -28,13 +26,14 @@ sealed class KnyttTilSakResultat {
 
 data class Sak(
     val sakId: UUID = UUIDv7.ny(),
-    val søknadId: UUID,
     val opprettet: LocalDateTime,
     private val behandlinger: MutableSet<Behandling> = mutableSetOf(),
 ) {
     fun behandlinger(): List<Behandling> = behandlinger.toList()
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
+
+    fun erFerietilleggsSak(): Boolean = behandlinger.any { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }
 
     private fun basertPåBehandlingErKnyttetTilSak(basertPåBehandlingId: UUID?): Boolean =
         this.behandlinger
@@ -50,7 +49,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.SØKNAD,
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     hendelse = søknadsbehandlingOpprettetHendelse,
                 ),
@@ -60,56 +59,16 @@ data class Sak(
             KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == meldekortbehandlingOpprettetHendelse.behandlingskjedeId ||
-            this.basertPåBehandlingErKnyttetTilSak(
-                meldekortbehandlingOpprettetHendelse.basertPåBehandling,
-            )
+    fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse): KnyttTilSakResultat =
+        if (this.sakId == hendelse.behandlingskjedeId ||
+            this.basertPåBehandlingErKnyttetTilSak(hendelse.basertPåBehandling)
         ) {
             behandlinger.add(
                 Behandling(
-                    behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.MELDEKORT,
-                    opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
-                    hendelse = meldekortbehandlingOpprettetHendelse,
-                ),
-            )
-            KnyttTilSakResultat.KnyttetTilSak(this)
-        } else {
-            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-        }
-
-    fun knyttTilSak(revurderingBehandlingOpprettetHendelse: RevurderingBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == revurderingBehandlingOpprettetHendelse.behandlingskjedeId ||
-            this.basertPåBehandlingErKnyttetTilSak(
-                revurderingBehandlingOpprettetHendelse.basertPåBehandling,
-            )
-        ) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = revurderingBehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.REVURDERING,
-                    opprettet = revurderingBehandlingOpprettetHendelse.opprettet,
-                    hendelse = revurderingBehandlingOpprettetHendelse,
-                ),
-            )
-            KnyttTilSakResultat.KnyttetTilSak(this)
-        } else {
-            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
-        }
-
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat =
-        if (this.sakId == manuellBehandlingOpprettetHendelse.behandlingskjedeId ||
-            this.basertPåBehandlingErKnyttetTilSak(
-                manuellBehandlingOpprettetHendelse.basertPåBehandling,
-            )
-        ) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.MANUELL,
-                    opprettet = manuellBehandlingOpprettetHendelse.opprettet,
-                    hendelse = manuellBehandlingOpprettetHendelse,
+                    behandlingId = hendelse.behandlingId,
+                    utløstAv = hendelse.type,
+                    opprettet = hendelse.opprettet,
+                    hendelse = hendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)
@@ -137,7 +96,6 @@ data class Sak(
         if (other !is Sak) return false
 
         if (sakId != other.sakId) return false
-        if (søknadId != other.søknadId) return false
         if (!opprettet.isEqual(other.opprettet)) return false
         if (this.behandlinger().sortedBy { it.behandlingId } !=
             other

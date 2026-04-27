@@ -2,14 +2,27 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDateTime
+import java.util.stream.Stream
 
 class SakHistorikkKnyttTilSakTest {
+    companion object {
+        @JvmStatic
+        fun dpBehandlingTyper(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(HendelseBehandler.DpBehandling.Meldekort, "id"),
+                Arguments.of(HendelseBehandler.DpBehandling.Manuell, UUIDv7.ny().toString()),
+                Arguments.of(HendelseBehandler.DpBehandling.Ferietillegg, "ferie-1"),
+            )
+    }
+
     private val now = LocalDateTime.now()
     private val testPerson =
         Person(
@@ -22,17 +35,17 @@ class SakHistorikkKnyttTilSakTest {
     private val søknadOmNyRettBehandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAv = UtløstAvType.SØKNAD,
+            utløstAv = HendelseBehandler.DpBehandling.Søknad,
             opprettet = now,
             hendelse = TomHendelse,
         )
     private val sakMedBehandling =
-        Sak(søknadId = UUIDv7.ny(), opprettet = now).also {
+        Sak(opprettet = now).also {
             it.leggTilBehandling(
                 søknadOmNyRettBehandling,
             )
         }
-    private val sakUtenBehandling = Sak(søknadId = UUIDv7.ny(), opprettet = now)
+    private val sakUtenBehandling = Sak(opprettet = now)
 
     private val sakHistorikk =
         SakHistorikk(
@@ -68,16 +81,21 @@ class SakHistorikkKnyttTilSakTest {
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
     }
 
-    @Test
-    fun `knyttTilSak med MeldekortbehandlingOpprettetHendelse`() {
+    @ParameterizedTest
+    @MethodSource("dpBehandlingTyper")
+    fun `knyttTilSak med DpBehandlingOpprettetHendelse`(
+        type: HendelseBehandler.DpBehandling,
+        eksternId: String,
+    ) {
         val hendelse =
-            MeldekortbehandlingOpprettetHendelse(
+            DpBehandlingOpprettetHendelse(
                 behandlingId = UUIDv7.ny(),
                 ident = "12345678910",
                 opprettet = now,
-                meldekortId = "id",
                 basertPåBehandling = UUIDv7.ny(),
                 behandlingskjedeId = UUIDv7.ny(),
+                type = type,
+                eksternId = eksternId,
             )
 
         sakHistorikk.knyttTilSak(hendelse) shouldBe
@@ -95,40 +113,7 @@ class SakHistorikkKnyttTilSakTest {
 
         sakHistorikk.knyttTilSak(
             hendelse.copy(
-                behandlingskjedeId = null,
-                basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
-            ),
-        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
-    }
-
-    @Test
-    fun `knyttTilSak med ManuellBehandlingOpprettetHendelse`() {
-        val hendelse =
-            ManuellBehandlingOpprettetHendelse(
-                behandlingId = UUIDv7.ny(),
-                ident = "12345678910",
-                opprettet = now,
-                manuellId = UUIDv7.ny(),
-                basertPåBehandling = UUIDv7.ny(),
                 behandlingskjedeId = UUIDv7.ny(),
-            )
-
-        sakHistorikk.knyttTilSak(hendelse) shouldBe
-            KnyttTilSakResultat.IkkeKnyttetTilSak(
-                sakMedBehandling.sakId,
-                sakUtenBehandling.sakId,
-            )
-
-        sakHistorikk.knyttTilSak(
-            hendelse.copy(
-                basertPåBehandling = UUIDv7.ny(),
-                behandlingskjedeId = sakMedBehandling.sakId,
-            ),
-        ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
-
-        sakHistorikk.knyttTilSak(
-            hendelse.copy(
-                behandlingskjedeId = null,
                 basertPåBehandling = søknadOmNyRettBehandling.behandlingId,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sakMedBehandling)
@@ -142,7 +127,7 @@ class SakHistorikkKnyttTilSakTest {
                 ident = "12345678910",
                 opprettet = now,
                 sakId = UUIDv7.ny(),
-                type = UtløstAvType.SØKNAD,
+                type = HendelseBehandler.DpBehandling.Søknad,
             )
 
         sakHistorikk.knyttTilSak(hendelse) shouldBe
