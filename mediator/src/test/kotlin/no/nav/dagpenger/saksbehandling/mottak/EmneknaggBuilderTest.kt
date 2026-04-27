@@ -469,6 +469,21 @@ class EmneknaggBuilderTest {
         ).bygg() shouldBe setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn)
     }
 
+    @Test
+    fun `Skal sette behandletHendelseType som emneknagg hvis type er Samordning`() {
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "behandletHendelse": { "type": "Samordning" },
+                  "rettighetsperioder": [{"harRett": true, "opprinnelse": "Ny"}],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn)
+    }
+
     private val objectMapper =
         jacksonObjectMapper().also {
             it.registerModule(JavaTimeModule())

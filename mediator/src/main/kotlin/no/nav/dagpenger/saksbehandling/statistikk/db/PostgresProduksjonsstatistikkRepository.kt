@@ -114,6 +114,7 @@ class PostgresProduksjonsstatistikkRepository(
                                    , ('OPPFØLGING')
                                    , ('FERIETILLEGG')
                                    , ('ARBEIDSSØKERPERIODE')
+                                   , ('SAMORDNING')
                              ) AS utlo(utlost_av)
                         """.trimIndent(),
                     paramMap =

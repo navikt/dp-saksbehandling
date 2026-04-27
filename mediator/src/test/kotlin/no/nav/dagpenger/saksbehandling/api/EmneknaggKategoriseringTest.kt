@@ -78,6 +78,7 @@ class EmneknaggKategoriseringTest {
             setOf(
                 Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn,
                 Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn,
+                Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn,
             )
 
         val result = rettigheter.tilOppgaveEmneknaggerDTOListe()
