@@ -1797,7 +1797,6 @@ components:
         - REVURDERING
         - KLAGE
         - INNSENDING
-        - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
         - OPPFØLGING
         - FERIETILLEGG
@@ -1810,7 +1809,6 @@ components:
         - RETT_TIL_DAGPENGER
         - KLAGE
         - INNSENDING
-        - MELDEKORT_KORRIGERING
         - TILBAKEKREVING
         - OPPFØLGING
 
