@@ -45,9 +45,11 @@ sealed class HendelseBehandler(
 
         data object Arbeidssøkerperiode : DpBehandling("ARBEIDSSØKERPERIODE", "Arbeidssøkerperiode")
 
+        data object Samordning : DpBehandling("SAMORDNING", "Samordning")
+
         companion object {
             private val behandletHendelseTyper by lazy {
-                listOf(Søknad, Meldekort, Manuell, Revurdering, Ferietillegg, Arbeidssøkerperiode)
+                listOf(Søknad, Meldekort, Manuell, Revurdering, Ferietillegg, Arbeidssøkerperiode, Samordning)
                     .associateBy { it.behandletHendelseType }
             }
 
@@ -76,6 +78,7 @@ sealed class HendelseBehandler(
                 DpBehandling.Revurdering,
                 DpBehandling.Ferietillegg,
                 DpBehandling.Arbeidssøkerperiode,
+                DpBehandling.Samordning,
                 Intern.Innsending,
                 Intern.Klage,
                 Intern.Oppfølging,

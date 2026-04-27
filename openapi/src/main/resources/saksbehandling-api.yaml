@@ -1802,6 +1802,7 @@ components:
         - OPPFØLGING
         - FERIETILLEGG
         - ARBEIDSSØKERPERIODE
+        - SAMORDNING
 
     BehandlingType:
       type: string

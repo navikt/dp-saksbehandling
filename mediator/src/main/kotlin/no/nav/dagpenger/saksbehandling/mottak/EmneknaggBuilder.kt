@@ -76,6 +76,7 @@ class EmneknaggBuilder(
         when (behandletHendelseNode["type"].asText()) {
             "Arbeidssøkerperiode" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn)
             "Ferietillegg" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn)
+            "Samordning" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn)
             else -> emptySet()
         }
 

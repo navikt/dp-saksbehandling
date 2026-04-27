@@ -333,6 +333,7 @@ internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
         is HendelseBehandler.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
         is HendelseBehandler.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
         is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> UtlostAvTypeDTO.ARBEIDSSØKERPERIODE
+        is HendelseBehandler.DpBehandling.Samordning -> UtlostAvTypeDTO.SAMORDNING
     }
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =

@@ -18,6 +18,8 @@ class HendelseBehandlerTest {
                 Arguments.of("MANUELL", HendelseBehandler.DpBehandling.Manuell),
                 Arguments.of("REVURDERING", HendelseBehandler.DpBehandling.Revurdering),
                 Arguments.of("FERIETILLEGG", HendelseBehandler.DpBehandling.Ferietillegg),
+                Arguments.of("ARBEIDSSØKERPERIODE", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
+                Arguments.of("SAMORDNING", HendelseBehandler.DpBehandling.Samordning),
                 Arguments.of("INNSENDING", HendelseBehandler.Intern.Innsending),
                 Arguments.of("KLAGE", HendelseBehandler.Intern.Klage),
                 Arguments.of("OPPFØLGING", HendelseBehandler.Intern.Oppfølging),
@@ -32,6 +34,7 @@ class HendelseBehandlerTest {
                 Arguments.of("Omgjøring", HendelseBehandler.DpBehandling.Revurdering),
                 Arguments.of("Ferietillegg", HendelseBehandler.DpBehandling.Ferietillegg),
                 Arguments.of("Arbeidssøkerperiode", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
+                Arguments.of("Samordning", HendelseBehandler.DpBehandling.Samordning),
             )
     }
 
@@ -69,7 +72,7 @@ class HendelseBehandlerTest {
 
     @Test
     fun `entries inneholder alle kjente typer`() {
-        HendelseBehandler.entries.size shouldBe 9
+        HendelseBehandler.entries.size shouldBe 10
         HendelseBehandler.entries.map { it.name }.toSet() shouldBe
             setOf(
                 "SØKNAD",
@@ -78,6 +81,7 @@ class HendelseBehandlerTest {
                 "REVURDERING",
                 "FERIETILLEGG",
                 "ARBEIDSSØKERPERIODE",
+                "SAMORDNING",
                 "INNSENDING",
                 "KLAGE",
                 "OPPFØLGING",

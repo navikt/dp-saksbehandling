@@ -37,6 +37,7 @@ object Emneknagg {
         RETTIGHET_KONKURS("Konkurs", EmneknaggKategori.RETTIGHET),
         BEHANDLET_HENDELSE_TYPE_FERIETILLEGG("Ferietillegg", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
         BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE("Arbeidssøkerperiode", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
+        BEHANDLET_HENDELSE_TYPE_SAMORDNING("Samordning", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
     }
 
     enum class PåVent(
