@@ -105,23 +105,14 @@ class PostgresProduksjonsstatistikkRepository(
                                 AND     oppg.opprettet >= :fom
                                 AND     oppg.opprettet <  :tom_pluss_1_dag
                              )                                                              AS antall
-                        FROM (VALUES ('SØKNAD')
-                                   , ('MELDEKORT')
-                                   , ('MANUELL')
-                                   , ('REVURDERING')
-                                   , ('KLAGE')
-                                   , ('INNSENDING')
-                                   , ('OPPFØLGING')
-                                   , ('FERIETILLEGG')
-                                   , ('ARBEIDSSØKERPERIODE')
-                                   , ('SAMORDNING')
-                             ) AS utlo(utlost_av)
+                        FROM unnest(:utlost_av_typer::text[]) AS utlo(utlost_av)
                         """.trimIndent(),
                     paramMap =
                         mapOf(
                             "tilstander" to tilstander.map { it.name }.toTypedArray(),
                             "fom" to produksjonsstatistikkFilter.periode.fom,
                             "tom_pluss_1_dag" to produksjonsstatistikkFilter.periode.tom.plusDays(1),
+                            "utlost_av_typer" to HendelseBehandler.entries.map { it.name }.toTypedArray(),
                         ),
                 ).map { row ->
                     AntallOppgaverForUtløstAv(

@@ -322,19 +322,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
     }
 
-internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO =
-    when (this.behandling.utløstAv) {
-        is HendelseBehandler.DpBehandling.Søknad -> UtlostAvTypeDTO.SØKNAD
-        is HendelseBehandler.Intern.Klage -> UtlostAvTypeDTO.KLAGE
-        is HendelseBehandler.DpBehandling.Meldekort -> UtlostAvTypeDTO.MELDEKORT
-        is HendelseBehandler.DpBehandling.Manuell -> UtlostAvTypeDTO.MANUELL
-        is HendelseBehandler.Intern.Innsending -> UtlostAvTypeDTO.INNSENDING
-        is HendelseBehandler.DpBehandling.Revurdering -> UtlostAvTypeDTO.REVURDERING
-        is HendelseBehandler.Intern.Oppfølging -> UtlostAvTypeDTO.OPPFØLGING
-        is HendelseBehandler.DpBehandling.Ferietillegg -> UtlostAvTypeDTO.FERIETILLEGG
-        is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> UtlostAvTypeDTO.ARBEIDSSØKERPERIODE
-        is HendelseBehandler.DpBehandling.Samordning -> UtlostAvTypeDTO.SAMORDNING
-    }
+internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = UtlostAvTypeDTO.valueOf(this.behandling.utløstAv.name)
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
     when (this.tilstand().type) {

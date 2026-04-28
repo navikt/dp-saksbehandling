@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -767,6 +768,13 @@ class OppgaveDTOMapperTest {
 
             sakDTO2.oppgaver shouldHaveSize 1
             sakDTO2.oppgaver.first() shouldBe oppgave2
+        }
+    }
+
+    @Test
+    fun `alle HendelseBehandler-navn finnes som verdi i UtlostAvTypeDTO`() {
+        HendelseBehandler.entries.forEach { hendelseBehandler ->
+            UtlostAvTypeDTO.valueOf(hendelseBehandler.name)
         }
     }
 }
