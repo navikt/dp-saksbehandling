@@ -1,9 +1,5 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -28,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.util.UUID
 
 class EmneknaggBuilderTest {
@@ -484,10 +481,7 @@ class EmneknaggBuilderTest {
         ).bygg() shouldBe setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn)
     }
 
-    private val objectMapper =
-        jacksonObjectMapper().also {
-            it.registerModule(JavaTimeModule())
-        }
+    private val objectMapper = jacksonObjectMapper()
 
     private data class ForenkletOpplysning(
         val id: UUID,
@@ -525,7 +519,7 @@ class EmneknaggBuilderTest {
                         }
                     val periodeObject =
                         objectMapper.createObjectNode().apply {
-                            set<ObjectNode>("verdi", verdiNode)
+                            set("verdi", verdiNode)
                         }
                     val periodeArray =
                         objectMapper.createArrayNode().apply {
@@ -534,7 +528,7 @@ class EmneknaggBuilderTest {
                     val opplysningObject =
                         objectMapper.createObjectNode().apply {
                             put("opplysningTypeId", opplysning.id.toString())
-                            set<ArrayNode>("perioder", periodeArray)
+                            set("perioder", periodeArray)
                         }
                     add(opplysningObject)
                 }
@@ -543,9 +537,9 @@ class EmneknaggBuilderTest {
             .createObjectNode()
             .apply {
                 put("behandlingId", UUID.randomUUID().toString())
-                set<ObjectNode>("behandletHendelse", behandletHendelseObject)
-                set<ArrayNode>("rettighetsperioder", rettighetsperioderArray)
-                set<ArrayNode>("opplysninger", opplysningArray)
+                set("behandletHendelse", behandletHendelseObject)
+                set("rettighetsperioder", rettighetsperioderArray)
+                set("opplysninger", opplysningArray)
             }.toString()
     }
 }

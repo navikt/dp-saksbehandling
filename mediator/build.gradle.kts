@@ -53,7 +53,7 @@ dependencies {
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.bundles.postgres.test)
     testImplementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
-    testImplementation(libs.bundles.naisful.rapid.and.rivers.test)
+    testImplementation("com.github.navikt.rapids-and-rivers:rapids-and-rivers-test:2026043009341777534451")
 }
 application {
     mainClass.set("no.nav.dagpenger.saksbehandling.AppKt")

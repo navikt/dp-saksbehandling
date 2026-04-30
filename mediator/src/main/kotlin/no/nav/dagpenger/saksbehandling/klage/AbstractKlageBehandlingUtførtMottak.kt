@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
@@ -12,6 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import tools.jackson.databind.JsonNode
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -26,8 +26,16 @@ internal abstract class AbstractKlageBehandlingUtførtMottak(
             // todo: mer validering på noder eksister og sånt
             return Saksbehandler(
                 navIdent = this["navIdent"].asText(),
-                grupper = this["grupper"].map { it.asText() }.toSet(),
-                tilganger = this["tilganger"].map { TilgangType.valueOf(it.asText()) }.toSet(),
+                grupper =
+                    this["grupper"]
+                        .values()
+                        .map { it.asText() }
+                        .toSet(),
+                tilganger =
+                    this["tilganger"]
+                        .values()
+                        .map { TilgangType.valueOf(it.asText()) }
+                        .toSet(),
             )
         }
     }

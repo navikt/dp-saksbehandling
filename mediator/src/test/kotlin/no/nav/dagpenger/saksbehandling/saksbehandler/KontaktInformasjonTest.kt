@@ -1,18 +1,14 @@
 package no.nav.dagpenger.saksbehandling.saksbehandler
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.readValue
 
 class KontaktInformasjonTest {
     @Test
     fun `Skal kunne parse kontakt informasjon  for både postboksadresse ,stedsadresse og ingen post adresse`() {
-        val objectMapper =
-            jacksonObjectMapper().also {
-                it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            }
+        val objectMapper = jacksonObjectMapper()
 
         objectMapper
             .readValue<KontaktInformasjon>(
