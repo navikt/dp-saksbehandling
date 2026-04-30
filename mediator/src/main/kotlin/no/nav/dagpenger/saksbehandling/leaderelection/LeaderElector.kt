@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.leaderelection
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.stringType
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -13,6 +12,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.serialization.jackson.jackson
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.serder.applyDefault
 
 object LeaderElector {
     private val log = KotlinLogging.logger {}
@@ -20,9 +20,7 @@ object LeaderElector {
     private val httpClient =
         HttpClient {
             install(ContentNegotiation) {
-                jackson {
-                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                }
+                jackson { applyDefault() }
             }
             install(Logging) {
                 level = LogLevel.BODY

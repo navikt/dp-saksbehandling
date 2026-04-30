@@ -17,8 +17,17 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 
+fun defaultObjectMapper(): ObjectMapper = jacksonObjectMapper().applyDefault()
+
+fun ObjectMapper.applyDefault(): ObjectMapper =
+    this.apply {
+        registerModule(JavaTimeModule())
+        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+    }
+
 internal val objectMapper: ObjectMapper =
-    jacksonObjectMapper().apply {
+    defaultObjectMapper().apply {
         val behandlerModule = SimpleModule().addDeserializer(Behandler::class.java, BehandlerDeserializer())
         val applikasjonModule = SimpleModule().addDeserializer(Applikasjon::class.java, ApplikasjonDeserializer())
         val utløstAvTypeModule =
@@ -26,12 +35,9 @@ internal val objectMapper: ObjectMapper =
                 .addSerializer(HendelseBehandler::class.java, HendelseBehandlerSerializer())
                 .addDeserializer(HendelseBehandler::class.java, HendelseBehandlerDeserializer())
 
-        registerModule(JavaTimeModule())
         registerModule(applikasjonModule)
         registerModule(behandlerModule)
         registerModule(utløstAvTypeModule)
-        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
         enable(SerializationFeature.INDENT_OUTPUT)
     }

@@ -1,8 +1,6 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
@@ -29,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGE
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
+import no.nav.dagpenger.saksbehandling.serder.defaultObjectMapper
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -80,10 +79,7 @@ class EmneknaggBuilder(
             else -> emptySet()
         }
 
-    private val objectMapper =
-        ObjectMapper().also {
-            it.registerModule(JavaTimeModule())
-        }
+    private val objectMapper = defaultObjectMapper()
 
     private val jsonNode =
         try {

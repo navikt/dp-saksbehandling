@@ -6,23 +6,19 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.serder.defaultObjectMapper
 import java.time.LocalDate
 import java.util.UUID
 
 object KlageOpplysningerMapper {
     private val objectMapper =
-        ObjectMapper().also {
-            it.registerModule(JavaTimeModule())
-            it.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            it.registerModules(
+        defaultObjectMapper().apply {
+            registerModules(
                 SimpleModule().apply {
                     addSerializer(Verdi::class.java, VerdiSerializer())
                     addDeserializer(Verdi::class.java, VerdiDeserializer())
