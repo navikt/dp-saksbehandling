@@ -66,7 +66,12 @@ fun httpClient(
     install(ContentNegotiation) {
         jackson {
             applyDefault()
-            changeDefaultPropertyInclusion { JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.USE_DEFAULTS) }
+            changeDefaultPropertyInclusion {
+                JsonInclude.Value.construct(
+                    JsonInclude.Include.NON_NULL,
+                    JsonInclude.Include.USE_DEFAULTS,
+                )
+            }
         }
     }
 
