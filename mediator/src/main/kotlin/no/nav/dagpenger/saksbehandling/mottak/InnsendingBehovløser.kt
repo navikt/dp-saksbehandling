@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -15,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.HåndterInnsendingResultat
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import tools.jackson.databind.JsonNode
 import java.util.UUID
 
 internal class InnsendingBehovløser(

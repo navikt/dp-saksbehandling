@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -13,6 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -97,9 +97,9 @@ class KlageinstansVedtakMottak(
         init {
             avsluttet = jsonNode["avsluttet"].asLocalDateTime()
             journalpostIder =
-                jsonNode["journalpostReferanser"].map {
-                    it.asText()
-                }
+                jsonNode["journalpostReferanser"]
+                    .values()
+                    .map { it.asText() }
             utfall = jsonNode["utfall"].asText()
         }
     }

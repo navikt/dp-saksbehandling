@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualJson
@@ -73,6 +72,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -307,8 +307,8 @@ class KlageMediatorTest {
                         it["ident"].asText() shouldBe testPersonIdent
                         it["fagsakId"].asText() shouldBe sakId.toString()
                         it["behandlendeEnhet"].asText() shouldBe klageBehandling.behandlendeEnhet()
-                        it["hjemler"].map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
-                        it["tilknyttedeJournalposter"].map { jp -> jp["journalpostId"].asText() } shouldBe
+                        it["hjemler"].values().map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
+                        it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].asText() } shouldBe
                             listOf(
                                 "journalpostIdKlageVedtak",
                                 "journalpostIdBrukersKlage",
@@ -488,8 +488,8 @@ class KlageMediatorTest {
                     it["ident"].asText() shouldBe testPersonIdent
                     it["fagsakId"].asText() shouldBe sakId.toString()
                     it["behandlendeEnhet"].asText() shouldBe klageBehandling.behandlendeEnhet()
-                    it["hjemler"].map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
-                    it["tilknyttedeJournalposter"].map { jp -> jp["journalpostId"].asText() } shouldBe
+                    it["hjemler"].values().map { hjemmel -> hjemmel.asText() } shouldBe klageBehandling.hjemler()
+                    it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].asText() } shouldBe
                         listOf(
                             "journalpostIdKlageVedtak",
                             "journalpostIdBrukersKlage",

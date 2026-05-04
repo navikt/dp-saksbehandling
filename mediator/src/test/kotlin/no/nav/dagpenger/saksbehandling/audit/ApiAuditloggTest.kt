@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.audit
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AktivitetsloggMediator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
 
 class ApiAuditloggTest {
     private val testRapid = TestRapid()

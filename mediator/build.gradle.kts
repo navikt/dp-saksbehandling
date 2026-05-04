@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
-    val dpBibliotekerVersion = "2025.12.19-08.15.2e150cd55270"
+    val dpBibliotekerVersion = "2026.05.04-11.00.ccf523d33b63"
 
     implementation(project(":modell"))
     implementation(project(":openapi"))
@@ -53,7 +53,7 @@ dependencies {
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.bundles.postgres.test)
     testImplementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
-    testImplementation(libs.bundles.naisful.rapid.and.rivers.test)
+    testImplementation(libs.rapids.and.rivers.test)
 }
 application {
     mainClass.set("no.nav.dagpenger.saksbehandling.AppKt")

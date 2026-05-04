@@ -1,8 +1,6 @@
 ﻿package no.nav.dagpenger.saksbehandling.pdl
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -10,7 +8,7 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import no.nav.dagpenger.pdl.PDLPerson
@@ -21,6 +19,7 @@ import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
+import no.nav.dagpenger.saksbehandling.serder.applyDefault
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -110,9 +109,8 @@ internal fun defaultHttpClient(
 
     install(ContentNegotiation) {
         jackson {
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            registerModules(JavaTimeModule())
+            applyDefault()
+            changeDefaultPropertyInclusion { JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.USE_DEFAULTS) }
         }
     }
 

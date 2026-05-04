@@ -1,8 +1,5 @@
 package no.nav.dagpenger.saksbehandling.saksbehandler
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.github.benmanes.caffeine.cache.Caffeine
 import dev.hsbrysk.caffeine.CoroutineCache
 import dev.hsbrysk.caffeine.buildCoroutine
@@ -15,7 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.model.registry.PrometheusRegistry
@@ -25,6 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.serder.applyDefault
 import java.util.concurrent.TimeUnit
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -86,11 +84,7 @@ internal class SaksbehandlerOppslagImpl(
         HttpClient(engine = engine) {
             expectSuccess = true
             install(ContentNegotiation) {
-                jackson {
-                    registerModule(JavaTimeModule())
-                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                }
+                jackson { applyDefault() }
             }
         }
 

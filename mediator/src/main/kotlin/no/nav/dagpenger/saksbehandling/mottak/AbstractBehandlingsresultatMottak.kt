@@ -105,11 +105,14 @@ internal data class Behandlingsresultat(
         behandletHendelseId = packet["behandletHendelse"]["id"].asText(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
         rettighetsperioder =
-            packet["rettighetsperioder"].takeIf { it.isArray }?.map {
-                Rettighetsperiode(
-                    harRett = it["harRett"].asBoolean(),
-                )
-            } ?: emptyList(),
+            packet["rettighetsperioder"]
+                .takeIf { it.isArray }
+                ?.values()
+                ?.map {
+                    Rettighetsperiode(
+                        harRett = it["harRett"].asBoolean(),
+                    )
+                } ?: emptyList(),
     )
 
     private fun dagpengerInnvilget(): Boolean =

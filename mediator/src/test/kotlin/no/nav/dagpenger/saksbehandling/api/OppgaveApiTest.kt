@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
@@ -95,6 +94,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import tools.jackson.core.type.TypeReference
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID

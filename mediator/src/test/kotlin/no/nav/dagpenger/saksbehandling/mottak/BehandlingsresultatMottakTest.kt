@@ -130,9 +130,7 @@ class BehandlingsresultatMottakTest {
               },
               "automatisk": $automatisk,
               "opplysninger": [],
-              "rettighetsperioder": [ ]
-                }
-              ]
+              "rettighetsperioder": []
             }
             """.trimIndent()
     }

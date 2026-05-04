@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -21,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
+import tools.jackson.module.kotlin.readValue
 import java.net.URI
 import java.time.format.DateTimeParseException
 
