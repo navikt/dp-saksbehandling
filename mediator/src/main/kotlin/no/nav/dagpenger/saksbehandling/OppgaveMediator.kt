@@ -231,6 +231,7 @@ class OppgaveMediator(
                             it.settKlarTilBehandling(forslagTilVedtakHendelse)
                         }
                     oppgaveRepository.lagre(oppgave)
+                    sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
                 }
 
                 false -> {
@@ -238,6 +239,7 @@ class OppgaveMediator(
                         when (handling) {
                             Handling.LAGRE_OPPGAVE -> {
                                 oppgaveRepository.lagre(oppgave)
+                                sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
                                 logger.info {
                                     "Behandlet forslag til vedtak. Oppgavens tilstand er" +
                                         " ${oppgave.tilstand().type} etter behandling."
@@ -759,6 +761,34 @@ class OppgaveMediator(
                     "${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
             }
         }
+    }
+
+    fun leggTilEmneknagger(
+        oppgaveId: UUID,
+        emneknagger: Set<String>,
+    ) {
+        oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
+            oppgave.leggTilEmneknagger(emneknagger)
+            oppgaveRepository.lagre(oppgave)
+        }
+    }
+
+    private fun sendSøknadsavklaringBehov(
+        oppgave: Oppgave,
+        forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+    ) {
+        if (forslagTilVedtakHendelse.behandletHendelseType != "Søknad") return
+        rapidsConnection.publish(
+            JsonMessage
+                .newNeed(
+                    setOf("EØSTilknytning", "Sanksjon", "BarnOver16"),
+                    mapOf(
+                        "ident" to forslagTilVedtakHendelse.ident,
+                        "søknadId" to forslagTilVedtakHendelse.behandletHendelseId,
+                        "oppgaveId" to oppgave.oppgaveId,
+                    ),
+                ).toJson(),
+        )
     }
 
     private fun sendAlertTilRapid(

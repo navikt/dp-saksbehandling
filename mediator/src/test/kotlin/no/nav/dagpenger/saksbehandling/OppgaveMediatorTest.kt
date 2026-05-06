@@ -585,6 +585,62 @@ OppgaveMediatorTest {
         }
     }
 
+    @Test
+    fun `Skal publisere søknadsavklaring behov når forslag til vedtak er av type Søknad`() {
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+            val meldingFørTest = testRapid.inspektør.size
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = oppgave.behandling.behandlingId,
+                ),
+            )
+
+            val behovMeldinger =
+                (meldingFørTest until testRapid.inspektør.size)
+                    .map { testRapid.inspektør.message(it) }
+                    .filter { it["@event_name"].asText() == "behov" }
+
+            behovMeldinger.size shouldBe 1
+            behovMeldinger[0].let { melding ->
+                melding["ident"].asText() shouldBe testIdent
+                melding["søknadId"].asText() shouldBe søknadId.toString()
+                melding["oppgaveId"].asText() shouldBe oppgave.oppgaveId.toString()
+                val behov = melding["@behov"].map { it.asText() }.toSet()
+                behov shouldBe setOf("EØSTilknytning", "Sanksjon", "BarnOver16")
+            }
+        }
+    }
+
+    @Test
+    fun `Skal ikke publisere søknadsavklaring behov når forslag til vedtak ikke er av type Søknad`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+            val meldingFørTest = testRapid.inspektør.size
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Meldekort",
+                    behandlingId = oppgave.behandling.behandlingId,
+                ),
+            )
+
+            val behovMeldinger =
+                (meldingFørTest until testRapid.inspektør.size)
+                    .map { testRapid.inspektør.message(it) }
+                    .filter { it["@event_name"].asText() == "behov" }
+
+            behovMeldinger.size shouldBe 0
+        }
+    }
+
     companion object {
         @JvmStatic
         private fun oppgaveTilstandForSøknad(): Stream<Arguments> =
