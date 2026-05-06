@@ -302,7 +302,13 @@ OppgaveMediatorTest {
             behandlingKlient =
                 mockk<BehandlingKlient>().also {
                     coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(false)
-                    coEvery { it.godkjenn(behandlingId = any(), ident = any(), saksbehandlerToken = any()) } returns Result.success(Unit)
+                    coEvery {
+                        it.godkjenn(
+                            behandlingId = any(),
+                            ident = any(),
+                            saksbehandlerToken = any(),
+                        )
+                    } returns Result.success(Unit)
                 },
         ) { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
@@ -599,7 +605,6 @@ OppgaveMediatorTest {
                     behandlingskjedeId = behandlingId,
                 ),
         ) { _, oppgaveMediator ->
-            val meldingFørTest = testRapid.inspektør.size
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -610,16 +615,11 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val behovMeldinger =
-                (meldingFørTest until testRapid.inspektør.size)
-                    .map { testRapid.inspektør.message(it) }
-                    .filter { it["@event_name"].asText() == "behov" }
-
-            behovMeldinger.size shouldBe 1
-            behovMeldinger[0].let { melding ->
-                melding["ident"].asText() shouldBe testIdent
-                melding["søknadId"].asText() shouldBe søknadId.toString()
-                val behov = melding["@behov"].map { it.asText() }.toSet()
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let { melding ->
+                melding["ident"].asString() shouldBe testIdent
+                melding["søknadId"].asString() shouldBe søknadId.toString()
+                val behov = melding["@behov"].values().map { it.asString() }.toSet()
                 behov shouldBe setOf("EØSTilknytning", "Sanksjon", "BarnOver16")
             }
         }
@@ -629,7 +629,6 @@ OppgaveMediatorTest {
     fun `Skal ikke publisere søknadsavklaring behov ved oppdatering av eksisterende oppgave`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
-            val meldingFørTest = testRapid.inspektør.size
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -639,13 +638,7 @@ OppgaveMediatorTest {
                     behandlingId = oppgave.behandling.behandlingId,
                 ),
             )
-
-            val behovMeldinger =
-                (meldingFørTest until testRapid.inspektør.size)
-                    .map { testRapid.inspektør.message(it) }
-                    .filter { it["@event_name"].asText() == "behov" }
-
-            behovMeldinger.size shouldBe 0
+            testRapid.inspektør.size shouldBe 0
         }
     }
 
@@ -673,13 +666,7 @@ OppgaveMediatorTest {
                     behandlingId = behandlingId,
                 ),
             )
-
-            val behovMeldinger =
-                (meldingFørTest until testRapid.inspektør.size)
-                    .map { testRapid.inspektør.message(it) }
-                    .filter { it["@event_name"].asText() == "behov" }
-
-            behovMeldinger.size shouldBe 0
+            testRapid.inspektør.size shouldBe 0
         }
     }
 
