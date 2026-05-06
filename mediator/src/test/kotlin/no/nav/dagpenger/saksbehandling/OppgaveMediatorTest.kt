@@ -271,8 +271,8 @@ OppgaveMediatorTest {
             it.size shouldBe 4
             for (i in 0 until it.size) {
                 it.message(i).let { message ->
-                    message["@event_name"].asText() shouldBe "saksbehandling_alert"
-                    message["alertType"].asText() shouldBe "BEHANDLING_IKKE_FUNNET"
+                    message["@event_name"].asString() shouldBe "saksbehandling_alert"
+                    message["alertType"].asString() shouldBe "BEHANDLING_IKKE_FUNNET"
                 }
             }
         }
@@ -1160,11 +1160,11 @@ OppgaveMediatorTest {
                 testRapid.inspektør.let { inspektør ->
                     (0 until inspektør.size)
                         .map { inspektør.message(it) }
-                        .single { it["@event_name"].asText() == "avbryt_behandling" }
+                        .single { it["@event_name"].asString() == "avbryt_behandling" }
                 }
-            avbrytMelding["behandlingId"].asText() shouldBe oppgave.behandling.behandlingId.toString()
-            avbrytMelding["ident"].asText() shouldBe oppgave.personIdent()
-            avbrytMelding["årsak"].asText() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
+            avbrytMelding["behandlingId"].asString() shouldBe oppgave.behandling.behandlingId.toString()
+            avbrytMelding["ident"].asString() shouldBe oppgave.personIdent()
+            avbrytMelding["årsak"].asString() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
         }
     }
 
