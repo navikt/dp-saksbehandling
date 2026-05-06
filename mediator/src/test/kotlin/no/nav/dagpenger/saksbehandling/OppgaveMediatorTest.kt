@@ -629,6 +629,7 @@ OppgaveMediatorTest {
     fun `Skal ikke publisere søknadsavklaring behov ved oppdatering av eksisterende oppgave`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+            val meldingFørTest = testRapid.inspektør.size
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -638,7 +639,7 @@ OppgaveMediatorTest {
                     behandlingId = oppgave.behandling.behandlingId,
                 ),
             )
-            testRapid.inspektør.size shouldBe 0
+            testRapid.inspektør.size shouldBe meldingFørTest
         }
     }
 
@@ -1155,13 +1156,15 @@ OppgaveMediatorTest {
             avbruttOppgave.tilstandslogg.first().tilstand shouldBe AVBRUTT
             avbruttOppgave.emneknagger.contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
             avbruttOppgave.behandlerIdent shouldBe saksbehandler.navIdent
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).let { message ->
-                message["@event_name"].asText() shouldBe "avbryt_behandling"
-                message["behandlingId"].asText() shouldBe oppgave.behandling.behandlingId.toString()
-                message["ident"].asText() shouldBe oppgave.personIdent()
-                message["årsak"].asText() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
-            }
+            val avbrytMelding =
+                testRapid.inspektør.let { inspektør ->
+                    (0 until inspektør.size)
+                        .map { inspektør.message(it) }
+                        .single { it["@event_name"].asText() == "avbryt_behandling" }
+                }
+            avbrytMelding["behandlingId"].asText() shouldBe oppgave.behandling.behandlingId.toString()
+            avbrytMelding["ident"].asText() shouldBe oppgave.personIdent()
+            avbrytMelding["årsak"].asText() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
         }
     }
 

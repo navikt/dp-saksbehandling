@@ -125,7 +125,8 @@ class OppgaveMediatorAlertTest {
                 },
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
-            rapid.inspektør.size shouldBe 0
+            rapid.inspektør.size shouldBe 1
+            rapid.inspektør.message(0)["@event_name"].asText() shouldBe "behov"
         }
     }
 
