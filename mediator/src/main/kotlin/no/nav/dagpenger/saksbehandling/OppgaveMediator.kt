@@ -239,7 +239,6 @@ class OppgaveMediator(
                         when (handling) {
                             Handling.LAGRE_OPPGAVE -> {
                                 oppgaveRepository.lagre(oppgave)
-                                sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
                                 logger.info {
                                     "Behandlet forslag til vedtak. Oppgavens tilstand er" +
                                         " ${oppgave.tilstand().type} etter behandling."
