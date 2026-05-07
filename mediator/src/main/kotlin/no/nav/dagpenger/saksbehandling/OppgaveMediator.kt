@@ -231,7 +231,9 @@ class OppgaveMediator(
                             it.settKlarTilBehandling(forslagTilVedtakHendelse)
                         }
                     oppgaveRepository.lagre(oppgave)
-                    sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
+                    if (forslagTilVedtakHendelse.behandletHendelseType == "Søknad") {
+                        sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
+                    }
                 }
 
                 false -> {
@@ -776,7 +778,6 @@ class OppgaveMediator(
         oppgave: Oppgave,
         forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
     ) {
-        if (forslagTilVedtakHendelse.behandletHendelseType != "Søknad") return
         rapidsConnection.publish(
             JsonMessage
                 .newNeed(
