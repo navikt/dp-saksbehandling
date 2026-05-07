@@ -23,14 +23,19 @@ class SøknadsavklaringLøsningMottakTest {
 
         testRapid.sendTestMessage(
             løsningMelding(
-                eøs = true,
+                eøsArbeid = true,
+                bostedslandErNorge = false,
+                grensearbeider = true,
                 sanksjon = true,
                 barnOver16 = true,
             ),
         )
 
         verify(exactly = 1) {
-            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("EØS", "Mulig sanksjon", "Barn over 16"))
+            oppgaveMediator.leggTilEmneknagger(
+                oppgaveId,
+                setOf("EØS-inntekt", "Bosatt utland", "Grensearbeider", "Mulig sanksjon", "Barn over 16"),
+            )
         }
     }
 
@@ -44,19 +49,21 @@ class SøknadsavklaringLøsningMottakTest {
 
         testRapid.sendTestMessage(
             løsningMelding(
-                eøs = true,
+                eøsArbeid = true,
+                bostedslandErNorge = true,
+                grensearbeider = false,
                 sanksjon = false,
                 barnOver16 = false,
             ),
         )
 
         verify(exactly = 1) {
-            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("EØS"))
+            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("EØS-inntekt"))
         }
     }
 
     @Test
-    fun `Skal ikke kalle leggTilEmneknagger når alle løsninger er false`() {
+    fun `Bosatt utland settes når BostedslandErNorge er false`() {
         val oppgaveMediator =
             mockk<OppgaveMediator>().also {
                 every { it.leggTilEmneknagger(any<UUID>(), any()) } returns Unit
@@ -65,7 +72,32 @@ class SøknadsavklaringLøsningMottakTest {
 
         testRapid.sendTestMessage(
             løsningMelding(
-                eøs = false,
+                eøsArbeid = false,
+                bostedslandErNorge = false,
+                grensearbeider = false,
+                sanksjon = false,
+                barnOver16 = false,
+            ),
+        )
+
+        verify(exactly = 1) {
+            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("Bosatt utland"))
+        }
+    }
+
+    @Test
+    fun `Skal ikke kalle leggTilEmneknagger når ingen emneknagger matcher`() {
+        val oppgaveMediator =
+            mockk<OppgaveMediator>().also {
+                every { it.leggTilEmneknagger(any<UUID>(), any()) } returns Unit
+            }
+        SøknadsavklaringLøsningMottak(testRapid, oppgaveMediator)
+
+        testRapid.sendTestMessage(
+            løsningMelding(
+                eøsArbeid = false,
+                bostedslandErNorge = true,
+                grensearbeider = false,
                 sanksjon = false,
                 barnOver16 = false,
             ),
@@ -75,7 +107,9 @@ class SøknadsavklaringLøsningMottakTest {
     }
 
     private fun løsningMelding(
-        eøs: Boolean,
+        eøsArbeid: Boolean,
+        bostedslandErNorge: Boolean,
+        grensearbeider: Boolean,
         sanksjon: Boolean,
         barnOver16: Boolean,
     ): String {
@@ -83,10 +117,12 @@ class SøknadsavklaringLøsningMottakTest {
         return """
             {
               "@event_name": "behov",
-              "@behov": ["EØSTilknytning", "Sanksjon", "BarnOver16"],
+              "@behov": ["EØSArbeid", "BostedslandErNorge", "Grensearbeider", "Sanksjon", "BarnOver16"],
               "@final": true,
               "@løsning": {
-                "EØSTilknytning": { "verdi": $eøs },
+                "EØSArbeid": { "verdi": $eøsArbeid },
+                "BostedslandErNorge": { "verdi": $bostedslandErNorge },
+                "Grensearbeider": { "verdi": $grensearbeider },
                 "Sanksjon": { "verdi": $sanksjon },
                 "BarnOver16": { "verdi": $barnOver16 }
               },
