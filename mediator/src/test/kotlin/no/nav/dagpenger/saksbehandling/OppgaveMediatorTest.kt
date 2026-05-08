@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
@@ -668,6 +669,71 @@ OppgaveMediatorTest {
                 ),
             )
             testRapid.inspektør.size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `Skal legge til D-nummer emneknagg for søknad med D-nummer ident`() {
+        val dNummerIdent = "42345612345"
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = dNummerIdent,
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { datasource, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = dNummerIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            val oppgave =
+                PostgresOppgaveRepository(datasource)
+                    .hentOppgaveIdFor(behandlingId)
+                    .let { PostgresOppgaveRepository(datasource).hentOppgave(it!!) }
+            oppgave.emneknagger shouldContain "D-nummer"
+        }
+    }
+
+    @Test
+    fun `Skal ikke legge til D-nummer emneknagg for søknad med vanlig fødselsnummer`() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { datasource, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            val oppgave =
+                PostgresOppgaveRepository(datasource)
+                    .hentOppgaveIdFor(behandlingId)
+                    .let { PostgresOppgaveRepository(datasource).hentOppgave(it!!) }
+            oppgave.emneknagger shouldNotContain "D-nummer"
         }
     }
 
