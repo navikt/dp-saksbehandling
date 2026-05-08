@@ -28,13 +28,14 @@ class SøknadsavklaringLøsningMottakTest {
                 grensearbeider = true,
                 sanksjon = true,
                 barnOver16 = true,
+                planleggerUtdanning = true,
             ),
         )
 
         verify(exactly = 1) {
             oppgaveMediator.leggTilEmneknagger(
                 oppgaveId,
-                setOf("EØS-inntekt", "Bosatt utland", "Grensearbeider", "Mulig sanksjon", "Barn over 16"),
+                setOf("EØS-inntekt", "Bosatt utland", "Grensearbeider", "Mulig sanksjon", "Barn over 16", "Utdanning"),
             )
         }
     }
@@ -86,6 +87,30 @@ class SøknadsavklaringLøsningMottakTest {
     }
 
     @Test
+    fun `Skal legge til Utdanning emneknagg når PlanleggerUtdanning er true`() {
+        val oppgaveMediator =
+            mockk<OppgaveMediator>().also {
+                every { it.leggTilEmneknagger(any<UUID>(), any()) } returns Unit
+            }
+        SøknadsavklaringLøsningMottak(testRapid, oppgaveMediator)
+
+        testRapid.sendTestMessage(
+            løsningMelding(
+                eøsArbeid = false,
+                bostedslandErNorge = true,
+                grensearbeider = false,
+                sanksjon = false,
+                barnOver16 = false,
+                planleggerUtdanning = true,
+            ),
+        )
+
+        verify(exactly = 1) {
+            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("Utdanning"))
+        }
+    }
+
+    @Test
     fun `Skal ikke kalle leggTilEmneknagger når ingen emneknagger matcher`() {
         val oppgaveMediator =
             mockk<OppgaveMediator>().also {
@@ -112,19 +137,21 @@ class SøknadsavklaringLøsningMottakTest {
         grensearbeider: Boolean,
         sanksjon: Boolean,
         barnOver16: Boolean,
+        planleggerUtdanning: Boolean = false,
     ): String {
         //language=JSON
         return """
             {
               "@event_name": "behov",
-              "@behov": ["EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16"],
+              "@behov": ["EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16", "PlanleggerUtdanning"],
               "@final": true,
               "@løsning": {
                 "EØSArbeid": { "verdi": $eøsArbeid },
                 "BostedslandErNorge": { "verdi": $bostedslandErNorge },
                 "PermittertGrensearbeider": { "verdi": $grensearbeider },
                 "Sanksjon": { "verdi": $sanksjon },
-                "BarnOver16": { "verdi": $barnOver16 }
+                "BarnOver16": { "verdi": $barnOver16 },
+                "PlanleggerUtdanning": { "verdi": $planleggerUtdanning }
               },
               "oppgaveId": "$oppgaveId",
               "søknadId": "${UUIDv7.ny()}",
