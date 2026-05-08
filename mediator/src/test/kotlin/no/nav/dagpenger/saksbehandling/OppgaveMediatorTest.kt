@@ -620,7 +620,7 @@ OppgaveMediatorTest {
                 melding["ident"].asString() shouldBe testIdent
                 melding["søknadId"].asString() shouldBe søknadId.toString()
                 val behov = melding["@behov"].values().map { it.asString() }.toSet()
-                behov shouldBe setOf("EØSArbeid", "BostedslandErNorge", "Grensearbeider", "Sanksjon", "BarnOver16")
+                behov shouldBe setOf("EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16")
             }
         }
     }

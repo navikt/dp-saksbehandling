@@ -781,7 +781,7 @@ class OppgaveMediator(
         rapidsConnection.publish(
             JsonMessage
                 .newNeed(
-                    setOf("EØSArbeid", "BostedslandErNorge", "Grensearbeider", "Sanksjon", "BarnOver16"),
+                    setOf("EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16"),
                     mapOf(
                         "ident" to forslagTilVedtakHendelse.ident,
                         "søknadId" to forslagTilVedtakHendelse.behandletHendelseId,

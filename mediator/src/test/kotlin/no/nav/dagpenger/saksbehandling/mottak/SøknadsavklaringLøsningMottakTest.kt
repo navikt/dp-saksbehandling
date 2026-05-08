@@ -117,12 +117,12 @@ class SøknadsavklaringLøsningMottakTest {
         return """
             {
               "@event_name": "behov",
-              "@behov": ["EØSArbeid", "BostedslandErNorge", "Grensearbeider", "Sanksjon", "BarnOver16"],
+              "@behov": ["EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16"],
               "@final": true,
               "@løsning": {
                 "EØSArbeid": { "verdi": $eøsArbeid },
                 "BostedslandErNorge": { "verdi": $bostedslandErNorge },
-                "Grensearbeider": { "verdi": $grensearbeider },
+                "PermittertGrensearbeider": { "verdi": $grensearbeider },
                 "Sanksjon": { "verdi": $sanksjon },
                 "BarnOver16": { "verdi": $barnOver16 }
               },

@@ -17,7 +17,7 @@ internal class SøknadsavklaringLøsningMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val behov = listOf("EØSArbeid", "BostedslandErNorge", "Grensearbeider", "Sanksjon", "BarnOver16")
+        private val behov = listOf("EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16")
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behov")
@@ -51,7 +51,7 @@ internal class SøknadsavklaringLøsningMottak(
             if (løsning["BostedslandErNorge"]?.get("verdi")?.asBoolean() == false) {
                 emneknagger.add("Bosatt utland")
             }
-            if (løsning["Grensearbeider"]?.get("verdi")?.asBoolean() == true) {
+            if (løsning["PermittertGrensearbeider"]?.get("verdi")?.asBoolean() == true) {
                 emneknagger.add("Grensearbeider")
             }
             if (løsning["Sanksjon"]?.get("verdi")?.asBoolean() == true) {
