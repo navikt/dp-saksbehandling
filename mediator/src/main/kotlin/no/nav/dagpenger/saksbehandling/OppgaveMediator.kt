@@ -782,6 +782,9 @@ class OppgaveMediator(
         oppgave: Oppgave,
         forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
     ) {
+        logger.info {
+            "Publiserer behov for søknadsinformasjon, behandling ${oppgave.behandling.behandlingId}, oppgave ${oppgave.oppgaveId}"
+        }
         rapidsConnection.publish(
             JsonMessage
                 .newNeed(
