@@ -620,6 +620,7 @@ OppgaveMediatorTest {
             testRapid.inspektør.message(0).let { melding ->
                 melding["ident"].asString() shouldBe testIdent
                 melding["søknadId"].asString() shouldBe søknadId.toString()
+                melding["behandlingId"].asString() shouldBe behandlingId.toString()
                 val behov = melding["@behov"].values().map { it.asString() }.toSet()
                 behov shouldBe setOf("EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16")
             }
