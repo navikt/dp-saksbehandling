@@ -792,6 +792,7 @@ class OppgaveMediator(
                     mapOf(
                         "ident" to forslagTilVedtakHendelse.ident,
                         "søknadId" to forslagTilVedtakHendelse.behandletHendelseId,
+                        "behandlingId" to oppgave.behandling.behandlingId,
                         "oppgaveId" to oppgave.oppgaveId,
                     ),
                 ).toJson(),
