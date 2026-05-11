@@ -241,7 +241,7 @@ class InnsendingApiTest {
     }
 
     @Test
-    fun `should audit log READ when viewing innsending`() {
+    fun `Skal auditlogge READ ved visning av innsending`() {
         val auditlogg = TestAuditlogg()
         val innsending = TestHelper.lagInnsending()
         val mediator =

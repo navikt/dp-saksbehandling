@@ -465,7 +465,7 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `should audit log READ when viewing oppfølging`() {
+    fun `Skal auditlogge READ ved visning av oppfølging`() {
         val auditlogg = TestAuditlogg()
         val oppfølging = TestHelper.lagOppfølging()
         val mediator =

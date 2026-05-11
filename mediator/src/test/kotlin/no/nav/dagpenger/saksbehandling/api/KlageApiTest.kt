@@ -473,7 +473,7 @@ class KlageApiTest {
         }
 
     @Test
-    fun `should audit log READ when viewing klagebehandling`() {
+    fun `Skal auditlogge READ ved visning av klagebehandling`() {
         val auditlogg = TestAuditlogg()
         val klageBehandling =
             mockk<KlageBehandling>(relaxed = true).also {
@@ -499,7 +499,7 @@ class KlageApiTest {
     }
 
     @Test
-    fun `should audit log UPDATE when withdrawing klage`() {
+    fun `Skal auditlogge UPDATE ved avbryt av klage`() {
         val auditlogg = TestAuditlogg()
         val klageBehandling =
             mockk<KlageBehandling>(relaxed = true).also {

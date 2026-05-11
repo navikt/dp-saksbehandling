@@ -1713,7 +1713,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `should audit log READ when viewing oppgave`() {
+    fun `Skal auditlogge READ ved visning av oppgave`() {
         val auditlogg = TestAuditlogg()
         val oppgaveId = UUIDv7.ny()
         val oppgave =
