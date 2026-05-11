@@ -231,6 +231,13 @@ class OppgaveMediator(
                             it.settKlarTilBehandling(forslagTilVedtakHendelse)
                         }
                     oppgaveRepository.lagre(oppgave)
+                    if (forslagTilVedtakHendelse.behandletHendelseType == "Søknad") {
+                        sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
+                        if (forslagTilVedtakHendelse.ident.first().digitToInt() in 4..7) {
+                            oppgave.leggTilEmneknagger(setOf("D-nummer"))
+                            oppgaveRepository.lagre(oppgave)
+                        }
+                    }
                 }
 
                 false -> {
@@ -759,6 +766,45 @@ class OppgaveMediator(
                     "${vedtakFattetHendelse.behandlingId} ved mottak av VedtakFattetHendelse"
             }
         }
+    }
+
+    fun leggTilEmneknagger(
+        oppgaveId: UUID,
+        emneknagger: Set<String>,
+    ) {
+        oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
+            oppgave.leggTilEmneknagger(emneknagger)
+            oppgaveRepository.lagre(oppgave)
+        }
+    }
+
+    private fun sendSøknadsavklaringBehov(
+        oppgave: Oppgave,
+        forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+    ) {
+        logger.info {
+            "Publiserer behov for søknadsinformasjon, behandling ${oppgave.behandling.behandlingId}, oppgave ${oppgave.oppgaveId}"
+        }
+        rapidsConnection.publish(
+            JsonMessage
+                .newNeed(
+                    setOf(
+                        "EØSArbeid",
+                        "BostedslandErNorge",
+                        "PermittertGrensearbeider",
+                        "Sanksjon",
+                        "BarnOver16",
+                        "PlanleggerUtdanning",
+                        "EØSPengestøtte",
+                    ),
+                    mapOf(
+                        "ident" to forslagTilVedtakHendelse.ident,
+                        "søknadId" to forslagTilVedtakHendelse.behandletHendelseId,
+                        "behandlingId" to oppgave.behandling.behandlingId,
+                        "oppgaveId" to oppgave.oppgaveId,
+                    ),
+                ).toJson(),
+        )
     }
 
     private fun sendAlertTilRapid(

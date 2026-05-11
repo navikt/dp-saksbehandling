@@ -183,6 +183,10 @@ data class Oppgave private constructor(
     val tilstandslogg: OppgaveTilstandslogg
         get() = _tilstandslogg
 
+    fun leggTilEmneknagger(emneknagger: Set<String>) {
+        _emneknagger.addAll(emneknagger)
+    }
+
     fun personIdent() = person.ident
 
     fun tilstand() = this.tilstand

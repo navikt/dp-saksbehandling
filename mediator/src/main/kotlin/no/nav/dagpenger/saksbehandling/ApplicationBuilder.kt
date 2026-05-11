@@ -50,6 +50,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.SøknadsavklaringLøsningMottak
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmJob
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmRepository
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingBehandler
@@ -273,6 +274,7 @@ internal class ApplicationBuilder(
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
+                SøknadsavklaringLøsningMottak(rapidsConnection, oppgaveMediator)
                 UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
                 InnsendingBehovløser(
                     rapidsConnection = rapidsConnection,
