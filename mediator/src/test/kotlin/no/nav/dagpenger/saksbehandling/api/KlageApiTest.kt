@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
@@ -18,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -28,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandl
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -469,9 +472,64 @@ class KlageApiTest {
                 )
         }
 
+    @Test
+    fun `should audit log READ when viewing klagebehandling`() {
+        val auditlogg = TestAuditlogg()
+        val klageBehandling =
+            mockk<KlageBehandling>(relaxed = true).also {
+                every { it.behandlingId } returns klageBehandlingId
+                every { it.personIdent() } returns "12345678901"
+            }
+        val mediator =
+            mockk<KlageMediator>().also {
+                every { it.hentKlageBehandling(klageBehandlingId, any()) } returns klageBehandling
+            }
+
+        withKlageApi(mediator, auditlogg = auditlogg) {
+            client.get("klage/$klageBehandlingId") { autentisert() }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.READ
+            it.melding shouldBe "Så en klagebehandling"
+            it.ident shouldBe "12345678901"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+        }
+    }
+
+    @Test
+    fun `should audit log UPDATE when withdrawing klage`() {
+        val auditlogg = TestAuditlogg()
+        val klageBehandling =
+            mockk<KlageBehandling>(relaxed = true).also {
+                every { it.personIdent() } returns "12345678901"
+            }
+        val mediator =
+            mockk<KlageMediator>(relaxed = true).also {
+                every { it.avbrytKlage(any()) } returns klageBehandling
+            }
+
+        withKlageApi(mediator, auditlogg = auditlogg) {
+            client.put("klage/$klageBehandlingId/trekk") {
+                autentisert()
+                header(HttpHeaders.ContentType, "application/json")
+                setBody("""{"årsak": "Klagen er trukket"}""")
+            }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.UPDATE
+            it.melding shouldBe "Avbrutte en klage"
+            it.ident shouldBe "12345678901"
+        }
+    }
+
     private fun withKlageApi(
         klageMediator: KlageMediator,
         oppslag: Oppslag = oppslagMock,
+        auditlogg: Auditlogg = TestAuditlogg(),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -487,7 +545,7 @@ class KlageApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = auditlogg,
                 )
             }
             test()

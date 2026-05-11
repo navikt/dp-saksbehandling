@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -14,12 +15,14 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
@@ -237,8 +240,32 @@ class InnsendingApiTest {
         }
     }
 
+    @Test
+    fun `should audit log READ when viewing innsending`() {
+        val auditlogg = TestAuditlogg()
+        val innsending = TestHelper.lagInnsending()
+        val mediator =
+            mockk<InnsendingMediator>().also {
+                every { it.hentInnsending(innsendingId, any()) } returns innsending
+                every { it.hentAlleSaker(any()) } returns emptyList()
+            }
+
+        withInnsendingApi(mediator, auditlogg = auditlogg) {
+            client.get("innsending/$innsendingId") { autentisert() }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.READ
+            it.melding shouldBe "Så en innsending"
+            it.ident shouldBe innsending.person.ident
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+        }
+    }
+
     private fun withInnsendingApi(
         innsendingMediator: InnsendingMediator,
+        auditlogg: Auditlogg = TestAuditlogg(),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -254,7 +281,7 @@ class InnsendingApiTest {
                     innsendingMediator = innsendingMediator,
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = auditlogg,
                 )
             }
             test()

@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
@@ -372,7 +372,7 @@ class StatuspageTest {
             innsendingMediator = mockk(),
             meldingOmVedtakMediator = mockk(relaxed = true),
             oppfølgingMediator = mockk(relaxed = true),
-            auditlogg = Auditlogg.NoOp,
+            auditlogg = TestAuditlogg(),
         )
     }
 }

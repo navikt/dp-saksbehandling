@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.api
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.delete
@@ -26,6 +27,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
@@ -73,6 +75,7 @@ import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -1706,6 +1709,35 @@ class OppgaveApiTest {
                     "detail" : "Fant ikke person"
                 }"""
                 }
+        }
+    }
+
+    @Test
+    fun `should audit log READ when viewing oppgave`() {
+        val auditlogg = TestAuditlogg()
+        val oppgaveId = UUIDv7.ny()
+        val oppgave =
+            mockk<Oppgave>(relaxed = true).also {
+                every { it.personIdent() } returns "12345678901"
+            }
+        val oppgaveMediator =
+            mockk<OppgaveMediator>(relaxed = true).also {
+                every { it.hentOppgave(oppgaveId, any()) } returns oppgave
+            }
+
+        OppgaveApiTestHelper.withOppgaveApi(
+            oppgaveMediator = oppgaveMediator,
+            auditlogg = auditlogg,
+        ) {
+            client.get("oppgave/$oppgaveId") { autentisert() }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.READ
+            it.melding shouldBe "Så en oppgave"
+            it.ident shouldBe "12345678901"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }
     }
 }

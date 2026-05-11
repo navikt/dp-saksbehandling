@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.request.get
@@ -16,12 +17,14 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
@@ -461,8 +464,32 @@ class OppfølgingApiTest {
         }
     }
 
+    @Test
+    fun `should audit log READ when viewing oppfølging`() {
+        val auditlogg = TestAuditlogg()
+        val oppfølging = TestHelper.lagOppfølging()
+        val mediator =
+            mockk<OppfølgingMediator>().also {
+                every { it.hent(oppfølging.id, any()) } returns oppfølging
+                every { it.hentAlleSaker(any()) } returns emptyList()
+            }
+
+        withOppfølgingApi(mediator, auditlogg = auditlogg) {
+            client.get("oppfolging/${oppfølging.id}") { autentisert() }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.READ
+            it.melding shouldBe "Så en oppfølging"
+            it.ident shouldBe oppfølging.person.ident
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+        }
+    }
+
     private fun withOppfølgingApi(
         oppfølgingMediator: OppfølgingMediator,
+        auditlogg: Auditlogg = TestAuditlogg(),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -478,7 +505,7 @@ class OppfølgingApiTest {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = oppfølgingMediator,
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = auditlogg,
                 )
             }
             test()

@@ -5,6 +5,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -17,6 +18,7 @@ internal object OppgaveApiTestHelper {
         oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
         personMediator: PersonMediator = mockk(relaxed = true),
         oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
+        auditlogg: Auditlogg = TestAuditlogg(),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -32,7 +34,7 @@ internal object OppgaveApiTestHelper {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = auditlogg,
                 )
             }
             test()
@@ -46,6 +48,7 @@ internal object OppgaveApiTestHelper {
         saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
         oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
         personMediator: PersonMediator = mockk(relaxed = true),
+        auditlogg: Auditlogg = TestAuditlogg(),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -71,7 +74,7 @@ internal object OppgaveApiTestHelper {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = auditlogg,
                 )
             }
             test()

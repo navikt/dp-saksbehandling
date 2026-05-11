@@ -17,7 +17,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
-import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak
 import org.junit.jupiter.api.Test
 
@@ -247,7 +247,7 @@ class MeldingOmVedtakApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = meldingOmVedtakMediator,
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = TestAuditlogg(),
                 )
             }
             test()

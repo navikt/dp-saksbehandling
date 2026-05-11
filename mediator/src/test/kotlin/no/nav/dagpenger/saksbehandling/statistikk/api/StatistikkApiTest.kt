@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.MockAzure
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
-import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgRettighet
 import no.nav.dagpenger.saksbehandling.statistikk.db.AntallOppgaverForTilstandOgUtløstAv
@@ -45,7 +45,7 @@ class StatistikkApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = TestAuditlogg(),
                 )
             }
 
@@ -87,7 +87,7 @@ class StatistikkApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = TestAuditlogg(),
                 )
             }
 
@@ -143,7 +143,7 @@ class StatistikkApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = TestAuditlogg(),
                 )
             }
 
@@ -259,7 +259,7 @@ class StatistikkApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
-                    auditlogg = Auditlogg.NoOp,
+                    auditlogg = TestAuditlogg(),
                 )
             }
 
