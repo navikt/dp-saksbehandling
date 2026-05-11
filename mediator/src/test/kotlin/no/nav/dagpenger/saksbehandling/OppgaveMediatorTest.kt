@@ -630,6 +630,7 @@ OppgaveMediatorTest {
                         "Sanksjon",
                         "BarnOver16",
                         "PlanleggerUtdanning",
+                        "EØSPengestøtte",
                     )
             }
         }

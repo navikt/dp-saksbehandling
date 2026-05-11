@@ -25,6 +25,7 @@ internal class SøknadsavklaringLøsningMottak(
                 "Sanksjon",
                 "BarnOver16",
                 "PlanleggerUtdanning",
+                "EØSPengestøtte",
             )
         val rapidFilter: River.() -> Unit = {
             precondition {
@@ -70,6 +71,9 @@ internal class SøknadsavklaringLøsningMottak(
             }
             if (løsning["PlanleggerUtdanning"]?.get("verdi")?.asBoolean() == true) {
                 emneknagger.add("Utdanning")
+            }
+            if (løsning["EØSPengestøtte"]?.get("verdi")?.asBoolean() == true) {
+                emneknagger.add("EØS-pengestøtte")
             }
 
             if (emneknagger.isNotEmpty()) {

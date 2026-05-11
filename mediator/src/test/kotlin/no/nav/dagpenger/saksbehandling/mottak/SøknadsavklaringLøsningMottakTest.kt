@@ -29,13 +29,14 @@ class SøknadsavklaringLøsningMottakTest {
                 sanksjon = true,
                 barnOver16 = true,
                 planleggerUtdanning = true,
+                eøsPengestøtte = true,
             ),
         )
 
         verify(exactly = 1) {
             oppgaveMediator.leggTilEmneknagger(
                 oppgaveId,
-                setOf("EØS-inntekt", "Bosatt utland", "Grensearbeider", "Mulig sanksjon", "Barn over 16", "Utdanning"),
+                setOf("EØS-inntekt", "Bosatt utland", "Grensearbeider", "Mulig sanksjon", "Barn over 16", "Utdanning", "EØS-pengestøtte"),
             )
         }
     }
@@ -138,12 +139,13 @@ class SøknadsavklaringLøsningMottakTest {
         sanksjon: Boolean,
         barnOver16: Boolean,
         planleggerUtdanning: Boolean = false,
+        eøsPengestøtte: Boolean = false,
     ): String {
         //language=JSON
         return """
             {
               "@event_name": "behov",
-              "@behov": ["EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16", "PlanleggerUtdanning"],
+              "@behov": ["EØSArbeid", "BostedslandErNorge", "PermittertGrensearbeider", "Sanksjon", "BarnOver16", "PlanleggerUtdanning", "EØSPengestøtte"],
               "@final": true,
               "@løsning": {
                 "EØSArbeid": { "verdi": $eøsArbeid },
@@ -151,7 +153,8 @@ class SøknadsavklaringLøsningMottakTest {
                 "PermittertGrensearbeider": { "verdi": $grensearbeider },
                 "Sanksjon": { "verdi": $sanksjon },
                 "BarnOver16": { "verdi": $barnOver16 },
-                "PlanleggerUtdanning": { "verdi": $planleggerUtdanning }
+                "PlanleggerUtdanning": { "verdi": $planleggerUtdanning },
+                "EØSPengestøtte": { "verdi": $eøsPengestøtte }
               },
               "oppgaveId": "$oppgaveId",
               "søknadId": "${UUIDv7.ny()}",

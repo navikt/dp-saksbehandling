@@ -795,6 +795,7 @@ class OppgaveMediator(
                         "Sanksjon",
                         "BarnOver16",
                         "PlanleggerUtdanning",
+                        "EØSPengestøtte",
                     ),
                     mapOf(
                         "ident" to forslagTilVedtakHendelse.ident,
