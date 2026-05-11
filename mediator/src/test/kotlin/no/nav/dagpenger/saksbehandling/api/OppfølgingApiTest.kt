@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
@@ -477,6 +478,7 @@ class OppfølgingApiTest {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = oppfølgingMediator,
+                    auditlogg = Auditlogg.NoOp,
                 )
             }
             test()

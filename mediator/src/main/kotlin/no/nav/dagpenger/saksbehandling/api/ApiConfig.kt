@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
@@ -39,6 +40,7 @@ internal fun Application.installerApis(
     innsendingMediator: InnsendingMediator,
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
     oppfølgingMediator: OppfølgingMediator,
+    auditlogg: Auditlogg,
 ) {
     this.authConfig()
     install(CallId) {
@@ -78,19 +80,21 @@ internal fun Application.installerApis(
             oppgaveDTOMapper = oppgaveDTOMapper,
             applicationCallParser = applicationCallParser,
             personMediator = personMediator,
+            auditlogg = auditlogg,
         )
         sakApi(mediator = sakMediator)
         statistikkApi(produksjonsstatistikkRepository)
-        innsendingApi(innsendingMediator, applicationCallParser)
+        innsendingApi(innsendingMediator, applicationCallParser, auditlogg)
         klageApi(
             mediator = klageMediator,
             klageDtoMapper = klageDTOMapper,
             applicationCallParser = applicationCallParser,
+            auditlogg = auditlogg,
         )
         meldingOmVedtakApi(
             meldingOmVedtakMediator = meldingOmVedtakMediator,
             applicationCallParser = applicationCallParser,
         )
-        oppfølgingApi(oppfølgingMediator, applicationCallParser)
+        oppfølgingApi(oppfølgingMediator, applicationCallParser, auditlogg)
     }
 }

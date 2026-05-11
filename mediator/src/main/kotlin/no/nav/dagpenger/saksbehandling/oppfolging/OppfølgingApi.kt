@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OpprettOppfolgingRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettOppfolgingResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnBehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnSakDTO
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
@@ -27,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.jwt.jwt
 internal fun Route.oppfølgingApi(
     oppfølgingMediator: OppfølgingMediator,
     applicationCallParser: ApplicationCallParser,
+    auditlogg: Auditlogg,
 ) {
     route("oppfolging") {
         authenticate("azureAd") {
@@ -61,6 +63,7 @@ internal fun Route.oppfølgingApi(
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
                     val oppfølging = oppfølgingMediator.hent(behandlingId, saksbehandler)
+                    auditlogg.les("Så en oppfølging", oppfølging.person.ident, saksbehandler.navIdent)
                     val lovligeSaker = oppfølgingMediator.hentAlleSaker(oppfølging.person.ident)
                     call.respond(
                         HttpStatusCode.OK,

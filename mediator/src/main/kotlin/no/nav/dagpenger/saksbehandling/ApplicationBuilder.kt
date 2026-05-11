@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -227,6 +228,33 @@ internal class ApplicationBuilder(
     private val oppgaveTilstandAlertJob: Timer
     val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource)
     val statistikkV2Tjeneste = PostgresProduksjonsstatistikkRepository(dataSource)
+    private lateinit var auditloggDelegate: Auditlogg
+    private val auditlogg: Auditlogg =
+        object : Auditlogg {
+            override fun les(
+                melding: String,
+                ident: String,
+                saksbehandler: String,
+            ) = auditloggDelegate.les(melding, ident, saksbehandler)
+
+            override fun opprett(
+                melding: String,
+                ident: String,
+                saksbehandler: String,
+            ) = auditloggDelegate.opprett(melding, ident, saksbehandler)
+
+            override fun oppdater(
+                melding: String,
+                ident: String,
+                saksbehandler: String,
+            ) = auditloggDelegate.oppdater(melding, ident, saksbehandler)
+
+            override fun slett(
+                melding: String,
+                ident: String,
+                saksbehandler: String,
+            ) = auditloggDelegate.slett(melding, ident, saksbehandler)
+        }
     private val rapidsConnection: RapidsConnection =
         RapidApplication
             .create(
@@ -244,6 +272,7 @@ internal class ApplicationBuilder(
                             innsendingMediator = innsendingMediator,
                             meldingOmVedtakMediator = meldingOmVedtakMediator,
                             oppfølgingMediator = oppfølgingMediator,
+                            auditlogg = auditlogg,
                         )
                         this.install(KafkaStreamsPlugin) {
                             kafkaStreams =
@@ -267,7 +296,7 @@ internal class ApplicationBuilder(
                 utsendingMediator.setRapidsConnection(rapidsConnection)
                 oppgaveMediator.setRapidsConnection(rapidsConnection)
                 klageMediator.setRapidsConnection(rapidsConnection)
-                klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
+                auditloggDelegate = ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection)
                 BehandlingOpprettetMottak(rapidsConnection, sakMediator)
                 SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)

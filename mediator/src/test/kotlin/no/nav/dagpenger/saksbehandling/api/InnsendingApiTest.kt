@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
@@ -253,6 +254,7 @@ class InnsendingApiTest {
                     innsendingMediator = innsendingMediator,
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
+                    auditlogg = Auditlogg.NoOp,
                 )
             }
             test()

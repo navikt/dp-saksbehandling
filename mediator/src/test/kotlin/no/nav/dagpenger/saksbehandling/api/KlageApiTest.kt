@@ -14,10 +14,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
@@ -29,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -64,6 +63,11 @@ class KlageApiTest {
 
     @Test
     fun `Skal hente klageDTO`() {
+        val klageBehandling =
+            mockk<KlageBehandling>(relaxed = true).also {
+                every { it.behandlingId } returns klageBehandlingId
+                every { it.personIdent() } returns "12345678901"
+            }
         val mediator =
             mockk<KlageMediator>().also {
                 every {
@@ -71,14 +75,7 @@ class KlageApiTest {
                         behandlingId = klageBehandlingId,
                         saksbehandler = TestHelper.saksbehandler,
                     )
-                } returns
-                    KlageBehandling.rehydrer(
-                        behandlingId = klageBehandlingId,
-                        journalpostId = journalpostId,
-                        tilstand = KlageBehandling.Behandles,
-                        behandlendeEnhet = null,
-                        opprettet = opprettet,
-                    )
+                } returns klageBehandling
             }
 
         withKlageApi(mediator) {
@@ -289,7 +286,7 @@ class KlageApiTest {
                     it.avbrytKlage(
                         hendelse = avbruttHendelse,
                     )
-                } just Runs
+                } returns mockk<KlageBehandling>(relaxed = true)
             }
 
         withKlageApi(mediator) {
@@ -315,7 +312,7 @@ class KlageApiTest {
                             ),
                         saksbehandlerToken = saksbehandlerToken,
                     )
-                } just Runs
+                } returns mockk<KlageBehandling>(relaxed = true)
             }
 
         withKlageApi(mediator) {
@@ -343,7 +340,7 @@ class KlageApiTest {
             mockk<KlageMediator>().also {
                 every {
                     it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekstListe, TestHelper.saksbehandler)
-                } returns Unit
+                } returns mockk<KlageBehandling>(relaxed = true)
             }
         withKlageApi(mediator) {
             client
@@ -373,7 +370,7 @@ class KlageApiTest {
             mockk<KlageMediator>().also {
                 every {
                     it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekst, TestHelper.saksbehandler)
-                } returns Unit
+                } returns mockk<KlageBehandling>(relaxed = true)
             }
         withKlageApi(mediator) {
             client
@@ -403,7 +400,7 @@ class KlageApiTest {
             mockk<KlageMediator>().also {
                 every {
                     it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, boolsk, TestHelper.saksbehandler)
-                } returns Unit
+                } returns mockk<KlageBehandling>(relaxed = true)
             }
         withKlageApi(mediator) {
             client
@@ -433,7 +430,7 @@ class KlageApiTest {
             mockk<KlageMediator>().also {
                 every {
                     it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, dato, TestHelper.saksbehandler)
-                } returns Unit
+                } returns mockk<KlageBehandling>(relaxed = true)
             }
         withKlageApi(mediator) {
             client
@@ -490,6 +487,7 @@ class KlageApiTest {
                     innsendingMediator = mockk(),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
+                    auditlogg = Auditlogg.NoOp,
                 )
             }
             test()

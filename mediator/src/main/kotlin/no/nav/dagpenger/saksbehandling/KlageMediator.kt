@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.api.Oppslag
-import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -41,14 +40,9 @@ class KlageMediator(
     private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
-    private lateinit var auditlogg: Auditlogg
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
-    }
-
-    fun setAuditlogg(auditlogg: Auditlogg) {
-        this.auditlogg = auditlogg
     }
 
     fun hentKlageBehandling(
@@ -59,9 +53,7 @@ class KlageMediator(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
-        val klageBehandling = klageRepository.hentKlageBehandling(behandlingId)
-        auditlogg.les("Så en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
-        return klageBehandling
+        return klageRepository.hentKlageBehandling(behandlingId)
     }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
@@ -147,12 +139,6 @@ class KlageMediator(
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
 
-        auditlogg.opprett(
-            "Opprettet en manuell klage",
-            manuellKlageMottattHendelse.ident,
-            utførtAv.navIdent,
-        )
-
         return runCatching {
             oppgaveMediator
                 .opprettOppgaveForKlageBehandling(
@@ -177,12 +163,11 @@ class KlageMediator(
         opplysningId: UUID,
         verdi: Verdi,
         saksbehandler: Saksbehandler,
-    ) {
+    ): KlageBehandling {
         sjekkTilgangOgEierAvOppgave(behandlingId, saksbehandler)
-        klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
+        return klageRepository.hentKlageBehandling(behandlingId).also { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
-            auditlogg.oppdater("Oppdaterte en klageopplysning", klageBehandling.personIdent(), saksbehandler.navIdent)
         }
     }
 
@@ -198,11 +183,11 @@ class KlageMediator(
     fun behandlingUtført(
         hendelse: KlageBehandlingUtført,
         saksbehandlerToken: String,
-    ) {
+    ): KlageBehandling {
         val oppgave =
             sjekkTilgangOgEierAvOppgave(behandlingId = hendelse.behandlingId, saksbehandler = hendelse.utførtAv)
 
-        runBlocking {
+        return runBlocking {
             val saksbehandlerDeferred =
                 async(Dispatchers.IO) {
                     oppslag.hentBehandler(
@@ -255,17 +240,13 @@ class KlageMediator(
                         ),
                     ).toJson(),
             )
-            auditlogg.opprett(
-                "Ferdigstilte en klagebehandling",
-                klageBehandling.personIdent(),
-                hendelse.utførtAv.navIdent,
-            )
+            klageBehandling
         }
     }
 
     // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
     // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
-    fun avbrytKlage(hendelse: AvbruttHendelse) {
+    fun avbrytKlage(hendelse: AvbruttHendelse): KlageBehandling {
         sjekkTilgangOgEierAvOppgave(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
@@ -280,8 +261,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
-        // TODO: Fix skrivefeil i auditlogg
-        auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
+        return klageBehandling
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {

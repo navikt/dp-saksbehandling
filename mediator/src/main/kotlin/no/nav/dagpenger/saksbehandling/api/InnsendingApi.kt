@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDT
 import no.nav.dagpenger.saksbehandling.api.models.InnsendingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnBehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnSakDTO
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon.Avslutt
@@ -28,16 +29,19 @@ import java.util.UUID
 fun Route.innsendingApi(
     mediator: InnsendingMediator,
     applicationCallParser: ApplicationCallParser,
+    auditlogg: Auditlogg,
 ) {
     route("innsending") {
         authenticate("azureAd") {
             route("{behandlingId}") {
                 get {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
                     mediator
                         .hentInnsending(
                             innsendingId = call.behandlingId(),
-                            saksbehandler = applicationCallParser.saksbehandler(call),
+                            saksbehandler = saksbehandler,
                         ).let {
+                            auditlogg.les("Så en innsending", it.person.ident, saksbehandler.navIdent)
                             call.respond(
                                 HttpStatusCode.OK,
                                 it.tilInnsendingDTO(

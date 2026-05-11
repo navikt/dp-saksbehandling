@@ -49,6 +49,7 @@ import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -74,6 +75,7 @@ internal fun Route.oppgaveApi(
     personMediator: PersonMediator,
     oppgaveDTOMapper: OppgaveDTOMapper,
     applicationCallParser: ApplicationCallParser,
+    auditlogg: Auditlogg,
 ) {
     authenticate("azureAd") {
         route("person/personId") {
@@ -93,15 +95,18 @@ internal fun Route.oppgaveApi(
                         .finnOppgaverFor(person.ident, antall = null)
                         .tilOppgaveOversiktDTOListe()
                 val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
+                auditlogg.les("Så personoversikt", person.ident, call.navIdent())
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)
             }
         }
         route("person/oppgaver") {
             post {
+                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 val oppgaver =
                     oppgaveMediator
-                        .finnOppgaverFor(call.receive<PersonIdentDTO>().ident)
+                        .finnOppgaverFor(personIdentDTO.ident)
                         .tilOppgaveOversiktDTOListe()
+                auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
                 call.respond(status = HttpStatusCode.OK, oppgaver)
             }
         }
@@ -148,7 +153,10 @@ internal fun Route.oppgaveApi(
                                     ),
                             )
 
-                        else -> call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
+                        else -> {
+                            auditlogg.les("Hentet neste oppgave", oppgave.personIdent(), saksbehandler.navIdent)
+                            call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
+                        }
                     }
                 }
             }
@@ -159,6 +167,7 @@ internal fun Route.oppgaveApi(
                     val oppgaveId = call.finnUUID("oppgaveId")
                     withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
+                        auditlogg.les("Så en oppgave", oppgave.personIdent(), saksbehandler.navIdent)
                         val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }

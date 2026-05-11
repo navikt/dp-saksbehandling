@@ -4,6 +4,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -31,6 +32,7 @@ internal object OppgaveApiTestHelper {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
+                    auditlogg = Auditlogg.NoOp,
                 )
             }
             test()
@@ -69,6 +71,7 @@ internal object OppgaveApiTestHelper {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = mockk(relaxed = true),
+                    auditlogg = Auditlogg.NoOp,
                 )
             }
             test()
