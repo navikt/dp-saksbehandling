@@ -59,6 +59,7 @@ class PostgresKlageRepositoryTest {
                                 },
                         ),
                     sakRepository = PostgresSakRepository(dataSource = ds),
+                    rapidsConnection = mockk(relaxed = true),
                 )
 
             val søknadsbehandlingOpprettetHendelse =

@@ -77,9 +77,8 @@ class UtsendingMediatorTest {
                                 )
                             } returns htmlBrev
                         },
-                ).also {
-                    it.setRapidsConnection(rapid)
-                }
+                    rapidsConnection = rapid,
+                )
 
             BehandlingsresultatMottakForUtsending(
                 rapidsConnection = rapid,
@@ -236,9 +235,8 @@ class UtsendingMediatorTest {
                         mockk<UtsendingMediator.BrevProdusent>().also {
                             coEvery { it.lagBrev(person.ident, behandlingId, utsendingSak.id) } returns htmlBrev
                         },
-                ).also {
-                    it.setRapidsConnection(rapid)
-                }
+                    rapidsConnection = rapid,
+                )
 
             val mockSakMediator =
                 mockk<SakMediator>().also {
@@ -411,9 +409,8 @@ class UtsendingMediatorTest {
                                 )
                             } returns htmlBrev
                         },
-                ).also {
-                    it.setRapidsConnection(rapid)
-                }
+                    rapidsConnection = rapid,
+                )
 
             BehandlingsresultatMottakForAutomatiskVedtakUtsending(
                 rapidsConnection = rapid,
@@ -546,9 +543,8 @@ class UtsendingMediatorTest {
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
                     brevProdusent = mockk(),
-                ).also {
-                    it.setRapidsConnection(rapid)
-                }
+                    rapidsConnection = rapid,
+                )
 
             UtsendingBehovLøsningMottak(
                 utsendingMediator = utsendingMediator,
@@ -691,6 +687,7 @@ class UtsendingMediatorTest {
                         every { it.finnUtsendingForBehandlingId(utsending.behandlingId) } returns utsending
                     },
                 brevProdusent = brevProdusentMock,
+                rapidsConnection = mockk(relaxed = true),
             )
         val vedtakFattetHendelse =
             VedtakFattetHendelse(

@@ -56,7 +56,8 @@ class OppgaveMediatorAlertTest {
                 mockk<SakMediator>().also {
                     every { it.finnSakHistorikk(any()) } returns sakHistorikk
                 },
-        ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
+            rapidsConnection = rapid,
+        ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1
             rapid.inspektør.message(0).forventetAlert(behandlingId) shouldBe true
@@ -123,7 +124,8 @@ class OppgaveMediatorAlertTest {
                 mockk<SakMediator>().also {
                     every { it.finnSakHistorikk(any()) } returns sakHistorikk
                 },
-        ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
+            rapidsConnection = rapid,
+        ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1
             rapid.inspektør.message(0)["@event_name"].asText() shouldBe "behov"

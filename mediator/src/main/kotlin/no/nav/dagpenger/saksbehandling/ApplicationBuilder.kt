@@ -135,11 +135,7 @@ internal class ApplicationBuilder(
             personRepository = personRepository,
             oppslag = oppslag,
         )
-    private val sakMediator =
-        SakMediator(
-            personMediator = personMediator,
-            sakRepository = sakRepository,
-        )
+    private lateinit var sakMediator: SakMediator
 
     private val meldingOmVedtakKlient =
         MeldingOmVedtakKlient(
@@ -154,69 +150,15 @@ internal class ApplicationBuilder(
             oppgaveRepository = oppgaveRepository,
             tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
         )
-    private val utsendingMediator =
-        UtsendingMediator(
-            utsendingRepository = utsendingRepository,
-            brevProdusent = brevProdusent,
-        )
-    private val oppgaveMediator =
-        OppgaveMediator(
-            oppgaveRepository = oppgaveRepository,
-            behandlingKlient = behandlingKlient,
-            utsendingMediator = utsendingMediator,
-            sakMediator = sakMediator,
-        )
-    private val klageMediator =
-        KlageMediator(
-            klageRepository = klageRepository,
-            oppgaveMediator = oppgaveMediator,
-            utsendingMediator = utsendingMediator,
-            oppslag = oppslag,
-            meldingOmVedtakKlient = meldingOmVedtakKlient,
-            sakMediator = sakMediator,
-        )
+    private lateinit var utsendingMediator: UtsendingMediator
+    private lateinit var oppgaveMediator: OppgaveMediator
+    private lateinit var klageMediator: KlageMediator
 
     private val oppfølgingRepository = PostgresOppfølgingRepository(dataSource)
-    private val oppfølgingMediator =
-        OppfølgingMediator(
-            oppfølgingRepository = oppfølgingRepository,
-            oppfølgingBehandler =
-                OppfølgingBehandler(
-                    klageMediator = klageMediator,
-                    behandlingKlient = behandlingKlient,
-                ),
-            personMediator = personMediator,
-            sakMediator = sakMediator,
-            oppgaveMediator = oppgaveMediator,
-        )
-
-    private val meldingOmVedtakMediator =
-        MeldingOmVedtakMediator(
-            oppgaveMediator = oppgaveMediator,
-            meldingOmVedtakKlient = meldingOmVedtakKlient,
-            oppslag = oppslag,
-            sakMediator = sakMediator,
-        )
-
-    private val innsendingMediator =
-        InnsendingMediator(
-            sakMediator = sakMediator,
-            oppgaveMediator = oppgaveMediator,
-            personMediator = personMediator,
-            innsendingRepository = innsendingRepository,
-            innsendingBehandler =
-                InnsendingBehandler(
-                    klageMediator = klageMediator,
-                    behandlingKlient = behandlingKlient,
-                    oppfølgingMediator = oppfølgingMediator,
-                ),
-        )
-    private val oppgaveDTOMapper =
-        OppgaveDTOMapper(
-            oppslag = oppslag,
-            oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
-            sakMediator = sakMediator,
-        )
+    private lateinit var oppfølgingMediator: OppfølgingMediator
+    private lateinit var meldingOmVedtakMediator: MeldingOmVedtakMediator
+    private lateinit var innsendingMediator: InnsendingMediator
+    private lateinit var oppgaveDTOMapper: OppgaveDTOMapper
     private lateinit var innsendingAlarmJob: Timer
     private lateinit var utsendingAlarmJob: Timer
     private lateinit var oversendKlageinstansAlarmJob: Timer
@@ -250,6 +192,75 @@ internal class ApplicationBuilder(
                     }
                 },
             ) { server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, rapid: KafkaRapid ->
+                sakMediator =
+                    SakMediator(
+                        personMediator = personMediator,
+                        sakRepository = sakRepository,
+                        rapidsConnection = rapid,
+                    )
+                utsendingMediator =
+                    UtsendingMediator(
+                        utsendingRepository = utsendingRepository,
+                        brevProdusent = brevProdusent,
+                        rapidsConnection = rapid,
+                    )
+                oppgaveMediator =
+                    OppgaveMediator(
+                        oppgaveRepository = oppgaveRepository,
+                        behandlingKlient = behandlingKlient,
+                        utsendingMediator = utsendingMediator,
+                        sakMediator = sakMediator,
+                        rapidsConnection = rapid,
+                    )
+                klageMediator =
+                    KlageMediator(
+                        klageRepository = klageRepository,
+                        oppgaveMediator = oppgaveMediator,
+                        utsendingMediator = utsendingMediator,
+                        oppslag = oppslag,
+                        meldingOmVedtakKlient = meldingOmVedtakKlient,
+                        sakMediator = sakMediator,
+                        rapidsConnection = rapid,
+                    )
+                oppfølgingMediator =
+                    OppfølgingMediator(
+                        oppfølgingRepository = oppfølgingRepository,
+                        oppfølgingBehandler =
+                            OppfølgingBehandler(
+                                klageMediator = klageMediator,
+                                behandlingKlient = behandlingKlient,
+                            ),
+                        personMediator = personMediator,
+                        sakMediator = sakMediator,
+                        oppgaveMediator = oppgaveMediator,
+                    )
+                innsendingMediator =
+                    InnsendingMediator(
+                        sakMediator = sakMediator,
+                        oppgaveMediator = oppgaveMediator,
+                        personMediator = personMediator,
+                        innsendingRepository = innsendingRepository,
+                        innsendingBehandler =
+                            InnsendingBehandler(
+                                klageMediator = klageMediator,
+                                behandlingKlient = behandlingKlient,
+                                oppfølgingMediator = oppfølgingMediator,
+                            ),
+                    )
+                meldingOmVedtakMediator =
+                    MeldingOmVedtakMediator(
+                        oppgaveMediator = oppgaveMediator,
+                        meldingOmVedtakKlient = meldingOmVedtakKlient,
+                        oppslag = oppslag,
+                        sakMediator = sakMediator,
+                    )
+                oppgaveDTOMapper =
+                    OppgaveDTOMapper(
+                        oppslag = oppslag,
+                        oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+                        sakMediator = sakMediator,
+                    )
+
                 server.application.installerApis(
                     oppgaveMediator = oppgaveMediator,
                     oppgaveDTOMapper = oppgaveDTOMapper,
@@ -264,10 +275,6 @@ internal class ApplicationBuilder(
                     auditlogg = ApiAuditlogg(AktivitetsloggMediator(), rapid),
                 )
 
-                sakMediator.setRapidsConnection(rapid)
-                utsendingMediator.setRapidsConnection(rapid)
-                oppgaveMediator.setRapidsConnection(rapid)
-                klageMediator.setRapidsConnection(rapid)
                 BehandlingOpprettetMottak(rapid, sakMediator)
                 SøknadBehandlingOpprettetMottak(rapid, innsendingMediator)
                 BehandlingAvbruttMottak(rapid, oppgaveMediator)

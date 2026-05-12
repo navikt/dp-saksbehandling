@@ -38,13 +38,8 @@ class KlageMediator(
     private val oppslag: Oppslag,
     private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
     private val sakMediator: SakMediator,
+    private val rapidsConnection: RapidsConnection,
 ) {
-    private lateinit var rapidsConnection: RapidsConnection
-
-    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
-        this.rapidsConnection = rapidsConnection
-    }
-
     fun hentKlageBehandling(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,

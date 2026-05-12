@@ -40,6 +40,7 @@ class OppgaveFristUtgåttJobTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = mockk(),
+                    rapidsConnection = mockk(relaxed = true),
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"

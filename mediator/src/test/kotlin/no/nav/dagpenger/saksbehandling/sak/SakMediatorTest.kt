@@ -120,14 +120,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
 
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
@@ -158,14 +157,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
 
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
@@ -203,14 +201,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
                 behandlingskjedeId = søknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
@@ -238,14 +235,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
                 behandlingskjedeId = søknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
@@ -274,6 +270,7 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -345,6 +342,7 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -409,14 +407,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
 
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns false
@@ -459,8 +456,8 @@ class SakMediatorTest {
                     every { it.lagre(mockSakHistorikk) } just Runs
                 },
             personMediator = mockk(relaxed = true),
+            rapidsConnection = testRapid,
         ).also {
-            it.setRapidsConnection(testRapid)
             it.knyttTilSak(søknadsbehandlingOpprettetHendelseNyRett)
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
@@ -475,14 +472,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
 
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns true
@@ -515,14 +511,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
 
             val sak1 =
                 sakMediator.opprettSak(
@@ -616,14 +611,13 @@ class SakMediatorTest {
             val sakMediator =
                 SakMediator(
                     sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                )
 
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,

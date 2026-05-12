@@ -55,13 +55,8 @@ class OppgaveMediator(
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
     private val sakMediator: SakMediator,
+    private val rapidsConnection: RapidsConnection,
 ) {
-    private lateinit var rapidsConnection: RapidsConnection
-
-    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
-        this.rapidsConnection = rapidsConnection
-    }
-
     fun lagOppgaveForInnsendingBehandling(
         innsendingMottattHendelse: InnsendingMottattHendelse,
         behandling: Behandling,

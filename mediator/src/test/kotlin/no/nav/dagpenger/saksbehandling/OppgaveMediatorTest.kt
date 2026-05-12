@@ -223,9 +223,8 @@ OppgaveMediatorTest {
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 sakMediator = sakMediatorMock,
-            ).also {
-                it.setRapidsConnection(testRapid)
-            }
+                rapidsConnection = testRapid,
+            )
 
         shouldThrow<IllegalStateException> {
             oppgaveMediator.opprettOppgaveForKlageBehandling(
@@ -920,6 +919,7 @@ OppgaveMediatorTest {
                 UtsendingMediator(
                     utsendingRepository = PostgresUtsendingRepository(datasource),
                     brevProdusent = mockk(),
+                    rapidsConnection = mockk(relaxed = true),
                 )
 
             val oppgave =
@@ -1033,6 +1033,7 @@ OppgaveMediatorTest {
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(datasource),
                 brevProdusent = mockk(),
+                rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
                 utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId) shouldBe null
             }
@@ -1484,6 +1485,7 @@ OppgaveMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = mockk(),
+                    rapidsConnection = mockk(relaxed = true),
                 )
 
             oppgaveMediator
@@ -1551,6 +1553,7 @@ OppgaveMediatorTest {
                 SakMediator(
                     personMediator = personMediatorMock,
                     sakRepository = PostgresSakRepository(it),
+                    rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
@@ -1558,6 +1561,7 @@ OppgaveMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
                 )
             val innsendingRepository = PostgresInnsendingRepository(it)
             val innsendingMediator =
@@ -1644,9 +1648,8 @@ OppgaveMediatorTest {
                         oppslag = oppslagMock,
                     ),
                 sakRepository = PostgresSakRepository(dataSource),
-            ).also {
-                it.setRapidsConnection(testRapid)
-            }
+                rapidsConnection = testRapid,
+            )
 
         val oppgaveMediator =
             OppgaveMediator(
@@ -1654,9 +1657,8 @@ OppgaveMediatorTest {
                 behandlingKlient = behandlingKlientMock,
                 utsendingMediator = mockk(),
                 sakMediator = sakMediator,
-            ).also {
-                it.setRapidsConnection(testRapid)
-            }
+                rapidsConnection = testRapid,
+            )
 
         val hendelse =
             SøknadsbehandlingOpprettetHendelse(
@@ -1746,9 +1748,8 @@ OppgaveMediatorTest {
                             oppslag = oppslagMock,
                         ),
                     sakRepository = PostgresSakRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                    rapidsConnection = testRapid,
+                )
 
             val oppgaveMediator =
                 OppgaveMediator(
@@ -1758,11 +1759,11 @@ OppgaveMediatorTest {
                         UtsendingMediator(
                             utsendingRepository = PostgresUtsendingRepository(datasource),
                             brevProdusent = mockk(),
+                            rapidsConnection = testRapid,
                         ),
                     sakMediator = sakMediator,
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+                    rapidsConnection = testRapid,
+                )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {
                 val sak =

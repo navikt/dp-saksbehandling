@@ -26,13 +26,8 @@ private val logger = KotlinLogging.logger {}
 class SakMediator(
     private val personMediator: PersonMediator,
     private val sakRepository: SakRepository,
+    private val rapidsConnection: RapidsConnection,
 ) {
-    private lateinit var rapidsConnection: RapidsConnection
-
-    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
-        this.rapidsConnection = rapidsConnection
-    }
-
     fun hentSakHistorikk(ident: String): SakHistorikk = sakRepository.hentSakHistorikk(ident)
 
     fun finnSakHistorikk(ident: String): SakHistorikk? = sakRepository.finnSakHistorikk(ident)

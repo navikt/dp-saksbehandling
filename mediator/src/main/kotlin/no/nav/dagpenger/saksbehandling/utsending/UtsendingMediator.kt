@@ -25,13 +25,8 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class UtsendingMediator(
     private val utsendingRepository: UtsendingRepository,
     private val brevProdusent: BrevProdusent,
+    private val rapidsConnection: RapidsConnection,
 ) : UtsendingRepository by utsendingRepository {
-    private lateinit var rapidsConnection: RapidsConnection
-
-    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
-        this.rapidsConnection = rapidsConnection
-    }
-
     fun opprettUtsending(
         behandlingId: UUID,
         brev: String?,

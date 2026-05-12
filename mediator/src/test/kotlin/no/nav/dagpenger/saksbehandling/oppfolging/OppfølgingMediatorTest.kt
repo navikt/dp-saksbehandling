@@ -33,13 +33,19 @@ class OppfølgingMediatorTest {
         DBTestHelper.withPerson { ds ->
             val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = mockk(relaxed = true),
+                )
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = PostgresOppgaveRepository(ds),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
                 )
 
             val oppfølgingBehandler =
@@ -113,7 +119,12 @@ class OppfølgingMediatorTest {
         DBTestHelper.withPerson { ds ->
             val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = mockk(relaxed = true),
+                )
             val oppgaveRepository = PostgresOppgaveRepository(ds)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -121,6 +132,7 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
                 )
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
@@ -176,7 +188,12 @@ class OppfølgingMediatorTest {
         DBTestHelper.withPerson { ds ->
             val oppfølgingRepository = PostgresOppfølgingRepository(ds)
             val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
-            val sakMediator = SakMediator(personMediator = personMediator, sakRepository = PostgresSakRepository(ds))
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(ds),
+                    rapidsConnection = mockk(relaxed = true),
+                )
             val oppgaveRepository = PostgresOppgaveRepository(ds)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -184,6 +201,7 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
                 )
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =

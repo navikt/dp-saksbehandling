@@ -1071,9 +1071,8 @@ class KlageMediatorTest {
                 SakMediator(
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(dataSource = dataSource),
-                ).also {
-                    it.setRapidsConnection(rapidsConnection = testRapid)
-                }
+                    rapidsConnection = testRapid,
+                )
 
             val oppgaveMediator =
                 OppgaveMediator(
@@ -1081,6 +1080,7 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
+                    rapidsConnection = testRapid,
                 )
             val klageMediator =
                 KlageMediator(
@@ -1090,9 +1090,8 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
-                ).also {
-                    it.setRapidsConnection(rapidsConnection = testRapid)
-                }
+                    rapidsConnection = testRapid,
+                )
             personRepository.lagre(
                 Person(
                     ident = testPersonIdent,
