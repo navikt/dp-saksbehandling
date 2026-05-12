@@ -84,68 +84,22 @@ import java.util.Timer
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
 ) : RapidsConnection.StatusListener {
-    private val klageRepository = PostgresKlageRepository(dataSource)
-    private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
     private val personRepository = PostgresPersonRepository(dataSource)
-    private val sakRepository = PostgresSakRepository(dataSource = dataSource)
-    private val utsendingRepository = PostgresUtsendingRepository(dataSource)
-    private val innsendingRepository = PostgresInnsendingRepository(dataSource)
-
-    private val skjermingKlient =
-        SkjermingHttpKlient(
-            skjermingApiUrl = Configuration.skjermingApiUrl,
-            tokenProvider = Configuration.skjermingTokenProvider,
-        )
     private val pdlKlient =
         PDLHttpKlient(
             url = Configuration.pdlUrl,
             tokenSupplier = Configuration.pdlTokenProvider,
         )
 
-    private val journalpostIdClient =
-        MottakHttpKlient(
-            dpMottakApiUrl = Configuration.dpMottakApiUrl,
-            tokenProvider = Configuration.journalpostTokenProvider,
-        )
-    private val behandlingKlient =
-        BehandlingHttpKlient(
-            dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
-            tokenProvider = Configuration.dpBehandlingOboExchanger,
-        )
-
-    private val skjermingConsumer = SkjermingConsumer(personRepository)
-    private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(personRepository, pdlKlient)
-    private val saksbehandlerOppslag =
-        CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
-    private val oppslag: Oppslag =
-        Oppslag(
-            pdlKlient = pdlKlient,
-            relevanteJournalpostIdOppslag =
-                RelevanteJournalpostIdOppslag(
-                    journalpostIdKlient = journalpostIdClient,
-                    utsendingRepository = utsendingRepository,
-                    klageRepository = klageRepository,
-                    innsendingRepository = innsendingRepository,
-                ),
-            saksbehandlerOppslag = saksbehandlerOppslag,
-            skjermingKlient = skjermingKlient,
-        )
-    private val personMediator =
-        PersonMediator(
-            personRepository = personRepository,
-            oppslag = oppslag,
-        )
     private lateinit var innsendingAlarmJob: Timer
     private lateinit var utsendingAlarmJob: Timer
     private lateinit var oversendKlageinstansAlarmJob: Timer
     private lateinit var oppfølgingAlarmJob: Timer
     private lateinit var oppgaveFristUtgåttJob: Timer
     private lateinit var metrikkJob: Timer
-
     private lateinit var statistikkJob: Timer
     private lateinit var oppgaveTilstandAlertJob: Timer
-    val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource)
-    val statistikkV2Tjeneste = PostgresProduksjonsstatistikkRepository(dataSource)
+
     private val rapidsConnection: RapidsConnection =
         RapidApplication
             .create(
@@ -157,30 +111,61 @@ internal class ApplicationBuilder(
                                 kafkaStreams(Configuration.kafkaStreamProperties) {
                                     skjermetPersonStatus(
                                         Configuration.skjermingPersonStatusTopic,
-                                        skjermingConsumer::oppdaterSkjermetStatus,
+                                        SkjermingConsumer(personRepository)::oppdaterSkjermetStatus,
                                     )
                                     adressebeskyttetStream(
                                         Configuration.leesahTopic,
-                                        adressebeskyttelseConsumer::oppdaterAdressebeskyttelseGradering,
+                                        AdressebeskyttelseConsumer(personRepository, pdlKlient)::oppdaterAdressebeskyttelseGradering,
                                     )
                                 }
                         }
                     }
                 },
             ) { server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, rapid: KafkaRapid ->
+                val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+                val sakRepository = PostgresSakRepository(dataSource = dataSource)
+                val utsendingRepository = PostgresUtsendingRepository(dataSource)
+                val innsendingRepository = PostgresInnsendingRepository(dataSource)
+                val klageRepository = PostgresKlageRepository(dataSource)
+
+                val behandlingKlient =
+                    BehandlingHttpKlient(
+                        dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
+                        tokenProvider = Configuration.dpBehandlingOboExchanger,
+                    )
                 val meldingOmVedtakKlient =
                     MeldingOmVedtakKlient(
                         dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
                         tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
                     )
-                val brevProdusent =
-                    UtsendingMediator.BrevProdusent(
-                        oppslag = oppslag,
-                        meldingOmVedtakKlient = meldingOmVedtakKlient,
-                        oppgaveRepository = oppgaveRepository,
-                        tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
+                val saksbehandlerOppslag =
+                    CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
+                val oppslag =
+                    Oppslag(
+                        pdlKlient = pdlKlient,
+                        relevanteJournalpostIdOppslag =
+                            RelevanteJournalpostIdOppslag(
+                                journalpostIdKlient =
+                                    MottakHttpKlient(
+                                        dpMottakApiUrl = Configuration.dpMottakApiUrl,
+                                        tokenProvider = Configuration.journalpostTokenProvider,
+                                    ),
+                                utsendingRepository = utsendingRepository,
+                                klageRepository = klageRepository,
+                                innsendingRepository = innsendingRepository,
+                            ),
+                        saksbehandlerOppslag = saksbehandlerOppslag,
+                        skjermingKlient =
+                            SkjermingHttpKlient(
+                                skjermingApiUrl = Configuration.skjermingApiUrl,
+                                tokenProvider = Configuration.skjermingTokenProvider,
+                            ),
                     )
-                val oppfølgingRepository = PostgresOppfølgingRepository(dataSource)
+                val personMediator =
+                    PersonMediator(
+                        personRepository = personRepository,
+                        oppslag = oppslag,
+                    )
 
                 val sakMediator =
                     SakMediator(
@@ -191,7 +176,13 @@ internal class ApplicationBuilder(
                 val utsendingMediator =
                     UtsendingMediator(
                         utsendingRepository = utsendingRepository,
-                        brevProdusent = brevProdusent,
+                        brevProdusent =
+                            UtsendingMediator.BrevProdusent(
+                                oppslag = oppslag,
+                                meldingOmVedtakKlient = meldingOmVedtakKlient,
+                                oppgaveRepository = oppgaveRepository,
+                                tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
+                            ),
                         rapidsConnection = rapid,
                     )
                 val oppgaveMediator =
@@ -214,7 +205,7 @@ internal class ApplicationBuilder(
                     )
                 val oppfølgingMediator =
                     OppfølgingMediator(
-                        oppfølgingRepository = oppfølgingRepository,
+                        oppfølgingRepository = PostgresOppfølgingRepository(dataSource),
                         oppfølgingBehandler =
                             OppfølgingBehandler(
                                 klageMediator = klageMediator,
@@ -237,30 +228,28 @@ internal class ApplicationBuilder(
                                 oppfølgingMediator = oppfølgingMediator,
                             ),
                     )
-                val meldingOmVedtakMediator =
-                    MeldingOmVedtakMediator(
-                        oppgaveMediator = oppgaveMediator,
-                        meldingOmVedtakKlient = meldingOmVedtakKlient,
-                        oppslag = oppslag,
-                        sakMediator = sakMediator,
-                    )
-                val oppgaveDTOMapper =
-                    OppgaveDTOMapper(
-                        oppslag = oppslag,
-                        oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
-                        sakMediator = sakMediator,
-                    )
 
                 server.application.installerApis(
                     oppgaveMediator = oppgaveMediator,
-                    oppgaveDTOMapper = oppgaveDTOMapper,
-                    produksjonsstatistikkRepository = statistikkV2Tjeneste,
+                    oppgaveDTOMapper =
+                        OppgaveDTOMapper(
+                            oppslag = oppslag,
+                            oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+                            sakMediator = sakMediator,
+                        ),
+                    produksjonsstatistikkRepository = PostgresProduksjonsstatistikkRepository(dataSource),
                     klageMediator = klageMediator,
                     klageDTOMapper = KlageDTOMapper(oppslag),
                     personMediator = personMediator,
                     sakMediator = sakMediator,
                     innsendingMediator = innsendingMediator,
-                    meldingOmVedtakMediator = meldingOmVedtakMediator,
+                    meldingOmVedtakMediator =
+                        MeldingOmVedtakMediator(
+                            oppgaveMediator = oppgaveMediator,
+                            meldingOmVedtakKlient = meldingOmVedtakKlient,
+                            oppslag = oppslag,
+                            sakMediator = sakMediator,
+                        ),
                     oppfølgingMediator = oppfølgingMediator,
                     auditlogg = ApiAuditlogg(AktivitetsloggMediator(), rapid),
                 )
@@ -366,7 +355,7 @@ internal class ApplicationBuilder(
                 statistikkJob =
                     StatistikkJob(
                         rapidsConnection = rapid,
-                        saksbehandlingsstatistikkRepository = statistikkTjeneste,
+                        saksbehandlingsstatistikkRepository = PostgresSaksbehandlingsstatistikkRepository(dataSource),
                     ).startJob(
                         startAt = now,
                         period = 5.Minutt,
