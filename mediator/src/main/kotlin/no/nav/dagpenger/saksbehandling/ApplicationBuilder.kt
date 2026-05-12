@@ -135,30 +135,6 @@ internal class ApplicationBuilder(
             personRepository = personRepository,
             oppslag = oppslag,
         )
-    private lateinit var sakMediator: SakMediator
-
-    private val meldingOmVedtakKlient =
-        MeldingOmVedtakKlient(
-            dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
-            tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
-        )
-
-    private val brevProdusent =
-        UtsendingMediator.BrevProdusent(
-            oppslag = oppslag,
-            meldingOmVedtakKlient = meldingOmVedtakKlient,
-            oppgaveRepository = oppgaveRepository,
-            tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
-        )
-    private lateinit var utsendingMediator: UtsendingMediator
-    private lateinit var oppgaveMediator: OppgaveMediator
-    private lateinit var klageMediator: KlageMediator
-
-    private val oppfølgingRepository = PostgresOppfølgingRepository(dataSource)
-    private lateinit var oppfølgingMediator: OppfølgingMediator
-    private lateinit var meldingOmVedtakMediator: MeldingOmVedtakMediator
-    private lateinit var innsendingMediator: InnsendingMediator
-    private lateinit var oppgaveDTOMapper: OppgaveDTOMapper
     private lateinit var innsendingAlarmJob: Timer
     private lateinit var utsendingAlarmJob: Timer
     private lateinit var oversendKlageinstansAlarmJob: Timer
@@ -192,19 +168,33 @@ internal class ApplicationBuilder(
                     }
                 },
             ) { server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, rapid: KafkaRapid ->
-                sakMediator =
+                val meldingOmVedtakKlient =
+                    MeldingOmVedtakKlient(
+                        dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
+                        tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
+                    )
+                val brevProdusent =
+                    UtsendingMediator.BrevProdusent(
+                        oppslag = oppslag,
+                        meldingOmVedtakKlient = meldingOmVedtakKlient,
+                        oppgaveRepository = oppgaveRepository,
+                        tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
+                    )
+                val oppfølgingRepository = PostgresOppfølgingRepository(dataSource)
+
+                val sakMediator =
                     SakMediator(
                         personMediator = personMediator,
                         sakRepository = sakRepository,
                         rapidsConnection = rapid,
                     )
-                utsendingMediator =
+                val utsendingMediator =
                     UtsendingMediator(
                         utsendingRepository = utsendingRepository,
                         brevProdusent = brevProdusent,
                         rapidsConnection = rapid,
                     )
-                oppgaveMediator =
+                val oppgaveMediator =
                     OppgaveMediator(
                         oppgaveRepository = oppgaveRepository,
                         behandlingKlient = behandlingKlient,
@@ -212,7 +202,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         rapidsConnection = rapid,
                     )
-                klageMediator =
+                val klageMediator =
                     KlageMediator(
                         klageRepository = klageRepository,
                         oppgaveMediator = oppgaveMediator,
@@ -222,7 +212,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         rapidsConnection = rapid,
                     )
-                oppfølgingMediator =
+                val oppfølgingMediator =
                     OppfølgingMediator(
                         oppfølgingRepository = oppfølgingRepository,
                         oppfølgingBehandler =
@@ -234,7 +224,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         oppgaveMediator = oppgaveMediator,
                     )
-                innsendingMediator =
+                val innsendingMediator =
                     InnsendingMediator(
                         sakMediator = sakMediator,
                         oppgaveMediator = oppgaveMediator,
@@ -247,14 +237,14 @@ internal class ApplicationBuilder(
                                 oppfølgingMediator = oppfølgingMediator,
                             ),
                     )
-                meldingOmVedtakMediator =
+                val meldingOmVedtakMediator =
                     MeldingOmVedtakMediator(
                         oppgaveMediator = oppgaveMediator,
                         meldingOmVedtakKlient = meldingOmVedtakKlient,
                         oppslag = oppslag,
                         sakMediator = sakMediator,
                     )
-                oppgaveDTOMapper =
+                val oppgaveDTOMapper =
                     OppgaveDTOMapper(
                         oppslag = oppslag,
                         oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
