@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
@@ -271,8 +272,8 @@ OppgaveMediatorTest {
             it.size shouldBe 4
             for (i in 0 until it.size) {
                 it.message(i).let { message ->
-                    message["@event_name"].asText() shouldBe "saksbehandling_alert"
-                    message["alertType"].asText() shouldBe "BEHANDLING_IKKE_FUNNET"
+                    message["@event_name"].asString() shouldBe "saksbehandling_alert"
+                    message["alertType"].asString() shouldBe "BEHANDLING_IKKE_FUNNET"
                 }
             }
         }
@@ -302,7 +303,13 @@ OppgaveMediatorTest {
             behandlingKlient =
                 mockk<BehandlingKlient>().also {
                     coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(false)
-                    coEvery { it.godkjenn(behandlingId = any(), ident = any(), saksbehandlerToken = any()) } returns Result.success(Unit)
+                    coEvery {
+                        it.godkjenn(
+                            behandlingId = any(),
+                            ident = any(),
+                            saksbehandlerToken = any(),
+                        )
+                    } returns Result.success(Unit)
                 },
         ) { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
@@ -582,6 +589,161 @@ OppgaveMediatorTest {
 
             oppdatertOppgave.emneknagger shouldBe testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe KlarTilBehandling
+        }
+    }
+
+    @Test
+    fun `Skal publisere søknadsavklaring behov når ny oppgave opprettes for Søknad`() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { _, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let { melding ->
+                melding["ident"].asString() shouldBe testIdent
+                melding["søknadId"].asString() shouldBe søknadId.toString()
+                melding["behandlingId"].asString() shouldBe behandlingId.toString()
+                val behov = melding["@behov"].values().map { it.asString() }.toSet()
+                behov shouldBe
+                    setOf(
+                        "EØSArbeid",
+                        "BostedslandErNorge",
+                        "PermittertGrensearbeider",
+                        "Sanksjon",
+                        "BarnOver16",
+                        "PlanleggerUtdanning",
+                        "EØSPengestøtte",
+                    )
+            }
+        }
+    }
+
+    @Test
+    fun `Skal ikke publisere søknadsavklaring behov ved oppdatering av eksisterende oppgave`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+            val meldingFørTest = testRapid.inspektør.size
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = oppgave.behandling.behandlingId,
+                ),
+            )
+            testRapid.inspektør.size shouldBe meldingFørTest
+        }
+    }
+
+    @Test
+    fun `Skal ikke publisere søknadsavklaring behov for ny oppgave som ikke er Søknad`() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { _, oppgaveMediator ->
+            val meldingFørTest = testRapid.inspektør.size
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Meldekort",
+                    behandlingId = behandlingId,
+                ),
+            )
+            testRapid.inspektør.size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `Skal legge til D-nummer emneknagg for søknad med D-nummer ident`() {
+        val dNummerIdent = "42345612345"
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = dNummerIdent,
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { datasource, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = dNummerIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            val oppgave =
+                PostgresOppgaveRepository(datasource)
+                    .hentOppgaveIdFor(behandlingId)
+                    .let { PostgresOppgaveRepository(datasource).hentOppgave(it!!) }
+            oppgave.emneknagger shouldContain "D-nummer"
+        }
+    }
+
+    @Test
+    fun `Skal ikke legge til D-nummer emneknagg for søknad med vanlig fødselsnummer`() {
+        val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
+        settOppOppgaveMediator(
+            hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                    behandlingskjedeId = behandlingId,
+                ),
+        ) { datasource, oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            val oppgave =
+                PostgresOppgaveRepository(datasource)
+                    .hentOppgaveIdFor(behandlingId)
+                    .let { PostgresOppgaveRepository(datasource).hentOppgave(it!!) }
+            oppgave.emneknagger shouldNotContain "D-nummer"
         }
     }
 
@@ -1070,13 +1232,15 @@ OppgaveMediatorTest {
             avbruttOppgave.tilstandslogg.first().tilstand shouldBe AVBRUTT
             avbruttOppgave.emneknagger.contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
             avbruttOppgave.behandlerIdent shouldBe saksbehandler.navIdent
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).let { message ->
-                message["@event_name"].asText() shouldBe "avbryt_behandling"
-                message["behandlingId"].asText() shouldBe oppgave.behandling.behandlingId.toString()
-                message["ident"].asText() shouldBe oppgave.personIdent()
-                message["årsak"].asText() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
-            }
+            val avbrytMelding =
+                testRapid.inspektør.let { inspektør ->
+                    (0 until inspektør.size)
+                        .map { inspektør.message(it) }
+                        .single { it["@event_name"].asString() == "avbryt_behandling" }
+                }
+            avbrytMelding["behandlingId"].asString() shouldBe oppgave.behandling.behandlingId.toString()
+            avbrytMelding["ident"].asString() shouldBe oppgave.personIdent()
+            avbrytMelding["årsak"].asString() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
         }
     }
 
