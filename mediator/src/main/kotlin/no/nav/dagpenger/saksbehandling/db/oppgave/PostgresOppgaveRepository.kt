@@ -591,6 +591,22 @@ class PostgresOppgaveRepository(
                 )
             OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
+
+    override fun hentDistinkteEmneknagger(): Set<String> =
+        sessionOf(dataSource).use { session ->
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        """
+                        SELECT DISTINCT emneknagg
+                        FROM emneknagg_v1
+                        """.trimIndent(),
+                    ).map { row ->
+                        row.string("emneknagg")
+                    }.asList,
+                ).toSet()
+        }
 }
 
 private fun rehydrerTilstandsendringHendelse(

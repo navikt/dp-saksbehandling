@@ -1970,4 +1970,43 @@ class PostgresOppgaveRepositoryTest {
             oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg
         }
     }
+
+    @Test
+    fun `hentDistinkteEmneknagger returnerer unike emneknagger fra alle oppgaver`() {
+        val behandling1 =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                opprettet = opprettetNå,
+                hendelse = TomHendelse,
+            )
+        val behandling2 =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                opprettet = opprettetNå,
+                hendelse = TomHendelse,
+            )
+
+        DBTestHelper.Companion.withBehandlinger(behandlinger = listOf(behandling1, behandling2)) { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgave1 =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    behandling = behandling1,
+                    emneknagger = setOf("Avslag", "EØS-inntekt"),
+                )
+            val oppgave2 =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    behandling = behandling2,
+                    emneknagger = setOf("Avslag", "D-nummer"),
+                )
+            repo.lagre(oppgave1)
+            repo.lagre(oppgave2)
+
+            val distinkteEmneknagger = repo.hentDistinkteEmneknagger()
+            distinkteEmneknagger shouldBe setOf("Avslag", "EØS-inntekt", "D-nummer")
+        }
+    }
 }

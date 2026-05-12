@@ -240,7 +240,7 @@ fun Set<String>.tilOppgaveEmneknaggerDTOListe(): List<EmneknaggDTO> =
         )
     }
 
-private fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
+internal fun EmneknaggKategori.tilDTO(): EmneknaggKategoriDTO =
     when (this) {
         EmneknaggKategori.RETTIGHET -> EmneknaggKategoriDTO.RETTIGHET
         EmneknaggKategori.GJENOPPTAK -> EmneknaggKategoriDTO.GJENOPPTAK

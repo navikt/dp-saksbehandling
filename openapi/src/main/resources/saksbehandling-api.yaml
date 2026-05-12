@@ -1344,6 +1344,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /emneknagger:
+    get:
+      operationId: hentAlleEmneknagger
+      summary: Hent alle tilgjengelige emneknagger
+      description: |
+        Returnerer alle kjente emneknagger med visningsnavn og kategori.
+        Inkluderer både kodedefinerte emneknagger og emneknagger fra databasen.
+        Kan brukes til å bygge filter-UI.
+      tags:
+        - Emneknagg
+      responses:
+        '200':
+          description: Liste over alle tilgjengelige emneknagger
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Emneknagg'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
 components:
   schemas:
     KorrigerteMeldekort:

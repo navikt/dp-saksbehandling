@@ -669,6 +669,8 @@ class OppgaveMediator(
 
     fun søk(søkefilter: Søkefilter): OppgaveSøkResultat = oppgaveRepository.søk(søkefilter)
 
+    fun hentDistinkteEmneknagger(): Set<String> = oppgaveRepository.hentDistinkteEmneknagger()
+
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,

@@ -96,5 +96,6 @@ internal fun Application.installerApis(
             applicationCallParser = applicationCallParser,
         )
         oppfølgingApi(oppfølgingMediator, applicationCallParser, auditlogg)
+        emneknaggApi(oppgaveMediator)
     }
 }

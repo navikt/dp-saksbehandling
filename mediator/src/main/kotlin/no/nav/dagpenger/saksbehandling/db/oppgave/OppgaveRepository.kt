@@ -49,4 +49,6 @@ interface OppgaveRepository {
         ident: String,
         søknadId: UUID,
     ): Oppgave.Tilstand.Type?
+
+    fun hentDistinkteEmneknagger(): Set<String>
 }
