@@ -104,23 +104,6 @@ internal class ApplicationBuilder(
         RapidApplication
             .create(
                 env = configuration,
-                builder = {
-                    withKtorModule {
-                        install(KafkaStreamsPlugin) {
-                            kafkaStreams =
-                                kafkaStreams(Configuration.kafkaStreamProperties) {
-                                    skjermetPersonStatus(
-                                        Configuration.skjermingPersonStatusTopic,
-                                        SkjermingConsumer(personRepository)::oppdaterSkjermetStatus,
-                                    )
-                                    adressebeskyttetStream(
-                                        Configuration.leesahTopic,
-                                        AdressebeskyttelseConsumer(personRepository, pdlKlient)::oppdaterAdressebeskyttelseGradering,
-                                    )
-                                }
-                        }
-                    }
-                },
             ) { server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, rapid: KafkaRapid ->
                 val oppgaveRepository = PostgresOppgaveRepository(dataSource)
                 val sakRepository = PostgresSakRepository(dataSource = dataSource)
@@ -253,6 +236,20 @@ internal class ApplicationBuilder(
                     oppfølgingMediator = oppfølgingMediator,
                     auditlogg = ApiAuditlogg(AktivitetsloggMediator(), rapid),
                 )
+
+                server.application.install(KafkaStreamsPlugin) {
+                    kafkaStreams =
+                        kafkaStreams(Configuration.kafkaStreamProperties) {
+                            skjermetPersonStatus(
+                                Configuration.skjermingPersonStatusTopic,
+                                SkjermingConsumer(personRepository)::oppdaterSkjermetStatus,
+                            )
+                            adressebeskyttetStream(
+                                Configuration.leesahTopic,
+                                AdressebeskyttelseConsumer(personRepository, pdlKlient)::oppdaterAdressebeskyttelseGradering,
+                            )
+                        }
+                }
 
                 BehandlingOpprettetMottak(rapid, sakMediator)
                 SøknadBehandlingOpprettetMottak(rapid, innsendingMediator)
