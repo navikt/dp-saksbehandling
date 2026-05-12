@@ -91,14 +91,14 @@ data class Oppgave private constructor(
     )
 
     companion object {
-        internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
-        internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
-        internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
+        internal val kontrollEmneknagger: Set<String> =
+            Emneknagg.Kontroll.entries
+                .map { it.visningsnavn }
+                .toSet()
         internal val påVentEmneknagger: Set<String> =
             Emneknagg.PåVent.entries
-                .map { påVentÅrsaker ->
-                    påVentÅrsaker.visningsnavn
-                }.toSet()
+                .map { it.visningsnavn }
+                .toSet()
 
         fun rehydrer(
             oppgaveId: UUID,
@@ -512,8 +512,8 @@ data class Oppgave private constructor(
             } else {
                 oppgave.behandlerIdent = oppgave.sisteBeslutter()
                 oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
-                oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
-                oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
+                oppgave._emneknagger.add(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
+                oppgave._emneknagger.remove(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
             }
         }
 
@@ -973,8 +973,8 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
-            oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
-            oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
+            oppgave._emneknagger.add(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+            oppgave._emneknagger.remove(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
                 oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }

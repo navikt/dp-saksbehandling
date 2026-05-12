@@ -9,7 +9,6 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
-import no.nav.dagpenger.saksbehandling.Oppgave.Companion.RETUR_FRA_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
@@ -478,7 +477,7 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        oppgave.emneknagger.shouldContain(RETUR_FRA_KONTROLL)
+        oppgave.emneknagger.shouldContain(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
     }
 
     @Test
@@ -684,8 +683,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
 
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         oppgave.tildel(
@@ -697,8 +696,8 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
 
         oppgave.returnerTilSaksbehandling(
             ReturnerTilSaksbehandlingHendelse(
@@ -709,8 +708,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn
+        oppgave.emneknagger shouldContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
 
         oppgave.sendTilKontroll(
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
@@ -718,8 +717,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL
+        oppgave.emneknagger shouldContain Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
     }
 
     @ParameterizedTest

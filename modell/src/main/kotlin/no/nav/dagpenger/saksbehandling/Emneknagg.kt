@@ -2,19 +2,24 @@ package no.nav.dagpenger.saksbehandling
 
 import java.time.LocalDate
 
+interface KategorisertEmneknagg {
+    val visningsnavn: String
+    val kategori: EmneknaggKategori
+}
+
 object Emneknagg {
     data class Ettersending(
         private val mottatt: LocalDate = LocalDate.now(),
-    ) {
+    ) : KategorisertEmneknagg {
         val fastTekst = "Ettersending"
-        val visningsnavn = "$fastTekst($mottatt)"
-        val kategori = EmneknaggKategori.ETTERSENDING
+        override val visningsnavn = "$fastTekst($mottatt)"
+        override val kategori = EmneknaggKategori.ETTERSENDING
     }
 
     enum class Regelknagg(
-        val visningsnavn: String,
-        val kategori: EmneknaggKategori,
-    ) {
+        override val visningsnavn: String,
+        override val kategori: EmneknaggKategori,
+    ) : KategorisertEmneknagg {
         AVSLAG("Avslag", EmneknaggKategori.SØKNADSRESULTAT),
         INNVILGELSE("Innvilgelse", EmneknaggKategori.SØKNADSRESULTAT),
         GJENOPPTAK("Gjenopptak", EmneknaggKategori.GJENOPPTAK),
@@ -41,8 +46,8 @@ object Emneknagg {
     }
 
     enum class PåVent(
-        val visningsnavn: String,
-    ) {
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
         AVVENT_SVAR("Avvent svar"),
         AVVENT_DOKUMENTASJON("Avvent dokumentasjon"),
         AVVENT_MELDEKORT("Avvent meldekort"),
@@ -53,24 +58,24 @@ object Emneknagg {
         TIDLIGERE_UTSATT("Tidligere utsatt"),
         ;
 
-        val kategori = EmneknaggKategori.PÅ_VENT
+        override val kategori = EmneknaggKategori.PÅ_VENT
     }
 
     enum class AvbrytBehandling(
-        val visningsnavn: String,
-    ) {
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
         AVBRUTT_BEHANDLES_I_ARENA("Behandles i Arena"),
         AVBRUTT_FLERE_SØKNADER("Flere søknader"),
         AVBRUTT_TRUKKET_SØKNAD("Trukket søknad"),
         AVBRUTT_ANNET("Annen avbruddsårsak"),
         ;
 
-        val kategori = EmneknaggKategori.AVBRUTT_GRUNN
+        override val kategori = EmneknaggKategori.AVBRUTT_GRUNN
     }
 
     enum class Oppfølging(
-        val visningsnavn: String,
-    ) {
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
         AVVENTER_NY_INFORMASJON("Avventer ny informasjon"),
         OPPFØLGING_AV_MELDEKORT("Oppfølging av meldekort"),
         OPPFØLGING_AV_VEDTAK("Oppfølging av vedtak"),
@@ -79,33 +84,47 @@ object Emneknagg {
         ANNEN_ÅRSAK("Annen årsak"),
         ;
 
-        val kategori = EmneknaggKategori.OPPFØLGING_ÅRSAK
+        override val kategori = EmneknaggKategori.OPPFØLGING_ÅRSAK
     }
+
+    enum class Kontroll(
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
+        RETUR_FRA_KONTROLL("Retur fra kontroll"),
+        TIDLIGERE_KONTROLLERT("Tidligere kontrollert"),
+        ;
+
+        override val kategori = EmneknaggKategori.UDEFINERT
+    }
+
+    enum class Søknadsavklaring(
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
+        EØS_INNTEKT("EØS-inntekt"),
+        BOSATT_UTLAND("Bosatt utland"),
+        GRENSEARBEIDER("Grensearbeider"),
+        MULIG_SANKSJON("Mulig sanksjon"),
+        BARN_OVER_16("Barn over 16"),
+        UTDANNING("Utdanning"),
+        EØS_PENGESTØTTE("EØS-pengestøtte"),
+        D_NUMMER("D-nummer"),
+        ;
+
+        override val kategori = EmneknaggKategori.UDEFINERT
+    }
+
+    val alleKodedefinerte: List<KategorisertEmneknagg> =
+        Regelknagg.entries + PåVent.entries + AvbrytBehandling.entries +
+            Oppfølging.entries + Kontroll.entries + Søknadsavklaring.entries
 }
 
-fun hentEmneknaggKategori(visningsnavn: String): EmneknaggKategori {
+fun hentEmneknaggKategori(visningsnavn: String): EmneknaggKategori =
     if (visningsnavn.startsWith("Ettersending")) {
-        return EmneknaggKategori.ETTERSENDING
+        EmneknaggKategori.ETTERSENDING
+    } else {
+        Emneknagg.alleKodedefinerte.find { it.visningsnavn == visningsnavn }?.kategori
+            ?: EmneknaggKategori.UDEFINERT
     }
-
-    Emneknagg.Regelknagg.entries.find { it.visningsnavn == visningsnavn }?.let {
-        return it.kategori
-    }
-
-    Emneknagg.PåVent.entries.find { it.visningsnavn == visningsnavn }?.let {
-        return EmneknaggKategori.PÅ_VENT
-    }
-
-    Emneknagg.AvbrytBehandling.entries.find { it.visningsnavn == visningsnavn }?.let {
-        return EmneknaggKategori.AVBRUTT_GRUNN
-    }
-
-    Emneknagg.Oppfølging.entries.find { it.visningsnavn == visningsnavn }?.let {
-        return EmneknaggKategori.OPPFØLGING_ÅRSAK
-    }
-
-    return EmneknaggKategori.UDEFINERT
-}
 
 enum class EmneknaggKategori {
     RETTIGHET,

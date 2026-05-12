@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import java.util.UUID
 
@@ -55,25 +56,25 @@ internal class SøknadsavklaringLøsningMottak(
             val emneknagger = mutableSetOf<String>()
 
             if (løsning["EØSArbeid"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add("EØS-inntekt")
+                emneknagger.add(Emneknagg.Søknadsavklaring.EØS_INNTEKT.visningsnavn)
             }
             if (løsning["BostedslandErNorge"]?.get("verdi")?.asBoolean() == false) {
-                emneknagger.add("Bosatt utland")
+                emneknagger.add(Emneknagg.Søknadsavklaring.BOSATT_UTLAND.visningsnavn)
             }
             if (løsning["PermittertGrensearbeider"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add("Grensearbeider")
+                emneknagger.add(Emneknagg.Søknadsavklaring.GRENSEARBEIDER.visningsnavn)
             }
             if (løsning["Sanksjon"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add("Mulig sanksjon")
+                emneknagger.add(Emneknagg.Søknadsavklaring.MULIG_SANKSJON.visningsnavn)
             }
             if (løsning["BarnOver16"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add("Barn over 16")
+                emneknagger.add(Emneknagg.Søknadsavklaring.BARN_OVER_16.visningsnavn)
             }
             if (løsning["PlanleggerUtdanning"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add("Utdanning")
+                emneknagger.add(Emneknagg.Søknadsavklaring.UTDANNING.visningsnavn)
             }
             if (løsning["EØSPengestøtte"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add("EØS-pengestøtte")
+                emneknagger.add(Emneknagg.Søknadsavklaring.EØS_PENGESTØTTE.visningsnavn)
             }
 
             if (emneknagger.isNotEmpty()) {

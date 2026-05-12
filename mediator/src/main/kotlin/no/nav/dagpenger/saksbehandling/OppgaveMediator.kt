@@ -229,7 +229,7 @@ class OppgaveMediator(
                     if (forslagTilVedtakHendelse.behandletHendelseType == "Søknad") {
                         sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
                         if (forslagTilVedtakHendelse.ident.first().digitToInt() in 4..7) {
-                            oppgave.leggTilEmneknagger(setOf("D-nummer"))
+                            oppgave.leggTilEmneknagger(setOf(Emneknagg.Søknadsavklaring.D_NUMMER.visningsnavn))
                             oppgaveRepository.lagre(oppgave)
                         }
                     }
