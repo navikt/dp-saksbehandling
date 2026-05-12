@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
-import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -218,64 +217,24 @@ internal class ApplicationBuilder(
             oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
             sakMediator = sakMediator,
         )
-    private val innsendingAlarmJob: Timer
-    private val utsendingAlarmJob: Timer
-    private val oversendKlageinstansAlarmJob: Timer
-    private val oppfølgingAlarmJob: Timer
-    private val oppgaveFristUtgåttJob: Timer
-    private val metrikkJob: Timer
+    private lateinit var innsendingAlarmJob: Timer
+    private lateinit var utsendingAlarmJob: Timer
+    private lateinit var oversendKlageinstansAlarmJob: Timer
+    private lateinit var oppfølgingAlarmJob: Timer
+    private lateinit var oppgaveFristUtgåttJob: Timer
+    private lateinit var metrikkJob: Timer
 
-    private val statistikkJob: Timer
-    private val oppgaveTilstandAlertJob: Timer
+    private lateinit var statistikkJob: Timer
+    private lateinit var oppgaveTilstandAlertJob: Timer
     val statistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource)
     val statistikkV2Tjeneste = PostgresProduksjonsstatistikkRepository(dataSource)
-    private lateinit var auditloggDelegate: Auditlogg
-    private val auditlogg: Auditlogg =
-        object : Auditlogg {
-            override fun les(
-                melding: String,
-                ident: String,
-                saksbehandler: String,
-            ) = auditloggDelegate.les(melding, ident, saksbehandler)
-
-            override fun opprett(
-                melding: String,
-                ident: String,
-                saksbehandler: String,
-            ) = auditloggDelegate.opprett(melding, ident, saksbehandler)
-
-            override fun oppdater(
-                melding: String,
-                ident: String,
-                saksbehandler: String,
-            ) = auditloggDelegate.oppdater(melding, ident, saksbehandler)
-
-            override fun slett(
-                melding: String,
-                ident: String,
-                saksbehandler: String,
-            ) = auditloggDelegate.slett(melding, ident, saksbehandler)
-        }
     private val rapidsConnection: RapidsConnection =
         RapidApplication
             .create(
                 env = configuration,
                 builder = {
                     withKtorModule {
-                        installerApis(
-                            oppgaveMediator = oppgaveMediator,
-                            oppgaveDTOMapper = oppgaveDTOMapper,
-                            produksjonsstatistikkRepository = statistikkV2Tjeneste,
-                            klageMediator = klageMediator,
-                            klageDTOMapper = KlageDTOMapper(oppslag),
-                            personMediator = personMediator,
-                            sakMediator = sakMediator,
-                            innsendingMediator = innsendingMediator,
-                            meldingOmVedtakMediator = meldingOmVedtakMediator,
-                            oppfølgingMediator = oppfølgingMediator,
-                            auditlogg = auditlogg,
-                        )
-                        this.install(KafkaStreamsPlugin) {
+                        install(KafkaStreamsPlugin) {
                             kafkaStreams =
                                 kafkaStreams(Configuration.kafkaStreamProperties) {
                                     skjermetPersonStatus(
@@ -290,103 +249,114 @@ internal class ApplicationBuilder(
                         }
                     }
                 },
-            ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
-            }.also { rapidsConnection ->
+            ) { server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, rapid: KafkaRapid ->
+                server.application.installerApis(
+                    oppgaveMediator = oppgaveMediator,
+                    oppgaveDTOMapper = oppgaveDTOMapper,
+                    produksjonsstatistikkRepository = statistikkV2Tjeneste,
+                    klageMediator = klageMediator,
+                    klageDTOMapper = KlageDTOMapper(oppslag),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    innsendingMediator = innsendingMediator,
+                    meldingOmVedtakMediator = meldingOmVedtakMediator,
+                    oppfølgingMediator = oppfølgingMediator,
+                    auditlogg = ApiAuditlogg(AktivitetsloggMediator(), rapid),
+                )
 
-                sakMediator.setRapidsConnection(rapidsConnection)
-                utsendingMediator.setRapidsConnection(rapidsConnection)
-                oppgaveMediator.setRapidsConnection(rapidsConnection)
-                klageMediator.setRapidsConnection(rapidsConnection)
-                auditloggDelegate = ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection)
-                BehandlingOpprettetMottak(rapidsConnection, sakMediator)
-                SøknadBehandlingOpprettetMottak(rapidsConnection, innsendingMediator)
-                BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
-                BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
-                ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
-                SøknadsavklaringLøsningMottak(rapidsConnection, oppgaveMediator)
-                UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
+                sakMediator.setRapidsConnection(rapid)
+                utsendingMediator.setRapidsConnection(rapid)
+                oppgaveMediator.setRapidsConnection(rapid)
+                klageMediator.setRapidsConnection(rapid)
+                BehandlingOpprettetMottak(rapid, sakMediator)
+                SøknadBehandlingOpprettetMottak(rapid, innsendingMediator)
+                BehandlingAvbruttMottak(rapid, oppgaveMediator)
+                BehandlingsresultatMottak(rapid, oppgaveMediator)
+                ForslagTilBehandlingsresultatMottak(rapid, oppgaveMediator)
+                SøknadsavklaringLøsningMottak(rapid, oppgaveMediator)
+                UtsendingBehovLøsningMottak(rapid, utsendingMediator)
                 InnsendingBehovløser(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     innsendingMediator = innsendingMediator,
                 )
                 BehandlingsresultatMottakForUtsending(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     utsendingMediator = utsendingMediator,
                     sakRepository = sakRepository,
                 )
 // TODO: Kommenter inn når vi skal skru av fatting av vedtak mot Arena.
 //                BehandlingsresultatMottakForAutomatiskVedtakUtsending(
-//                        rapidsConnection = rapidsConnection,
+//                        rapidsConnection = rapid,
 //                        utsendingMediator = utsendingMediator,
 //                        sakRepository = sakRepository,
 //                    )
                 BehandlingsresultatMottakForSak(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     sakRepository = sakRepository,
                     sakMediator = sakMediator,
                 )
                 ArenaSinkVedtakOpprettetMottak(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     personRepository = personRepository,
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
                 )
-                MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
+                MeldingOmVedtakProdusentBehovløser(rapid, utsendingMediator)
                 OversendtKlageinstansMottak(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     klageMediator = klageMediator,
                 )
                 KlageinstansVedtakMottak(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     klageMediator = klageMediator,
                 )
                 UtsendingDistribuertMottakForKlage(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     klageMediator = klageMediator,
                 )
                 KlageBehandlingUtførtMottakForUtsending(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     utsendingMediator = utsendingMediator,
                 )
                 KlageBehandlingUtførtMottakForOppgave(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     oppgaveMediator = oppgaveMediator,
                 )
                 OpprettOppgaveMottak(
-                    rapidsConnection = rapidsConnection,
+                    rapidsConnection = rapid,
                     oppfølgingMediator = oppfølgingMediator,
                 )
                 utsendingAlarmJob =
                     UtsendingAlarmJob(
-                        rapidsConnection = rapidsConnection,
+                        rapidsConnection = rapid,
                         utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
                     ).startJob(
                         period = 60.Minutt,
                     )
                 innsendingAlarmJob =
                     InnsendingAlarmJob(
-                        rapidsConnection = rapidsConnection,
+                        rapidsConnection = rapid,
                         innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
                     ).startJob(
                         period = 1.Dag,
                     )
                 oppfølgingAlarmJob =
                     OppfølgingAlarmJob(
-                        rapidsConnection = rapidsConnection,
+                        rapidsConnection = rapid,
                         oppfølgingAlarmRepository = OppfølgingAlarmRepository(dataSource),
                     ).startJob(
                         period = 1.Dag,
                     )
                 oppgaveTilstandAlertJob =
                     OppgaveTilstandAlertJob(
-                        rapidsConnection = rapidsConnection,
+                        rapidsConnection = rapid,
                         oppgaveMediator = oppgaveMediator,
                     ).startJob(
                         period = 1.Dag,
                     )
                 oversendKlageinstansAlarmJob =
                     OversendKlageinstansAlarmJob(
-                        rapidsConnection = rapidsConnection,
+                        rapidsConnection = rapid,
                         repository = OversendKlageinstansAlarmRepository(dataSource),
                     ).startJob(
                         period = 60.Minutt,
@@ -398,7 +368,7 @@ internal class ApplicationBuilder(
                     )
                 statistikkJob =
                     StatistikkJob(
-                        rapidsConnection = rapidsConnection,
+                        rapidsConnection = rapid,
                         saksbehandlingsstatistikkRepository = statistikkTjeneste,
                     ).startJob(
                         startAt = now,
