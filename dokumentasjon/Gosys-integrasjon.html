@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gosys-integrasjon i DP-sak — Skisse og avklaringspunkter</title>
+    <style>
+        :root {
+            --nav-red: #c30000;
+            --nav-blue: #0067c5;
+            --nav-dark: #262626;
+            --nav-gray: #59514b;
+            --nav-light: #f1f1f1;
+            --nav-green: #06893a;
+            --nav-orange: #ff9100;
+            --nav-bg: #ffffff;
+            --border: #c6c2bf;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--nav-dark);
+            line-height: 1.6;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            background: var(--nav-bg);
+        }
+        h1 { font-size: 2rem; margin-bottom: 0.25rem; color: var(--nav-dark); }
+        h2 { font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--nav-blue); }
+        h3 { font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        h4 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+        p { margin-bottom: 0.75rem; }
+        .subtitle { color: var(--nav-gray); font-size: 0.95rem; margin-bottom: 2rem; }
+        .subtitle span { display: inline-block; margin-right: 1.5rem; }
+
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.92rem; }
+        th, td { padding: 0.6rem 0.75rem; text-align: left; border: 1px solid var(--border); }
+        th { background: var(--nav-light); font-weight: 600; }
+        tr:nth-child(even) { background: #fafafa; }
+
+        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+        .badge-red { background: #fde8e8; color: var(--nav-red); }
+        .badge-yellow { background: #fff3d6; color: #6a3b00; }
+        .badge-green { background: #e0f5e9; color: #035827; }
+
+        .box { border-radius: 8px; padding: 1.25rem; margin: 1rem 0; }
+        .box-blue { background: #e6f0ff; border-left: 4px solid var(--nav-blue); }
+        .box-red { background: #fde8e8; border-left: 4px solid var(--nav-red); }
+        .box-green { background: #e0f5e9; border-left: 4px solid var(--nav-green); }
+        .box-yellow { background: #fff3d6; border-left: 4px solid var(--nav-orange); }
+        .box-gray { background: var(--nav-light); border-left: 4px solid var(--nav-gray); }
+
+        .arch-diagram {
+            background: #1e1e1e; color: #d4d4d4; padding: 1.25rem;
+            border-radius: 8px; font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.82rem; line-height: 1.5; overflow-x: auto; white-space: pre;
+            margin: 1rem 0;
+        }
+        .arch-diagram .highlight { color: #569cd6; }
+        .arch-diagram .string { color: #ce9178; }
+        .arch-diagram .comment { color: #6a9955; }
+
+        .flow-steps { counter-reset: step; list-style: none; padding: 0; }
+        .flow-steps li {
+            position: relative; padding: 0.75rem 0 0.75rem 3.5rem;
+            border-left: 2px solid var(--nav-blue); margin-left: 1rem;
+        }
+        .flow-steps li:last-child { border-left-color: transparent; }
+        .flow-steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute; left: -0.85rem; top: 0.65rem;
+            width: 1.7rem; height: 1.7rem;
+            background: var(--nav-blue); color: white;
+            border-radius: 50%; text-align: center; line-height: 1.7rem;
+            font-weight: 600; font-size: 0.85rem;
+        }
+        .flow-steps .system { color: var(--nav-gray); font-size: 0.85rem; }
+
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+        .comparison-card {
+            border: 2px solid var(--border); border-radius: 8px;
+            padding: 1.25rem; position: relative;
+        }
+        .comparison-card.recommended { border-color: var(--nav-blue); }
+        .comparison-card h3 { margin-top: 0; }
+        .comparison-card .tag {
+            position: absolute; top: -0.7rem; right: 1rem;
+            background: var(--nav-blue); color: white; padding: 0.1rem 0.6rem;
+            border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+        }
+
+        .value-chart { margin: 1.5rem 0; }
+        .value-bar {
+            display: flex; align-items: center; margin: 0.5rem 0; gap: 0.75rem;
+        }
+        .value-bar .label { width: 3rem; font-weight: 600; text-align: right; }
+        .value-bar .bar {
+            height: 2rem; border-radius: 4px; display: flex; align-items: center;
+            padding: 0 0.75rem; color: white; font-size: 0.85rem; font-weight: 600;
+        }
+
+        .question-list { list-style: none; padding: 0; }
+        .question-list li { padding: 0.5rem 0; padding-left: 1.5rem; position: relative; }
+        .question-list li::before { content: "?"; position: absolute; left: 0; color: var(--nav-blue); font-weight: 700; font-size: 1.1rem; }
+
+        .stakeholder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        .stakeholder-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+        .stakeholder-card h4 { margin-top: 0; display: flex; align-items: center; gap: 0.5rem; }
+
+        .scope-list { list-style: none; padding: 0; }
+        .scope-list li { padding: 0.35rem 0; padding-left: 1.75rem; position: relative; }
+        .scope-list li.in::before { content: "✅"; position: absolute; left: 0; }
+        .scope-list li.out::before { content: "❌"; position: absolute; left: 0; }
+
+        .roadmap { position: relative; padding-left: 2rem; }
+        .roadmap-item {
+            position: relative; padding: 0.75rem 0 1.5rem 1.5rem;
+            border-left: 3px solid var(--nav-blue);
+        }
+        .roadmap-item:last-child { border-left-color: transparent; }
+        .roadmap-item::before {
+            content: ""; position: absolute; left: -0.55rem; top: 1rem;
+            width: 1rem; height: 1rem; background: var(--nav-blue);
+            border-radius: 50%;
+        }
+        .roadmap-item.future::before { background: var(--border); }
+        .roadmap-item.future { border-left-color: var(--border); }
+
+        @media (max-width: 700px) {
+            .comparison { grid-template-columns: 1fr; }
+            .stakeholder-grid { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            body { max-width: 100%; padding: 1rem; font-size: 11pt; }
+            .box, .comparison-card { break-inside: avoid; }
+            h2 { break-before: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Gosys-integrasjon i DP-sak</h1>
+<p class="subtitle">
+    <span>📋 Status: Utredningsfase</span>
+    <span>👥 Team: STSB (Saksbehandling dagpenger)</span>
+    <span>📅 Mai 2026</span>
+</p>
+
+<!-- PROBLEMET -->
+<h2>🎯 Problemet vi løser</h2>
+<div class="box box-red">
+    <p><strong>I dag:</strong> Dagpenger-saksbehandlere må manuelt sjekke Gosys for å se om det finnes oppgaver knyttet til sine brukere — henvendelser fra NKS, purringer, kontakt bruker-oppgaver, oppgaver fra lokalkontor, osv.</p>
+</div>
+<div class="box box-green">
+    <p><strong>Mål:</strong> Gosys-oppgaver for dagpengerbrukere skal dukke opp automatisk i DP-sak, slik at saksbehandler kan håndtere dem uten å bytte system.</p>
+</div>
+
+<!-- ARKITEKTUR -->
+<h2>🏗️ Foreslått løsning</h2>
+<div class="arch-diagram"><span class="comment">┌──────────────────────────────────────────────────────────────────────┐</span>
+<span class="comment">│</span>                       <span class="highlight">GOSYS / Oppgave</span>                              <span class="comment">│</span>
+<span class="comment">│</span>  <span class="string">(eies av Team Oppgavehåndtering)</span>                                    <span class="comment">│</span>
+<span class="comment">│</span>                                                                      <span class="comment">│</span>
+<span class="comment">│</span>  Kafka-topic: tynne hendelser        REST API v2: full oppgavedata   <span class="comment">│</span>
+<span class="comment">└──────────┬───────────────────────────────────────────┬───────────────┘</span>
+           │ <span class="string">Kafka</span>                                      │ <span class="string">REST</span>
+           ▼                                           │
+<span class="comment">┌─────────────────────────┐</span>                            │
+<span class="comment">│</span>  <span class="highlight">dp-gosys-oppgave</span>       <span class="comment">│</span>                            │
+<span class="comment">│</span>  <span class="string">(NY stateless app)</span>     <span class="comment">│</span>◄──── PATCH ──────────────►│
+<span class="comment">│</span>  • Filtrerer tema=DAG   <span class="comment">│</span>  (marker + ferdigstill)    │
+<span class="comment">└──────────┬──────────────┘</span>                            │
+           │ <span class="string">Rapids-melding</span>                              │
+           ▼                                           │
+<span class="comment">┌──────────────────────────────────────────────────────┤</span>
+<span class="comment">│</span>  <span class="highlight">dp-saksbehandling</span>                                  <span class="comment">│</span>
+<span class="comment">│</span>  <span class="string">(eksisterende app)</span>                                  <span class="comment">│</span>
+<span class="comment">│</span>                                                      <span class="comment">│</span>
+<span class="comment">│</span>  • Er personen i dp-sak? JA → opprett oppfølging     <span class="comment">│</span>
+<span class="comment">│</span>  • Saksbehandler åpner → hent fersk data ─────────────┤ <span class="string">REST on-demand</span>
+<span class="comment">│</span>  • Ferdigstill → lukk i Gosys automatisk              <span class="comment">│</span>
+<span class="comment">└──────────────────────────────────────────────────────┘</span></div>
+
+<h3>Flyten steg for steg</h3>
+<ol class="flow-steps">
+    <li>NKS / lokalkontor / annet oppretter oppgave i Gosys med tema DAG <span class="system">— Gosys</span></li>
+    <li>Gosys publiserer tynn Kafka-hendelse <span class="system">— Gosys</span></li>
+    <li>dp-gosys-oppgave filtrerer tema=DAG, videresender til Rapids <span class="system">— dp-gosys-oppgave</span></li>
+    <li>dp-saksbehandling sjekker: har vi denne personen? <span class="system">— dp-saksbehandling</span></li>
+    <li>Hvis ja: oppretter oppfølgings-oppgave <span class="system">— dp-saksbehandling</span></li>
+    <li>Markerer Gosys-oppgaven som «behandles i DP-SAK» <span class="system">— dp-gosys-oppgave</span></li>
+    <li>Saksbehandler ser oppgaven i dp-sak sin oppgaveliste <span class="system">— Frontend</span></li>
+    <li>Saksbehandler åpner → fersk data hentes fra Gosys REST <span class="system">— dp-saksbehandling</span></li>
+    <li>Saksbehandler vurderer og ferdigstiller <span class="system">— Frontend</span></li>
+    <li>dp-gosys-oppgave ferdigstiller oppgaven i Gosys <span class="system">— dp-gosys-oppgave</span></li>
+</ol>
+
+<!-- ANALYSER -->
+<h2>📊 Hva vi vet — analyser gjennomført</h2>
+<table>
+    <tr><th>Analyse</th><th>Resultat</th></tr>
+    <tr><td>Gosys Kafka-format</td><td><strong>Tynn hendelse</strong> — ID, type, frist, person, men IKKE beskrivelse/dokumenter</td></tr>
+    <tr><td>Gosys REST API v2</td><td><strong>Rik data</strong> — alt inkl. beskrivelse, kommentarer, dokumentreferanser</td></tr>
+    <tr><td>FP-sak (foreldrepenger)</td><td>Henter alltid fersk data via REST on-demand. Viser oppgaver inline med dokumenter</td></tr>
+    <tr><td>K9-sak (pleiepenger)</td><td>Bruker også REST on-demand. Blokkerer vedtak hvis åpne Gosys-oppgaver</td></tr>
+    <tr><td>Kelvin (AAP)</td><td>Eget oppgavesystem, integrerer ikke mot Gosys for lesing</td></tr>
+    <tr><td>dp-mottak</td><td>Kun <em>utgående</em> — oppretter journalføringsoppgaver. Ingen overlapp</td></tr>
+    <tr><td>DAG oppgavetyper</td><td>17 typer totalt, 9 høy prioritet for MVP</td></tr>
+    <tr><td><code>behandlesAvApplikasjon</code></td><td>Felt i Gosys som markerer at oppgave håndteres av eksternt fagsystem</td></tr>
+</table>
+
+<h3>9 oppgavetyper i MVP</h3>
+<table>
+    <tr><th>Kode</th><th>Beskrivelse</th><th>Typisk kilde</th></tr>
+    <tr><td><code>BEH_HENV</code></td><td>Behandle henvendelse</td><td>NKS</td></tr>
+    <tr><td><code>VURD_HENV</code></td><td>Vurdere henvendelse</td><td>NKS</td></tr>
+    <tr><td><code>KONT_BRUK</code></td><td>Kontakte bruker</td><td>NKS / saksbehandler</td></tr>
+    <tr><td><code>VUR_KONS_YTE</code></td><td>Vurdere konsekvens for ytelse</td><td>Internt</td></tr>
+    <tr><td><code>VUR_SVAR</code></td><td>Vurdere svar</td><td>Oppfølging</td></tr>
+    <tr><td><code>INNH_DOK</code></td><td>Innhente dokumentasjon</td><td>Saksbehandler</td></tr>
+    <tr><td><code>SVAR_IK_MOT</code></td><td>Svar ikke mottatt</td><td>Automatisk</td></tr>
+    <tr><td><code>RETUR</code></td><td>Returoppgave</td><td>Annen enhet</td></tr>
+    <tr><td><code>ETTERSEND_MOTT</code></td><td>Ettersendelse mottatt</td><td>Automatisk</td></tr>
+</table>
+
+<!-- AVKLARINGSPUNKTER -->
+<h2>⚠️ Avklaringspunkter</h2>
+
+<div class="box box-red">
+    <h3>🔴 Krever saksbehandler/design-input</h3>
+
+    <h4>1. Hva trenger saksbehandler å se?</h4>
+    <table>
+        <tr><th>Data</th><th>Tilgjengelig via</th><th>Prioritet?</th></tr>
+        <tr><td>Oppgavetype (f.eks. «Behandle henvendelse»)</td><td>Kafka + REST</td><td></td></tr>
+        <tr><td>Frist</td><td>Kafka + REST</td><td></td></tr>
+        <tr><td>Beskrivelse (fritekst)</td><td>Kun REST</td><td></td></tr>
+        <tr><td>Kommentarer</td><td>Kun REST</td><td></td></tr>
+        <tr><td>Tilknyttede dokumenter</td><td>Kun REST + Joark</td><td></td></tr>
+        <tr><td>Hvem som opprettet</td><td>Kun REST</td><td></td></tr>
+        <tr><td>Deeplink til Gosys</td><td>Kan konstrueres</td><td></td></tr>
+    </table>
+    <ul class="question-list">
+        <li>Er beskrivelse + type + frist nok for de fleste oppgaver?</li>
+        <li>Trenger vi dokumentvisning, eller holder en lenke til Gosys?</li>
+        <li>Skal vi vise kommentarhistorikk?</li>
+    </ul>
+
+    <h4>2. Hvordan ferdigstiller saksbehandler?</h4>
+    <table>
+        <tr><th>Variant</th><th>Beskrivelse</th></tr>
+        <tr><td>AVSLUTT</td><td>Bare lukk oppgaven</td></tr>
+        <tr><td>OPPRETT_KLAGE</td><td>Oppgaven resulterer i en klage</td></tr>
+        <tr><td>OPPRETT_MANUELL_BEHANDLING</td><td>Krever ny manuell behandling</td></tr>
+        <tr><td>OPPRETT_REVURDERING</td><td>Krever revurdering</td></tr>
+        <tr><td>OPPRETT_OPPFOLGING</td><td>Resulterer i ny oppfølging</td></tr>
+    </table>
+    <ul class="question-list">
+        <li>Er disse variantene dekkende for Gosys-oppgaver?</li>
+        <li>Trenger vi nye varianter?</li>
+        <li>Skal saksbehandler kunne skrive en vurdering/kommentar?</li>
+    </ul>
+
+    <h4>3. UX-design</h4>
+    <ul class="question-list">
+        <li>Samme oppgaveliste eller egen seksjon for Gosys-oppgaver?</li>
+        <li>Trenger vi visuell markering (emneknagg/ikon)?</li>
+        <li>Hvordan viser vi at oppgaven kommer fra Gosys?</li>
+    </ul>
+</div>
+
+<div class="box box-yellow">
+    <h3>🟡 Krever avklaring med andre team</h3>
+
+    <h4>4. Avtale med Team Oppgavehåndtering</h4>
+    <ul>
+        <li><strong>App-kode:</strong> Vi trenger en registrert kode (f.eks. «DP-SAK») for <code>behandlesAvApplikasjon</code></li>
+        <li><strong>Kafka topic-navn:</strong> Tilgang til Gosys sin topic i dev og prod</li>
+        <li><strong>Konsekvenser:</strong> Hva skjer i Gosys-UI når vi markerer en oppgave?</li>
+    </ul>
+
+    <h4>5. Oppgave lukket i Gosys direkte?</h4>
+    <p>Scenario: Vi har laget oppfølging i dp-sak, men noen ferdigstiller oppgaven direkte i Gosys.</p>
+    <p><strong>Foreslått:</strong> Saksbehandler ser oppdatert status neste gang de åpner oppgaven (fersk REST-data).</p>
+    <ul class="question-list">
+        <li>Akseptabelt for MVP, eller må vi auto-lukke?</li>
+    </ul>
+</div>
+
+<div class="box box-green">
+    <h3>🟢 Allerede besluttet</h3>
+    <table>
+        <tr><th>Beslutning</th><th>Begrunnelse</th></tr>
+        <tr><td>Separat bridge-app (dp-gosys-oppgave)</td><td>Isolerer Gosys-avhengigheten</td></tr>
+        <tr><td>dp-saksbehandling eier eierskapssjekken</td><td>Har allerede person-data i DB</td></tr>
+        <tr><td>Kun nye oppgaver (ingen backfill)</td><td>Enklere MVP, gradvis onboarding</td></tr>
+        <tr><td>Always-fresh REST on-demand</td><td>Unngår stale data</td></tr>
+        <tr><td>Gjenbruk oppfølgings-mønsteret</td><td>Infrastrukturen finnes allerede</td></tr>
+        <tr><td>Gosys v2 API</td><td>Anbefalt av Team Oppgavehåndtering</td></tr>
+    </table>
+</div>
+
+<!-- SCOPE -->
+<h2>🗺️ Scope og avgrensninger</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div>
+        <h3>✅ I scope (MVP)</h3>
+        <ul class="scope-list">
+            <li class="in">Lytte på Gosys Kafka (tema=DAG, 9 typer)</li>
+            <li class="in">Opprette oppfølging for kjente personer</li>
+            <li class="in">Markere oppgave som «behandles i DP-SAK»</li>
+            <li class="in">Vise oppgavedata (fersk fra REST)</li>
+            <li class="in">Ferdigstille → automatisk lukke i Gosys</li>
+        </ul>
+    </div>
+    <div>
+        <h3>❌ Utenfor scope (MVP)</h3>
+        <ul class="scope-list">
+            <li class="out">Opprette oppgaver i Gosys fra dp-sak</li>
+            <li class="out">Backfill av eksisterende oppgaver</li>
+            <li class="out">Toveis kommentarsynkronisering</li>
+            <li class="out">OPPGAVE_ENDRET-hendelser</li>
+            <li class="out">Direkte Salesforce-integrasjon</li>
+        </ul>
+    </div>
+</div>
+
+<!-- KOMPLEKSITET -->
+<h2>⚖️ Kompleksitetsanalyse</h2>
+
+<div class="comparison">
+    <div class="comparison-card">
+        <h3>Alternativ A: Metadata-only</h3>
+        <p>Marker <code>gjelder</code> i Gosys — ingen endring i dp-sak.</p>
+        <table>
+            <tr><td>Ny app</td><td>1 liten (~3 filer)</td></tr>
+            <tr><td>Backend-endringer</td><td>Ingen</td></tr>
+            <tr><td>Frontend-endringer</td><td>Ingen</td></tr>
+            <tr><td>Design nødvendig</td><td>Nei</td></tr>
+            <tr><td>Risiko</td><td><span class="badge badge-green">Lav</span></td></tr>
+        </table>
+        <div class="box box-green" style="margin-top:0.75rem">
+            <strong>Gevinst:</strong> Ser kobling i Gosys<br>
+            <strong>Begrensning:</strong> Jobber fortsatt i Gosys
+        </div>
+    </div>
+
+    <div class="comparison-card recommended">
+        <span class="tag">Anbefalt mål</span>
+        <h3>Alternativ B: Full integrasjon</h3>
+        <p>Gosys-oppgaver blir oppfølgingsoppgaver i dp-sak.</p>
+        <table>
+            <tr><td>Ny app</td><td>1 (~6-8 filer)</td></tr>
+            <tr><td>Backend-endringer</td><td>Medium</td></tr>
+            <tr><td>Frontend-endringer</td><td>Medium</td></tr>
+            <tr><td>Design nødvendig</td><td><span class="badge badge-red">Ja — blokkerer</span></td></tr>
+            <tr><td>Risiko</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+        </table>
+        <div class="box box-blue" style="margin-top:0.75rem">
+            <strong>Gevinst:</strong> Jobber i ett system<br>
+            <strong>B+</strong> (fremtid): dokumentvisning, kommentarer
+        </div>
+    </div>
+</div>
+
+<h3>Verdi vs. kompleksitet</h3>
+<div class="value-chart">
+    <div class="value-bar">
+        <span class="label">B+</span>
+        <div class="bar" style="width: 90%; background: linear-gradient(90deg, var(--nav-blue) 70%, var(--border) 70%);">
+            Full + dokumenter (fremtid)
+        </div>
+    </div>
+    <div class="value-bar">
+        <span class="label">B</span>
+        <div class="bar" style="width: 70%; background: var(--nav-blue);">
+            Jobber i ett system
+        </div>
+    </div>
+    <div class="value-bar">
+        <span class="label">A</span>
+        <div class="bar" style="width: 30%; background: var(--nav-green);">
+            Ser kobling
+        </div>
+    </div>
+</div>
+
+<!-- ANBEFALING -->
+<h2>💡 Anbefalt tilnærming: Inkrementelt</h2>
+<div class="roadmap">
+    <div class="roadmap-item">
+        <h4>Steg 1 — Alternativ A <span class="badge badge-green">Kan starte nå</span></h4>
+        <p>Metadata-only. Bygger infrastruktur (Kafka-consumer, Gosys-klient, eierskapssjekk) som B trenger.</p>
+        <p><em>Parallelt: design-avklaring med saksbehandlere</em></p>
+    </div>
+    <div class="roadmap-item">
+        <h4>Steg 2 — Alternativ B <span class="badge badge-yellow">Trenger design</span></h4>
+        <p>Full integrasjon. Gjenbruker alt fra A. Saksbehandler jobber i dp-sak.</p>
+        <p><em>Parallelt: saksbehandler-feedback</em></p>
+    </div>
+    <div class="roadmap-item future">
+        <h4>Steg 3 — B+ utvidelser</h4>
+        <p>Dokumentvisning, kommentarer, deeplinks — basert på erfaring fra B.</p>
+    </div>
+</div>
+
+<div class="box box-blue" style="margin-top: 1.5rem;">
+    <strong>Nøkkelspørsmål til produkteier:</strong>
+    <ol>
+        <li>Er «ser koblingen i Gosys» (A) verdifullt nok som første steg?</li>
+        <li>Eller er det kun «jobber i dp-sak» (B) som gir reell verdi?</li>
+        <li>Kan vi leve med at B tar lengre tid pga. design-avklaring?</li>
+    </ol>
+</div>
+
+<!-- STAKEHOLDERS -->
+<h2>👥 Hvem trenger vi input fra?</h2>
+<div class="stakeholder-grid">
+    <div class="stakeholder-card">
+        <h4><span class="badge badge-red">Blokkerer</span> Saksbehandlere</h4>
+        <p>Hva trenger de å se? Hvordan ferdigstiller de?</p>
+    </div>
+    <div class="stakeholder-card">
+        <h4><span class="badge badge-red">Blokkerer</span> Designere</h4>
+        <p>UX for Gosys-oppgaver i oppgavelisten</p>
+    </div>
+    <div class="stakeholder-card">
+        <h4><span class="badge badge-yellow">Viktig</span> Produkteier</h4>
+        <p>Scope, prioritering, valg av ambisjonsnivå (A vs B)</p>
+    </div>
+    <div class="stakeholder-card">
+        <h4><span class="badge badge-yellow">Viktig</span> Team Oppgavehåndtering</h4>
+        <p>App-kode, topic-navn, konsekvenser av markering</p>
+    </div>
+    <div class="stakeholder-card">
+        <h4><span class="badge badge-green">Kan starte</span> Frontend-utviklere</h4>
+        <p>Teknisk gjennomførbarhet av lazy-load</p>
+    </div>
+    <div class="stakeholder-card">
+        <h4><span class="badge badge-green">Kan starte</span> Backend-utviklere</h4>
+        <p>Review av arkitekturskisse</p>
+    </div>
+</div>
+
+<!-- VEIKART -->
+<h2>🔮 Veikart</h2>
+<table>
+    <tr><th>Fase</th><th>Innhold</th><th>Avhengigheter</th></tr>
+    <tr><td><strong>MVP</strong></td><td>Lytt → opprett oppfølging → vis → ferdigstill</td><td>Saksbehandler-input, Gosys-avtale</td></tr>
+    <tr><td><strong>v2</strong></td><td>Auto-lukk ved Gosys-ferdigstilling, flere oppgavetyper</td><td>Erfaring fra MVP</td></tr>
+    <tr><td><strong>v3</strong></td><td>Dokumentvisning, kommentarer, deeplinks</td><td>Design-beslutning</td></tr>
+    <tr><td><strong>Fremtid</strong></td><td>Opprette oppgaver i Gosys, statusdeling til NKS</td><td>Produkt-prioritering</td></tr>
+</table>
+
+</body>
+</html>
