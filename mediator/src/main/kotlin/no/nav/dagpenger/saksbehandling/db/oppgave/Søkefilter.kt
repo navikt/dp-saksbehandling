@@ -56,7 +56,7 @@ data class Søkefilter(
         companion object {
             fun fra(verdi: String?): Sortering =
                 when (verdi?.trim()?.lowercase()) {
-                    "asc" -> ASC
+                    "desc" -> DESC
                     else -> ASC
                 }
         }

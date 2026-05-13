@@ -147,6 +147,17 @@ class SøkefilterTest {
     }
 
     @Test
+    fun `Skal kunne sette sortering til DESC eksplisitt`() {
+        Parameters.Companion
+            .build {
+                this["sortering"] = "desc"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.sortering shouldBe Søkefilter.Sortering.DESC
+            }
+    }
+
+    @Test
     fun `Skal bruke default verdier for sorteringsfelt og sortering ved ugyldige verdier`() {
         Parameters.Companion
             .build {
