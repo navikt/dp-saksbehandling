@@ -358,6 +358,47 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Hent alle oppgaver med sorteringsfelt og sortering`() {
+        val søkResultat =
+            listOf(
+                TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
+                TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
+            ).let {
+                PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+            }
+
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.søk(
+                        match {
+                            it.sorteringsfelt == Søkefilter.Sorteringsfelt.SAKSBEHANDLER &&
+                                it.sortering == Søkefilter.Sortering.ASC &&
+                                it.tilstander == søkbareTilstander &&
+                                it.periode == Periode.UBEGRENSET_PERIODE
+                        },
+                    )
+                } returns søkResultat
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client
+                .get("/oppgave?sorteringsfelt=saksbehandler&sortering=asc") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val oppgaveOversiktResultatDTO =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
+                        )
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
+                }
+        }
+    }
+
+    @Test
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val søkResultat =
             listOf(

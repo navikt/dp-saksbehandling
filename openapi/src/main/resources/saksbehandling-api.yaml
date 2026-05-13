@@ -362,15 +362,27 @@ paths:
           schema:
             type: integer
         - in: query
-          name: sortering
-          description: Sorteringsrekkefølge for oppgaver basert på opprettet-tidspunkt
+          name: sorteringsfelt
+          description: Feltet oppgaver sorteres på
           required: false
           schema:
             type: string
             enum:
-              - ASC
-              - DESC
-            default: ASC
+              - opprettet
+              - utlostAv
+              - status
+              - saksbehandler
+            default: opprettet
+        - in: query
+          name: sortering
+          description: Sorteringsrekkefølge for oppgaver
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver

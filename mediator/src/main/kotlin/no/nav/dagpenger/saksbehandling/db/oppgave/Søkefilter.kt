@@ -27,11 +27,39 @@ data class Søkefilter(
     val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
+    val sorteringsfelt: Sorteringsfelt = Sorteringsfelt.OPPRETTET,
     val sortering: Sortering = Sortering.ASC,
 ) {
+    enum class Sorteringsfelt {
+        OPPRETTET,
+        UTLOST_AV,
+        STATUS,
+        SAKSBEHANDLER,
+        ;
+
+        companion object {
+            fun fra(verdi: String?): Sorteringsfelt =
+                when (verdi?.trim()?.lowercase()) {
+                    "utlostav" -> UTLOST_AV
+                    "status" -> STATUS
+                    "saksbehandler" -> SAKSBEHANDLER
+                    else -> OPPRETTET
+                }
+        }
+    }
+
     enum class Sortering {
         ASC,
         DESC,
+        ;
+
+        companion object {
+            fun fra(verdi: String?): Sortering =
+                when (verdi?.trim()?.lowercase()) {
+                    "asc" -> ASC
+                    else -> ASC
+                }
+        }
     }
 
     data class Paginering(
@@ -59,6 +87,7 @@ data class Søkefilter(
             val mineOppgaver = builder.mineOppgaver() ?: false
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
+            val sorteringsfelt = builder.sorteringsfelt()
             val sortering = builder.sortering()
 
             return Søkefilter(
@@ -72,6 +101,7 @@ data class Søkefilter(
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
+                sorteringsfelt = sorteringsfelt,
                 sortering = sortering,
             )
         }
@@ -203,7 +233,9 @@ class FilterBuilder {
 
     fun utløstAvTyper(): Set<HendelseBehandler>? = stringValues.getAll("utlostAv")?.map { HendelseBehandler.valueOf(it) }?.toSet()
 
-    fun sortering(): Søkefilter.Sortering = stringValues["sortering"]?.let { Søkefilter.Sortering.valueOf(it) } ?: Søkefilter.Sortering.ASC
+    fun sorteringsfelt(): Søkefilter.Sorteringsfelt = Søkefilter.Sorteringsfelt.fra(stringValues["sorteringsfelt"])
+
+    fun sortering(): Søkefilter.Sortering = Søkefilter.Sortering.fra(stringValues["sortering"])
 }
 
 private fun Set<String>.grupperEmneknaggPerKategori(): Map<String, Set<String>> =

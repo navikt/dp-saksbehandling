@@ -18,6 +18,8 @@ class SøkefilterTest {
                 this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
                 this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
                 this.appendAll("rettighet", listOf("Permittert", "Permittert fisk"))
+                this["sorteringsfelt"] = "status"
+                this["sortering"] = "asc"
                 this["fom"] = "2021-01-01"
                 this["tom"] = "2023-01-01"
                 this["mineOppgaver"] = "true"
@@ -50,6 +52,8 @@ class SøkefilterTest {
                     )
                 søkefilter.saksbehandlerIdent shouldBe "testIdent"
                 søkefilter.paginering shouldBe Søkefilter.Paginering(10, 0)
+                søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.STATUS
+                søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
                 søkefilter.emneknaggGruppertPerKategori.shouldBe(
                     mapOf(
                         EmneknaggKategori.RETTIGHET to setOf("Permittert", "Permittert fisk"),
@@ -69,6 +73,7 @@ class SøkefilterTest {
         søkefilter.behandlingId shouldBe null
         søkefilter.paginering shouldBe Søkefilter.Paginering(20, 0)
         søkefilter.emneknaggGruppertPerKategori shouldBe emptyMap()
+        søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.OPPRETTET
         søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
     }
 
@@ -120,13 +125,13 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Skal kunne sette sortering til DESC`() {
+    fun `Skal kunne sette sorteringsfelt til STATUS`() {
         Parameters.Companion
             .build {
-                this["sortering"] = "DESC"
+                this["sorteringsfelt"] = "status"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.sortering shouldBe Søkefilter.Sortering.DESC
+                søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.STATUS
             }
     }
 
@@ -134,9 +139,22 @@ class SøkefilterTest {
     fun `Skal kunne sette sortering til ASC eksplisitt`() {
         Parameters.Companion
             .build {
-                this["sortering"] = "ASC"
+                this["sortering"] = "asc"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
+            }
+    }
+
+    @Test
+    fun `Skal bruke default verdier for sorteringsfelt og sortering ved ugyldige verdier`() {
+        Parameters.Companion
+            .build {
+                this["sorteringsfelt"] = "ukjent"
+                this["sortering"] = "ukjent"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.OPPRETTET
                 søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
             }
     }
