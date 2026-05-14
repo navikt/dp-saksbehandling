@@ -380,9 +380,9 @@ paths:
           schema:
             type: string
             enum:
-              - asc
-              - desc
-            default: asc
+              - ASC
+              - DESC
+            default: ASC
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver
