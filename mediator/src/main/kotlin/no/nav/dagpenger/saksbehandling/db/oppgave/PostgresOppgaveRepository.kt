@@ -490,8 +490,7 @@ class PostgresOppgaveRepository(
 
                     else -> ""
                 }
-            val sorteringsretning = søkeFilter.sortering.name
-            val orderByOpprettetClause = """ ORDER BY oppg.opprettet $sorteringsretning, oppg.id $sorteringsretning """
+            val orderByClause = søkeFilter.sorteringsfelt.orderByClause(søkeFilter.sortering)
 
             val limitAndOffsetClause =
                 søkeFilter.paginering?.let {
@@ -552,7 +551,7 @@ class PostgresOppgaveRepository(
                 """
                 $oppgaveSelect
                 $fromJoinAndWhereClause
-                $orderByOpprettetClause
+                $orderByClause
                 $limitAndOffsetClause   
                 """.trimIndent()
 
@@ -920,6 +919,21 @@ private fun Row.rehydrerHendelse(): Hendelse =
         hendelseType = this.stringOrNull("hendelse_type"),
         hendelseJson = this.stringOrNull("hendelse_data") ?: "{}",
     )
+
+private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sortering): String =
+    when (this) {
+        Søkefilter.Sorteringsfelt.OPPRETTET ->
+            """ ORDER BY oppg.opprettet ${sortering.name}, oppg.id ${sortering.name} """
+
+        Søkefilter.Sorteringsfelt.UTLOST_AV ->
+            """ ORDER BY beha.utlost_av ${sortering.name}, oppg.id ${sortering.name} """
+
+        Søkefilter.Sorteringsfelt.STATUS ->
+            """ ORDER BY oppg.tilstand ${sortering.name}, oppg.id ${sortering.name} """
+
+        Søkefilter.Sorteringsfelt.SAKSBEHANDLER ->
+            """ ORDER BY oppg.saksbehandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+    }
 
 class DataNotFoundException(
     message: String,

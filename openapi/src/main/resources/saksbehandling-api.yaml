@@ -362,8 +362,20 @@ paths:
           schema:
             type: integer
         - in: query
+          name: sorteringsfelt
+          description: Feltet oppgaver sorteres på
+          required: false
+          schema:
+            type: string
+            enum:
+              - opprettet
+              - utlostAv
+              - status
+              - saksbehandler
+            default: opprettet
+        - in: query
           name: sortering
-          description: Sorteringsrekkefølge for oppgaver basert på opprettet-tidspunkt
+          description: Sorteringsrekkefølge for oppgaver
           required: false
           schema:
             type: string

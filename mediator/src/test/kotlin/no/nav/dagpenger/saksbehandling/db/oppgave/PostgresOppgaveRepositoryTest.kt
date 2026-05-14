@@ -1653,7 +1653,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne sortere oppgaver med ASC, DESC og default`() {
+    fun `Skal kunne sortere oppgaver med default, ASC og DESC`() {
         DBTestHelper.withMigratedDb { ds ->
             val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
             val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
@@ -1741,6 +1741,157 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver[0] shouldBe nestEldsteOppgave
                     it.oppgaver[1] shouldBe eldsteOppgave
                     it.totaltAntallOppgaver shouldBe 4
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne sortere oppgaver på utløst av`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgaveKlage =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "zulu",
+                    type = HendelseBehandler.Intern.Klage,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+            val oppgaveSøknad =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "mikael",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+
+            val repo = PostgresOppgaveRepository(ds)
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sorteringsfelt = Søkefilter.Sorteringsfelt.UTLOST_AV,
+                        sortering = Søkefilter.Sortering.ASC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe oppgaveKlage
+                    it.oppgaver[1] shouldBe oppgaveSøknad
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne sortere oppgaver på status`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgaveAvbrutt =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "zulu",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.Avbrutt,
+                )
+            val oppgaveFerdigBehandlet =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "zulu",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.FerdigBehandlet,
+                )
+            val oppgaveKlarTilBehandling =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "mikael",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+            val oppgavePåVent =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "anders",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.PåVent,
+                )
+            val oppgaveUnderBehandling =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "ole",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.UnderBehandling,
+                )
+
+            val repo = PostgresOppgaveRepository(ds)
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sorteringsfelt = Søkefilter.Sorteringsfelt.STATUS,
+                        sortering = Søkefilter.Sortering.ASC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 5
+                    it.oppgaver[0] shouldBe oppgaveAvbrutt
+                    it.oppgaver[1] shouldBe oppgaveFerdigBehandlet
+                    it.oppgaver[2] shouldBe oppgaveKlarTilBehandling
+                    it.oppgaver[3] shouldBe oppgavePåVent
+                    it.oppgaver[4] shouldBe oppgaveUnderBehandling
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne sortere oppgaver på saksbehandler`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgaveAd =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "aad",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+            val oppgaveBj =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "bjørn",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+            val oppgaveMo =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "mikael",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+            val oppgaveZu =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = "zulu",
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+
+            val repo = PostgresOppgaveRepository(ds)
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
+                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sorteringsfelt = Søkefilter.Sorteringsfelt.SAKSBEHANDLER,
+                        sortering = Søkefilter.Sortering.ASC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe oppgaveAd
+                    it.oppgaver[1] shouldBe oppgaveBj
+                    it.oppgaver[2] shouldBe oppgaveMo
+                    it.oppgaver[3] shouldBe oppgaveZu
                 }
         }
     }
