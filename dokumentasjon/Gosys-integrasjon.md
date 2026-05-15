@@ -145,9 +145,26 @@ I dag har oppfølgingsoppgaver 5 ferdigstill-varianter:
 ### 🟡 Krever avklaring med andre team
 
 #### 4. Avtale med Team Oppgavehåndtering
-- **App-kode**: Vi trenger en registrert kode (f.eks. "DP-SAK") for `behandlesAvApplikasjon`
-- **Kafka topic-navn**: Trenger tilgang til Gosys sin Kafka-topic i dev og prod
-- **Konsekvenser av markering**: Når vi markerer en oppgave, hva skjer i Gosys-UI? (vi vet at det begrenser redigering)
+
+**Spørsmål vi trenger svar på:**
+
+| # | Spørsmål | Kontekst | Vår antagelse |
+|---|----------|----------|---------------|
+| 1 | App-kode for `behandlesAvApplikasjon` | Vi trenger en registrert kode (f.eks. "DP-SAK") | Registreres hos dere |
+| 2 | Kafka topic-navn | Trenger lesetilgang til Gosys sin oppgavehendelse-topic i dev og prod | `oppgavehandtering.oppgave-hendelse-v1`? |
+| 3 | Konsekvenser av `behandlesAvApplikasjon` | Når vi markerer en oppgave, hva skjer i Gosys-UI? Begrenses redigering? | Ja, basert på kildekoden (`Begrensning` i v2 DTO) |
+| 4 | Ferdigstilling via API | Vi ønsker å PATCH status→FERDIGSTILT når saksbehandler ferdigstiller i dp-sak. Er dette greit? | Ja — FP gjør det allerede |
+| 5 | `endretAvEnhetsnr` ved ferdigstilling | Hvilken enhetsnr bruker vi? Saksbehandlers enhet, eller en fast «dp-sak»-enhet? | Saksbehandlers enhet |
+| 6 | Optimistic locking ved ferdigstilling | Vi lagrer `versjon` fra Kafka-hendelsen ved opprettelse. Kan oppgaven ha fått ny versjon mellom opprettelse og ferdigstilling? | Ja, vi henter fersk versjon via GET først |
+| 7 | Feilregistrering | Kan saksbehandler feilregistrere via dp-sak? (dvs. PATCH status→FEILREGISTRERT) | Ikke i MVP, men mulig teknisk |
+| 8 | OPPGAVE_OPPRETTET-hendelsen | Inneholder den tilstrekkelig info til å avgjøre om vi skal plukke opp oppgaven? (ident, tema, oppgavetype) | Ja, basert på `OppgaveKafkaAivenRecord` |
+
+**Kontekst for Team Oppgavehåndtering:**
+- Vi bygger dagpenger-saksbehandling i nytt fagsystem (dp-sak)
+- Saksbehandlere sjekker i dag Gosys manuelt for å se henvendelser
+- Vi vil automatisk plukke opp DAG-oppgaver for personer vi allerede behandler
+- Modell: som FP — fagsystem tar over oppgaven, ferdigstiller via API
+- Volumet er pt svært lavt (<100 personer i systemet)
 
 #### 5. Hva skjer når noen lukker oppgaven i Gosys direkte?
 Scenario: Vi har laget en oppfølging i dp-sak, men noen ferdigstiller oppgaven direkte i Gosys.
@@ -170,6 +187,15 @@ Scenario: Vi har laget en oppfølging i dp-sak, men noen ferdigstiller oppgaven 
 | Always-fresh REST on-demand | Unngår stale data, løser berikelsesproblemet |
 | Gjenbruk oppfølgings-mønsteret | Infrastrukturen finnes allerede (tilstandsmaskin, frist, emneknagger) |
 | Gosys v2 API | Anbefalt av Team Oppgavehåndtering, v1 fases ut |
+| Eierskapssjekk = person har Sak | `finnSakHistorikk(ident) != null` — enkel eksistenssjekk |
+| Idempotens — skip for MVP | Duplikater er teoretiske, konsekvenser håndterbare |
+| REST-klient i dp-saksbehandling | Kaller Gosys direkte, ikke via proxy |
+| Feilhåndtering = la det feile | Oppgavelista fungerer alltid (lokal data), detaljvisning feiler med melding + deeplink |
+| Sak-knytning = personnivå | Oppfølging knyttes til person, ikke sak (som eksisterende oppfølginger) |
+| Ingen feature toggle | <100 brukere, deploy = on, redeploy = off |
+| UX = konvolutt/strukturertData | Backend leverer Gosys-data via strukturertData. Frontend utvides iterativt |
+| Gosys-data aldri cachet | Hentes alltid fersk fra Gosys REST når frontend spør |
+| Kun OPPGAVE_OPPRETTET for MVP | Saksbehandler ser oppdatert status via fersk REST-data |
 
 ---
 
