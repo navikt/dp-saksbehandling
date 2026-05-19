@@ -349,17 +349,11 @@ data class Oppgave private constructor(
                 val hendelse = it.hendelse as ForslagTilVedtakHendelse
                 when (hendelse.behandletHendelseType) {
                     "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
-                    "Manuell", "Meldekort", "Omgjøring" -> {
-                        logger.info {
-                            "behandletHendelseType is ${hendelse.behandletHendelseType} " +
-                                "for oppgave: ${this.oppgaveId} " +
-                                "søknadId eksisterer derfor ikke"
-                        }
-                        null
-                    }
-
                     else -> {
-                        logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
+                        logger.info {
+                            "behandletHendelseType er ${hendelse.behandletHendelseType} " +
+                                "for oppgave: ${this.oppgaveId}, søknadId eksisterer derfor ikke."
+                        }
                         null
                     }
                 }
