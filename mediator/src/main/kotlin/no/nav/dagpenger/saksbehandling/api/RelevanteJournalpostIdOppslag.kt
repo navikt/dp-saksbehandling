@@ -16,33 +16,33 @@ class RelevanteJournalpostIdOppslag(
     private val innsendingRepository: InnsendingRepository,
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
-        when (oppgave.behandling.utløstAv) {
-            is HendelseBehandler.Intern.Klage -> return coroutineScope {
-                val journalpostIderKlage: String? =
-                    klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
-                val journalpostMeldingOmVedtak =
-                    utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
-                (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
+        val journalpostForUtsending =
+            utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
+        val journalposter: Set<String> =
+            when (oppgave.behandling.utløstAv) {
+                is HendelseBehandler.Intern.Klage ->
+                    coroutineScope {
+                        val journalpostIderKlage: String? =
+                            klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
+
+                        (setOf(journalpostIderKlage)).filterNotNull().toSet()
+                    }
+
+                is HendelseBehandler.Intern.Innsending ->
+                    coroutineScope {
+                        val journalpostIdInnsending: String =
+                            innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
+                        (setOf(journalpostIdInnsending)).toSet()
+                    }
+
+                is HendelseBehandler.DpBehandling.Søknad ->
+                    coroutineScope {
+                        val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
+                        (journalpostIderSøknad.await()).toSet()
+                    }
+                else -> journalpostForUtsending?.let { setOf(it) } ?: emptySet()
             }
-
-            is HendelseBehandler.Intern.Innsending -> return coroutineScope {
-                val journalpostIdInnsending: String? =
-                    innsendingRepository.hent(oppgave.behandling.behandlingId).journalpostId
-                setOf(journalpostIdInnsending).filterNotNull().toSet()
-            }
-
-            is HendelseBehandler.Intern.Oppfølging -> return emptySet()
-
-            is HendelseBehandler.DpBehandling.Søknad ->
-                return coroutineScope {
-                    val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
-                    val journalpostMeldingOmVedtak =
-                        utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.journalpostId()
-                    (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
-                }
-
-            is HendelseBehandler.DpBehandling -> return emptySet()
-        }
+        return journalposter + setOfNotNull(journalpostForUtsending)
     }
 
     private suspend fun JournalpostIdKlient.hentJournalPostIder(oppgave: Oppgave): Set<String> =

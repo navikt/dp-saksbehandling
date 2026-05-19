@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
@@ -40,8 +41,6 @@ class RelevanteJournalpostIdOppslagTest {
                         )
                     },
             )
-        val innsending = TestHelper.lagInnsending()
-
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient =
@@ -65,7 +64,7 @@ class RelevanteJournalpostIdOppslagTest {
 
     @Test
     fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
-        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage))
+        val oppgave = TestHelper.lagOppgave(behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage))
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient = mockk(),
@@ -95,10 +94,10 @@ class RelevanteJournalpostIdOppslagTest {
     }
 
     @Test
-    fun `For innsending skal vi bare hente innsendingens journalpostId`() {
+    fun `For innsending skal vi hente innsendingens journalpostId hvis det ikke finnes utsending`() {
         val innsending = TestHelper.lagInnsending()
         val behandling =
-            TestHelper.lagBehandling(
+            lagBehandling(
                 behandlingId = innsending.innsendingId,
                 utløstAvType = HendelseBehandler.Intern.Innsending,
             )
@@ -111,7 +110,13 @@ class RelevanteJournalpostIdOppslagTest {
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient = mockk(),
                 klageRepository = mockk(),
-                utsendingRepository = mockk(),
+                utsendingRepository =
+                    mockk<UtsendingRepository>().also {
+                        coEvery { it.finnUtsendingForBehandlingId(any()) } returns
+                            mockk<Utsending>().also {
+                                coEvery { it.journalpostId() } returns null
+                            }
+                    },
                 innsendingRepository =
                     mockk<InnsendingRepository>().also {
                         every { it.hent(any()) } returns innsending
@@ -119,6 +124,71 @@ class RelevanteJournalpostIdOppslagTest {
             )
         runBlocking {
             journalpostIdOppslag.hentJournalpostIder(oppgave) shouldBe listOf(innsending.journalpostId)
+        }
+    }
+
+    @Test
+    fun `For innsending skal vi hente innsendingens journalpostId og evt utsending`() {
+        val innsending = TestHelper.lagInnsending()
+        val behandling =
+            lagBehandling(
+                behandlingId = innsending.innsendingId,
+                utløstAvType = HendelseBehandler.Intern.Innsending,
+            )
+        val oppgave =
+            TestHelper.lagOppgave(
+                person = innsending.person,
+                behandling = behandling,
+            )
+        val journalpostIdOppslag =
+            RelevanteJournalpostIdOppslag(
+                journalpostIdKlient = mockk(),
+                klageRepository = mockk(),
+                utsendingRepository =
+                    mockk<UtsendingRepository>().also {
+                        coEvery { it.finnUtsendingForBehandlingId(any()) } returns
+                            mockk<Utsending>().also {
+                                coEvery { it.journalpostId() } returns "55"
+                            }
+                    },
+                innsendingRepository =
+                    mockk<InnsendingRepository>().also {
+                        every { it.hent(any()) } returns innsending
+                    },
+            )
+        runBlocking {
+            journalpostIdOppslag.hentJournalpostIder(oppgave) shouldBe listOf(innsending.journalpostId, "55")
+        }
+    }
+
+    @Test
+    fun `For ferietillegg skal vi hente evt utsending`() {
+        val oppgave =
+            TestHelper.lagOppgave(
+                tilstand = Oppgave.FerdigBehandlet,
+                saksbehandlerIdent = "SB",
+                person = TestHelper.lagPerson(),
+                behandling =
+                    lagBehandling(
+                        utløstAvType = HendelseBehandler.DpBehandling.Ferietillegg,
+                    ),
+            )
+
+        val journalpostIdOppslag =
+            RelevanteJournalpostIdOppslag(
+                journalpostIdKlient = mockk(),
+                klageRepository = mockk(),
+                utsendingRepository =
+                    mockk<UtsendingRepository>().also {
+                        coEvery { it.finnUtsendingForBehandlingId(any()) } returns
+                            mockk<Utsending>().also {
+                                coEvery { it.journalpostId() } returns "1"
+                            }
+                    },
+                innsendingRepository = mockk(),
+            )
+        runBlocking {
+            journalpostIdOppslag.hentJournalpostIder(oppgave) shouldBe listOf("1")
         }
     }
 }
