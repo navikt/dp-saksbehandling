@@ -16,7 +16,7 @@ class EmneknaggKategoriseringTest {
                 Regelknagg.GJENOPPTAK.visningsnavn,
                 Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn,
                 Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
-                Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn,
+                Regelknagg.RETTIGHET_FERIETILLEGG.visningsnavn,
             )
 
         val result = emneknagger.tilOppgaveEmneknaggerDTOListe()
@@ -26,7 +26,7 @@ class EmneknaggKategoriseringTest {
         result.single { it.visningsnavn == "Gjenopptak" }.kategori shouldBe EmneknaggKategoriDTO.GJENOPPTAK
         result.single { it.visningsnavn == "Minsteinntekt" }.kategori shouldBe EmneknaggKategoriDTO.AVSLAGSGRUNN
         result.single { it.visningsnavn == "Ordinær" }.kategori shouldBe EmneknaggKategoriDTO.RETTIGHET
-        result.single { it.visningsnavn == "Ferietillegg" }.kategori shouldBe EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE
+        result.single { it.visningsnavn == "Ferietillegg" }.kategori shouldBe EmneknaggKategoriDTO.RETTIGHET
     }
 
     @Test
@@ -63,6 +63,7 @@ class EmneknaggKategoriseringTest {
                 Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
                 Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
                 Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+                Regelknagg.RETTIGHET_FERIETILLEGG.visningsnavn,
             )
 
         val result = rettigheter.tilOppgaveEmneknaggerDTOListe()
@@ -74,14 +75,13 @@ class EmneknaggKategoriseringTest {
 
     @Test
     fun `Alle behandletHendelseType emneknagger skal ha kategori BEHANDLET_HENDELSE_TYPE`() {
-        val rettigheter =
+        val behandletHendelseTyper =
             setOf(
-                Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn,
                 Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn,
                 Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn,
             )
 
-        val result = rettigheter.tilOppgaveEmneknaggerDTOListe()
+        val result = behandletHendelseTyper.tilOppgaveEmneknaggerDTOListe()
 
         result.forEach { emneknagg ->
             emneknagg.kategori shouldBe EmneknaggKategoriDTO.BEHANDLET_HENDELSE_TYPE

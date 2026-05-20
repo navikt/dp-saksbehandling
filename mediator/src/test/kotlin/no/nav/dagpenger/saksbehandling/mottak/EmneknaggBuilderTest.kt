@@ -463,7 +463,7 @@ class EmneknaggBuilderTest {
                   "opplysninger": []
                 }
             """,
-        ).bygg() shouldBe setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_FERIETILLEGG.visningsnavn)
+        ).bygg() shouldBe setOf(Regelknagg.RETTIGHET_FERIETILLEGG.visningsnavn)
     }
 
     @Test

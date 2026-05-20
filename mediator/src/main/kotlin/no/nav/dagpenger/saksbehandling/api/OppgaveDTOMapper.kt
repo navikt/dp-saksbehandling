@@ -232,10 +232,10 @@ internal class OppgaveDTOMapper(
 }
 
 fun Set<String>.tilOppgaveEmneknaggerDTOListe(): List<EmneknaggDTO> =
-    this.map { visningsNavn ->
-        val kategori = hentEmneknaggKategori(visningsNavn)
+    this.map { visningsnavn ->
+        val kategori = hentEmneknaggKategori(visningsnavn)
         EmneknaggDTO(
-            visningsnavn = visningsNavn,
+            visningsnavn = visningsnavn,
             kategori = kategori.tilDTO(),
         )
     }
