@@ -77,9 +77,10 @@ object Emneknagg {
         override val visningsnavn: String,
     ) : KategorisertEmneknagg {
         AVVENTER_NY_INFORMASJON("Avventer ny informasjon"),
-        OPPFØLGING_AV_MELDEKORT("Oppfølging av meldekort"),
-        OPPFØLGING_AV_VEDTAK("Oppfølging av vedtak"),
         KOPI_AV_VEDTAK_TIL_FULLMEKTIG("Kopi av vedtak til fullmektig"),
+        OPPFØLGING_AV_MELDEKORT("Oppfølging av meldekort"),
+        OPPFØLGING_AV_SAMORDNING("Oppfølging av samordning"),
+        OPPFØLGING_AV_VEDTAK("Oppfølging av vedtak"),
         VURDERE_FEILUTBETALING("Vurdere feilutbetaling"),
         ANNEN_ÅRSAK("Annen årsak"),
         ;
