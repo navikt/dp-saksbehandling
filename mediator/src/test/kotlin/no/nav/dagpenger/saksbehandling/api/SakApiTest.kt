@@ -4,9 +4,13 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
@@ -73,6 +77,54 @@ class SakApiTest {
                         }
                         """.trimIndent()
                 }
+        }
+    }
+
+    @Test
+    fun `Skal returnere sakId når person har dagpenger-sak`() {
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSisteDagpengeSakId("12345678901") } returns sakId
+            }
+        val token = gyldigMaskinToken()
+        withSakApi(sakMediator) {
+            client
+                .post("person/siste-dagpenger-sak") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"ident": "12345678901"}""")
+                }.let {
+                    it.status shouldBe HttpStatusCode.OK
+                    it.bodyAsText() shouldBe sakId.toString()
+                }
+        }
+    }
+
+    @Test
+    fun `Skal returnere 404 når person ikke har dagpenger-sak`() {
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSisteDagpengeSakId("99999999999") } returns null
+            }
+        val token = gyldigMaskinToken()
+        withSakApi(sakMediator) {
+            client
+                .post("person/siste-dagpenger-sak") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"ident": "99999999999"}""")
+                }.status shouldBe HttpStatusCode.NotFound
+        }
+    }
+
+    @Test
+    fun `Skal kreve autentisering for siste-dagpenger-sak`() {
+        withSakApi(mockk<SakMediator>()) {
+            client
+                .post("person/siste-dagpenger-sak") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"ident": "12345678901"}""")
+                }.status shouldBe HttpStatusCode.Unauthorized
         }
     }
 

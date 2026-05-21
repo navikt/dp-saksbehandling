@@ -1283,6 +1283,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /person/siste-dagpenger-sak:
+    post:
+      summary: Hent siste dagpenger-sak for en person
+      description: Returnerer sakId for personens siste dagpenger-sak, eller 404 hvis personen ikke har en dagpenger-sak.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdent'
+      responses:
+        '200':
+          description: Personen har en dagpenger-sak
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+        '404':
+          description: Personen har ingen dagpenger-sak
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
 
   /produksjonsstatistikk:
     get:
