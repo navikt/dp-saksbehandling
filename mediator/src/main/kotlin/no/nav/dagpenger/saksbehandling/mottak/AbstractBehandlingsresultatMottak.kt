@@ -34,6 +34,9 @@ internal abstract class AbstractBehandlingsresultatMottak(
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
                 it.interestedIn("rettighetsperioder")
+                // TODO sjekk navngiving
+                it.interestedIn("saksbehandlerIdent")
+                it.interestedIn("beslutterIdent")
                 it.valideringsregler()
                 it.interestedIn("basertPå")
             }
@@ -60,7 +63,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
         sak: UtsendingSak?,
         behandlingsresultat: Behandlingsresultat,
     ): VedtakFattetHendelse {
-        val ident = this["ident"].asText()
+        val ident = this["ident"].asString()
 
         return VedtakFattetHendelse(
             behandlingId = behandlingsresultat.behandlingId,
@@ -69,6 +72,8 @@ internal abstract class AbstractBehandlingsresultatMottak(
             ident = ident,
             sak = sak,
             automatiskBehandlet = behandlingsresultat.automatiskBehandlet,
+            saksbehandlerIdent = behandlingsresultat.saksbehandlerIdent,
+            beslutterIdent = behandlingsresultat.beslutterIdent,
         )
     }
 
@@ -97,13 +102,17 @@ internal data class Behandlingsresultat(
     val behandletHendelseId: String,
     val rettighetsperioder: List<Rettighetsperiode>,
     val automatiskBehandlet: Boolean,
+    val saksbehandlerIdent: String?,
+    val beslutterIdent: String?,
 ) {
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
         basertPåBehandlingId = packet["basertPå"].uuidOrNull(),
-        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
-        behandletHendelseId = packet["behandletHendelse"]["id"].asText(),
+        behandletHendelseType = packet["behandletHendelse"]["type"].asString(),
+        behandletHendelseId = packet["behandletHendelse"]["id"].asString(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
+        saksbehandlerIdent = packet["saksbehandlerIdent"].asString(),
+        beslutterIdent = packet["beslutterIdent"].asString(),
         rettighetsperioder =
             packet["rettighetsperioder"]
                 .takeIf { it.isArray }

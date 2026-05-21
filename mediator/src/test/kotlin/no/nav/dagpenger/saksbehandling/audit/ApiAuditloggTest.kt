@@ -48,7 +48,7 @@ class ApiAuditloggTest {
     }
 
     private fun JsonNode.aktivitetsloggMelding(): String {
-        require(this["@event_name"].asText() == "aktivitetslogg") { "Forventet behov som aktivitetslogg" }
+        require(this["@event_name"].asString() == "aktivitetslogg") { "Forventet behov som aktivitetslogg" }
         return "TODO: Jeg har lyst å bruke denne for å hente ut meldingen som sendes inn til auditloggen, men jeg vet ikke hvordan! "
     }
 }

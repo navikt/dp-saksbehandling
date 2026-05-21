@@ -43,16 +43,16 @@ class OversendKlageinstansAlarmJobTest {
 
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(0).let { jsonNode ->
-                jsonNode["alertType"].asText() shouldBe "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
-                jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asText() shouldBe "Oversendelse til klageinstans ikke fullført for " +
+                jsonNode["alertType"].asString() shouldBe "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
+                jsonNode["@event_name"].asString() shouldBe "saksbehandling_alert"
+                jsonNode["feilMelding"].asString() shouldBe "Oversendelse til klageinstans ikke fullført for " +
                     "klagebehandling $behandlingId1. Den har vært i tilstand OVERSEND_KLAGEINSTANS siden $iGår"
             }
 
             testRapid.inspektør.message(1).let { jsonNode ->
-                jsonNode["alertType"].asText() shouldBe "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
-                jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asText() shouldBe "Oversendelse til klageinstans ikke fullført for " +
+                jsonNode["alertType"].asString() shouldBe "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
+                jsonNode["@event_name"].asString() shouldBe "saksbehandling_alert"
+                jsonNode["feilMelding"].asString() shouldBe "Oversendelse til klageinstans ikke fullført for " +
                     "klagebehandling $behandlingId2. Den har vært i tilstand OVERSEND_KLAGEINSTANS siden $iDag"
             }
         }

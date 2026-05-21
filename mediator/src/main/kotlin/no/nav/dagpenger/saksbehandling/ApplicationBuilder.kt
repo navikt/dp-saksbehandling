@@ -265,6 +265,7 @@ internal class ApplicationBuilder(
                 BehandlingsresultatMottakForUtsending(
                     rapidsConnection = rapid,
                     utsendingMediator = utsendingMediator,
+                    oppgaveRepository = oppgaveRepository,
                     sakRepository = sakRepository,
                 )
 // TODO: Kommenter inn når vi skal skru av fatting av vedtak mot Arena.

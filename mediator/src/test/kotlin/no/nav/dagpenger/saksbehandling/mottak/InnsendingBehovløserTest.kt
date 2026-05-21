@@ -134,7 +134,7 @@ class InnsendingBehovløserTest {
     }
 
     @Test
-    fun `Håndterer tilfeller der søknadId er "null" `() {
+    fun `Håndterer tilfeller der søknadId er null`() {
         val slot = slot<InnsendingMottattHendelse>()
         InnsendingBehovløser(
             rapidsConnection = testRapid,

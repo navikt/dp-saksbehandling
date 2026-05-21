@@ -10,6 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -38,9 +39,14 @@ class BehandlingsresultatMottakForUtsendingTest {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
                 every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
             }
+        val oppgaveRepositoryMock =
+            mockk<OppgaveRepository>().also {
+                every { it.finnOppgaveFor(any()) } returns null
+            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
+            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository = sakRepositoryMock,
         )
 
@@ -71,6 +77,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
+            oppgaveRepository = mockk(),
             sakRepository = mockk<SakRepository>(),
         )
 
@@ -92,9 +99,14 @@ class BehandlingsresultatMottakForUtsendingTest {
                 every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
                 every { it.hentSakIdForBehandlingId(any()) } returns sakId
             }
+        val oppgaveRepositoryMock =
+            mockk<OppgaveRepository>().also {
+                every { it.finnOppgaveFor(any()) } returns null
+            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
+            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository = sakRepositoryMock,
         )
 
@@ -116,9 +128,14 @@ class BehandlingsresultatMottakForUtsendingTest {
                 every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
                 every { it.hentSakIdForBehandlingId(any()) } returns sakId
             }
+        val oppgaveRepositoryMock =
+            mockk<OppgaveRepository>().also {
+                every { it.finnOppgaveFor(any()) } returns null
+            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
+            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository = sakRepositoryMock,
         )
 
@@ -132,10 +149,14 @@ class BehandlingsresultatMottakForUtsendingTest {
     @Test
     fun `Skal håndtere behandlinger med flere rettighetsperioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
-
+        val oppgaveRepositoryMock =
+            mockk<OppgaveRepository>().also {
+                every { it.finnOppgaveFor(any()) } returns null
+            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
+            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository =
                 mockk<SakRepository>().also {
                     every { it.hentDagpengerSakIdForBehandlingId(behandlingId) } returns sakId
@@ -182,6 +203,8 @@ class BehandlingsresultatMottakForUtsendingTest {
                             kontekst = "Dagpenger",
                         ),
                     automatiskBehandlet = false,
+                    saksbehandlerIdent = null,
+                    beslutterIdent = null,
                 ),
             )
         }

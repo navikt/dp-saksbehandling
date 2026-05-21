@@ -350,7 +350,7 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
-                it.tilstand().type shouldBe Type.UNDER_BEHANDLING
+                it.tilstand().type shouldBe UNDER_BEHANDLING
                 it.behandlerIdent shouldBe saksbehandler.navIdent
                 it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
                 it.sisteBeslutter() shouldBe beslutter.navIdent
@@ -667,7 +667,6 @@ OppgaveMediatorTest {
                     behandlingskjedeId = behandlingId,
                 ),
         ) { _, oppgaveMediator ->
-            val meldingFørTest = testRapid.inspektør.size
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -891,11 +890,6 @@ OppgaveMediatorTest {
         val behandlingId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val saksbehandlerToken = "token"
-        val sakMediatorMock =
-            mockk<SakMediator>().also {
-                every { it.hentSakIdForBehandlingId(any()) } returns UUIDv7.ny()
-            }
-
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
@@ -1035,7 +1029,7 @@ OppgaveMediatorTest {
                 brevProdusent = mockk(),
                 rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
-                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId) shouldBe null
+                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId) shouldNotBe null
             }
         }
     }
@@ -1775,7 +1769,7 @@ OppgaveMediatorTest {
                                 behandlingId = hendelse.behandlingId,
                                 opprettet = hendelse.opprettet,
                                 hendelse = hendelse,
-                                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                                utløstAv = DpBehandling.Søknad,
                             ),
                     )
                 sakMediator.knyttTilSak(

@@ -83,6 +83,7 @@ class UtsendingMediatorTest {
             BehandlingsresultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
+                oppgaveRepository = mockk(),
                 sakRepository = PostgresSakRepository(ds),
             )
 

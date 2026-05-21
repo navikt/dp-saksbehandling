@@ -94,21 +94,6 @@ class PostgresUtsendingRepository(
             ) != null
         }
 
-    override fun slettUtsending(utsendingId: UUID): Int =
-        sessionOf(ds).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        DELETE FROM utsending_v1
-                        WHERE id = :id
-                        """.trimIndent(),
-                    paramMap = mapOf("id" to utsendingId),
-                ).asUpdate,
-            )
-        }
-
     override fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending =
         finnUtsendingForBehandlingId(behandlingId)
             ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
@@ -160,7 +145,7 @@ class PostgresUtsendingRepository(
         }
     }
 
-    private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Utsending.Tilstand =
+    private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Tilstand =
         when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
             VenterPåVedtak -> Utsending.VenterPåVedtak
             AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev

@@ -41,7 +41,7 @@ class DefaultObjectMapperTest {
         val node = mapper.readTree(json)
 
         node.has("årsak") shouldBe true
-        node["årsak"].asText() shouldBe "INHABILITET"
+        node["årsak"].asString() shouldBe "INHABILITET"
     }
 
     @Test
