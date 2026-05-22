@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
@@ -83,7 +84,10 @@ class UtsendingMediatorTest {
             BehandlingsresultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                oppgaveRepository = mockk(),
+                oppgaveRepository =
+                    mockk<OppgaveRepository>().also {
+                        every { it.finnOppgaveFor(any()) } returns null
+                    },
                 sakRepository = PostgresSakRepository(ds),
             )
 

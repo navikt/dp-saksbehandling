@@ -586,10 +586,12 @@ data class Oppgave private constructor(
                     oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
                     return Handling.LAGRE_OPPGAVE
                 }
-
                 else -> {
-                    logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-                    return Handling.INGEN
+                    logger.info { "Mottok vedtak fattet i tilstand $type. Ferdigstiller oppgave." }
+                    oppgave.behandlerIdent =
+                        vedtakFattetHendelse.beslutterIdent ?: vedtakFattetHendelse.saksbehandlerIdent
+                    oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+                    return Handling.LAGRE_OPPGAVE
                 }
             }
         }

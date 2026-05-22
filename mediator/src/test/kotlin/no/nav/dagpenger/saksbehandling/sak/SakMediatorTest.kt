@@ -9,10 +9,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import javax.sql.DataSource
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -36,6 +32,10 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+import javax.sql.DataSource
 
 class SakMediatorTest {
     private val testIdent = "12345678901"
@@ -445,9 +445,9 @@ class SakMediatorTest {
         val mockSakHistorikk =
             mockk<SakHistorikk>().also {
                 every { it.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) } returns
-                        KnyttTilSakResultat.IkkeKnyttetTilSak(
-                            sakId,
-                        )
+                    KnyttTilSakResultat.IkkeKnyttetTilSak(
+                        sakId,
+                    )
             }
         SakMediator(
             sakRepository =
@@ -649,8 +649,10 @@ class SakMediatorTest {
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
                 )
-            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
-                .alleSaker().size shouldBe 2
+            sakMediator
+                .hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
+                .alleSaker()
+                .size shouldBe 2
 
             val hendelse =
                 InnsendingMottattHendelse(
