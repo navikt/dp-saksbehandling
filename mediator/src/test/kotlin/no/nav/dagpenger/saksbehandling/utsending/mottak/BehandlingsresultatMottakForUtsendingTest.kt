@@ -39,14 +39,9 @@ class BehandlingsresultatMottakForUtsendingTest {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
                 every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
             }
-        val oppgaveRepositoryMock =
-            mockk<OppgaveRepository>().also {
-                every { it.finnOppgaveFor(any()) } returns null
-            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository = sakRepositoryMock,
         )
 
@@ -77,7 +72,6 @@ class BehandlingsresultatMottakForUtsendingTest {
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            oppgaveRepository = mockk(),
             sakRepository = mockk<SakRepository>(),
         )
 
@@ -99,14 +93,9 @@ class BehandlingsresultatMottakForUtsendingTest {
                 every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
                 every { it.hentSakIdForBehandlingId(any()) } returns sakId
             }
-        val oppgaveRepositoryMock =
-            mockk<OppgaveRepository>().also {
-                every { it.finnOppgaveFor(any()) } returns null
-            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository = sakRepositoryMock,
         )
 
@@ -128,14 +117,9 @@ class BehandlingsresultatMottakForUtsendingTest {
                 every { it.hentDagpengerSakIdForBehandlingId(any()) } returns sakId
                 every { it.hentSakIdForBehandlingId(any()) } returns sakId
             }
-        val oppgaveRepositoryMock =
-            mockk<OppgaveRepository>().also {
-                every { it.finnOppgaveFor(any()) } returns null
-            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository = sakRepositoryMock,
         )
 
@@ -149,14 +133,9 @@ class BehandlingsresultatMottakForUtsendingTest {
     @Test
     fun `Skal håndtere behandlinger med flere rettighetsperioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
-        val oppgaveRepositoryMock =
-            mockk<OppgaveRepository>().also {
-                every { it.finnOppgaveFor(any()) } returns null
-            }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            oppgaveRepository = oppgaveRepositoryMock,
             sakRepository =
                 mockk<SakRepository>().also {
                     every { it.hentDagpengerSakIdForBehandlingId(behandlingId) } returns sakId

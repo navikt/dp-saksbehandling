@@ -63,7 +63,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
         sak: UtsendingSak?,
         behandlingsresultat: Behandlingsresultat,
     ): VedtakFattetHendelse {
-        val ident = this["ident"].asString()
+        val ident = this["ident"].stringValue()
 
         return VedtakFattetHendelse(
             behandlingId = behandlingsresultat.behandlingId,
@@ -108,11 +108,11 @@ internal data class Behandlingsresultat(
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
         basertPåBehandlingId = packet["basertPå"].uuidOrNull(),
-        behandletHendelseType = packet["behandletHendelse"]["type"].asString(),
-        behandletHendelseId = packet["behandletHendelse"]["id"].asString(),
+        behandletHendelseType = packet["behandletHendelse"]["type"].stringValue(),
+        behandletHendelseId = packet["behandletHendelse"]["id"].stringValue(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
-        saksbehandlerIdent = packet["saksbehandlerIdent"].asString(),
-        beslutterIdent = packet["beslutterIdent"].asString(),
+        saksbehandlerIdent = packet["saksbehandlerIdent"].takeUnless { it.isMissingNode() }?.stringValue(),
+        beslutterIdent = packet["beslutterIdent"].takeUnless { it.isMissingNode() }?.stringValue(),
         rettighetsperioder =
             packet["rettighetsperioder"]
                 .takeIf { it.isArray }

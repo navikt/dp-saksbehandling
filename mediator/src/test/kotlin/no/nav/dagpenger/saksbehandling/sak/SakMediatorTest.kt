@@ -432,10 +432,10 @@ class SakMediatorTest {
 
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
-            packet["@event_name"].asString() shouldBe "avbryt_behandling"
+            packet["@event_name"].stringValue() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["ident"].asString() shouldBe testIdent
-            packet["årsak"].asString() shouldBe "Skjermet eller adressebeskyttet person"
+            packet["ident"].stringValue() shouldBe testIdent
+            packet["årsak"].stringValue() shouldBe "Skjermet eller adressebeskyttet person"
         }
     }
 
@@ -461,8 +461,8 @@ class SakMediatorTest {
             it.knyttTilSak(søknadsbehandlingOpprettetHendelseNyRett)
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
-            packet["@event_name"].asString() shouldBe "saksbehandling_alert"
-            packet["alertType"].asString() shouldBe "KNYTNING_TIL_SAK_FEIL"
+            packet["@event_name"].stringValue() shouldBe "saksbehandling_alert"
+            packet["alertType"].stringValue() shouldBe "KNYTNING_TIL_SAK_FEIL"
         }
     }
 
@@ -497,10 +497,10 @@ class SakMediatorTest {
 
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
-            packet["@event_name"].asString() shouldBe "avbryt_behandling"
+            packet["@event_name"].stringValue() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["ident"].asString() shouldBe testIdent
-            packet["årsak"].asString() shouldBe "Skjermet eller adressebeskyttet person"
+            packet["ident"].stringValue() shouldBe testIdent
+            packet["årsak"].stringValue() shouldBe "Skjermet eller adressebeskyttet person"
         }
     }
 

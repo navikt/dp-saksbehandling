@@ -58,11 +58,11 @@ class BehandlingsresultatMottakForSakTest {
 
         testRapid.inspektør.size shouldBe 1
         testRapid.inspektør.message(0).also { message ->
-            message["@event_name"].asString() shouldBe "vedtak_fattet_utenfor_arena"
-            message["behandlingId"].asString() shouldBe behandlingId.toString()
-            message["søknadId"].asString() shouldBe søknadId.toString()
-            message["sakId"].asString() shouldBe sakId.toString()
-            message["ident"].asString() shouldBe ident
+            message["@event_name"].stringValue() shouldBe "vedtak_fattet_utenfor_arena"
+            message["behandlingId"].stringValue() shouldBe behandlingId.toString()
+            message["søknadId"].stringValue() shouldBe søknadId.toString()
+            message["sakId"].stringValue() shouldBe sakId.toString()
+            message["ident"].stringValue() shouldBe ident
         }
     }
 

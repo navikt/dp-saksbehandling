@@ -129,6 +129,8 @@ class BehandlingsresultatMottakTest {
                 "type": "$behandletHendelseType"
               },
               "automatisk": $automatisk,
+              "saksbehandlerIdent": null,
+              "beslutterIdent": null,
               "opplysninger": [],
               "rettighetsperioder": []
             }

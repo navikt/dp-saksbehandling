@@ -176,10 +176,10 @@ class KlageMediatorTest {
 
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
-                it["@event_name"].asString() shouldBe "klage_behandling_opprettet"
+                it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
-                it["ident"].asString() shouldBe testPersonIdent
+                it["ident"].stringValue() shouldBe testPersonIdent
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -231,11 +231,11 @@ class KlageMediatorTest {
                 }
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(1).let {
-                it["@event_name"].asString() shouldBe "klage_behandling_utført"
+                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
-                it["utfall"].asString() shouldBe "OPPRETTHOLDELSE"
-                it["ident"].asString() shouldBe testPersonIdent
+                it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
+                it["ident"].stringValue() shouldBe testPersonIdent
                 it["saksbehandler"].toString() shouldEqualJson
                     """
                     {
@@ -270,24 +270,24 @@ class KlageMediatorTest {
                     klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
                     testRapid.inspektør.size shouldBe 3
                     testRapid.inspektør.message(2).let {
-                        it["@behov"].single().asString() shouldBe "OversendelseKlageinstans"
-                        it["ident"].asString() shouldBe testPersonIdent
-                        it["fagsakId"].asString() shouldBe sakId.toString()
-                        it["behandlendeEnhet"].asString() shouldBe klageBehandling.behandlendeEnhet()
-                        it["hjemler"].values().map { hjemmel -> hjemmel.asString() } shouldBe klageBehandling.hjemler()
-                        it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].asString() } shouldBe
+                        it["@behov"].single().stringValue() shouldBe "OversendelseKlageinstans"
+                        it["ident"].stringValue() shouldBe testPersonIdent
+                        it["fagsakId"].stringValue() shouldBe sakId.toString()
+                        it["behandlendeEnhet"].stringValue() shouldBe klageBehandling.behandlendeEnhet()
+                        it["hjemler"].values().map { hjemmel -> hjemmel.stringValue() } shouldBe klageBehandling.hjemler()
+                        it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].stringValue() } shouldBe
                             listOf(
                                 "journalpostIdKlageVedtak",
                                 "journalpostIdBrukersKlage",
                                 "journalpostIdTilVedtakBrukerHarKlagdPå",
                             )
-                        it["prosessfullmektigNavn"].asString() shouldBe "Djevelens Advokat"
-                        it["prosessfullmektigAdresselinje1"].asString() shouldBe "Sydenveien 1"
-                        it["prosessfullmektigAdresselinje2"].asString() shouldBe "Poste restante"
-                        it["prosessfullmektigAdresselinje3"].asString() shouldBe "Teisen postkontor"
-                        it["prosessfullmektigPostnummer"].asString() shouldBe "0666"
-                        it["prosessfullmektigPoststed"].asString() shouldBe "Oslo"
-                        it["prosessfullmektigLand"].asString() shouldBe "Norge"
+                        it["prosessfullmektigNavn"].stringValue() shouldBe "Djevelens Advokat"
+                        it["prosessfullmektigAdresselinje1"].stringValue() shouldBe "Sydenveien 1"
+                        it["prosessfullmektigAdresselinje2"].stringValue() shouldBe "Poste restante"
+                        it["prosessfullmektigAdresselinje3"].stringValue() shouldBe "Teisen postkontor"
+                        it["prosessfullmektigPostnummer"].stringValue() shouldBe "0666"
+                        it["prosessfullmektigPoststed"].stringValue() shouldBe "Oslo"
+                        it["prosessfullmektigLand"].stringValue() shouldBe "Norge"
                     }
                 }
             verify(exactly = 1) {
@@ -417,11 +417,11 @@ class KlageMediatorTest {
                         )
                     }
                     testRapid.inspektør.message(0).let {
-                        it["@event_name"].asString() shouldBe "klage_behandling_utført"
+                        it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
                         it["behandlingId"].asUUID() shouldBe behandlingId
                         it["sakId"].asUUID() shouldBe sakId
-                        it["ident"].asString() shouldBe testPersonIdent
-                        it["utfall"].asString() shouldBe "OPPRETTHOLDELSE"
+                        it["ident"].stringValue() shouldBe testPersonIdent
+                        it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
                         it["saksbehandler"].toString() shouldEqualJson
                             """
                             {
@@ -451,24 +451,24 @@ class KlageMediatorTest {
                 klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
                 testRapid.inspektør.size shouldBe 2
                 testRapid.inspektør.message(1).let {
-                    it["@behov"].single().asString() shouldBe "OversendelseKlageinstans"
-                    it["ident"].asString() shouldBe testPersonIdent
-                    it["fagsakId"].asString() shouldBe sakId.toString()
-                    it["behandlendeEnhet"].asString() shouldBe klageBehandling.behandlendeEnhet()
-                    it["hjemler"].values().map { hjemmel -> hjemmel.asString() } shouldBe klageBehandling.hjemler()
-                    it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].asString() } shouldBe
+                    it["@behov"].single().stringValue() shouldBe "OversendelseKlageinstans"
+                    it["ident"].stringValue() shouldBe testPersonIdent
+                    it["fagsakId"].stringValue() shouldBe sakId.toString()
+                    it["behandlendeEnhet"].stringValue() shouldBe klageBehandling.behandlendeEnhet()
+                    it["hjemler"].values().map { hjemmel -> hjemmel.stringValue() } shouldBe klageBehandling.hjemler()
+                    it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].stringValue() } shouldBe
                         listOf(
                             "journalpostIdKlageVedtak",
                             "journalpostIdBrukersKlage",
                             "journalpostIdTilVedtakBrukerHarKlagdPå",
                         )
-                    it["prosessfullmektigNavn"].asString() shouldBe "Djevelens Advokat"
-                    it["prosessfullmektigAdresselinje1"].asString() shouldBe "Sydenveien 1"
-                    it["prosessfullmektigAdresselinje2"].asString() shouldBe "Poste restante"
-                    it["prosessfullmektigAdresselinje3"].asString() shouldBe "Teisen postkontor"
-                    it["prosessfullmektigPostnummer"].asString() shouldBe "0666"
-                    it["prosessfullmektigPoststed"].asString() shouldBe "Oslo"
-                    it["prosessfullmektigLand"].asString() shouldBe "Norge"
+                    it["prosessfullmektigNavn"].stringValue() shouldBe "Djevelens Advokat"
+                    it["prosessfullmektigAdresselinje1"].stringValue() shouldBe "Sydenveien 1"
+                    it["prosessfullmektigAdresselinje2"].stringValue() shouldBe "Poste restante"
+                    it["prosessfullmektigAdresselinje3"].stringValue() shouldBe "Teisen postkontor"
+                    it["prosessfullmektigPostnummer"].stringValue() shouldBe "0666"
+                    it["prosessfullmektigPoststed"].stringValue() shouldBe "Oslo"
+                    it["prosessfullmektigLand"].stringValue() shouldBe "Norge"
                 }
             }
 
@@ -505,10 +505,10 @@ class KlageMediatorTest {
 
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
-                it["@event_name"].asString() shouldBe "klage_behandling_opprettet"
+                it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
-                it["ident"].asString() shouldBe testPersonIdent
+                it["ident"].stringValue() shouldBe testPersonIdent
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
 
@@ -554,11 +554,11 @@ class KlageMediatorTest {
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(1).let {
-                it["@event_name"].asString() shouldBe "klage_behandling_utført"
+                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
-                it["ident"].asString() shouldBe testPersonIdent
-                it["utfall"].asString() shouldBe "AVVIST"
+                it["ident"].stringValue() shouldBe testPersonIdent
+                it["utfall"].stringValue() shouldBe "AVVIST"
                 it["saksbehandler"].toString() shouldEqualJson
                     """
                     {
@@ -644,10 +644,10 @@ class KlageMediatorTest {
                 .type shouldBe FERDIG_BEHANDLET
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
-                it["@event_name"].asString() shouldBe "klage_behandling_opprettet"
+                it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
-                it["ident"].asString() shouldBe testPersonIdent
+                it["ident"].stringValue() shouldBe testPersonIdent
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
         }
@@ -708,10 +708,10 @@ class KlageMediatorTest {
                 .type shouldBe UNDER_BEHANDLING
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
-                it["@event_name"].asString() shouldBe "klage_behandling_opprettet"
+                it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
-                it["ident"].asString() shouldBe testPersonIdent
+                it["ident"].stringValue() shouldBe testPersonIdent
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
         }

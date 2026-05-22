@@ -7,7 +7,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.UtsendingSak
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.Behandlingsresultat
@@ -19,7 +18,6 @@ private val logger = KotlinLogging.logger {}
 internal class BehandlingsresultatMottakForUtsending(
     rapidsConnection: RapidsConnection,
     private val utsendingMediator: UtsendingMediator,
-    private val oppgaveRepository: OppgaveRepository,
     private val sakRepository: SakRepository,
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
     override val mottakNavn: String = "BehandlingsresultatMottakForUtsending"
@@ -71,9 +69,6 @@ internal class BehandlingsresultatMottakForUtsending(
             utsendingMediator.startUtsendingForVedtakFattet(
                 vedtakFattetHendelse = vedtakFattetHendelse,
             )
-            oppgaveRepository.finnOppgaveFor(behandlingsresultat.behandlingId)?.let { oppgave ->
-                oppgave.ferdigstill(vedtakFattetHendelse).also { oppgaveRepository.lagre(oppgave) }
-            }
         }
     }
 }

@@ -67,9 +67,9 @@ class ArenaSinkVedtakOpprettetMottak(
             return
         }
         val ident = personRepository.hentPersonForBehandlingId(behandlingId).ident
-        val sakId = packet["sakId"].asString()
-        val vedtakstatus = packet["vedtakstatus"].asString()
-        val behandletHendelseId = packet["søknadId"].asString()
+        val sakId = packet["sakId"].asInt().toString()
+        val vedtakstatus = packet["vedtakstatus"].stringValue()
+        val behandletHendelseId = packet["søknadId"].stringValue()
 
         withLoggingContext(
             "behandlingId" to "$behandlingId",

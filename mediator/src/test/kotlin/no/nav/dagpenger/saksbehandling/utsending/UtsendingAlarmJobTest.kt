@@ -49,9 +49,9 @@ class UtsendingAlarmJobTest {
 
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(0).let { jsonNode ->
-                jsonNode["alertType"].asString() shouldBe "UTSENDING_IKKE_FULLFØRT"
-                jsonNode["@event_name"].asString() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asString() shouldBe
+                jsonNode["alertType"].stringValue() shouldBe "UTSENDING_IKKE_FULLFØRT"
+                jsonNode["@event_name"].stringValue() shouldBe "saksbehandling_alert"
+                jsonNode["feilMelding"].stringValue() shouldBe
                     """
                     Utsending ikke fullført for utsendingId: $utsendingId1.
                     Den har vært i tilstand AvventerArkiverbarVersjonAvBrev i 24 timer (sist endret: $igår)
@@ -61,9 +61,9 @@ class UtsendingAlarmJobTest {
             }
 
             testRapid.inspektør.message(1).let { jsonNode ->
-                jsonNode["alertType"].asString() shouldBe "UTSENDING_IKKE_FULLFØRT"
-                jsonNode["@event_name"].asString() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asString() shouldBe
+                jsonNode["alertType"].stringValue() shouldBe "UTSENDING_IKKE_FULLFØRT"
+                jsonNode["@event_name"].stringValue() shouldBe "saksbehandling_alert"
+                jsonNode["feilMelding"].stringValue() shouldBe
                     """
                     Utsending ikke fullført for utsendingId: $utsendingId2.
                     Den har vært i tilstand AvventerDistribuering i 24 timer (sist endret: $igår)
