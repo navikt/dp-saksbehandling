@@ -35,8 +35,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
                 it.interestedIn("rettighetsperioder")
                 // TODO sjekk navngiving
-                it.interestedIn("saksbehandlerIdent")
-                it.interestedIn("beslutterIdent")
+                it.interestedIn("behandletAv")
                 it.valideringsregler()
                 it.interestedIn("basertPå")
             }
@@ -111,8 +110,26 @@ internal data class Behandlingsresultat(
         behandletHendelseType = packet["behandletHendelse"]["type"].stringValue(),
         behandletHendelseId = packet["behandletHendelse"]["id"].stringValue(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
-        saksbehandlerIdent = packet["saksbehandlerIdent"].takeUnless { it.isMissingNode() }?.stringValue(),
-        beslutterIdent = packet["beslutterIdent"].takeUnless { it.isMissingNode() }?.stringValue(),
+        saksbehandlerIdent =
+            packet["behandletAv"]
+                .takeIf { it.isArray }
+                ?.values()
+                ?.firstOrNull { entry ->
+                    entry["rolle"].takeIf { !it.isMissingNode() && !it.isNull }?.stringValue() == "saksbehandler"
+                }?.get("behandler")
+                ?.get("ident")
+                ?.takeIf { !it.isMissingNode() && !it.isNull }
+                ?.stringValue(),
+        beslutterIdent =
+            packet["behandletAv"]
+                .takeIf { it.isArray }
+                ?.values()
+                ?.firstOrNull { entry ->
+                    entry["rolle"].takeIf { !it.isMissingNode() && !it.isNull }?.stringValue() == "beslutter"
+                }?.get("behandler")
+                ?.get("ident")
+                ?.takeIf { !it.isMissingNode() && !it.isNull }
+                ?.stringValue(),
         rettighetsperioder =
             packet["rettighetsperioder"]
                 .takeIf { it.isArray }

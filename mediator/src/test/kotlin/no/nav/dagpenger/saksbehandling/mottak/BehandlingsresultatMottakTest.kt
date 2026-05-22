@@ -111,6 +111,192 @@ class BehandlingsresultatMottakTest {
         }
     }
 
+    @Test
+    fun `skal håndtere behandlingsresultat som kun er behandlet av saksbehandler`() {
+        //language=JSON
+        val behandlingsresultat =
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "${TestHelper.testPerson.ident}",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
+              "automatisk": false,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": true
+                }
+              ],
+              "behandletAv": [
+                  {
+                    "rolle": "saksbehandler",
+                    "behandler": {
+                      "ident": "MrSaksbehandler"
+                    }
+                  }
+              ]
+            }
+            """.trimIndent()
+        testRapid.sendTestMessage(behandlingsresultat)
+        verify(exactly = 1) {
+            oppgaveMediatorMock.håndter(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = false,
+                        saksbehandlerIdent = "MrSaksbehandler",
+                        sak = null,
+                    ),
+                emneknagger = emptySet(),
+            )
+        }
+    }
+
+    @Test
+    fun `skal håndtere behandlingsresultat som både er behandlet av saksbehandler og beslutter`() {
+        //language=JSON
+        val behandlingsresultat =
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "${TestHelper.testPerson.ident}",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
+              "automatisk": false,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": true
+                }
+              ],
+              "behandletAv": [
+                  {
+                    "rolle": "saksbehandler",
+                    "behandler": {
+                      "ident": "MrSaksbehandler"
+                    }
+                  },
+                  {
+                    "rolle": "beslutter",
+                    "behandler": {
+                      "ident": "MissBeslutter"
+                    }
+                  }
+              ]
+            }
+            """.trimIndent()
+        testRapid.sendTestMessage(behandlingsresultat)
+        verify(exactly = 1) {
+            oppgaveMediatorMock.håndter(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = false,
+                        saksbehandlerIdent = "MrSaksbehandler",
+                        beslutterIdent = "MissBeslutter",
+                        sak = null,
+                    ),
+                emneknagger = emptySet(),
+            )
+        }
+    }
+
+    @Test
+    fun `skal håndtere behandlingsresultat som ikke har saksbehandler og beslutter - behandletAv er tomt array`() {
+        //language=JSON
+        val behandlingsresultat =
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "${TestHelper.testPerson.ident}",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
+              "automatisk": true,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": true
+                }
+              ],
+              "behandletAv": []
+            }
+            """.trimIndent()
+        testRapid.sendTestMessage(behandlingsresultat)
+        verify(exactly = 1) {
+            oppgaveMediatorMock.håndter(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = true,
+                        saksbehandlerIdent = null,
+                        beslutterIdent = null,
+                        sak = null,
+                    ),
+                emneknagger = emptySet(),
+            )
+        }
+    }
+
+    @Test
+    fun `skal håndtere behandlingsresultat som ikke har saksbehandler og beslutter - behandletAv er missing`() {
+        //language=JSON
+        val behandlingsresultat =
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "${TestHelper.testPerson.ident}",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
+              "automatisk": true,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": true
+                }
+              ]
+            }
+            """.trimIndent()
+        testRapid.sendTestMessage(behandlingsresultat)
+        verify(exactly = 1) {
+            oppgaveMediatorMock.håndter(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = TestHelper.testPerson.ident,
+                        automatiskBehandlet = true,
+                        saksbehandlerIdent = null,
+                        beslutterIdent = null,
+                        sak = null,
+                    ),
+                emneknagger = emptySet(),
+            )
+        }
+    }
+
     private fun behandlingsresultatEvent(
         ident: String = TestHelper.testPerson.ident,
         behandlingId: String = this.behandlingId.toString(),
