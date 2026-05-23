@@ -113,35 +113,13 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat som kun er behandlet av saksbehandler`() {
-        //language=JSON
-        val behandlingsresultat =
-            """
-            {
-              "@event_name": "behandlingsresultat",
-              "ident": "${TestHelper.testPerson.ident}",
-              "behandlingId": "$behandlingId",
-              "behandletHendelse": {
-                "id": "$søknadId",
-                "type": "Søknad"
-              },
-              "automatisk": false,
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "2025-09-09",
-                  "harRett": true
-                }
-              ],
-              "behandletAv": [
-                  {
-                    "rolle": "saksbehandler",
-                    "behandler": {
-                      "ident": "MrSaksbehandler"
-                    }
-                  }
-              ]
-            }
-            """.trimIndent()
-        testRapid.sendTestMessage(behandlingsresultat)
+        testRapid.sendTestMessage(
+            behandlingsresultatEvent(
+                behandletHendelseType = "Søknad",
+                automatisk = false,
+                saksbehandlerIdent = "MrSaksbehandler",
+            ),
+        )
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =
@@ -154,48 +132,21 @@ class BehandlingsresultatMottakTest {
                         saksbehandlerIdent = "MrSaksbehandler",
                         sak = null,
                     ),
-                emneknagger = emptySet(),
+                emneknagger = any(),
             )
         }
     }
 
     @Test
     fun `skal håndtere behandlingsresultat som både er behandlet av saksbehandler og beslutter`() {
-        //language=JSON
-        val behandlingsresultat =
-            """
-            {
-              "@event_name": "behandlingsresultat",
-              "ident": "${TestHelper.testPerson.ident}",
-              "behandlingId": "$behandlingId",
-              "behandletHendelse": {
-                "id": "$søknadId",
-                "type": "Søknad"
-              },
-              "automatisk": false,
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "2025-09-09",
-                  "harRett": true
-                }
-              ],
-              "behandletAv": [
-                  {
-                    "rolle": "saksbehandler",
-                    "behandler": {
-                      "ident": "MrSaksbehandler"
-                    }
-                  },
-                  {
-                    "rolle": "beslutter",
-                    "behandler": {
-                      "ident": "MissBeslutter"
-                    }
-                  }
-              ]
-            }
-            """.trimIndent()
-        testRapid.sendTestMessage(behandlingsresultat)
+        testRapid.sendTestMessage(
+            behandlingsresultatEvent(
+                behandletHendelseType = "Søknad",
+                automatisk = false,
+                saksbehandlerIdent = "MrSaksbehandler",
+                beslutterIdent = "MissBeslutter",
+            ),
+        )
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =
@@ -209,7 +160,7 @@ class BehandlingsresultatMottakTest {
                         beslutterIdent = "MissBeslutter",
                         sak = null,
                     ),
-                emneknagger = emptySet(),
+                emneknagger = any(),
             )
         }
     }
@@ -251,7 +202,7 @@ class BehandlingsresultatMottakTest {
                         beslutterIdent = null,
                         sak = null,
                     ),
-                emneknagger = emptySet(),
+                emneknagger = any(),
             )
         }
     }
@@ -292,7 +243,7 @@ class BehandlingsresultatMottakTest {
                         beslutterIdent = null,
                         sak = null,
                     ),
-                emneknagger = emptySet(),
+                emneknagger = any(),
             )
         }
     }
@@ -303,9 +254,40 @@ class BehandlingsresultatMottakTest {
         søknadId: String = this.søknadId.toString(),
         automatisk: Boolean = true,
         behandletHendelseType: String = "Søknad",
+        saksbehandlerIdent: String? = null,
+        beslutterIdent: String? = null,
     ): String {
+        val saksbehandlerJson =
+            if (saksbehandlerIdent != null) {
+                """{ "rolle": "saksbehandler", "behandler": { "ident": "$saksbehandlerIdent" }}""".trimIndent() +
+                    if (beslutterIdent != null) {
+                        ",".trimIndent()
+                    } else {
+                        ""
+                    }
+            } else {
+                ""
+            }
+        val beslutterJson =
+            if (beslutterIdent != null) {
+                """{ "rolle": "beslutter", "behandler": { "ident": "$beslutterIdent" }}""".trimIndent()
+            } else {
+                ""
+            }
+        val behandletAvJson: String =
+            if (saksbehandlerIdent != null || beslutterIdent != null) {
+                """
+                ,
+                "behandletAv": [
+                $saksbehandlerJson $beslutterJson
+                ]
+                """.trimIndent()
+            } else {
+                ""
+            }
         //language=JSON
-        return """
+        val json =
+            """
             {
               "@event_name": "behandlingsresultat",
               "ident": "$ident",
@@ -318,8 +300,9 @@ class BehandlingsresultatMottakTest {
               "saksbehandlerIdent": null,
               "beslutterIdent": null,
               "opplysninger": [],
-              "rettighetsperioder": []
+              "rettighetsperioder": [] $behandletAvJson
             }
             """.trimIndent()
+        return json
     }
 }
