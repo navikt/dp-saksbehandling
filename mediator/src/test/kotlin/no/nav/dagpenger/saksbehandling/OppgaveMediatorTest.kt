@@ -958,7 +958,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal slette utsending hvis godkjenning av behandling feiler`() {
+    fun `Skal ikke slette utsending selv om godkjenning av behandling feiler, men slett hvis brevkilde endres`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
         val søknadId = UUIDv7.ny()
@@ -1021,15 +1021,28 @@ OppgaveMediatorTest {
                 behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            val oppgaveFraDB = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            oppgaveFraDB.tilstand().type shouldBe UNDER_BEHANDLING
 
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(datasource),
                 brevProdusent = mockk(),
                 rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
-                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId) shouldNotBe null
+                utsendingMediator.finnUtsendingForBehandlingId(oppgaveFraDB.behandling.behandlingId) shouldNotBe null
+            }
+
+            oppgaveMediator.endreMeldingOmVedtakKilde(
+                oppgaveId = oppgave.oppgaveId,
+                meldingOmVedtakKilde = INGEN,
+                saksbehandler = saksbehandler,
+            )
+            UtsendingMediator(
+                utsendingRepository = PostgresUtsendingRepository(datasource),
+                brevProdusent = mockk(),
+                rapidsConnection = mockk(relaxed = true),
+            ).also { utsendingMediator ->
+                utsendingMediator.finnUtsendingForBehandlingId(oppgaveFraDB.behandling.behandlingId) shouldBe null
             }
         }
     }

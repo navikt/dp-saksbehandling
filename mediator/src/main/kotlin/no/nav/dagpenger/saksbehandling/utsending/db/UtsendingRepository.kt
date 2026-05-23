@@ -11,6 +11,8 @@ interface UtsendingRepository {
     fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending?
 
     fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending
+
+    fun slettUtsending(utsendingId: UUID): Int
 }
 
 class UtsendingIkkeFunnet(

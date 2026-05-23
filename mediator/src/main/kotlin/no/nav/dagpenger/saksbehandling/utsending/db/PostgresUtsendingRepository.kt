@@ -154,6 +154,21 @@ class PostgresUtsendingRepository(
             Distribuert -> Utsending.Distribuert
             Avbrutt -> Utsending.Avbrutt
         }
+
+    override fun slettUtsending(utsendingId: UUID): Int =
+        sessionOf(ds).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        DELETE FROM utsending_v1
+                        WHERE id = :id
+                        """.trimIndent(),
+                    paramMap = mapOf("id" to utsendingId),
+                ).asUpdate,
+            )
+        }
 }
 
 private fun Session.lagreUtsendingSak(utsendingSak: UtsendingSak) {
