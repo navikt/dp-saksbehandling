@@ -1048,6 +1048,94 @@ OppgaveMediatorTest {
     }
 
     @Test
+    fun `Livssyklus for oppgave når godkjenning av behandling feiler, men vedtaket likevel fattes av regelmotor`() {
+        val behandlingId = UUIDv7.ny()
+        val saksbehandlerToken = "token"
+        val søknadId = UUIDv7.ny()
+        val behandlingClientMock =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.godkjenn(
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
+                coEvery {
+                    it.kreverTotrinnskontroll(
+                        behandlingId = behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(false)
+            }
+
+        settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+
+            shouldThrow<BehandlingException> {
+                oppgaveMediator.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = saksbehandler,
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            verify(exactly = 1) {
+                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
+            }
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
+
+            oppgaveMediator.håndter(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = testIdent,
+                        sak = null,
+                        automatiskBehandlet = false,
+                        saksbehandlerIdent = saksbehandler.navIdent,
+                        beslutterIdent = null,
+                    ),
+                emneknagger = setOf("Avslag", "Ordinær"),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { dbOppgave ->
+                dbOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+                dbOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            }
+        }
+    }
+
+    @Test
     fun `Skal kaste feil dersom godkjenn behandling feiler`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
@@ -1097,8 +1185,7 @@ OppgaveMediatorTest {
                 behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
