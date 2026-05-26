@@ -4,26 +4,25 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import java.util.UUID
-import javax.sql.DataSource
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class PostgresPersonRepository(
-    private val dataSource: DataSource,
+    private val databaseSession: DatabaseSession,
 ) : PersonRepository,
     SkjermingRepository,
     AdressebeskyttelseRepository {
     override fun finnPerson(ident: String): Person? {
         sikkerlogg.info { "Søker etter person med ident $ident" }
-        sessionOf(dataSource).use { session ->
-            return session.run(
+        return databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -45,8 +44,8 @@ class PostgresPersonRepository(
 
     override fun finnPerson(id: UUID): Person? {
         sikkerlogg.info { "Søker etter person med id $id" }
-        sessionOf(dataSource).use { session ->
-            return session.run(
+        return databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -68,8 +67,8 @@ class PostgresPersonRepository(
 
     fun finnPersonForBehandlingId(behandlingId: UUID): Person? {
         sikkerlogg.info { "Søker etter person med behandlingId $behandlingId" }
-        sessionOf(dataSource).use { session ->
-            return session.run(
+        return databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -105,19 +104,18 @@ class PostgresPersonRepository(
     override fun hentPersonForBehandlingId(behandlingId: UUID) =
         finnPersonForBehandlingId(behandlingId) ?: throw DataNotFoundException("Kan ikke finne person fra behandlingId $behandlingId")
 
-    override fun lagre(person: Person) {
-        sessionOf(dataSource).use { session ->
+    override fun lagre(person: Person) =
+        databaseSession.session { session ->
             session.transaction { tx ->
                 tx.lagre(person)
             }
         }
-    }
 
     override fun oppdaterSkjermingStatus(
         fnr: String,
         skjermet: Boolean,
     ): Int =
-        sessionOf(dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -140,7 +138,7 @@ class PostgresPersonRepository(
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int =
-        sessionOf(dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -161,7 +159,7 @@ class PostgresPersonRepository(
 
     override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
         val identer = fnrs.joinToString { "'$it'" }
-        return sessionOf(dataSource).use { session ->
+        return databaseSession.session { session ->
             session
                 .run(
                     queryOf(

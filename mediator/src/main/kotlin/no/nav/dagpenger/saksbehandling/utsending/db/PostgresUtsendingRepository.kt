@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
@@ -15,13 +15,12 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distrib
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import java.util.UUID
-import javax.sql.DataSource
 
 class PostgresUtsendingRepository(
-    private val ds: DataSource,
+    private val databaseSession: DatabaseSession,
 ) : UtsendingRepository {
     override fun lagre(utsending: Utsending) {
-        sessionOf(ds).use { session ->
+        databaseSession.session { session ->
             session.transaction { tx ->
                 utsending.sak()?.let { tx.lagreUtsendingSak(it) }
                 tx.run(
@@ -79,7 +78,7 @@ class PostgresUtsendingRepository(
     }
 
     override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean =
-        sessionOf(ds).use { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -98,9 +97,9 @@ class PostgresUtsendingRepository(
         finnUtsendingForBehandlingId(behandlingId)
             ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
 
-    override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? {
-        sessionOf(ds).use { session ->
-            return session.run(
+    override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? =
+        databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -143,7 +142,6 @@ class PostgresUtsendingRepository(
                 }.asSingle,
             )
         }
-    }
 
     private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Tilstand =
         when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
