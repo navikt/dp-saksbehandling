@@ -18,15 +18,7 @@ data class DatabaseSession(
 ) {
     fun <R> session(block: (Session) -> R): R = sessionOf(dataSource.value).use(block)
 
-    fun transaction(transactionBlock: PostgresUnitOfWork.() -> Unit) {
-        session { session ->
-            session.connection.underlying.withTransaction {
-                PostgresUnitOfWork(session).apply(transactionBlock)
-            }
-        }
-    }
-
-    fun <R> withTransaction(transactionBlock: PostgresUnitOfWork.() -> R): R =
+    fun <R> transaction(transactionBlock: PostgresUnitOfWork.() -> R): R =
         session { session ->
             session.connection.underlying.withTransaction {
                 transactionBlock(PostgresUnitOfWork(session))
@@ -68,11 +60,10 @@ private fun Connection.commitAndCount() {
 }
 
 private fun Connection.rollbackAndCount() {
-    val timer = DbMetrics.transactionDuration.startTimer()
     try {
         rollback()
         DbMetrics.rollbackCounter.inc()
-    } finally {
-        timer.observeDuration()
+    } catch (e: Exception) {
+        dbLogger.error(e) { "Rollback feilet" }
     }
 }

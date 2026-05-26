@@ -66,7 +66,7 @@ class PostgresOppgaveRepository(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): UUID? =
-        databaseSession.withTransaction {
+        databaseSession.transaction {
             val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
             val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'${it.name}'" }
             val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
@@ -102,6 +102,7 @@ class PostgresOppgaveRepository(
                             }
                         categoryConditions.joinToString(" ")
                     }
+
                     else -> ""
                 }
 
@@ -323,7 +324,7 @@ class PostgresOppgaveRepository(
         when (val notat = oppgave.tilstand().notat()) {
             null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
             else -> {
-                databaseSession.withTransaction {
+                databaseSession.transaction {
                     lagreNotat(
                         notatId = notat.notatId,
                         tilstandsendringId = oppgave.tilstandslogg.first().id,
@@ -337,7 +338,7 @@ class PostgresOppgaveRepository(
     override fun slettNotatFor(oppgave: Oppgave) {
         val tilstandsloggId = oppgave.tilstandslogg.first().id
 
-        databaseSession.session { session ->
+        databaseSession.transaction {
             session.run(
                 queryOf(
                     //language=PostgreSQL
