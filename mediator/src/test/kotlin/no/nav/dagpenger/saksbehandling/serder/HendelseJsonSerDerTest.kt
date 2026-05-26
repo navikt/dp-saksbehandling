@@ -259,7 +259,9 @@ class HendelseJsonSerDerTest {
                         id = UUIDv7.ny().toString(),
                     ),
                 automatiskBehandlet = false,
+                utførtAv = Applikasjon.DpBehandling,
             )
+        //language=JSON
         val json =
             """
             {

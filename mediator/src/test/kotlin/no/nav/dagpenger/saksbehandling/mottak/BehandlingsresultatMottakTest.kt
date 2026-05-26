@@ -114,13 +114,13 @@ class BehandlingsresultatMottakTest {
 
     @Test
     fun `skal håndtere behandlingsresultat som kun er behandlet av saksbehandler`() {
-        testRapid.sendTestMessage(
+        val behandlingsresultat =
             behandlingsresultatEvent(
                 behandletHendelseType = "Søknad",
                 automatisk = false,
                 saksbehandlerIdent = "MrSaksbehandler",
-            ),
-        )
+            )
+        testRapid.sendTestMessage(behandlingsresultat)
         verify(exactly = 1) {
             oppgaveMediatorMock.håndter(
                 vedtakFattetHendelse =

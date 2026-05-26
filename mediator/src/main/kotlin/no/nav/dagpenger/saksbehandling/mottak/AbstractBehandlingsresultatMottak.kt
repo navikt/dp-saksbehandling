@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 internal abstract class AbstractBehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
@@ -84,7 +85,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
                             tilganger = emptySet(),
                         )
                     } ?: Applikasjon.DpBehandling,
-        )
+        ).also { sikkerlogg.info { "VedtakFattetHendelse: $it" } }
     }
 
     override fun onPacket(
@@ -99,6 +100,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
             "behandlingId" to "${behandlingsresultat.behandlingId}",
         ) {
             logger.info { "Mottok behandlingsresultat hendelse i $mottakNavn" }
+            sikkerlogg.info { "Mottok behandlingsresultat hendelse i $mottakNavn: $behandlingsresultat" }
             håndter(behandlingsresultat, packet, context, metadata, meterRegistry)
         }
     }

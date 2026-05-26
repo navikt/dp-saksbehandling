@@ -1113,24 +1113,33 @@ OppgaveMediatorTest {
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
 
+            val vedtakFattetHendelse =
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    ident = testIdent,
+                    sak = null,
+                    automatiskBehandlet = false,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    beslutterIdent = null,
+                    utførtAv =
+                        Saksbehandler(
+                            navIdent = saksbehandler.navIdent,
+                            grupper = emptySet(),
+                            tilganger = emptySet(),
+                        ),
+                )
             oppgaveMediator.håndter(
-                vedtakFattetHendelse =
-                    VedtakFattetHendelse(
-                        behandlingId = behandlingId,
-                        behandletHendelseId = søknadId.toString(),
-                        behandletHendelseType = "Søknad",
-                        ident = testIdent,
-                        sak = null,
-                        automatiskBehandlet = false,
-                        saksbehandlerIdent = saksbehandler.navIdent,
-                        beslutterIdent = null,
-                    ),
+                vedtakFattetHendelse = vedtakFattetHendelse,
                 emneknagger = setOf("Avslag", "Ordinær"),
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { dbOppgave ->
                 dbOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
                 dbOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+                dbOppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+                dbOppgave.tilstandslogg.first().hendelse shouldBe vedtakFattetHendelse
             }
         }
     }
