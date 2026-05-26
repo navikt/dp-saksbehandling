@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -38,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -221,7 +221,7 @@ class PostgresOppgaveRepository(
                     }.asSingle,
                 )
             oppgaveIdOgTilstandType?.let {
-                session.lagre(
+                lagre(
                     it.first,
                     Tilstandsendring(
                         tilstand = it.second,
@@ -234,7 +234,7 @@ class PostgresOppgaveRepository(
 
     override fun lagre(oppgave: Oppgave) {
         databaseSession.transaction {
-            session.lagre(oppgave)
+            lagre(oppgave)
         }
     }
 
@@ -323,8 +323,8 @@ class PostgresOppgaveRepository(
         when (val notat = oppgave.tilstand().notat()) {
             null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
             else -> {
-                databaseSession.session { session ->
-                    session.lagreNotat(
+                databaseSession.withTransaction {
+                    lagreNotat(
                         notatId = notat.notatId,
                         tilstandsendringId = oppgave.tilstandslogg.first().id,
                         tekst = notat.hentTekst(),
@@ -686,8 +686,8 @@ private fun hentTilstandsloggForOppgave(
             ).let { OppgaveTilstandslogg(it) }
     }
 
-private fun Session.lagre(oppgave: Oppgave) {
-    run(
+private fun PostgresUnitOfWork.lagre(oppgave: Oppgave) {
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =
@@ -746,13 +746,13 @@ private fun Session.lagre(oppgave: Oppgave) {
     }
 }
 
-private fun Session.lagreNotat(
+private fun PostgresUnitOfWork.lagreNotat(
     notatId: UUID,
     tilstandsendringId: UUID,
     tekst: String,
     skrevetAv: String,
 ): LocalDateTime =
-    run(
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =
@@ -776,11 +776,11 @@ private fun Session.lagreNotat(
         "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
     )
 
-private fun Session.lagre(
+private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,
     emneknagger: Set<String>,
 ) {
-    run(
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =
@@ -793,7 +793,7 @@ private fun Session.lagre(
         ).asUpdate,
     )
     emneknagger.forEach { emneknagg ->
-        run(
+        session.run(
             queryOf(
                 //language=PostgreSQL
                 statement =
@@ -810,11 +810,11 @@ private fun Session.lagre(
     }
 }
 
-private fun Session.lagre(
+private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,
     tilstandsendring: Tilstandsendring<Type>,
 ) {
-    this.run(
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =
@@ -842,7 +842,7 @@ private fun Session.lagre(
     )
 }
 
-private fun Session.lagre(
+private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,
     tilstandslogg: OppgaveTilstandslogg,
 ) {

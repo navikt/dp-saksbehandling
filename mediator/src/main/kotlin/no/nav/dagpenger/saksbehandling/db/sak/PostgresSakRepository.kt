@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.db.sak
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -11,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
@@ -26,7 +26,7 @@ class PostgresSakRepository(
 ) : SakRepository {
     override fun lagre(sakHistorikk: SakHistorikk) {
         databaseSession.transaction {
-            session.lagreSakHistorikk(
+            lagreSakHistorikk(
                 personId = sakHistorikk.person.id,
                 saker = sakHistorikk.alleSaker(),
             )
@@ -194,18 +194,18 @@ class PostgresSakRepository(
             ) ?: throw DataNotFoundException("Kan ikke finne dagpenger sak for behandlingId $behandlingId")
         }
 
-    private fun Session.lagreSakHistorikk(
+    private fun PostgresUnitOfWork.lagreSakHistorikk(
         personId: UUID,
         saker: List<Sak>,
     ) {
         saker.forEach { sak -> this.lagreSak(personId, sak) }
     }
 
-    private fun Session.lagreSak(
+    private fun PostgresUnitOfWork.lagreSak(
         personId: UUID,
         sak: Sak,
     ) {
-        run(
+        session.run(
             queryOf(
                 //language=PostgreSQL
                 statement =
@@ -232,7 +232,7 @@ class PostgresSakRepository(
         )
     }
 
-    private fun Session.lagreBehandlinger(
+    private fun PostgresUnitOfWork.lagreBehandlinger(
         personId: UUID,
         sakId: UUID,
         behandlinger: List<Behandling>,
@@ -246,11 +246,11 @@ class PostgresSakRepository(
         }
     }
 
-    private fun Session.lagreHendelse(
+    private fun PostgresUnitOfWork.lagreHendelse(
         behandlingId: UUID,
         hendelse: Hendelse,
     ) {
-        run(
+        session.run(
             queryOf(
                 //language=PostgreSQL
                 statement =
@@ -281,7 +281,7 @@ class PostgresSakRepository(
         behandling: Behandling,
     ) {
         databaseSession.transaction {
-            session.lagreBehandling(
+            lagreBehandling(
                 personId = personId,
                 sakId = sakId,
                 behandling = behandling,
@@ -337,12 +337,12 @@ class PostgresSakRepository(
         }
     }
 
-    private fun Session.lagreBehandling(
+    private fun PostgresUnitOfWork.lagreBehandling(
         personId: UUID,
         sakId: UUID?,
         behandling: Behandling,
     ) {
-        run(
+        session.run(
             queryOf(
                 //language=PostgreSQL
                 statement =

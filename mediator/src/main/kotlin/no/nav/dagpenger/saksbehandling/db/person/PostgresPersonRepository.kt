@@ -2,12 +2,12 @@ package no.nav.dagpenger.saksbehandling.db.person
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import java.util.UUID
@@ -106,7 +106,7 @@ class PostgresPersonRepository(
 
     override fun lagre(person: Person) =
         databaseSession.transaction {
-            session.lagre(person)
+            lagre(person)
         }
 
     override fun oppdaterSkjermingStatus(
@@ -176,8 +176,8 @@ class PostgresPersonRepository(
     }
 }
 
-private fun Session.lagre(person: Person) {
-    run(
+private fun PostgresUnitOfWork.lagre(person: Person) {
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =

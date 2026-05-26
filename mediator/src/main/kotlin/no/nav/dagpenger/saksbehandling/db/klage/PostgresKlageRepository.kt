@@ -2,11 +2,11 @@ package no.nav.dagpenger.saksbehandling.db.klage
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -34,7 +34,7 @@ class PostgresKlageRepository(
 ) : KlageRepository {
     override fun lagre(klageBehandling: KlageBehandling) {
         databaseSession.transaction {
-            session.lagre(klageBehandling)
+            lagre(klageBehandling)
         }
     }
 
@@ -74,8 +74,8 @@ class PostgresKlageRepository(
         return klageBehandling
     }
 
-    private fun Session.lagre(klageBehandling: KlageBehandling) {
-        run(
+    private fun PostgresUnitOfWork.lagre(klageBehandling: KlageBehandling) {
+        session.run(
             queryOf(
                 //language=PostgreSQL
                 statement =
@@ -108,7 +108,7 @@ class PostgresKlageRepository(
         lagre(behandlingId = klageBehandling.behandlingId, klageinstansVedtak = klageBehandling.klageinstansVedtak())
     }
 
-    private fun Session.lagre(
+    private fun PostgresUnitOfWork.lagre(
         behandlingId: UUID,
         tilstandslogg: KlageTilstandslogg,
     ) {
@@ -117,13 +117,13 @@ class PostgresKlageRepository(
         }
     }
 
-    private fun Session.lagre(
+    private fun PostgresUnitOfWork.lagre(
         behandlingId: UUID,
         klageinstansVedtak: KlageinstansVedtak?,
     ) {
         klageinstansVedtak?.let { _ ->
-            val journalpostIderArray = this.createArrayOf("text", klageinstansVedtak.journalpostIder)
-            this.run(
+            val journalpostIderArray = session.createArrayOf("text", klageinstansVedtak.journalpostIder)
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -147,11 +147,11 @@ class PostgresKlageRepository(
         }
     }
 
-    private fun Session.lagre(
+    private fun PostgresUnitOfWork.lagre(
         behandlingId: UUID,
         tilstandsendring: Tilstandsendring<KlageTilstand.Type>,
     ) {
-        this.run(
+        session.run(
             queryOf(
                 //language=PostgreSQL
                 statement =

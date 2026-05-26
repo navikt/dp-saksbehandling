@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.utsending.db
 
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
@@ -21,7 +21,7 @@ class PostgresUtsendingRepository(
 ) : UtsendingRepository {
     override fun lagre(utsending: Utsending) {
         databaseSession.transaction {
-            utsending.sak()?.let { session.lagreUtsendingSak(it) }
+            utsending.sak()?.let { lagreUtsendingSak(it) }
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -167,8 +167,8 @@ class PostgresUtsendingRepository(
         }
 }
 
-private fun Session.lagreUtsendingSak(utsendingSak: UtsendingSak) {
-    this.run(
+private fun PostgresUnitOfWork.lagreUtsendingSak(utsendingSak: UtsendingSak) {
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =
