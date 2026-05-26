@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -33,7 +34,7 @@ class OppgaveFristUtgåttJobTest {
             person = TestHelper.testPerson,
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(testDatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = repo,

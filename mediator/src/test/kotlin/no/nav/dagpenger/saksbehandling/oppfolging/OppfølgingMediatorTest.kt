@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
+import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
@@ -31,17 +32,17 @@ class OppfølgingMediatorTest {
     @Test
     fun `E2E - opprette og ferdigstille oppfølging`() {
         DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val oppfølgingRepository = PostgresOppfølgingRepository(testDatabaseSession(ds))
+            val personMediator = PersonMediator(PostgresPersonRepository(testDatabaseSession(ds)), mockk())
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(ds),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(ds),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(ds)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
@@ -117,15 +118,15 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstill med OpprettOppfølging - frist og beholdOppgaven gir ny oppgave i PåVent`() {
         DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val oppfølgingRepository = PostgresOppfølgingRepository(testDatabaseSession(ds))
+            val personMediator = PersonMediator(PostgresPersonRepository(testDatabaseSession(ds)), mockk())
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(ds),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = oppgaveRepository,
@@ -186,15 +187,15 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstill med OpprettOppfølging uten beholdOppgaven gir ny oppgave i KlarTilBehandling uten behandler`() {
         DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(ds)
-            val personMediator = PersonMediator(PostgresPersonRepository(ds), mockk())
+            val oppfølgingRepository = PostgresOppfølgingRepository(testDatabaseSession(ds))
+            val personMediator = PersonMediator(PostgresPersonRepository(testDatabaseSession(ds)), mockk())
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(ds),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
+            val oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = oppgaveRepository,

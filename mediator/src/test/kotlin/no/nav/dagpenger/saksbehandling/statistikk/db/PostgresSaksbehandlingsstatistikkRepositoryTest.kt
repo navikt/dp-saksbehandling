@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.beslutter
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -55,7 +56,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 oppgave = oppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(testDatabaseSession(ds))
             val førsteTilstandsendring =
                 postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                     it.size shouldBe 1
@@ -98,7 +99,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 ),
             )
 
-            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(oppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                 it.size shouldBe 1
@@ -144,7 +145,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     utførtAv = beslutter,
                 ),
             )
-            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(oppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                 it.size shouldBe 4
@@ -201,7 +202,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     utførtAv = TestHelper.saksbehandler,
                 ),
             )
-            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(oppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                 it.size shouldBe 2
@@ -250,7 +251,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 oppgave = oppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(testDatabaseSession(ds))
             val førsteTilstandsendring =
                 postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                     it.size shouldBe 1
@@ -293,7 +294,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 ),
             )
 
-            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(oppgave)
             val andreTilstandsendring =
                 postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                     it.size shouldBe 1
@@ -335,7 +336,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 ),
             )
 
-            PostgresOppgaveRepository(dataSource = ds).lagre(oppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(oppgave)
             val tredjeTilstandsendring =
                 postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
                     it.size shouldBe 1
@@ -398,7 +399,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 oppgave = innsendingOppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(testDatabaseSession(ds))
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
 
             innsendingOppgave.tildel(
@@ -409,7 +410,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 ),
             )
 
-            PostgresOppgaveRepository(dataSource = ds).lagre(innsendingOppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(innsendingOppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
         }
@@ -442,7 +443,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 oppgave = klageOppgave,
                 merkSomEgenSak = true,
             )
-            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(dataSource = ds)
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(testDatabaseSession(ds))
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
             klageOppgave.tildel(
@@ -453,7 +454,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 ),
             )
 
-            PostgresOppgaveRepository(dataSource = ds).lagre(klageOppgave)
+            PostgresOppgaveRepository(testDatabaseSession(ds)).lagre(klageOppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
         }

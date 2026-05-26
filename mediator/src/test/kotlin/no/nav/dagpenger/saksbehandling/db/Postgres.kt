@@ -5,6 +5,8 @@ import org.flywaydb.core.internal.configuration.ConfigUtils
 import org.testcontainers.postgresql.PostgreSQLContainer
 import javax.sql.DataSource
 
+internal fun testDatabaseSession(ds: DataSource) = DatabaseSession(lazy { ds })
+
 internal object Postgres {
     val instance by lazy {
         PostgreSQLContainer("postgres:18.1").apply {

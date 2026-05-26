@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
+import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -1063,19 +1064,19 @@ class KlageMediatorTest {
         test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
     ) {
         withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val personRepository = PostgresPersonRepository(testDatabaseSession(dataSource))
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
 
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(dataSource = dataSource),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(dataSource)),
                     rapidsConnection = testRapid,
                 )
 
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(dataSource),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(dataSource)),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
@@ -1083,7 +1084,7 @@ class KlageMediatorTest {
                 )
             val klageMediator =
                 KlageMediator(
-                    klageRepository = PostgresKlageRepository(dataSource),
+                    klageRepository = PostgresKlageRepository(testDatabaseSession(dataSource)),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,

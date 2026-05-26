@@ -30,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
+import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
@@ -144,18 +145,18 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingRepository = PostgresInnsendingRepository(testDatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -300,18 +301,18 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingRepository = PostgresInnsendingRepository(testDatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -387,12 +388,12 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
@@ -516,18 +517,18 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingRepository = PostgresInnsendingRepository(testDatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -628,7 +629,7 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val behandlingKlientMock =
@@ -638,13 +639,13 @@ class InnsendingMediatorTest {
                 }
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingRepository = PostgresInnsendingRepository(testDatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -773,7 +774,7 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(testDatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val behandlingKlientMock =
@@ -783,13 +784,13 @@ class InnsendingMediatorTest {
                 }
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingRepository = PostgresInnsendingRepository(testDatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,

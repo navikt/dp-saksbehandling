@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAksjon
 import org.junit.jupiter.api.Test
@@ -23,8 +24,8 @@ class PostgresOppfølgingRepositoryTest {
     @Test
     fun `Skal lagre og hente oppfølging`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repository = PostgresOppfølgingRepository(ds)
+            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val repository = PostgresOppfølgingRepository(testDatabaseSession(ds))
 
             personRepository.lagre(testPerson)
 
@@ -50,8 +51,8 @@ class PostgresOppfølgingRepositoryTest {
     @Test
     fun `Skal oppdatere oppfølging ved ferdigstilling`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repository = PostgresOppfølgingRepository(ds)
+            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val repository = PostgresOppfølgingRepository(testDatabaseSession(ds))
 
             personRepository.lagre(testPerson)
 
@@ -84,8 +85,8 @@ class PostgresOppfølgingRepositoryTest {
     @Test
     fun `Skal lagre og hente oppgave med klage-resultat`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repository = PostgresOppfølgingRepository(ds)
+            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val repository = PostgresOppfølgingRepository(testDatabaseSession(ds))
 
             personRepository.lagre(testPerson)
 
@@ -113,8 +114,8 @@ class PostgresOppfølgingRepositoryTest {
     @Test
     fun `Skal lagre og hente oppgave med RettTilDagpenger-resultat`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repository = PostgresOppfølgingRepository(ds)
+            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val repository = PostgresOppfølgingRepository(testDatabaseSession(ds))
 
             personRepository.lagre(testPerson)
 
@@ -144,8 +145,8 @@ class PostgresOppfølgingRepositoryTest {
     @Test
     fun `Skal finne oppgaver for person`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repository = PostgresOppfølgingRepository(ds)
+            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val repository = PostgresOppfølgingRepository(testDatabaseSession(ds))
 
             personRepository.lagre(testPerson)
 
@@ -173,7 +174,7 @@ class PostgresOppfølgingRepositoryTest {
     @Test
     fun `Skal returnere null ved finn med ukjent id`() {
         withMigratedDb { ds ->
-            val repository = PostgresOppfølgingRepository(ds)
+            val repository = PostgresOppfølgingRepository(testDatabaseSession(ds))
 
             val resultat = repository.finn(UUID.randomUUID())
 
