@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.db.person
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.TransactionalSession
+import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
@@ -105,10 +105,8 @@ class PostgresPersonRepository(
         finnPersonForBehandlingId(behandlingId) ?: throw DataNotFoundException("Kan ikke finne person fra behandlingId $behandlingId")
 
     override fun lagre(person: Person) =
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                tx.lagre(person)
-            }
+        databaseSession.transaction {
+            session.lagre(person)
         }
 
     override fun oppdaterSkjermingStatus(
@@ -178,7 +176,7 @@ class PostgresPersonRepository(
     }
 }
 
-private fun TransactionalSession.lagre(person: Person) {
+private fun Session.lagre(person: Person) {
     run(
         queryOf(
             //language=PostgreSQL

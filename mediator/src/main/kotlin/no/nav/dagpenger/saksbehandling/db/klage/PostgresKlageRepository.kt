@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.db.klage
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.TransactionalSession
+import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
@@ -33,10 +33,8 @@ class PostgresKlageRepository(
     private val databaseSession: DatabaseSession,
 ) : KlageRepository {
     override fun lagre(klageBehandling: KlageBehandling) {
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                tx.lagre(klageBehandling)
-            }
+        databaseSession.transaction {
+            session.lagre(klageBehandling)
         }
     }
 
@@ -76,7 +74,7 @@ class PostgresKlageRepository(
         return klageBehandling
     }
 
-    private fun TransactionalSession.lagre(klageBehandling: KlageBehandling) {
+    private fun Session.lagre(klageBehandling: KlageBehandling) {
         run(
             queryOf(
                 //language=PostgreSQL
@@ -110,7 +108,7 @@ class PostgresKlageRepository(
         lagre(behandlingId = klageBehandling.behandlingId, klageinstansVedtak = klageBehandling.klageinstansVedtak())
     }
 
-    private fun TransactionalSession.lagre(
+    private fun Session.lagre(
         behandlingId: UUID,
         tilstandslogg: KlageTilstandslogg,
     ) {
@@ -119,7 +117,7 @@ class PostgresKlageRepository(
         }
     }
 
-    private fun TransactionalSession.lagre(
+    private fun Session.lagre(
         behandlingId: UUID,
         klageinstansVedtak: KlageinstansVedtak?,
     ) {
@@ -149,7 +147,7 @@ class PostgresKlageRepository(
         }
     }
 
-    private fun TransactionalSession.lagre(
+    private fun Session.lagre(
         behandlingId: UUID,
         tilstandsendring: Tilstandsendring<KlageTilstand.Type>,
     ) {

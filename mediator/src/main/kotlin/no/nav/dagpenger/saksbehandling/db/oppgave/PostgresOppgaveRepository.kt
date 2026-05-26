@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.Session
-import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -67,59 +66,58 @@ class PostgresOppgaveRepository(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): UUID? =
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
-                val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'${it.name}'" }
-                val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
-                val utløstAvTypeClause =
-                    if (filter.utløstAvTyper.isNotEmpty()) {
-                        " AND beha.utlost_av IN ($utløstAvTyperAsText) "
-                    } else {
-                        ""
+        databaseSession.withTransaction {
+            val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
+            val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'${it.name}'" }
+            val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
+            val utløstAvTypeClause =
+                if (filter.utløstAvTyper.isNotEmpty()) {
+                    " AND beha.utlost_av IN ($utløstAvTyperAsText) "
+                } else {
+                    ""
+                }
+            val tilstandClause =
+                if (filter.tilstander.isNotEmpty()) {
+                    " AND oppg.tilstand IN ($tilstanderAsText) "
+                } else {
+                    ""
+                }
+
+            // language=SQL
+            val emneknaggClause =
+                when {
+                    filter.emneknaggGruppertPerKategori.isNotEmpty() -> {
+                        // AND mellom kategorier, OR innenfor samme kategori
+                        val categoryConditions =
+                            filter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
+                                val emneknaggList = emneknagger.joinToString { "'$it'" }
+                                """
+                                AND EXISTS(
+                                    SELECT 1
+                                    FROM   emneknagg_v1 emne
+                                    WHERE  emne.oppgave_id = oppg.id
+                                    AND    emne.emneknagg IN ($emneknaggList)
+                                )
+                                """.trimIndent()
+                            }
+                        categoryConditions.joinToString(" ")
                     }
-                val tilstandClause =
-                    if (filter.tilstander.isNotEmpty()) {
-                        " AND oppg.tilstand IN ($tilstanderAsText) "
-                    } else {
-                        ""
-                    }
+                    else -> ""
+                }
 
-                // language=SQL
-                val emneknaggClause =
-                    when {
-                        filter.emneknaggGruppertPerKategori.isNotEmpty() -> {
-                            // AND mellom kategorier, OR innenfor samme kategori
-                            val categoryConditions =
-                                filter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
-                                    val emneknaggList = emneknagger.joinToString { "'$it'" }
-                                    """
-                                    AND EXISTS(
-                                        SELECT 1
-                                        FROM   emneknagg_v1 emne
-                                        WHERE  emne.oppgave_id = oppg.id
-                                        AND    emne.emneknagg IN ($emneknaggList)
-                                    )
-                                    """.trimIndent()
-                                }
-                            categoryConditions.joinToString(" ")
-                        }
-                        else -> ""
-                    }
+            // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
+            // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
+            // Det sjekkes derfor mot tilganger i utplukket.
 
-                // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
-                // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
-                // Det sjekkes derfor mot tilganger i utplukket.
+            // language=SQL
+            val withStatement =
+                """
+                WITH neste_oppgave AS ( WITH alle_oppgaver AS (
+                """.trimIndent()
 
-                // language=SQL
-                val withStatement =
-                    """
-                    WITH neste_oppgave AS ( WITH alle_oppgaver AS (
-                    """.trimIndent()
-
-                // language=SQL
-                val selectKlarTilBehandlingOppgaver =
-                    """
+            // language=SQL
+            val selectKlarTilBehandlingOppgaver =
+                """
                     SELECT   oppg.*
                     FROM     oppgave_v1    oppg
                     JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
@@ -133,12 +131,12 @@ class PostgresOppgaveRepository(
                     AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
                     """ + utløstAvTypeClause + tilstandClause + emneknaggClause
 
-                // language=SQL
-                val unionAll = """UNION ALL"""
+            // language=SQL
+            val unionAll = """UNION ALL"""
 
-                // language=SQL
-                val selectKlarTilKontrollOppgaver =
-                    """
+            // language=SQL
+            val selectKlarTilKontrollOppgaver =
+                """
                     SELECT  oppg.*
                     FROM    oppgave_v1    oppg
                     JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
@@ -167,23 +165,23 @@ class PostgresOppgaveRepository(
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
                 """ + utløstAvTypeClause + tilstandClause + emneknaggClause +
-                        """
-                        )
-                        """.trimIndent()
-
-                // language=SQL
-                val selectAlleAktuelleOppgaverOrderByOpprettet =
                     """
-                        SELECT *
-                        FROM   alle_oppgaver alop
-                        ORDER BY alop.opprettet, alop.id
-                        FETCH FIRST 1 ROWS ONLY
                     )
                     """.trimIndent()
 
-                // language=SQL
-                val updateNesteOppgave =
-                    """
+            // language=SQL
+            val selectAlleAktuelleOppgaverOrderByOpprettet =
+                """
+                    SELECT *
+                    FROM   alle_oppgaver alop
+                    ORDER BY alop.opprettet, alop.id
+                    FETCH FIRST 1 ROWS ONLY
+                )
+                """.trimIndent()
+
+            // language=SQL
+            val updateNesteOppgave =
+                """
                 UPDATE oppgave_v1 oppu
                 SET    saksbehandler_ident = :saksbehandler_ident
                      , tilstand            = CASE oppu.tilstand
@@ -194,52 +192,49 @@ class PostgresOppgaveRepository(
                 WHERE next.id = oppu.id
                 RETURNING *
                 """
-                val statement =
-                    withStatement +
-                        selectKlarTilBehandlingOppgaver +
-                        unionAll +
-                        selectKlarTilKontrollOppgaver +
-                        selectAlleAktuelleOppgaverOrderByOpprettet +
-                        updateNesteOppgave
+            val statement =
+                withStatement +
+                    selectKlarTilBehandlingOppgaver +
+                    unionAll +
+                    selectKlarTilKontrollOppgaver +
+                    selectAlleAktuelleOppgaverOrderByOpprettet +
+                    updateNesteOppgave
 
-                sikkerlogger.info { "Henter oppgaver med SQL i tildelNesteOppgave: $statement - Filter = $filter" }
+            sikkerlogger.info { "Henter oppgaver med SQL i tildelNesteOppgave: $statement - Filter = $filter" }
 
-                val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
-                    tx.run(
-                        queryOf(
-                            statement = statement,
-                            paramMap =
-                                mapOf(
-                                    "saksbehandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
-                                    "fom" to filter.periode.fom,
-                                    "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
-                                    "har_tilgang_til_egne_ansatte" to filter.egneAnsatteTilgang,
-                                    "har_beslutter_rolle" to filter.harBeslutterRolle,
-                                    "navIdent" to filter.navIdent,
-                                ),
-                        ).map { row ->
-                            val tilstandType = Type.valueOf(row.string("tilstand"))
-                            Pair(row.uuid("id"), tilstandType)
-                        }.asSingle,
-                    )
-                oppgaveIdOgTilstandType?.let {
-                    tx.lagre(
-                        it.first,
-                        Tilstandsendring(
-                            tilstand = it.second,
-                            hendelse = nesteOppgaveHendelse,
-                        ),
-                    )
-                }
-                oppgaveIdOgTilstandType?.first
+            val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
+                session.run(
+                    queryOf(
+                        statement = statement,
+                        paramMap =
+                            mapOf(
+                                "saksbehandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
+                                "fom" to filter.periode.fom,
+                                "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                                "har_tilgang_til_egne_ansatte" to filter.egneAnsatteTilgang,
+                                "har_beslutter_rolle" to filter.harBeslutterRolle,
+                                "navIdent" to filter.navIdent,
+                            ),
+                    ).map { row ->
+                        val tilstandType = Type.valueOf(row.string("tilstand"))
+                        Pair(row.uuid("id"), tilstandType)
+                    }.asSingle,
+                )
+            oppgaveIdOgTilstandType?.let {
+                session.lagre(
+                    it.first,
+                    Tilstandsendring(
+                        tilstand = it.second,
+                        hendelse = nesteOppgaveHendelse,
+                    ),
+                )
             }
+            oppgaveIdOgTilstandType?.first
         }
 
     override fun lagre(oppgave: Oppgave) {
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                tx.lagre(oppgave)
-            }
+        databaseSession.transaction {
+            session.lagre(oppgave)
         }
     }
 
@@ -691,7 +686,7 @@ private fun hentTilstandsloggForOppgave(
             ).let { OppgaveTilstandslogg(it) }
     }
 
-private fun TransactionalSession.lagre(oppgave: Oppgave) {
+private fun Session.lagre(oppgave: Oppgave) {
     run(
         queryOf(
             //language=PostgreSQL
@@ -781,7 +776,7 @@ private fun Session.lagreNotat(
         "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
     )
 
-private fun TransactionalSession.lagre(
+private fun Session.lagre(
     oppgaveId: UUID,
     emneknagger: Set<String>,
 ) {
@@ -815,7 +810,7 @@ private fun TransactionalSession.lagre(
     }
 }
 
-private fun TransactionalSession.lagre(
+private fun Session.lagre(
     oppgaveId: UUID,
     tilstandsendring: Tilstandsendring<Type>,
 ) {
@@ -847,7 +842,7 @@ private fun TransactionalSession.lagre(
     )
 }
 
-private fun TransactionalSession.lagre(
+private fun Session.lagre(
     oppgaveId: UUID,
     tilstandslogg: OppgaveTilstandslogg,
 ) {

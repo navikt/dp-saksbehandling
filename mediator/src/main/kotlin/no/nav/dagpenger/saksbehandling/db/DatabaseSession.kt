@@ -25,6 +25,13 @@ data class DatabaseSession(
             }
         }
     }
+
+    fun <R> withTransaction(transactionBlock: PostgresUnitOfWork.() -> R): R =
+        session { session ->
+            session.connection.underlying.withTransaction {
+                transactionBlock(PostgresUnitOfWork(session))
+            }
+        }
 }
 
 private fun <R> Connection.withTransaction(transactionBlock: () -> R): R {

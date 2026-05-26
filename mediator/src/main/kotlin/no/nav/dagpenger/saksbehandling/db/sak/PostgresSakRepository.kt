@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.db.sak
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
-import kotliquery.TransactionalSession
+import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -25,13 +25,11 @@ class PostgresSakRepository(
     private val databaseSession: DatabaseSession,
 ) : SakRepository {
     override fun lagre(sakHistorikk: SakHistorikk) {
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                tx.lagreSakHistorikk(
-                    personId = sakHistorikk.person.id,
-                    saker = sakHistorikk.alleSaker(),
-                )
-            }
+        databaseSession.transaction {
+            session.lagreSakHistorikk(
+                personId = sakHistorikk.person.id,
+                saker = sakHistorikk.alleSaker(),
+            )
         }
     }
 
@@ -196,14 +194,14 @@ class PostgresSakRepository(
             ) ?: throw DataNotFoundException("Kan ikke finne dagpenger sak for behandlingId $behandlingId")
         }
 
-    private fun TransactionalSession.lagreSakHistorikk(
+    private fun Session.lagreSakHistorikk(
         personId: UUID,
         saker: List<Sak>,
     ) {
         saker.forEach { sak -> this.lagreSak(personId, sak) }
     }
 
-    private fun TransactionalSession.lagreSak(
+    private fun Session.lagreSak(
         personId: UUID,
         sak: Sak,
     ) {
@@ -234,7 +232,7 @@ class PostgresSakRepository(
         )
     }
 
-    private fun TransactionalSession.lagreBehandlinger(
+    private fun Session.lagreBehandlinger(
         personId: UUID,
         sakId: UUID,
         behandlinger: List<Behandling>,
@@ -248,7 +246,7 @@ class PostgresSakRepository(
         }
     }
 
-    private fun TransactionalSession.lagreHendelse(
+    private fun Session.lagreHendelse(
         behandlingId: UUID,
         hendelse: Hendelse,
     ) {
@@ -282,14 +280,12 @@ class PostgresSakRepository(
         sakId: UUID?,
         behandling: Behandling,
     ) {
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                tx.lagreBehandling(
-                    personId = personId,
-                    sakId = sakId,
-                    behandling = behandling,
-                )
-            }
+        databaseSession.transaction {
+            session.lagreBehandling(
+                personId = personId,
+                sakId = sakId,
+                behandling = behandling,
+            )
         }
     }
 
@@ -341,7 +337,7 @@ class PostgresSakRepository(
         }
     }
 
-    private fun TransactionalSession.lagreBehandling(
+    private fun Session.lagreBehandling(
         personId: UUID,
         sakId: UUID?,
         behandling: Behandling,

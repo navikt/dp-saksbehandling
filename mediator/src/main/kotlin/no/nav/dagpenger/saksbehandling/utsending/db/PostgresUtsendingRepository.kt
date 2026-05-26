@@ -20,60 +20,58 @@ class PostgresUtsendingRepository(
     private val databaseSession: DatabaseSession,
 ) : UtsendingRepository {
     override fun lagre(utsending: Utsending) {
-        databaseSession.session { session ->
-            session.transaction { tx ->
-                utsending.sak()?.let { tx.lagreUtsendingSak(it) }
-                tx.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            INSERT INTO utsending_v1(
-                                id, 
-                                behandling_id, 
-                                tilstand, 
-                                brev, 
-                                pdf_urn, 
-                                journalpost_id, 
-                                distribusjon_id, 
-                                utsending_sak_id, 
-                                type
-                            ) 
-                            VALUES(
-                                :id, 
-                                :behandling_id, 
-                                :tilstand, 
-                                :brev, 
-                                :pdf_urn, 
-                                :journalpost_id, 
-                                :distribusjon_id, 
-                                :utsending_sak_id, 
-                                :type
-                            ) 
-                            ON CONFLICT (id) DO UPDATE SET 
-                                tilstand = :tilstand,
-                                brev = :brev,
-                                pdf_urn = :pdf_urn,
-                                journalpost_id = :journalpost_id,
-                                distribusjon_id = :distribusjon_id,
-                                utsending_sak_id = :utsending_sak_id,
-                                type = :type
-                            """.trimIndent(),
-                        paramMap =
-                            mapOf(
-                                "id" to utsending.id,
-                                "behandling_id" to utsending.behandlingId,
-                                "tilstand" to utsending.tilstand().type.name,
-                                "brev" to utsending.brev(),
-                                "pdf_urn" to utsending.pdfUrn()?.toString(),
-                                "journalpost_id" to utsending.journalpostId(),
-                                "distribusjon_id" to utsending.distribusjonId(),
-                                "utsending_sak_id" to utsending.sak()?.id,
-                                "type" to utsending.type.name,
-                            ),
-                    ).asUpdate,
-                )
-            }
+        databaseSession.transaction {
+            utsending.sak()?.let { session.lagreUtsendingSak(it) }
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO utsending_v1(
+                            id, 
+                            behandling_id, 
+                            tilstand, 
+                            brev, 
+                            pdf_urn, 
+                            journalpost_id, 
+                            distribusjon_id, 
+                            utsending_sak_id, 
+                            type
+                        ) 
+                        VALUES(
+                            :id, 
+                            :behandling_id, 
+                            :tilstand, 
+                            :brev, 
+                            :pdf_urn, 
+                            :journalpost_id, 
+                            :distribusjon_id, 
+                            :utsending_sak_id, 
+                            :type
+                        ) 
+                        ON CONFLICT (id) DO UPDATE SET 
+                            tilstand = :tilstand,
+                            brev = :brev,
+                            pdf_urn = :pdf_urn,
+                            journalpost_id = :journalpost_id,
+                            distribusjon_id = :distribusjon_id,
+                            utsending_sak_id = :utsending_sak_id,
+                            type = :type
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "id" to utsending.id,
+                            "behandling_id" to utsending.behandlingId,
+                            "tilstand" to utsending.tilstand().type.name,
+                            "brev" to utsending.brev(),
+                            "pdf_urn" to utsending.pdfUrn()?.toString(),
+                            "journalpost_id" to utsending.journalpostId(),
+                            "distribusjon_id" to utsending.distribusjonId(),
+                            "utsending_sak_id" to utsending.sak()?.id,
+                            "type" to utsending.type.name,
+                        ),
+                ).asUpdate,
+            )
         }
     }
 
