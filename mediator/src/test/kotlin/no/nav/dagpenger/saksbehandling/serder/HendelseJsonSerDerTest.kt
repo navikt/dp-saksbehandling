@@ -29,6 +29,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.stream.Stream
+import kotlin.reflect.KClass
 
 class HendelseJsonSerDerTest {
     private val aUUID = "018fa4fe-8450-7fa2-9e47-cafa81f718cd"
@@ -89,6 +90,22 @@ class HendelseJsonSerDerTest {
                         behandletHendelseType = "Søknad",
                         ident = "12345678901",
                         sak = UtsendingSak(id = fixedUUID.toString()),
+                    ),
+                ),
+                Arguments.of(
+                    "VedtakFattetHendelse",
+                    VedtakFattetHendelse(
+                        behandlingId = fixedUUID,
+                        behandletHendelseId = fixedUUID.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = "12345678901",
+                        sak = UtsendingSak(id = fixedUUID.toString()),
+                        utførtAv =
+                            Saksbehandler(
+                                navIdent = "navIdent",
+                                grupper = emptySet(),
+                                tilganger = emptySet(),
+                            ),
                     ),
                 ),
                 Arguments.of(
@@ -263,6 +280,46 @@ class HendelseJsonSerDerTest {
     }
 
     @Test
+    fun `skal deserialisere vedtak fattet hendelse utført av saksbehandler`() {
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = UUIDv7.ny(),
+                behandletHendelseId = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
+                ident = "12345678901",
+                sak =
+                    UtsendingSak(
+                        id = UUIDv7.ny().toString(),
+                    ),
+                automatiskBehandlet = false,
+                utførtAv =
+                    Saksbehandler(
+                        navIdent = "sbIdent",
+                        grupper = emptySet(),
+                        tilganger = emptySet(),
+                    ),
+            )
+        //language=JSON
+        val json =
+            """
+            {
+                "behandlingId": "${vedtakFattetHendelse.behandlingId}",
+                "behandletHendelseId": "${vedtakFattetHendelse.behandletHendelseId}",
+                "behandletHendelseType": "${vedtakFattetHendelse.behandletHendelseType}",
+                "ident": "${vedtakFattetHendelse.ident}",
+                "sak": {
+                    "id": "${vedtakFattetHendelse.sak!!.id}",
+                    "kontekst": "Arena"
+                },
+                "automatiskBehandlet": ${vedtakFattetHendelse.automatiskBehandlet},
+                "utførtAv": { "navIdent": "sbIdent", "grupper": [], "tilganger": [] }
+            }
+            """.trimIndent()
+
+        json.tilHendelse<VedtakFattetHendelse>() shouldBe vedtakFattetHendelse
+    }
+
+    @Test
     fun `Skal deserialisere ReturnerTilSaksbehandlingHendelse med default årsak`() {
         val oppgaveId = UUIDv7.ny()
         val saksbehandler =
@@ -333,7 +390,7 @@ class HendelseJsonSerDerTest {
         }
     }
 
-    private fun finnAlleKonkreteSubklasser(klass: kotlin.reflect.KClass<out Hendelse>): List<kotlin.reflect.KClass<out Hendelse>> =
+    private fun finnAlleKonkreteSubklasser(klass: KClass<out Hendelse>): List<KClass<out Hendelse>> =
         klass.sealedSubclasses.flatMap { sub ->
             if (sub.isSealed) finnAlleKonkreteSubklasser(sub) else listOf(sub)
         }

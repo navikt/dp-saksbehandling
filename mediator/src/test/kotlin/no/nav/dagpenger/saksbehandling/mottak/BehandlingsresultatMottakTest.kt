@@ -7,6 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -131,6 +132,12 @@ class BehandlingsresultatMottakTest {
                         automatiskBehandlet = false,
                         saksbehandlerIdent = "MrSaksbehandler",
                         sak = null,
+                        utførtAv =
+                            Saksbehandler(
+                                navIdent = "MrSaksbehandler",
+                                grupper = emptySet(),
+                                tilganger = emptySet(),
+                            ),
                     ),
                 emneknagger = any(),
             )
@@ -159,6 +166,12 @@ class BehandlingsresultatMottakTest {
                         saksbehandlerIdent = "MrSaksbehandler",
                         beslutterIdent = "MissBeslutter",
                         sak = null,
+                        utførtAv =
+                            Saksbehandler(
+                                navIdent = "MissBeslutter",
+                                grupper = emptySet(),
+                                tilganger = emptySet(),
+                            ),
                     ),
                 emneknagger = any(),
             )

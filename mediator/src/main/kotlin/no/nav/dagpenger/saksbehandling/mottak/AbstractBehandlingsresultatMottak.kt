@@ -8,6 +8,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
@@ -73,6 +75,15 @@ internal abstract class AbstractBehandlingsresultatMottak(
             automatiskBehandlet = behandlingsresultat.automatiskBehandlet,
             saksbehandlerIdent = behandlingsresultat.saksbehandlerIdent,
             beslutterIdent = behandlingsresultat.beslutterIdent,
+            utførtAv =
+                (behandlingsresultat.beslutterIdent ?: behandlingsresultat.saksbehandlerIdent)
+                    ?.let { ident ->
+                        Saksbehandler(
+                            navIdent = ident,
+                            grupper = emptySet(),
+                            tilganger = emptySet(),
+                        )
+                    } ?: Applikasjon.DpBehandling,
         )
     }
 
