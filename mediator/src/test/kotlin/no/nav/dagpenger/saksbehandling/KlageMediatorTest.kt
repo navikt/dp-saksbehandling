@@ -19,13 +19,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
-import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -1064,19 +1064,19 @@ class KlageMediatorTest {
         test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
     ) {
         withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(testDatabaseSession(dataSource))
+            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { dataSource }))
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
 
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(testDatabaseSession(dataSource)),
+                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource })),
                     rapidsConnection = testRapid,
                 )
 
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(testDatabaseSession(dataSource)),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { dataSource })),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
@@ -1084,7 +1084,7 @@ class KlageMediatorTest {
                 )
             val klageMediator =
                 KlageMediator(
-                    klageRepository = PostgresKlageRepository(testDatabaseSession(dataSource)),
+                    klageRepository = PostgresKlageRepository(DatabaseSession(lazy { dataSource })),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,

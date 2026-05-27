@@ -17,9 +17,9 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
-import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
@@ -64,7 +64,7 @@ class UtsendingMediatorTest {
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-            val utsendingRepository = PostgresUtsendingRepository(testDatabaseSession(ds))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
@@ -84,7 +84,7 @@ class UtsendingMediatorTest {
             BehandlingsresultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                sakRepository = PostgresSakRepository(testDatabaseSession(ds)),
+                sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
             )
 
             UtsendingBehovLøsningMottak(
@@ -228,7 +228,7 @@ class UtsendingMediatorTest {
             val utsendingSak = UtsendingSak("123", "Arena")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
 
-            val utsendingRepository = PostgresUtsendingRepository(testDatabaseSession(ds))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
@@ -246,7 +246,7 @@ class UtsendingMediatorTest {
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                personRepository = PostgresPersonRepository(testDatabaseSession(ds)),
+                personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
                 sakMediator = mockSakMediator,
             )
 
@@ -396,7 +396,7 @@ class UtsendingMediatorTest {
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et automatisk vedtaksbrev</p>"
-            val utsendingRepository = PostgresUtsendingRepository(testDatabaseSession(ds))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
@@ -416,7 +416,7 @@ class UtsendingMediatorTest {
             BehandlingsresultatMottakForAutomatiskVedtakUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                sakRepository = PostgresSakRepository(testDatabaseSession(ds)),
+                sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
             )
 
             UtsendingBehovLøsningMottak(
@@ -539,7 +539,7 @@ class UtsendingMediatorTest {
 
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
             val behandlingId = behandling.behandlingId
-            val utsendingRepository = PostgresUtsendingRepository(testDatabaseSession(ds))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,

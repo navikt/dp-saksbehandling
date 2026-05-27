@@ -5,8 +5,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
 import java.util.UUID
@@ -16,7 +16,7 @@ class PostgresTriggerTest {
     @Test
     fun `Når en oppgave endres så skal endret_tidspunkt oppdateres`() {
         DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(testDatabaseSession(ds))
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(TestHelper.testOppgave)
             val endretTidspunkt = ds.hentEndretTidspunkt(TestHelper.testOppgave.oppgaveId)
             Thread.sleep(100)

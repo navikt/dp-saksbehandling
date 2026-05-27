@@ -6,16 +6,16 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
 import org.junit.jupiter.api.Test
 
 class PostgresPersonRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente person`() {
         withMigratedDb { ds ->
-            val repo = PostgresPersonRepository(testDatabaseSession(ds))
+            val repo = PostgresPersonRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testPerson)
 
             val personFraDatabase = repo.finnPerson(testPerson.ident)
@@ -26,7 +26,7 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `Skal kunne oppdatere egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
-            val repo = PostgresPersonRepository(testDatabaseSession(ds))
+            val repo = PostgresPersonRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testPerson)
             repo.finnPerson(testPerson.ident) shouldBe testPerson
 
@@ -39,7 +39,7 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `Skal kunne oppdatere bare egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
-            val repo = PostgresPersonRepository(testDatabaseSession(ds))
+            val repo = PostgresPersonRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testPerson)
             repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe false
 
@@ -51,7 +51,7 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `Skal kunne oppdatere adresse beskyttet status på en person`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds }))
             personRepository.lagre(testPerson)
             personRepository.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe UGRADERT
 
@@ -63,7 +63,7 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `Exception hvis vi ikke får hentet person basert på ident`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds }))
 
             shouldThrow<DataNotFoundException> {
                 personRepository.hentPerson(testPerson.ident)
@@ -74,7 +74,7 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `Sjekk om fødselsnumre eksisterer i vårt system`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(testDatabaseSession(ds))
+            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds }))
             val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")
 
             personRepository.lagre(lagPerson(fnr1))

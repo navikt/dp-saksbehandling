@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
-import no.nav.dagpenger.saksbehandling.db.testDatabaseSession
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ class PostgresInnsendingRepositoryTest {
                         ),
                     valgtSakId = null,
                 )
-            val repository = PostgresInnsendingRepository(testDatabaseSession(ds))
+            val repository = PostgresInnsendingRepository(DatabaseSession(lazy { ds }))
             repository.lagre(innsending = innsending)
 
             repository.hent(innsending.innsendingId).also { dbInnsending ->
