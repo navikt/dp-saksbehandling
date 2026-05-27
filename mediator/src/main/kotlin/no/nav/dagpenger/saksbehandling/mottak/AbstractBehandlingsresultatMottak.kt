@@ -37,7 +37,6 @@ internal abstract class AbstractBehandlingsresultatMottak(
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
                 it.interestedIn("rettighetsperioder")
-                // TODO sjekk navngiving
                 it.interestedIn("behandletAv")
                 it.valideringsregler()
                 it.interestedIn("basertPå")
