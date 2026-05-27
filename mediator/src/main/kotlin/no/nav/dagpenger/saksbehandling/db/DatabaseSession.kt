@@ -30,40 +30,38 @@ private fun <R> Connection.withTransaction(transactionBlock: () -> R): R {
     val transactionTimer = DbMetrics.transactionDuration.startTimer()
     val previousValue = autoCommit
     autoCommit = false
-    try {
+    return runCatching {
         DbMetrics.activeTransactions.inc()
-
         val result = transactionBlock()
-
-        commitAndCount()
-
-        return result
-    } catch (err: Exception) {
-        rollbackAndCount()
-        dbLogger.error(err) { "Transaksjonen feilet, ruller tilbake" }
-        throw err
-    } finally {
+        handleCommit()
+        result
+    }.onFailure { e ->
+        handleRollback(e)
+    }.also {
         autoCommit = previousValue
         DbMetrics.activeTransactions.dec()
         transactionTimer.observeDuration()
-    }
+    }.getOrThrow()
 }
 
-private fun Connection.commitAndCount() {
+private fun Connection.handleCommit() {
     val commitTimer = DbMetrics.commitDuration.startTimer()
-    try {
+    runCatching {
         commit()
+    }.onSuccess {
         DbMetrics.commitCounter.inc()
-    } finally {
         commitTimer.observeDuration()
-    }
+    }.onFailure {
+        dbLogger.error(it) { "Commit feilet" }
+    }.getOrThrow()
 }
 
-private fun Connection.rollbackAndCount() {
-    try {
-        rollback()
+private fun Connection.handleRollback(t: Throwable) {
+    runCatching {
+        dbLogger.error(t) { "Transaksjonen feilet, ruller tilbake" }
         DbMetrics.rollbackCounter.inc()
-    } catch (e: Exception) {
-        dbLogger.error(e) { "Rollback feilet" }
+        rollback()
+    }.onFailure {
+        dbLogger.error(t) { "Rollback feilet" }
     }
 }

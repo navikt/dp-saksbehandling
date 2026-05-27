@@ -102,7 +102,8 @@ class PostgresPersonRepository(
     override fun hentPerson(id: UUID) = finnPerson(id) ?: throw DataNotFoundException("Kan ikke finne person med id $id")
 
     override fun hentPersonForBehandlingId(behandlingId: UUID) =
-        finnPersonForBehandlingId(behandlingId) ?: throw DataNotFoundException("Kan ikke finne person fra behandlingId $behandlingId")
+        finnPersonForBehandlingId(behandlingId)
+            ?: throw DataNotFoundException("Kan ikke finne person fra behandlingId $behandlingId")
 
     override fun lagre(person: Person) =
         databaseSession.transaction {
@@ -113,7 +114,7 @@ class PostgresPersonRepository(
         fnr: String,
         skjermet: Boolean,
     ): Int =
-        return databaseSession.session { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -136,7 +137,7 @@ class PostgresPersonRepository(
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int =
-        return databaseSession.session { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
