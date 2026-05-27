@@ -351,7 +351,7 @@ class OppgaveApiTest {
                             response.bodyAsText(),
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver.size shouldBe 2
                     oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
@@ -392,7 +392,7 @@ class OppgaveApiTest {
                             response.bodyAsText(),
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver.size shouldBe 2
                     oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
@@ -435,7 +435,7 @@ class OppgaveApiTest {
                             response.bodyAsText(),
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver.size shouldBe 2
                     oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
@@ -451,7 +451,7 @@ class OppgaveApiTest {
                 navIdent = TestHelper.beslutter.navIdent,
             )
 
-        val notat: String = "Dette er et notat"
+        val notat = "Dette er et notat"
 
         @Language("JSON")
         val notatJson = """ {"tekst": "$notat"} """

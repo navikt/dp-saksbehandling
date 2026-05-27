@@ -668,7 +668,7 @@ class UtsendingMediatorTest {
 
     @Test
     fun `Skal feile hvis lag-brev feiler`() {
-        var utsending =
+        val utsending =
             Utsending(
                 id = UUIDv7.ny(),
                 behandlingId = UUIDv7.ny(),

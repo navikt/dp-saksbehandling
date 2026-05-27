@@ -579,19 +579,12 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
-            when (vedtakFattetHendelse.automatiskBehandlet) {
-                true -> {
-                    logger.info { "Mottok automatisk behandlet vedtak fattet i tilstand $type. Ferdigstiller oppgave." }
-                    oppgave.behandlerIdent = null
-                    oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-                    return Handling.LAGRE_OPPGAVE
-                }
-
-                else -> {
-                    logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-                    return Handling.INGEN
-                }
+            logger.info {
+                "Mottok vedtak fattet hendelse i tilstand $type. Automatisk = ${vedtakFattetHendelse.automatiskBehandlet}. Ferdigstiller oppgave."
             }
+            oppgave.behandlerIdent = vedtakFattetHendelse.saksbehandlerIdent
+            oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun ferdigstill(
@@ -860,19 +853,12 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
-            when (vedtakFattetHendelse.automatiskBehandlet) {
-                true -> {
-                    logger.info { "Mottok automatisk behandlet vedtak fattet i tilstand $type. Ferdigstiller oppgave." }
-                    oppgave.behandlerIdent = null
-                    oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-                    return Handling.LAGRE_OPPGAVE
-                }
-
-                else -> {
-                    logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-                    return Handling.INGEN
-                }
+            logger.info {
+                "Mottok vedtak fattet hendelse i tilstand $type. Automatisk = ${vedtakFattetHendelse.automatiskBehandlet}. Ferdigstiller oppgave."
             }
+            oppgave.behandlerIdent = vedtakFattetHendelse.beslutterIdent
+            oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun ferdigstill(

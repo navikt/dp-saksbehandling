@@ -48,7 +48,7 @@ internal class BehandlingsresultatMottakForSak(
 
             sakMediator.merkSakenSomDpSak(vedtakFattetHendelse = vedtakFattetHendelse)
             context.publish(
-                key = packet["ident"].asText(),
+                key = packet["ident"].stringValue(),
                 message =
                     JsonMessage
                         .newMessage(
@@ -56,7 +56,7 @@ internal class BehandlingsresultatMottakForSak(
                                 VedtakUtenforArena(
                                     behandlingId = behandlingsresultat.behandlingId,
                                     søknadId = behandlingsresultat.behandletHendelseId,
-                                    ident = packet["ident"].asText(),
+                                    ident = packet["ident"].stringValue(),
                                     sakId = sakId,
                                 ).toMap(),
                         ).toJson(),

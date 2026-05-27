@@ -128,15 +128,15 @@ class OppgaveMediatorAlertTest {
         ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1
-            rapid.inspektør.message(0)["@event_name"].asText() shouldBe "behov"
+            rapid.inspektør.message(0)["@event_name"].stringValue() shouldBe "behov"
         }
     }
 
     private fun JsonNode.forventetAlert(behandlingId: UUID): Boolean {
-        this["@event_name"].asText() shouldBe "saksbehandling_alert"
-        this["alertType"].asText() shouldBe "BEHANDLING_IKKE_FUNNET"
-        this["feilMelding"].asText() shouldBe "Behandling ikke funnet"
-        this["utvidetFeilMelding"].asText() shouldContain behandlingId.toString()
+        this["@event_name"].stringValue() shouldBe "saksbehandling_alert"
+        this["alertType"].stringValue() shouldBe "BEHANDLING_IKKE_FUNNET"
+        this["feilMelding"].stringValue() shouldBe "Behandling ikke funnet"
+        this["utvidetFeilMelding"].stringValue() shouldContain behandlingId.toString()
         return true
     }
 }

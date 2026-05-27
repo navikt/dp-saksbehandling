@@ -8,11 +8,11 @@ interface UtsendingRepository {
 
     fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean
 
-    fun slettUtsending(utsendingId: UUID): Int
-
     fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending?
 
     fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending
+
+    fun slettUtsending(utsendingId: UUID): Int
 }
 
 class UtsendingIkkeFunnet(

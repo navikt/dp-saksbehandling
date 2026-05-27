@@ -44,6 +44,19 @@ class UtsendingMediator(
         return utsending
     }
 
+    fun hentEllerOpprettUtsending(
+        behandlingId: UUID,
+        brev: String?,
+        ident: String,
+        type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
+    ): Utsending =
+        utsendingRepository.finnUtsendingForBehandlingId(behandlingId) ?: opprettUtsending(
+            behandlingId = behandlingId,
+            ident = ident,
+            brev = brev,
+            type = type,
+        )
+
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(startUtsendingHendelse.behandlingId)
         utsending.startUtsending(startUtsendingHendelse)

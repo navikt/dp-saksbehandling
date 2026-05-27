@@ -140,23 +140,9 @@ class OppgaveTilstandTest {
                         sak = utsendingSak,
                     ),
                 )
-
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
             when (tilstand) {
-                UNDER_KONTROLL -> {
-                    oppgave.tilstand().type shouldBe UNDER_KONTROLL
-                }
-
-                UNDER_BEHANDLING -> {
-                    oppgave.tilstand().type shouldBe UNDER_BEHANDLING
-                }
-
-                else -> {
-                    oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
-                }
-            }
-
-            when (tilstand) {
-                in setOf(UNDER_BEHANDLING, UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe Oppgave.Handling.INGEN
+                in setOf(FERDIG_BEHANDLET) -> resultat shouldBe Oppgave.Handling.INGEN
                 else -> resultat shouldBe Oppgave.Handling.LAGRE_OPPGAVE
             }
         }
@@ -1030,7 +1016,7 @@ class OppgaveTilstandTest {
     @Test
     fun `klargjørForBehandling - uten frist med beholdOppgaven gir UnderBehandling tildelt saksbehandler`() {
         val oppgave = lagOppgave(OPPRETTET)
-        val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
+        val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(SAKSBEHANDLER))
         oppgave.klargjørForBehandling(
             OpprettOppfølgingHendelse(
                 ident = "12345678910",
@@ -1067,7 +1053,7 @@ class OppgaveTilstandTest {
     @Test
     fun `klargjørForBehandling - med frist og beholdOppgaven gir PåVent forhåndsreservert til saksbehandler`() {
         val oppgave = lagOppgave(OPPRETTET)
-        val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
+        val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(SAKSBEHANDLER))
         val frist = LocalDate.now().plusDays(7)
         oppgave.klargjørForBehandling(
             OpprettOppfølgingHendelse(

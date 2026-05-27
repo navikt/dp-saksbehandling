@@ -33,8 +33,8 @@ class OppgaveTilstandAlertJobTest {
         testRapid.inspektør.size shouldBe 2
 
         testRapid.inspektør.message(0).let { jsonNode ->
-            jsonNode["alertType"].asText() shouldBe "OPPGAVE_OPPRETTET_TILSTAND_ALERT"
-            jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
+            jsonNode["alertType"].stringValue() shouldBe "OPPGAVE_OPPRETTET_TILSTAND_ALERT"
+            jsonNode["@event_name"].stringValue() shouldBe "saksbehandling_alert"
         }
     }
 }

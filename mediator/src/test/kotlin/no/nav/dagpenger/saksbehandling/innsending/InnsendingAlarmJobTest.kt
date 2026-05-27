@@ -41,9 +41,9 @@ class InnsendingAlarmJobTest {
 
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let { jsonNode ->
-                jsonNode["alertType"].asText() shouldBe "INNSENDING_IKKE_FULLFØRT"
-                jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asText() shouldBe
+                jsonNode["alertType"].stringValue() shouldBe "INNSENDING_IKKE_FULLFØRT"
+                jsonNode["@event_name"].stringValue() shouldBe "saksbehandling_alert"
+                jsonNode["feilMelding"].stringValue() shouldBe
                     """
                     Innsending ikke fullført for innsendingId: $innsendingId1.
                     Den har vært i tilstand FERDIGSTILL_STARTET i 24 timer (sist endret: $iGår)

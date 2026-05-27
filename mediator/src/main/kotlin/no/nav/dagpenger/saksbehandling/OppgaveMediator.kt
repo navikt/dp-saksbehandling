@@ -423,6 +423,11 @@ class OppgaveMediator(
                 )
                 oppgaveRepository.lagre(oppgave)
             }
+            if (meldingOmVedtakKilde != DP_SAK) {
+                utsendingMediator.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.let { utsending ->
+                    utsendingMediator.slettUtsending(utsendingId = utsending.id)
+                }
+            }
         }
     }
 
@@ -582,13 +587,12 @@ class OppgaveMediator(
         oppgave: Oppgave,
         saksbehandlerToken: String,
     ) {
-        val utsendingId =
-            utsendingMediator
-                .opprettUtsending(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    brev = null,
-                    ident = oppgave.personIdent(),
-                ).id
+        utsendingMediator
+            .hentEllerOpprettUtsending(
+                behandlingId = oppgave.behandling.behandlingId,
+                brev = null,
+                ident = oppgave.personIdent(),
+            )
 
         godkjennEllerBeslutt(
             behandlingId = oppgave.behandling.behandlingId,
@@ -596,15 +600,7 @@ class OppgaveMediator(
             saksbehandlerToken = saksbehandlerToken,
         ).onSuccess {
             oppgaveRepository.lagre(oppgave)
-        }.onFailure {
-            utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                when (rowsDeleted) {
-                    1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                    else -> logger.error { "Fant ikke utsending med id $utsendingId" }
-                }
-            }
-            throw it
-        }
+        }.getOrThrow()
     }
 
     private fun ferdigstillOppgaveUtenUtsending(
@@ -617,9 +613,7 @@ class OppgaveMediator(
             saksbehandlerToken = saksbehandlerToken,
         ).onSuccess {
             oppgaveRepository.lagre(oppgave)
-        }.onFailure {
-            throw it
-        }
+        }.getOrThrow()
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {

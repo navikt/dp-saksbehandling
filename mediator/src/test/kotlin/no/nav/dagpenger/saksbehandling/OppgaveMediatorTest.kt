@@ -350,7 +350,7 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
-                it.tilstand().type shouldBe Type.UNDER_BEHANDLING
+                it.tilstand().type shouldBe UNDER_BEHANDLING
                 it.behandlerIdent shouldBe saksbehandler.navIdent
                 it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
                 it.sisteBeslutter() shouldBe beslutter.navIdent
@@ -667,7 +667,6 @@ OppgaveMediatorTest {
                     behandlingskjedeId = behandlingId,
                 ),
         ) { _, oppgaveMediator ->
-            val meldingFørTest = testRapid.inspektør.size
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -891,11 +890,6 @@ OppgaveMediatorTest {
         val behandlingId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
         val saksbehandlerToken = "token"
-        val sakMediatorMock =
-            mockk<SakMediator>().also {
-                every { it.hentSakIdForBehandlingId(any()) } returns UUIDv7.ny()
-            }
-
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
@@ -964,7 +958,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal slette utsending hvis godkjenning av behandling feiler`() {
+    fun `Skal ikke slette utsending selv om godkjenning av behandling feiler, men slett hvis brevkilde endres`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
         val søknadId = UUIDv7.ny()
@@ -1027,15 +1021,125 @@ OppgaveMediatorTest {
                 behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            val oppgaveFraDB = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            oppgaveFraDB.tilstand().type shouldBe UNDER_BEHANDLING
 
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(datasource),
                 brevProdusent = mockk(),
                 rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
-                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandling.behandlingId) shouldBe null
+                utsendingMediator.finnUtsendingForBehandlingId(oppgaveFraDB.behandling.behandlingId) shouldNotBe null
+            }
+
+            oppgaveMediator.endreMeldingOmVedtakKilde(
+                oppgaveId = oppgave.oppgaveId,
+                meldingOmVedtakKilde = INGEN,
+                saksbehandler = saksbehandler,
+            )
+            UtsendingMediator(
+                utsendingRepository = PostgresUtsendingRepository(datasource),
+                brevProdusent = mockk(),
+                rapidsConnection = mockk(relaxed = true),
+            ).also { utsendingMediator ->
+                utsendingMediator.finnUtsendingForBehandlingId(oppgaveFraDB.behandling.behandlingId) shouldBe null
+            }
+        }
+    }
+
+    @Test
+    fun `Livssyklus for oppgave når godkjenning av behandling feiler, men vedtaket likevel fattes av regelmotor`() {
+        val behandlingId = UUIDv7.ny()
+        val saksbehandlerToken = "token"
+        val søknadId = UUIDv7.ny()
+        val behandlingClientMock =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.godkjenn(
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
+                coEvery {
+                    it.kreverTotrinnskontroll(
+                        behandlingId = behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(false)
+            }
+
+        settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+
+            shouldThrow<BehandlingException> {
+                oppgaveMediator.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = saksbehandler,
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            verify(exactly = 1) {
+                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
+            }
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
+
+            val vedtakFattetHendelse =
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
+                    ident = testIdent,
+                    sak = null,
+                    automatiskBehandlet = false,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    beslutterIdent = null,
+                    utførtAv =
+                        Saksbehandler(
+                            navIdent = saksbehandler.navIdent,
+                            grupper = emptySet(),
+                            tilganger = emptySet(),
+                        ),
+                )
+            oppgaveMediator.håndter(
+                vedtakFattetHendelse = vedtakFattetHendelse,
+                emneknagger = setOf("Avslag", "Ordinær"),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { dbOppgave ->
+                dbOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+                dbOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+                dbOppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+                dbOppgave.tilstandslogg.first().hendelse shouldBe vedtakFattetHendelse
             }
         }
     }
@@ -1090,8 +1194,7 @@ OppgaveMediatorTest {
                 behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -1775,7 +1878,7 @@ OppgaveMediatorTest {
                                 behandlingId = hendelse.behandlingId,
                                 opprettet = hendelse.opprettet,
                                 hendelse = hendelse,
-                                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                                utløstAv = DpBehandling.Søknad,
                             ),
                     )
                 sakMediator.knyttTilSak(

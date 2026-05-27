@@ -132,7 +132,6 @@ class BehandlingsresultatMottakForUtsendingTest {
     @Test
     fun `Skal håndtere behandlinger med flere rettighetsperioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
-
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
@@ -182,6 +181,8 @@ class BehandlingsresultatMottakForUtsendingTest {
                             kontekst = "Dagpenger",
                         ),
                     automatiskBehandlet = false,
+                    saksbehandlerIdent = null,
+                    beslutterIdent = null,
                 ),
             )
         }

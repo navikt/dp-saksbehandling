@@ -8,11 +8,14 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 internal abstract class AbstractBehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
@@ -34,6 +37,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
                 it.interestedIn("rettighetsperioder")
+                it.interestedIn("behandletAv")
                 it.valideringsregler()
                 it.interestedIn("basertPå")
             }
@@ -60,7 +64,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
         sak: UtsendingSak?,
         behandlingsresultat: Behandlingsresultat,
     ): VedtakFattetHendelse {
-        val ident = this["ident"].asText()
+        val ident = this["ident"].stringValue()
 
         return VedtakFattetHendelse(
             behandlingId = behandlingsresultat.behandlingId,
@@ -69,7 +73,18 @@ internal abstract class AbstractBehandlingsresultatMottak(
             ident = ident,
             sak = sak,
             automatiskBehandlet = behandlingsresultat.automatiskBehandlet,
-        )
+            saksbehandlerIdent = behandlingsresultat.saksbehandlerIdent,
+            beslutterIdent = behandlingsresultat.beslutterIdent,
+            utførtAv =
+                (behandlingsresultat.beslutterIdent ?: behandlingsresultat.saksbehandlerIdent)
+                    ?.let { ident ->
+                        Saksbehandler(
+                            navIdent = ident,
+                            grupper = emptySet(),
+                            tilganger = emptySet(),
+                        )
+                    } ?: Applikasjon.DpBehandling,
+        ).also { sikkerlogg.info { "VedtakFattetHendelse: $it" } }
     }
 
     override fun onPacket(
@@ -84,6 +99,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
             "behandlingId" to "${behandlingsresultat.behandlingId}",
         ) {
             logger.info { "Mottok behandlingsresultat hendelse i $mottakNavn" }
+            sikkerlogg.info { "Mottok behandlingsresultat hendelse i $mottakNavn: $behandlingsresultat" }
             håndter(behandlingsresultat, packet, context, metadata, meterRegistry)
         }
     }
@@ -97,13 +113,35 @@ internal data class Behandlingsresultat(
     val behandletHendelseId: String,
     val rettighetsperioder: List<Rettighetsperiode>,
     val automatiskBehandlet: Boolean,
+    val saksbehandlerIdent: String?,
+    val beslutterIdent: String?,
 ) {
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
         basertPåBehandlingId = packet["basertPå"].uuidOrNull(),
-        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
-        behandletHendelseId = packet["behandletHendelse"]["id"].asText(),
+        behandletHendelseType = packet["behandletHendelse"]["type"].stringValue(),
+        behandletHendelseId = packet["behandletHendelse"]["id"].stringValue(),
         automatiskBehandlet = packet["automatisk"].asBoolean(),
+        saksbehandlerIdent =
+            packet["behandletAv"]
+                .takeIf { it.isArray }
+                ?.values()
+                ?.firstOrNull { entry ->
+                    entry["rolle"].takeIf { !it.isMissingNode() && !it.isNull }?.stringValue() == "saksbehandler"
+                }?.get("behandler")
+                ?.get("ident")
+                ?.takeIf { !it.isMissingNode() && !it.isNull }
+                ?.stringValue(),
+        beslutterIdent =
+            packet["behandletAv"]
+                .takeIf { it.isArray }
+                ?.values()
+                ?.firstOrNull { entry ->
+                    entry["rolle"].takeIf { !it.isMissingNode() && !it.isNull }?.stringValue() == "beslutter"
+                }?.get("behandler")
+                ?.get("ident")
+                ?.takeIf { !it.isMissingNode() && !it.isNull }
+                ?.stringValue(),
         rettighetsperioder =
             packet["rettighetsperioder"]
                 .takeIf { it.isArray }

@@ -432,10 +432,10 @@ class SakMediatorTest {
 
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
-            packet["@event_name"].asText() shouldBe "avbryt_behandling"
+            packet["@event_name"].stringValue() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["ident"].asText() shouldBe testIdent
-            packet["årsak"].asText() shouldBe "Skjermet eller adressebeskyttet person"
+            packet["ident"].stringValue() shouldBe testIdent
+            packet["årsak"].stringValue() shouldBe "Skjermet eller adressebeskyttet person"
         }
     }
 
@@ -461,8 +461,8 @@ class SakMediatorTest {
             it.knyttTilSak(søknadsbehandlingOpprettetHendelseNyRett)
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
-            packet["@event_name"].asText() shouldBe "saksbehandling_alert"
-            packet["alertType"].asText() shouldBe "KNYTNING_TIL_SAK_FEIL"
+            packet["@event_name"].stringValue() shouldBe "saksbehandling_alert"
+            packet["alertType"].stringValue() shouldBe "KNYTNING_TIL_SAK_FEIL"
         }
     }
 
@@ -497,10 +497,10 @@ class SakMediatorTest {
 
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
-            packet["@event_name"].asText() shouldBe "avbryt_behandling"
+            packet["@event_name"].stringValue() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
-            packet["ident"].asText() shouldBe testIdent
-            packet["årsak"].asText() shouldBe "Skjermet eller adressebeskyttet person"
+            packet["ident"].stringValue() shouldBe testIdent
+            packet["årsak"].stringValue() shouldBe "Skjermet eller adressebeskyttet person"
         }
     }
 
@@ -548,18 +548,17 @@ class SakMediatorTest {
                 }
             }
 
-            val sak2 =
-                sakMediator.opprettSak(
-                    ident = endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident,
-                    behandlingskjedeId = endaEnSøknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
-                    behandling =
-                        Behandling(
-                            behandlingId = endaEnSøknadsbehandlingOpprettetHendelseNyRett.behandlingId,
-                            opprettet = endaEnSøknadsbehandlingOpprettetHendelseNyRett.opprettet,
-                            hendelse = endaEnSøknadsbehandlingOpprettetHendelseNyRett,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                        ),
-                )
+            sakMediator.opprettSak(
+                ident = endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident,
+                behandlingskjedeId = endaEnSøknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
+                behandling =
+                    Behandling(
+                        behandlingId = endaEnSøknadsbehandlingOpprettetHendelseNyRett.behandlingId,
+                        opprettet = endaEnSøknadsbehandlingOpprettetHendelseNyRett.opprettet,
+                        hendelse = endaEnSøknadsbehandlingOpprettetHendelseNyRett,
+                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                    ),
+            )
             sakMediator.merkSakenSomDpSak(
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdEndaEnSøknad,
@@ -650,7 +649,10 @@ class SakMediatorTest {
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
                 )
-            sakMediator.hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident).alleSaker().size shouldBe 2
+            sakMediator
+                .hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
+                .alleSaker()
+                .size shouldBe 2
 
             val hendelse =
                 InnsendingMottattHendelse(
