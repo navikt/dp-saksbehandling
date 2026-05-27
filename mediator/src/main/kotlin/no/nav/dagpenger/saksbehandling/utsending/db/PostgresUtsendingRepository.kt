@@ -152,7 +152,7 @@ class PostgresUtsendingRepository(
         }
 
     override fun slettUtsending(utsendingId: UUID): Int =
-        sessionOf(ds).use { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL

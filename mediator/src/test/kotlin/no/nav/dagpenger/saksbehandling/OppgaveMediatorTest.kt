@@ -1039,7 +1039,7 @@ OppgaveMediatorTest {
                 saksbehandler = saksbehandler,
             )
             UtsendingMediator(
-                utsendingRepository = PostgresUtsendingRepository(datasource),
+                utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { datasource })),
                 brevProdusent = mockk(),
                 rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
