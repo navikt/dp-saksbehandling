@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
@@ -104,7 +105,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4, behandling5, behandling6, behandling7),
         ) { ds: DataSource ->
             // Insert test data
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(oppgave1FerdigBehandlet)
             repo.lagre(oppgave2FerdigBehandlet)
             repo.lagre(oppgave3FerdigBehandlet)
@@ -113,7 +114,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             repo.lagre(oppgave6FerdigBehandletIForgårs)
             repo.lagre(oppgave7KlarTilBehandling)
 
-            val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(ds)
+            val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(DatabaseSession(lazy { ds }))
 
             val tilstanderAlle =
                 statistikkTjeneste.hentTilstanderMedUtløstAvFilter(

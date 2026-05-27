@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
@@ -9,15 +8,15 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.statistikk.ProduksjonsstatistikkFilter
 import java.time.LocalDateTime
-import javax.sql.DataSource
 
 class PostgresProduksjonsstatistikkRepository(
-    private val dataSource: DataSource,
+    private val databaseSession: DatabaseSession,
 ) : ProduksjonsstatistikkRepository {
     override fun hentAntallBrevSendt(): Int =
-        sessionOf(dataSource = dataSource).use { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -36,7 +35,7 @@ class PostgresProduksjonsstatistikkRepository(
             produksjonsstatistikkFilter.utløstAvTyper.ifEmpty {
                 HendelseBehandler.entries.toSet()
             }
-        return sessionOf(dataSource = dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -90,7 +89,7 @@ class PostgresProduksjonsstatistikkRepository(
                 Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
-        return sessionOf(dataSource = dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -136,7 +135,7 @@ class PostgresProduksjonsstatistikkRepository(
                 )
             }
 
-        return sessionOf(dataSource = dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -205,7 +204,7 @@ class PostgresProduksjonsstatistikkRepository(
                 Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
-        return sessionOf(dataSource = dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -257,7 +256,7 @@ class PostgresProduksjonsstatistikkRepository(
                 Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
-        return sessionOf(dataSource = dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -311,7 +310,7 @@ class PostgresProduksjonsstatistikkRepository(
                 Oppgave.Tilstand.Type.søkbareTilstander
                     .toSet()
             }
-        return sessionOf(dataSource = dataSource).use { session ->
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL

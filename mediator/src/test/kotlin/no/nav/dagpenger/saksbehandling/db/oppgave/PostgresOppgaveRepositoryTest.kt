@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -69,7 +70,7 @@ class PostgresOppgaveRepositoryTest {
             )
 
         DBTestHelper.Companion.withBehandling(behandling = behandling) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val saksbehandler =
                 Saksbehandler(
                     navIdent = "NAVIdent2",
@@ -105,7 +106,7 @@ class PostgresOppgaveRepositoryTest {
             person = testPerson,
             behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             lagOppgave(
                 tilstand = Oppgave.KlarTilBehandling,
@@ -177,7 +178,7 @@ class PostgresOppgaveRepositoryTest {
             person = testPerson,
             behandlinger = listOf(klageBehandling, søknadBehandling),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             lagOppgave(
                 tilstand = Oppgave.KlarTilBehandling,
@@ -256,7 +257,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
             )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             val saksbehandlerUtenTilgangTilEgneAnsatte =
                 Saksbehandler(
@@ -347,7 +348,7 @@ class PostgresOppgaveRepositoryTest {
                     tilganger = emptySet(),
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
                     nesteOppgaveHendelse =
@@ -412,7 +413,7 @@ class PostgresOppgaveRepositoryTest {
                     emneknagger = setOf("Testknagg"),
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val saksbehandler =
                 Saksbehandler(
                     navIdent = "NAVIdent",
@@ -516,7 +517,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
@@ -749,7 +750,7 @@ class PostgresOppgaveRepositoryTest {
                     navIdent = testSaksbehandler.navIdent,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo
                 .tildelOgHentNesteOppgave(
                     nesteOppgaveHendelse =
@@ -980,7 +981,7 @@ class PostgresOppgaveRepositoryTest {
             this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
 
             val repo =
-                PostgresOppgaveRepository(ds)
+                PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
                     .tildelOgHentNesteOppgave(
                         nesteOppgaveHendelse =
                             NesteOppgaveHendelse(
@@ -1007,7 +1008,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre en oppgave flere ganger`() {
         DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             shouldNotThrowAny {
                 repo.lagre(TestHelper.testOppgave)
                 repo.lagre(TestHelper.testOppgave)
@@ -1033,7 +1034,7 @@ class PostgresOppgaveRepositoryTest {
                     utførtAv = beslutter,
                 ),
             )
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
 
@@ -1046,7 +1047,7 @@ class PostgresOppgaveRepositoryTest {
         val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
         DBTestHelper.withOppgave(oppgave) { ds ->
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -1076,7 +1077,7 @@ class PostgresOppgaveRepositoryTest {
         val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
         DBTestHelper.withOppgave(oppgave) { ds ->
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -1107,7 +1108,7 @@ class PostgresOppgaveRepositoryTest {
         val testOppgave = lagOppgave(behandling = behandling, person = testPerson)
 
         DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -1133,7 +1134,7 @@ class PostgresOppgaveRepositoryTest {
                     utførtAv = beslutter,
                 ),
             )
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testOppgave)
 
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1186,7 +1187,7 @@ class PostgresOppgaveRepositoryTest {
         val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
         DBTestHelper.withOppgave(testOppgave) { ds ->
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase.tilstandslogg.size shouldBe testOppgave.tilstandslogg.size
             oppgaveFraDatabase.tilstandslogg.forEachIndexed { index, tilstandsendring ->
@@ -1204,7 +1205,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne endre tilstand på en oppgave`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilBehandling)
         DBTestHelper.withOppgave(testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             repo.lagre(testOppgave)
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -1219,7 +1220,7 @@ class PostgresOppgaveRepositoryTest {
         val testOppgave = lagOppgave(tilstand = Oppgave.UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
         DBTestHelper.withOppgave(testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(
                 testOppgave.copy(
                     tilstand = Oppgave.PåVent,
@@ -1239,7 +1240,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgaveOpprettet = this.leggTilOppgave(tilstand = Oppgave.Opprettet, type = HendelseBehandler.Intern.Innsending)
             val oppgaveKlarTilBehandling = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling)
             val oppgaveFerdigBehandlet = this.leggTilOppgave(tilstand = Oppgave.FerdigBehandlet)
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             repo.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.OPPRETTET).let { oppgaver ->
                 oppgaver.size shouldBe 1
@@ -1271,7 +1272,7 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo
                 .søk(
                     søkeFilter =
@@ -1303,7 +1304,7 @@ class PostgresOppgaveRepositoryTest {
             )
 
         DBTestHelper.withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val oppgave1TilOla =
                 this.leggTilOppgave(person = ola, tilstand = Oppgave.KlarTilBehandling, opprettet = opprettetNå)
             val oppgave2TilOla =
@@ -1351,7 +1352,7 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withBehandling(
             behandling = behandling,
         ) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val oppgave =
                 lagOppgave(
                     oppgaveId = UUIDv7.ny(),
@@ -1410,7 +1411,7 @@ class PostgresOppgaveRepositoryTest {
                     behandling = behandling,
                     person = person,
                 )
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(oppgave = oppgave)
 
             repo.oppgaveTilstandForSøknad(
@@ -1431,7 +1432,7 @@ class PostgresOppgaveRepositoryTest {
         val oppgave = lagOppgave(behandling = behandling)
 
         DBTestHelper.withBehandling(behandling = behandling) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(oppgave)
             repo.hentOppgaveIdFor(behandlingId = behandling.behandlingId) shouldBe oppgave.oppgaveId
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
@@ -1445,7 +1446,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgave2 = this.leggTilOppgave(emneknagger = setOf("hubba"), opprettet = opprettetNå)
             val oppgave3 = this.leggTilOppgave(emneknagger = emptySet(), opprettet = opprettetNå)
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo
                 .søk(
                     Søkefilter(
@@ -1521,7 +1522,7 @@ class PostgresOppgaveRepositoryTest {
                 emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
             )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo
                 .søk(
                     Søkefilter(
@@ -1580,7 +1581,7 @@ class PostgresOppgaveRepositoryTest {
             val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
             val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo
                 .søk(
                     Søkefilter(
@@ -1660,7 +1661,7 @@ class PostgresOppgaveRepositoryTest {
             val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
             val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             // Default sortering (uten å oppgi sortering) skal gi eldste først
             repo
@@ -1763,7 +1764,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilBehandling,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             repo
                 .søk(
@@ -1821,7 +1822,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.UnderBehandling,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             repo
                 .søk(
@@ -1875,7 +1876,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilBehandling,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
 
             repo
                 .søk(
@@ -1916,7 +1917,7 @@ class PostgresOppgaveRepositoryTest {
                 opprettet = opprettetNå.minusDays(1),
             )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo
                 .søk(
                     Søkefilter(
@@ -2024,7 +2025,7 @@ class PostgresOppgaveRepositoryTest {
             this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
             this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val oppgaver =
                 repo.søk(
                     Søkefilter(
@@ -2048,7 +2049,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgaveIGår = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
             val oppgave3 = this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
 
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val oppgaver =
                 repo.søk(
                     Søkefilter(
@@ -2067,7 +2068,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal hente en oppgave basert på behandlingId`() {
         DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.hentOppgaveFor(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
 
             shouldThrow<DataNotFoundException> {
@@ -2079,7 +2080,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
         DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.finnOppgaveFor(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
@@ -2095,7 +2096,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
             )
         DBTestHelper.withOppgave(oppgave = oppgave) { ds ->
-            PostgresOppgaveRepository(ds)
+            PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
                 .adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
         }
     }
@@ -2115,7 +2116,7 @@ class PostgresOppgaveRepositoryTest {
                 tilstandslogg = OppgaveTilstandslogg(tilstandsendring),
             )
         DBTestHelper.withBehandling(behandling = behandling) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg
@@ -2140,7 +2141,7 @@ class PostgresOppgaveRepositoryTest {
             )
 
         DBTestHelper.Companion.withBehandlinger(behandlinger = listOf(behandling1, behandling2)) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             val oppgave1 =
                 lagOppgave(
                     tilstand = Oppgave.KlarTilBehandling,

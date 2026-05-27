@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -1063,19 +1064,19 @@ class KlageMediatorTest {
         test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
     ) {
         withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { dataSource }))
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
 
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(dataSource = dataSource),
+                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource })),
                     rapidsConnection = testRapid,
                 )
 
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(dataSource),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { dataSource })),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
@@ -1083,7 +1084,7 @@ class KlageMediatorTest {
                 )
             val klageMediator =
                 KlageMediator(
-                    klageRepository = PostgresKlageRepository(dataSource),
+                    klageRepository = PostgresKlageRepository(DatabaseSession(lazy { dataSource })),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,

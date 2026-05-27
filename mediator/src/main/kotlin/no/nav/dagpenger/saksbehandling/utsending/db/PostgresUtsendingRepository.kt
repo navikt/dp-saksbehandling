@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.utsending.db
 
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
@@ -15,71 +15,68 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distrib
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import java.util.UUID
-import javax.sql.DataSource
 
 class PostgresUtsendingRepository(
-    private val ds: DataSource,
+    private val databaseSession: DatabaseSession,
 ) : UtsendingRepository {
     override fun lagre(utsending: Utsending) {
-        sessionOf(ds).use { session ->
-            session.transaction { tx ->
-                utsending.sak()?.let { tx.lagreUtsendingSak(it) }
-                tx.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            INSERT INTO utsending_v1(
-                                id, 
-                                behandling_id, 
-                                tilstand, 
-                                brev, 
-                                pdf_urn, 
-                                journalpost_id, 
-                                distribusjon_id, 
-                                utsending_sak_id, 
-                                type
-                            ) 
-                            VALUES(
-                                :id, 
-                                :behandling_id, 
-                                :tilstand, 
-                                :brev, 
-                                :pdf_urn, 
-                                :journalpost_id, 
-                                :distribusjon_id, 
-                                :utsending_sak_id, 
-                                :type
-                            ) 
-                            ON CONFLICT (id) DO UPDATE SET 
-                                tilstand = :tilstand,
-                                brev = :brev,
-                                pdf_urn = :pdf_urn,
-                                journalpost_id = :journalpost_id,
-                                distribusjon_id = :distribusjon_id,
-                                utsending_sak_id = :utsending_sak_id,
-                                type = :type
-                            """.trimIndent(),
-                        paramMap =
-                            mapOf(
-                                "id" to utsending.id,
-                                "behandling_id" to utsending.behandlingId,
-                                "tilstand" to utsending.tilstand().type.name,
-                                "brev" to utsending.brev(),
-                                "pdf_urn" to utsending.pdfUrn()?.toString(),
-                                "journalpost_id" to utsending.journalpostId(),
-                                "distribusjon_id" to utsending.distribusjonId(),
-                                "utsending_sak_id" to utsending.sak()?.id,
-                                "type" to utsending.type.name,
-                            ),
-                    ).asUpdate,
-                )
-            }
+        databaseSession.transaction {
+            utsending.sak()?.let { lagreUtsendingSak(it) }
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO utsending_v1(
+                            id, 
+                            behandling_id, 
+                            tilstand, 
+                            brev, 
+                            pdf_urn, 
+                            journalpost_id, 
+                            distribusjon_id, 
+                            utsending_sak_id, 
+                            type
+                        ) 
+                        VALUES(
+                            :id, 
+                            :behandling_id, 
+                            :tilstand, 
+                            :brev, 
+                            :pdf_urn, 
+                            :journalpost_id, 
+                            :distribusjon_id, 
+                            :utsending_sak_id, 
+                            :type
+                        ) 
+                        ON CONFLICT (id) DO UPDATE SET 
+                            tilstand = :tilstand,
+                            brev = :brev,
+                            pdf_urn = :pdf_urn,
+                            journalpost_id = :journalpost_id,
+                            distribusjon_id = :distribusjon_id,
+                            utsending_sak_id = :utsending_sak_id,
+                            type = :type
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "id" to utsending.id,
+                            "behandling_id" to utsending.behandlingId,
+                            "tilstand" to utsending.tilstand().type.name,
+                            "brev" to utsending.brev(),
+                            "pdf_urn" to utsending.pdfUrn()?.toString(),
+                            "journalpost_id" to utsending.journalpostId(),
+                            "distribusjon_id" to utsending.distribusjonId(),
+                            "utsending_sak_id" to utsending.sak()?.id,
+                            "type" to utsending.type.name,
+                        ),
+                ).asUpdate,
+            )
         }
     }
 
     override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean =
-        sessionOf(ds).use { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -98,9 +95,9 @@ class PostgresUtsendingRepository(
         finnUtsendingForBehandlingId(behandlingId)
             ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
 
-    override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? {
-        sessionOf(ds).use { session ->
-            return session.run(
+    override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? =
+        databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -143,7 +140,6 @@ class PostgresUtsendingRepository(
                 }.asSingle,
             )
         }
-    }
 
     private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Tilstand =
         when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
@@ -156,7 +152,7 @@ class PostgresUtsendingRepository(
         }
 
     override fun slettUtsending(utsendingId: UUID): Int =
-        sessionOf(ds).use { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -171,8 +167,8 @@ class PostgresUtsendingRepository(
         }
 }
 
-private fun Session.lagreUtsendingSak(utsendingSak: UtsendingSak) {
-    this.run(
+private fun PostgresUnitOfWork.lagreUtsendingSak(utsendingSak: UtsendingSak) {
+    session.run(
         queryOf(
             //language=PostgreSQL
             statement =

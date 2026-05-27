@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.TestHelper.lagUtsending
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
@@ -50,7 +51,7 @@ class MetrikkJobTest {
                     behandling8,
                 ),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
             repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling1))
             repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling2))
             repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling3))
@@ -112,8 +113,8 @@ class MetrikkJobTest {
                     behandling8,
                 ),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            val utsendingRepository = PostgresUtsendingRepository(ds)
+            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
             lagOppgave(tilstand = PåVent, behandling = behandling1).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(

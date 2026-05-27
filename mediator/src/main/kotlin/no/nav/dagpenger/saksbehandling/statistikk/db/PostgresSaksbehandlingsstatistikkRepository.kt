@@ -1,17 +1,16 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import java.util.UUID
-import javax.sql.DataSource
 
 class PostgresSaksbehandlingsstatistikkRepository(
-    private val dataSource: DataSource,
+    private val databaseSession: DatabaseSession,
 ) : SaksbehandlingsstatistikkRepository {
-    override fun tidligereTilstandsendringerErOverført(): Boolean {
-        sessionOf(dataSource = dataSource).use { session ->
+    override fun tidligereTilstandsendringerErOverført(): Boolean =
+        databaseSession.session { session ->
             val count =
                 session.run(
                     queryOf(
@@ -26,20 +25,18 @@ class PostgresSaksbehandlingsstatistikkRepository(
                         row.int("count")
                     }.asSingle,
                 )
-            return count == 0
+            count == 0
         }
-    }
 
     // Henter oppgavetilstander som skal sendes til statistikk.
     // Går ikke lenger tilbake i tid enn det finnes behandlinger i behandlinger_mart på BigQuery, derfor begrensningen
     // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
     override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
-        sessionOf(dataSource = dataSource)
-            .use { session ->
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = """
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                         INSERT
                         INTO  saksbehandling_statistikk_v1 (
                               tilstand_id
@@ -121,36 +118,36 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             LIMIT 1000
                         RETURNING   *
                         """,
-                    ).map { row ->
-                        OppgaveITilstand(
-                            oppgaveId = row.uuid("oppgave_id"),
-                            mottatt = row.localDateTime("mottatt"),
-                            sakId = row.uuid("sak_id"),
-                            behandlingId = row.uuid("behandling_id"),
-                            personIdent = row.string("person_ident"),
-                            saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                            beslutterIdent = row.stringOrNull("beslutter_ident"),
-                            versjon = Configuration.versjon,
-                            tilstandsendring =
-                                OppgaveITilstand.Tilstandsendring(
-                                    sekvensnummer = row.long("sekvensnummer"),
-                                    tilstandsendringId = row.uuid("tilstand_id"),
-                                    tilstand = row.string("tilstand"),
-                                    tidspunkt = row.localDateTime("tilstand_tidspunkt"),
-                                ),
-                            utløstAv = row.string("utlost_av"),
-                            behandlingResultat = row.stringOrNull("behandling_resultat"),
-                            behandlingÅrsak = row.stringOrNull("behandling_aarsak"),
-                            fagsystem = row.stringOrNull("fagsystem"),
-                            arenaSakId = row.stringOrNull("arena_sak_id"),
-                            resultatBegrunnelse = row.stringOrNull("resultat_begrunnelse"),
-                        )
-                    }.asList,
-                )
-            }
+                ).map { row ->
+                    OppgaveITilstand(
+                        oppgaveId = row.uuid("oppgave_id"),
+                        mottatt = row.localDateTime("mottatt"),
+                        sakId = row.uuid("sak_id"),
+                        behandlingId = row.uuid("behandling_id"),
+                        personIdent = row.string("person_ident"),
+                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
+                        beslutterIdent = row.stringOrNull("beslutter_ident"),
+                        versjon = Configuration.versjon,
+                        tilstandsendring =
+                            OppgaveITilstand.Tilstandsendring(
+                                sekvensnummer = row.long("sekvensnummer"),
+                                tilstandsendringId = row.uuid("tilstand_id"),
+                                tilstand = row.string("tilstand"),
+                                tidspunkt = row.localDateTime("tilstand_tidspunkt"),
+                            ),
+                        utløstAv = row.string("utlost_av"),
+                        behandlingResultat = row.stringOrNull("behandling_resultat"),
+                        behandlingÅrsak = row.stringOrNull("behandling_aarsak"),
+                        fagsystem = row.stringOrNull("fagsystem"),
+                        arenaSakId = row.stringOrNull("arena_sak_id"),
+                        resultatBegrunnelse = row.stringOrNull("resultat_begrunnelse"),
+                    )
+                }.asList,
+            )
+        }
 
     override fun markerTilstandsendringerSomOverført(tilstandId: UUID): Int =
-        sessionOf(dataSource = dataSource).use { session ->
+        databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL

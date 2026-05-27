@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -24,9 +25,9 @@ import javax.sql.DataSource
 
 class DBTestHelper private constructor(
     private val ds: DataSource,
-) : SakRepository by PostgresSakRepository(ds),
-    OppgaveRepository by PostgresOppgaveRepository(ds),
-    PersonRepository by PostgresPersonRepository(ds) {
+) : SakRepository by PostgresSakRepository(DatabaseSession(lazy { ds })),
+    OppgaveRepository by PostgresOppgaveRepository(DatabaseSession(lazy { ds })),
+    PersonRepository by PostgresPersonRepository(DatabaseSession(lazy { ds })) {
     companion object {
         val sakId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()

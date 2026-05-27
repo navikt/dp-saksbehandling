@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -49,7 +50,7 @@ class PostgresKlageRepositoryTest {
                         PersonMediator(
                             personRepository =
                                 PostgresPersonRepository(
-                                    dataSource = ds,
+                                    DatabaseSession(lazy { ds }),
                                 ),
                             oppslag =
                                 mockk<Oppslag>().also {
@@ -58,7 +59,7 @@ class PostgresKlageRepositoryTest {
                                         AdressebeskyttelseGradering.UGRADERT
                                 },
                         ),
-                    sakRepository = PostgresSakRepository(dataSource = ds),
+                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
                     rapidsConnection = mockk(relaxed = true),
                 )
 
@@ -92,7 +93,7 @@ class PostgresKlageRepositoryTest {
                         type = HendelseBehandler.Intern.Klage,
                     ),
             )
-            val klageRepository = PostgresKlageRepository(datasource = ds)
+            val klageRepository = PostgresKlageRepository(DatabaseSession(lazy { ds }))
 
             test(klageRepository, sak.sakId)
         }

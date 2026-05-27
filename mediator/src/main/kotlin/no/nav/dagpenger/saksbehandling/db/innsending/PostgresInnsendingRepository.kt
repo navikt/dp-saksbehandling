@@ -3,91 +3,88 @@ package no.nav.dagpenger.saksbehandling.db.innsending
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
 import java.util.UUID
-import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class PostgresInnsendingRepository(
-    private val dataSource: DataSource,
+    private val databaseSession: DatabaseSession,
 ) : InnsendingRepository {
     override fun lagre(innsending: Innsending) {
-        sessionOf(dataSource).use { session ->
-            session.transaction { tx ->
-                val innsendingResultat = innsending.innsendingResultat()
-                tx.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            INSERT INTO innsending_v1 (
-                                id, 
-                                person_id, 
-                                journalpost_id, 
-                                skjema_kode, 
-                                kategori, 
-                                mottatt, 
-                                soknad_id, 
-                                vurdering, 
-                                tilstand, 
-                                resultat_type, 
-                                resultat_behandling_id,
-                                valgt_sak_id
-                            )
-                            VALUES (
-                                :id, 
-                                :person_id, 
-                                :journalpost_id, 
-                                :skjema_kode, 
-                                :kategori, 
-                                :mottatt, 
-                                :soknad_id, 
-                                :vurdering, 
-                                :tilstand, 
-                                :resultat_type, 
-                                :resultat_behandling_id,
-                                :valgt_sak_id
-                            )
-                            ON CONFLICT (id) 
-                            DO UPDATE 
-                            SET vurdering = :vurdering ,
-                             tilstand = :tilstand ,
-                             resultat_type = :resultat_type ,
-                             resultat_behandling_id = :resultat_behandling_id,
-                             valgt_sak_id = :valgt_sak_id
-                            """.trimIndent(),
-                        paramMap =
-                            mapOf(
-                                "id" to innsending.innsendingId,
-                                "person_id" to innsending.person.id,
-                                "journalpost_id" to innsending.journalpostId,
-                                "skjema_kode" to innsending.skjemaKode,
-                                "kategori" to innsending.kategori.name,
-                                "mottatt" to innsending.mottatt,
-                                "soknad_id" to innsending.søknadId,
-                                "vurdering" to innsending.vurdering(),
-                                "tilstand" to innsending.tilstand(),
-                                "valgt_sak_id" to innsending.valgtSakId(),
-                                "resultat_type" to innsendingResultat?.javaClass?.simpleName,
-                                "resultat_behandling_id" to
-                                    when (innsendingResultat) {
-                                        Innsending.InnsendingResultat.Ingen -> null
-                                        is Innsending.InnsendingResultat.Klage -> innsendingResultat.behandlingId
-                                        is Innsending.InnsendingResultat.RettTilDagpenger -> innsendingResultat.behandlingId
-                                        is Innsending.InnsendingResultat.Oppfølging -> innsendingResultat.behandlingId
-                                        null -> null
-                                    },
-                            ),
-                    ).asUpdate,
-                )
-            }
+        databaseSession.transaction {
+            val innsendingResultat = innsending.innsendingResultat()
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO innsending_v1 (
+                            id, 
+                            person_id, 
+                            journalpost_id, 
+                            skjema_kode, 
+                            kategori, 
+                            mottatt, 
+                            soknad_id, 
+                            vurdering, 
+                            tilstand, 
+                            resultat_type, 
+                            resultat_behandling_id,
+                            valgt_sak_id
+                        )
+                        VALUES (
+                            :id, 
+                            :person_id, 
+                            :journalpost_id, 
+                            :skjema_kode, 
+                            :kategori, 
+                            :mottatt, 
+                            :soknad_id, 
+                            :vurdering, 
+                            :tilstand, 
+                            :resultat_type, 
+                            :resultat_behandling_id,
+                            :valgt_sak_id
+                        )
+                        ON CONFLICT (id) 
+                        DO UPDATE 
+                        SET vurdering = :vurdering ,
+                         tilstand = :tilstand ,
+                         resultat_type = :resultat_type ,
+                         resultat_behandling_id = :resultat_behandling_id,
+                         valgt_sak_id = :valgt_sak_id
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "id" to innsending.innsendingId,
+                            "person_id" to innsending.person.id,
+                            "journalpost_id" to innsending.journalpostId,
+                            "skjema_kode" to innsending.skjemaKode,
+                            "kategori" to innsending.kategori.name,
+                            "mottatt" to innsending.mottatt,
+                            "soknad_id" to innsending.søknadId,
+                            "vurdering" to innsending.vurdering(),
+                            "tilstand" to innsending.tilstand(),
+                            "valgt_sak_id" to innsending.valgtSakId(),
+                            "resultat_type" to innsendingResultat?.javaClass?.simpleName,
+                            "resultat_behandling_id" to
+                                when (innsendingResultat) {
+                                    Innsending.InnsendingResultat.Ingen -> null
+                                    is Innsending.InnsendingResultat.Klage -> innsendingResultat.behandlingId
+                                    is Innsending.InnsendingResultat.RettTilDagpenger -> innsendingResultat.behandlingId
+                                    is Innsending.InnsendingResultat.Oppfølging -> innsendingResultat.behandlingId
+                                    null -> null
+                                },
+                        ),
+                ).asUpdate,
+            )
         }
     }
 
@@ -95,9 +92,9 @@ class PostgresInnsendingRepository(
         finnInnsending(innsendingId)
             ?: throw DataNotFoundException("Kan ikke finne innsending med id $innsendingId")
 
-    override fun finnInnsendingerForPerson(ident: String): List<Innsending> {
-        sessionOf(dataSource).use { session ->
-            return session.run(
+    override fun finnInnsendingerForPerson(ident: String): List<Innsending> =
+        databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -130,11 +127,10 @@ class PostgresInnsendingRepository(
                 }.asList,
             )
         }
-    }
 
-    private fun finnInnsending(innsendingId: UUID): Innsending? {
-        sessionOf(dataSource).use { session ->
-            return session.run(
+    private fun finnInnsending(innsendingId: UUID): Innsending? =
+        databaseSession.session { session ->
+            session.run(
                 queryOf(
                     //language=PostgreSQL
                     statement =
@@ -167,7 +163,6 @@ class PostgresInnsendingRepository(
                 }.asSingle,
             )
         }
-    }
 
     private fun Row.innsending(): Innsending =
         Innsending.rehydrer(

@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.databaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
@@ -84,7 +85,7 @@ import java.util.Timer
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
 ) : RapidsConnection.StatusListener {
-    private val personRepository = PostgresPersonRepository(dataSource)
+    private val personRepository = PostgresPersonRepository(databaseSession)
     private val pdlKlient =
         PDLHttpKlient(
             url = Configuration.pdlUrl,
@@ -105,11 +106,11 @@ internal class ApplicationBuilder(
             .create(
                 env = configuration,
             ) { server: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, rapid: KafkaRapid ->
-                val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-                val sakRepository = PostgresSakRepository(dataSource = dataSource)
-                val utsendingRepository = PostgresUtsendingRepository(dataSource)
-                val innsendingRepository = PostgresInnsendingRepository(dataSource)
-                val klageRepository = PostgresKlageRepository(dataSource)
+                val oppgaveRepository = PostgresOppgaveRepository(databaseSession)
+                val sakRepository = PostgresSakRepository(databaseSession)
+                val utsendingRepository = PostgresUtsendingRepository(databaseSession)
+                val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+                val klageRepository = PostgresKlageRepository(databaseSession)
 
                 val behandlingKlient =
                     BehandlingHttpKlient(
@@ -188,7 +189,7 @@ internal class ApplicationBuilder(
                     )
                 val oppfølgingMediator =
                     OppfølgingMediator(
-                        oppfølgingRepository = PostgresOppfølgingRepository(dataSource),
+                        oppfølgingRepository = PostgresOppfølgingRepository(databaseSession),
                         oppfølgingBehandler =
                             OppfølgingBehandler(
                                 klageMediator = klageMediator,
@@ -220,7 +221,7 @@ internal class ApplicationBuilder(
                             oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                             sakMediator = sakMediator,
                         ),
-                    produksjonsstatistikkRepository = PostgresProduksjonsstatistikkRepository(dataSource),
+                    produksjonsstatistikkRepository = PostgresProduksjonsstatistikkRepository(databaseSession),
                     klageMediator = klageMediator,
                     klageDTOMapper = KlageDTOMapper(oppslag),
                     personMediator = personMediator,
@@ -352,7 +353,7 @@ internal class ApplicationBuilder(
                 statistikkJob =
                     StatistikkJob(
                         rapidsConnection = rapid,
-                        saksbehandlingsstatistikkRepository = PostgresSaksbehandlingsstatistikkRepository(dataSource),
+                        saksbehandlingsstatistikkRepository = PostgresSaksbehandlingsstatistikkRepository(databaseSession),
                     ).startJob(
                         startAt = now,
                         period = 5.Minutt,

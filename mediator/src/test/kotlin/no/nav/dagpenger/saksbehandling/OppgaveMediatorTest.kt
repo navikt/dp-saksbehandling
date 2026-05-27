@@ -52,6 +52,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
@@ -706,9 +707,9 @@ OppgaveMediatorTest {
             )
 
             val oppgave =
-                PostgresOppgaveRepository(datasource)
+                PostgresOppgaveRepository(DatabaseSession(lazy { datasource }))
                     .hentOppgaveIdFor(behandlingId)
-                    .let { PostgresOppgaveRepository(datasource).hentOppgave(it!!) }
+                    .let { PostgresOppgaveRepository(DatabaseSession(lazy { datasource })).hentOppgave(it!!) }
             oppgave.emneknagger shouldContain "D-nummer"
         }
     }
@@ -738,9 +739,9 @@ OppgaveMediatorTest {
             )
 
             val oppgave =
-                PostgresOppgaveRepository(datasource)
+                PostgresOppgaveRepository(DatabaseSession(lazy { datasource }))
                     .hentOppgaveIdFor(behandlingId)
-                    .let { PostgresOppgaveRepository(datasource).hentOppgave(it!!) }
+                    .let { PostgresOppgaveRepository(DatabaseSession(lazy { datasource })).hentOppgave(it!!) }
             oppgave.emneknagger shouldNotContain "D-nummer"
         }
     }
@@ -911,7 +912,7 @@ OppgaveMediatorTest {
         ) { datasource, oppgaveMediator ->
             val utsendingMediator =
                 UtsendingMediator(
-                    utsendingRepository = PostgresUtsendingRepository(datasource),
+                    utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { datasource })),
                     brevProdusent = mockk(),
                     rapidsConnection = mockk(relaxed = true),
                 )
@@ -1025,7 +1026,7 @@ OppgaveMediatorTest {
             oppgaveFraDB.tilstand().type shouldBe UNDER_BEHANDLING
 
             UtsendingMediator(
-                utsendingRepository = PostgresUtsendingRepository(datasource),
+                utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { datasource })),
                 brevProdusent = mockk(),
                 rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
@@ -1038,7 +1039,7 @@ OppgaveMediatorTest {
                 saksbehandler = saksbehandler,
             )
             UtsendingMediator(
-                utsendingRepository = PostgresUtsendingRepository(datasource),
+                utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { datasource })),
                 brevProdusent = mockk(),
                 rapidsConnection = mockk(relaxed = true),
             ).also { utsendingMediator ->
@@ -1584,7 +1585,7 @@ OppgaveMediatorTest {
         DBTestHelper.withOppgave(oppgave) { ds ->
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(ds),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { ds })),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = mockk(),
@@ -1655,18 +1656,18 @@ OppgaveMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(it),
+                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(it),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(it)
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(lazy { it }))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -1742,7 +1743,7 @@ OppgaveMediatorTest {
         behandlingId: UUID = UUIDv7.ny(),
         søknadId: UUID = UUIDv7.ny(),
     ): Oppgave {
-        val personRepository = PostgresPersonRepository(this)
+        val personRepository = PostgresPersonRepository(DatabaseSession(lazy { this }))
         val sakMediator =
             SakMediator(
                 personMediator =
@@ -1750,13 +1751,13 @@ OppgaveMediatorTest {
                         personRepository = personRepository,
                         oppslag = oppslagMock,
                     ),
-                sakRepository = PostgresSakRepository(dataSource),
+                sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource })),
                 rapidsConnection = testRapid,
             )
 
         val oppgaveMediator =
             OppgaveMediator(
-                oppgaveRepository = PostgresOppgaveRepository(this),
+                oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { this })),
                 behandlingKlient = behandlingKlientMock,
                 utsendingMediator = mockk(),
                 sakMediator = sakMediator,
@@ -1847,20 +1848,20 @@ OppgaveMediatorTest {
                 SakMediator(
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
+                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { dataSource })),
                             oppslag = oppslagMock,
                         ),
-                    sakRepository = PostgresSakRepository(dataSource),
+                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource })),
                     rapidsConnection = testRapid,
                 )
 
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(datasource),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { datasource })),
                     behandlingKlient = behandlingKlient,
                     utsendingMediator =
                         UtsendingMediator(
-                            utsendingRepository = PostgresUtsendingRepository(datasource),
+                            utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { datasource })),
                             brevProdusent = mockk(),
                             rapidsConnection = testRapid,
                         ),
