@@ -13,7 +13,7 @@ private val dbLogger = KotlinLogging.logger {}
  * Da unngår vi at applikasjonen kobler seg til databasen ved oppstart, før den faktisk trengs
  * (f.eks. i tester eller komponenter som ikke alltid leser/skriver).
  */
-data class DatabaseSession(
+class DatabaseSession(
     private val dataSource: Lazy<DataSource>,
 ) {
     fun <R> session(block: (Session) -> R): R = sessionOf(dataSource.value).use(block)
