@@ -16,7 +16,7 @@ internal object PostgresDataSourceBuilder {
 
     private fun getOrThrow(key: String): String = getEnv(key) ?: getSystemProperty(key)
 
-    val databaseSession by lazy { DatabaseSession(lazy { dataSource }) }
+    val databaseSession = DatabaseSession(lazy { dataSource })
 
     val dataSource by lazy {
         HikariDataSource().apply {

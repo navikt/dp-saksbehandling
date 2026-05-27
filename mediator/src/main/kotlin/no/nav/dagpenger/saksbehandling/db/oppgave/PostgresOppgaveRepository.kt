@@ -339,13 +339,7 @@ class PostgresOppgaveRepository(
         val tilstandsloggId = oppgave.tilstandslogg.first().id
 
         databaseSession.transaction {
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = "DELETE FROM notat_v1 WHERE oppgave_tilstand_logg_id = :oppgave_tilstand_logg_id",
-                    paramMap = mapOf("oppgave_tilstand_logg_id" to tilstandsloggId),
-                ).asUpdate,
-            )
+            slettNotat(tilstandsloggId)
         }
     }
 
@@ -776,6 +770,16 @@ private fun PostgresUnitOfWork.lagreNotat(
     ) ?: throw KanIkkeLagreNotatException(
         "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
     )
+
+private fun PostgresUnitOfWork.slettNotat(tilstandsloggId: UUID) {
+    session.run(
+        queryOf(
+            //language=PostgreSQL
+            statement = "DELETE FROM notat_v1 WHERE oppgave_tilstand_logg_id = :oppgave_tilstand_logg_id",
+            paramMap = mapOf("oppgave_tilstand_logg_id" to tilstandsloggId),
+        ).asUpdate,
+    )
+}
 
 private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,

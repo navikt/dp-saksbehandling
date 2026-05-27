@@ -5,38 +5,40 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.core.metrics.Histogram
 
 internal object DbMetrics {
+    private const val PREFIX = "dp_saksbehandling_"
+
     val commitCounter: Counter =
         Counter
             .builder()
-            .name("transactions_committed_total")
+            .name("${PREFIX}transactions_committed_total")
             .help("Total number of committed transactions")
             .register()
 
     val rollbackCounter: Counter =
         Counter
             .builder()
-            .name("transactions_rolledback_total")
+            .name("${PREFIX}transactions_rolledback_total")
             .help("Total number of rolled-back transactions")
             .register()
 
     val transactionDuration: Histogram =
         Histogram
             .builder()
-            .name("transaction_duration_seconds")
+            .name("${PREFIX}transaction_duration_seconds")
             .help("Full transaction duration including queries and commit")
             .register()
 
     val commitDuration: Histogram =
         Histogram
             .builder()
-            .name("commit_duration_seconds")
+            .name("${PREFIX}commit_duration_seconds")
             .help("Time spent in actual DB commit")
             .register()
 
     val activeTransactions: Gauge =
         Gauge
             .builder()
-            .name("active_transactions")
+            .name("${PREFIX}active_transactions")
             .help("Number of active transactions currently open")
             .register()
 }

@@ -2,6 +2,13 @@
 
 Oversikt over alle Prometheus-metrikker eksponert av dp-saksbehandling.
 
+## Konvensjoner
+
+- **Prefiks**: Alle metrikker skal ha `dp_saksbehandling_`-prefiks
+- **Automatiske labels fra Nais**: Prometheus legger automatisk til `app`, `team` og `namespace` labels på alle metrikker via scrape-konfigurasjonen. Disse trenger ikke registreres i koden.
+- **Navneformat**: `dp_saksbehandling_<domene>_<beskrivelse>_<enhet/type>` (snake_case)
+- **Help-tekst**: Obligatorisk, kort beskrivelse på norsk eller engelsk
+
 ## Forretningsmetrikker
 
 | Metric | Type | Labels | Beskrivelse | Kilde |
@@ -29,14 +36,13 @@ Oversikt over alle Prometheus-metrikker eksponert av dp-saksbehandling.
 
 | Metric | Type | Labels | Beskrivelse | Kilde |
 |--------|------|--------|-------------|-------|
-| `transactions_committed_total` | Counter | — | Totalt antall committede transaksjoner | `DbMetrics` |
-| `transactions_rolledback_total` | Counter | — | Totalt antall rollback-ede transaksjoner | `DbMetrics` |
-| `transaction_duration_seconds` | Histogram | — | Full transaksjonsvarighet inkludert queries og commit | `DbMetrics` |
-| `commit_duration_seconds` | Histogram | — | Tid brukt på selve DB-commit | `DbMetrics` |
-| `active_transactions` | Gauge | — | Antall aktive transaksjoner akkurat nå | `DbMetrics` |
+| `dp_saksbehandling_transactions_committed_total` | Counter | — | Totalt antall committede transaksjoner | `DbMetrics` |
+| `dp_saksbehandling_transactions_rolledback_total` | Counter | — | Totalt antall rollback-ede transaksjoner | `DbMetrics` |
+| `dp_saksbehandling_transaction_duration_seconds` | Histogram | — | Full transaksjonsvarighet inkludert queries og commit | `DbMetrics` |
+| `dp_saksbehandling_commit_duration_seconds` | Histogram | — | Tid brukt på selve DB-commit | `DbMetrics` |
+| `dp_saksbehandling_active_transactions` | Gauge | — | Antall aktive transaksjoner akkurat nå | `DbMetrics` |
 
 ## Merknader
 
 - Forretningsmetrikker oppdateres av `StatistikkJob` som kjører hvert 5. minutt
-- Databasemetrikker mangler `dp_saksbehandling_`-prefiks (teknisk gjeld, lav prioritet)
 - HikariCP eksponerer egne metrikker automatisk via Prometheus-integrasjonen

@@ -58,9 +58,10 @@ private fun Connection.handleCommit() {
 
 private fun Connection.handleRollback(t: Throwable) {
     runCatching {
-        dbLogger.error(t) { "Transaksjonen feilet, ruller tilbake" }
-        DbMetrics.rollbackCounter.inc()
         rollback()
+    }.onSuccess {
+        dbLogger.error(t) { "Transaksjonen feilet, rullet tilbake" }
+        DbMetrics.rollbackCounter.inc()
     }.onFailure {
         dbLogger.error(t) { "Rollback feilet" }
     }
