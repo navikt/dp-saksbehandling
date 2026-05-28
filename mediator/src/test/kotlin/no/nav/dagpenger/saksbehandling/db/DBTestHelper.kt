@@ -25,9 +25,9 @@ import javax.sql.DataSource
 
 class DBTestHelper private constructor(
     private val ds: DataSource,
-) : SakRepository by PostgresSakRepository(DatabaseSession(lazy { ds })),
-    OppgaveRepository by PostgresOppgaveRepository(DatabaseSession(lazy { ds })),
-    PersonRepository by PostgresPersonRepository(DatabaseSession(lazy { ds })) {
+) : SakRepository by PostgresSakRepository(DatabaseSession(ds)),
+    OppgaveRepository by PostgresOppgaveRepository(DatabaseSession(ds)),
+    PersonRepository by PostgresPersonRepository(DatabaseSession(ds)) {
     companion object {
         val sakId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()

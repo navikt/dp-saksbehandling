@@ -64,7 +64,7 @@ class UtsendingMediatorTest {
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
@@ -84,7 +84,7 @@ class UtsendingMediatorTest {
             BehandlingsresultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                sakRepository = PostgresSakRepository(DatabaseSession(ds)),
             )
 
             UtsendingBehovLøsningMottak(
@@ -228,7 +228,7 @@ class UtsendingMediatorTest {
             val utsendingSak = UtsendingSak("123", "Arena")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
 
-            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
@@ -246,7 +246,7 @@ class UtsendingMediatorTest {
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                 sakMediator = mockSakMediator,
             )
 
@@ -396,7 +396,7 @@ class UtsendingMediatorTest {
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et automatisk vedtaksbrev</p>"
-            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
@@ -416,7 +416,7 @@ class UtsendingMediatorTest {
             BehandlingsresultatMottakForAutomatiskVedtakUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                sakRepository = PostgresSakRepository(DatabaseSession(ds)),
             )
 
             UtsendingBehovLøsningMottak(
@@ -539,7 +539,7 @@ class UtsendingMediatorTest {
 
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
             val behandlingId = behandling.behandlingId
-            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,

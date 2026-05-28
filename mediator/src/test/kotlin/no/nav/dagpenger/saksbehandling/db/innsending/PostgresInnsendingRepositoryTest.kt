@@ -36,7 +36,7 @@ class PostgresInnsendingRepositoryTest {
                         ),
                     valgtSakId = null,
                 )
-            val repository = PostgresInnsendingRepository(DatabaseSession(lazy { ds }))
+            val repository = PostgresInnsendingRepository(DatabaseSession(ds))
             repository.lagre(innsending = innsending)
 
             repository.hent(innsending.innsendingId).also { dbInnsending ->

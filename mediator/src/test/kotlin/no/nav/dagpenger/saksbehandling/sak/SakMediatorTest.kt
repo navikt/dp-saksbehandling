@@ -120,11 +120,11 @@ class SakMediatorTest {
 
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -157,11 +157,11 @@ class SakMediatorTest {
 
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -201,11 +201,11 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -235,11 +235,11 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -270,11 +270,11 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -342,11 +342,11 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -407,11 +407,11 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -472,11 +472,11 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -511,11 +511,11 @@ class SakMediatorTest {
 
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )
@@ -610,11 +610,11 @@ class SakMediatorTest {
 
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = testRapid,
                     personMediator =
                         PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(lazy { ds })),
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
                 )

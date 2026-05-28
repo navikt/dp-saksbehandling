@@ -34,7 +34,7 @@ class OppgaveFristUtgåttJobTest {
             person = TestHelper.testPerson,
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = repo,

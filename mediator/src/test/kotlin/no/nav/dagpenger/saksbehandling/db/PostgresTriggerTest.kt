@@ -16,7 +16,7 @@ class PostgresTriggerTest {
     @Test
     fun `Når en oppgave endres så skal endret_tidspunkt oppdateres`() {
         DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo.lagre(TestHelper.testOppgave)
             val endretTidspunkt = ds.hentEndretTidspunkt(TestHelper.testOppgave.oppgaveId)
             Thread.sleep(100)
