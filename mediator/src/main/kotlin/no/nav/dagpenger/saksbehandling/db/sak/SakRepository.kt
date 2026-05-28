@@ -7,7 +7,10 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import java.util.UUID
 
 interface SakRepository {
-    fun lagre(sakHistorikk: SakHistorikk)
+    fun lagre(
+        sakHistorikk: SakHistorikk,
+        ctx: Transaksjonskontekst = IkkeAktiv,
+    )
 
     fun hentSakHistorikk(ident: String): SakHistorikk
 

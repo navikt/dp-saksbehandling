@@ -115,17 +115,20 @@ class SakMediator(
         return sak
     }
 
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    behandlingOpprettetHendelse.behandlingId,
-                    behandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
+    fun knyttTilSak(
+        behandlingOpprettetHendelse: BehandlingOpprettetHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ): SakHistorikk {
+        val sakHistorikk = sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident)
+        sakHistorikk.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
+            sjekkResultat(
+                behandlingOpprettetHendelse.behandlingId,
+                behandlingOpprettetHendelse.javaClass.simpleName,
+                resultat,
+            )
         }
+        sakRepository.lagre(sakHistorikk, ctx)
+        return sakHistorikk
     }
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {

@@ -25,8 +25,11 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 class PostgresSakRepository(
     private val databaseSession: DatabaseSession,
 ) : SakRepository {
-    override fun lagre(sakHistorikk: SakHistorikk) {
-        databaseSession.transaction {
+    override fun lagre(
+        sakHistorikk: SakHistorikk,
+        ctx: Transaksjonskontekst,
+    ) {
+        databaseSession.inContext(ctx) {
             lagreSakHistorikk(
                 personId = sakHistorikk.person.id,
                 saker = sakHistorikk.alleSaker(),

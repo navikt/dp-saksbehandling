@@ -227,29 +227,6 @@ OppgaveMediatorTest {
                 rapidsConnection = testRapid,
             )
 
-        shouldThrow<IllegalStateException> {
-            oppgaveMediator.opprettOppgaveForKlageBehandling(
-                BehandlingOpprettetHendelse(
-                    behandlingId = UUIDv7.ny(),
-                    sakId = UUIDv7.ny(),
-                    ident = personUtenSakHistorikk,
-                    opprettet = LocalDateTime.now(),
-                    type = HendelseBehandler.Intern.Klage,
-                ),
-            )
-        }
-        shouldThrow<IllegalStateException> {
-            oppgaveMediator.opprettOppgaveForKlageBehandling(
-                BehandlingOpprettetHendelse(
-                    behandlingId = UUIDv7.ny(),
-                    sakId = UUIDv7.ny(),
-                    ident = personUtenBehandling,
-                    opprettet = LocalDateTime.now(),
-                    type = HendelseBehandler.Intern.Klage,
-                ),
-            )
-        }
-
         oppgaveMediator.opprettEllerOppdaterOppgave(
             ForslagTilVedtakHendelse(
                 ident = personUtenBehandling,
@@ -269,7 +246,7 @@ OppgaveMediatorTest {
         ) shouldBe null
 
         testRapid.inspektør.let {
-            it.size shouldBe 4
+            it.size shouldBe 2
             for (i in 0 until it.size) {
                 it.message(i).let { message ->
                     message["@event_name"].asString() shouldBe "saksbehandling_alert"

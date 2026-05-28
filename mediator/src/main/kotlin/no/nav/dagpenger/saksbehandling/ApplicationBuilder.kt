@@ -179,6 +179,7 @@ internal class ApplicationBuilder(
                     )
                 val klageMediator =
                     KlageMediator(
+                        transaksjoner = Transaksjoner(databaseSession),
                         klageRepository = klageRepository,
                         oppgaveMediator = oppgaveMediator,
                         utsendingMediator = utsendingMediator,

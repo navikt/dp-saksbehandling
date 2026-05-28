@@ -110,6 +110,45 @@ class OppgaveMediator(
         return oppgave
     }
 
+    fun lagOppgaveForKlage(
+        hendelse: BehandlingOpprettetHendelse,
+        sakHistorikk: SakHistorikk,
+        saksbehandler: Saksbehandler? = null,
+        ctx: Transaksjonskontekst.Aktiv,
+    ): Oppgave {
+        val behandling =
+            sakHistorikk.finnBehandling(hendelse.behandlingId)
+                ?: throw IllegalStateException(
+                    "Fant ikke behandling ${hendelse.behandlingId} i sakHistorikk for klageopprettelse",
+                )
+
+        val oppgave =
+            Oppgave(
+                emneknagger = emptySet(),
+                opprettet = behandling.opprettet,
+                person = sakHistorikk.person,
+                behandling = behandling,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            )
+
+        oppgave.settKlarTilBehandling(hendelse)
+        saksbehandler?.let {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = it.navIdent,
+                    utførtAv = it,
+                ),
+            )
+        }
+        oppgaveRepository.lagre(oppgave, ctx)
+        return oppgave
+    }
+
     fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
         if (!hendelse.erEttersendingMedSøknadId()) {
             return
@@ -131,47 +170,6 @@ class OppgaveMediator(
             } ?: logger.warn {
             "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
         }
-    }
-
-    fun opprettOppgaveForKlageBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
-        var oppgave: Oppgave? = null
-
-        val sakHistorikk = sakMediator.finnSakHistorikk(behandlingOpprettetHendelse.ident)
-
-        val behandling =
-            sakHistorikk
-                ?.finnBehandling(behandlingOpprettetHendelse.behandlingId)
-
-        if (behandling == null) {
-            val feilmelding =
-                "Mottatt hendelse behandlingOpprettetHendelse for behandling med id " +
-                    "${behandlingOpprettetHendelse.behandlingId}." +
-                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
-            logger.error { feilmelding }
-            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
-        } else {
-            oppgave =
-                Oppgave(
-                    emneknagger = emptySet(),
-                    opprettet = behandling.opprettet,
-                    person = sakHistorikk.person,
-                    behandling = behandling,
-                    meldingOmVedtak =
-                        Oppgave.MeldingOmVedtak(
-                            kilde = DP_SAK,
-                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                        ),
-                ).also {
-                    it.settKlarTilBehandling(behandlingOpprettetHendelse)
-                }
-            oppgaveRepository.lagre(oppgave)
-        }
-
-        // todo Bedre  Exception håndtering
-        return oppgave ?: throw IllegalStateException(
-            "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
-                "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
-        )
     }
 
     fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)

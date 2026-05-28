@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -1063,19 +1064,19 @@ class KlageMediatorTest {
         test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
     ) {
         withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { dataSource }))
+            val personRepository = PostgresPersonRepository(DatabaseSession(dataSource))
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
 
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(dataSource)),
                     rapidsConnection = testRapid,
                 )
 
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { dataSource })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(dataSource)),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
@@ -1083,7 +1084,8 @@ class KlageMediatorTest {
                 )
             val klageMediator =
                 KlageMediator(
-                    klageRepository = PostgresKlageRepository(DatabaseSession(lazy { dataSource })),
+                    transaksjoner = Transaksjoner(DatabaseSession(dataSource)),
+                    klageRepository = PostgresKlageRepository(DatabaseSession(dataSource)),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
@@ -1120,6 +1122,173 @@ class KlageMediatorTest {
                 )
 
             test(klageMediator, oppgaveMediator, sak.sakId)
+        }
+    }
+
+    @Test
+    fun `opprettManuellKlage ruller tilbake alle DB-endringer dersom oppgaveopprettelse feiler`() {
+        withMigratedDb { dataSource ->
+            val databaseSession = DatabaseSession(dataSource)
+            val personRepository = PostgresPersonRepository(databaseSession)
+            val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
+            val sakRepository = PostgresSakRepository(databaseSession)
+            val klageRepository = PostgresKlageRepository(databaseSession)
+
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = sakRepository,
+                    rapidsConnection = testRapid,
+                )
+
+            val oppgaveMediator =
+                mockk<OppgaveMediator> {
+                    every { lagOppgaveForKlage(any(), any(), any(), any()) } throws
+                        RuntimeException("Simulert feil ved oppgaveopprettelse")
+                }
+
+            val klageMediator =
+                KlageMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    klageRepository = klageRepository,
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = mockk(relaxed = true),
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    sakMediator = sakMediator,
+                    rapidsConnection = testRapid,
+                )
+
+            personRepository.lagre(
+                Person(
+                    ident = testPersonIdent,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+            )
+
+            val hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                    ident = testPersonIdent,
+                    opprettet = nå,
+                    behandlingskjedeId = UUIDv7.ny(),
+                )
+            val sak =
+                sakMediator.opprettSak(
+                    ident = hendelse.ident,
+                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                    behandling =
+                        Behandling(
+                            behandlingId = hendelse.behandlingId,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            opprettet = hendelse.opprettet,
+                            hendelse = hendelse,
+                        ),
+                )
+
+            shouldThrow<RuntimeException> {
+                klageMediator.opprettManuellKlage(
+                    ManuellKlageMottattHendelse(
+                        ident = testPersonIdent,
+                        sakId = sak.sakId,
+                        opprettet = nå,
+                        journalpostId = "12345",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+
+            // Verifiser at klageBehandling ikke ble persistert
+            val sakHistorikk = sakRepository.hentSakHistorikk(testPersonIdent)
+            sakHistorikk
+                .alleSaker()
+                .flatMap { it.behandlinger() }
+                .filter { it.utløstAv == HendelseBehandler.Intern.Klage } shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `opprettKlage ruller tilbake alle DB-endringer dersom oppgaveopprettelse feiler`() {
+        withMigratedDb { dataSource ->
+            val databaseSession = DatabaseSession(dataSource)
+            val personRepository = PostgresPersonRepository(databaseSession)
+            val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
+            val sakRepository = PostgresSakRepository(databaseSession)
+            val klageRepository = PostgresKlageRepository(databaseSession)
+
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = sakRepository,
+                    rapidsConnection = testRapid,
+                )
+
+            val oppgaveMediator =
+                mockk<OppgaveMediator> {
+                    every { lagOppgaveForKlage(any(), any(), any(), any()) } throws
+                        RuntimeException("Simulert feil ved oppgaveopprettelse")
+                }
+
+            val klageMediator =
+                KlageMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    klageRepository = klageRepository,
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = mockk(relaxed = true),
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    sakMediator = sakMediator,
+                    rapidsConnection = testRapid,
+                )
+
+            personRepository.lagre(
+                Person(
+                    ident = testPersonIdent,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+            )
+
+            val hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                    ident = testPersonIdent,
+                    opprettet = nå,
+                    behandlingskjedeId = UUIDv7.ny(),
+                )
+            val sak =
+                sakMediator.opprettSak(
+                    ident = hendelse.ident,
+                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                    behandling =
+                        Behandling(
+                            behandlingId = hendelse.behandlingId,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            opprettet = hendelse.opprettet,
+                            hendelse = hendelse,
+                        ),
+                )
+
+            shouldThrow<RuntimeException> {
+                klageMediator.opprettKlage(
+                    KlageMottattHendelse(
+                        ident = testPersonIdent,
+                        sakId = sak.sakId,
+                        opprettet = nå,
+                        journalpostId = "journalpostIdBrukersKlage",
+                    ),
+                )
+            }
+
+            // Verifiser at klageBehandling ikke ble persistert
+            val sakHistorikk = sakRepository.hentSakHistorikk(testPersonIdent)
+            sakHistorikk
+                .alleSaker()
+                .flatMap { it.behandlinger() }
+                .filter { it.utløstAv == HendelseBehandler.Intern.Klage } shouldBe emptyList()
         }
     }
 }

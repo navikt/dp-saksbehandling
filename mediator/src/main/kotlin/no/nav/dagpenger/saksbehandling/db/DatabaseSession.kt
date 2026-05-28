@@ -16,6 +16,8 @@ private val dbLogger = KotlinLogging.logger {}
 class DatabaseSession(
     private val dataSource: Lazy<DataSource>,
 ) {
+    constructor(dataSource: DataSource) : this(lazyOf(dataSource))
+
     fun <R> session(block: (Session) -> R): R = sessionOf(dataSource.value).use(block)
 
     fun <R> transaction(transactionBlock: PostgresUnitOfWork.() -> R): R =
