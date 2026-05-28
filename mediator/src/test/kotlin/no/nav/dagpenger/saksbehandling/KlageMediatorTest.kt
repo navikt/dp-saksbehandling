@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -231,26 +230,7 @@ class KlageMediatorTest {
                     klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
                     klageBehandling.hjemler() shouldBe listOf("FTRL_4_5_REGISTRERING", "FTRL_4_2")
                 }
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(1).let {
-                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                it["behandlingId"].asUUID() shouldBe behandlingId
-                it["sakId"].asUUID() shouldBe sakId
-                it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
-                it["ident"].stringValue() shouldBe testPersonIdent
-                it["saksbehandler"].toString() shouldEqualJson
-                    """
-                    {
-                      "navIdent": "${saksbehandler.navIdent}",
-                      "grupper": [],
-                      "tilganger": [
-                        "SAKSBEHANDLER",
-                        "BESLUTTER"
-                      ]
-                    }
-                        
-                    """.trimIndent()
-            }
+            testRapid.inspektør.size shouldBe 1
 
             val utsendingDistribuertHendelse =
                 UtsendingDistribuert(
@@ -270,8 +250,8 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-                    testRapid.inspektør.size shouldBe 3
-                    testRapid.inspektør.message(2).let {
+                    testRapid.inspektør.size shouldBe 2
+                    testRapid.inspektør.message(1).let {
                         it["@behov"].single().stringValue() shouldBe "OversendelseKlageinstans"
                         it["ident"].stringValue() shouldBe testPersonIdent
                         it["fagsakId"].stringValue() shouldBe sakId.toString()
@@ -298,6 +278,7 @@ class KlageMediatorTest {
                     brev = html,
                     ident = testPersonIdent,
                     type = UtsendingType.KLAGE_OVERSENDELSE,
+                    ctx = any(),
                 )
             }
 
@@ -373,12 +354,12 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
-            oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler).let { oppgave ->
-                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
-                oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-                oppgave.tilstandslogg.size shouldBe 3
-                oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
-            }
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+
+            oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            oppgave.tilstandslogg.size shouldBe 3
+            oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
@@ -402,14 +383,7 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-            verify(exactly = 1) {
-                utsendingMediatorMock.opprettUtsending(
-                    behandlingId = behandlingId,
-                    brev = html,
-                    ident = testPersonIdent,
-                    type = UtsendingType.KLAGE_OVERSENDELSE,
-                )
-            }
+
             klageMediator
                 .hentKlageBehandling(
                     behandlingId = behandlingId,
@@ -417,25 +391,17 @@ class KlageMediatorTest {
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
                     klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
-                }
-            testRapid.inspektør.message(0).let {
-                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                it["behandlingId"].asUUID() shouldBe behandlingId
-                it["sakId"].asUUID() shouldBe sakId
-                it["ident"].stringValue() shouldBe testPersonIdent
-                it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
-                it["saksbehandler"].toString() shouldEqualJson
-                    """
-                    {
-                      "navIdent": "${saksbehandler.navIdent}",
-                      "grupper": [],
-                      "tilganger": [
-                        "SAKSBEHANDLER",
-                        "BESLUTTER"
-                      ]
+                    verify(exactly = 1) {
+                        utsendingMediatorMock.opprettUtsending(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            brev = html,
+                            ident = testPersonIdent,
+                            type = UtsendingType.KLAGE_OVERSENDELSE,
+                            ctx = any(),
+                        )
                     }
-                    """.trimIndent()
-            }
+                }
+
             klageMediator.vedtakDistribuert(
                 hendelse =
                     UtsendingDistribuert(
@@ -449,8 +415,8 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).let { klageBehandling ->
                 klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-                testRapid.inspektør.size shouldBe 2
-                testRapid.inspektør.message(1).let {
+                testRapid.inspektør.size shouldBe 1
+                testRapid.inspektør.message(0).let {
                     it["@behov"].single().stringValue() shouldBe "OversendelseKlageinstans"
                     it["ident"].stringValue() shouldBe testPersonIdent
                     it["fagsakId"].stringValue() shouldBe sakId.toString()
@@ -547,31 +513,12 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
             klageBehandling.utfall() shouldBe UtfallType.AVVIST
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(1).let {
-                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                it["behandlingId"].asUUID() shouldBe behandlingId
-                it["sakId"].asUUID() shouldBe sakId
-                it["ident"].stringValue() shouldBe testPersonIdent
-                it["utfall"].stringValue() shouldBe "AVVIST"
-                it["saksbehandler"].toString() shouldEqualJson
-                    """
-                    {
-                      "navIdent": "${saksbehandler.navIdent}",
-                      "grupper": [],
-                      "tilganger": [
-                        "SAKSBEHANDLER",
-                        "BESLUTTER"
-                      ]
-                    }
-                    """.trimIndent()
-            }
+            testRapid.inspektør.size shouldBe 1
 
             klageMediator.vedtakDistribuert(
                 hendelse =
@@ -1289,6 +1236,49 @@ class KlageMediatorTest {
                 .alleSaker()
                 .flatMap { it.behandlinger() }
                 .filter { it.utløstAv == HendelseBehandler.Intern.Klage } shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `behandlingUtført ruller tilbake alle DB-endringer dersom ferdigstillOppgave feiler`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>(relaxed = true).also {
+                every { it.opprettUtsending(any(), any(), any(), any(), any()) } throws
+                    RuntimeException("Simulert feil ved utsending-opprettelse")
+            }
+
+        setupMediatorerOgSak(utsendingMediatorMock) { klageMediator, oppgaveMediator, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettManuellKlage(
+                        ManuellKlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostId",
+                            utførtAv = saksbehandler,
+                        ),
+                    ).behandling.behandlingId
+
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
+
+            shouldThrow<RuntimeException> {
+                klageMediator.behandlingUtført(
+                    hendelse =
+                        KlageBehandlingUtført(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            // Verifiser at klageBehandling IKKE har endret tilstand (rullet tilbake)
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLES
         }
     }
 }

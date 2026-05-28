@@ -508,7 +508,10 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(avbruttHendelse: AvbruttHendelse) {
+    fun ferdigstillOppgave(
+        avbruttHendelse: AvbruttHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
@@ -518,7 +521,7 @@ class OppgaveMediator(
                     "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(avbruttHendelse)
-                oppgaveRepository.lagre(oppgave)
+                oppgaveRepository.lagre(oppgave, ctx)
                 logger.info {
                     "Behandlet AvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
@@ -529,6 +532,7 @@ class OppgaveMediator(
     fun ferdigstillOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Result<UUID> =
         runCatching {
             oppgaveRepository.hentOppgaveFor(behandlingId = behandlingId).let { oppgave ->
@@ -538,7 +542,7 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                oppgaveRepository.lagre(oppgave)
+                oppgaveRepository.lagre(oppgave, ctx)
                 oppgave.oppgaveId
             }
         }

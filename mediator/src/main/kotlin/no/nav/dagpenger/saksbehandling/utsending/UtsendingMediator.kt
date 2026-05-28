@@ -9,6 +9,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
@@ -32,6 +34,7 @@ class UtsendingMediator(
         brev: String?,
         ident: String,
         type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ): Utsending {
         val utsending =
             Utsending(
@@ -40,7 +43,7 @@ class UtsendingMediator(
                 brev = brev,
                 type = type,
             )
-        utsendingRepository.lagre(utsending)
+        utsendingRepository.lagre(utsending, ctx)
         return utsending
     }
 
