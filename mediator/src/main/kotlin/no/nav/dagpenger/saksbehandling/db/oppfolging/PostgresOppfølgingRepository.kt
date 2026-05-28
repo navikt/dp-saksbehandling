@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -13,8 +14,11 @@ import java.util.UUID
 class PostgresOppfølgingRepository(
     private val databaseSession: DatabaseSession,
 ) : OppfølgingRepository {
-    override fun lagre(oppfølging: Oppfølging) {
-        databaseSession.transaction {
+    override fun lagre(
+        oppfølging: Oppfølging,
+        ctx: Transaksjonskontekst,
+    ) {
+        databaseSession.inContext(ctx) {
             val resultat = oppfølging.resultat()
             session.run(
                 queryOf(

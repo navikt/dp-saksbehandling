@@ -24,6 +24,19 @@ class DatabaseSession(
                 transactionBlock(PostgresUnitOfWork(session))
             }
         }
+
+    /**
+     * Kjører blokken innenfor eksisterende transaksjon hvis [ctx] er [Transaksjonskontekst.Aktiv],
+     * ellers starter en ny transaksjon.
+     */
+    fun <R> inContext(
+        ctx: Transaksjonskontekst,
+        block: PostgresUnitOfWork.() -> R,
+    ): R =
+        when (ctx) {
+            is Transaksjonskontekst.Aktiv -> block(PostgresUnitOfWork(ctx.session))
+            is Transaksjonskontekst.IkkeAktiv -> transaction(block)
+        }
 }
 
 private fun <R> Connection.withTransaction(transactionBlock: () -> R): R {

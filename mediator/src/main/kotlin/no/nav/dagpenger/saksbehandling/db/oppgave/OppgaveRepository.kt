@@ -3,6 +3,8 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -11,7 +13,10 @@ import java.util.UUID
 interface OppgaveRepository {
     fun hentOppgave(oppgaveId: UUID): Oppgave
 
-    fun lagre(oppgave: Oppgave)
+    fun lagre(
+        oppgave: Oppgave,
+        ctx: Transaksjonskontekst = IkkeAktiv,
+    )
 
     fun finnOppgaverFor(
         ident: String,

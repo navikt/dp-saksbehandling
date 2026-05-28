@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
@@ -279,8 +280,9 @@ class PostgresSakRepository(
         personId: UUID,
         sakId: UUID?,
         behandling: Behandling,
+        ctx: Transaksjonskontekst,
     ) {
-        databaseSession.transaction {
+        databaseSession.inContext(ctx) {
             lagreBehandling(
                 personId = personId,
                 sakId = sakId,
