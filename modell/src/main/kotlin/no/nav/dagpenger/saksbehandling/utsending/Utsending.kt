@@ -23,6 +23,7 @@ enum class UtsendingType(
 ) {
     VEDTAK_DAGPENGER("Vedtak om dagpenger", "NAV-DAGPENGER-VEDTAK"),
     KLAGEMELDING("Klagebrev", "NAV-DAGPENGER-KLAGE"),
+    MANGELBREV("Mangelbrev", "NAV-DAGPENGER-MANGELBREV"),
 }
 
 data class Utsending(
@@ -230,6 +231,7 @@ data class Utsending(
                 behandlingId = utsending.behandlingId,
                 journalpostId = utsending.journalpostId ?: throw IllegalStateException("journalpostId mangler"),
                 fagsystem = fagsystem,
+                utsendingType = utsending.type,
             )
         }
 

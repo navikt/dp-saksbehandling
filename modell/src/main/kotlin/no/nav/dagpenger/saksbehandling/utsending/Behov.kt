@@ -76,6 +76,7 @@ data class DistribueringBehov(
     override val behandlingId: UUID,
     private val journalpostId: String,
     private val fagsystem: String,
+    private val utsendingType: UtsendingType,
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "DistribueringBehov"
@@ -86,6 +87,11 @@ data class DistribueringBehov(
         mapOf(
             "journalpostId" to journalpostId,
             "fagsystem" to fagsystem,
+            "distribusjonstype" to when (utsendingType) {
+                UtsendingType.VEDTAK_DAGPENGER -> "VEDTAK"
+                UtsendingType.KLAGEMELDING -> "VIKTIG"
+                UtsendingType.MANGELBREV -> "VIKTIG"
+            },
         )
 }
 
