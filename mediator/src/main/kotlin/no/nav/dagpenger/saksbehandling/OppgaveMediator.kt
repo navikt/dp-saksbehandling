@@ -491,7 +491,10 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse) {
+    fun ferdigstillOppgave(
+        oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         oppgaveRepository.hentOppgaveFor(oppfølgingFerdigstiltHendelse.oppfølgingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
@@ -501,7 +504,7 @@ class OppgaveMediator(
                     "Mottatt OppfølgingFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(oppfølgingFerdigstiltHendelse)
-                oppgaveRepository.lagre(oppgave)
+                oppgaveRepository.lagre(oppgave, ctx)
                 logger.info {
                     "Behandlet OppfølgingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }

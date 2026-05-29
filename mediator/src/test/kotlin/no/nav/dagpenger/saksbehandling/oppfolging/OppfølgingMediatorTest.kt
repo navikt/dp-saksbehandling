@@ -284,4 +284,96 @@ class OppfølgingMediatorTest {
             oppfølgingRepository.finnForPerson(testPerson.ident) shouldBe emptyList()
         }
     }
+
+    @Test
+    fun `ferdigstillInternt ruller tilbake alle DB-endringer hvis ferdigstillOppgave feiler`() {
+        DBTestHelper.withPerson { ds ->
+            val databaseSession = DatabaseSession(lazy { ds })
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
+                )
+
+            val oppfølgingBehandler = mockk<OppfølgingBehandler>()
+
+            val mediator =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            // Opprett en oppfølging først
+            val resultat =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "Test",
+                        tittel = "Test oppfølging",
+                    ),
+                )
+
+            // Tildel oppgaven (kreves for ferdigstill)
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = resultat.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            // Mock oppgaveMediator.ferdigstillOppgave til å kaste feil
+            val feilendeOppgaveMediator =
+                mockk<OppgaveMediator>().also {
+                    every {
+                        it.ferdigstillOppgave(
+                            any<no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse>(),
+                            any(),
+                        )
+                    } throws
+                        RuntimeException("Feil ved ferdigstilling av oppgave")
+                }
+
+            val mediatorMedFeil =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = feilendeOppgaveMediator,
+                )
+
+            runCatching {
+                mediatorMedFeil.ferdigstill(
+                    FerdigstillOppfølgingHendelse(
+                        oppfølgingId = resultat.oppfølgingId,
+                        aksjon = OppfølgingAksjon.Avslutt(null),
+                        vurdering = "Skal rulle tilbake",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at oppfølging IKKE ble ferdigstilt (rollback)
+            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
+            oppfølging.tilstand() shouldBe "BEHANDLES"
+            oppfølging.vurdering() shouldBe null
+        }
+    }
 }

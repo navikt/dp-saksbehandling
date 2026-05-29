@@ -98,42 +98,71 @@ class OppfølgingMediator(
             vurdering = hendelse.vurdering,
             valgtSakId = hendelse.aksjon.valgtSakId,
         )
-        oppfølgingRepository.lagre(oppfølging)
 
-        val ferdigstiltHendelse =
-            when (hendelse.aksjon) {
-                is OppfølgingAksjon.Avslutt ->
+        when (hendelse.aksjon) {
+            is OppfølgingAksjon.Avslutt ->
+                ferdigstillInternt(oppfølging, hendelse) { _ ->
                     OppfølgingFerdigstiltHendelse(
                         oppfølgingId = oppfølging.id,
                         aksjonType = hendelse.aksjon.type,
                         opprettetBehandlingId = null,
                         utførtAv = hendelse.utførtAv,
                     )
+                }
 
-                is OppfølgingAksjon.OpprettKlage ->
-                    transaksjoner.transaksjon { ctx ->
-                        oppfølgingBehandler.opprettKlage(oppfølging, hendelse, ctx)
-                    }
+            is OppfølgingAksjon.OpprettKlage ->
+                ferdigstillInternt(oppfølging, hendelse) { ctx ->
+                    oppfølgingBehandler.opprettKlage(oppfølging, hendelse, ctx)
+                }
 
-                is OppfølgingAksjon.OpprettManuellBehandling,
-                is OppfølgingAksjon.OpprettRevurderingBehandling,
-                ->
-                    oppfølgingBehandler.opprettBehandling(oppfølging, hendelse)
+            is OppfølgingAksjon.OpprettOppfølging ->
+                ferdigstillInternt(oppfølging, hendelse) { ctx ->
+                    oppfølgingBehandler.opprettNyOppfølging(oppfølging, hendelse, this, ctx)
+                }
 
-                is OppfølgingAksjon.OpprettOppfølging ->
-                    transaksjoner.transaksjon { ctx ->
-                        oppfølgingBehandler.opprettNyOppfølging(oppfølging, hendelse, this, ctx)
-                    }
-            }
+            is OppfølgingAksjon.OpprettManuellBehandling,
+            is OppfølgingAksjon.OpprettRevurderingBehandling,
+            -> ferdigstillEksternt(oppfølging, hendelse)
+        }
 
-        logger.info { "Ferdigstiller oppfølging ${oppfølging.id} med aksjon ${hendelse.aksjon.type}" }
+        logger.info { "Ferdigstilt oppfølging ${oppfølging.id} med aksjon ${hendelse.aksjon.type}" }
+    }
 
-        oppfølging.ferdigstill(
-            aksjonType = ferdigstiltHendelse.aksjonType,
-            opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
-        )
-        oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
+    private fun ferdigstillInternt(
+        oppfølging: Oppfølging,
+        hendelse: FerdigstillOppfølgingHendelse,
+        aksjon: (Transaksjonskontekst.Aktiv) -> OppfølgingFerdigstiltHendelse,
+    ) {
+        transaksjoner.transaksjon { ctx ->
+            oppfølgingRepository.lagre(oppfølging, ctx)
+            val ferdigstiltHendelse = aksjon(ctx)
+            oppfølging.ferdigstill(
+                aksjonType = ferdigstiltHendelse.aksjonType,
+                opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
+            )
+            oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse, ctx)
+            oppfølgingRepository.lagre(oppfølging, ctx)
+        }
+    }
+
+    private fun ferdigstillEksternt(
+        oppfølging: Oppfølging,
+        hendelse: FerdigstillOppfølgingHendelse,
+    ) {
+        // Checkpoint: persist FERDIGSTILL_STARTET before external HTTP call
         oppfølgingRepository.lagre(oppfølging)
+
+        val ferdigstiltHendelse = oppfølgingBehandler.opprettBehandling(oppfølging, hendelse)
+
+        // Final writes in one transaction after successful HTTP
+        transaksjoner.transaksjon { ctx ->
+            oppfølging.ferdigstill(
+                aksjonType = ferdigstiltHendelse.aksjonType,
+                opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
+            )
+            oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse, ctx)
+            oppfølgingRepository.lagre(oppfølging, ctx)
+        }
     }
 
     fun hent(
