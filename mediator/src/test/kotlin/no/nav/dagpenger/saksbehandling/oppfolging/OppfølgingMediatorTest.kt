@@ -19,11 +19,13 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.util.UUID
 
 class OppfølgingMediatorTest {
     private val testPerson = DBTestHelper.testPerson
@@ -374,6 +376,182 @@ class OppfølgingMediatorTest {
             val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
             oppfølging.tilstand() shouldBe "BEHANDLES"
             oppfølging.vurdering() shouldBe null
+        }
+    }
+
+    @Test
+    fun `ferdigstillEksternt - HTTP-feil lar oppfølging stå i FERDIGSTILL_STARTET`() {
+        DBTestHelper.withPerson { ds ->
+            val databaseSession = DatabaseSession(lazy { ds })
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
+                )
+
+            val oppfølgingBehandler =
+                mockk<OppfølgingBehandler>().also {
+                    every { it.opprettBehandling(any(), any()) } throws
+                        RuntimeException("HTTP-feil mot dp-behandling")
+                }
+
+            val mediator =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val resultat =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "Test",
+                        tittel = "Test oppfølging",
+                    ),
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = resultat.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            runCatching {
+                mediator.ferdigstill(
+                    FerdigstillOppfølgingHendelse(
+                        oppfølgingId = resultat.oppfølgingId,
+                        aksjon =
+                            OppfølgingAksjon.OpprettManuellBehandling(
+                                saksbehandlerToken = "token",
+                                valgtSakId = UUID.randomUUID(),
+                            ),
+                        vurdering = "Trenger manuell behandling",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Oppfølging ble checkpointet til FERDIGSTILL_STARTET før HTTP-kallet
+            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
+            oppfølging.tilstand() shouldBe "FERDIGSTILL_STARTET"
+            oppfølging.vurdering() shouldBe "Trenger manuell behandling"
+        }
+    }
+
+    @Test
+    fun `ferdigstillEksternt - tx-feil etter HTTP lar oppfølging stå i FERDIGSTILL_STARTET`() {
+        DBTestHelper.withPerson { ds ->
+            val databaseSession = DatabaseSession(lazy { ds })
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
+                )
+
+            // OppfølgingBehandler som lykkes med HTTP men ferdigstillOppgave feiler etterpå
+            val oppfølgingBehandler =
+                mockk<OppfølgingBehandler>().also {
+                    every { it.opprettBehandling(any(), any()) } answers {
+                        val oppfølging = firstArg<Oppfølging>()
+                        OppfølgingFerdigstiltHendelse(
+                            oppfølgingId = oppfølging.id,
+                            aksjonType = OppfølgingAksjon.Type.OPPRETT_MANUELL_BEHANDLING,
+                            opprettetBehandlingId = UUID.randomUUID(),
+                            utførtAv = saksbehandler,
+                        )
+                    }
+                }
+
+            val mediator =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val resultat =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "Test",
+                        tittel = "Test oppfølging",
+                    ),
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = resultat.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            // Bytt til mediator med feilende oppgaveMediator for post-HTTP tx
+            val feilendeOppgaveMediator =
+                mockk<OppgaveMediator>().also {
+                    every { it.ferdigstillOppgave(any<OppfølgingFerdigstiltHendelse>(), any()) } throws
+                        RuntimeException("DB-feil i post-HTTP transaksjon")
+                }
+
+            val mediatorMedFeil =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = feilendeOppgaveMediator,
+                )
+
+            runCatching {
+                mediatorMedFeil.ferdigstill(
+                    FerdigstillOppfølgingHendelse(
+                        oppfølgingId = resultat.oppfølgingId,
+                        aksjon =
+                            OppfølgingAksjon.OpprettManuellBehandling(
+                                saksbehandlerToken = "token",
+                                valgtSakId = UUID.randomUUID(),
+                            ),
+                        vurdering = "Trenger manuell behandling",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Oppfølging forblir i FERDIGSTILL_STARTET — OppfølgingAlarmJob vil fange dette
+            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
+            oppfølging.tilstand() shouldBe "FERDIGSTILL_STARTET"
         }
     }
 }
