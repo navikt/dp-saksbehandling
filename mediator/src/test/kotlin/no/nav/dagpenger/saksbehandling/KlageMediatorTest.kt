@@ -372,12 +372,12 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
-
-            oppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-            oppgave.tilstandslogg.size shouldBe 3
-            oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler).let { oppgave ->
+                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+                oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+                oppgave.tilstandslogg.size shouldBe 3
+                oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            }
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
@@ -401,7 +401,14 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-
+            verify(exactly = 1) {
+                utsendingMediatorMock.opprettUtsending(
+                    behandlingId = behandlingId,
+                    brev = html,
+                    ident = testPersonIdent,
+                    type = UtsendingType.KLAGE_OVERSENDELSE,
+                )
+            }
             klageMediator
                 .hentKlageBehandling(
                     behandlingId = behandlingId,
@@ -409,34 +416,25 @@ class KlageMediatorTest {
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
                     klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
-                    verify(exactly = 1) {
-                        utsendingMediatorMock.opprettUtsending(
-                            behandlingId = oppgave.behandling.behandlingId,
-                            brev = html,
-                            ident = testPersonIdent,
-                            type = UtsendingType.KLAGE_OVERSENDELSE,
-                        )
-                    }
-                    testRapid.inspektør.message(0).let {
-                        it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                        it["behandlingId"].asUUID() shouldBe behandlingId
-                        it["sakId"].asUUID() shouldBe sakId
-                        it["ident"].stringValue() shouldBe testPersonIdent
-                        it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
-                        it["saksbehandler"].toString() shouldEqualJson
-                            """
-                            {
-                              "navIdent": "${saksbehandler.navIdent}",
-                              "grupper": [],
-                              "tilganger": [
-                                "SAKSBEHANDLER",
-                                "BESLUTTER"
-                              ]
-                            }
-                            """.trimIndent()
-                    }
                 }
-
+            testRapid.inspektør.message(0).let {
+                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
+                it["behandlingId"].asUUID() shouldBe behandlingId
+                it["sakId"].asUUID() shouldBe sakId
+                it["ident"].stringValue() shouldBe testPersonIdent
+                it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
+                it["saksbehandler"].toString() shouldEqualJson
+                    """
+                    {
+                      "navIdent": "${saksbehandler.navIdent}",
+                      "grupper": [],
+                      "tilganger": [
+                        "SAKSBEHANDLER",
+                        "BESLUTTER"
+                      ]
+                    }
+                    """.trimIndent()
+            }
             klageMediator.vedtakDistribuert(
                 hendelse =
                     UtsendingDistribuert(
@@ -548,6 +546,7 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
+
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
