@@ -18,6 +18,7 @@ class OppfølgingBehandler(
         hendelse: FerdigstillOppfølgingHendelse,
         ctx: Transaksjonskontekst.Aktiv,
     ): OppfølgingFerdigstiltHendelse {
+        require(hendelse.aksjon is OppfølgingAksjon.OpprettKlage) { "Ugyldig aksjon for opprettKlage: ${hendelse.aksjon}" }
         val aksjon = hendelse.aksjon as OppfølgingAksjon.OpprettKlage
 
         val klageOppgave =
@@ -49,8 +50,10 @@ class OppfølgingBehandler(
             when (val aksjon = hendelse.aksjon) {
                 is OppfølgingAksjon.OpprettManuellBehandling ->
                     aksjon.saksbehandlerToken to BehandlingstypeDTO.MANUELL
+
                 is OppfølgingAksjon.OpprettRevurderingBehandling ->
                     aksjon.saksbehandlerToken to BehandlingstypeDTO.REVURDERING
+
                 else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: $aksjon")
             }
 
@@ -78,6 +81,7 @@ class OppfølgingBehandler(
         oppfølgingMediator: OppfølgingMediator,
         ctx: Transaksjonskontekst.Aktiv,
     ): OppfølgingFerdigstiltHendelse {
+        require(hendelse.aksjon is OppfølgingAksjon.OpprettOppfølging) { "Ugyldig aksjon for opprettNyOppfølging: ${hendelse.aksjon}" }
         val aksjon = hendelse.aksjon as OppfølgingAksjon.OpprettOppfølging
 
         val nyOppgaveHendelse =
