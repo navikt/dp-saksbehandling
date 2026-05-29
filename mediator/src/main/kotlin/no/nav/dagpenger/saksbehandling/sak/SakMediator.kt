@@ -278,11 +278,13 @@ class SakMediator(
     fun lagreBehandling(
         personId: UUID,
         behandling: Behandling,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         sakRepository.lagreBehandling(
             personId = personId,
             sakId = null,
             behandling = behandling,
+            ctx = ctx,
         )
     }
 }

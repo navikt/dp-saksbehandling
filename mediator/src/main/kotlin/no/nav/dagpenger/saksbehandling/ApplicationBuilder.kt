@@ -189,6 +189,7 @@ internal class ApplicationBuilder(
                     )
                 val oppfølgingMediator =
                     OppfølgingMediator(
+                        transaksjoner = Transaksjoner(databaseSession),
                         oppfølgingRepository = PostgresOppfølgingRepository(databaseSession),
                         oppfølgingBehandler =
                             OppfølgingBehandler(

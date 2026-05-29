@@ -7,6 +7,8 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
@@ -22,13 +24,17 @@ data class OpprettetOppfølging(
 )
 
 class OppfølgingMediator(
+    private val transaksjoner: Transaksjoner,
     private val oppfølgingRepository: OppfølgingRepository,
     private val oppfølgingBehandler: OppfølgingBehandler,
     private val personMediator: PersonMediator,
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
 ) {
-    fun taImot(hendelse: OpprettOppfølgingHendelse): OpprettetOppfølging {
+    fun taImot(
+        hendelse: OpprettOppfølgingHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ): OpprettetOppfølging {
         val oppfølgingId = UUIDv7.ny()
         val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
 
@@ -46,11 +52,6 @@ class OppfølgingMediator(
                 utløstAv = HendelseBehandler.Intern.Oppfølging,
             )
 
-        sakMediator.lagreBehandling(
-            personId = person.id,
-            behandling = behandling,
-        )
-
         val oppfølging =
             Oppfølging.opprett(
                 id = oppfølgingId,
@@ -62,14 +63,21 @@ class OppfølgingMediator(
                 opprettet = hendelse.registrertTidspunkt,
             )
 
-        oppfølgingRepository.lagre(oppfølging)
-
         val oppgave =
-            oppgaveMediator.lagOppgaveForOppfølging(
-                hendelse = hendelse,
-                behandling = behandling,
-                person = person,
-            )
+            transaksjoner.transaksjon(ctx) { aktiv ->
+                sakMediator.lagreBehandling(
+                    personId = person.id,
+                    behandling = behandling,
+                    ctx = aktiv,
+                )
+                oppfølgingRepository.lagre(oppfølging, aktiv)
+                oppgaveMediator.lagOppgaveForOppfølging(
+                    hendelse = hendelse,
+                    behandling = behandling,
+                    person = person,
+                    ctx = aktiv,
+                )
+            }
 
         logger.info {
             "Opprettet oppfølging ${oppfølging.id} med årsak ${hendelse.aarsak} i tilstand ${oppgave.tilstand()}" +

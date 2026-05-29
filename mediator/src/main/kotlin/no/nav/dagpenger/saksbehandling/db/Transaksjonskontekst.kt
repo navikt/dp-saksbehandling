@@ -31,4 +31,17 @@ class Transaksjoner(
         databaseSession.transaction {
             block(Transaksjonskontekst.Aktiv(this.session))
         }
+
+    /**
+     * Starter ny transaksjon hvis [ctx] er [Transaksjonskontekst.IkkeAktiv],
+     * eller gjenbruker eksisterende hvis [ctx] allerede er [Transaksjonskontekst.Aktiv].
+     */
+    fun <R> transaksjon(
+        ctx: Transaksjonskontekst,
+        block: (Transaksjonskontekst.Aktiv) -> R,
+    ): R =
+        when (ctx) {
+            is Transaksjonskontekst.Aktiv -> block(ctx)
+            is Transaksjonskontekst.IkkeAktiv -> transaksjon(block)
+        }
 }

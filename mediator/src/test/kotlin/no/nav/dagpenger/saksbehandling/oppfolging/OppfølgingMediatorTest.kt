@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -64,6 +65,7 @@ class OppfølgingMediatorTest {
 
             val mediator =
                 OppfølgingMediator(
+                    transaksjoner = Transaksjoner(DatabaseSession(lazy { ds })),
                     oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = oppfølgingBehandler,
                     personMediator = personMediator,
@@ -138,6 +140,7 @@ class OppfølgingMediatorTest {
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
                 OppfølgingMediator(
+                    transaksjoner = Transaksjoner(DatabaseSession(lazy { ds })),
                     oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = OppfølgingBehandler(mockk<KlageMediator>(), mockk<BehandlingKlient>()),
                     personMediator = personMediator,
@@ -207,6 +210,7 @@ class OppfølgingMediatorTest {
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
                 OppfølgingMediator(
+                    transaksjoner = Transaksjoner(DatabaseSession(lazy { ds })),
                     oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = OppfølgingBehandler(mockk<KlageMediator>(), mockk<BehandlingKlient>()),
                     personMediator = personMediator,
@@ -247,6 +251,49 @@ class OppfølgingMediatorTest {
             val nyOppgave = oppgaver.first { it.tilstand() == Oppgave.KlarTilBehandling }
             nyOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
             nyOppgave.behandlerIdent shouldBe null
+        }
+    }
+
+    @Test
+    fun `taImot ruller tilbake alle DB-endringer hvis oppgave-lagring feiler`() {
+        DBTestHelper.withPerson { ds ->
+            val databaseSession = DatabaseSession(lazy { ds })
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                mockk<OppgaveMediator>().also {
+                    every { it.lagOppgaveForOppfølging(any(), any(), any(), any()) } throws
+                        RuntimeException("DB-feil ved lagring av oppgave")
+                }
+
+            val mediator =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = mockk(),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val hendelse =
+                OpprettOppfølgingHendelse(
+                    ident = testPerson.ident,
+                    aarsak = "Test",
+                    tittel = "Skal rulle tilbake",
+                )
+
+            runCatching { mediator.taImot(hendelse) }
+                .isFailure shouldBe true
+
+            // Verifiser at oppfølging IKKE ble lagret (rollback)
+            oppfølgingRepository.finnForPerson(testPerson.ident) shouldBe emptyList()
         }
     }
 }

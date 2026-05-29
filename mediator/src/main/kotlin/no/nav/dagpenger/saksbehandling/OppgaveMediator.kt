@@ -91,6 +91,7 @@ class OppgaveMediator(
         hendelse: OpprettOppfølgingHendelse,
         behandling: Behandling,
         person: Person,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Oppgave {
         val oppgave =
             Oppgave(
@@ -107,7 +108,7 @@ class OppgaveMediator(
             )
 
         oppgave.klargjørForBehandling(hendelse)
-        oppgaveRepository.lagre(oppgave)
+        oppgaveRepository.lagre(oppgave, ctx)
         return oppgave
     }
 
