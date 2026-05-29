@@ -17,7 +17,7 @@ class UtsendingDistribuertMottakForKlageTest {
     private val testRapid = TestRapid()
 
     @Test
-    fun `Skal håndtere distribuert utsendining`() {
+    fun `Skal håndtere distribuert utsending for klage som oversendes KA`() {
         val forventetHendelse =
             UtsendingDistribuert(
                 behandlingId = UUID.randomUUID(),
@@ -48,6 +48,45 @@ class UtsendingDistribuertMottakForKlageTest {
               "journalpostId": "${forventetHendelse.journalpostId}",
               "ident": "${forventetHendelse.ident}",
               "type": "${UtsendingType.KLAGE_OVERSENDELSE.name}"
+            }
+            """.trimIndent()
+        testRapid.sendTestMessage(melding)
+
+        verify(exactly = 1) { mockKlageMediator.vedtakDistribuert(forventetHendelse) }
+    }
+
+    @Test
+    fun `Skal håndtere distribuert utsending for klage som avvises`() {
+        val forventetHendelse =
+            UtsendingDistribuert(
+                behandlingId = UUID.randomUUID(),
+                distribusjonId = "distribusjon-123",
+                journalpostId = "journalpost-456",
+                utsendingId = UUID.randomUUID(),
+                ident = "12345678901",
+            )
+
+        val mockKlageMediator =
+            mockk<KlageMediator>(relaxed = false).also {
+                every { it.vedtakDistribuert(forventetHendelse) } just Runs
+            }
+
+        UtsendingDistribuertMottakForKlage(
+            rapidsConnection = testRapid,
+            klageMediator = mockKlageMediator,
+        )
+
+        @Language("JSON")
+        val melding =
+            """
+            {
+              "@event_name": "utsending_distribuert",
+              "behandlingId": "${forventetHendelse.behandlingId}",
+              "utsendingId": "${forventetHendelse.utsendingId}",
+              "distribusjonId": "${forventetHendelse.distribusjonId}",
+              "journalpostId": "${forventetHendelse.journalpostId}",
+              "ident": "${forventetHendelse.ident}",
+              "type": "${UtsendingType.KLAGE_AVVIST.name}"
             }
             """.trimIndent()
         testRapid.sendTestMessage(melding)
