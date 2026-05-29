@@ -243,6 +243,7 @@ class SakMediator(
     fun knyttEttersendingTilSammeSakSomSøknad(
         behandling: Behandling,
         hendelse: InnsendingMottattHendelse,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         requireNotNull(hendelse.søknadId) { "Ettersending må ha søknadId for å knyttes til samme sak som søknaden" }
         val sakId =
@@ -251,7 +252,7 @@ class SakMediator(
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
             sakHistorikk?.dagpengeSaker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
                 sak.leggTilBehandling(behandling)
-                sakRepository.lagre(sakHistorikk)
+                sakRepository.lagre(sakHistorikk, ctx)
             } ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
         }
     }
@@ -260,6 +261,7 @@ class SakMediator(
         behandling: Behandling,
         hendelse: InnsendingMottattHendelse,
         sakId: UUID,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
             sakHistorikk
@@ -270,7 +272,7 @@ class SakMediator(
                     sak.leggTilBehandling(
                         behandling = behandling,
                     )
-                    sakRepository.lagre(sakHistorikk)
+                    sakRepository.lagre(sakHistorikk, ctx)
                 } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
     }

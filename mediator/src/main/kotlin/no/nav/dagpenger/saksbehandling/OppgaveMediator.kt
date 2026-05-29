@@ -62,6 +62,7 @@ class OppgaveMediator(
         innsendingMottattHendelse: InnsendingMottattHendelse,
         behandling: Behandling,
         person: Person,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ) {
         val forventerBehandlingOpprettet =
             innsendingMottattHendelse.søknadId != null &&
@@ -84,7 +85,7 @@ class OppgaveMediator(
                 }
             }
 
-        oppgaveRepository.lagre(oppgave)
+        oppgaveRepository.lagre(oppgave, ctx)
     }
 
     fun lagOppgaveForOppfølging(

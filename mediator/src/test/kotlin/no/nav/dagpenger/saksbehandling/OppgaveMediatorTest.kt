@@ -55,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -1652,6 +1653,7 @@ OppgaveMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             sakMediator.merkSakenSomDpSak(
                 vedtakFattetHendelse =

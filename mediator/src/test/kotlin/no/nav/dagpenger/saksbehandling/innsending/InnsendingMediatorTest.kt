@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -175,6 +176,7 @@ class InnsendingMediatorTest {
                                     utførtAv = saksbehandler,
                                 )
                         },
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
 
             sakMediator.merkSakenSomDpSak(
@@ -243,6 +245,7 @@ class InnsendingMediatorTest {
                                 utførtAv = saksbehandler,
                             )
                     },
+                transaksjoner = Transaksjoner(DatabaseSession(it)),
             ).ferdigstill(
                 hendelse =
                     FerdigstillInnsendingHendelse(
@@ -320,6 +323,7 @@ class InnsendingMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
 
             val innsendingMottattHendelse =
@@ -407,6 +411,7 @@ class InnsendingMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = mockk(relaxed = true),
                 )
 
             val innsendingMottattHendelse =
@@ -423,13 +428,13 @@ class InnsendingMediatorTest {
                 innsendingMottattHendelse,
             )
             verify(exactly = 0) {
-                innsendingRepository.lagre(any())
+                innsendingRepository.lagre(any(), any())
             }
             verify(exactly = 0) {
-                sakMediatorMock.knyttBehandlingTilSak(any(), any(), any())
+                sakMediatorMock.knyttBehandlingTilSak(any(), any(), any(), any())
             }
             verify(exactly = 0) {
-                oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any())
+                oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any())
             }
         }
     }
@@ -445,6 +450,7 @@ class InnsendingMediatorTest {
                 personMediator = personMediatorMock,
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
+                transaksjoner = mockk(relaxed = true),
             )
 
         val innsendingMottattHendelse =
@@ -466,16 +472,16 @@ class InnsendingMediatorTest {
         }
 
         verify(exactly = 0) {
-            innsendingRepository.lagre(any())
+            innsendingRepository.lagre(any(), any())
         }
         verify(exactly = 0) {
             innsendingBehandler.utførAksjon(any(), any())
         }
         verify(exactly = 0) {
-            sakMediatorMock.knyttBehandlingTilSak(any(), any(), any())
+            sakMediatorMock.knyttBehandlingTilSak(any(), any(), any(), any())
         }
         verify(exactly = 0) {
-            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any())
+            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any())
         }
     }
 
@@ -536,6 +542,7 @@ class InnsendingMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -658,6 +665,7 @@ class InnsendingMediatorTest {
                             behandlingKlient = behandlingKlientMock,
                             oppfølgingMediator = mockk(),
                         ),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -803,6 +811,7 @@ class InnsendingMediatorTest {
                             behandlingKlient = behandlingKlientMock,
                             oppfølgingMediator = mockk(),
                         ),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(

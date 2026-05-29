@@ -212,6 +212,7 @@ internal class ApplicationBuilder(
                                 behandlingKlient = behandlingKlient,
                                 oppfølgingMediator = oppfølgingMediator,
                             ),
+                        transaksjoner = Transaksjoner(databaseSession),
                     )
 
                 server.application.installerApis(

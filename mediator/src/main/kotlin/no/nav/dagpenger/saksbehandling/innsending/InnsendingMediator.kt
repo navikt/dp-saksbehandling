@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -32,6 +33,7 @@ class InnsendingMediator(
     private val personMediator: PersonMediator,
     private val innsendingRepository: InnsendingRepository,
     private val innsendingBehandler: InnsendingBehandler,
+    private val transaksjoner: Transaksjoner,
 ) {
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
         oppgaveMediator.taImotEttersending(hendelse)
@@ -62,7 +64,6 @@ class InnsendingMediator(
         if (søknadErFerdigBehandlet(hendelse)) {
             val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
             val innsending = Innsending.opprett(hendelse = hendelse) { ident -> person }
-            innsendingRepository.lagre(innsending)
             val behandling =
                 Behandling(
                     behandlingId = innsending.innsendingId,
@@ -70,11 +71,15 @@ class InnsendingMediator(
                     hendelse = hendelse,
                     utløstAv = HendelseBehandler.Intern.Innsending,
                 )
-            sakMediator.knyttEttersendingTilSammeSakSomSøknad(
-                behandling = behandling,
-                hendelse = hendelse,
-            )
-            oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person)
+            transaksjoner.transaksjon { ctx ->
+                innsendingRepository.lagre(innsending, ctx)
+                sakMediator.knyttEttersendingTilSammeSakSomSøknad(
+                    behandling = behandling,
+                    hendelse = hendelse,
+                    ctx = ctx,
+                )
+                oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person, ctx)
+            }
         }
     }
 
@@ -82,13 +87,9 @@ class InnsendingMediator(
         hendelse: InnsendingMottattHendelse,
         sisteSakId: UUID,
     ) {
+        val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
         val innsending =
-            Innsending.opprett(hendelse = hendelse) { ident ->
-                personMediator.finnEllerOpprettPerson(
-                    hendelse.ident,
-                )
-            }
-        innsendingRepository.lagre(innsending)
+            Innsending.opprett(hendelse = hendelse) { ident -> person }
         val behandling =
             Behandling(
                 behandlingId = innsending.innsendingId,
@@ -97,17 +98,21 @@ class InnsendingMediator(
                 utløstAv = HendelseBehandler.Intern.Innsending,
             )
 
-        sakMediator.knyttBehandlingTilSak(
-            behandling = behandling,
-            hendelse = hendelse,
-            sakId = sisteSakId,
-        )
-
-        oppgaveMediator.lagOppgaveForInnsendingBehandling(
-            innsendingMottattHendelse = hendelse,
-            behandling = behandling,
-            person = personMediator.finnEllerOpprettPerson(hendelse.ident),
-        )
+        transaksjoner.transaksjon { ctx ->
+            innsendingRepository.lagre(innsending, ctx)
+            sakMediator.knyttBehandlingTilSak(
+                behandling = behandling,
+                hendelse = hendelse,
+                sakId = sisteSakId,
+                ctx = ctx,
+            )
+            oppgaveMediator.lagOppgaveForInnsendingBehandling(
+                innsendingMottattHendelse = hendelse,
+                behandling = behandling,
+                person = person,
+                ctx = ctx,
+            )
+        }
     }
 
     fun ferdigstill(hendelse: FerdigstillInnsendingHendelse) {
