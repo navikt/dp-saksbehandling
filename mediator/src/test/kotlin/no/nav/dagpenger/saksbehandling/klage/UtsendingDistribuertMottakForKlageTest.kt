@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -46,7 +47,7 @@ class UtsendingDistribuertMottakForKlageTest {
               "distribusjonId": "${forventetHendelse.distribusjonId}",
               "journalpostId": "${forventetHendelse.journalpostId}",
               "ident": "${forventetHendelse.ident}",
-              "type": "VEDTAK"
+              "type": "${UtsendingType.KLAGE_OVERSENDELSE.name}"
             }
             """.trimIndent()
         testRapid.sendTestMessage(melding)
