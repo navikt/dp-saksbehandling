@@ -94,11 +94,6 @@ class OppfølgingMediator(
     fun ferdigstill(hendelse: FerdigstillOppfølgingHendelse) {
         val oppfølging = hent(id = hendelse.oppfølgingId, saksbehandler = hendelse.utførtAv)
 
-        oppfølging.startFerdigstilling(
-            vurdering = hendelse.vurdering,
-            valgtSakId = hendelse.aksjon.valgtSakId,
-        )
-
         when (hendelse.aksjon) {
             is OppfølgingAksjon.Avslutt ->
                 ferdigstillInternt(oppfølging, hendelse) { _ ->
@@ -134,6 +129,10 @@ class OppfølgingMediator(
         aksjon: (Transaksjonskontekst.Aktiv) -> OppfølgingFerdigstiltHendelse,
     ) {
         transaksjoner.transaksjon { ctx ->
+            oppfølging.startFerdigstilling(
+                vurdering = hendelse.vurdering,
+                valgtSakId = hendelse.aksjon.valgtSakId,
+            )
             oppfølgingRepository.lagre(oppfølging, ctx)
             val ferdigstiltHendelse = aksjon(ctx)
             oppfølging.ferdigstill(
@@ -149,6 +148,10 @@ class OppfølgingMediator(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
     ) {
+        oppfølging.startFerdigstilling(
+            vurdering = hendelse.vurdering,
+            valgtSakId = hendelse.aksjon.valgtSakId,
+        )
         // Checkpoint: persist FERDIGSTILL_STARTET before external HTTP call
         oppfølgingRepository.lagre(oppfølging)
 
