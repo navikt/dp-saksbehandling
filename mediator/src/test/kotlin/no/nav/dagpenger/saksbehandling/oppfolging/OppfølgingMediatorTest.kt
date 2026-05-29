@@ -34,17 +34,18 @@ class OppfølgingMediatorTest {
     @Test
     fun `E2E - opprette og ferdigstille oppfølging`() {
         DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(DatabaseSession(lazy { ds }))
-            val personMediator = PersonMediator(PostgresPersonRepository(DatabaseSession(lazy { ds })), mockk())
+            val databaseSession = DatabaseSession(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { ds })),
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
@@ -55,7 +56,7 @@ class OppfølgingMediatorTest {
 
             val mediator =
                 OppfølgingMediator(
-                    transaksjoner = Transaksjoner(DatabaseSession(lazy { ds })),
+                    transaksjoner = Transaksjoner(databaseSession),
                     oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = oppfølgingBehandler,
                     personMediator = personMediator,
@@ -110,15 +111,15 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstill med OpprettOppfølging - frist og beholdOppgaven gir ny oppgave i PåVent`() {
         DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(DatabaseSession(lazy { ds }))
-            val personMediator = PersonMediator(PostgresPersonRepository(DatabaseSession(lazy { ds })), mockk())
+            val oppfølgingRepository = PostgresOppfølgingRepository(DatabaseSession(ds))
+            val personMediator = PersonMediator(PostgresPersonRepository(DatabaseSession(ds)), mockk())
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = oppgaveRepository,
@@ -130,7 +131,7 @@ class OppfølgingMediatorTest {
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
                 OppfølgingMediator(
-                    transaksjoner = Transaksjoner(DatabaseSession(lazy { ds })),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
                     oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = OppfølgingBehandler(mockk<KlageMediator>(), mockk<BehandlingKlient>()),
                     personMediator = personMediator,
@@ -180,15 +181,15 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstill med OpprettOppfølging uten beholdOppgaven gir ny oppgave i KlarTilBehandling uten behandler`() {
         DBTestHelper.withPerson { ds ->
-            val oppfølgingRepository = PostgresOppfølgingRepository(DatabaseSession(lazy { ds }))
-            val personMediator = PersonMediator(PostgresPersonRepository(DatabaseSession(lazy { ds })), mockk())
+            val oppfølgingRepository = PostgresOppfølgingRepository(DatabaseSession(ds))
+            val personMediator = PersonMediator(PostgresPersonRepository(DatabaseSession(ds)), mockk())
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = oppgaveRepository,
@@ -200,7 +201,7 @@ class OppfølgingMediatorTest {
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
                 OppfølgingMediator(
-                    transaksjoner = Transaksjoner(DatabaseSession(lazy { ds })),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
                     oppfølgingRepository = oppfølgingRepository,
                     oppfølgingBehandler = OppfølgingBehandler(mockk<KlageMediator>(), mockk<BehandlingKlient>()),
                     personMediator = personMediator,
@@ -247,7 +248,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `taImot ruller tilbake alle DB-endringer hvis oppgave-lagring feiler`() {
         DBTestHelper.withPerson { ds ->
-            val databaseSession = DatabaseSession(lazy { ds })
+            val databaseSession = DatabaseSession(ds)
             val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
             val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
             val sakMediator =
@@ -290,7 +291,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstillInternt ruller tilbake alle DB-endringer hvis ferdigstillOppgave feiler`() {
         DBTestHelper.withPerson { ds ->
-            val databaseSession = DatabaseSession(lazy { ds })
+            val databaseSession = DatabaseSession(ds)
             val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
             val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
             val sakMediator =
@@ -382,7 +383,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstillEksternt - HTTP-feil lar oppfølging stå i FERDIGSTILL_STARTET`() {
         DBTestHelper.withPerson { ds ->
-            val databaseSession = DatabaseSession(lazy { ds })
+            val databaseSession = DatabaseSession(ds)
             val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
             val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
             val sakMediator =
@@ -458,7 +459,7 @@ class OppfølgingMediatorTest {
     @Test
     fun `ferdigstillEksternt - tx-feil etter HTTP lar oppfølging stå i FERDIGSTILL_STARTET`() {
         DBTestHelper.withPerson { ds ->
-            val databaseSession = DatabaseSession(lazy { ds })
+            val databaseSession = DatabaseSession(ds)
             val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
             val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
             val sakMediator =
