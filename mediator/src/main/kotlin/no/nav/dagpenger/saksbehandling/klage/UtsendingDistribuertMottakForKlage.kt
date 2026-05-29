@@ -11,7 +11,8 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
-import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType.KLAGE_AVVIST
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType.KLAGE_OVERSENDELSE
 
 internal class UtsendingDistribuertMottakForKlage(
     rapidsConnection: RapidsConnection,
@@ -22,7 +23,7 @@ internal class UtsendingDistribuertMottakForKlage(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "utsending_distribuert")
-                it.requireValue("type", UtsendingType.KLAGEMELDING.name)
+                it.requireAny("type", listOf(KLAGE_OVERSENDELSE.name, KLAGE_AVVIST.name))
             }
             validate { it.requireKey("behandlingId", "ident", "utsendingId", "journalpostId", "distribusjonId") }
         }

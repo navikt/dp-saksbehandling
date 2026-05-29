@@ -296,7 +296,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     brev = html,
                     ident = testPersonIdent,
-                    type = UtsendingType.KLAGEMELDING,
+                    type = UtsendingType.KLAGE_OVERSENDELSE,
                 )
             }
 
@@ -414,7 +414,7 @@ class KlageMediatorTest {
                             behandlingId = oppgave.behandling.behandlingId,
                             brev = html,
                             ident = testPersonIdent,
-                            type = UtsendingType.KLAGEMELDING,
+                            type = UtsendingType.KLAGE_OVERSENDELSE,
                         )
                     }
                     testRapid.inspektør.message(0).let {

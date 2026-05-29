@@ -16,8 +16,8 @@ class UtsendingDistribuertMottakForKlageTest {
     private val testRapid = TestRapid()
 
     @Test
-    fun `Skal håndtere  distribuert utsendining`() {
-        val forVentetHendelse =
+    fun `Skal håndtere distribuert utsendining`() {
+        val forventetHendelse =
             UtsendingDistribuert(
                 behandlingId = UUID.randomUUID(),
                 distribusjonId = "distribusjon-123",
@@ -28,7 +28,7 @@ class UtsendingDistribuertMottakForKlageTest {
 
         val mockKlageMediator =
             mockk<KlageMediator>(relaxed = false).also {
-                every { it.vedtakDistribuert(forVentetHendelse) } just Runs
+                every { it.vedtakDistribuert(forventetHendelse) } just Runs
             }
 
         UtsendingDistribuertMottakForKlage(
@@ -41,16 +41,16 @@ class UtsendingDistribuertMottakForKlageTest {
             """
             {
               "@event_name": "utsending_distribuert",
-              "behandlingId": "${forVentetHendelse.behandlingId}",
-              "utsendingId": "${forVentetHendelse.utsendingId}",
-              "distribusjonId": "${forVentetHendelse.distribusjonId}",
-              "journalpostId": "${forVentetHendelse.journalpostId}",
-              "ident": "${forVentetHendelse.ident}",
-              "type": "KLAGEMELDING"
+              "behandlingId": "${forventetHendelse.behandlingId}",
+              "utsendingId": "${forventetHendelse.utsendingId}",
+              "distribusjonId": "${forventetHendelse.distribusjonId}",
+              "journalpostId": "${forventetHendelse.journalpostId}",
+              "ident": "${forventetHendelse.ident}",
+              "type": "VEDTAK"
             }
             """.trimIndent()
         testRapid.sendTestMessage(melding)
 
-        verify(exactly = 1) { mockKlageMediator.vedtakDistribuert(forVentetHendelse) }
+        verify(exactly = 1) { mockKlageMediator.vedtakDistribuert(forventetHendelse) }
     }
 }

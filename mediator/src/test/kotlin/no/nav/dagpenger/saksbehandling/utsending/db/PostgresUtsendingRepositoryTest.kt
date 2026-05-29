@@ -45,7 +45,7 @@ class PostgresUtsendingRepositoryTest {
                     utsendingSak = utsendingSak,
                     ident = testPerson.ident,
                     distribusjonId = distribusjonId,
-                    type = UtsendingType.KLAGEMELDING,
+                    type = UtsendingType.KLAGE_OVERSENDELSE,
                 )
             repository.lagre(utsending)
 

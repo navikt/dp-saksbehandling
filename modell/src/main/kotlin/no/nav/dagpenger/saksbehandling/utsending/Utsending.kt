@@ -22,8 +22,8 @@ enum class UtsendingType(
     val skjemaKode: String,
 ) {
     VEDTAK_DAGPENGER("Vedtak om dagpenger", "NAV-DAGPENGER-VEDTAK"),
-    KLAGEMELDING("Klagebrev", "NAV-DAGPENGER-KLAGE"),
-    MANGELBREV("Mangelbrev", "NAV-DAGPENGER-MANGELBREV"),
+    KLAGE_OVERSENDELSE("Oversendelse av klage til Nav klageinstans", "NAV-DAGPENGER-KLAGE"),
+    KLAGE_AVVIST("Vedtak om avvist klage", "NAV-DAGPENGER-KLAGE"),
 }
 
 data class Utsending(

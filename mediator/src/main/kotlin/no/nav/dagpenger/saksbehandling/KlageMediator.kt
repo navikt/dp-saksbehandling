@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -201,25 +202,35 @@ class KlageMediator(
                     )
                 }
             val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
-            val htmlDeferred =
-                async(Dispatchers.IO) {
-                    meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
-                        person = personDeferred.await(),
-                        saksbehandler = saksbehandlerDeferred.await(),
-                        beslutter = null,
-                        behandlingId = oppgave.behandling.behandlingId,
-                        saksbehandlerToken = saksbehandlerToken,
-                        utløstAvType = HendelseBehandler.Intern.Klage,
-                        sakId = sakId.toString(),
-                    )
-                }
-            val html = htmlDeferred.await().getOrThrow()
-            utsendingMediator.opprettUtsending(
-                behandlingId = oppgave.behandling.behandlingId,
-                brev = html,
-                ident = oppgave.personIdent(),
-                type = UtsendingType.KLAGEMELDING,
-            )
+
+            if (klageBehandling.utfall() in setOf(UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST)) {
+                val htmlDeferred =
+                    async(Dispatchers.IO) {
+                        meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
+                            person = personDeferred.await(),
+                            saksbehandler = saksbehandlerDeferred.await(),
+                            beslutter = null,
+                            behandlingId = oppgave.behandling.behandlingId,
+                            saksbehandlerToken = saksbehandlerToken,
+                            utløstAvType = HendelseBehandler.Intern.Klage,
+                            sakId = sakId.toString(),
+                        )
+                    }
+                val html = htmlDeferred.await().getOrThrow()
+                val utsendingType =
+                    when (klageBehandling.utfall()) {
+                        UtfallType.OPPRETTHOLDELSE -> UtsendingType.KLAGE_OVERSENDELSE
+                        UtfallType.AVVIST -> UtsendingType.KLAGE_AVVIST
+                        else -> throw IllegalStateException("Kan ikke opprette utsending for utfall: ${klageBehandling.utfall()}")
+                    }
+                utsendingMediator.opprettUtsending(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    brev = html,
+                    ident = oppgave.personIdent(),
+                    type = utsendingType,
+                )
+            }
+
             klageRepository.lagre(klageBehandling)
             rapidsConnection.publish(
                 oppgave.personIdent(),

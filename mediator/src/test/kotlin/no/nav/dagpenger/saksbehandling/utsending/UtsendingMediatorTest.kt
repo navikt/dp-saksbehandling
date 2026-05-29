@@ -96,7 +96,7 @@ class UtsendingMediatorTest {
                 behandlingId = behandlingId,
                 brev = null,
                 ident = person.ident,
-                type = UtsendingType.KLAGEMELDING,
+                type = UtsendingType.KLAGE_OVERSENDELSE,
             )
 
             var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
@@ -166,8 +166,8 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
-                  "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
-                  "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
+                  "tittel" : "${UtsendingType.KLAGE_OVERSENDELSE.brevTittel}",
+                  "skjemaKode" : "${UtsendingType.KLAGE_OVERSENDELSE.skjemaKode}",
                   "ident": "${person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {
@@ -259,7 +259,7 @@ class UtsendingMediatorTest {
                 behandlingId = behandlingId,
                 brev = null,
                 ident = person.ident,
-                type = UtsendingType.KLAGEMELDING,
+                type = UtsendingType.KLAGE_OVERSENDELSE,
             )
 
             var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
@@ -333,8 +333,8 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
-                  "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
-                  "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
+                  "tittel" : "${UtsendingType.KLAGE_OVERSENDELSE.brevTittel}",
+                  "skjemaKode" : "${UtsendingType.KLAGE_OVERSENDELSE.skjemaKode}",
                   "ident": "${person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {
@@ -557,7 +557,7 @@ class UtsendingMediatorTest {
                 behandlingId = behandlingId,
                 brev = htmlBrev,
                 ident = person.ident,
-                type = UtsendingType.KLAGEMELDING,
+                type = UtsendingType.KLAGE_OVERSENDELSE,
             )
 
             var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
@@ -622,8 +622,8 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
-                  "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
-                  "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
+                  "tittel" : "${UtsendingType.KLAGE_OVERSENDELSE.brevTittel}",
+                  "skjemaKode" : "${UtsendingType.KLAGE_OVERSENDELSE.skjemaKode}",
                   "ident": "${person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {

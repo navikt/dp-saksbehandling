@@ -87,11 +87,12 @@ data class DistribueringBehov(
         mapOf(
             "journalpostId" to journalpostId,
             "fagsystem" to fagsystem,
-            "distribusjonstype" to when (utsendingType) {
-                UtsendingType.VEDTAK_DAGPENGER -> "VEDTAK"
-                UtsendingType.KLAGEMELDING -> "VIKTIG"
-                UtsendingType.MANGELBREV -> "VIKTIG"
-            },
+            "distribusjonstype" to
+                when (utsendingType) {
+                    UtsendingType.VEDTAK_DAGPENGER -> "VEDTAK"
+                    UtsendingType.KLAGE_AVVIST -> "VEDTAK"
+                    UtsendingType.KLAGE_OVERSENDELSE -> "VIKTIG"
+                },
         )
 }
 
