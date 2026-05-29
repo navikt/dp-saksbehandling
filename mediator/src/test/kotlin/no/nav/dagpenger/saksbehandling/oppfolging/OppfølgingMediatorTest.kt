@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -50,18 +49,7 @@ class OppfølgingMediatorTest {
                     rapidsConnection = mockk(relaxed = true),
                 )
 
-            val oppfølgingBehandler =
-                mockk<OppfølgingBehandler>().also {
-                    every { it.utførAksjon(any(), any(), any()) } answers {
-                        val oppgave = firstArg<Oppfølging>()
-                        OppfølgingFerdigstiltHendelse(
-                            oppfølgingId = oppgave.id,
-                            aksjonType = OppfølgingAksjon.Type.AVSLUTT,
-                            opprettetBehandlingId = null,
-                            utførtAv = saksbehandler,
-                        )
-                    }
-                }
+            val oppfølgingBehandler = mockk<OppfølgingBehandler>()
 
             val mediator =
                 OppfølgingMediator(

@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -99,7 +100,32 @@ class OppfølgingMediator(
         )
         oppfølgingRepository.lagre(oppfølging)
 
-        val ferdigstiltHendelse = oppfølgingBehandler.utførAksjon(oppfølging, hendelse, this)
+        val ferdigstiltHendelse =
+            when (hendelse.aksjon) {
+                is OppfølgingAksjon.Avslutt ->
+                    OppfølgingFerdigstiltHendelse(
+                        oppfølgingId = oppfølging.id,
+                        aksjonType = hendelse.aksjon.type,
+                        opprettetBehandlingId = null,
+                        utførtAv = hendelse.utførtAv,
+                    )
+
+                is OppfølgingAksjon.OpprettKlage ->
+                    transaksjoner.transaksjon { ctx ->
+                        oppfølgingBehandler.opprettKlage(oppfølging, hendelse, ctx)
+                    }
+
+                is OppfølgingAksjon.OpprettManuellBehandling,
+                is OppfølgingAksjon.OpprettRevurderingBehandling,
+                ->
+                    oppfølgingBehandler.opprettBehandling(oppfølging, hendelse)
+
+                is OppfølgingAksjon.OpprettOppfølging ->
+                    transaksjoner.transaksjon { ctx ->
+                        oppfølgingBehandler.opprettNyOppfølging(oppfølging, hendelse, this, ctx)
+                    }
+            }
+
         logger.info { "Ferdigstiller oppfølging ${oppfølging.id} med aksjon ${hendelse.aksjon.type}" }
 
         oppfølging.ferdigstill(

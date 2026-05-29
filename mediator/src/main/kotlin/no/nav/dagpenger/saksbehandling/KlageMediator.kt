@@ -8,6 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -54,7 +55,10 @@ class KlageMediator(
         return klageRepository.hentKlageBehandling(behandlingId)
     }
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
+    fun opprettKlage(
+        klageMottattHendelse: KlageMottattHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ): Oppgave {
         val klageBehandling =
             KlageBehandling(
                 journalpostId = klageMottattHendelse.journalpostId,
@@ -79,13 +83,13 @@ class KlageMediator(
             )
 
         val oppgave =
-            transaksjoner.transaksjon { ctx ->
-                klageRepository.lagre(klageBehandling, ctx)
-                val sakHistorikk = sakMediator.knyttTilSak(behandlingOpprettetHendelse, ctx)
+            transaksjoner.transaksjon(ctx) { aktiv ->
+                klageRepository.lagre(klageBehandling, aktiv)
+                val sakHistorikk = sakMediator.knyttTilSak(behandlingOpprettetHendelse, aktiv)
                 oppgaveMediator.lagOppgaveForKlage(
                     hendelse = behandlingOpprettetHendelse,
                     sakHistorikk = sakHistorikk,
-                    ctx = ctx,
+                    ctx = aktiv,
                 )
             }
 
