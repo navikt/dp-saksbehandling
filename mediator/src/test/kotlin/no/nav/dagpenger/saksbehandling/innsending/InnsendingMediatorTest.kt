@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
@@ -1042,6 +1043,114 @@ class InnsendingMediatorTest {
             // Verifiser at saken fortsatt bare har 1 behandling (rollback)
             val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
             sakHistorikk.finnSak { it.sakId == sak.sakId }!!.behandlinger().size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `automatiskFerdigstill ruller tilbake innsending hvis avbryt av oppgave feiler`() {
+        val søknadIdGjenopptak = UUIDv7.ny()
+        val sak =
+            Sak(
+                sakId = UUIDv7.ny(),
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val databaseSession = DatabaseSession(it)
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+
+            // Oppretter innsending med ekte oppgaveMediator
+            val ekteOppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            InnsendingMediator(
+                sakMediator = sakMediator,
+                oppgaveMediator = ekteOppgaveMediator,
+                personMediator = personMediatorMock,
+                innsendingRepository = innsendingRepository,
+                innsendingBehandler = mockk(),
+                transaksjoner = Transaksjoner(databaseSession),
+            ).taImotInnsending(
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = søknadIdGjenopptak,
+                    skjemaKode = skjemaKode,
+                    kategori = Kategori.GJENOPPTAK,
+                ),
+            )
+            val tilstandFør =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single().tilstand()
+
+            // Ferdigstill automatisk med oppgaveMediator som feiler på avbryt
+            val feilendeOppgaveMediator =
+                mockk<OppgaveMediator>().also { mock ->
+                    every { mock.avbrytOppgave(any(), any()) } throws
+                        RuntimeException("DB-feil ved avbryt av oppgave")
+                }
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = feilendeOppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(databaseSession),
+                )
+
+            runCatching {
+                innsendingMediator.automatiskFerdigstill(
+                    hendelse =
+                        BehandlingOpprettetForSøknadHendelse(
+                            ident = testPerson.ident,
+                            søknadId = søknadIdGjenopptak,
+                            behandlingId = behandlingIdSøknad,
+                        ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at innsending IKKE ble ferdigstilt (rollback)
+            val innsendingEtter =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            innsendingEtter.tilstand() shouldBe tilstandFør
+            innsendingEtter.tilstand() shouldNotBe "FERDIGSTILT"
         }
     }
 

@@ -68,7 +68,23 @@ Alle 🟡 gule er enten wrappet (der mulig), bevisst ikke wrappet (HTTP i midten
 | 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Medium** | `lagre(oppgave)` → Kafka `avbryt_behandling`. Ingen alarm-jobb dekker dette. dp-behandling vet ikke om avbruddet ved krasj |
 | 15 | `SakMediator.opprettSak()` | DB+DB | Lav | `finnEllerOpprettPerson` → `lagre(sakHistorikk)`. Idempotent ved retry |
 
-**Anbefaling for #14:** Lag `AvbrytBehandlingAlarmJob` som finner oppgaver i tilstand `Avbrutt` der behandlingen fortsatt er aktiv i dp-behandling, eller bruk outbox-pattern for `avbryt_behandling`-eventen.
+### Re-vurdering av nye funn (2026-06-01)
+
+Etter kritisk gjennomgang: **#13/#14/#15 er ikke reelle problemer** for cross-repo transaksjonshåndtering.
+
+| # | Flow | Type | Konklusjon |
+|---|------|------|------------|
+| 13 | `OppgaveMediator.endreMeldingOmVedtakKilde()` | DB+DB | **Ikke problem.** API-trigget (synkron). `slettUtsending` er separat, trygg. Feiler den, får saksbehandler HTTP-feil og prøver på nytt; `endreMeldingOmVedtakKilde` er idempotent. Selvhelende ved retry |
+| 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Ikke cross-repo-hotspot.** Dette er dual-write (DB+Kafka), annen problemklasse enn UoW. API-trigget. `rapidsConnection.publish` kaster sjelden; vinduet er app-krasj mellom to linjer. Akseptert R&R-tradeoff på tvers av hele kodebasen |
+| 15 | `SakMediator.opprettSak()` | DB+DB | **Ikke problem.** Kafka-trigget → River reprosesserer ved feil (onPacket kaster = ingen ack). `finnEllerOpprettPerson` idempotent. Selvhelende |
+
+### Funn som ble fikset
+
+| # | Flow | Fil | Beskrivelse | Status |
+|---|------|-----|-------------|--------|
+| 16 | `InnsendingMediator.automatiskFerdigstill()` | `innsending/InnsendingMediator.kt:133` | `innsendingRepo.lagre` → `oppgaveMediator.avbrytOppgave` (cross-repo, ingen HTTP imellom). Var ikke wrappet — strukturelt identisk med #2/#3 | ✅ Wrappet i tx (la til `ctx`-param på `avbrytOppgave`) + rollback-test |
+
+**Konklusjon:** Etter wrapping av #16 er alle ekte cross-repo DB-write-flows uten ekstern I/O dekket. Gjenstående uvwrappede flows har enten HTTP/Kafka imellom (bevisst, mitigert av alarm-jobber) eller er selvhelende via River-retry/idempotens.
 
 ## Notater
 

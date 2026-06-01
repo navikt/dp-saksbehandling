@@ -627,7 +627,10 @@ class OppgaveMediator(
         }.getOrThrow()
     }
 
-    fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
+    fun avbrytOppgave(
+        hendelse: BehandlingAvbruttHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         oppgaveRepository
             .søk(
                 Søkefilter(
@@ -643,7 +646,7 @@ class OppgaveMediator(
                 ) {
                     logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
                     oppgave.avbryt(hendelse)
-                    oppgaveRepository.lagre(oppgave)
+                    oppgaveRepository.lagre(oppgave, ctx)
                     logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
                 }
             }

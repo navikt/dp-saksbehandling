@@ -137,17 +137,20 @@ class InnsendingMediator(
                 it.gjelderSøknadMedId(søknadId = hendelse.søknadId)
             }?.let { innsending ->
                 innsending.automatiskFerdigstill(hendelse)
-                innsendingRepository.lagre(innsending)
-                oppgaveMediator.avbrytOppgave(
-                    hendelse =
-                        BehandlingAvbruttHendelse(
-                            behandlingId = innsending.innsendingId,
-                            behandletHendelseId = hendelse.søknadId.toString(),
-                            behandletHendelseType = "Søknad",
-                            ident = hendelse.ident,
-                            utførtAv = hendelse.utførtAv,
-                        ),
-                )
+                transaksjoner.transaksjon { ctx ->
+                    innsendingRepository.lagre(innsending, ctx)
+                    oppgaveMediator.avbrytOppgave(
+                        hendelse =
+                            BehandlingAvbruttHendelse(
+                                behandlingId = innsending.innsendingId,
+                                behandletHendelseId = hendelse.søknadId.toString(),
+                                behandletHendelseType = "Søknad",
+                                ident = hendelse.ident,
+                                utførtAv = hendelse.utførtAv,
+                            ),
+                        ctx = ctx,
+                    )
+                }
             }
     }
 
