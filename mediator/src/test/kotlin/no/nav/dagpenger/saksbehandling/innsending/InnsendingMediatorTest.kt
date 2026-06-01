@@ -885,6 +885,166 @@ class InnsendingMediatorTest {
         }
     }
 
+    @Test
+    fun `taImotInnsendingPåSisteSak ruller tilbake alle DB-endringer hvis oppgave-lagring feiler`() {
+        val sak =
+            Sak(
+                sakId = sakId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val databaseSession = DatabaseSession(it)
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                mockk<OppgaveMediator>().also { mock ->
+                    every { mock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any()) } throws
+                        RuntimeException("DB-feil ved lagring av oppgave")
+                }
+            val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(databaseSession),
+                )
+
+            runCatching {
+                innsendingMediator.taImotInnsending(
+                    InnsendingMottattHendelse(
+                        ident = testPerson.ident,
+                        journalpostId = journalpostId,
+                        registrertTidspunkt = registrertTidspunkt,
+                        søknadId = null,
+                        skjemaKode = skjemaKode,
+                        kategori = Kategori.KLAGE,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at innsending IKKE ble lagret (rollback)
+            innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident) shouldBe emptyList()
+
+            // Verifiser at saken fortsatt bare har 1 behandling (rollback)
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }!!.behandlinger().size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `taImotEttersendingTilSøknad ruller tilbake alle DB-endringer hvis oppgave-lagring feiler`() {
+        val sak =
+            Sak(
+                sakId = sakId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val databaseSession = DatabaseSession(it)
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                mockk<OppgaveMediator>().also { mock ->
+                    every { mock.oppgaveTilstandForSøknad(søknadId, any()) } returns FERDIG_BEHANDLET
+                    every { mock.taImotEttersending(any(), any()) } just Runs
+                    every { mock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any()) } throws
+                        RuntimeException("DB-feil ved lagring av oppgave")
+                }
+            val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(databaseSession),
+                )
+
+            runCatching {
+                innsendingMediator.taImotInnsending(
+                    InnsendingMottattHendelse(
+                        ident = testPerson.ident,
+                        journalpostId = journalpostId,
+                        registrertTidspunkt = registrertTidspunkt,
+                        søknadId = søknadId,
+                        skjemaKode = skjemaKode,
+                        kategori = Kategori.ETTERSENDING,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at innsending IKKE ble lagret (rollback)
+            innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident) shouldBe emptyList()
+
+            // Verifiser at saken fortsatt bare har 1 behandling (rollback)
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }!!.behandlinger().size shouldBe 1
+        }
+    }
+
     private fun OppgaveMediator.finnAlleOppgaverFor(ident: String): List<Oppgave> =
         this
             .søk(
