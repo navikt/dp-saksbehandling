@@ -81,6 +81,8 @@ class InnsendingMediator(
                 )
                 oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person, ctx)
             }
+        } else {
+            oppgaveMediator.taImotEttersending(hendelse)
         }
     }
 

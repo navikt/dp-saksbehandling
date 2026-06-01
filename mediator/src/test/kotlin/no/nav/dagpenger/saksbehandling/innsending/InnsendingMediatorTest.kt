@@ -487,6 +487,45 @@ class InnsendingMediatorTest {
     }
 
     @Test
+    fun `Ettersending til søknad som ikke er ferdigbehandlet skal registreres på eksisterende oppgave uten ny innsending`() {
+        val innsendingRepository = mockk<InnsendingRepository>(relaxed = false)
+        val innsendingBehandler = mockk<InnsendingBehandler>()
+        val mediator =
+            InnsendingMediator(
+                sakMediator = sakMediatorMock,
+                oppgaveMediator = oppgaveMediatorMock,
+                personMediator = personMediatorMock,
+                innsendingRepository = innsendingRepository,
+                innsendingBehandler = innsendingBehandler,
+                transaksjoner = mockk(relaxed = true),
+            )
+
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
+                ident = personMedSak.ident,
+                journalpostId = journalpostId,
+                registrertTidspunkt = registrertTidspunkt,
+                søknadId = søknadIdSomIkkeErFerdigBehandlet,
+                skjemaKode = skjemaKode,
+                kategori = Kategori.ETTERSENDING,
+            )
+
+        mediator.taImotInnsending(
+            innsendingMottattHendelse,
+        ) shouldBe HåndterInnsendingResultat.HåndtertInnsending(sakId)
+
+        verify(exactly = 1) {
+            oppgaveMediatorMock.taImotEttersending(innsendingMottattHendelse)
+        }
+        verify(exactly = 0) {
+            innsendingRepository.lagre(any(), any())
+        }
+        verify(exactly = 0) {
+            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `Avbryt innsending hvis behandling opprettes for søknad`() {
         val søknadIdGjenopptak = UUIDv7.ny()
         val sak =
