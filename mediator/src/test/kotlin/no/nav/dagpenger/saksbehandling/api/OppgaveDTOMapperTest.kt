@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -38,6 +39,10 @@ class OppgaveDTOMapperTest {
     private val relevanteJournalpostIdOppslag =
         mockk<RelevanteJournalpostIdOppslag>().also {
             coEvery { it.hentJournalpostIder(any()) } returns setOf("søknadJournalpostId", "vedtakJournalpostId")
+        }
+    private val personRepositoryMock =
+        mockk<PersonRepository>().also {
+            every { it.erNødbremset(any()) } returns false
         }
 
     @Test
@@ -85,6 +90,7 @@ class OppgaveDTOMapperTest {
                                 )
                         },
                         skjermingKlient = mockk(),
+                        personRepository = personRepositoryMock,
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
@@ -245,6 +251,7 @@ class OppgaveDTOMapperTest {
                                     )
                             },
                         skjermingKlient = mockk(),
+                        personRepository = personRepositoryMock,
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
@@ -419,6 +426,7 @@ class OppgaveDTOMapperTest {
                                     )
                             },
                         skjermingKlient = mockk(),
+                        personRepository = personRepositoryMock,
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
@@ -586,6 +594,7 @@ class OppgaveDTOMapperTest {
                                     )
                             },
                         skjermingKlient = mockk(),
+                        personRepository = personRepositoryMock,
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
@@ -747,10 +756,11 @@ class OppgaveDTOMapperTest {
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
-                        pdlKlient,
-                        relevanteJournalpostIdOppslag,
-                        mockk(relaxed = true),
+                        pdlKlient = pdlKlient,
+                        relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
+                        saksbehandlerOppslag = mockk(relaxed = true),
                         skjermingKlient = mockk(),
+                        personRepository = personRepositoryMock,
                     ),
                 oppgaveHistorikkDTOMapper = mockk(relaxed = true),
                 sakMediator = sakMediator,

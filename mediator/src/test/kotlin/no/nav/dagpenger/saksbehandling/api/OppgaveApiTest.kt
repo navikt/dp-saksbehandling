@@ -1037,6 +1037,7 @@ class OppgaveApiTest {
                                                     .gyldigTom,
                                         ),
                                     ),
+                                erNoedbremset = false,
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
@@ -1183,6 +1184,7 @@ class OppgaveApiTest {
                                 mellomnavn = TestHelper.pdlPerson.mellomnavn,
                                 statsborgerskap = TestHelper.pdlPerson.statsborgerskap,
                                 sikkerhetstiltak = emptyList(),
+                                erNoedbremset = false,
                             ),
                         tidspunktOpprettet = oppgave.opprettet,
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
@@ -1420,6 +1422,7 @@ class OppgaveApiTest {
                                     gyldigTom = LocalDate.of(2025, 12, 31),
                                 ),
                             ),
+                        erNoedbremset = false,
                     ),
                 saker =
                     listOf(

@@ -228,6 +228,7 @@ internal class OppgaveDTOMapper(
                     AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                     AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                 },
+            erNoedbremset = oppslag.erNødbremset(person.ident),
         )
 }
 
