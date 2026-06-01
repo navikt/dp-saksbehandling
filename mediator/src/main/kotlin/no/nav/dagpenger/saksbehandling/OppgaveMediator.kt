@@ -152,7 +152,7 @@ class OppgaveMediator(
         return oppgave
     }
 
-    fun taImotEttersending(
+    fun settEmneknaggEttersending(
         hendelse: InnsendingMottattHendelse,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ) {
@@ -171,7 +171,7 @@ class OppgaveMediator(
             ).oppgaver
             .singleOrNull()
             ?.let { oppgave ->
-                oppgave.taImotEttersending(hendelse)
+                oppgave.settEmneknagg(hendelse)
                 oppgaveRepository.lagre(oppgave, ctx)
             } ?: logger.warn {
             "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."

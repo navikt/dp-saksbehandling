@@ -37,7 +37,6 @@ class InnsendingMediator(
 ) {
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
         val sisteSakId = sakMediator.finnSisteDagpengeSakId(hendelse.ident)
-
         if (sisteSakId != null) {
             if (hendelse.erEttersendingMedSøknadId()) {
                 taImotEttersendingTilSøknad(hendelse)
@@ -45,7 +44,7 @@ class InnsendingMediator(
                 taImotInnsendingPåSisteSak(hendelse, sisteSakId)
             }
         } else {
-            oppgaveMediator.taImotEttersending(hendelse)
+            oppgaveMediator.settEmneknaggEttersending(hendelse)
         }
 
         return when (sisteSakId) {
@@ -72,7 +71,6 @@ class InnsendingMediator(
                     utløstAv = HendelseBehandler.Intern.Innsending,
                 )
             transaksjoner.transaksjon { ctx ->
-                oppgaveMediator.taImotEttersending(hendelse, ctx)
                 innsendingRepository.lagre(innsending, ctx)
                 sakMediator.knyttEttersendingTilSammeSakSomSøknad(
                     behandling = behandling,
@@ -82,7 +80,7 @@ class InnsendingMediator(
                 oppgaveMediator.lagOppgaveForInnsendingBehandling(hendelse, behandling, person, ctx)
             }
         } else {
-            oppgaveMediator.taImotEttersending(hendelse)
+            oppgaveMediator.settEmneknaggEttersending(hendelse)
         }
     }
 

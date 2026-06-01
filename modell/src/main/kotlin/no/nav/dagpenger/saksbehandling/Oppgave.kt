@@ -362,8 +362,8 @@ data class Oppgave private constructor(
             logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
         }.getOrThrow()
 
-    fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
-        tilstand.taImotEttersending(this, hendelse)
+    fun settEmneknagg(hendelse: InnsendingMottattHendelse) {
+        tilstand.settEmneknagg(this, hendelse)
     }
 
     fun settKlarTilBehandling(hendelse: Hendelse) {
@@ -436,7 +436,7 @@ data class Oppgave private constructor(
     object KlarTilBehandling : Tilstand {
         override val type: Type = KLAR_TIL_BEHANDLING
 
-        override fun taImotEttersending(
+        override fun settEmneknagg(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
@@ -479,7 +479,7 @@ data class Oppgave private constructor(
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
 
-        override fun taImotEttersending(
+        override fun settEmneknagg(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
@@ -705,7 +705,7 @@ data class Oppgave private constructor(
     object PåVent : Tilstand {
         override val type: Type = PAA_VENT
 
-        override fun taImotEttersending(
+        override fun settEmneknagg(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
@@ -793,7 +793,7 @@ data class Oppgave private constructor(
     object KlarTilKontroll : Tilstand {
         override val type: Type = KLAR_TIL_KONTROLL
 
-        override fun taImotEttersending(
+        override fun settEmneknagg(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
@@ -841,7 +841,7 @@ data class Oppgave private constructor(
     ) : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
-        override fun taImotEttersending(
+        override fun settEmneknagg(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {
@@ -1263,7 +1263,7 @@ data class Oppgave private constructor(
             )
         }
 
-        fun taImotEttersending(
+        fun settEmneknagg(
             oppgave: Oppgave,
             hendelse: InnsendingMottattHendelse,
         ) {

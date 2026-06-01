@@ -957,7 +957,7 @@ class OppgaveTilstandTest {
 
         lagEmneknaggTilstander.forEach { tilstandType ->
             val oppgave = lagOppgave(tilstandType)
-            oppgave.taImotEttersending(innsendingMottattHendelse)
+            oppgave.settEmneknagg(innsendingMottattHendelse)
 
             oppgave.emneknagger shouldContain "Ettersending(${LocalDate.now()})"
             if (tilstandType == PAA_VENT) {
@@ -971,7 +971,7 @@ class OppgaveTilstandTest {
 
         (Type.values - lagEmneknaggTilstander).forEach {
             val oppgave = lagOppgave(it)
-            oppgave.taImotEttersending(innsendingMottattHendelse)
+            oppgave.settEmneknagg(innsendingMottattHendelse)
 
             oppgave.emneknagger.size shouldBe 0
             oppgave.tilstandslogg.size shouldBe 0
@@ -991,7 +991,7 @@ class OppgaveTilstandTest {
             )
 
         lagOppgave(PAA_VENT).let {
-            it.taImotEttersending(innsendingMottattHendelse)
+            it.settEmneknagg(innsendingMottattHendelse)
             it.tilstand() shouldBe Oppgave.KlarTilBehandling
         }
 
@@ -999,7 +999,7 @@ class OppgaveTilstandTest {
             tilstandType = PAA_VENT,
             behandler = saksbehandler,
         ).let {
-            it.taImotEttersending(innsendingMottattHendelse)
+            it.settEmneknagg(innsendingMottattHendelse)
             it.tilstand() shouldBe Oppgave.UnderBehandling
         }
     }

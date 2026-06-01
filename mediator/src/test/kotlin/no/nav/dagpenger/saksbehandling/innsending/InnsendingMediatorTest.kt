@@ -77,7 +77,7 @@ class InnsendingMediatorTest {
         }
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {
-            every { it.taImotEttersending(any()) } just Runs
+            every { it.settEmneknaggEttersending(any()) } just Runs
             coEvery { it.oppgaveTilstandForSøknad(søknadIdSomErFerdigBehandlet, any()) } returns FERDIG_BEHANDLET
             coEvery { it.oppgaveTilstandForSøknad(søknadIdSomIkkeErFerdigBehandlet, any()) } returns UNDER_BEHANDLING
             coEvery { it.lagOppgaveForInnsendingBehandling(any(), any(), any()) } just Runs
@@ -469,7 +469,7 @@ class InnsendingMediatorTest {
         ) shouldBe HåndterInnsendingResultat.UhåndtertInnsending
 
         verify(exactly = 1) {
-            oppgaveMediatorMock.taImotEttersending(innsendingMottattHendelse)
+            oppgaveMediatorMock.settEmneknaggEttersending(innsendingMottattHendelse)
         }
 
         verify(exactly = 0) {
@@ -515,7 +515,7 @@ class InnsendingMediatorTest {
         ) shouldBe HåndterInnsendingResultat.HåndtertInnsending(sakId)
 
         verify(exactly = 1) {
-            oppgaveMediatorMock.taImotEttersending(innsendingMottattHendelse)
+            oppgaveMediatorMock.settEmneknaggEttersending(innsendingMottattHendelse)
         }
         verify(exactly = 0) {
             innsendingRepository.lagre(any(), any())
@@ -1048,7 +1048,7 @@ class InnsendingMediatorTest {
             val oppgaveMediator =
                 mockk<OppgaveMediator>().also { mock ->
                     every { mock.oppgaveTilstandForSøknad(søknadId, any()) } returns FERDIG_BEHANDLET
-                    every { mock.taImotEttersending(any(), any()) } just Runs
+                    every { mock.settEmneknaggEttersending(any(), any()) } just Runs
                     every { mock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any()) } throws
                         RuntimeException("DB-feil ved lagring av oppgave")
                 }

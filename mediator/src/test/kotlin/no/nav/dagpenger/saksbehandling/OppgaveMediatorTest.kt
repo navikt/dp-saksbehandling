@@ -1239,7 +1239,7 @@ OppgaveMediatorTest {
                     skjemaKode = "NAV 11-12.05",
                     kategori = Kategori.ETTERSENDING,
                 )
-            oppgaveMediator.taImotEttersending(ettersendingSomManglerSøknadId)
+            oppgaveMediator.settEmneknaggEttersending(ettersendingSomManglerSøknadId)
             oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør) shouldBe søknadOppgave
 
             val klage =
@@ -1251,7 +1251,7 @@ OppgaveMediatorTest {
                     skjemaKode = "NAV 11-12.05",
                     kategori = Kategori.KLAGE,
                 )
-            oppgaveMediator.taImotEttersending(klage)
+            oppgaveMediator.settEmneknaggEttersending(klage)
             oppgaveMediator.hentOppgave(søknadOppgave.oppgaveId, testInspektør) shouldBe søknadOppgave
 
             oppgaveMediator.tildelOppgave(
@@ -1272,7 +1272,7 @@ OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.taImotEttersending(
+            oppgaveMediator.settEmneknaggEttersending(
                 ettersendingSomManglerSøknadId.copy(
                     søknadId = søknadOppgave.søknadId(),
                     kategori = Kategori.ETTERSENDING,
