@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
@@ -337,6 +338,29 @@ class KlageBehandlingTest {
         klageBehandling
             .vedtakDistribuert(hendelse)
             .shouldBeInstanceOf<KlageAksjon.IngenAksjon>()
+    }
+
+    @Test
+    fun `vedtak distribuert er idempotent - redelivery i tilstand OVERSEND_KLAGEINSTANS kaster ikke`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.OPPRETTHOLDELSE)
+        val hendelse =
+            UtsendingDistribuert(
+                behandlingId = klageBehandling.behandlingId,
+                utsendingId = UUID.randomUUID(),
+                ident = "fnr",
+                journalpostId = "journalpostId",
+                distribusjonId = "distribusjonId",
+            )
+
+        klageBehandling
+            .vedtakDistribuert(hendelse)
+            .shouldBeInstanceOf<KlageAksjon.OversendKlageinstans>()
+        klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
+
+        klageBehandling
+            .vedtakDistribuert(hendelse)
+            .shouldBeInstanceOf<KlageAksjon.IngenAksjon>()
+        klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
     }
 
     @ParameterizedTest
