@@ -1523,7 +1523,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Sikkerhetstiltak'
-        erNoedbremset:
+        erNodbremset:
           type: boolean
       required:
         - ident
@@ -1536,7 +1536,7 @@ components:
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
         - sikkerhetstiltak
-        - erNoedbremset
+        - erNodbremset
 
     PersonOversikt:
       type: object

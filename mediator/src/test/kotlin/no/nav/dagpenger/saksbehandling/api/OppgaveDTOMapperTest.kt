@@ -138,7 +138,8 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${LocalDate.now().plusDays(1)}"
                           }
                         ],
-                        "statsborgerskap": "NOR"
+                        "statsborgerskap": "NOR",
+                        "erNodbremset": false
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
                       "behandlingType": "RETT_TIL_DAGPENGER",
@@ -299,7 +300,8 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
-                        "statsborgerskap": "NOR"
+                        "statsborgerskap": "NOR",
+                        "erNodbremset": false
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
                       "behandlingType": "RETT_TIL_DAGPENGER",
@@ -642,7 +644,8 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
-                        "statsborgerskap": "NOR"
+                        "statsborgerskap": "NOR",
+                        "erNodbremset": false
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
                       "behandlingType": "RETT_TIL_DAGPENGER",

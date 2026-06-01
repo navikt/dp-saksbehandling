@@ -88,7 +88,7 @@ class PostgresSakRepository(
                         FROM        sak_v2 sak
                         JOIN        person_v1 per               ON sak.person_id = per.id
                         JOIN        behandling_v1 beh           ON beh.sak_id    = sak.id
-                        LEFT JOIN   noedbremset_person_v1 nod   ON nod.person_id = per.id
+                        LEFT JOIN   nodbremset_person_v1 nod   ON nod.person_id = per.id
                         WHERE       per.ident = :ident
                         AND         nod.person_id IS NULL
                         AND         sak.er_dp_sak

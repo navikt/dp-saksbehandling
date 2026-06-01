@@ -1037,7 +1037,7 @@ class OppgaveApiTest {
                                                     .gyldigTom,
                                         ),
                                     ),
-                                erNoedbremset = false,
+                                erNodbremset = false,
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
@@ -1184,7 +1184,7 @@ class OppgaveApiTest {
                                 mellomnavn = TestHelper.pdlPerson.mellomnavn,
                                 statsborgerskap = TestHelper.pdlPerson.statsborgerskap,
                                 sikkerhetstiltak = emptyList(),
-                                erNoedbremset = false,
+                                erNodbremset = false,
                             ),
                         tidspunktOpprettet = oppgave.opprettet,
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
@@ -1422,7 +1422,7 @@ class OppgaveApiTest {
                                     gyldigTom = LocalDate.of(2025, 12, 31),
                                 ),
                             ),
-                        erNoedbremset = false,
+                        erNodbremset = false,
                     ),
                 saker =
                     listOf(
@@ -1568,7 +1568,8 @@ class OppgaveApiTest {
                                 "beskrivelse": "To ansatte i samtale",
                                 "gyldigTom": "2025-12-31"
                               }
-                            ]
+                            ],
+                            "erNodbremset": false
                           },
                           "saker": [
                             {
