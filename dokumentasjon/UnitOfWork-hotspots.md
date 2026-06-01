@@ -50,12 +50,29 @@ felles `Session` gjennom alle repo-kall innenfor en transaksjon.
 
 ## Anbefalt rekkefølge
 
-1. **Innfør infrastruktur**: `DatabaseSession` + `PostgresUnitOfWork` (etter dp-behandling-mønster)
-2. **Migrer 🔴 hotspots**: Rene DB-writes, ingen ekstern I/O — trygt å samle i transaksjon
+1. ✅ **Innfør infrastruktur**: `DatabaseSession` + `PostgresUnitOfWork` (etter dp-behandling-mønster)
+2. ✅ **Migrer 🔴 hotspots**: Rene DB-writes, ingen ekstern I/O — trygt å samle i transaksjon
 3. **Vurder 🟡 hotspots**: For flows med HTTP/Kafka — vurder om DB-delen kan isoleres i transaksjon med I/O utenfor
 4. **Outbox-pattern**: For flows der DB+event-konsistens er kritisk
+
+## Status (2026-06-01)
+
+Alle 🔴 røde hotspots (#1–5) er wrappet i transaksjon via PR-stack #386→#387→#389.
+Alle 🟡 gule er enten wrappet (der mulig), bevisst ikke wrappet (HTTP i midten), eller mitigert med alarm-jobb.
+
+### Nye funn fra fullstendig mediator-gjennomgang
+
+| # | Flow | Type | Risiko | Beskrivelse |
+|---|------|------|--------|-------------|
+| 13 | `OppgaveMediator.endreMeldingOmVedtakKilde()` | DB+DB | Lav | `lagre(oppgave)` → `slettUtsending`. Reverser rekkefølge eller wrap i tx |
+| 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Medium** | `lagre(oppgave)` → Kafka `avbryt_behandling`. Ingen alarm-jobb dekker dette. dp-behandling vet ikke om avbruddet ved krasj |
+| 15 | `SakMediator.opprettSak()` | DB+DB | Lav | `finnEllerOpprettPerson` → `lagre(sakHistorikk)`. Idempotent ved retry |
+
+**Anbefaling for #14:** Lag `AvbrytBehandlingAlarmJob` som finner oppgaver i tilstand `Avbrutt` der behandlingen fortsatt er aktiv i dp-behandling, eller bruk outbox-pattern for `avbryt_behandling`-eventen.
 
 ## Notater
 
 - `OppfølgingMediator.ferdigstill()` har bevisst split-transaksjon (se Oppfølging.md) — mitigert av OppfølgingAlarmJob
+- `InnsendingMediator.ferdigstill()` har bevisst split-transaksjon — mitigert av InnsendingAlarmJob
 - `ferdigstillOppgaveMedUtsending()` har allerede compensating delete — fungerer, men er sårbar for app-krasj mellom steg 1 og 3
+- `OppgaveTilstandAlertJob` sjekker kun oppgaver stuck i `OPPRETTET` — dekker ikke #14
