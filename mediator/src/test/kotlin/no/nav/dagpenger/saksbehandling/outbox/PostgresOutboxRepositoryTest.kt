@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class OutboxRepositoryTest {
+class PostgresOutboxRepositoryTest {
     @Test
     fun `lagre skriver record i delt transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
