@@ -185,7 +185,7 @@ class PostgresPersonRepository(
                         """
                         SELECT    noed.person_id
                         FROM      person_v1 pers
-                        LEFT JOIN nodbremset_person noed ON noed.person_id = pers.id
+                        LEFT JOIN nodbremset_person_v1 noed ON noed.person_id = pers.id
                         WHERE     pers.ident = :ident
                         """.trimIndent(),
                     paramMap =
