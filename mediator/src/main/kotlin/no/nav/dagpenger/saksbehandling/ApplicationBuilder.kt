@@ -105,7 +105,7 @@ internal class ApplicationBuilder(
     private lateinit var metrikkJob: Timer
     private lateinit var outboxJob: Timer
     private lateinit var outboxCleanupJob: Timer
-    private val outboxRepository = PostgresOutboxRepository(dataSource)
+    private val outboxRepository = PostgresOutboxRepository(databaseSession)
     private val outbox = PostgresOutbox(outboxRepository)
     private lateinit var statistikkJob: Timer
     private lateinit var oppgaveTilstandAlertJob: Timer

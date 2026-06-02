@@ -15,7 +15,7 @@ class OutboxRepositoryTest {
     fun `lagre skriver record i delt transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(ds)
+            val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre(key = "123", message = """{"a":1}""", ctx = ctx)
@@ -29,7 +29,7 @@ class OutboxRepositoryTest {
     fun `lagre ruller tilbake når transaksjonen feiler`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(ds)
+            val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             runCatching {
                 transaksjoner.transaksjon { ctx ->
@@ -46,7 +46,7 @@ class OutboxRepositoryTest {
     fun `hentPending returnerer i FIFO-rekkefølge og respekterer limit`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(ds)
+            val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("a", """{"i":"a"}""", ctx)
@@ -64,7 +64,7 @@ class OutboxRepositoryTest {
     fun `markerSendt setter status til SENDT`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(ds)
+            val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("a", """{"i":"a"}""", ctx)
@@ -82,7 +82,7 @@ class OutboxRepositoryTest {
     fun `slettSendteEldreEnn sletter kun gamle SENDT-records`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(ds)
+            val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("gammel", """{"i":"g"}""", ctx)
