@@ -60,6 +60,7 @@ class PostgresOutboxRepositoryTest {
             val records = repository.hentMedTilstand(pending, limit = 2)
             records.size shouldBe 2
             records.map { it.key } shouldBe listOf("a", "b")
+            records.map { it.tilstand } shouldBe listOf(pending, pending)
         }
     }
 

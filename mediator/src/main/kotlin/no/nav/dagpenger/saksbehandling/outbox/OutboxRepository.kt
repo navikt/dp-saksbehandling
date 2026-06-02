@@ -43,4 +43,5 @@ data class OutboxRecord(
     val id: Long,
     val key: String,
     val message: String,
+    val tilstand: String,
 )

@@ -33,13 +33,14 @@ class PostgresOutboxRepository(
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = "SELECT id, key, message FROM outbox WHERE status = :status ORDER BY id LIMIT :limit",
+                    statement = "SELECT id, key, message, status FROM outbox WHERE status = :status ORDER BY id LIMIT :limit",
                     paramMap = mapOf("status" to tilstand, "limit" to limit),
                 ).map { row ->
                     OutboxRecord(
                         id = row.long("id"),
                         key = row.string("key"),
                         message = row.string("message"),
+                        tilstand = row.string("status"),
                     )
                 }.asList,
             )
