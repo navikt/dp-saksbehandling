@@ -4,7 +4,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
@@ -13,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import org.junit.jupiter.api.Test
 import javax.sql.DataSource
 
-class OutboxJobTest {
+class OutboxPublisherTest {
     @Test
     fun `Publiserer PENDING records i FIFO-rekkefølge`() {
         DBTestHelper.withMigratedDb { ds ->
@@ -27,7 +26,7 @@ class OutboxJobTest {
                 outbox.send("c", """{"ident":"c"}""", ctx)
             }
 
-            runBlocking { OutboxJob(ds, rapid).executeJob() }
+            OutboxPublisher(ds, rapid).publiser()
 
             rapid.inspektør.size shouldBe 3
             alleHarStatus(ds, "SENDT") shouldBe true
@@ -45,8 +44,7 @@ class OutboxJobTest {
                 outbox.send("y", """{"ident":"y"}""", ctx)
             }
 
-            val failingRapid = FailOnFirstPublishRapid()
-            runBlocking { OutboxJob(ds, failingRapid).executeJob() }
+            OutboxPublisher(ds, FailOnFirstPublishRapid()).publiser()
 
             pendingCount(ds) shouldBe 2
         }
@@ -56,7 +54,7 @@ class OutboxJobTest {
     fun `Publiserer ikke når ingen PENDING records finnes`() {
         DBTestHelper.withMigratedDb { ds ->
             val rapid = TestRapid()
-            runBlocking { OutboxJob(ds, rapid).executeJob() }
+            OutboxPublisher(ds, rapid).publiser()
             rapid.inspektør.size shouldBe 0
         }
     }

@@ -59,7 +59,8 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.outbox.OutboxCleanupJob
-import no.nav.dagpenger.saksbehandling.outbox.OutboxJob
+import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisher
+import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisherJob
 import no.nav.dagpenger.saksbehandling.outbox.PostgresOutbox
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -366,9 +367,8 @@ internal class ApplicationBuilder(
                         period = 5.Minutt,
                     )
                 outboxJob =
-                    OutboxJob(
-                        dataSource = dataSource,
-                        rapidsConnection = rapid,
+                    OutboxPublisherJob(
+                        publisher = OutboxPublisher(dataSource = dataSource, rapidsConnection = rapid),
                     ).startJob(
                         startAt = now,
                         period = 5.Sekund,
