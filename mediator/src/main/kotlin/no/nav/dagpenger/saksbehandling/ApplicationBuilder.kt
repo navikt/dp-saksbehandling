@@ -60,8 +60,8 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.outbox.OutboxCleanupJob
 import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisherJob
-import no.nav.dagpenger.saksbehandling.outbox.OutboxTjeneste
 import no.nav.dagpenger.saksbehandling.outbox.PostgresOutboxRepository
+import no.nav.dagpenger.saksbehandling.outbox.PostgresRapidOutbox
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -119,7 +119,7 @@ internal class ApplicationBuilder(
                 val innsendingRepository = PostgresInnsendingRepository(databaseSession)
                 val klageRepository = PostgresKlageRepository(databaseSession)
 
-                val outboxTjeneste = OutboxTjeneste(repository = outboxRepository, rapidsConnection = rapid)
+                val outbox = PostgresRapidOutbox(repository = outboxRepository, rapidsConnection = rapid)
 
                 val behandlingKlient =
                     BehandlingHttpKlient(
@@ -177,7 +177,7 @@ internal class ApplicationBuilder(
                                 oppgaveRepository = oppgaveRepository,
                                 tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
                             ),
-                        outbox = outboxTjeneste,
+                        outbox = outbox,
                         transaksjoner = Transaksjoner(databaseSession),
                     )
                 val oppgaveMediator =
@@ -371,13 +371,13 @@ internal class ApplicationBuilder(
                     )
                 outboxJob =
                     OutboxPublisherJob(
-                        vedlikehold = outboxTjeneste,
+                        vedlikehold = outbox,
                     ).startJob(
                         startAt = now,
                         period = 5.Sekund,
                     )
                 outboxCleanupJob =
-                    OutboxCleanupJob(vedlikehold = outboxTjeneste).startJob(
+                    OutboxCleanupJob(vedlikehold = outbox).startJob(
                         startAt = getNextOccurrence(3, 30),
                         period = 1.Dag,
                     )

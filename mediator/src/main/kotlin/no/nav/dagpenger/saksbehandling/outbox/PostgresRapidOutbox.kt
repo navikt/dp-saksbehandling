@@ -20,7 +20,7 @@ import java.time.LocalDateTime
  * - Stopper ved første feil — retry ved neste poll
  * - fnr (key) og meldingsinnhold logges kun til sikkerlogg (GDPR)
  */
-class OutboxTjeneste(
+class PostgresRapidOutbox(
     private val repository: OutboxRepository,
     private val rapidsConnection: RapidsConnection,
     private val levetidSendte: Duration = Duration.ofDays(7),

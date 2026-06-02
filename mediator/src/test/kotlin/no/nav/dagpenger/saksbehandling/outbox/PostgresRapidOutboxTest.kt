@@ -14,12 +14,12 @@ import java.time.Duration
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class OutboxTjenesteTest {
+class PostgresRapidOutboxTest {
     @Test
     fun `send skriver til outbox-tabell i samme transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val tjeneste = outboxTjeneste(ds, TestRapid())
+            val tjeneste = outbox(ds, TestRapid())
 
             transaksjoner.transaksjon { ctx ->
                 tjeneste.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
@@ -33,7 +33,7 @@ class OutboxTjenesteTest {
     fun `send ruller tilbake ved feil i samme transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val tjeneste = outboxTjeneste(ds, TestRapid())
+            val tjeneste = outbox(ds, TestRapid())
 
             runCatching {
                 transaksjoner.transaksjon { ctx ->
@@ -51,7 +51,7 @@ class OutboxTjenesteTest {
         DBTestHelper.withMigratedDb { ds ->
             val rapid = TestRapid()
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val tjeneste = outboxTjeneste(ds, rapid)
+            val tjeneste = outbox(ds, rapid)
 
             transaksjoner.transaksjon { ctx ->
                 tjeneste.send("a", """{"ident":"a"}""", ctx)
@@ -70,7 +70,7 @@ class OutboxTjenesteTest {
     fun `publiserVentende stopper ved første feil og lar resten stå PENDING`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val tjeneste = outboxTjeneste(ds, FailOnFirstPublishRapid())
+            val tjeneste = outbox(ds, FailOnFirstPublishRapid())
 
             transaksjoner.transaksjon { ctx ->
                 tjeneste.send("x", """{"ident":"x"}""", ctx)
@@ -87,7 +87,7 @@ class OutboxTjenesteTest {
     fun `publiserVentende publiserer ikke når ingen PENDING records finnes`() {
         DBTestHelper.withMigratedDb { ds ->
             val rapid = TestRapid()
-            outboxTjeneste(ds, rapid).publiserVentende()
+            outbox(ds, rapid).publiserVentende()
             rapid.inspektør.size shouldBe 0
         }
     }
@@ -97,7 +97,7 @@ class OutboxTjenesteTest {
         DBTestHelper.withMigratedDb { ds ->
             val rapid = TestRapid()
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val tjeneste = outboxTjeneste(ds, rapid, levetidSendte = Duration.ofDays(7))
+            val tjeneste = outbox(ds, rapid, levetidSendte = Duration.ofDays(7))
 
             transaksjoner.transaksjon { ctx ->
                 tjeneste.send("gammel", """{"ident":"g"}""", ctx)
@@ -111,11 +111,11 @@ class OutboxTjenesteTest {
         }
     }
 
-    private fun outboxTjeneste(
+    private fun outbox(
         ds: DataSource,
         rapid: RapidsConnection,
         levetidSendte: Duration = Duration.ofDays(7),
-    ) = OutboxTjeneste(
+    ) = PostgresRapidOutbox(
         repository = PostgresOutboxRepository(DatabaseSession(ds)),
         rapidsConnection = rapid,
         levetidSendte = levetidSendte,

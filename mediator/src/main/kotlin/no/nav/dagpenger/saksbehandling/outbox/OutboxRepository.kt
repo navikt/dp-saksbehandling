@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 /**
  * Persistens-seam for outbox-tabellen. Samler all SQL-tilgang ett sted slik at
- * [OutboxTjeneste] holdes fri for inline SQL.
+ * [PostgresRapidOutbox] holdes fri for inline SQL.
  *
  * Repositoryet er bevisst uvitende om hvilke tilstander som finnes — `tilstand`
  * tas som [String]. Domenelogikken (via [OutboxTilstand]) bestemmer hvilken
