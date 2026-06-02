@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -9,10 +8,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.outbox.Outbox
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
@@ -27,7 +28,8 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class UtsendingMediator(
     private val utsendingRepository: UtsendingRepository,
     private val brevProdusent: BrevProdusent,
-    private val rapidsConnection: RapidsConnection,
+    private val outbox: Outbox,
+    private val transaksjoner: Transaksjoner,
 ) : UtsendingRepository by utsendingRepository {
     fun opprettUtsending(
         behandlingId: UUID,
@@ -81,16 +83,26 @@ class UtsendingMediator(
     fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(distribuertHendelse.behandlingId)
         utsending.mottaDistribuertKvittering(distribuertHendelse)
-        lagreOgPubliserBehov(utsending)
-        publiserUtsendingDistribuert(distribuertHendelse, utsending)
+        transaksjoner.transaksjon { ctx ->
+            lagreOgPubliserBehov(utsending, ctx)
+            publiserUtsendingDistribuert(distribuertHendelse, utsending, ctx)
+        }
     }
 
-    private fun lagreOgPubliserBehov(utsending: Utsending) {
-        utsendingRepository.lagre(utsending)
-        publiserBehov(utsending)
+    private fun lagreOgPubliserBehov(
+        utsending: Utsending,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
+        transaksjoner.transaksjon(ctx) { aktiv ->
+            utsendingRepository.lagre(utsending, aktiv)
+            publiserBehov(utsending, aktiv)
+        }
     }
 
-    private fun publiserBehov(utsending: Utsending) {
+    private fun publiserBehov(
+        utsending: Utsending,
+        ctx: Transaksjonskontekst.Aktiv,
+    ) {
         val behov = utsending.tilstand().behov(utsending)
         if (behov is IngenBehov) return
 
@@ -99,12 +111,13 @@ class UtsendingMediator(
                 sikkerlogg.info { "Publiserer behov: $it for $utsending" }
             }
         logger.info { "Publiserer behov: ${behov.navn} for $utsending" }
-        rapidsConnection.publish(key = utsending.ident, message = message)
+        outbox.send(key = utsending.ident, message = message, ctx = ctx)
     }
 
     private fun publiserUtsendingDistribuert(
         hendelse: DistribuertHendelse,
         utsending: Utsending,
+        ctx: Transaksjonskontekst.Aktiv,
     ) {
         val message =
             JsonMessage
@@ -125,7 +138,7 @@ class UtsendingMediator(
         }
         sikkerlogg.info { "Publiserer melding: $message" }
 
-        rapidsConnection.publish(key = utsending.ident, message = message)
+        outbox.send(key = utsending.ident, message = message, ctx = ctx)
     }
 
     fun startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {

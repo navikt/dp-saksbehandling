@@ -175,7 +175,8 @@ internal class ApplicationBuilder(
                                 oppgaveRepository = oppgaveRepository,
                                 tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
                             ),
-                        rapidsConnection = rapid,
+                        outbox = outbox,
+                        transaksjoner = Transaksjoner(databaseSession),
                     )
                 val oppgaveMediator =
                     OppgaveMediator(

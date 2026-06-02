@@ -83,6 +83,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.outbox.DirectOutbox
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -899,7 +900,8 @@ OppgaveMediatorTest {
                 UtsendingMediator(
                     utsendingRepository = PostgresUtsendingRepository(DatabaseSession(datasource)),
                     brevProdusent = mockk(),
-                    rapidsConnection = mockk(relaxed = true),
+                    outbox = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(datasource)),
                 )
 
             val oppgave =
@@ -1013,7 +1015,8 @@ OppgaveMediatorTest {
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(DatabaseSession(datasource)),
                 brevProdusent = mockk(),
-                rapidsConnection = mockk(relaxed = true),
+                outbox = mockk(relaxed = true),
+                transaksjoner = Transaksjoner(DatabaseSession(datasource)),
             ).also { utsendingMediator ->
                 utsendingMediator.finnUtsendingForBehandlingId(oppgaveFraDB.behandling.behandlingId) shouldNotBe null
             }
@@ -1026,7 +1029,8 @@ OppgaveMediatorTest {
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(DatabaseSession(datasource)),
                 brevProdusent = mockk(),
-                rapidsConnection = mockk(relaxed = true),
+                outbox = mockk(relaxed = true),
+                transaksjoner = Transaksjoner(DatabaseSession(datasource)),
             ).also { utsendingMediator ->
                 utsendingMediator.finnUtsendingForBehandlingId(oppgaveFraDB.behandling.behandlingId) shouldBe null
             }
@@ -1849,7 +1853,8 @@ OppgaveMediatorTest {
                         UtsendingMediator(
                             utsendingRepository = PostgresUtsendingRepository(DatabaseSession(datasource)),
                             brevProdusent = mockk(),
-                            rapidsConnection = testRapid,
+                            outbox = DirectOutbox(testRapid),
+                            transaksjoner = Transaksjoner(DatabaseSession(datasource)),
                         ),
                     sakMediator = sakMediator,
                     rapidsConnection = testRapid,
