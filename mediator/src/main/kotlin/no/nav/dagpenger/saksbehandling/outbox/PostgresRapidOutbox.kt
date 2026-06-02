@@ -19,6 +19,11 @@ import java.time.LocalDateTime
  * - Global FIFO (ORDER BY id i repository)
  * - Stopper ved første feil — retry ved neste poll
  * - fnr (key) og meldingsinnhold logges kun til sikkerlogg (GDPR)
+ *
+ * Leveringssemantikk: **at-least-once.** [publiserVentende] gjør publish (steg 1) og
+ * markering som SENDT (steg 2) i to separate operasjoner. Krasjer poden mellom dem,
+ * re-publiseres meldingen ved neste poll. Outbox eliminerer altså *tapte* meldinger,
+ * ikke *dupliserte* — konsumenter må derfor være idempotente.
  */
 class PostgresRapidOutbox(
     private val repository: OutboxRepository,
