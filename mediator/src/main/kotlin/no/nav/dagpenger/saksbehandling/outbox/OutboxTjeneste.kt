@@ -2,23 +2,40 @@ package no.nav.dagpenger.saksbehandling.outbox
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import java.time.Duration
+import java.time.LocalDateTime
 
 /**
- * Leser PENDING-rader fra outbox via [OutboxRepository] og publiserer dem til Rapids & Rivers.
+ * All outbox-logikk samlet ett sted. Bestemmer hvilke [OutboxTilstand]-verdier som
+ * gjelder ved lagring, publisering og opprydding, og delegerer persistens til
+ * [OutboxRepository].
  *
- * Garantier:
+ * Implementerer to seam:
+ * - [Outbox]: sender-seam brukt av mediatorene for å enqueue meldinger i en delt transaksjon.
+ * - [OutboxVedlikehold]: jobb-seam brukt av bakgrunnsjobbene for publisering og opprydding.
+ *
+ * Garantier ved publisering:
  * - Global FIFO (ORDER BY id i repository)
  * - Stopper ved første feil — retry ved neste poll
  * - fnr (key) og meldingsinnhold logges kun til sikkerlogg (GDPR)
  */
-class OutboxPublisher(
+class OutboxTjeneste(
     private val repository: OutboxRepository,
     private val rapidsConnection: RapidsConnection,
-) {
+    private val levetidSendte: Duration = Duration.ofDays(7),
+) : Outbox,
+    OutboxVedlikehold {
     private val logger = KotlinLogging.logger {}
     private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-    fun publiser() {
+    override fun send(
+        key: String,
+        message: String,
+        ctx: Transaksjonskontekst.Aktiv,
+    ) = repository.lagre(key = key, message = message, tilstand = OutboxTilstand.PENDING.name, ctx = ctx)
+
+    override fun publiserVentende() {
         for (record in repository.hentMedTilstand(OutboxTilstand.PENDING.name)) {
             try {
                 rapidsConnection.publish(record.key, record.message)
@@ -31,5 +48,11 @@ class OutboxPublisher(
                 break
             }
         }
+    }
+
+    override fun slettGamleSendte() {
+        val cutoff = LocalDateTime.now().minus(levetidSendte)
+        val slettet = repository.slettMedTilstandEldreEnn(OutboxTilstand.SENDT.name, cutoff)
+        logger.info { "Slettet $slettet utgåtte outbox-records (SENDT eldre enn $levetidSendte)" }
     }
 }

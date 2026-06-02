@@ -5,10 +5,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job
 
 class OutboxPublisherJob(
-    private val publisher: OutboxPublisher,
+    private val vedlikehold: OutboxVedlikehold,
 ) : Job() {
     override val jobName: String = "OutboxPublisherJob"
     override val logger: KLogger = KotlinLogging.logger {}
 
-    override suspend fun executeJob() = publisher.publiser()
+    override suspend fun executeJob() = vedlikehold.publiserVentende()
 }

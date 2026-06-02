@@ -59,9 +59,8 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.outbox.OutboxCleanupJob
-import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisher
 import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisherJob
-import no.nav.dagpenger.saksbehandling.outbox.PostgresOutbox
+import no.nav.dagpenger.saksbehandling.outbox.OutboxTjeneste
 import no.nav.dagpenger.saksbehandling.outbox.PostgresOutboxRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -106,7 +105,6 @@ internal class ApplicationBuilder(
     private lateinit var outboxJob: Timer
     private lateinit var outboxCleanupJob: Timer
     private val outboxRepository = PostgresOutboxRepository(databaseSession)
-    private val outbox = PostgresOutbox(outboxRepository)
     private lateinit var statistikkJob: Timer
     private lateinit var oppgaveTilstandAlertJob: Timer
 
@@ -120,6 +118,8 @@ internal class ApplicationBuilder(
                 val utsendingRepository = PostgresUtsendingRepository(databaseSession)
                 val innsendingRepository = PostgresInnsendingRepository(databaseSession)
                 val klageRepository = PostgresKlageRepository(databaseSession)
+
+                val outboxTjeneste = OutboxTjeneste(repository = outboxRepository, rapidsConnection = rapid)
 
                 val behandlingKlient =
                     BehandlingHttpKlient(
@@ -177,7 +177,7 @@ internal class ApplicationBuilder(
                                 oppgaveRepository = oppgaveRepository,
                                 tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
                             ),
-                        outbox = outbox,
+                        outbox = outboxTjeneste,
                         transaksjoner = Transaksjoner(databaseSession),
                     )
                 val oppgaveMediator =
@@ -371,13 +371,13 @@ internal class ApplicationBuilder(
                     )
                 outboxJob =
                     OutboxPublisherJob(
-                        publisher = OutboxPublisher(repository = outboxRepository, rapidsConnection = rapid),
+                        vedlikehold = outboxTjeneste,
                     ).startJob(
                         startAt = now,
                         period = 5.Sekund,
                     )
                 outboxCleanupJob =
-                    OutboxCleanupJob(repository = outboxRepository).startJob(
+                    OutboxCleanupJob(vedlikehold = outboxTjeneste).startJob(
                         startAt = getNextOccurrence(3, 30),
                         period = 1.Dag,
                     )
