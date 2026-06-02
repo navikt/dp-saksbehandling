@@ -15,4 +15,6 @@ interface PersonRepository {
     fun hentPersonForBehandlingId(behandlingId: UUID): Person
 
     fun lagre(person: Person)
+
+    fun erNødbremset(ident: String): Boolean
 }

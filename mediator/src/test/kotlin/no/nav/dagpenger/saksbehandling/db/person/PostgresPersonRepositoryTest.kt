@@ -37,6 +37,15 @@ class PostgresPersonRepositoryTest {
     }
 
     @Test
+    fun `Skal sjekke om person er nødbremset`() {
+        withMigratedDb { ds ->
+            val repo = PostgresPersonRepository(DatabaseSession(lazy { ds }))
+            repo.lagre(testPerson)
+            repo.erNødbremset(testPerson.ident) shouldBe false
+        }
+    }
+
+    @Test
     fun `Skal kunne oppdatere bare egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresPersonRepository(DatabaseSession(ds))

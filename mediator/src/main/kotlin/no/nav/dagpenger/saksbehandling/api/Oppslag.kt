@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -16,12 +17,15 @@ class Oppslag(
     private val relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag,
     private val saksbehandlerOppslag: SaksbehandlerOppslag,
     private val skjermingKlient: SkjermingKlient,
+    private val personRepository: PersonRepository,
 ) {
     suspend fun hentPerson(ident: String): PDLPersonIntern = pdlKlient.person(ident).getOrThrow()
 
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> = relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave)
 
     suspend fun hentBehandler(ident: String): BehandlerDTO = saksbehandlerOppslag.hentSaksbehandler(ident)
+
+    fun erNødbremset(ident: String): Boolean = personRepository.erNødbremset(ident)
 
     suspend fun erSkjermetPerson(ident: String): Boolean = skjermingKlient.erSkjermetPerson(ident).getOrThrow()
 

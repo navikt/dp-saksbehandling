@@ -60,6 +60,7 @@ import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepositor
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -185,12 +186,18 @@ OppgaveMediatorTest {
             coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns behandlerDTO
         }
 
+    private val personRepositoryMock =
+        mockk<PersonRepository>().also {
+            every { it.erNødbremset(any()) } returns false
+        }
+
     private val oppslagMock =
         Oppslag(
             pdlKlient = pdlKlientMock,
             relevanteJournalpostIdOppslag = mockk(),
             saksbehandlerOppslag = saksbehandlerOppslagMock,
             skjermingKlient = skjermingKlientMock,
+            personRepository = personRepositoryMock,
         )
 
     private val emneknagger = setOf("Emneknagg 1", "Emneknagg 2")

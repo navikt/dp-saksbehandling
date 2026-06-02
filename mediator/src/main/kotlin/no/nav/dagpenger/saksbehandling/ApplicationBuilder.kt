@@ -143,6 +143,7 @@ internal class ApplicationBuilder(
                                 skjermingApiUrl = Configuration.skjermingApiUrl,
                                 tokenProvider = Configuration.skjermingTokenProvider,
                             ),
+                        personRepository = personRepository,
                     )
                 val personMediator =
                     PersonMediator(

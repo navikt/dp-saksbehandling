@@ -88,12 +88,14 @@ class PostgresSakRepository(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT   sak.id
-                        FROM     sak_v2 sak
-                        JOIN     person_v1 per     ON sak.person_id = per.id
-                        JOIN     behandling_v1 beh ON beh.sak_id    = sak.id
-                        WHERE    per.ident = :ident
-                        AND      sak.er_dp_sak
+                        SELECT      sak.id
+                        FROM        sak_v2 sak
+                        JOIN        person_v1 per               ON sak.person_id = per.id
+                        JOIN        behandling_v1 beh           ON beh.sak_id    = sak.id
+                        LEFT JOIN   nodbremset_person_v1 nod    ON nod.person_id = per.id
+                        WHERE       per.ident = :ident
+                        AND         nod.person_id IS NULL
+                        AND         sak.er_dp_sak
                         AND NOT EXISTS (
                             SELECT 1
                             FROM   behandling_v1 feri

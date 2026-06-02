@@ -175,6 +175,28 @@ class PostgresPersonRepository(
                 ).toSet()
         }
     }
+
+    override fun erNødbremset(ident: String): Boolean =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT    noed.person_id
+                        FROM      person_v1 pers
+                        LEFT JOIN nodbremset_person_v1 noed ON noed.person_id = pers.id
+                        WHERE     pers.ident = :ident
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "ident" to ident,
+                        ),
+                ).map { row ->
+                    row.uuidOrNull("person_id") != null
+                }.asSingle,
+            ) ?: false
+        }
 }
 
 private fun PostgresUnitOfWork.lagre(person: Person) {
