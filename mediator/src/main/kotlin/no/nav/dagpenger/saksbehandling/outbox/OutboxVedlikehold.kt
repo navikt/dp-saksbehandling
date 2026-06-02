@@ -11,5 +11,5 @@ interface OutboxVedlikehold {
     fun publiserVentende()
 
     /** Rydder bort gamle, allerede sendte meldinger. */
-    fun slettGamleSendte()
+    fun slettGamleSendte(): Int
 }

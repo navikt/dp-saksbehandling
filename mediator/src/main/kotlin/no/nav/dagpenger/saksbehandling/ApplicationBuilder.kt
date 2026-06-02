@@ -377,7 +377,7 @@ internal class ApplicationBuilder(
                         period = 5.Sekund,
                     )
                 outboxCleanupJob =
-                    OutboxCleanupJob(vedlikehold = outbox).startJob(
+                    OutboxCleanupJob(outbox = outbox).startJob(
                         startAt = getNextOccurrence(3, 30),
                         period = 1.Dag,
                     )

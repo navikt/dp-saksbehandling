@@ -5,10 +5,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job
 
 class OutboxCleanupJob(
-    private val vedlikehold: OutboxVedlikehold,
+    private val outbox: OutboxVedlikehold,
 ) : Job() {
     override val jobName: String = "OutboxCleanupJob"
     override val logger: KLogger = KotlinLogging.logger {}
 
-    override suspend fun executeJob() = vedlikehold.slettGamleSendte()
+    override suspend fun executeJob() {
+        outbox.slettGamleSendte()
+    }
 }

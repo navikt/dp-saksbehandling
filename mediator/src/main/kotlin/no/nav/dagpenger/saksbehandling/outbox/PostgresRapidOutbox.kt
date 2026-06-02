@@ -50,9 +50,10 @@ class PostgresRapidOutbox(
         }
     }
 
-    override fun slettGamleSendte() {
+    override fun slettGamleSendte(): Int {
         val cutoff = LocalDateTime.now().minus(levetidSendte)
-        val slettet = repository.slettMedTilstandEldreEnn(OutboxTilstand.SENDT.name, cutoff)
-        logger.info { "Slettet $slettet utgåtte outbox-records (SENDT eldre enn $levetidSendte)" }
+        return repository.slettMedTilstandEldreEnn(OutboxTilstand.SENDT.name, cutoff).also {
+            logger.info { "Slettet $it utgåtte outbox-records (SENDT eldre enn $levetidSendte)" }
+        }
     }
 }
