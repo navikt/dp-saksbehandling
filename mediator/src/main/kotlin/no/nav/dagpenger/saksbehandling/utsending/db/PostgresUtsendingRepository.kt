@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
@@ -19,8 +20,11 @@ import java.util.UUID
 class PostgresUtsendingRepository(
     private val databaseSession: DatabaseSession,
 ) : UtsendingRepository {
-    override fun lagre(utsending: Utsending) {
-        databaseSession.transaction {
+    override fun lagre(
+        utsending: Utsending,
+        ctx: Transaksjonskontekst,
+    ) {
+        databaseSession.inContext(ctx) {
             utsending.sak()?.let { lagreUtsendingSak(it) }
             session.run(
                 queryOf(

@@ -50,7 +50,7 @@ class PostgresKlageRepositoryTest {
                         PersonMediator(
                             personRepository =
                                 PostgresPersonRepository(
-                                    DatabaseSession(lazy { ds }),
+                                    DatabaseSession(ds),
                                 ),
                             oppslag =
                                 mockk<Oppslag>().also {
@@ -59,7 +59,7 @@ class PostgresKlageRepositoryTest {
                                         AdressebeskyttelseGradering.UGRADERT
                                 },
                         ),
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
                 )
 
@@ -93,7 +93,7 @@ class PostgresKlageRepositoryTest {
                         type = HendelseBehandler.Intern.Klage,
                     ),
             )
-            val klageRepository = PostgresKlageRepository(DatabaseSession(lazy { ds }))
+            val klageRepository = PostgresKlageRepository(DatabaseSession(ds))
 
             test(klageRepository, sak.sakId)
         }

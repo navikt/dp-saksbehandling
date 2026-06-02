@@ -105,7 +105,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4, behandling5, behandling6, behandling7),
         ) { ds: DataSource ->
             // Insert test data
-            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo.lagre(oppgave1FerdigBehandlet)
             repo.lagre(oppgave2FerdigBehandlet)
             repo.lagre(oppgave3FerdigBehandlet)
@@ -114,7 +114,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
             repo.lagre(oppgave6FerdigBehandletIForgårs)
             repo.lagre(oppgave7KlarTilBehandling)
 
-            val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(DatabaseSession(lazy { ds }))
+            val statistikkTjeneste = PostgresProduksjonsstatistikkRepository(DatabaseSession(ds))
 
             val tilstanderAlle =
                 statistikkTjeneste.hentTilstanderMedUtløstAvFilter(

@@ -51,7 +51,7 @@ class MetrikkJobTest {
                     behandling8,
                 ),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling1))
             repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling2))
             repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling3))
@@ -113,8 +113,8 @@ class MetrikkJobTest {
                     behandling8,
                 ),
         ) { ds ->
-            val repo = PostgresOppgaveRepository(DatabaseSession(lazy { ds }))
-            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
             lagOppgave(tilstand = PåVent, behandling = behandling1).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(

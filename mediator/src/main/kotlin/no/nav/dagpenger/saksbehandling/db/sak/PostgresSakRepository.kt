@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
@@ -24,8 +25,11 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 class PostgresSakRepository(
     private val databaseSession: DatabaseSession,
 ) : SakRepository {
-    override fun lagre(sakHistorikk: SakHistorikk) {
-        databaseSession.transaction {
+    override fun lagre(
+        sakHistorikk: SakHistorikk,
+        ctx: Transaksjonskontekst,
+    ) {
+        databaseSession.inContext(ctx) {
             lagreSakHistorikk(
                 personId = sakHistorikk.person.id,
                 saker = sakHistorikk.alleSaker(),
@@ -281,8 +285,9 @@ class PostgresSakRepository(
         personId: UUID,
         sakId: UUID?,
         behandling: Behandling,
+        ctx: Transaksjonskontekst,
     ) {
-        databaseSession.transaction {
+        databaseSession.inContext(ctx) {
             lagreBehandling(
                 personId = personId,
                 sakId = sakId,

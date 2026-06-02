@@ -16,6 +16,8 @@ private val dbLogger = KotlinLogging.logger {}
 class DatabaseSession(
     private val dataSource: Lazy<DataSource>,
 ) {
+    constructor(dataSource: DataSource) : this(lazyOf(dataSource))
+
     fun <R> session(block: (Session) -> R): R = sessionOf(dataSource.value).use(block)
 
     fun <R> transaction(transactionBlock: PostgresUnitOfWork.() -> R): R =
@@ -23,6 +25,19 @@ class DatabaseSession(
             session.connection.underlying.withTransaction {
                 transactionBlock(PostgresUnitOfWork(session))
             }
+        }
+
+    /**
+     * Kjører blokken innenfor eksisterende transaksjon hvis [ctx] er [Transaksjonskontekst.Aktiv],
+     * ellers starter en ny transaksjon.
+     */
+    fun <R> inContext(
+        ctx: Transaksjonskontekst,
+        block: PostgresUnitOfWork.() -> R,
+    ): R =
+        when (ctx) {
+            is Transaksjonskontekst.Aktiv -> block(PostgresUnitOfWork(ctx.session))
+            is Transaksjonskontekst.IkkeAktiv -> transaction(block)
         }
 }
 

@@ -36,7 +36,7 @@ class PostgresUtsendingRepositoryTest {
             val brev = "vedtaksbrev.html"
             val utsendingSak = UtsendingSak("id", "fagsystem")
 
-            val repository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val repository = PostgresUtsendingRepository(DatabaseSession(ds))
             val distribusjonId = "distribusjonId"
             val utsending =
                 Utsending(
@@ -63,7 +63,7 @@ class PostgresUtsendingRepositoryTest {
         val testPerson = DBTestHelper.testPerson
 
         withBehandling(behandling = behandling, person = testPerson) { ds ->
-            val repository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val repository = PostgresUtsendingRepository(DatabaseSession(ds))
             val utsending =
                 Utsending(
                     behandlingId = behandling.behandlingId,
@@ -83,7 +83,7 @@ class PostgresUtsendingRepositoryTest {
     @Test
     fun `skal kunne finne ut om en utsending finnes eller ikke for oppgaveId og behandlingId`() {
         withBehandling(behandling = behandling, person = testPerson) { ds ->
-            val repository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val repository = PostgresUtsendingRepository(DatabaseSession(ds))
             val utsending =
                 Utsending(
                     behandlingId = behandling.behandlingId,
@@ -103,7 +103,7 @@ class PostgresUtsendingRepositoryTest {
     @Test
     fun `Skal ikke kunne lagre flere utsendinger for samme behandling`() {
         withBehandling(behandling = behandling) { ds ->
-            val repository = PostgresUtsendingRepository(DatabaseSession(lazy { ds }))
+            val repository = PostgresUtsendingRepository(DatabaseSession(ds))
             repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = behandling.behandlingId))
             shouldThrow<PSQLException> {
                 repository.lagre(

@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
@@ -61,6 +62,7 @@ class OppgaveMediator(
         innsendingMottattHendelse: InnsendingMottattHendelse,
         behandling: Behandling,
         person: Person,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ) {
         val forventerBehandlingOpprettet =
             innsendingMottattHendelse.søknadId != null &&
@@ -83,13 +85,14 @@ class OppgaveMediator(
                 }
             }
 
-        oppgaveRepository.lagre(oppgave)
+        oppgaveRepository.lagre(oppgave, ctx)
     }
 
     fun lagOppgaveForOppfølging(
         hendelse: OpprettOppfølgingHendelse,
         behandling: Behandling,
         person: Person,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Oppgave {
         val oppgave =
             Oppgave(
@@ -106,11 +109,53 @@ class OppgaveMediator(
             )
 
         oppgave.klargjørForBehandling(hendelse)
-        oppgaveRepository.lagre(oppgave)
+        oppgaveRepository.lagre(oppgave, ctx)
         return oppgave
     }
 
-    fun taImotEttersending(hendelse: InnsendingMottattHendelse) {
+    fun lagOppgaveForKlage(
+        hendelse: BehandlingOpprettetHendelse,
+        sakHistorikk: SakHistorikk,
+        saksbehandler: Saksbehandler? = null,
+        ctx: Transaksjonskontekst.Aktiv,
+    ): Oppgave {
+        val behandling =
+            sakHistorikk.finnBehandling(hendelse.behandlingId)
+                ?: throw IllegalStateException(
+                    "Fant ikke behandling ${hendelse.behandlingId} i sakHistorikk for klageopprettelse",
+                )
+
+        val oppgave =
+            Oppgave(
+                emneknagger = emptySet(),
+                opprettet = behandling.opprettet,
+                person = sakHistorikk.person,
+                behandling = behandling,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
+            )
+
+        oppgave.settKlarTilBehandling(hendelse)
+        saksbehandler?.let {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = it.navIdent,
+                    utførtAv = it,
+                ),
+            )
+        }
+        oppgaveRepository.lagre(oppgave, ctx)
+        return oppgave
+    }
+
+    fun settEmneknaggEttersending(
+        hendelse: InnsendingMottattHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         if (!hendelse.erEttersendingMedSøknadId()) {
             return
         }
@@ -126,52 +171,11 @@ class OppgaveMediator(
             ).oppgaver
             .singleOrNull()
             ?.let { oppgave ->
-                oppgave.taImotEttersending(hendelse)
-                oppgaveRepository.lagre(oppgave)
+                oppgave.settEmneknagg(hendelse)
+                oppgaveRepository.lagre(oppgave, ctx)
             } ?: logger.warn {
             "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
         }
-    }
-
-    fun opprettOppgaveForKlageBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
-        var oppgave: Oppgave? = null
-
-        val sakHistorikk = sakMediator.finnSakHistorikk(behandlingOpprettetHendelse.ident)
-
-        val behandling =
-            sakHistorikk
-                ?.finnBehandling(behandlingOpprettetHendelse.behandlingId)
-
-        if (behandling == null) {
-            val feilmelding =
-                "Mottatt hendelse behandlingOpprettetHendelse for behandling med id " +
-                    "${behandlingOpprettetHendelse.behandlingId}." +
-                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
-            logger.error { feilmelding }
-            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
-        } else {
-            oppgave =
-                Oppgave(
-                    emneknagger = emptySet(),
-                    opprettet = behandling.opprettet,
-                    person = sakHistorikk.person,
-                    behandling = behandling,
-                    meldingOmVedtak =
-                        Oppgave.MeldingOmVedtak(
-                            kilde = DP_SAK,
-                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                        ),
-                ).also {
-                    it.settKlarTilBehandling(behandlingOpprettetHendelse)
-                }
-            oppgaveRepository.lagre(oppgave)
-        }
-
-        // todo Bedre  Exception håndtering
-        return oppgave ?: throw IllegalStateException(
-            "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
-                "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
-        )
     }
 
     fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
@@ -491,7 +495,10 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse) {
+    fun ferdigstillOppgave(
+        oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         oppgaveRepository.hentOppgaveFor(oppfølgingFerdigstiltHendelse.oppfølgingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
@@ -501,7 +508,7 @@ class OppgaveMediator(
                     "Mottatt OppfølgingFerdigstiltHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(oppfølgingFerdigstiltHendelse)
-                oppgaveRepository.lagre(oppgave)
+                oppgaveRepository.lagre(oppgave, ctx)
                 logger.info {
                     "Behandlet OppfølgingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
@@ -509,7 +516,10 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(avbruttHendelse: AvbruttHendelse) {
+    fun ferdigstillOppgave(
+        avbruttHendelse: AvbruttHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
@@ -519,7 +529,7 @@ class OppgaveMediator(
                     "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(avbruttHendelse)
-                oppgaveRepository.lagre(oppgave)
+                oppgaveRepository.lagre(oppgave, ctx)
                 logger.info {
                     "Behandlet AvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
@@ -530,6 +540,7 @@ class OppgaveMediator(
     fun ferdigstillOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Result<UUID> =
         runCatching {
             oppgaveRepository.hentOppgaveFor(behandlingId = behandlingId).let { oppgave ->
@@ -539,7 +550,7 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                oppgaveRepository.lagre(oppgave)
+                oppgaveRepository.lagre(oppgave, ctx)
                 oppgave.oppgaveId
             }
         }
@@ -616,7 +627,10 @@ class OppgaveMediator(
         }.getOrThrow()
     }
 
-    fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
+    fun avbrytOppgave(
+        hendelse: BehandlingAvbruttHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         oppgaveRepository
             .søk(
                 Søkefilter(
@@ -632,7 +646,7 @@ class OppgaveMediator(
                 ) {
                     logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
                     oppgave.avbryt(hendelse)
-                    oppgaveRepository.lagre(oppgave)
+                    oppgaveRepository.lagre(oppgave, ctx)
                     logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
                 }
             }

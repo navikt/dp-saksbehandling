@@ -385,7 +385,7 @@ class OppgaveHistorikkDTOMapperTest {
                 ),
             )
 
-            oppgave.taImotEttersending(
+            oppgave.settEmneknagg(
                 InnsendingMottattHendelse(
                     ident = oppgave.personIdent(),
                     journalpostId = "journalpostId",

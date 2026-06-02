@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
@@ -12,47 +13,36 @@ class OppfølgingBehandler(
     private val klageMediator: KlageMediator,
     private val behandlingKlient: BehandlingKlient,
 ) {
-    fun utførAksjon(
+    fun opprettKlage(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
-        oppfølgingMediator: OppfølgingMediator,
-    ): OppfølgingFerdigstiltHendelse =
-        when (hendelse.aksjon) {
-            is OppfølgingAksjon.Avslutt ->
-                OppfølgingFerdigstiltHendelse(
-                    oppfølgingId = oppfølging.id,
-                    aksjonType = hendelse.aksjon.type,
-                    opprettetBehandlingId = null,
-                    utførtAv = hendelse.utførtAv,
-                )
+        ctx: Transaksjonskontekst.Aktiv,
+    ): OppfølgingFerdigstiltHendelse {
+        require(hendelse.aksjon is OppfølgingAksjon.OpprettKlage) { "Ugyldig aksjon for opprettKlage: ${hendelse.aksjon}" }
+        val aksjon = hendelse.aksjon as OppfølgingAksjon.OpprettKlage
 
-            is OppfølgingAksjon.OpprettKlage ->
-                opprettKlage(
-                    oppfølging = oppfølging,
-                    hendelse = hendelse,
-                )
+        val klageOppgave =
+            klageMediator.opprettKlage(
+                klageMottattHendelse =
+                    KlageMottattHendelse(
+                        ident = oppfølging.person.ident,
+                        opprettet = oppfølging.opprettet,
+                        journalpostId = null,
+                        sakId = aksjon.valgtSakId,
+                        utførtAv = hendelse.utførtAv,
+                    ),
+                ctx = ctx,
+            )
 
-            is OppfølgingAksjon.OpprettManuellBehandling ->
-                opprettBehandling(
-                    oppfølging = oppfølging,
-                    hendelse = hendelse,
-                )
+        return OppfølgingFerdigstiltHendelse(
+            oppfølgingId = oppfølging.id,
+            aksjonType = hendelse.aksjon.type,
+            opprettetBehandlingId = klageOppgave.behandling.behandlingId,
+            utførtAv = hendelse.utførtAv,
+        )
+    }
 
-            is OppfølgingAksjon.OpprettRevurderingBehandling ->
-                opprettBehandling(
-                    oppfølging = oppfølging,
-                    hendelse = hendelse,
-                )
-
-            is OppfølgingAksjon.OpprettOppfølging ->
-                opprettNyOppfølging(
-                    oppfølging = oppfølging,
-                    hendelse = hendelse,
-                    oppfølgingMediator = oppfølgingMediator,
-                )
-        }
-
-    private fun opprettBehandling(
+    fun opprettBehandling(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
     ): OppfølgingFerdigstiltHendelse {
@@ -60,8 +50,10 @@ class OppfølgingBehandler(
             when (val aksjon = hendelse.aksjon) {
                 is OppfølgingAksjon.OpprettManuellBehandling ->
                     aksjon.saksbehandlerToken to BehandlingstypeDTO.MANUELL
+
                 is OppfølgingAksjon.OpprettRevurderingBehandling ->
                     aksjon.saksbehandlerToken to BehandlingstypeDTO.REVURDERING
+
                 else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: $aksjon")
             }
 
@@ -83,37 +75,13 @@ class OppfølgingBehandler(
             }
     }
 
-    private fun opprettKlage(
-        oppfølging: Oppfølging,
-        hendelse: FerdigstillOppfølgingHendelse,
-    ): OppfølgingFerdigstiltHendelse {
-        val aksjon = hendelse.aksjon as OppfølgingAksjon.OpprettKlage
-
-        val klageOppgave =
-            klageMediator.opprettKlage(
-                klageMottattHendelse =
-                    KlageMottattHendelse(
-                        ident = oppfølging.person.ident,
-                        opprettet = oppfølging.opprettet,
-                        journalpostId = null,
-                        sakId = aksjon.valgtSakId,
-                        utførtAv = hendelse.utførtAv,
-                    ),
-            )
-
-        return OppfølgingFerdigstiltHendelse(
-            oppfølgingId = oppfølging.id,
-            aksjonType = hendelse.aksjon.type,
-            opprettetBehandlingId = klageOppgave.behandling.behandlingId,
-            utførtAv = hendelse.utførtAv,
-        )
-    }
-
-    private fun opprettNyOppfølging(
+    fun opprettNyOppfølging(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
         oppfølgingMediator: OppfølgingMediator,
+        ctx: Transaksjonskontekst.Aktiv,
     ): OppfølgingFerdigstiltHendelse {
+        require(hendelse.aksjon is OppfølgingAksjon.OpprettOppfølging) { "Ugyldig aksjon for opprettNyOppfølging: ${hendelse.aksjon}" }
         val aksjon = hendelse.aksjon as OppfølgingAksjon.OpprettOppfølging
 
         val nyOppgaveHendelse =
@@ -127,9 +95,8 @@ class OppfølgingBehandler(
                 utførtAv = hendelse.utførtAv,
             )
 
-        val opprettet = oppfølgingMediator.taImot(nyOppgaveHendelse)
+        val opprettet = oppfølgingMediator.taImot(nyOppgaveHendelse, ctx)
 
-        // Når frist er satt håndterer klargjørForBehandling beholdOppgaven — tildelOppgave skal ikke kalles
         return OppfølgingFerdigstiltHendelse(
             oppfølgingId = oppfølging.id,
             aksjonType = aksjon.type,

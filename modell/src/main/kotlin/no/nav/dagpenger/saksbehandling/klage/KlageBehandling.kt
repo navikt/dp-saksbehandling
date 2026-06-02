@@ -177,6 +177,14 @@ data class KlageBehandling private constructor(
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
     }
 
+    private fun ignorerDistribuertVedtak(tilstand: Type): KlageAksjon {
+        logger.warn {
+            "Mottok hendelse om distribuert vedtak for klage ${this.behandlingId} som allerede er i tilstand " +
+                "$tilstand. Ignorerer hendelsen (idempotent håndtering av redelivery)."
+        }
+        return KlageAksjon.IngenAksjon(this.behandlingId)
+    }
+
     private fun evaluerSynlighetOgUtfall() {
         this.steg.forEach { steg ->
             steg.evaluerSynlighet(opplysninger)
@@ -284,6 +292,11 @@ data class KlageBehandling private constructor(
                 hendelse = hendelse,
             )
         }
+
+        override fun vedtakDistribuert(
+            klageBehandling: KlageBehandling,
+            hendelse: UtsendingDistribuert,
+        ): KlageAksjon = klageBehandling.ignorerDistribuertVedtak(type)
     }
 
     object BehandlingUtført : KlageTilstand {
@@ -323,6 +336,11 @@ data class KlageBehandling private constructor(
 
     object Ferdigstilt : KlageTilstand {
         override val type: Type = FERDIGSTILT
+
+        override fun vedtakDistribuert(
+            klageBehandling: KlageBehandling,
+            hendelse: UtsendingDistribuert,
+        ): KlageAksjon = klageBehandling.ignorerDistribuertVedtak(type)
     }
 
     object BehandlesAvKlageinstans : KlageTilstand {
@@ -335,6 +353,11 @@ data class KlageBehandling private constructor(
             klageBehandling.klageinstansVedtak = KlageinstansVedtak.from(hendelse)
             klageBehandling.endreTilstand(Ferdigstilt, hendelse)
         }
+
+        override fun vedtakDistribuert(
+            klageBehandling: KlageBehandling,
+            hendelse: UtsendingDistribuert,
+        ): KlageAksjon = klageBehandling.ignorerDistribuertVedtak(type)
     }
 
     object Avbrutt : KlageTilstand {

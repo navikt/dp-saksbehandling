@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -21,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -230,26 +230,7 @@ class KlageMediatorTest {
                     klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
                     klageBehandling.hjemler() shouldBe listOf("FTRL_4_5_REGISTRERING", "FTRL_4_2")
                 }
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(1).let {
-                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                it["behandlingId"].asUUID() shouldBe behandlingId
-                it["sakId"].asUUID() shouldBe sakId
-                it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
-                it["ident"].stringValue() shouldBe testPersonIdent
-                it["saksbehandler"].toString() shouldEqualJson
-                    """
-                    {
-                      "navIdent": "${saksbehandler.navIdent}",
-                      "grupper": [],
-                      "tilganger": [
-                        "SAKSBEHANDLER",
-                        "BESLUTTER"
-                      ]
-                    }
-                        
-                    """.trimIndent()
-            }
+            testRapid.inspektør.size shouldBe 1
 
             val utsendingDistribuertHendelse =
                 UtsendingDistribuert(
@@ -269,8 +250,8 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-                    testRapid.inspektør.size shouldBe 3
-                    testRapid.inspektør.message(2).let {
+                    testRapid.inspektør.size shouldBe 2
+                    testRapid.inspektør.message(1).let {
                         it["@behov"].single().stringValue() shouldBe "OversendelseKlageinstans"
                         it["ident"].stringValue() shouldBe testPersonIdent
                         it["fagsakId"].stringValue() shouldBe sakId.toString()
@@ -297,6 +278,7 @@ class KlageMediatorTest {
                     brev = html,
                     ident = testPersonIdent,
                     type = UtsendingType.KLAGE_OVERSENDELSE,
+                    ctx = any(),
                 )
             }
 
@@ -372,12 +354,12 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
-            oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler).let { oppgave ->
-                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
-                oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-                oppgave.tilstandslogg.size shouldBe 3
-                oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
-            }
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+
+            oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            oppgave.tilstandslogg.size shouldBe 3
+            oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
@@ -401,14 +383,7 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-            verify(exactly = 1) {
-                utsendingMediatorMock.opprettUtsending(
-                    behandlingId = behandlingId,
-                    brev = html,
-                    ident = testPersonIdent,
-                    type = UtsendingType.KLAGE_OVERSENDELSE,
-                )
-            }
+
             klageMediator
                 .hentKlageBehandling(
                     behandlingId = behandlingId,
@@ -416,25 +391,17 @@ class KlageMediatorTest {
                 ).let { klageBehandling ->
                     klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
                     klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
-                }
-            testRapid.inspektør.message(0).let {
-                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                it["behandlingId"].asUUID() shouldBe behandlingId
-                it["sakId"].asUUID() shouldBe sakId
-                it["ident"].stringValue() shouldBe testPersonIdent
-                it["utfall"].stringValue() shouldBe "OPPRETTHOLDELSE"
-                it["saksbehandler"].toString() shouldEqualJson
-                    """
-                    {
-                      "navIdent": "${saksbehandler.navIdent}",
-                      "grupper": [],
-                      "tilganger": [
-                        "SAKSBEHANDLER",
-                        "BESLUTTER"
-                      ]
+                    verify(exactly = 1) {
+                        utsendingMediatorMock.opprettUtsending(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            brev = html,
+                            ident = testPersonIdent,
+                            type = UtsendingType.KLAGE_OVERSENDELSE,
+                            ctx = any(),
+                        )
                     }
-                    """.trimIndent()
-            }
+                }
+
             klageMediator.vedtakDistribuert(
                 hendelse =
                     UtsendingDistribuert(
@@ -448,8 +415,8 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).let { klageBehandling ->
                 klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-                testRapid.inspektør.size shouldBe 2
-                testRapid.inspektør.message(1).let {
+                testRapid.inspektør.size shouldBe 1
+                testRapid.inspektør.message(0).let {
                     it["@behov"].single().stringValue() shouldBe "OversendelseKlageinstans"
                     it["ident"].stringValue() shouldBe testPersonIdent
                     it["fagsakId"].stringValue() shouldBe sakId.toString()
@@ -546,31 +513,12 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
-
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
             klageBehandling.utfall() shouldBe UtfallType.AVVIST
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(1).let {
-                it["@event_name"].stringValue() shouldBe "klage_behandling_utført"
-                it["behandlingId"].asUUID() shouldBe behandlingId
-                it["sakId"].asUUID() shouldBe sakId
-                it["ident"].stringValue() shouldBe testPersonIdent
-                it["utfall"].stringValue() shouldBe "AVVIST"
-                it["saksbehandler"].toString() shouldEqualJson
-                    """
-                    {
-                      "navIdent": "${saksbehandler.navIdent}",
-                      "grupper": [],
-                      "tilganger": [
-                        "SAKSBEHANDLER",
-                        "BESLUTTER"
-                      ]
-                    }
-                    """.trimIndent()
-            }
+            testRapid.inspektør.size shouldBe 1
 
             klageMediator.vedtakDistribuert(
                 hendelse =
@@ -1063,19 +1011,19 @@ class KlageMediatorTest {
         test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
     ) {
         withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(DatabaseSession(lazy { dataSource }))
+            val personRepository = PostgresPersonRepository(DatabaseSession(dataSource))
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
 
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(dataSource)),
                     rapidsConnection = testRapid,
                 )
 
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { dataSource })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(dataSource)),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
@@ -1083,7 +1031,8 @@ class KlageMediatorTest {
                 )
             val klageMediator =
                 KlageMediator(
-                    klageRepository = PostgresKlageRepository(DatabaseSession(lazy { dataSource })),
+                    transaksjoner = Transaksjoner(DatabaseSession(dataSource)),
+                    klageRepository = PostgresKlageRepository(DatabaseSession(dataSource)),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
@@ -1120,6 +1069,216 @@ class KlageMediatorTest {
                 )
 
             test(klageMediator, oppgaveMediator, sak.sakId)
+        }
+    }
+
+    @Test
+    fun `opprettManuellKlage ruller tilbake alle DB-endringer dersom oppgaveopprettelse feiler`() {
+        withMigratedDb { dataSource ->
+            val databaseSession = DatabaseSession(dataSource)
+            val personRepository = PostgresPersonRepository(databaseSession)
+            val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
+            val sakRepository = PostgresSakRepository(databaseSession)
+            val klageRepository = PostgresKlageRepository(databaseSession)
+
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = sakRepository,
+                    rapidsConnection = testRapid,
+                )
+
+            val oppgaveMediator =
+                mockk<OppgaveMediator> {
+                    every { lagOppgaveForKlage(any(), any(), any(), any()) } throws
+                        RuntimeException("Simulert feil ved oppgaveopprettelse")
+                }
+
+            val klageMediator =
+                KlageMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    klageRepository = klageRepository,
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = mockk(relaxed = true),
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    sakMediator = sakMediator,
+                    rapidsConnection = testRapid,
+                )
+
+            personRepository.lagre(
+                Person(
+                    ident = testPersonIdent,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+            )
+
+            val hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                    ident = testPersonIdent,
+                    opprettet = nå,
+                    behandlingskjedeId = UUIDv7.ny(),
+                )
+            val sak =
+                sakMediator.opprettSak(
+                    ident = hendelse.ident,
+                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                    behandling =
+                        Behandling(
+                            behandlingId = hendelse.behandlingId,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            opprettet = hendelse.opprettet,
+                            hendelse = hendelse,
+                        ),
+                )
+
+            shouldThrow<RuntimeException> {
+                klageMediator.opprettManuellKlage(
+                    ManuellKlageMottattHendelse(
+                        ident = testPersonIdent,
+                        sakId = sak.sakId,
+                        opprettet = nå,
+                        journalpostId = "12345",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+
+            // Verifiser at klageBehandling ikke ble persistert
+            val sakHistorikk = sakRepository.hentSakHistorikk(testPersonIdent)
+            sakHistorikk
+                .alleSaker()
+                .flatMap { it.behandlinger() }
+                .filter { it.utløstAv == HendelseBehandler.Intern.Klage } shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `opprettKlage ruller tilbake alle DB-endringer dersom oppgaveopprettelse feiler`() {
+        withMigratedDb { dataSource ->
+            val databaseSession = DatabaseSession(dataSource)
+            val personRepository = PostgresPersonRepository(databaseSession)
+            val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
+            val sakRepository = PostgresSakRepository(databaseSession)
+            val klageRepository = PostgresKlageRepository(databaseSession)
+
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = sakRepository,
+                    rapidsConnection = testRapid,
+                )
+
+            val oppgaveMediator =
+                mockk<OppgaveMediator> {
+                    every { lagOppgaveForKlage(any(), any(), any(), any()) } throws
+                        RuntimeException("Simulert feil ved oppgaveopprettelse")
+                }
+
+            val klageMediator =
+                KlageMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    klageRepository = klageRepository,
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = mockk(relaxed = true),
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    sakMediator = sakMediator,
+                    rapidsConnection = testRapid,
+                )
+
+            personRepository.lagre(
+                Person(
+                    ident = testPersonIdent,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+            )
+
+            val hendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                    ident = testPersonIdent,
+                    opprettet = nå,
+                    behandlingskjedeId = UUIDv7.ny(),
+                )
+            val sak =
+                sakMediator.opprettSak(
+                    ident = hendelse.ident,
+                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
+                    behandling =
+                        Behandling(
+                            behandlingId = hendelse.behandlingId,
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            opprettet = hendelse.opprettet,
+                            hendelse = hendelse,
+                        ),
+                )
+
+            shouldThrow<RuntimeException> {
+                klageMediator.opprettKlage(
+                    KlageMottattHendelse(
+                        ident = testPersonIdent,
+                        sakId = sak.sakId,
+                        opprettet = nå,
+                        journalpostId = "journalpostIdBrukersKlage",
+                    ),
+                )
+            }
+
+            // Verifiser at klageBehandling ikke ble persistert
+            val sakHistorikk = sakRepository.hentSakHistorikk(testPersonIdent)
+            sakHistorikk
+                .alleSaker()
+                .flatMap { it.behandlinger() }
+                .filter { it.utløstAv == HendelseBehandler.Intern.Klage } shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `behandlingUtført ruller tilbake alle DB-endringer dersom ferdigstillOppgave feiler`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>(relaxed = true).also {
+                every { it.opprettUtsending(any(), any(), any(), any(), any()) } throws
+                    RuntimeException("Simulert feil ved utsending-opprettelse")
+            }
+
+        setupMediatorerOgSak(utsendingMediatorMock) { klageMediator, oppgaveMediator, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettManuellKlage(
+                        ManuellKlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostId",
+                            utførtAv = saksbehandler,
+                        ),
+                    ).behandling.behandlingId
+
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
+
+            shouldThrow<RuntimeException> {
+                klageMediator.behandlingUtført(
+                    hendelse =
+                        KlageBehandlingUtført(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            // Verifiser at klageBehandling IKKE har endret tilstand (rullet tilbake)
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLES
         }
     }
 }

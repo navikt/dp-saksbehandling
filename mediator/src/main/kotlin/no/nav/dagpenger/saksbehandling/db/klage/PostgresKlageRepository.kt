@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -32,8 +33,11 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 class PostgresKlageRepository(
     private val databaseSession: DatabaseSession,
 ) : KlageRepository {
-    override fun lagre(klageBehandling: KlageBehandling) {
-        databaseSession.transaction {
+    override fun lagre(
+        klageBehandling: KlageBehandling,
+        ctx: Transaksjonskontekst,
+    ) {
+        databaseSession.inContext(ctx) {
             lagre(klageBehandling)
         }
     }

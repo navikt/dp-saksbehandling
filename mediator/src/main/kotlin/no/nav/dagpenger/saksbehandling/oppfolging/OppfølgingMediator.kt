@@ -7,9 +7,12 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppfolging.OppfølgingRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -22,13 +25,17 @@ data class OpprettetOppfølging(
 )
 
 class OppfølgingMediator(
+    private val transaksjoner: Transaksjoner,
     private val oppfølgingRepository: OppfølgingRepository,
     private val oppfølgingBehandler: OppfølgingBehandler,
     private val personMediator: PersonMediator,
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
 ) {
-    fun taImot(hendelse: OpprettOppfølgingHendelse): OpprettetOppfølging {
+    fun taImot(
+        hendelse: OpprettOppfølgingHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ): OpprettetOppfølging {
         val oppfølgingId = UUIDv7.ny()
         val person = personMediator.finnEllerOpprettPerson(hendelse.ident)
 
@@ -46,11 +53,6 @@ class OppfølgingMediator(
                 utløstAv = HendelseBehandler.Intern.Oppfølging,
             )
 
-        sakMediator.lagreBehandling(
-            personId = person.id,
-            behandling = behandling,
-        )
-
         val oppfølging =
             Oppfølging.opprett(
                 id = oppfølgingId,
@@ -62,14 +64,21 @@ class OppfølgingMediator(
                 opprettet = hendelse.registrertTidspunkt,
             )
 
-        oppfølgingRepository.lagre(oppfølging)
-
         val oppgave =
-            oppgaveMediator.lagOppgaveForOppfølging(
-                hendelse = hendelse,
-                behandling = behandling,
-                person = person,
-            )
+            transaksjoner.transaksjon(ctx) { aktiv ->
+                sakMediator.lagreBehandling(
+                    personId = person.id,
+                    behandling = behandling,
+                    ctx = aktiv,
+                )
+                oppfølgingRepository.lagre(oppfølging, aktiv)
+                oppgaveMediator.lagOppgaveForOppfølging(
+                    hendelse = hendelse,
+                    behandling = behandling,
+                    person = person,
+                    ctx = aktiv,
+                )
+            }
 
         logger.info {
             "Opprettet oppfølging ${oppfølging.id} med årsak ${hendelse.aarsak} i tilstand ${oppgave.tilstand()}" +
@@ -85,21 +94,78 @@ class OppfølgingMediator(
     fun ferdigstill(hendelse: FerdigstillOppfølgingHendelse) {
         val oppfølging = hent(id = hendelse.oppfølgingId, saksbehandler = hendelse.utførtAv)
 
+        when (hendelse.aksjon) {
+            is OppfølgingAksjon.Avslutt ->
+                ferdigstillInternt(oppfølging, hendelse) { _ ->
+                    OppfølgingFerdigstiltHendelse(
+                        oppfølgingId = oppfølging.id,
+                        aksjonType = hendelse.aksjon.type,
+                        opprettetBehandlingId = null,
+                        utførtAv = hendelse.utførtAv,
+                    )
+                }
+
+            is OppfølgingAksjon.OpprettKlage ->
+                ferdigstillInternt(oppfølging, hendelse) { ctx ->
+                    oppfølgingBehandler.opprettKlage(oppfølging, hendelse, ctx)
+                }
+
+            is OppfølgingAksjon.OpprettOppfølging ->
+                ferdigstillInternt(oppfølging, hendelse) { ctx ->
+                    oppfølgingBehandler.opprettNyOppfølging(oppfølging, hendelse, this, ctx)
+                }
+
+            is OppfølgingAksjon.OpprettManuellBehandling,
+            is OppfølgingAksjon.OpprettRevurderingBehandling,
+            -> ferdigstillEksternt(oppfølging, hendelse)
+        }
+
+        logger.info { "Ferdigstilt oppfølging ${oppfølging.id} med aksjon ${hendelse.aksjon.type}" }
+    }
+
+    private fun ferdigstillInternt(
+        oppfølging: Oppfølging,
+        hendelse: FerdigstillOppfølgingHendelse,
+        aksjon: (Transaksjonskontekst.Aktiv) -> OppfølgingFerdigstiltHendelse,
+    ) {
+        transaksjoner.transaksjon { ctx ->
+            oppfølging.startFerdigstilling(
+                vurdering = hendelse.vurdering,
+                valgtSakId = hendelse.aksjon.valgtSakId,
+            )
+            oppfølgingRepository.lagre(oppfølging, ctx)
+            val ferdigstiltHendelse = aksjon(ctx)
+            oppfølging.ferdigstill(
+                aksjonType = ferdigstiltHendelse.aksjonType,
+                opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
+            )
+            oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse, ctx)
+            oppfølgingRepository.lagre(oppfølging, ctx)
+        }
+    }
+
+    private fun ferdigstillEksternt(
+        oppfølging: Oppfølging,
+        hendelse: FerdigstillOppfølgingHendelse,
+    ) {
         oppfølging.startFerdigstilling(
             vurdering = hendelse.vurdering,
             valgtSakId = hendelse.aksjon.valgtSakId,
         )
+        // Checkpoint: persist FERDIGSTILL_STARTET before external HTTP call
         oppfølgingRepository.lagre(oppfølging)
 
-        val ferdigstiltHendelse = oppfølgingBehandler.utførAksjon(oppfølging, hendelse, this)
-        logger.info { "Ferdigstiller oppfølging ${oppfølging.id} med aksjon ${hendelse.aksjon.type}" }
+        val ferdigstiltHendelse = oppfølgingBehandler.opprettBehandling(oppfølging, hendelse)
 
-        oppfølging.ferdigstill(
-            aksjonType = ferdigstiltHendelse.aksjonType,
-            opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
-        )
-        oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse)
-        oppfølgingRepository.lagre(oppfølging)
+        // Final writes in one transaction after successful HTTP
+        transaksjoner.transaksjon { ctx ->
+            oppfølging.ferdigstill(
+                aksjonType = ferdigstiltHendelse.aksjonType,
+                opprettetBehandlingId = ferdigstiltHendelse.opprettetBehandlingId,
+            )
+            oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse, ctx)
+            oppfølgingRepository.lagre(oppfølging, ctx)
+        }
     }
 
     fun hent(

@@ -109,7 +109,7 @@ class PostgresSakRepositoryTest {
     @Test
     fun `Skal kunne lagre sakHistorikk`() {
         DBTestHelper.withPerson(person) { dataSource ->
-            val sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource }))
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
             sakRepository.lagre(sakHistorikk)
             this.leggTilOppgave(oppgaveId, behandling1iSak1.behandlingId)
             val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
@@ -159,7 +159,7 @@ class PostgresSakRepositoryTest {
                     it.leggTilSak(sak1)
                     it.leggTilSak(sakFerietillegg)
                 }
-            val sakRepository = PostgresSakRepository(DatabaseSession(lazy { dataSource }))
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
             sakRepository.lagre(sakHistorikkMedFerietillegg)
             val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
@@ -182,7 +182,7 @@ class PostgresSakRepositoryTest {
     @Test
     fun `Hent sakId basert på behandlingId`() {
         DBTestHelper.withSaker(saker = listOf(sak1)) { ds ->
-            val sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds }))
+            val sakRepository = PostgresSakRepository(DatabaseSession(ds))
 
             sakRepository.merkSakenSomDpSak(sak1.sakId, true)
             sakRepository.hentSakIdForBehandlingId(behandling1iSak1.behandlingId) shouldBe sak1.sakId
@@ -199,7 +199,7 @@ class PostgresSakRepositoryTest {
     @Test
     fun `Henter sakId til nyeste dp-sak for en person`() {
         DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
-            val sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds }))
+            val sakRepository = PostgresSakRepository(DatabaseSession(ds))
 
             ds.opprettOppgaveForBehandling(behandlingId = behandling1iSak1.behandlingId)
             ds.opprettOppgaveForBehandling(behandlingId = behandling2iSak1.behandlingId)
@@ -225,7 +225,7 @@ class PostgresSakRepositoryTest {
     @Test
     fun `Finner sakId for en søknad`() {
         DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
-            val sakRepository = PostgresSakRepository(DatabaseSession(lazy { ds }))
+            val sakRepository = PostgresSakRepository(DatabaseSession(ds))
 
             sakRepository.finnSakIdForSøknad(
                 søknadId = søknadIdSak1,

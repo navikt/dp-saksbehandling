@@ -2,10 +2,15 @@ package no.nav.dagpenger.saksbehandling.db.sak
 
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import java.util.UUID
 
 interface SakRepository {
-    fun lagre(sakHistorikk: SakHistorikk)
+    fun lagre(
+        sakHistorikk: SakHistorikk,
+        ctx: Transaksjonskontekst = IkkeAktiv,
+    )
 
     fun hentSakHistorikk(ident: String): SakHistorikk
 
@@ -26,6 +31,7 @@ interface SakRepository {
         personId: UUID,
         sakId: UUID?,
         behandling: Behandling,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     )
 
     fun settArenaSakId(

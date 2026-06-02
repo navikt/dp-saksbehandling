@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
@@ -24,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -75,7 +77,7 @@ class InnsendingMediatorTest {
         }
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {
-            every { it.taImotEttersending(any()) } just Runs
+            every { it.settEmneknaggEttersending(any()) } just Runs
             coEvery { it.oppgaveTilstandForSøknad(søknadIdSomErFerdigBehandlet, any()) } returns FERDIG_BEHANDLET
             coEvery { it.oppgaveTilstandForSøknad(søknadIdSomIkkeErFerdigBehandlet, any()) } returns UNDER_BEHANDLING
             coEvery { it.lagOppgaveForInnsendingBehandling(any(), any(), any()) } just Runs
@@ -145,18 +147,18 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(lazy { it }))
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -175,6 +177,7 @@ class InnsendingMediatorTest {
                                     utførtAv = saksbehandler,
                                 )
                         },
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
 
             sakMediator.merkSakenSomDpSak(
@@ -243,6 +246,7 @@ class InnsendingMediatorTest {
                                 utførtAv = saksbehandler,
                             )
                     },
+                transaksjoner = Transaksjoner(DatabaseSession(it)),
             ).ferdigstill(
                 hendelse =
                     FerdigstillInnsendingHendelse(
@@ -301,18 +305,18 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(lazy { it }))
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -320,6 +324,7 @@ class InnsendingMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
 
             val innsendingMottattHendelse =
@@ -388,12 +393,12 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
@@ -407,6 +412,7 @@ class InnsendingMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = mockk(relaxed = true),
                 )
 
             val innsendingMottattHendelse =
@@ -423,13 +429,13 @@ class InnsendingMediatorTest {
                 innsendingMottattHendelse,
             )
             verify(exactly = 0) {
-                innsendingRepository.lagre(any())
+                innsendingRepository.lagre(any(), any())
             }
             verify(exactly = 0) {
-                sakMediatorMock.knyttBehandlingTilSak(any(), any(), any())
+                sakMediatorMock.knyttBehandlingTilSak(any(), any(), any(), any())
             }
             verify(exactly = 0) {
-                oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any())
+                oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any())
             }
         }
     }
@@ -445,6 +451,7 @@ class InnsendingMediatorTest {
                 personMediator = personMediatorMock,
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
+                transaksjoner = mockk(relaxed = true),
             )
 
         val innsendingMottattHendelse =
@@ -462,20 +469,59 @@ class InnsendingMediatorTest {
         ) shouldBe HåndterInnsendingResultat.UhåndtertInnsending
 
         verify(exactly = 1) {
-            oppgaveMediatorMock.taImotEttersending(innsendingMottattHendelse)
+            oppgaveMediatorMock.settEmneknaggEttersending(innsendingMottattHendelse)
         }
 
         verify(exactly = 0) {
-            innsendingRepository.lagre(any())
+            innsendingRepository.lagre(any(), any())
         }
         verify(exactly = 0) {
             innsendingBehandler.utførAksjon(any(), any())
         }
         verify(exactly = 0) {
-            sakMediatorMock.knyttBehandlingTilSak(any(), any(), any())
+            sakMediatorMock.knyttBehandlingTilSak(any(), any(), any(), any())
         }
         verify(exactly = 0) {
-            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any())
+            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `Ettersending til søknad som ikke er ferdigbehandlet skal registreres på eksisterende oppgave uten ny innsending`() {
+        val innsendingRepository = mockk<InnsendingRepository>(relaxed = false)
+        val innsendingBehandler = mockk<InnsendingBehandler>()
+        val mediator =
+            InnsendingMediator(
+                sakMediator = sakMediatorMock,
+                oppgaveMediator = oppgaveMediatorMock,
+                personMediator = personMediatorMock,
+                innsendingRepository = innsendingRepository,
+                innsendingBehandler = innsendingBehandler,
+                transaksjoner = mockk(relaxed = true),
+            )
+
+        val innsendingMottattHendelse =
+            InnsendingMottattHendelse(
+                ident = personMedSak.ident,
+                journalpostId = journalpostId,
+                registrertTidspunkt = registrertTidspunkt,
+                søknadId = søknadIdSomIkkeErFerdigBehandlet,
+                skjemaKode = skjemaKode,
+                kategori = Kategori.ETTERSENDING,
+            )
+
+        mediator.taImotInnsending(
+            innsendingMottattHendelse,
+        ) shouldBe HåndterInnsendingResultat.HåndtertInnsending(sakId)
+
+        verify(exactly = 1) {
+            oppgaveMediatorMock.settEmneknaggEttersending(innsendingMottattHendelse)
+        }
+        verify(exactly = 0) {
+            innsendingRepository.lagre(any(), any())
+        }
+        verify(exactly = 0) {
+            oppgaveMediatorMock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any())
         }
     }
 
@@ -517,18 +563,18 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(lazy { it }))
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -536,6 +582,7 @@ class InnsendingMediatorTest {
                     personMediator = personMediatorMock,
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -629,7 +676,7 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val behandlingKlientMock =
@@ -639,13 +686,13 @@ class InnsendingMediatorTest {
                 }
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(lazy { it }))
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -658,6 +705,7 @@ class InnsendingMediatorTest {
                             behandlingKlient = behandlingKlientMock,
                             oppfølgingMediator = mockk(),
                         ),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -774,7 +822,7 @@ class InnsendingMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediatorMock,
-                    sakRepository = PostgresSakRepository(DatabaseSession(lazy { it })),
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
                     rapidsConnection = mockk(relaxed = true),
                 )
             val behandlingKlientMock =
@@ -784,13 +832,13 @@ class InnsendingMediatorTest {
                 }
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(lazy { it })),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
                     rapidsConnection = mockk(relaxed = true),
                 )
-            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(lazy { it }))
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
                 InnsendingMediator(
                     sakMediator = sakMediator,
@@ -803,6 +851,7 @@ class InnsendingMediatorTest {
                             behandlingKlient = behandlingKlientMock,
                             oppfølgingMediator = mockk(),
                         ),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -873,6 +922,274 @@ class InnsendingMediatorTest {
                     opprettetBehandlingId = behandlingIdManuell,
                     utførtAv = saksbehandler,
                 )
+        }
+    }
+
+    @Test
+    fun `taImotInnsendingPåSisteSak ruller tilbake alle DB-endringer hvis oppgave-lagring feiler`() {
+        val sak =
+            Sak(
+                sakId = sakId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val databaseSession = DatabaseSession(it)
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                mockk<OppgaveMediator>().also { mock ->
+                    every { mock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any()) } throws
+                        RuntimeException("DB-feil ved lagring av oppgave")
+                }
+            val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(databaseSession),
+                )
+
+            runCatching {
+                innsendingMediator.taImotInnsending(
+                    InnsendingMottattHendelse(
+                        ident = testPerson.ident,
+                        journalpostId = journalpostId,
+                        registrertTidspunkt = registrertTidspunkt,
+                        søknadId = null,
+                        skjemaKode = skjemaKode,
+                        kategori = Kategori.KLAGE,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at innsending IKKE ble lagret (rollback)
+            innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident) shouldBe emptyList()
+
+            // Verifiser at saken fortsatt bare har 1 behandling (rollback)
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }!!.behandlinger().size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `taImotEttersendingTilSøknad ruller tilbake alle DB-endringer hvis oppgave-lagring feiler`() {
+        val sak =
+            Sak(
+                sakId = sakId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val databaseSession = DatabaseSession(it)
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                mockk<OppgaveMediator>().also { mock ->
+                    every { mock.oppgaveTilstandForSøknad(søknadId, any()) } returns FERDIG_BEHANDLET
+                    every { mock.settEmneknaggEttersending(any(), any()) } just Runs
+                    every { mock.lagOppgaveForInnsendingBehandling(any(), any(), any(), any()) } throws
+                        RuntimeException("DB-feil ved lagring av oppgave")
+                }
+            val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(databaseSession),
+                )
+
+            runCatching {
+                innsendingMediator.taImotInnsending(
+                    InnsendingMottattHendelse(
+                        ident = testPerson.ident,
+                        journalpostId = journalpostId,
+                        registrertTidspunkt = registrertTidspunkt,
+                        søknadId = søknadId,
+                        skjemaKode = skjemaKode,
+                        kategori = Kategori.ETTERSENDING,
+                    ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at innsending IKKE ble lagret (rollback)
+            innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident) shouldBe emptyList()
+
+            // Verifiser at saken fortsatt bare har 1 behandling (rollback)
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }!!.behandlinger().size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `automatiskFerdigstill ruller tilbake innsending hvis avbryt av oppgave feiler`() {
+        val søknadIdGjenopptak = UUIDv7.ny()
+        val sak =
+            Sak(
+                sakId = UUIDv7.ny(),
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger = mutableSetOf(),
+            )
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+                merkSomEgenSak = true,
+            )
+            val databaseSession = DatabaseSession(it)
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val innsendingRepository = PostgresInnsendingRepository(databaseSession)
+
+            // Oppretter innsending med ekte oppgaveMediator
+            val ekteOppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            InnsendingMediator(
+                sakMediator = sakMediator,
+                oppgaveMediator = ekteOppgaveMediator,
+                personMediator = personMediatorMock,
+                innsendingRepository = innsendingRepository,
+                innsendingBehandler = mockk(),
+                transaksjoner = Transaksjoner(databaseSession),
+            ).taImotInnsending(
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = søknadIdGjenopptak,
+                    skjemaKode = skjemaKode,
+                    kategori = Kategori.GJENOPPTAK,
+                ),
+            )
+            val tilstandFør =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single().tilstand()
+
+            // Ferdigstill automatisk med oppgaveMediator som feiler på avbryt
+            val feilendeOppgaveMediator =
+                mockk<OppgaveMediator>().also { mock ->
+                    every { mock.avbrytOppgave(any(), any()) } throws
+                        RuntimeException("DB-feil ved avbryt av oppgave")
+                }
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = feilendeOppgaveMediator,
+                    personMediator = personMediatorMock,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler = mockk(),
+                    transaksjoner = Transaksjoner(databaseSession),
+                )
+
+            runCatching {
+                innsendingMediator.automatiskFerdigstill(
+                    hendelse =
+                        BehandlingOpprettetForSøknadHendelse(
+                            ident = testPerson.ident,
+                            søknadId = søknadIdGjenopptak,
+                            behandlingId = behandlingIdSøknad,
+                        ),
+                )
+            }.isFailure shouldBe true
+
+            // Verifiser at innsending IKKE ble ferdigstilt (rollback)
+            val innsendingEtter =
+                innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
+            innsendingEtter.tilstand() shouldBe tilstandFør
+            innsendingEtter.tilstand() shouldNotBe "FERDIGSTILT"
         }
     }
 

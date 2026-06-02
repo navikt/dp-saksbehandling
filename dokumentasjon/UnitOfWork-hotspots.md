@@ -50,12 +50,45 @@ felles `Session` gjennom alle repo-kall innenfor en transaksjon.
 
 ## Anbefalt rekkefølge
 
-1. **Innfør infrastruktur**: `DatabaseSession` + `PostgresUnitOfWork` (etter dp-behandling-mønster)
-2. **Migrer 🔴 hotspots**: Rene DB-writes, ingen ekstern I/O — trygt å samle i transaksjon
+1. ✅ **Innfør infrastruktur**: `DatabaseSession` + `PostgresUnitOfWork` (etter dp-behandling-mønster)
+2. ✅ **Migrer 🔴 hotspots**: Rene DB-writes, ingen ekstern I/O — trygt å samle i transaksjon
 3. **Vurder 🟡 hotspots**: For flows med HTTP/Kafka — vurder om DB-delen kan isoleres i transaksjon med I/O utenfor
 4. **Outbox-pattern**: For flows der DB+event-konsistens er kritisk
+
+## Status (2026-06-01)
+
+Alle 🔴 røde hotspots (#1–5) er wrappet i transaksjon via PR-stack #386→#387→#389.
+Alle 🟡 gule er enten wrappet (der mulig), bevisst ikke wrappet (HTTP i midten), eller mitigert med alarm-jobb.
+
+### Nye funn fra fullstendig mediator-gjennomgang
+
+| # | Flow | Type | Risiko | Beskrivelse |
+|---|------|------|--------|-------------|
+| 13 | `OppgaveMediator.endreMeldingOmVedtakKilde()` | DB+DB | Lav | `lagre(oppgave)` → `slettUtsending`. Reverser rekkefølge eller wrap i tx |
+| 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Medium** | `lagre(oppgave)` → Kafka `avbryt_behandling`. Ingen alarm-jobb dekker dette. dp-behandling vet ikke om avbruddet ved krasj |
+| 15 | `SakMediator.opprettSak()` | DB+DB | Lav | `finnEllerOpprettPerson` → `lagre(sakHistorikk)`. Idempotent ved retry |
+
+### Re-vurdering av nye funn (2026-06-01)
+
+Etter kritisk gjennomgang: **#13/#14/#15 er ikke reelle problemer** for cross-repo transaksjonshåndtering.
+
+| # | Flow | Type | Konklusjon |
+|---|------|------|------------|
+| 13 | `OppgaveMediator.endreMeldingOmVedtakKilde()` | DB+DB | **Ikke problem.** API-trigget (synkron). `slettUtsending` er separat, trygg. Feiler den, får saksbehandler HTTP-feil og prøver på nytt; `endreMeldingOmVedtakKilde` er idempotent. Selvhelende ved retry |
+| 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Ikke cross-repo-hotspot.** Dette er dual-write (DB+Kafka), annen problemklasse enn UoW. API-trigget. `rapidsConnection.publish` kaster sjelden; vinduet er app-krasj mellom to linjer. Akseptert R&R-tradeoff på tvers av hele kodebasen |
+| 15 | `SakMediator.opprettSak()` | DB+DB | **Ikke problem.** Kafka-trigget → River reprosesserer ved feil (onPacket kaster = ingen ack). `finnEllerOpprettPerson` idempotent. Selvhelende |
+
+### Funn som ble fikset
+
+| # | Flow | Fil | Beskrivelse | Status |
+|---|------|-----|-------------|--------|
+| 16 | `InnsendingMediator.automatiskFerdigstill()` | `innsending/InnsendingMediator.kt:133` | `innsendingRepo.lagre` → `oppgaveMediator.avbrytOppgave` (cross-repo, ingen HTTP imellom). Var ikke wrappet — strukturelt identisk med #2/#3 | ✅ Wrappet i tx (la til `ctx`-param på `avbrytOppgave`) + rollback-test |
+
+**Konklusjon:** Etter wrapping av #16 er alle ekte cross-repo DB-write-flows uten ekstern I/O dekket. Gjenstående uvwrappede flows har enten HTTP/Kafka imellom (bevisst, mitigert av alarm-jobber) eller er selvhelende via River-retry/idempotens.
 
 ## Notater
 
 - `OppfølgingMediator.ferdigstill()` har bevisst split-transaksjon (se Oppfølging.md) — mitigert av OppfølgingAlarmJob
+- `InnsendingMediator.ferdigstill()` har bevisst split-transaksjon — mitigert av InnsendingAlarmJob
 - `ferdigstillOppgaveMedUtsending()` har allerede compensating delete — fungerer, men er sårbar for app-krasj mellom steg 1 og 3
+- `OppgaveTilstandAlertJob` sjekker kun oppgaver stuck i `OPPRETTET` — dekker ikke #14

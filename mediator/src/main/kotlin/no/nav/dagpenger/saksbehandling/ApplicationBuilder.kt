@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.databaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppfolging.PostgresOppfølgingRepository
@@ -35,8 +36,6 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandlingUtførtMottakForOppgave
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandlingUtførtMottakForUtsending
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottak
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
@@ -180,6 +179,7 @@ internal class ApplicationBuilder(
                     )
                 val klageMediator =
                     KlageMediator(
+                        transaksjoner = Transaksjoner(databaseSession),
                         klageRepository = klageRepository,
                         oppgaveMediator = oppgaveMediator,
                         utsendingMediator = utsendingMediator,
@@ -190,6 +190,7 @@ internal class ApplicationBuilder(
                     )
                 val oppfølgingMediator =
                     OppfølgingMediator(
+                        transaksjoner = Transaksjoner(databaseSession),
                         oppfølgingRepository = PostgresOppfølgingRepository(databaseSession),
                         oppfølgingBehandler =
                             OppfølgingBehandler(
@@ -212,6 +213,7 @@ internal class ApplicationBuilder(
                                 behandlingKlient = behandlingKlient,
                                 oppfølgingMediator = oppfølgingMediator,
                             ),
+                        transaksjoner = Transaksjoner(databaseSession),
                     )
 
                 server.application.installerApis(
@@ -298,14 +300,6 @@ internal class ApplicationBuilder(
                 UtsendingDistribuertMottakForKlage(
                     rapidsConnection = rapid,
                     klageMediator = klageMediator,
-                )
-                KlageBehandlingUtførtMottakForUtsending(
-                    rapidsConnection = rapid,
-                    utsendingMediator = utsendingMediator,
-                )
-                KlageBehandlingUtførtMottakForOppgave(
-                    rapidsConnection = rapid,
-                    oppgaveMediator = oppgaveMediator,
                 )
                 OpprettOppgaveMottak(
                     rapidsConnection = rapid,

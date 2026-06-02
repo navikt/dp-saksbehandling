@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -15,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
@@ -26,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.util.UUID
 
@@ -33,6 +35,7 @@ private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class KlageMediator(
+    private val transaksjoner: Transaksjoner,
     private val klageRepository: KlageRepository,
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
@@ -52,9 +55,10 @@ class KlageMediator(
         return klageRepository.hentKlageBehandling(behandlingId)
     }
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
-        // todo her kan en Exception kastes hvis personen ikke finnes
-
+    fun opprettKlage(
+        klageMottattHendelse: KlageMottattHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ): Oppgave {
         val klageBehandling =
             KlageBehandling(
                 journalpostId = klageMottattHendelse.journalpostId,
@@ -67,7 +71,6 @@ class KlageMediator(
                         ),
                     ),
             )
-        klageRepository.lagre(klageBehandling)
 
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
@@ -78,33 +81,46 @@ class KlageMediator(
                 type = HendelseBehandler.Intern.Klage,
                 utførtAv = klageMottattHendelse.utførtAv,
             )
-        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
-        rapidsConnection.publish(
-            key = klageMottattHendelse.ident,
-            message =
-                JsonMessage
-                    .newMessage(
-                        mapOf(
-                            "@event_name" to "klage_behandling_opprettet",
-                            "behandlingId" to klageBehandling.behandlingId,
-                            "sakId" to klageMottattHendelse.sakId,
-                            "ident" to klageMottattHendelse.ident,
-                            "mottatt" to klageMottattHendelse.opprettet,
-                        ).let { base ->
-                            klageMottattHendelse.journalpostId?.let { journalpostId ->
-                                base + ("journalpostId" to journalpostId)
-                            } ?: base
-                        },
-                    ).toJson(),
-        )
-        return runCatching {
-            oppgaveMediator.opprettOppgaveForKlageBehandling(
-                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+
+        val oppgave =
+            transaksjoner.transaksjon(ctx) { aktiv ->
+                klageRepository.lagre(klageBehandling, aktiv)
+                val sakHistorikk = sakMediator.knyttTilSak(behandlingOpprettetHendelse, aktiv)
+                oppgaveMediator.lagOppgaveForKlage(
+                    hendelse = behandlingOpprettetHendelse,
+                    sakHistorikk = sakHistorikk,
+                    ctx = aktiv,
+                )
+            }
+
+        logger.info { "Klagebehandling ${klageBehandling.behandlingId} opprettet med oppgave ${oppgave.oppgaveId}" }
+
+        try {
+            rapidsConnection.publish(
+                key = klageMottattHendelse.ident,
+                message =
+                    JsonMessage
+                        .newMessage(
+                            mapOf(
+                                "@event_name" to "klage_behandling_opprettet",
+                                "behandlingId" to klageBehandling.behandlingId,
+                                "sakId" to klageMottattHendelse.sakId,
+                                "ident" to klageMottattHendelse.ident,
+                                "mottatt" to klageMottattHendelse.opprettet,
+                            ).let { base ->
+                                klageMottattHendelse.journalpostId?.let { journalpostId ->
+                                    base + ("journalpostId" to journalpostId)
+                                } ?: base
+                            },
+                        ).toJson(),
             )
-        }.onFailure { e ->
-            logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
-            throw e
-        }.getOrThrow()
+        } catch (e: Exception) {
+            logger.error(e) {
+                "Kunne ikke publisere klage_behandling_opprettet for ${klageBehandling.behandlingId}, men DB er OK"
+            }
+        }
+
+        return oppgave
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
@@ -121,8 +137,6 @@ class KlageMediator(
                     ),
             )
 
-        klageRepository.lagre(klageBehandling)
-
         val utførtAv = manuellKlageMottattHendelse.utførtAv
         val behandlingOpprettetHendelse =
             BehandlingOpprettetHendelse(
@@ -133,25 +147,17 @@ class KlageMediator(
                 type = HendelseBehandler.Intern.Klage,
                 utførtAv = utførtAv,
             )
-        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
 
-        return runCatching {
-            oppgaveMediator
-                .opprettOppgaveForKlageBehandling(
-                    behandlingOpprettetHendelse = behandlingOpprettetHendelse,
-                ).also { oppgave ->
-                    oppgaveMediator.tildelOppgave(
-                        SettOppgaveAnsvarHendelse(
-                            oppgaveId = oppgave.oppgaveId,
-                            ansvarligIdent = utførtAv.navIdent,
-                            utførtAv = utførtAv,
-                        ),
-                    )
-                }
-        }.onFailure { e ->
-            logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
-            throw e
-        }.getOrThrow()
+        return transaksjoner.transaksjon { ctx ->
+            klageRepository.lagre(klageBehandling, ctx)
+            val sakHistorikk = sakMediator.knyttTilSak(behandlingOpprettetHendelse, ctx)
+            oppgaveMediator.lagOppgaveForKlage(
+                hendelse = behandlingOpprettetHendelse,
+                sakHistorikk = sakHistorikk,
+                saksbehandler = utførtAv,
+                ctx = ctx,
+            )
+        }
     }
 
     fun oppdaterKlageOpplysning(
@@ -203,8 +209,15 @@ class KlageMediator(
                 }
             val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
 
-            if (klageBehandling.utfall() in setOf(UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST)) {
-                val htmlDeferred =
+            val utsendingType =
+                when (klageBehandling.utfall()) {
+                    UtfallType.OPPRETTHOLDELSE -> UtsendingType.KLAGE_OVERSENDELSE
+                    UtfallType.AVVIST -> UtsendingType.KLAGE_AVVIST
+                    else -> null
+                }
+
+            val html =
+                utsendingType?.let {
                     async(Dispatchers.IO) {
                         meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
                             person = personDeferred.await(),
@@ -215,37 +228,43 @@ class KlageMediator(
                             utløstAvType = HendelseBehandler.Intern.Klage,
                             sakId = sakId.toString(),
                         )
-                    }
-                val html = htmlDeferred.await().getOrThrow()
-                val utsendingType =
-                    when (klageBehandling.utfall()) {
-                        UtfallType.OPPRETTHOLDELSE -> UtsendingType.KLAGE_OVERSENDELSE
-                        UtfallType.AVVIST -> UtsendingType.KLAGE_AVVIST
-                        else -> throw IllegalStateException("Kan ikke opprette utsending for utfall: ${klageBehandling.utfall()}")
-                    }
-                utsendingMediator.opprettUtsending(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    brev = html,
-                    ident = oppgave.personIdent(),
-                    type = utsendingType,
+                    }.await().getOrThrow()
+                }
+
+            transaksjoner.transaksjon { ctx ->
+                if (utsendingType != null && html != null) {
+                    utsendingMediator.opprettUtsending(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        brev = html,
+                        ident = oppgave.personIdent(),
+                        type = utsendingType,
+                        ctx = ctx,
+                    )
+                }
+                klageRepository.lagre(klageBehandling, ctx)
+                oppgaveMediator.ferdigstillOppgave(
+                    behandlingId = hendelse.behandlingId,
+                    saksbehandler = hendelse.utførtAv,
+                    ctx = ctx,
                 )
             }
 
-            klageRepository.lagre(klageBehandling)
-            rapidsConnection.publish(
-                oppgave.personIdent(),
-                JsonMessage
-                    .newMessage(
-                        mapOf(
-                            "@event_name" to "klage_behandling_utført",
-                            "behandlingId" to klageBehandling.behandlingId,
-                            "sakId" to sakId,
-                            "ident" to oppgave.personIdent(),
-                            "utfall" to klageBehandling.utfall()!!.name,
-                            "saksbehandler" to hendelse.utførtAv,
-                        ),
-                    ).toJson(),
-            )
+            logger.info { "Klagebehandling ${klageBehandling.behandlingId} utført — utsending, klage og oppgave lagret i transaksjon" }
+
+            if (utsendingType != null) {
+                utsendingMediator.mottaStartUtsending(
+                    StartUtsendingHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        utsendingSak =
+                            UtsendingSak(
+                                id = sakId.toString(),
+                                kontekst = "Dagpenger",
+                            ),
+                        ident = oppgave.personIdent(),
+                    ),
+                )
+            }
+
             klageBehandling
         }
     }
@@ -265,8 +284,11 @@ class KlageMediator(
                     klageBehandling.avbryt(hendelse = hendelse)
                 }
 
-        klageRepository.lagre(klageBehandling)
-        oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
+        transaksjoner.transaksjon { ctx ->
+            klageRepository.lagre(klageBehandling, ctx)
+            oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse, ctx = ctx)
+        }
+        logger.info { "Klagebehandling ${klageBehandling.behandlingId} avbrutt — klage og oppgave lagret i transaksjon" }
         return klageBehandling
     }
 

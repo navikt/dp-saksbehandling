@@ -10,6 +10,8 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.SkjermetPersonException
@@ -115,17 +117,20 @@ class SakMediator(
         return sak
     }
 
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
-                sjekkResultat(
-                    behandlingOpprettetHendelse.behandlingId,
-                    behandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
-                )
-            }
-            sakRepository.lagre(it)
+    fun knyttTilSak(
+        behandlingOpprettetHendelse: BehandlingOpprettetHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ): SakHistorikk {
+        val sakHistorikk = sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident)
+        sakHistorikk.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
+            sjekkResultat(
+                behandlingOpprettetHendelse.behandlingId,
+                behandlingOpprettetHendelse.javaClass.simpleName,
+                resultat,
+            )
         }
+        sakRepository.lagre(sakHistorikk, ctx)
+        return sakHistorikk
     }
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
@@ -238,6 +243,7 @@ class SakMediator(
     fun knyttEttersendingTilSammeSakSomSøknad(
         behandling: Behandling,
         hendelse: InnsendingMottattHendelse,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         requireNotNull(hendelse.søknadId) { "Ettersending må ha søknadId for å knyttes til samme sak som søknaden" }
         val sakId =
@@ -246,7 +252,7 @@ class SakMediator(
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
             sakHistorikk?.dagpengeSaker()?.find { sak -> sak.sakId == sakId }?.let { sak ->
                 sak.leggTilBehandling(behandling)
-                sakRepository.lagre(sakHistorikk)
+                sakRepository.lagre(sakHistorikk, ctx)
             } ?: throw IllegalStateException("Fant ingen sak for søknadId: ${hendelse.søknadId}")
         }
     }
@@ -255,6 +261,7 @@ class SakMediator(
         behandling: Behandling,
         hendelse: InnsendingMottattHendelse,
         sakId: UUID,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         sakRepository.finnSakHistorikk(ident = hendelse.ident).let { sakHistorikk ->
             sakHistorikk
@@ -265,7 +272,7 @@ class SakMediator(
                     sak.leggTilBehandling(
                         behandling = behandling,
                     )
-                    sakRepository.lagre(sakHistorikk)
+                    sakRepository.lagre(sakHistorikk, ctx)
                 } ?: throw IllegalStateException("Fant ikke sak med id: $sakId")
         }
     }
@@ -273,11 +280,13 @@ class SakMediator(
     fun lagreBehandling(
         personId: UUID,
         behandling: Behandling,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         sakRepository.lagreBehandling(
             personId = personId,
             sakId = null,
             behandling = behandling,
+            ctx = ctx,
         )
     }
 }

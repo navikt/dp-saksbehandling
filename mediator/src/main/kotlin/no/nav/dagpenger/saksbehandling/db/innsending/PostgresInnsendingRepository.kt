@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
@@ -17,8 +18,11 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 class PostgresInnsendingRepository(
     private val databaseSession: DatabaseSession,
 ) : InnsendingRepository {
-    override fun lagre(innsending: Innsending) {
-        databaseSession.transaction {
+    override fun lagre(
+        innsending: Innsending,
+        ctx: Transaksjonskontekst,
+    ) {
+        databaseSession.inContext(ctx) {
             val innsendingResultat = innsending.innsendingResultat()
             session.run(
                 queryOf(
