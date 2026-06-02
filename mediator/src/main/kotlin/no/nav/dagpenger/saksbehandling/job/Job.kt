@@ -31,6 +31,7 @@ abstract class Job(
             )
         val Int.Dag get() = this * 1000L * 60L * 60L * 24L
         val Int.Minutt get() = this * 1000L * 60L
+        val Int.Sekund get() = this * 1000L
 
         fun getNextOccurrence(
             hour: Int,

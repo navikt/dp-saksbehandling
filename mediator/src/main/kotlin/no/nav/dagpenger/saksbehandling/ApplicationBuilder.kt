@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.Sekund
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
@@ -57,6 +58,9 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingBehandler
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
+import no.nav.dagpenger.saksbehandling.outbox.OutboxCleanupJob
+import no.nav.dagpenger.saksbehandling.outbox.OutboxJob
+import no.nav.dagpenger.saksbehandling.outbox.PostgresOutbox
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -97,6 +101,9 @@ internal class ApplicationBuilder(
     private lateinit var oppfølgingAlarmJob: Timer
     private lateinit var oppgaveFristUtgåttJob: Timer
     private lateinit var metrikkJob: Timer
+    private lateinit var outboxJob: Timer
+    private lateinit var outboxCleanupJob: Timer
+    private val outbox = PostgresOutbox()
     private lateinit var statistikkJob: Timer
     private lateinit var oppgaveTilstandAlertJob: Timer
 
@@ -357,6 +364,19 @@ internal class ApplicationBuilder(
                     MetrikkJob().startJob(
                         startAt = now,
                         period = 5.Minutt,
+                    )
+                outboxJob =
+                    OutboxJob(
+                        dataSource = dataSource,
+                        rapidsConnection = rapid,
+                    ).startJob(
+                        startAt = now,
+                        period = 5.Sekund,
+                    )
+                outboxCleanupJob =
+                    OutboxCleanupJob(dataSource = dataSource).startJob(
+                        startAt = getNextOccurrence(3, 30),
+                        period = 1.Dag,
                     )
             }
 
