@@ -12,7 +12,7 @@ class OutboxCleanupJob(
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        val slettet = repository.slettSendteEldreEnn(LocalDateTime.now().minusDays(7))
+        val slettet = repository.slettMedTilstandEldreEnn(OutboxTilstand.SENDT.name, LocalDateTime.now().minusDays(7))
         logger.info { "Slettet $slettet utgåtte outbox-records (SENDT > 7 dager)" }
     }
 }

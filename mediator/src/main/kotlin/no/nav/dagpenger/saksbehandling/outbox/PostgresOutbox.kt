@@ -13,5 +13,5 @@ class PostgresOutbox(
         key: String,
         message: String,
         ctx: Transaksjonskontekst.Aktiv,
-    ) = repository.lagre(key = key, message = message, ctx = ctx)
+    ) = repository.lagre(key = key, message = message, tilstand = OutboxTilstand.PENDING.name, ctx = ctx)
 }

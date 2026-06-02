@@ -11,6 +11,9 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class PostgresOutboxRepositoryTest {
+    private val pending = OutboxTilstand.PENDING.name
+    private val sendt = OutboxTilstand.SENDT.name
+
     @Test
     fun `lagre skriver record i delt transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
@@ -18,10 +21,10 @@ class PostgresOutboxRepositoryTest {
             val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
-                repository.lagre(key = "123", message = """{"a":1}""", ctx = ctx)
+                repository.lagre(key = "123", message = """{"a":1}""", tilstand = pending, ctx = ctx)
             }
 
-            repository.hentPending().size shouldBe 1
+            repository.hentMedTilstand(pending).size shouldBe 1
         }
     }
 
@@ -33,72 +36,90 @@ class PostgresOutboxRepositoryTest {
 
             runCatching {
                 transaksjoner.transaksjon { ctx ->
-                    repository.lagre(key = "123", message = """{"a":1}""", ctx = ctx)
+                    repository.lagre(key = "123", message = """{"a":1}""", tilstand = pending, ctx = ctx)
                     error("feil")
                 }
             }
 
-            repository.hentPending().size shouldBe 0
+            repository.hentMedTilstand(pending).size shouldBe 0
         }
     }
 
     @Test
-    fun `hentPending returnerer i FIFO-rekkefølge og respekterer limit`() {
+    fun `hentMedTilstand returnerer i FIFO-rekkefølge og respekterer limit`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
             val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
-                repository.lagre("a", """{"i":"a"}""", ctx)
-                repository.lagre("b", """{"i":"b"}""", ctx)
-                repository.lagre("c", """{"i":"c"}""", ctx)
+                repository.lagre("a", """{"i":"a"}""", pending, ctx)
+                repository.lagre("b", """{"i":"b"}""", pending, ctx)
+                repository.lagre("c", """{"i":"c"}""", pending, ctx)
             }
 
-            val pending = repository.hentPending(limit = 2)
-            pending.size shouldBe 2
-            pending.map { it.key } shouldBe listOf("a", "b")
+            val records = repository.hentMedTilstand(pending, limit = 2)
+            records.size shouldBe 2
+            records.map { it.key } shouldBe listOf("a", "b")
         }
     }
 
     @Test
-    fun `markerSendt setter status til SENDT`() {
+    fun `hentMedTilstand filtrerer på tilstand`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
             val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
-                repository.lagre("a", """{"i":"a"}""", ctx)
+                repository.lagre("a", """{"i":"a"}""", pending, ctx)
+                repository.lagre("b", """{"i":"b"}""", pending, ctx)
             }
-            val record = repository.hentPending().single()
+            val b = repository.hentMedTilstand(pending).first { it.key == "b" }
+            repository.oppdaterTilstand(b.id, sendt)
 
-            repository.markerSendt(record.id)
-
-            repository.hentPending().size shouldBe 0
-            statusFor(ds, record.id) shouldBe "SENDT"
+            repository.hentMedTilstand(pending).map { it.key } shouldBe listOf("a")
+            repository.hentMedTilstand(sendt).map { it.key } shouldBe listOf("b")
         }
     }
 
     @Test
-    fun `slettSendteEldreEnn sletter kun gamle SENDT-records`() {
+    fun `oppdaterTilstand setter ny tilstand`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
             val repository = PostgresOutboxRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
-                repository.lagre("gammel", """{"i":"g"}""", ctx)
-                repository.lagre("ny", """{"i":"n"}""", ctx)
+                repository.lagre("a", """{"i":"a"}""", pending, ctx)
             }
-            val records = repository.hentPending()
+            val record = repository.hentMedTilstand(pending).single()
+
+            repository.oppdaterTilstand(record.id, sendt)
+
+            repository.hentMedTilstand(pending).size shouldBe 0
+            statusFor(ds, record.id) shouldBe sendt
+        }
+    }
+
+    @Test
+    fun `slettMedTilstandEldreEnn sletter kun gamle records med angitt tilstand`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val transaksjoner = Transaksjoner(DatabaseSession(ds))
+            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+
+            transaksjoner.transaksjon { ctx ->
+                repository.lagre("gammel", """{"i":"g"}""", pending, ctx)
+                repository.lagre("ny", """{"i":"n"}""", pending, ctx)
+            }
+            val records = repository.hentMedTilstand(pending)
             val gammel = records.first { it.key == "gammel" }
             val ny = records.first { it.key == "ny" }
-            repository.markerSendt(gammel.id)
-            repository.markerSendt(ny.id)
+            repository.oppdaterTilstand(gammel.id, sendt)
+            repository.oppdaterTilstand(ny.id, sendt)
             settCreatedAt(ds, gammel.id, LocalDateTime.now().minusDays(10))
 
-            val slettet = repository.slettSendteEldreEnn(LocalDateTime.now().minusDays(7))
+            val slettet = repository.slettMedTilstandEldreEnn(sendt, LocalDateTime.now().minusDays(7))
 
             slettet shouldBe 1
-            statusFor(ds, ny.id) shouldBe "SENDT"
+            statusFor(ds, ny.id) shouldBe sendt
             statusFor(ds, gammel.id) shouldBe null
         }
     }

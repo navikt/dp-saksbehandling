@@ -19,10 +19,10 @@ class OutboxPublisher(
     private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
     fun publiser() {
-        for (record in repository.hentPending()) {
+        for (record in repository.hentMedTilstand(OutboxTilstand.PENDING.name)) {
             try {
                 rapidsConnection.publish(record.key, record.message)
-                repository.markerSendt(record.id)
+                repository.oppdaterTilstand(record.id, OutboxTilstand.SENDT.name)
                 logger.info { "Publiserte outbox id=${record.id}" }
                 // fnr (key) og message-innhold KUN til sikkerlogg (GDPR)
                 sikkerlogg.info { "Publiserte outbox id=${record.id} key=${record.key}" }

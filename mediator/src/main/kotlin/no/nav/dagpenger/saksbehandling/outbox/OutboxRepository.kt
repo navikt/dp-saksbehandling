@@ -6,23 +6,37 @@ import java.time.LocalDateTime
 /**
  * Persistens-seam for outbox-tabellen. Samler all SQL-tilgang ett sted slik at
  * [PostgresOutbox], [OutboxPublisher] og [OutboxCleanupJob] holdes fri for inline SQL.
+ *
+ * Repositoryet er bevisst uvitende om hvilke tilstander som finnes — `tilstand`
+ * tas som [String]. Domenelogikken (via [OutboxTilstand]) bestemmer hvilken
+ * tilstand som lagres, hentes, oppdateres og slettes.
  */
 interface OutboxRepository {
-    /** Skriver en melding til outbox i en pågående transaksjon (delt med domeneendringen). */
+    /** Skriver en melding til outbox med [tilstand] i en pågående transaksjon (delt med domeneendringen). */
     fun lagre(
         key: String,
         message: String,
+        tilstand: String,
         ctx: Transaksjonskontekst.Aktiv,
     )
 
-    /** Henter PENDING-records i global FIFO-rekkefølge (ORDER BY id), begrenset til [limit]. */
-    fun hentPending(limit: Int = 100): List<OutboxRecord>
+    /** Henter records med [tilstand] i global FIFO-rekkefølge (ORDER BY id), begrenset til [limit]. */
+    fun hentMedTilstand(
+        tilstand: String,
+        limit: Int = 100,
+    ): List<OutboxRecord>
 
-    /** Markerer en record som SENDT etter vellykket publisering. */
-    fun markerSendt(id: Long)
+    /** Setter [tilstand] på recorden med [id]. */
+    fun oppdaterTilstand(
+        id: Long,
+        tilstand: String,
+    )
 
-    /** Sletter SENDT-records eldre enn [cutoff]. Returnerer antall slettede rader. */
-    fun slettSendteEldreEnn(cutoff: LocalDateTime): Int
+    /** Sletter records med [tilstand] eldre enn [cutoff]. Returnerer antall slettede rader. */
+    fun slettMedTilstandEldreEnn(
+        tilstand: String,
+        cutoff: LocalDateTime,
+    ): Int
 }
 
 data class OutboxRecord(
