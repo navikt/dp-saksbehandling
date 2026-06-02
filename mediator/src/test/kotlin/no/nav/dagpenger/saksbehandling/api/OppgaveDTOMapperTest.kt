@@ -8,12 +8,15 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.personIdent
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -24,17 +27,34 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDate.of
 import java.time.LocalDateTime
 
 class OppgaveDTOMapperTest {
+    private val nødbremsetPerson = TestHelper.lagPerson()
+    private val nødbremsetPdlPerson =
+        PDLPersonIntern(
+            ident = nødbremsetPerson.ident,
+            fornavn = "MIKKE",
+            etternavn = "MUS",
+            mellomnavn = "NØDBREMSET",
+            fødselsdato = of(1986, 11, 11),
+            alder = 40,
+            statsborgerskap = "NOR",
+            kjønn = PDLPerson.Kjonn.MANN,
+            adresseBeskyttelseGradering = UGRADERT,
+            sikkerhetstiltak = emptyList(),
+        )
     private val pdlKlient =
         mockk<PDLKlient>().also {
-            coEvery { it.person(TestHelper.personIdent) } returns Result.success(TestHelper.pdlPerson)
+            coEvery { it.person(personIdent) } returns Result.success(TestHelper.pdlPerson)
+            coEvery { it.person(nødbremsetPerson.ident) } returns Result.success(nødbremsetPdlPerson)
         }
     private val relevanteJournalpostIdOppslag =
         mockk<RelevanteJournalpostIdOppslag>().also {
@@ -42,7 +62,8 @@ class OppgaveDTOMapperTest {
         }
     private val personRepositoryMock =
         mockk<PersonRepository>().also {
-            every { it.erNødbremset(any()) } returns false
+            every { it.erNødbremset(ident = TestHelper.personIdent) } returns false
+            every { it.erNødbremset(ident = nødbremsetPerson.ident) } returns true
         }
 
     @Test
@@ -385,6 +406,167 @@ class OppgaveDTOMapperTest {
     }
 
     @Test
+    fun `Skal sende info om nødbremset person`() {
+        val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
+
+        runBlocking {
+            val oppgave =
+                TestHelper.lagOppgave(
+                    tilstand = Oppgave.UnderKontroll(),
+                    opprettet = etTidspunkt,
+                    person = nødbremsetPerson,
+                    tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
+                )
+
+            OppgaveDTOMapper(
+                oppslag =
+                    Oppslag(
+                        pdlKlient = pdlKlient,
+                        relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
+                        saksbehandlerOppslag =
+                            mockk<SaksbehandlerOppslag>().also {
+                                coEvery { it.hentSaksbehandler(TestHelper.saksbehandler.navIdent) } returns
+                                    BehandlerDTO(
+                                        ident = TestHelper.saksbehandler.navIdent,
+                                        fornavn = "sbfornavn",
+                                        etternavn = "sbetternavn",
+                                        enhet =
+                                            BehandlerDTOEnhetDTO(
+                                                navn = "sbEnhet",
+                                                enhetNr = "sbEnhetNr",
+                                                postadresse = "sbPostadresse",
+                                            ),
+                                    )
+                                coEvery { it.hentSaksbehandler(TestHelper.beslutter.navIdent) } returns
+                                    BehandlerDTO(
+                                        ident = TestHelper.beslutter.navIdent,
+                                        fornavn = "befornavn",
+                                        etternavn = "beetternavn",
+                                        enhet =
+                                            BehandlerDTOEnhetDTO(
+                                                navn = "beEnhet",
+                                                enhetNr = "beEnhetNr",
+                                                postadresse = "bePostadresse",
+                                            ),
+                                    )
+                            },
+                        skjermingKlient = mockk(),
+                        personRepository = personRepositoryMock,
+                    ),
+                oppgaveHistorikkDTOMapper =
+                    mockk<OppgaveHistorikkDTOMapper>().also {
+                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
+                            listOf(
+                                OppgaveHistorikkDTO(
+                                    type = OppgaveHistorikkDTOTypeDTO.NOTAT,
+                                    tidspunkt = etTidspunkt,
+                                    tittel = "Notat",
+                                    body = "Dette er et notat",
+                                    behandler =
+                                        OppgaveHistorikkDTOBehandlerDTO(
+                                            navn = "BeslutterNavn",
+                                            rolle = BehandlerDTORolleDTO.BESLUTTER,
+                                        ),
+                                ),
+                            )
+                    },
+                sakMediator =
+                    mockk<SakMediator>(),
+            ).let { mapper ->
+                val oppgaveDTO =
+                    mapper.lagOppgaveDTO(
+                        oppgave,
+                    )
+                //language=JSON
+                objectMapper.writeValueAsString(oppgaveDTO) shouldEqualJson
+                    """
+                    {
+                      "oppgaveId": "${oppgave.oppgaveId}",
+                      "behandlingId": "${oppgave.behandling.behandlingId}",
+                      "person": {
+                        "ident": "${nødbremsetPerson.ident}",
+                        "id": "${nødbremsetPerson.id}",
+                        "fornavn": "MIKKE",
+                        "etternavn": "MUS",
+                        "mellomnavn": "NØDBREMSET",
+                        "fodselsdato": "1986-11-11",
+                        "alder": 40,
+                        "kjonn": "MANN",
+                        "skjermesSomEgneAnsatte": false,
+                        "adressebeskyttelseGradering": "UGRADERT",
+                        "sikkerhetstiltak": [],
+                        "statsborgerskap": "NOR",
+                        "erNodbremset": true
+                      },
+                      "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
+                      "utlostAv": "SØKNAD",
+                      "emneknagger": [],
+                      "tilstand": "UNDER_KONTROLL",
+                      "lovligeEndringer": {
+                        "paaVentAarsaker": [],
+                        "avbrytAarsaker": [],
+                        "leggTilbakeAarsaker": [
+                          "MANGLER_KOMPETANSE",
+                          "INHABILITET",
+                          "FRAVÆR",
+                          "ANNET"
+                        ],
+                        "returnerTilSaksbehandlingAarsaker": [
+                          "FEIL_UTFALL",
+                          "FEIL_HJEMMEL",
+                          "HAR_MANGLER",
+                          "FEIL_BRUK_AV_FAGSYSTEM",
+                          "ANNET"
+                        ],
+                        "kvalitetskontrollAarsaker": []
+                      },
+                      "saksbehandler": {
+                        "ident": "SaksbehandlerIdent",
+                        "fornavn": "sbfornavn",
+                        "etternavn": "sbetternavn",
+                        "enhet": {
+                          "navn": "sbEnhet",
+                          "enhetNr": "sbEnhetNr",
+                          "postadresse": "sbPostadresse"
+                        }
+                      },
+                      "beslutter": {
+                        "ident": "BeslutterIdent",
+                        "fornavn": "befornavn",
+                        "etternavn": "beetternavn",
+                        "enhet": {
+                          "navn": "beEnhet",
+                          "enhetNr": "beEnhetNr",
+                          "postadresse": "bePostadresse"
+                        }
+                      },
+                      "journalpostIder": [
+                        "søknadJournalpostId",
+                        "vedtakJournalpostId"
+                      ],
+                      "historikk": [
+                        {
+                          "type": "notat",
+                          "tidspunkt": "2024-11-01T09:50:00",
+                          "tittel": "Notat",
+                          "body": "Dette er et notat",
+                          "behandler": {
+                            "navn": "BeslutterNavn",
+                            "rolle": "beslutter"
+                          }
+                        }
+                      ],
+                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b",
+                      "meldingOmVedtakKilde": "DP_SAK",
+                      "kontrollertBrev": "IKKE_RELEVANT"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Skal mappe og berike oppgaveDTO for manuell behandling`() {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
@@ -476,7 +658,8 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
-                        "statsborgerskap": "NOR"
+                        "statsborgerskap": "NOR",
+                        "erNodbremset": false
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
                       "behandlingType": "RETT_TIL_DAGPENGER",
