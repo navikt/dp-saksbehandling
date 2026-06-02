@@ -4,9 +4,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.matchers.shouldBe
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -25,11 +28,13 @@ class PostgresRapidOutboxTest {
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
             val repository = PostgresOutboxRepository(databaseSession)
+            val registry = PrometheusRegistry()
 
             val outbox =
                 PostgresRapidOutbox(
                     repository = repository,
                     rapidsConnection = testRapid,
+                    registry = registry,
                 )
 
             transaksjoner.transaksjon { ctx ->
@@ -37,6 +42,9 @@ class PostgresRapidOutboxTest {
             }
 
             repository.hentMedTilstand(OutboxTilstand.PENDING.name).size shouldBe 1
+            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_outbox_new_records_total" }.let { snapshot ->
+                snapshot.dataPoints.single().value shouldBe 1.0
+            }
         }
     }
 
@@ -46,11 +54,13 @@ class PostgresRapidOutboxTest {
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
             val repository = PostgresOutboxRepository(databaseSession)
+            val registry = PrometheusRegistry()
 
             val outbox =
                 PostgresRapidOutbox(
                     repository = repository,
                     rapidsConnection = testRapid,
+                    registry = registry,
                 )
 
             runCatching {
@@ -70,11 +80,13 @@ class PostgresRapidOutboxTest {
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
             val repository = PostgresOutboxRepository(databaseSession)
+            val registry = PrometheusRegistry()
 
             val outbox =
                 PostgresRapidOutbox(
                     repository = repository,
                     rapidsConnection = testRapid,
+                    registry = registry,
                 )
             transaksjoner.transaksjon { ctx ->
                 outbox.send(key = "a", message = """{"ident":"a"}""", ctx = ctx)
@@ -106,11 +118,13 @@ class PostgresRapidOutboxTest {
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
             val repository = PostgresOutboxRepository(databaseSession)
+            val registry = PrometheusRegistry()
 
             val outbox =
                 PostgresRapidOutbox(
                     repository = repository,
                     rapidsConnection = FeilendeRapid(1, testRapid),
+                    registry = registry,
                 )
 
             transaksjoner.transaksjon { ctx ->
@@ -128,6 +142,11 @@ class PostgresRapidOutboxTest {
                 it.key shouldBe "y"
                 it.message shouldBe """{"ident":"y"}"""
             }
+
+            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_outbox_published_records_total" }.let { snapshot ->
+                snapshot.dataPoints.single { it.labels["status"] == "success" }.value shouldBe 1.0
+                snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
+            }
         }
     }
 
@@ -136,10 +155,12 @@ class PostgresRapidOutboxTest {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
             val repository = PostgresOutboxRepository(databaseSession)
+            val registry = PrometheusRegistry()
 
             PostgresRapidOutbox(
                 repository = repository,
                 rapidsConnection = testRapid,
+                registry = registry,
             ).publiserVentende()
 
             testRapid.inspektør.size shouldBe 0
@@ -152,6 +173,7 @@ class PostgresRapidOutboxTest {
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
             val repository = PostgresOutboxRepository(databaseSession)
+            val registry = PrometheusRegistry()
 
             val outbox =
                 PostgresRapidOutbox(
@@ -160,6 +182,7 @@ class PostgresRapidOutboxTest {
                     // records regnes som utgått — uten å måtte manipulere created_at direkte.
                     rapidsConnection = testRapid,
                     levetidSendte = Duration.ofDays(-2),
+                    registry = registry,
                 )
 
             transaksjoner.transaksjon { ctx ->

@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling.outbox
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import java.time.Duration
 import java.time.LocalDateTime
@@ -18,6 +20,7 @@ import java.time.LocalDateTime
  * Garantier ved publisering:
  * - Global FIFO (ORDER BY id i repository)
  * - Stopper ved første feil — retry ved neste poll
+ *   (bevisst: key=fnr til én rapid-strøm, så feil er normalt globale og bør feile høyt)
  * - fnr (key) og meldingsinnhold logges kun til sikkerlogg (GDPR)
  *
  * Leveringssemantikk: **at-least-once.** [publiserVentende] gjør publish (steg 1) og
@@ -29,26 +32,34 @@ class PostgresRapidOutbox(
     private val repository: OutboxRepository,
     private val rapidsConnection: RapidsConnection,
     private val levetidSendte: Duration = Duration.ofDays(7),
+    registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
 ) : Outbox,
     OutboxVedlikehold {
     private val logger = KotlinLogging.logger {}
     private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+    private val nyeRecordsCounter = registry.lagNyeRecordsCounter()
+    private val publiserteRecordsCounter = registry.lagPubliserteRecordsCounter()
 
     override fun send(
         key: String,
         message: String,
         ctx: Transaksjonskontekst.Aktiv,
-    ) = repository.lagre(key = key, message = message, tilstand = OutboxTilstand.PENDING.name, ctx = ctx)
+    ) {
+        repository.lagre(key = key, message = message, tilstand = OutboxTilstand.PENDING.name, ctx = ctx)
+        nyeRecordsCounter.inc()
+    }
 
     override fun publiserVentende() {
         for (record in repository.hentMedTilstand(OutboxTilstand.PENDING.name)) {
             try {
                 rapidsConnection.publish(record.key, record.message)
                 repository.oppdaterTilstand(record.id, OutboxTilstand.SENDT.name)
+                publiserteRecordsCounter.inc("success")
                 logger.info { "Publiserte outbox id=${record.id}" }
                 // fnr (key) og message-innhold KUN til sikkerlogg (GDPR)
                 sikkerlogg.info { "Publiserte outbox id=${record.id} key=${record.key}" }
             } catch (e: Exception) {
+                publiserteRecordsCounter.inc("failed")
                 logger.error(e) { "Feil ved publisering av outbox id=${record.id} — stopper polling" }
                 break
             }
@@ -61,4 +72,21 @@ class PostgresRapidOutbox(
             logger.info { "Slettet $it utgåtte outbox-records (SENDT eldre enn $levetidSendte)" }
         }
     }
+
+    private fun Counter.inc(status: String) = this.labelValues(status).inc()
+
+    private fun PrometheusRegistry.lagNyeRecordsCounter(): Counter =
+        Counter
+            .builder()
+            .name("dp_saksbehandling_outbox_new_records_total")
+            .help("Antall outbox-records lagt til")
+            .register(this)
+
+    private fun PrometheusRegistry.lagPubliserteRecordsCounter(): Counter =
+        Counter
+            .builder()
+            .name("dp_saksbehandling_outbox_published_records_total")
+            .help("Antall outbox-records prosessert")
+            .labelNames("status")
+            .register(this)
 }
