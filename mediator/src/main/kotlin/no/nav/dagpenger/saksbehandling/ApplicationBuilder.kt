@@ -62,6 +62,7 @@ import no.nav.dagpenger.saksbehandling.outbox.OutboxCleanupJob
 import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisher
 import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisherJob
 import no.nav.dagpenger.saksbehandling.outbox.PostgresOutbox
+import no.nav.dagpenger.saksbehandling.outbox.PostgresOutboxRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -104,7 +105,8 @@ internal class ApplicationBuilder(
     private lateinit var metrikkJob: Timer
     private lateinit var outboxJob: Timer
     private lateinit var outboxCleanupJob: Timer
-    private val outbox = PostgresOutbox()
+    private val outboxRepository = PostgresOutboxRepository(dataSource)
+    private val outbox = PostgresOutbox(outboxRepository)
     private lateinit var statistikkJob: Timer
     private lateinit var oppgaveTilstandAlertJob: Timer
 
@@ -369,13 +371,13 @@ internal class ApplicationBuilder(
                     )
                 outboxJob =
                     OutboxPublisherJob(
-                        publisher = OutboxPublisher(dataSource = dataSource, rapidsConnection = rapid),
+                        publisher = OutboxPublisher(repository = outboxRepository, rapidsConnection = rapid),
                     ).startJob(
                         startAt = now,
                         period = 5.Sekund,
                     )
                 outboxCleanupJob =
-                    OutboxCleanupJob(dataSource = dataSource).startJob(
+                    OutboxCleanupJob(repository = outboxRepository).startJob(
                         startAt = getNextOccurrence(3, 30),
                         period = 1.Dag,
                     )

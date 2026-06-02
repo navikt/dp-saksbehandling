@@ -18,7 +18,7 @@ class OutboxPublisherTest {
         DBTestHelper.withMigratedDb { ds ->
             val rapid = TestRapid()
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val outbox = PostgresOutbox()
+            val outbox = PostgresOutbox(PostgresOutboxRepository(ds))
 
             transaksjoner.transaksjon { ctx ->
                 outbox.send("a", """{"ident":"a"}""", ctx)
@@ -26,7 +26,7 @@ class OutboxPublisherTest {
                 outbox.send("c", """{"ident":"c"}""", ctx)
             }
 
-            OutboxPublisher(ds, rapid).publiser()
+            OutboxPublisher(PostgresOutboxRepository(ds), rapid).publiser()
 
             rapid.inspektør.size shouldBe 3
             alleHarStatus(ds, "SENDT") shouldBe true
@@ -37,14 +37,14 @@ class OutboxPublisherTest {
     fun `Stopper ved første feil og lar resten stå PENDING`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val outbox = PostgresOutbox()
+            val outbox = PostgresOutbox(PostgresOutboxRepository(ds))
 
             transaksjoner.transaksjon { ctx ->
                 outbox.send("x", """{"ident":"x"}""", ctx)
                 outbox.send("y", """{"ident":"y"}""", ctx)
             }
 
-            OutboxPublisher(ds, FailOnFirstPublishRapid()).publiser()
+            OutboxPublisher(PostgresOutboxRepository(ds), FailOnFirstPublishRapid()).publiser()
 
             pendingCount(ds) shouldBe 2
         }
@@ -54,7 +54,7 @@ class OutboxPublisherTest {
     fun `Publiserer ikke når ingen PENDING records finnes`() {
         DBTestHelper.withMigratedDb { ds ->
             val rapid = TestRapid()
-            OutboxPublisher(ds, rapid).publiser()
+            OutboxPublisher(PostgresOutboxRepository(ds), rapid).publiser()
             rapid.inspektør.size shouldBe 0
         }
     }

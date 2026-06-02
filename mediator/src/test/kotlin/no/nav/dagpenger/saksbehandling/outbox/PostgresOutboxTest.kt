@@ -13,7 +13,7 @@ class PostgresOutboxTest {
     fun `send skriver til outbox-tabell i samme transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val outbox = PostgresOutbox()
+            val outbox = PostgresOutbox(PostgresOutboxRepository(ds))
 
             transaksjoner.transaksjon { ctx ->
                 outbox.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
@@ -39,7 +39,7 @@ class PostgresOutboxTest {
     fun `send ruller tilbake ved feil i samme transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val outbox = PostgresOutbox()
+            val outbox = PostgresOutbox(PostgresOutboxRepository(ds))
 
             runCatching {
                 transaksjoner.transaksjon { ctx ->
