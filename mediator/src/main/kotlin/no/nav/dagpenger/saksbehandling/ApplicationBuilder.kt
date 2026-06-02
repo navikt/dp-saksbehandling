@@ -406,6 +406,8 @@ internal class ApplicationBuilder(
         statistikkJob.cancel()
 //        oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
+        outboxJob.cancel()
+        outboxCleanupJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 
