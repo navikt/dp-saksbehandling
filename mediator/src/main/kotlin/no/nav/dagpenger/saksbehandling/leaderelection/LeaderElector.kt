@@ -27,7 +27,7 @@ object LeaderElector {
                 logger =
                     object : Logger {
                         override fun log(message: String) {
-                            log.info { message }
+                            log.debug { message }
                         }
                     }
             }
