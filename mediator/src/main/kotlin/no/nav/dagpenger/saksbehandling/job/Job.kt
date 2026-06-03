@@ -90,7 +90,7 @@ abstract class Job(
                                 executeJob()
                             }
 
-                            false -> logger.info { "Er ikke leder, kjører ikke jobb: $jobName" }
+                            false -> logger.debug { "Er ikke leder, kjører ikke jobb: $jobName" }
                         }
                     }.onFailure {
                         logger.error(it) { "Kunne ikke avgjøre om jeg er leder for jobb: $jobName" }
