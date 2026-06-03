@@ -69,7 +69,7 @@ class PostgresOutboxRepository(
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = "DELETE FROM outbox WHERE status = :status AND created_at < :cutoff",
+                    statement = "DELETE FROM outbox WHERE status = :status AND registrert_tidspunkt < :cutoff",
                     paramMap = mapOf("status" to tilstand, "cutoff" to cutoff),
                 ).asUpdate,
             )

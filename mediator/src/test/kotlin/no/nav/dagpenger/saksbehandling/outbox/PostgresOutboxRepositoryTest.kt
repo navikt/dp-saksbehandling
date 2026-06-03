@@ -145,7 +145,7 @@ class PostgresOutboxRepositoryTest {
         sessionOf(ds).use { session ->
             session.run(
                 queryOf(
-                    "UPDATE outbox SET created_at = :tid WHERE id = :id",
+                    "UPDATE outbox SET registrert_tidspunkt = :tid WHERE id = :id",
                     mapOf("tid" to tidspunkt, "id" to id),
                 ).asUpdate,
             )
