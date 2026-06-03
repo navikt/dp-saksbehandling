@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.utboks
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import java.time.Duration
@@ -39,6 +40,7 @@ class PostgresRapidUtboks(
     private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     private val nyeMeldingerCounter = registry.lagNyeMeldingerCounter()
     private val publiserteMeldingerCounter = registry.lagPubliserteMeldingerCounter()
+    private val ventendeMeldingerGauge = registry.lagVentendeMeldingerGauge()
 
     override fun send(
         key: String,
@@ -50,21 +52,27 @@ class PostgresRapidUtboks(
     }
 
     override fun publiserVentende() {
-        val meldinger = repository.hentMedTilstand(UtboksTilstand.PENDING.name)
-        logger.info { "Fant ${meldinger.size} ventende utboks-meldinger som skal sendes" }
-        for (melding in meldinger) {
-            try {
-                rapidsConnection.publish(melding.key, melding.message)
-                repository.oppdaterTilstand(melding.id, UtboksTilstand.SENDT.name)
-                publiserteMeldingerCounter.inc("success")
-                logger.info { "Publiserte utboks id=${melding.id}" }
-                // fnr (key) og message-innhold KUN til sikkerlogg (GDPR)
-                sikkerlogg.info { "Publiserte utboks id=${melding.id} key=${melding.key}" }
-            } catch (e: Exception) {
-                publiserteMeldingerCounter.inc("failed")
-                logger.error(e) { "Feil ved publisering av utboks id=${melding.id} — stopper polling" }
-                break
+        val (meldinger, totaltAntall) = repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name)
+        logger.info { "Fant $totaltAntall ventende utboks-meldinger (${meldinger.size} hentes nå)" }
+        var antallPublisert = 0
+        try {
+            for (melding in meldinger) {
+                try {
+                    rapidsConnection.publish(melding.key, melding.message)
+                    repository.oppdaterTilstand(melding.id, UtboksTilstand.SENDT.name)
+                    publiserteMeldingerCounter.inc("success")
+                    antallPublisert++
+                    logger.info { "Publiserte utboks id=${melding.id}" }
+                    // fnr (key) og message-innhold KUN til sikkerlogg (GDPR)
+                    sikkerlogg.info { "Publiserte utboks id=${melding.id} key=${melding.key}" }
+                } catch (e: Exception) {
+                    publiserteMeldingerCounter.inc("failed")
+                    logger.error(e) { "Feil ved publisering av utboks id=${melding.id} — stopper polling" }
+                    break
+                }
             }
+        } finally {
+            ventendeMeldingerGauge.set((totaltAntall - antallPublisert).toDouble())
         }
     }
 
@@ -90,5 +98,12 @@ class PostgresRapidUtboks(
             .name("dp_saksbehandling_utboks_publiserte_meldinger_total")
             .help("Antall utboks-meldinger prosessert")
             .labelNames("status")
+            .register(this)
+
+    private fun PrometheusRegistry.lagVentendeMeldingerGauge(): Gauge =
+        Gauge
+            .builder()
+            .name("dp_saksbehandling_utboks_ventende_meldinger")
+            .help("Antall utboks-meldinger som venter på å bli publisert (PENDING)")
             .register(this)
 }

@@ -20,11 +20,16 @@ interface UtboksRepository {
         ctx: Transaksjonskontekst.Aktiv,
     )
 
-    /** Henter meldinger med [tilstand] i global FIFO-rekkefølge (ORDER BY id), begrenset til [limit]. */
-    fun hentMedTilstand(
+    /**
+     * Henter meldinger med [tilstand] (FIFO, begrenset til [limit]) og returnerer også totalt antall
+     * meldinger med tilstanden — i én spørring via window-funksjon.
+     *
+     * Returnerer [Pair] der [Pair.first] er batch-listen og [Pair.second] er totalt antall (uavhengig av limit).
+     */
+    fun hentOgTellMedTilstand(
         tilstand: String,
         limit: Int = 100,
-    ): List<UtboksMelding>
+    ): Pair<List<UtboksMelding>, Int>
 
     /** Setter [tilstand] på meldingen med [id]. */
     fun oppdaterTilstand(

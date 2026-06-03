@@ -6,6 +6,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.matchers.shouldBe
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
+import io.prometheus.metrics.model.snapshots.GaugeSnapshot
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
@@ -41,7 +42,7 @@ class PostgresRapidUtboksTest {
                 utboks.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
             }
 
-            repository.hentMedTilstand(UtboksTilstand.PENDING.name).size shouldBe 1
+            repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name).first.size shouldBe 1
             registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_nye_meldinger_total" }.let { snapshot ->
                 snapshot.dataPoints.single().value shouldBe 1.0
             }
@@ -70,7 +71,7 @@ class PostgresRapidUtboksTest {
                     error("Simulert feil etter send")
                 }
             }
-            repository.hentMedTilstand(UtboksTilstand.PENDING.name).size shouldBe 0
+            repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name).first.size shouldBe 0
         }
     }
 
@@ -107,8 +108,8 @@ class PostgresRapidUtboksTest {
             testRapid.inspektør.key(2) shouldBe "c"
             testRapid.inspektør.message(2)["ident"].asString() shouldBe "c"
 
-            repository.hentMedTilstand(UtboksTilstand.PENDING.name).size shouldBe 0
-            repository.hentMedTilstand(UtboksTilstand.SENDT.name).size shouldBe 3
+            repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name).first.size shouldBe 0
+            repository.hentOgTellMedTilstand(UtboksTilstand.SENDT.name).first.size shouldBe 3
         }
     }
 
@@ -134,11 +135,11 @@ class PostgresRapidUtboksTest {
 
             utboks.publiserVentende()
 
-            repository.hentMedTilstand(UtboksTilstand.SENDT.name).single().let {
+            repository.hentOgTellMedTilstand(UtboksTilstand.SENDT.name).first.single().let {
                 it.key shouldBe "x"
                 it.message shouldBe """{"ident":"x"}"""
             }
-            repository.hentMedTilstand(UtboksTilstand.PENDING.name).single().let {
+            repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name).first.single().let {
                 it.key shouldBe "y"
                 it.message shouldBe """{"ident":"y"}"""
             }
@@ -146,6 +147,62 @@ class PostgresRapidUtboksTest {
             registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }.let { snapshot ->
                 snapshot.dataPoints.single { it.labels["status"] == "success" }.value shouldBe 1.0
                 snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
+            }
+        }
+    }
+
+    @Test
+    fun `publiserVentende setter gauge til 0 etter vellykket publisering`() {
+        Postgres.withMigratedDb { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val transaksjoner = Transaksjoner(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
+            val registry = PrometheusRegistry()
+
+            val utboks =
+                PostgresRapidUtboks(
+                    repository = repository,
+                    rapidsConnection = testRapid,
+                    registry = registry,
+                )
+
+            transaksjoner.transaksjon { ctx ->
+                utboks.send(key = "a", message = """{"ident":"a"}""", ctx = ctx)
+                utboks.send(key = "b", message = """{"ident":"b"}""", ctx = ctx)
+            }
+
+            utboks.publiserVentende()
+
+            registry.getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }.let { snapshot ->
+                snapshot.dataPoints.single().value shouldBe 0.0
+            }
+        }
+    }
+
+    @Test
+    fun `publiserVentende setter gauge til antall gjenværende ved feil`() {
+        Postgres.withMigratedDb { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val transaksjoner = Transaksjoner(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
+            val registry = PrometheusRegistry()
+
+            val utboks =
+                PostgresRapidUtboks(
+                    repository = repository,
+                    rapidsConnection = FeilendeRapid(1, testRapid),
+                    registry = registry,
+                )
+
+            transaksjoner.transaksjon { ctx ->
+                utboks.send(key = "x", message = """{"ident":"x"}""", ctx = ctx)
+                utboks.send(key = "y", message = """{"ident":"y"}""", ctx = ctx)
+            }
+
+            utboks.publiserVentende()
+
+            registry.getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }.let { snapshot ->
+                snapshot.dataPoints.single().value shouldBe 1.0
             }
         }
     }
@@ -190,10 +247,10 @@ class PostgresRapidUtboksTest {
             }
 
             utboks.publiserVentende()
-            repository.hentMedTilstand(UtboksTilstand.SENDT.name).size shouldBe 1
+            repository.hentOgTellMedTilstand(UtboksTilstand.SENDT.name).first.size shouldBe 1
 
             utboks.slettGamleSendte() shouldBe 1
-            repository.hentMedTilstand(UtboksTilstand.SENDT.name).size shouldBe 0
+            repository.hentOgTellMedTilstand(UtboksTilstand.SENDT.name).first.size shouldBe 0
         }
     }
 }

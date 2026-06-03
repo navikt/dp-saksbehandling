@@ -25,25 +25,34 @@ class PostgresUtboksRepository(
         }
     }
 
-    override fun hentMedTilstand(
+    override fun hentOgTellMedTilstand(
         tilstand: String,
         limit: Int,
-    ): List<UtboksMelding> =
+    ): Pair<List<UtboksMelding>, Int> =
         databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = "SELECT id, key, message, status FROM kafka_utboks_v1 WHERE status = :status ORDER BY id LIMIT :limit",
-                    paramMap = mapOf("status" to tilstand, "limit" to limit),
-                ).map { row ->
-                    UtboksMelding(
-                        id = row.long("id"),
-                        key = row.string("key"),
-                        message = row.string("message"),
-                        tilstand = row.string("status"),
-                    )
-                }.asList,
-            )
+            val rader =
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id, key, message, status, COUNT(*) OVER() AS totalt_antall
+                            FROM kafka_utboks_v1
+                            WHERE status = :status
+                            ORDER BY id
+                            LIMIT :limit
+                            """.trimIndent(),
+                        paramMap = mapOf("status" to tilstand, "limit" to limit),
+                    ).map { row ->
+                        UtboksMelding(
+                            id = row.long("id"),
+                            key = row.string("key"),
+                            message = row.string("message"),
+                            tilstand = row.string("status"),
+                        ) to row.int("totalt_antall")
+                    }.asList,
+                )
+            rader.map { it.first } to (rader.firstOrNull()?.second ?: 0)
         }
 
     override fun oppdaterTilstand(

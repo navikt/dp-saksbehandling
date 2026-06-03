@@ -24,7 +24,7 @@ class PostgresUtboksRepositoryTest {
                 repository.lagre(key = "123", message = """{"a":1}""", tilstand = pending, ctx = ctx)
             }
 
-            repository.hentMedTilstand(pending).size shouldBe 1
+            repository.hentOgTellMedTilstand(pending).first.size shouldBe 1
         }
     }
 
@@ -41,7 +41,7 @@ class PostgresUtboksRepositoryTest {
                 }
             }
 
-            repository.hentMedTilstand(pending).size shouldBe 0
+            repository.hentOgTellMedTilstand(pending).first.size shouldBe 0
         }
     }
 
@@ -57,7 +57,7 @@ class PostgresUtboksRepositoryTest {
                 repository.lagre("c", """{"i":"c"}""", pending, ctx)
             }
 
-            val meldinger = repository.hentMedTilstand(pending, limit = 2)
+            val meldinger = repository.hentOgTellMedTilstand(pending, limit = 2).first
             meldinger.size shouldBe 2
             meldinger.map { it.key } shouldBe listOf("a", "b")
             meldinger.map { it.tilstand } shouldBe listOf(pending, pending)
@@ -74,11 +74,11 @@ class PostgresUtboksRepositoryTest {
                 repository.lagre("a", """{"i":"a"}""", pending, ctx)
                 repository.lagre("b", """{"i":"b"}""", pending, ctx)
             }
-            val b = repository.hentMedTilstand(pending).first { it.key == "b" }
+            val b = repository.hentOgTellMedTilstand(pending).first.first { it.key == "b" }
             repository.oppdaterTilstand(b.id, sendt)
 
-            repository.hentMedTilstand(pending).map { it.key } shouldBe listOf("a")
-            repository.hentMedTilstand(sendt).map { it.key } shouldBe listOf("b")
+            repository.hentOgTellMedTilstand(pending).first.map { it.key } shouldBe listOf("a")
+            repository.hentOgTellMedTilstand(sendt).first.map { it.key } shouldBe listOf("b")
         }
     }
 
@@ -91,11 +91,11 @@ class PostgresUtboksRepositoryTest {
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("a", """{"i":"a"}""", pending, ctx)
             }
-            val melding = repository.hentMedTilstand(pending).single()
+            val melding = repository.hentOgTellMedTilstand(pending).first.single()
 
             repository.oppdaterTilstand(melding.id, sendt)
 
-            repository.hentMedTilstand(pending).size shouldBe 0
+            repository.hentOgTellMedTilstand(pending).first.size shouldBe 0
             statusFor(ds, melding.id) shouldBe sendt
         }
     }
@@ -110,7 +110,7 @@ class PostgresUtboksRepositoryTest {
                 repository.lagre("gammel", """{"i":"g"}""", pending, ctx)
                 repository.lagre("ny", """{"i":"n"}""", pending, ctx)
             }
-            val meldinger = repository.hentMedTilstand(pending)
+            val meldinger = repository.hentOgTellMedTilstand(pending).first
             val gammel = meldinger.first { it.key == "gammel" }
             val ny = meldinger.first { it.key == "ny" }
             repository.oppdaterTilstand(gammel.id, sendt)
