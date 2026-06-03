@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.outbox
+package no.nav.dagpenger.saksbehandling.utboks
 
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
@@ -10,15 +10,15 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class PostgresOutboxRepositoryTest {
-    private val pending = OutboxTilstand.PENDING.name
-    private val sendt = OutboxTilstand.SENDT.name
+class PostgresUtboksRepositoryTest {
+    private val pending = UtboksTilstand.PENDING.name
+    private val sendt = UtboksTilstand.SENDT.name
 
     @Test
-    fun `lagre skriver record i delt transaksjon`() {
+    fun `lagre skriver melding i delt transaksjon`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+            val repository = PostgresUtboksRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre(key = "123", message = """{"a":1}""", tilstand = pending, ctx = ctx)
@@ -32,7 +32,7 @@ class PostgresOutboxRepositoryTest {
     fun `lagre ruller tilbake når transaksjonen feiler`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+            val repository = PostgresUtboksRepository(DatabaseSession(ds))
 
             runCatching {
                 transaksjoner.transaksjon { ctx ->
@@ -49,7 +49,7 @@ class PostgresOutboxRepositoryTest {
     fun `hentMedTilstand returnerer i FIFO-rekkefølge og respekterer limit`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+            val repository = PostgresUtboksRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("a", """{"i":"a"}""", pending, ctx)
@@ -57,10 +57,10 @@ class PostgresOutboxRepositoryTest {
                 repository.lagre("c", """{"i":"c"}""", pending, ctx)
             }
 
-            val records = repository.hentMedTilstand(pending, limit = 2)
-            records.size shouldBe 2
-            records.map { it.key } shouldBe listOf("a", "b")
-            records.map { it.tilstand } shouldBe listOf(pending, pending)
+            val meldinger = repository.hentMedTilstand(pending, limit = 2)
+            meldinger.size shouldBe 2
+            meldinger.map { it.key } shouldBe listOf("a", "b")
+            meldinger.map { it.tilstand } shouldBe listOf(pending, pending)
         }
     }
 
@@ -68,7 +68,7 @@ class PostgresOutboxRepositoryTest {
     fun `hentMedTilstand filtrerer på tilstand`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+            val repository = PostgresUtboksRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("a", """{"i":"a"}""", pending, ctx)
@@ -86,33 +86,33 @@ class PostgresOutboxRepositoryTest {
     fun `oppdaterTilstand setter ny tilstand`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+            val repository = PostgresUtboksRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("a", """{"i":"a"}""", pending, ctx)
             }
-            val record = repository.hentMedTilstand(pending).single()
+            val melding = repository.hentMedTilstand(pending).single()
 
-            repository.oppdaterTilstand(record.id, sendt)
+            repository.oppdaterTilstand(melding.id, sendt)
 
             repository.hentMedTilstand(pending).size shouldBe 0
-            statusFor(ds, record.id) shouldBe sendt
+            statusFor(ds, melding.id) shouldBe sendt
         }
     }
 
     @Test
-    fun `slettMedTilstandEldreEnn sletter kun gamle records med angitt tilstand`() {
+    fun `slettMedTilstandEldreEnn sletter kun gamle meldinger med angitt tilstand`() {
         DBTestHelper.withMigratedDb { ds ->
             val transaksjoner = Transaksjoner(DatabaseSession(ds))
-            val repository = PostgresOutboxRepository(DatabaseSession(ds))
+            val repository = PostgresUtboksRepository(DatabaseSession(ds))
 
             transaksjoner.transaksjon { ctx ->
                 repository.lagre("gammel", """{"i":"g"}""", pending, ctx)
                 repository.lagre("ny", """{"i":"n"}""", pending, ctx)
             }
-            val records = repository.hentMedTilstand(pending)
-            val gammel = records.first { it.key == "gammel" }
-            val ny = records.first { it.key == "ny" }
+            val meldinger = repository.hentMedTilstand(pending)
+            val gammel = meldinger.first { it.key == "gammel" }
+            val ny = meldinger.first { it.key == "ny" }
             repository.oppdaterTilstand(gammel.id, sendt)
             repository.oppdaterTilstand(ny.id, sendt)
             settCreatedAt(ds, gammel.id, LocalDateTime.now().minusDays(10))
@@ -131,7 +131,7 @@ class PostgresOutboxRepositoryTest {
     ): String? =
         sessionOf(ds).use { session ->
             session.run(
-                queryOf("SELECT status FROM outbox WHERE id = :id", mapOf("id" to id))
+                queryOf("SELECT status FROM kafka_utboks_v1 WHERE id = :id", mapOf("id" to id))
                     .map { it.string("status") }
                     .asSingle,
             )
@@ -145,7 +145,7 @@ class PostgresOutboxRepositoryTest {
         sessionOf(ds).use { session ->
             session.run(
                 queryOf(
-                    "UPDATE outbox SET registrert_tidspunkt = :tid WHERE id = :id",
+                    "UPDATE kafka_utboks_v1 SET registrert_tidspunkt = :tid WHERE id = :id",
                     mapOf("tid" to tidspunkt, "id" to id),
                 ).asUpdate,
             )

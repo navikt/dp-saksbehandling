@@ -1,8 +1,8 @@
-package no.nav.dagpenger.saksbehandling.outbox
+package no.nav.dagpenger.saksbehandling.utboks
 
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 
-interface Outbox {
+interface Utboks {
     fun send(
         key: String,
         message: String,

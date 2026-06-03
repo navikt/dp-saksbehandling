@@ -1,16 +1,16 @@
-package no.nav.dagpenger.saksbehandling.outbox
+package no.nav.dagpenger.saksbehandling.utboks
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 
 /**
- * Synkron outbox-implementasjon for tester — sender direkte til [rapidsConnection]
+ * Synkron utboks-implementasjon for tester — sender direkte til [rapidsConnection]
  * i stedet for å skrive til DB. Brukes med TestRapid slik at mediator-tester
  * ikke trenger å endre assertions.
  */
-class DirectOutbox(
+class TestUtboks(
     private val rapidsConnection: RapidsConnection,
-) : Outbox {
+) : Utboks {
     override fun send(
         key: String,
         message: String,

@@ -28,9 +28,9 @@ import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
-import no.nav.dagpenger.saksbehandling.outbox.DirectOutbox
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.toUrn
+import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
@@ -80,7 +80,7 @@ class UtsendingMediatorTest {
                                 )
                             } returns htmlBrev
                         },
-                    outbox = DirectOutbox(rapid),
+                    utboks = TestUtboks(rapid),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
 
@@ -239,7 +239,7 @@ class UtsendingMediatorTest {
                         mockk<UtsendingMediator.BrevProdusent>().also {
                             coEvery { it.lagBrev(person.ident, behandlingId, utsendingSak.id) } returns htmlBrev
                         },
-                    outbox = DirectOutbox(rapid),
+                    utboks = TestUtboks(rapid),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
 
@@ -414,7 +414,7 @@ class UtsendingMediatorTest {
                                 )
                             } returns htmlBrev
                         },
-                    outbox = DirectOutbox(rapid),
+                    utboks = TestUtboks(rapid),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
 
@@ -549,7 +549,7 @@ class UtsendingMediatorTest {
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
                     brevProdusent = mockk(),
-                    outbox = DirectOutbox(rapid),
+                    utboks = TestUtboks(rapid),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
 
@@ -691,7 +691,7 @@ class UtsendingMediatorTest {
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
                     brevProdusent = mockk(),
-                    outbox = DirectOutbox(rapid),
+                    utboks = TestUtboks(rapid),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
 
@@ -836,7 +836,7 @@ class UtsendingMediatorTest {
                         every { it.finnUtsendingForBehandlingId(utsending.behandlingId) } returns utsending
                     },
                 brevProdusent = brevProdusentMock,
-                outbox = mockk(relaxed = true),
+                utboks = mockk(relaxed = true),
                 transaksjoner = mockk(relaxed = true),
             )
         val vedtakFattetHendelse =

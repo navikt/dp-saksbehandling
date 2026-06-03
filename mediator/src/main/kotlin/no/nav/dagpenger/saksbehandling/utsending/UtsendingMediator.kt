@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.outbox.Outbox
+import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
@@ -28,7 +28,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class UtsendingMediator(
     private val utsendingRepository: UtsendingRepository,
     private val brevProdusent: BrevProdusent,
-    private val outbox: Outbox,
+    private val utboks: Utboks,
     private val transaksjoner: Transaksjoner,
 ) : UtsendingRepository by utsendingRepository {
     fun opprettUtsending(
@@ -111,7 +111,7 @@ class UtsendingMediator(
                 sikkerlogg.info { "Publiserer behov: $it for $utsending" }
             }
         logger.info { "Publiserer behov: ${behov.navn} for $utsending" }
-        outbox.send(key = utsending.ident, message = message, ctx = ctx)
+        utboks.send(key = utsending.ident, message = message, ctx = ctx)
     }
 
     private fun publiserUtsendingDistribuert(
@@ -138,7 +138,7 @@ class UtsendingMediator(
         }
         sikkerlogg.info { "Publiserer melding: $message" }
 
-        outbox.send(key = utsending.ident, message = message, ctx = ctx)
+        utboks.send(key = utsending.ident, message = message, ctx = ctx)
     }
 
     fun startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {

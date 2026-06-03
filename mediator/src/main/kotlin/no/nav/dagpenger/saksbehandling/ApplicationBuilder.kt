@@ -58,10 +58,6 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingBehandler
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
-import no.nav.dagpenger.saksbehandling.outbox.OutboxCleanupJob
-import no.nav.dagpenger.saksbehandling.outbox.OutboxPublisherJob
-import no.nav.dagpenger.saksbehandling.outbox.PostgresOutboxRepository
-import no.nav.dagpenger.saksbehandling.outbox.PostgresRapidOutbox
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -76,6 +72,10 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
+import no.nav.dagpenger.saksbehandling.utboks.PostgresRapidUtboks
+import no.nav.dagpenger.saksbehandling.utboks.PostgresUtboksRepository
+import no.nav.dagpenger.saksbehandling.utboks.UtboksOppryddingJob
+import no.nav.dagpenger.saksbehandling.utboks.UtboksPubliseringJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -102,9 +102,9 @@ internal class ApplicationBuilder(
     private lateinit var oppfølgingAlarmJob: Timer
     private lateinit var oppgaveFristUtgåttJob: Timer
     private lateinit var metrikkJob: Timer
-    private lateinit var outboxJob: Timer
-    private lateinit var outboxCleanupJob: Timer
-    private val outboxRepository = PostgresOutboxRepository(databaseSession)
+    private lateinit var utboksJob: Timer
+    private lateinit var utboksOppryddingJob: Timer
+    private val utboksRepository = PostgresUtboksRepository(databaseSession)
     private lateinit var statistikkJob: Timer
     private lateinit var oppgaveTilstandAlertJob: Timer
 
@@ -119,11 +119,11 @@ internal class ApplicationBuilder(
                 val innsendingRepository = PostgresInnsendingRepository(databaseSession)
                 val klageRepository = PostgresKlageRepository(databaseSession)
 
-                val outbox =
-                    PostgresRapidOutbox(
-                        repository = outboxRepository,
+                val utboks =
+                    PostgresRapidUtboks(
+                        repository = utboksRepository,
                         rapidsConnection = rapid,
-                        levetidSendte = Configuration.outboxLevetidSendte,
+                        levetidSendte = Configuration.utboksLevetidSendte,
                     )
 
                 val behandlingKlient =
@@ -182,7 +182,7 @@ internal class ApplicationBuilder(
                                 oppgaveRepository = oppgaveRepository,
                                 tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
                             ),
-                        outbox = outbox,
+                        utboks = utboks,
                         transaksjoner = Transaksjoner(databaseSession),
                     )
                 val oppgaveMediator =
@@ -374,15 +374,15 @@ internal class ApplicationBuilder(
                         startAt = now,
                         period = 5.Minutt,
                     )
-                outboxJob =
-                    OutboxPublisherJob(
-                        vedlikehold = outbox,
+                utboksJob =
+                    UtboksPubliseringJob(
+                        vedlikehold = utboks,
                     ).startJob(
                         startAt = now,
                         period = 5.Sekund,
                     )
-                outboxCleanupJob =
-                    OutboxCleanupJob(outbox = outbox).startJob(
+                utboksOppryddingJob =
+                    UtboksOppryddingJob(utboks = utboks).startJob(
                         startAt = getNextOccurrence(3, 30),
                         period = 1.Dag,
                     )
@@ -411,8 +411,8 @@ internal class ApplicationBuilder(
         statistikkJob.cancel()
 //        oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
-        outboxJob.cancel()
-        outboxCleanupJob.cancel()
+        utboksJob.cancel()
+        utboksOppryddingJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 

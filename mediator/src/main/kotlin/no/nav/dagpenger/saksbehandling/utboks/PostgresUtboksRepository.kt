@@ -1,13 +1,13 @@
-package no.nav.dagpenger.saksbehandling.outbox
+package no.nav.dagpenger.saksbehandling.utboks
 
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import java.time.LocalDateTime
 
-class PostgresOutboxRepository(
+class PostgresUtboksRepository(
     private val databaseSession: DatabaseSession,
-) : OutboxRepository {
+) : UtboksRepository {
     override fun lagre(
         key: String,
         message: String,
@@ -18,7 +18,7 @@ class PostgresOutboxRepository(
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = "INSERT INTO outbox (key, message, status) VALUES (:key, :message, :status)",
+                    statement = "INSERT INTO kafka_utboks_v1 (key, message, status) VALUES (:key, :message, :status)",
                     paramMap = mapOf("key" to key, "message" to message, "status" to tilstand),
                 ).asUpdate,
             )
@@ -28,15 +28,15 @@ class PostgresOutboxRepository(
     override fun hentMedTilstand(
         tilstand: String,
         limit: Int,
-    ): List<OutboxRecord> =
+    ): List<UtboksMelding> =
         databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = "SELECT id, key, message, status FROM outbox WHERE status = :status ORDER BY id LIMIT :limit",
+                    statement = "SELECT id, key, message, status FROM kafka_utboks_v1 WHERE status = :status ORDER BY id LIMIT :limit",
                     paramMap = mapOf("status" to tilstand, "limit" to limit),
                 ).map { row ->
-                    OutboxRecord(
+                    UtboksMelding(
                         id = row.long("id"),
                         key = row.string("key"),
                         message = row.string("message"),
@@ -54,7 +54,7 @@ class PostgresOutboxRepository(
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = "UPDATE outbox SET status = :status WHERE id = :id",
+                    statement = "UPDATE kafka_utboks_v1 SET status = :status WHERE id = :id",
                     paramMap = mapOf("status" to tilstand, "id" to id),
                 ).asUpdate,
             )
@@ -69,7 +69,7 @@ class PostgresOutboxRepository(
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = "DELETE FROM outbox WHERE status = :status AND registrert_tidspunkt < :cutoff",
+                    statement = "DELETE FROM kafka_utboks_v1 WHERE status = :status AND registrert_tidspunkt < :cutoff",
                     paramMap = mapOf("status" to tilstand, "cutoff" to cutoff),
                 ).asUpdate,
             )

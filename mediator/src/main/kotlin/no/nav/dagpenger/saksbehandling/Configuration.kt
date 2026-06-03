@@ -103,7 +103,7 @@ object Configuration {
         } ?: false
     }
 
-    val outboxLevetidSendte: Duration by lazy {
+    val utboksLevetidSendte: Duration by lazy {
         if (isDev) Duration.ofHours(1) else Duration.ofDays(7)
     }
 

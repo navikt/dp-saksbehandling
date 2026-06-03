@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.outbox
+package no.nav.dagpenger.saksbehandling.utboks
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
-class PostgresRapidOutboxTest {
+class PostgresRapidUtboksTest {
     private val testRapid = TestRapid()
 
     @BeforeEach
@@ -23,26 +23,26 @@ class PostgresRapidOutboxTest {
     }
 
     @Test
-    fun `send skriver til outbox-tabell i samme transaksjon`() {
+    fun `send skriver til utboks-tabell i samme transaksjon`() {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
-            val repository = PostgresOutboxRepository(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
             val registry = PrometheusRegistry()
 
-            val outbox =
-                PostgresRapidOutbox(
+            val utboks =
+                PostgresRapidUtboks(
                     repository = repository,
                     rapidsConnection = testRapid,
                     registry = registry,
                 )
 
             transaksjoner.transaksjon { ctx ->
-                outbox.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
+                utboks.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
             }
 
-            repository.hentMedTilstand(OutboxTilstand.PENDING.name).size shouldBe 1
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_outbox_new_records_total" }.let { snapshot ->
+            repository.hentMedTilstand(UtboksTilstand.PENDING.name).size shouldBe 1
+            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_nye_meldinger_total" }.let { snapshot ->
                 snapshot.dataPoints.single().value shouldBe 1.0
             }
         }
@@ -53,11 +53,11 @@ class PostgresRapidOutboxTest {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
-            val repository = PostgresOutboxRepository(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
             val registry = PrometheusRegistry()
 
-            val outbox =
-                PostgresRapidOutbox(
+            val utboks =
+                PostgresRapidUtboks(
                     repository = repository,
                     rapidsConnection = testRapid,
                     registry = registry,
@@ -65,36 +65,36 @@ class PostgresRapidOutboxTest {
 
             runCatching {
                 transaksjoner.transaksjon { ctx ->
-                    outbox.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
-                    outbox.send(key = "12345678902", message = """{"@event_name":"test2"}""", ctx = ctx)
+                    utboks.send(key = "12345678901", message = """{"@event_name":"test"}""", ctx = ctx)
+                    utboks.send(key = "12345678902", message = """{"@event_name":"test2"}""", ctx = ctx)
                     error("Simulert feil etter send")
                 }
             }
-            repository.hentMedTilstand(OutboxTilstand.PENDING.name).size shouldBe 0
+            repository.hentMedTilstand(UtboksTilstand.PENDING.name).size shouldBe 0
         }
     }
 
     @Test
-    fun `publiserVentende publiserer PENDING records i FIFO-rekkefølge og markerer som SENDT`() {
+    fun `publiserVentende publiserer PENDING meldinger i FIFO-rekkefølge og markerer som SENDT`() {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
-            val repository = PostgresOutboxRepository(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
             val registry = PrometheusRegistry()
 
-            val outbox =
-                PostgresRapidOutbox(
+            val utboks =
+                PostgresRapidUtboks(
                     repository = repository,
                     rapidsConnection = testRapid,
                     registry = registry,
                 )
             transaksjoner.transaksjon { ctx ->
-                outbox.send(key = "a", message = """{"ident":"a"}""", ctx = ctx)
-                outbox.send(key = "b", message = """{"ident":"b"}""", ctx = ctx)
-                outbox.send(key = "c", message = """{"ident":"c"}""", ctx = ctx)
+                utboks.send(key = "a", message = """{"ident":"a"}""", ctx = ctx)
+                utboks.send(key = "b", message = """{"ident":"b"}""", ctx = ctx)
+                utboks.send(key = "c", message = """{"ident":"c"}""", ctx = ctx)
             }
 
-            outbox.publiserVentende()
+            utboks.publiserVentende()
 
             testRapid.inspektør.size shouldBe 3
 
@@ -107,8 +107,8 @@ class PostgresRapidOutboxTest {
             testRapid.inspektør.key(2) shouldBe "c"
             testRapid.inspektør.message(2)["ident"].asString() shouldBe "c"
 
-            repository.hentMedTilstand(OutboxTilstand.PENDING.name).size shouldBe 0
-            repository.hentMedTilstand(OutboxTilstand.SENDT.name).size shouldBe 3
+            repository.hentMedTilstand(UtboksTilstand.PENDING.name).size shouldBe 0
+            repository.hentMedTilstand(UtboksTilstand.SENDT.name).size shouldBe 3
         }
     }
 
@@ -117,33 +117,33 @@ class PostgresRapidOutboxTest {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
-            val repository = PostgresOutboxRepository(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
             val registry = PrometheusRegistry()
 
-            val outbox =
-                PostgresRapidOutbox(
+            val utboks =
+                PostgresRapidUtboks(
                     repository = repository,
                     rapidsConnection = FeilendeRapid(1, testRapid),
                     registry = registry,
                 )
 
             transaksjoner.transaksjon { ctx ->
-                outbox.send(key = "x", message = """{"ident":"x"}""", ctx = ctx)
-                outbox.send(key = "y", message = """{"ident":"y"}""", ctx = ctx)
+                utboks.send(key = "x", message = """{"ident":"x"}""", ctx = ctx)
+                utboks.send(key = "y", message = """{"ident":"y"}""", ctx = ctx)
             }
 
-            outbox.publiserVentende()
+            utboks.publiserVentende()
 
-            repository.hentMedTilstand(OutboxTilstand.SENDT.name).single().let {
+            repository.hentMedTilstand(UtboksTilstand.SENDT.name).single().let {
                 it.key shouldBe "x"
                 it.message shouldBe """{"ident":"x"}"""
             }
-            repository.hentMedTilstand(OutboxTilstand.PENDING.name).single().let {
+            repository.hentMedTilstand(UtboksTilstand.PENDING.name).single().let {
                 it.key shouldBe "y"
                 it.message shouldBe """{"ident":"y"}"""
             }
 
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_outbox_published_records_total" }.let { snapshot ->
+            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }.let { snapshot ->
                 snapshot.dataPoints.single { it.labels["status"] == "success" }.value shouldBe 1.0
                 snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
             }
@@ -151,13 +151,13 @@ class PostgresRapidOutboxTest {
     }
 
     @Test
-    fun `publiserVentende publiserer ikke når ingen PENDING records finnes`() {
+    fun `publiserVentende publiserer ikke når ingen PENDING meldinger finnes`() {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
-            val repository = PostgresOutboxRepository(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
             val registry = PrometheusRegistry()
 
-            PostgresRapidOutbox(
+            PostgresRapidUtboks(
                 repository = repository,
                 rapidsConnection = testRapid,
                 registry = registry,
@@ -168,32 +168,32 @@ class PostgresRapidOutboxTest {
     }
 
     @Test
-    fun `slettGamleSendte rydder bort sendte records eldre enn levetiden`() {
+    fun `slettGamleSendte rydder bort sendte meldinger eldre enn levetiden`() {
         Postgres.withMigratedDb { ds ->
             val databaseSession = DatabaseSession(ds)
             val transaksjoner = Transaksjoner(databaseSession)
-            val repository = PostgresOutboxRepository(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
             val registry = PrometheusRegistry()
 
-            val outbox =
-                PostgresRapidOutbox(
+            val utboks =
+                PostgresRapidUtboks(
                     repository = repository,
                     // Negativ levetid gjør at cutoff havner i framtiden, slik at nylig sendte
-                    // records regnes som utgått — uten å måtte manipulere created_at direkte.
+                    // meldinger regnes som utgått — uten å måtte manipulere created_at direkte.
                     rapidsConnection = testRapid,
                     levetidSendte = Duration.ofDays(-2),
                     registry = registry,
                 )
 
             transaksjoner.transaksjon { ctx ->
-                outbox.send(key = "gammel", message = """{"ident":"g"}""", ctx = ctx)
+                utboks.send(key = "gammel", message = """{"ident":"g"}""", ctx = ctx)
             }
 
-            outbox.publiserVentende()
-            repository.hentMedTilstand(OutboxTilstand.SENDT.name).size shouldBe 1
+            utboks.publiserVentende()
+            repository.hentMedTilstand(UtboksTilstand.SENDT.name).size shouldBe 1
 
-            outbox.slettGamleSendte() shouldBe 1
-            repository.hentMedTilstand(OutboxTilstand.SENDT.name).size shouldBe 0
+            utboks.slettGamleSendte() shouldBe 1
+            repository.hentMedTilstand(UtboksTilstand.SENDT.name).size shouldBe 0
         }
     }
 }

@@ -1,16 +1,16 @@
-package no.nav.dagpenger.saksbehandling.outbox
+package no.nav.dagpenger.saksbehandling.utboks
 
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job
 
-class OutboxCleanupJob(
-    private val outbox: OutboxVedlikehold,
+class UtboksOppryddingJob(
+    private val utboks: UtboksVedlikehold,
 ) : Job() {
-    override val jobName: String = "OutboxCleanupJob"
+    override val jobName: String = "UtboksOppryddingJob"
     override val logger: KLogger = KotlinLogging.logger {}
 
     override suspend fun executeJob() {
-        outbox.slettGamleSendte()
+        utboks.slettGamleSendte()
     }
 }
