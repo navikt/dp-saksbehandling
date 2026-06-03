@@ -1,14 +1,14 @@
-CREATE TABLE outbox
+CREATE TABLE IF NOT EXISTS outbox
 (
     id                   BIGSERIAL PRIMARY KEY,
     key                  TEXT NOT NULL,
     message              TEXT NOT NULL,
-    status               TEXT NOT NULL DEFAULT 'PENDING',
+    status               TEXT NOT NULL,
     registrert_tidspunkt TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp),
     endret_tidspunkt     TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp)
 );
 
-CREATE INDEX idx_outbox_pending ON outbox (id) WHERE status = 'PENDING';
+CREATE INDEX IF NOT EXISTS idx_outbox_pending ON outbox (id) WHERE status = 'PENDING';
 
 CREATE OR REPLACE TRIGGER oppdater_endret_tidspunkt
     BEFORE UPDATE
