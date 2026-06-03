@@ -119,7 +119,12 @@ internal class ApplicationBuilder(
                 val innsendingRepository = PostgresInnsendingRepository(databaseSession)
                 val klageRepository = PostgresKlageRepository(databaseSession)
 
-                val outbox = PostgresRapidOutbox(repository = outboxRepository, rapidsConnection = rapid)
+                val outbox =
+                    PostgresRapidOutbox(
+                        repository = outboxRepository,
+                        rapidsConnection = rapid,
+                        levetidSendte = Configuration.outboxLevetidSendte,
+                    )
 
                 val behandlingKlient =
                     BehandlingHttpKlient(

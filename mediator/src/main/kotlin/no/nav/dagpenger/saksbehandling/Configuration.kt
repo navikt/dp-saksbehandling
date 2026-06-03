@@ -11,6 +11,7 @@ import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaConfiguration
+import java.time.Duration
 
 private val logger = KotlinLogging.logger { }
 
@@ -100,6 +101,10 @@ object Configuration {
         properties.getOrNull(Key("NAIS_CLUSTER_NAME", stringType))?.let { clusterName ->
             clusterName == "dev-gcp"
         } ?: false
+    }
+
+    val outboxLevetidSendte: Duration by lazy {
+        if (isDev) Duration.ofHours(1) else Duration.ofDays(7)
     }
 
     val azureAdClient: CachedOauth2Client by lazy {
