@@ -50,7 +50,9 @@ class PostgresRapidOutbox(
     }
 
     override fun publiserVentende() {
-        for (record in repository.hentMedTilstand(OutboxTilstand.PENDING.name)) {
+        val records = repository.hentMedTilstand(OutboxTilstand.PENDING.name)
+        logger.info { "Fant ${records.size} ventende outbox-records som skal sendes" }
+        for (record in records) {
             try {
                 rapidsConnection.publish(record.key, record.message)
                 repository.oppdaterTilstand(record.id, OutboxTilstand.SENDT.name)
