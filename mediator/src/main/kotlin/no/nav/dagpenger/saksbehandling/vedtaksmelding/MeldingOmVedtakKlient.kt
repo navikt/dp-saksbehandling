@@ -216,7 +216,7 @@ class MeldingOmVedtakKlient(
 private fun HendelseBehandler.tilMeldingOmVedtakBehandlingstype(): String =
     when (this) {
         is HendelseBehandler.Intern.Klage -> "KLAGE"
-        is HendelseBehandler.DpBehandling.Søknad -> "RETT_TIL_DAGPENGER"
+        is HendelseBehandler.DpBehandling.Søknad -> "SØKNAD"
         is HendelseBehandler.DpBehandling.Meldekort -> "MELDEKORT"
         is HendelseBehandler.DpBehandling.Manuell -> "MANUELL"
         is HendelseBehandler.Intern.Innsending -> "INNSENDING"
