@@ -130,7 +130,7 @@ class MeldingOmVedtakKlientTest {
                         "fornavn": "Test",
                         "etternavn": "Person",
                         "fodselsnummer": "testIdent",
-                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "behandlingstype": "SØKNAD",
                         "saksbehandler": {
                             "ident": "saksbehandlerIdent",
                             "fornavn": "Saks",
@@ -181,7 +181,7 @@ class MeldingOmVedtakKlientTest {
                         "fornavn": "Test",
                         "etternavn": "Person",
                         "fodselsnummer": "testIdent",
-                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "behandlingstype": "SØKNAD",
                         "sakId": "$sakId",
                         "saksbehandler": {
                             "ident": "saksbehandlerIdent",
@@ -297,7 +297,7 @@ class MeldingOmVedtakKlientTest {
                         "fornavn": "Test",
                         "etternavn": "Person",
                         "fodselsnummer": "testIdent",
-                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "behandlingstype": "SØKNAD",
                         "sakId": "$sakId",
                         "saksbehandler": {
                             "ident": "saksbehandlerIdent",
@@ -334,7 +334,7 @@ class MeldingOmVedtakKlientTest {
                         "fornavn": "Test",
                         "etternavn": "Person",
                         "fodselsnummer": "testIdent",
-                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "behandlingstype": "SØKNAD",
                         "saksbehandler": {
                             "ident": "saksbehandlerIdent",
                             "fornavn": "Saks",
