@@ -8,3 +8,14 @@ CREATE TABLE outbox
 );
 
 CREATE INDEX idx_outbox_pending ON outbox (id) WHERE status = 'PENDING';
+
+DO
+$$
+BEGIN
+        IF EXISTS
+            (SELECT 1 FROM pg_roles WHERE rolname = 'cloudsqliamuser')
+        THEN
+            GRANT SELECT ON TABLE nodbremset_person_v1 TO cloudsqliamuser;
+END IF;
+END
+$$;
