@@ -229,7 +229,6 @@ class OppgaveMediator(
                         ).also {
                             it.settKlarTilBehandling(forslagTilVedtakHendelse)
                         }
-
                     if (forslagTilVedtakHendelse.behandletHendelseType == "Søknad") {
                         sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
                     }
@@ -777,9 +776,13 @@ class OppgaveMediator(
         oppgaveId: UUID,
         emneknagger: Set<String>,
     ) {
-        oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
-            oppgave.leggTilEmneknagger(emneknagger)
-            oppgaveRepository.lagre(oppgave)
+        runCatching {
+            oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
+                oppgave.leggTilEmneknagger(emneknagger)
+                oppgaveRepository.lagre(oppgave)
+            }
+        }.onFailure {
+            logger.error { "Feil ved legging av emneknagger $emneknagger til oppgave $oppgaveId: ${it.message}" }
         }
     }
 
