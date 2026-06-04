@@ -443,6 +443,7 @@ private suspend fun ApplicationCall.avbrytOppgaveHendelse(saksbehandler: Saksbeh
                 AvbrytOppgaveAarsakDTO.BEHANDLES_I_ARENA -> AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA
                 AvbrytOppgaveAarsakDTO.FLERE_SØKNADER -> AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
                 AvbrytOppgaveAarsakDTO.TRUKKET_SØKNAD -> AvbrytBehandling.AVBRUTT_TRUKKET_SØKNAD
+                AvbrytOppgaveAarsakDTO.INGEN_BEHANDLING -> AvbrytBehandling.AVBRUTT_INGEN_BEHANDLING
                 AvbrytOppgaveAarsakDTO.ANNET -> AvbrytBehandling.AVBRUTT_ANNET
             },
     )

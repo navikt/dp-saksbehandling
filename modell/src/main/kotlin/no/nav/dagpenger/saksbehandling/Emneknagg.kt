@@ -67,6 +67,7 @@ object Emneknagg {
         AVBRUTT_BEHANDLES_I_ARENA("Behandles i Arena"),
         AVBRUTT_FLERE_SØKNADER("Flere søknader"),
         AVBRUTT_TRUKKET_SØKNAD("Trukket søknad"),
+        AVBRUTT_INGEN_BEHANDLING("Ingen behandling"),
         AVBRUTT_ANNET("Annen avbruddsårsak"),
         ;
 
