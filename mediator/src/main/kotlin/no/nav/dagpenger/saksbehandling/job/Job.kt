@@ -12,6 +12,7 @@ import java.util.Date
 import java.util.Timer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.fixedRateTimer
+import kotlin.system.measureNanoTime
 import kotlin.time.Duration.Companion.milliseconds
 
 abstract class Job(
@@ -64,6 +65,7 @@ abstract class Job(
         period: Long = 1.Dag,
     ): Timer {
         logger.info { "Jobb $jobName vil kjøre med intervall ${period.milliseconds.inWholeMinutes} minutter med første kjøring $startAt" }
+        JobMetrics.period(jobName, period)
         return fixedRateTimer(
             name = jobName,
             daemon = daemon,
@@ -78,6 +80,7 @@ abstract class Job(
             // Prevent overlapping executions on the same pod
             if (!isRunning.compareAndSet(false, true)) {
                 logger.warn { "Jobb $jobName kjører fortsatt fra forrige intervall, hopper over denne kjøringen" }
+                JobMetrics.skippedOverlap(jobName)
                 return@runBlocking
             }
 
@@ -87,9 +90,17 @@ abstract class Job(
                         when (it) {
                             true -> {
                                 logger.info { "Starter jobb $jobName" }
-                                executeJob()
+                                var duration: Long? = null
+                                try {
+                                    duration = measureNanoTime { executeJob() }
+                                    JobMetrics.success(jobName)
+                                } catch (e: Exception) {
+                                    JobMetrics.failure(jobName)
+                                    logger.error(e) { "Jobb $jobName feilet — fortsetter ved neste kjøringstidspunkt" }
+                                } finally {
+                                    JobMetrics.duration(jobName, duration)
+                                }
                             }
-
                             false -> logger.debug { "Er ikke leder, kjører ikke jobb: $jobName" }
                         }
                     }.onFailure {
