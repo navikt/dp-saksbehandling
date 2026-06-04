@@ -4,9 +4,13 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.kotest.assertions.nondeterministic.continually
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -75,6 +79,27 @@ class JobTest {
             )
     }
 
+    @Test
+    fun `Skal fortsette aa kjore selv om jobben kaster exception`() {
+        runBlocking {
+            val testJob = KastendeTestJob()
+            testJob.startJob(startAt = now, period = 200L)
+
+            // Hvis Timer-tråden hadde dødd ved første kast ville antallForsøk stoppet på 1
+            eventually(3.seconds) {
+                testJob.antallForsøk shouldBeGreaterThan 2
+            }
+
+            val failures =
+                PrometheusRegistry.defaultRegistry
+                    .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_job_executions_total" }
+                    .dataPoints
+                    .single { it.labels["job"] == "kastendeTestJob" && it.labels["status"] == "failure" }
+                    .value
+            failures shouldBeGreaterThan 2.0
+        }
+    }
+
     private class TestJob(
         leaderElector: suspend () -> Result<Boolean> = { Result.success(true) },
     ) : Job(leaderElector) {
@@ -83,6 +108,20 @@ class JobTest {
 
         override suspend fun executeJob() {
             antallGangerKjørt++
+        }
+
+        override val logger: KLogger = KotlinLogging.logger {}
+    }
+
+    private class KastendeTestJob(
+        leaderElector: suspend () -> Result<Boolean> = { Result.success(true) },
+    ) : Job(leaderElector) {
+        var antallForsøk: Int = 0
+        override val jobName: String = "kastendeTestJob"
+
+        override suspend fun executeJob() {
+            antallForsøk++
+            throw RuntimeException("Simulert jobb-feil")
         }
 
         override val logger: KLogger = KotlinLogging.logger {}
