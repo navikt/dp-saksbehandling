@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import org.junit.jupiter.api.Test
@@ -70,7 +71,8 @@ class OppgaveMediatorTilgangskontrollTest {
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 sakMediator = mockk(),
-                rapidsConnection = mockk(relaxed = true),
+                utboks = mockk(relaxed = true),
+                transaksjoner = kjørendeTransaksjoner(),
             )
 
         if (forventetTilgang) {
@@ -92,7 +94,8 @@ class OppgaveMediatorTilgangskontrollTest {
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 sakMediator = mockk(),
-                rapidsConnection = mockk(relaxed = true),
+                utboks = mockk(relaxed = true),
+                transaksjoner = kjørendeTransaksjoner(),
             )
 
         shouldNotThrow<ManglendeTilgang> {

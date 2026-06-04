@@ -120,23 +120,33 @@ object AlertManager {
         },
     }
 
+    fun alertMessage(
+        feilType: AlertType,
+        utvidetFeilMelding: String?,
+    ): String =
+        JsonMessage
+            .newMessage(
+                eventName = "saksbehandling_alert",
+                mutableMapOf(
+                    "alertType" to feilType.type,
+                    "feilMelding" to feilType.feilMelding,
+                ).also {
+                    utvidetFeilMelding?.let { feilMelding ->
+                        it["utvidetFeilMelding"] = feilMelding
+                    }
+                },
+            ).toJson()
+
     fun RapidsConnection.sendAlertTilRapid(
         feilType: AlertType,
         utvidetFeilMelding: String?,
     ) {
         this.publish(
-            JsonMessage
-                .newMessage(
-                    eventName = "saksbehandling_alert",
-                    mutableMapOf(
-                        "alertType" to feilType.type,
-                        "feilMelding" to feilType.feilMelding,
-                    ).also {
-                        utvidetFeilMelding?.let { feilMelding ->
-                            it["utvidetFeilMelding"] = feilMelding
-                        }
-                    },
-                ).toJson(),
+            message =
+                alertMessage(
+                    feilType = feilType,
+                    utvidetFeilMelding = utvidetFeilMelding,
+                ),
         )
     }
 }

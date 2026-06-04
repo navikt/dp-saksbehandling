@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -41,7 +42,8 @@ class OppgaveFristUtgåttJobTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = mockk(),
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"
