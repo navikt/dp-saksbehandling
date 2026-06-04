@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -25,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
@@ -42,7 +42,7 @@ class KlageMediator(
     private val oppslag: Oppslag,
     private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
     private val sakMediator: SakMediator,
-    private val rapidsConnection: RapidsConnection,
+    private val utboks: Utboks,
 ) {
     fun hentKlageBehandling(
         behandlingId: UUID,
@@ -82,21 +82,10 @@ class KlageMediator(
                 utførtAv = klageMottattHendelse.utførtAv,
             )
 
-        val oppgave =
-            transaksjoner.transaksjon(ctx) { aktiv ->
-                klageRepository.lagre(klageBehandling, aktiv)
-                val sakHistorikk = sakMediator.knyttTilSak(behandlingOpprettetHendelse, aktiv)
-                oppgaveMediator.lagOppgaveForKlage(
-                    hendelse = behandlingOpprettetHendelse,
-                    sakHistorikk = sakHistorikk,
-                    ctx = aktiv,
-                )
-            }
-
-        logger.info { "Klagebehandling ${klageBehandling.behandlingId} opprettet med oppgave ${oppgave.oppgaveId}" }
-
-        try {
-            rapidsConnection.publish(
+        return transaksjoner.transaksjon(ctx) { aktiv ->
+            klageRepository.lagre(klageBehandling, aktiv)
+            val sakHistorikk = sakMediator.knyttTilSak(behandlingOpprettetHendelse, aktiv)
+            utboks.send(
                 key = klageMottattHendelse.ident,
                 message =
                     JsonMessage
@@ -113,14 +102,17 @@ class KlageMediator(
                                 } ?: base
                             },
                         ).toJson(),
+                ctx = aktiv,
             )
-        } catch (e: Exception) {
-            logger.error(e) {
-                "Kunne ikke publisere klage_behandling_opprettet for ${klageBehandling.behandlingId}, men DB er OK"
-            }
+            oppgaveMediator
+                .lagOppgaveForKlage(
+                    hendelse = behandlingOpprettetHendelse,
+                    sakHistorikk = sakHistorikk,
+                    ctx = aktiv,
+                ).also {
+                    logger.info { "Klagebehandling ${klageBehandling.behandlingId} opprettet med oppgave ${it.oppgaveId}" }
+                }
         }
-
-        return oppgave
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
@@ -313,24 +305,27 @@ class KlageMediator(
             klageBehandling.vedtakDistribuert(
                 hendelse = hendelse,
             )
-        klageRepository.lagre(klageBehandling)
 
-        when (aksjon) {
-            is KlageAksjon.OversendKlageinstans -> {
-                rapidsConnection.publish(
-                    key = hendelse.ident,
-                    message =
-                        BehovbyggerKlageinstans(
-                            klageBehandling = klageBehandling,
-                            sakId = sakId,
-                            hendelse = hendelse,
-                            finnJournalpostIdForBehandling = finnJournalpostIdForBehandling,
-                        ).behov,
-                )
-            }
+        transaksjoner.transaksjon { ctx ->
+            klageRepository.lagre(klageBehandling, ctx)
+            when (aksjon) {
+                is KlageAksjon.OversendKlageinstans -> {
+                    utboks.send(
+                        key = hendelse.ident,
+                        message =
+                            BehovbyggerKlageinstans(
+                                klageBehandling = klageBehandling,
+                                sakId = sakId,
+                                hendelse = hendelse,
+                                finnJournalpostIdForBehandling = finnJournalpostIdForBehandling,
+                            ).behov,
+                        ctx = ctx,
+                    )
+                }
 
-            is KlageAksjon.IngenAksjon -> {
-                // Ingen handling nødvendig
+                is KlageAksjon.IngenAksjon -> {
+                    // Ingen handling nødvendig
+                }
             }
         }
     }

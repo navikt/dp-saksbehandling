@@ -202,7 +202,7 @@ internal class ApplicationBuilder(
                         oppslag = oppslag,
                         meldingOmVedtakKlient = meldingOmVedtakKlient,
                         sakMediator = sakMediator,
-                        rapidsConnection = rapid,
+                        utboks = utboks,
                     )
                 val oppfølgingMediator =
                     OppfølgingMediator(

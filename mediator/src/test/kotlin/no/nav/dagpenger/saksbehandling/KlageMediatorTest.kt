@@ -67,6 +67,7 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
@@ -1038,7 +1039,7 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
-                    rapidsConnection = testRapid,
+                    utboks = TestUtboks(testRapid),
                 )
             personRepository.lagre(
                 Person(
@@ -1103,7 +1104,7 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
-                    rapidsConnection = testRapid,
+                    utboks = TestUtboks(testRapid),
                 )
 
             personRepository.lagre(
@@ -1187,7 +1188,7 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
-                    rapidsConnection = testRapid,
+                    utboks = TestUtboks(testRapid),
                 )
 
             personRepository.lagre(
