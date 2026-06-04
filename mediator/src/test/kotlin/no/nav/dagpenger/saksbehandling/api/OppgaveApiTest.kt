@@ -251,6 +251,7 @@ class OppgaveApiTest {
                                         "BEHANDLES_I_ARENA",
                                         "FLERE_SØKNADER",
                                         "TRUKKET_SØKNAD",
+                                        "INGEN_BEHANDLING",
                                         "ANNET"
                                     ],
                                     "leggTilbakeAarsaker": [
@@ -1264,7 +1265,7 @@ class OppgaveApiTest {
                       },
                       "lovligeEndringer" : {
                           "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "ANNET" ],
-                          "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "ANNET" ],
+                          "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "INGEN_BEHANDLING", "ANNET" ],
                           "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "INHABILITET", "FRAVÆR", "ANNET" ]
                       },
                       "historikk": [

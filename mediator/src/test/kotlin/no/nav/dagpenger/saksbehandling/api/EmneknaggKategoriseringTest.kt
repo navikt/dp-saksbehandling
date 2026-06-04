@@ -111,6 +111,7 @@ class EmneknaggKategoriseringTest {
                 Emneknagg.AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn,
                 Emneknagg.AvbrytBehandling.AVBRUTT_FLERE_SØKNADER.visningsnavn,
                 Emneknagg.AvbrytBehandling.AVBRUTT_TRUKKET_SØKNAD.visningsnavn,
+                Emneknagg.AvbrytBehandling.AVBRUTT_INGEN_BEHANDLING.visningsnavn,
                 Emneknagg.AvbrytBehandling.AVBRUTT_ANNET.visningsnavn,
             )
 

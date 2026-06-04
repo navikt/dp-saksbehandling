@@ -343,6 +343,7 @@ class OppgaveDTOMapperTest {
                           "BEHANDLES_I_ARENA",
                           "FLERE_SØKNADER",
                           "TRUKKET_SØKNAD",
+                          "INGEN_BEHANDLING",
                           "ANNET"
                         ],
                         "leggTilbakeAarsaker": [
@@ -680,6 +681,7 @@ class OppgaveDTOMapperTest {
                           "BEHANDLES_I_ARENA",
                           "FLERE_SØKNADER",
                           "TRUKKET_SØKNAD",
+                          "INGEN_BEHANDLING",
                           "ANNET"
                         ],
                         "leggTilbakeAarsaker": [
@@ -849,6 +851,7 @@ class OppgaveDTOMapperTest {
                           "BEHANDLES_I_ARENA",
                           "FLERE_SØKNADER",
                           "TRUKKET_SØKNAD",
+                          "INGEN_BEHANDLING",
                           "ANNET"
                         ],
                         "leggTilbakeAarsaker": [
