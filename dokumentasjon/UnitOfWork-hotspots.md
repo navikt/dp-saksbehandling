@@ -34,7 +34,7 @@ felles `Session` gjennom alle repo-kall innenfor en transaksjon.
 | # | Flow | Fil | Repo-kall | Ekstern I/O |
 |---|------|-----|-----------|-------------|
 | 6 | `KlageMediator.opprettKlage()` | `KlageMediator.kt:54` | `klageRepo.lagre` → `sakMediator.knyttTilSak` → Kafka → `oppgaveRepo.lagre` | Kafka publish mellom steg 2 og 3 |
-| 7 | `OppgaveMediator.ferdigstillOppgaveMedUtsending()` | `OppgaveMediator.kt:581` | `utsendingRepo.lagre` → HTTP → `oppgaveRepo.lagre` | HTTP (godkjenn/beslutt). Har manuell kompensering (slett utsending ved feil) |
+| 7 | `OppgaveMediator.ferdigstillOppgaveMedUtsending()` | `OppgaveMediator.kt:598` | `hentEllerOpprettUtsending` → HTTP → `oppgaveRepo.lagre` | HTTP (godkjenn/beslutt). Selvhelende via `behandlingsresultat`-event — se notat |
 | 8 | `KlageMediator.behandlingUtført()` | `KlageMediator.kt:178` | HTTP → `utsendingRepo.lagre` → `klageRepo.lagre` → Kafka | HTTP (brev) + Kafka publish |
 | 9 | `OppfølgingMediator.ferdigstill()` | `oppfolging/OppfølgingMediator.kt:85` | `oppfølgingRepo.lagre` → [HTTP aksjon] → `oppgaveRepo.lagre` → `oppfølgingRepo.lagre` | HTTP (opprett klage/behandling) — bevisst design, mitigert av OppfølgingAlarmJob |
 | 10 | `InnsendingMediator.ferdigstill()` | `innsending/InnsendingMediator.kt:113` | `innsendingRepo.lagre` → [aksjon] → `oppgaveRepo.lagre` → `innsendingRepo.lagre` | Aksjonen kan inneholde HTTP |
@@ -90,5 +90,5 @@ Etter kritisk gjennomgang: **#13/#14/#15 er ikke reelle problemer** for cross-re
 
 - `OppfølgingMediator.ferdigstill()` har bevisst split-transaksjon (se Oppfølging.md) — mitigert av OppfølgingAlarmJob
 - `InnsendingMediator.ferdigstill()` har bevisst split-transaksjon — mitigert av InnsendingAlarmJob
-- `ferdigstillOppgaveMedUtsending()` har allerede compensating delete — fungerer, men er sårbar for app-krasj mellom steg 1 og 3
+- `ferdigstillOppgaveMedUtsending()` er **selvhelende via Kafka**, ikke via kompenserende delete. Rekkefølgen er bevisst: `hentEllerOpprettUtsending` oppretter utsendingen *før* HTTP-kallet (`godkjenn/beslutt`). Hvis HTTP timer ut / feiler, men dp-behandling faktisk fullfører behandlingen, kommer et `behandlingsresultat`-event som (a) `BehandlingsresultatMottak` ferdigstiller oppgaven, og (b) `BehandlingsresultatMottakForUtsending` → `startUtsendingForVedtakFattet` starter den allerede opprettede utsendingen. Den tidlige opprettelsen er **load-bearing**: `startUtsendingForVedtakFattet` bruker `finnUtsendingForBehandlingId(...)?.let { ... }` og starter kun en utsending som allerede finnes. Begge stegene er idempotente (`oppgave.ferdigstill` → `Handling.INGEN` ved allerede ferdig; utsendingens tilstandsmaskin no-op'er ved reprise), så saksbehandlers retry og Kafka-recovery kan skje samtidig uten dobbeltkjøring. Feiler HTTP fordi dp-behandling rullet tilbake, kommer ingen event — men da er ingenting fullført, og saksbehandlers retry er riktig vei.
 - `OppgaveTilstandAlertJob` sjekker kun oppgaver stuck i `OPPRETTET` — dekker ikke #14
