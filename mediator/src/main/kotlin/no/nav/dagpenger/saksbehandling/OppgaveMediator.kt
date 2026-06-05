@@ -423,11 +423,15 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                oppgaveRepository.lagre(oppgave)
-            }
-            if (meldingOmVedtakKilde != DP_SAK) {
-                utsendingMediator.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.let { utsending ->
-                    utsendingMediator.slettUtsending(utsendingId = utsending.id)
+                transaksjoner.transaksjon { ctx ->
+                    oppgaveRepository.lagre(oppgave, ctx)
+                    if (meldingOmVedtakKilde != DP_SAK) {
+                        utsendingMediator
+                            .finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)
+                            ?.let { utsending ->
+                                utsendingMediator.slettUtsending(utsendingId = utsending.id, ctx)
+                            }
+                    }
                 }
             }
         }

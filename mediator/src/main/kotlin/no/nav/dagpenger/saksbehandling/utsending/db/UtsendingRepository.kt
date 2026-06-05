@@ -18,6 +18,11 @@ interface UtsendingRepository {
     fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending
 
     fun slettUtsending(utsendingId: UUID): Int
+
+    fun slettUtsending(
+        utsendingId: UUID,
+        kontekst: Transaksjonskontekst.Aktiv,
+    ): Int
 }
 
 class UtsendingIkkeFunnet(
