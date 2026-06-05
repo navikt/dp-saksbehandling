@@ -92,3 +92,84 @@ Etter kritisk gjennomgang: **#13/#14/#15 er ikke reelle problemer** for cross-re
 - `InnsendingMediator.ferdigstill()` har bevisst split-transaksjon — mitigert av InnsendingAlarmJob
 - `ferdigstillOppgaveMedUtsending()` er **selvhelende via Kafka**, ikke via kompenserende delete. Rekkefølgen er bevisst: `hentEllerOpprettUtsending` oppretter utsendingen *før* HTTP-kallet (`godkjenn/beslutt`). Hvis HTTP timer ut / feiler, men dp-behandling faktisk fullfører behandlingen, kommer et `behandlingsresultat`-event som (a) `BehandlingsresultatMottak` ferdigstiller oppgaven, og (b) `BehandlingsresultatMottakForUtsending` → `startUtsendingForVedtakFattet` starter den allerede opprettede utsendingen. Den tidlige opprettelsen er **load-bearing**: `startUtsendingForVedtakFattet` bruker `finnUtsendingForBehandlingId(...)?.let { ... }` og starter kun en utsending som allerede finnes. Begge stegene er idempotente (`oppgave.ferdigstill` → `Handling.INGEN` ved allerede ferdig; utsendingens tilstandsmaskin no-op'er ved reprise), så saksbehandlers retry og Kafka-recovery kan skje samtidig uten dobbeltkjøring. Feiler HTTP fordi dp-behandling rullet tilbake, kommer ingen event — men da er ingenting fullført, og saksbehandlers retry er riktig vei.
 - `OppgaveTilstandAlertJob` sjekker kun oppgaver stuck i `OPPRETTET` — dekker ikke #14
+
+---
+
+## TODO (eventuell) — `StatistikkJob`: gjør publisering transaksjonell via utboks
+
+**Status:** ikke en akutt bug. `StatistikkJob` er en *håndrullet outbox* og fungerer (at-least-once,
+konsument idempotent på `tilstandsendringId`). Dette er en mulig forbedring, ikke et krav.
+
+### Bakgrunn — hva `StatistikkJob` faktisk er
+
+Ikke en enkel dual-write, men en **denormaliserende ETL-projeksjon med ordnet cursor**:
+
+- `oppgaveTilstandsendringer()` (`PostgresSaksbehandlingsstatistikkRepository`) er én
+  `INSERT … SELECT … RETURNING` som leser `oppgave_tilstand_logg_v1`, joiner på tvers av
+  oppgave/behandling/sak/person/innsending, og gjør forretningstransformasjoner i SQL
+  (`AVBRUTT→AVBRUTT_MANUELT`, `UNDER_BEHANDLING+Returner→UNDERKJENT_BESLUTTER`, `fagsystem`
+  fra `sak.er_dp_sak`/`arena_sak_id`, beslutter/saksbehandler ut av JSON).
+- High-water mark cursor: `log.id > coalesce(max(overført), seed)`, `ORDER BY log.id`.
+- Jobben publiserer hver rad til rapid og flipper `overfort_til_statistikk = TRUE` etterpå.
+
+**Polling-forsinkelsen er load-bearing**: `fagsystem`/`arena_sak_id`/`resultat_type` settes
+av *senere* events (`merkSakenSomDpSak`, `oppdaterSakMedArenaSakId`), så projeksjonen må skje
+etter at downstream-fakta har satt seg — ikke ved tilstands-skrivetidspunkt.
+
+### Reell svakhet i dagens kode
+
+`publish`-returverdien ignoreres (`.also { marker… }`), så raden markeres `overført` uansett.
+En feilende rapid kan dermed **markere som sendt uten faktisk levering** (omvendt risiko vs.
+utboksen, som markerer `SENDT` kun etter bekreftet publish). I tillegg: ingen etterslep-metrikk.
+
+### Forkastet alternativ — flytt produksjon til skrivetid (full utbox-integrasjon)
+
+Å produsere statistikkmeldingen inne i oppgave-skrivetransaksjonen ble **forkastet**: krever å
+flytte SQL-forretningslogikken til Kotlin, mister polling-forsinkelsen (fanger ufullstendige
+fakta), mister den varige projeksjonstabellen, og må reimplementere cursor/seed. Høy blast
+radius mot et analyse-datasett (BigQuery `behandlinger_mart`).
+
+### Anbefalt måldesign (hvis vi tar dette) — behold ETL-pollen, gjør hand-off transaksjonell
+
+Wrap poll + enqueue + markering i **én** transaksjon:
+
+```kotlin
+transaksjoner.transaksjon { ctx ->
+    val endringer = repo.oppgaveTilstandsendringer(ctx)                 // INSERT…RETURNING i tx
+    utboks.send(endringer.map { it.tilMelding() }, ctx)                // batch-enqueue i tx
+    repo.markerTilstandsendringerSomOverført(endringer.map { it.tilstandId }, ctx) // batch-flip i tx
+}
+```
+
+- Teknisk wirebart uten ny infra: repoet bruker allerede `DatabaseSession`, og
+  `DatabaseSession.inContext(ctx)` finnes (samme som utbox-repoet). Trengs kun ctx-overloads.
+- **Vinner:** fjerner fire-and-forget reverse-risken, full atomicitet (projeksjon+markering+
+  enqueue), arver utboksens gauge/alarmer. Beholder ETL-projeksjon, polling-delay, varig
+  tabell og cursor.
+- Duplikat-grensen flyttes til utboksens `publish→SENDT`, med samme idempotensnøkkel
+  (`tilstandsendringId`) konsumenten allerede tåler.
+
+### Forutsetninger / risikoer før et slikt bygg
+
+1. **Batch-API er påkrevd, ikke valgfritt.** Opptil 1000 rader/poll → uten batch blir det
+   ~2000 round-trips i én lang tx (låser, WAL, statement-timeout ved etterslep/backfill).
+   Trengs `utboks.send(List, ctx)` (multi-row INSERT) + `marker(List, ctx)`
+   (`WHERE tilstand_id = ANY(:ids)`).
+2. **FIFO-kobling (viktigst).** Statistikk (lav-kritisk) vil dele utboksens globale FIFO med
+   forretningskritiske meldinger (`avbryt_behandling`, klage). Utboksen «stopper ved første
+   feil» → en poison statistikkmelding kan stalle høy-kritisk utsending. Denne feilisolasjonen
+   finnes i dag (egen jobb). Krever **eksplisitt valg**: (a) aksepter delt strøm, eller
+   (b) egen utbox-kategori for statistikk (mer kompleksitet).
+3. **Volum/baseline.** Statistikk er høyfrekvent → høyere innsett-rate og «ventende»-gauge-
+   baseline. Bekreft at 7-dagers opprydding og alarmterskler tåler det (unngå falske alarmer).
+4. `tidligereTilstandsendringerErOverført()`-gaten blir korrekthet-overflødig (FALSE-rader kan
+   ikke vedvare etter atomisk commit) — behold som billig invariant eller fjern bevisst.
+
+### Cutover
+Drain gammel sti (kjør til ingen `overfort=FALSE` gjenstår) → deploy ny sti i samme
+poll-posisjon. Cursor/seed garanterer ingen gap/dobbel.
+
+### Lavrisiko-mellomsteg (uavhengig av ovenstående)
+Selv om vi ikke tar full transaksjonell hand-off: (1) legg til etterslep-metrikk (antall
+`overfort=FALSE`), og (2) verifiser `publish`-suksess før `markerSomOverført` — fjerner
+reverse-risken alene.
