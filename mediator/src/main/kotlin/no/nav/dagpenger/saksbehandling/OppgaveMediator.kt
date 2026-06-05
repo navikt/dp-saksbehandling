@@ -460,6 +460,7 @@ class OppgaveMediator(
                 oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
                 transaksjoner.transaksjon { ctx ->
                     oppgaveRepository.lagre(oppgave, ctx)
+                    utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
                     if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
                         utboks.send(
                             key = oppgave.personIdent(),
@@ -652,6 +653,7 @@ class OppgaveMediator(
                     logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
                     oppgave.avbryt(hendelse)
                     oppgaveRepository.lagre(oppgave, ctx)
+                    utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
                     logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
                 }
             }

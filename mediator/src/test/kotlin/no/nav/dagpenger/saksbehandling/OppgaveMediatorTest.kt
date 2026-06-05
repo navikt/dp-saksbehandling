@@ -1386,6 +1386,48 @@ OppgaveMediatorTest {
     }
 
     @Test
+    fun `Når oppgave avbrytes skal utsending som venter på vedtak også avbrytes`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave()
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(datasource))
+            utsendingRepository.lagre(
+                Utsending(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.personIdent(),
+                    brev = "<html>brev</html>",
+                ),
+            )
+            utsendingRepository
+                .hentUtsendingForBehandlingId(oppgave.behandling.behandlingId)
+                .tilstand()
+                .type shouldBe Utsending.Tilstand.Type.VenterPåVedtak
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.avbryt(
+                AvbrytOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    navIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe AVBRUTT
+            utsendingRepository
+                .hentUtsendingForBehandlingId(oppgave.behandling.behandlingId)
+                .tilstand()
+                .type shouldBe Utsending.Tilstand.Type.Avbrutt
+        }
+    }
+
+    @Test
     fun `Livssyklus for søknadsbehandling som blir satt på vent`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
 

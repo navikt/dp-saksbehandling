@@ -110,6 +110,10 @@ data class Utsending(
         counter.labelValues("avslagMinsteinntekt").inc()
     }
 
+    fun avbryt() {
+        tilstand.avbryt(this)
+    }
+
     private fun nyTilstand(nyTilstand: Tilstand) {
         nyTilstand.entering(this)
         tilstand = nyTilstand
@@ -117,6 +121,13 @@ data class Utsending(
 
     object VenterPåVedtak : Tilstand {
         override val type = Tilstand.Type.VenterPåVedtak
+
+        override fun avbryt(utsending: Utsending) {
+            withLoggingContext("behandlingId" to utsending.behandlingId.toString()) {
+                logger.info { "Avbryter utsending i tilstand $type" }
+                utsending.nyTilstand(Avbrutt)
+            }
+        }
 
         override fun mottaStartUtsendingHendelse(
             utsending: Utsending,
@@ -255,6 +266,10 @@ data class Utsending(
 
     object Avbrutt : Tilstand {
         override val type = Tilstand.Type.Avbrutt
+
+        override fun avbryt(utsending: Utsending) {
+            // Idempotent: utsending er allerede avbrutt
+        }
     }
 
     object Distribuert : Tilstand {
@@ -285,6 +300,9 @@ data class Utsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ): Unit = throw UlovligUtsendingTilstandsendring("Kan ikke starte utsending i tilstand: ${this.type}")
+
+        fun avbryt(utsending: Utsending): Unit =
+            throw UlovligUtsendingTilstandsendring("Kan ikke avbryte utsending i tilstand: ${this.type}")
 
         val type: Type
 

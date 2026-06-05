@@ -62,6 +62,17 @@ class UtsendingMediator(
             type = type,
         )
 
+    fun avbrytUtsendingForBehandling(
+        behandlingId: UUID,
+        ctx: Transaksjonskontekst = IkkeAktiv,
+    ) {
+        utsendingRepository.finnUtsendingForBehandlingId(behandlingId)?.let { utsending ->
+            logger.info { "Avbryter utsending ${utsending.id} for behandling $behandlingId" }
+            utsending.avbryt()
+            utsendingRepository.lagre(utsending, ctx)
+        }
+    }
+
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
         val utsending = utsendingRepository.hentUtsendingForBehandlingId(startUtsendingHendelse.behandlingId)
         utsending.startUtsending(startUtsendingHendelse)

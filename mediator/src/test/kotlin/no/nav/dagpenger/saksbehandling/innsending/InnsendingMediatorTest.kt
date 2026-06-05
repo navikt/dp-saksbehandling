@@ -573,7 +573,7 @@ class InnsendingMediatorTest {
                 OppgaveMediator(
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
-                    utsendingMediator = mockk(),
+                    utsendingMediator = mockk { every { avbrytUtsendingForBehandling(any(), any()) } just Runs },
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
