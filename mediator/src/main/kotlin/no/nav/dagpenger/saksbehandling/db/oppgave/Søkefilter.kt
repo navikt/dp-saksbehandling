@@ -24,6 +24,7 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknaggGruppertPerKategori: Map<EmneknaggKategori, Set<String>> = emptyMap(),
+    val ekskluderEmneknagger: Set<String> = emptySet(),
     val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
@@ -99,6 +100,7 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
+                ekskluderEmneknagger = builder.ekskluderEmneknagger(),
                 utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
                 sorteringsfelt = sorteringsfelt,
@@ -111,6 +113,7 @@ data class Søkefilter(
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknaggGruppertPerKategori: Map<EmneknaggKategori, Set<String>> = emptyMap(),
+    val ekskluderEmneknagger: Set<String> = emptySet(),
     val tilstander: Set<Tilstand.Type> = emptySet(),
     val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
@@ -133,6 +136,7 @@ data class TildelNesteOppgaveFilter(
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
+                ekskluderEmneknagger = builder.ekskluderEmneknagger(),
                 tilstander = tilstander,
                 utløstAvTyper = utløstAvTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
@@ -230,6 +234,8 @@ class FilterBuilder {
     }
 
     fun tilstander(): Set<Tilstand.Type>? = stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
+
+    fun ekskluderEmneknagger(): Set<String> = stringValues.getAll("ekskluderEmneknagg")?.toSet() ?: emptySet()
 
     fun utløstAvTyper(): Set<HendelseBehandler>? = stringValues.getAll("utlostAv")?.map { HendelseBehandler.valueOf(it) }?.toSet()
 

@@ -12,10 +12,11 @@ import java.time.LocalDate
 
 class SøkefilterTest {
     @Test
-    fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
-        Parameters.Companion
+    fun `Skal kunne initialisere et søkefilter fra Ktors QueryParameters`() {
+        Parameters
             .build {
                 this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
+                this.appendAll("ekskluderEmneknagg", listOf("D-nummer", "Utdanning"))
                 this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
                 this.appendAll("rettighet", listOf("Permittert", "Permittert fisk"))
                 this["sorteringsfelt"] = "status"
@@ -42,6 +43,7 @@ class SøkefilterTest {
                         HendelseBehandler.DpBehandling.Søknad,
                         HendelseBehandler.Intern.Klage,
                     )
+                søkefilter.ekskluderEmneknagger shouldBe setOf("D-nummer", "Utdanning")
                 søkefilter.emneknaggGruppertPerKategori shouldBe
                     mapOf(
                         EmneknaggKategori.RETTIGHET to
@@ -63,10 +65,11 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom, tom eller paginering`() {
-        val søkefilter = Søkefilter.fra(Parameters.Companion.Empty, "testIdent")
+    fun `Bruk default verdier når query parameters mangler mine, tilstand, ekskluderEmneknagger, fom, tom eller paginering`() {
+        val søkefilter = Søkefilter.fra(Parameters.Empty, "testIdent")
         søkefilter.periode shouldBe Periode.UBEGRENSET_PERIODE
-        søkefilter.tilstander shouldBe Oppgave.Tilstand.Type.Companion.søkbareTilstander
+        søkefilter.tilstander shouldBe Oppgave.Tilstand.Type.søkbareTilstander
+        søkefilter.ekskluderEmneknagger shouldBe emptySet()
         søkefilter.saksbehandlerIdent shouldBe null
         søkefilter.personIdent shouldBe null
         søkefilter.oppgaveId shouldBe null
@@ -102,7 +105,7 @@ class SøkefilterTest {
 
     @Test
     fun `Skal kunne bruke kategori-baserte query parametere`() {
-        Parameters.Companion
+        Parameters
             .build {
                 this.appendAll("rettighet", listOf("Ordinær", "Verneplikt"))
                 this.appendAll("soknadsresultat", listOf("Avslag"))
@@ -120,13 +123,13 @@ class SøkefilterTest {
 
     @Test
     fun `Sortering default skal være ASC`() {
-        val søkefilter = Søkefilter.fra(Parameters.Companion.Empty, "testIdent")
+        val søkefilter = Søkefilter.fra(Parameters.Empty, "testIdent")
         søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
     }
 
     @Test
     fun `Skal kunne sette sorteringsfelt til STATUS`() {
-        Parameters.Companion
+        Parameters
             .build {
                 this["sorteringsfelt"] = "status"
             }.let {
@@ -137,7 +140,7 @@ class SøkefilterTest {
 
     @Test
     fun `Skal kunne sette sortering til ASC eksplisitt`() {
-        Parameters.Companion
+        Parameters
             .build {
                 this["sortering"] = "asc"
             }.let {
@@ -148,7 +151,7 @@ class SøkefilterTest {
 
     @Test
     fun `Skal kunne sette sortering til DESC eksplisitt`() {
-        Parameters.Companion
+        Parameters
             .build {
                 this["sortering"] = "desc"
             }.let {
@@ -159,7 +162,7 @@ class SøkefilterTest {
 
     @Test
     fun `Skal bruke default verdier for sorteringsfelt og sortering ved ugyldige verdier`() {
-        Parameters.Companion
+        Parameters
             .build {
                 this["sorteringsfelt"] = "ukjent"
                 this["sortering"] = "ukjent"

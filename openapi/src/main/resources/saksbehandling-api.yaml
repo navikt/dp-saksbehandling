@@ -208,7 +208,7 @@ paths:
 
   /oppgave:
     get:
-      summary: Hent alle oppgaver med status Klar til behandling
+      summary: Hent alle oppgaver ut fra gitt filter
       parameters:
         - in: query
           name: rettighet
@@ -254,6 +254,17 @@ paths:
             items:
               type: string
           example: ["Gjenopptak"]
+        - in: query
+          name: ekskluderEmneknagg
+          description: Ekskluder oppgaver med disse emneknaggene (f.eks. "Verneplikt" og "D-nummer")
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Verneplikt", "D-nummer"]
         - in: query
           name: paa_vent
           description: Filtrer på på-vent årsaker (f.eks. "Avvent svar", "Avvent dokumentasjon")
