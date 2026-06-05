@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -47,10 +48,9 @@ class StatistikkJob(
                 }
 
             oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
-                rapidsConnection
-                    .publish(
-                        key = oppgaveTilstandsendring.personIdent,
-                        message =
+                val melding =
+                    OutgoingMessage(
+                        body =
                             JsonMessage
                                 .newMessage(
                                     mapOf(
@@ -58,22 +58,38 @@ class StatistikkJob(
                                         "oppgave" to oppgaveTilstandsendring.asMap(),
                                     ),
                                 ).toJson(),
-                    ).also {
-                        saksbehandlingsstatistikkRepository
-                            .markerTilstandsendringerSomOverført(
-                                tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
-                            ).let {
-                                if (it != 1) {
-                                    logger.warn {
-                                        "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
-                                    }
-                                }
+                        key = oppgaveTilstandsendring.personIdent,
+                    )
+
+                // (A) Synkron send()-feil propagerer ut → fanges av runCatching.onFailure (ingen markering).
+                // (B) Async leveransefeil rapporteres som FailedMessage uten å kaste.
+                val (_, feilet) = rapidsConnection.publish(listOf(melding))
+
+                // Marker IKKE som overført ved leveransefeil — det ville gitt et stille hull i statistikken.
+                // Stopp for å bevare streng log.id-rekkefølge; raden retryes ved neste kjøring.
+                if (feilet.isNotEmpty()) {
+                    logger.error(feilet.first().error) {
+                        "Leveransefeil for tilstandsendring ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} " +
+                            "— stopper (forblir uoverført)"
+                    }
+                    return@runCatching
+                }
+
+                saksbehandlingsstatistikkRepository
+                    .markerTilstandsendringerSomOverført(
+                        tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
+                    ).let {
+                        if (it != 1) {
+                            logger.warn {
+                                "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: " +
+                                    "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
                             }
-                        logger.info {
-                            "Publisert oppgavetilstandsendring med " +
-                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
                     }
+                logger.info {
+                    "Publisert oppgavetilstandsendring med " +
+                        "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+                }
             }
             logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
         }.onFailure {

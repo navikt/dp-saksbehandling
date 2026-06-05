@@ -1,9 +1,14 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.FailedMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.SentMessage
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -245,4 +250,68 @@ class StatistikkJobTest {
         }
         assert(testRapid.inspektør.size == 0)
     }
+
+    @Test
+    fun `Skal ikke markere tilstandsendring som overført ved leveransefeil og skal stoppe videre publisering`() {
+        // Feiler på melding nr 3 (innsendingFerdigBehandlet) med FailedMessage uten å kaste
+        val rapidMedLeveransefeil = FeilendePåIndeksRapid(feilPåIndeks = 3, delegate = testRapid)
+
+        runBlocking {
+            StatistikkJob(
+                rapidsConnection = rapidMedLeveransefeil,
+                saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
+            ).executeJob()
+        }
+
+        // De to første ble levert og markert
+        verify(exactly = 1) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                søknadKlarTilBehandling.tilstandsendring.tilstandsendringId,
+            )
+        }
+        verify(exactly = 1) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId)
+        }
+        // Den feilede og den etterfølgende skal IKKE markeres (ellers stille hull i statistikken)
+        verify(exactly = 0) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId,
+            )
+        }
+        verify(exactly = 0) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId)
+        }
+    }
+}
+
+private class FeilendePåIndeksRapid(
+    private val feilPåIndeks: Int,
+    private val delegate: RapidsConnection,
+) : RapidsConnection() {
+    private var antallPublisert = 0
+
+    override fun publish(message: String) = TODO("ikke i bruk")
+
+    override fun publish(
+        key: String,
+        message: String,
+    ) = TODO("ikke i bruk")
+
+    override fun publish(messages: List<OutgoingMessage>): Pair<List<SentMessage>, List<FailedMessage>> {
+        antallPublisert++
+        return if (antallPublisert == feilPåIndeks) {
+            emptyList<SentMessage>() to
+                messages.mapIndexed { index, melding ->
+                    FailedMessage(index, melding, RuntimeException("Simulert leveransefeil"))
+                }
+        } else {
+            delegate.publish(messages)
+        }
+    }
+
+    override fun rapidName(): String = "FeilendePåIndeksRapid"
+
+    override fun start() {}
+
+    override fun stop() {}
 }
