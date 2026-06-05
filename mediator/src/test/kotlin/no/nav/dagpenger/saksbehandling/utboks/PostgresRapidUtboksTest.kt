@@ -45,7 +45,8 @@ class PostgresRapidUtboksTest {
             }
 
             repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name).first.size shouldBe 1
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_nye_meldinger_total" }
+            registry
+                .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_nye_meldinger_total" }
                 .let { snapshot ->
                     snapshot.dataPoints.single().value shouldBe 1.0
                 }
@@ -147,7 +148,8 @@ class PostgresRapidUtboksTest {
                 it.message shouldBe """{"ident":"y"}"""
             }
 
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }
+            registry
+                .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }
                 .let { snapshot ->
                     snapshot.dataPoints.single { it.labels["status"] == "success" }.value shouldBe 1.0
                     snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
@@ -177,7 +179,8 @@ class PostgresRapidUtboksTest {
 
             utboks.publiserVentende()
 
-            registry.getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }
+            registry
+                .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }
                 .let { snapshot ->
                     snapshot.dataPoints.single().value shouldBe 0.0
                 }
@@ -212,7 +215,8 @@ class PostgresRapidUtboksTest {
                 .first
                 .single()
                 .key shouldBe "x"
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }
+            registry
+                .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }
                 .let { snapshot ->
                     snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
                 }
@@ -271,7 +275,8 @@ class PostgresRapidUtboksTest {
 
             utboks.publiserVentende()
 
-            registry.getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }
+            registry
+                .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }
                 .let { snapshot ->
                     snapshot.dataPoints.single().value shouldBe 1.0
                 }
@@ -354,9 +359,9 @@ private class FeilendeRapid(
                 Feilmodus.SYNKRONT_KAST -> throw RuntimeException("Simulert synkron Kafka-feil")
                 Feilmodus.LEVERANSEFEIL ->
                     emptyList<SentMessage>() to
-                            messages.mapIndexed { index, melding ->
-                                FailedMessage(index, melding, RuntimeException("Simulert leveransefeil"))
-                            }
+                        messages.mapIndexed { index, melding ->
+                            FailedMessage(index, melding, RuntimeException("Simulert leveransefeil"))
+                        }
             }
         }
         antallPublisert++

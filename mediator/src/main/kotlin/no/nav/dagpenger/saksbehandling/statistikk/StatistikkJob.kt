@@ -64,31 +64,32 @@ class StatistikkJob(
                 // (A) Synkron send()-feil propagerer ut → fanges av runCatching.onFailure (ingen markering).
                 // (B) Async leveransefeil rapporteres som FailedMessage uten å kaste.
                 val (_, feilet) = rapidsConnection.publish(listOf(melding))
-
-                // Marker IKKE som overført ved leveransefeil — det ville gitt et stille hull i statistikken.
-                // Stopp for å bevare streng log.id-rekkefølge; raden retryes ved neste kjøring.
-                if (feilet.isNotEmpty()) {
-                    logger.error(feilet.first().error) {
-                        "Leveransefeil for tilstandsendring ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} " +
-                            "— stopper (forblir uoverført)"
-                    }
-                    return@runCatching
-                }
-
-                saksbehandlingsstatistikkRepository
-                    .markerTilstandsendringerSomOverført(
-                        tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
-                    ).let {
-                        if (it != 1) {
-                            logger.warn {
-                                "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: " +
-                                    "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
+                when (feilet.isEmpty()) {
+                    true -> {
+                        saksbehandlingsstatistikkRepository
+                            .markerTilstandsendringerSomOverført(
+                                tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
+                            ).let {
+                                if (it != 1) {
+                                    logger.warn {
+                                        "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: " +
+                                            "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
+                                    }
+                                }
                             }
+                        logger.info {
+                            "Publisert oppgavetilstandsendring med " +
+                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
                     }
-                logger.info {
-                    "Publisert oppgavetilstandsendring med " +
-                        "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
+
+                    false -> {
+                        logger.error(feilet.first().error) {
+                            "Leveransefeil for tilstandsendring ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} " +
+                                "— stopper (forblir uoverført)"
+                        }
+                        return@runCatching
+                    }
                 }
             }
             logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
