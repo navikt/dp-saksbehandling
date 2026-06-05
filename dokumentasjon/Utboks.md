@@ -150,9 +150,45 @@ ved reprise i stedet for å kaste). Se sesjonsartefakt
 
 ### Utsatt
 
-- **Jobb-alarmer** for utboks-jobbene (varsling ved stillstand/feil) — utsatt til
-  det er mer trafikk i prod.
+- **Jobb-alarmer** for utboks-jobbene: `UtboksDrenererIkke` (stillstand i
+  publisering) er på plass i `.nais/alerts.yaml` (dev+prod). Mer finkornede
+  alarmer (per-jobb feilrate o.l.) utsatt til det er mer trafikk i prod.
 - **Alert-semantikk**: `BEHANDLING_IKKE_FUNNET` går nå at-least-once/async via
   utboks i en frittstående transaksjon (kun `utboks.send`, ingen domeneendring å
   rulle tilbake), i stedet for synkron fire-and-forget. Bevisst valg for å fjerne
   siste `RapidsConnection`-avhengighet fra OppgaveMediator.
+
+## Poison-meldinger og head-of-line blocking (akseptert restrisiko)
+
+`publiserVentende` publiserer strengt FIFO (`ORDER BY id`) og **stopper ved første
+feil** (`break`) — både ved synkront kast og ved `FailedMessage` fra rapiden. Det er
+riktig for *transiente/globale* feil (broker nede, timeout): hele køen retryes ved
+neste poll, og ingenting tapes (raden forblir PENDING til bekreftet leveranse).
+
+Svakheten: en *permanent, deterministisk* feil på én melding ville stoppe hele køen
+i det uendelige (head-of-line blocking), siden samme rad hentes og feiler hver poll.
+
+**Hvorfor dette er akseptert som restrisiko, ikke fikset:**
+
+- Den eneste realistiske permanente per-melding-feilen var `RecordTooLargeException`
+  fra `ArkiverbartBrevBehov` (base64-HTML inline). Brevene er i praksis **langt under**
+  Kafka-grensen (default 1 MB), så vektoren finnes ikke.
+- Øvrige meldinger er små JSON-strenger som allerede er serialisert (`JsonMessage.toJson()`)
+  *før* utboks — serialiseringsfeil ved send er ~umulig.
+- Gjenstående feilklasser (broker nede, ACL, ukjent topic) er **transiente/globale**,
+  ikke per-melding — der er `break` + retry korrekt respons.
+
+⇒ Klassen «permanent per-melding-feil» er tilnærmet tom. `break`-på-feil er dermed
+riktig design, ikke en svakhet.
+
+**Sikkerhetsnett:** `UtboksDrenererIkke`-alarmen (`.nais/alerts.yaml`) fyrer hvis
+`dp_saksbehandling_utboks_ventende_meldinger` holder seg `> 0` i 10 min. Skulle en
+ukjent permanent feil likevel oppstå, oppdages den reaktivt — og ingenting tapes
+imens (alt forblir PENDING).
+
+**Hvis det noen gang skjer:** vurder per-key (per-fnr) `FEILET`-skip — flagg den
+giftige raden `FEILET` og ekskludér kun *den personens* køede meldinger (`NOT EXISTS`
+på `key`), så øvrige fnr drenerer. Det bevarer per-fnr-rekkefølge (den eneste orden
+Kafka faktisk gir nedstrøms, siden `key = ident` partisjonerer per person) og isolerer
+blast radius til én person. Bygges først når en faktisk feilsignatur finnes — ikke
+spekulativt.

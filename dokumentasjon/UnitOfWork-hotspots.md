@@ -75,7 +75,7 @@ Etter kritisk gjennomgang: **#13/#14/#15 er ikke reelle problemer** for cross-re
 | # | Flow | Type | Konklusjon |
 |---|------|------|------------|
 | 13 | `OppgaveMediator.endreMeldingOmVedtakKilde()` | DB+DB | **Ikke problem.** API-trigget (synkron). `slettUtsending` er separat, trygg. Feiler den, får saksbehandler HTTP-feil og prøver på nytt; `endreMeldingOmVedtakKilde` er idempotent. Selvhelende ved retry |
-| 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Ikke cross-repo-hotspot.** Dette er dual-write (DB+Kafka), annen problemklasse enn UoW. API-trigget. `rapidsConnection.publish` kaster sjelden; vinduet er app-krasj mellom to linjer. Akseptert R&R-tradeoff på tvers av hele kodebasen |
+| 14 | `OppgaveMediator.avbryt()` | DB+Kafka | **Løst via utboks (2026-06).** Tidligere dual-write (DB+Kafka) er nå migrert: `avbryt_behandling` skrives til utboksen i samme transaksjon som `lagre(oppgave)`, og publiseres at-least-once av `UtboksPubliseringJob`. Ingen dual-write-vindu igjen. Stillstand dekkes av `UtboksDrenererIkke`-alarmen. Se Utboks.md |
 | 15 | `SakMediator.opprettSak()` | DB+DB | **Ikke problem.** Kafka-trigget → River reprosesserer ved feil (onPacket kaster = ingen ack). `finnEllerOpprettPerson` idempotent. Selvhelende |
 
 ### Funn som ble fikset
@@ -91,7 +91,7 @@ Etter kritisk gjennomgang: **#13/#14/#15 er ikke reelle problemer** for cross-re
 - `OppfølgingMediator.ferdigstill()` har bevisst split-transaksjon (se Oppfølging.md) — mitigert av OppfølgingAlarmJob
 - `InnsendingMediator.ferdigstill()` har bevisst split-transaksjon — mitigert av InnsendingAlarmJob
 - `ferdigstillOppgaveMedUtsending()` er **selvhelende via Kafka**, ikke via kompenserende delete. Rekkefølgen er bevisst: `hentEllerOpprettUtsending` oppretter utsendingen *før* HTTP-kallet (`godkjenn/beslutt`). Hvis HTTP timer ut / feiler, men dp-behandling faktisk fullfører behandlingen, kommer et `behandlingsresultat`-event som (a) `BehandlingsresultatMottak` ferdigstiller oppgaven, og (b) `BehandlingsresultatMottakForUtsending` → `startUtsendingForVedtakFattet` starter den allerede opprettede utsendingen. Den tidlige opprettelsen er **load-bearing**: `startUtsendingForVedtakFattet` bruker `finnUtsendingForBehandlingId(...)?.let { ... }` og starter kun en utsending som allerede finnes. Begge stegene er idempotente (`oppgave.ferdigstill` → `Handling.INGEN` ved allerede ferdig; utsendingens tilstandsmaskin no-op'er ved reprise), så saksbehandlers retry og Kafka-recovery kan skje samtidig uten dobbeltkjøring. Feiler HTTP fordi dp-behandling rullet tilbake, kommer ingen event — men da er ingenting fullført, og saksbehandlers retry er riktig vei.
-- `OppgaveTilstandAlertJob` sjekker kun oppgaver stuck i `OPPRETTET` — dekker ikke #14
+- `OppgaveTilstandAlertJob` sjekker kun oppgaver stuck i `OPPRETTET`. #14 (`avbryt()`) er ikke lenger et dual-write-hotspot — det er migrert til utboks og dekkes av `UtboksDrenererIkke`-alarmen
 
 ---
 
