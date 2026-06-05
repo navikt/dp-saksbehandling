@@ -57,6 +57,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
+import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -233,7 +234,8 @@ OppgaveMediatorTest {
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 sakMediator = sakMediatorMock,
-                rapidsConnection = testRapid,
+                utboks = TestUtboks(testRapid),
+                transaksjoner = kjørendeTransaksjoner(),
             )
 
         oppgaveMediator.opprettEllerOppdaterOppgave(
@@ -1578,7 +1580,8 @@ OppgaveMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = mockk(),
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
 
             oppgaveMediator
@@ -1654,7 +1657,8 @@ OppgaveMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -1751,7 +1755,8 @@ OppgaveMediatorTest {
                 behandlingKlient = behandlingKlientMock,
                 utsendingMediator = mockk(),
                 sakMediator = sakMediator,
-                rapidsConnection = testRapid,
+                utboks = TestUtboks(testRapid),
+                transaksjoner = Transaksjoner(DatabaseSession(this)),
             )
 
         val hendelse =
@@ -1857,7 +1862,8 @@ OppgaveMediatorTest {
                             transaksjoner = Transaksjoner(DatabaseSession(datasource)),
                         ),
                     sakMediator = sakMediator,
-                    rapidsConnection = testRapid,
+                    utboks = TestUtboks(testRapid),
+                    transaksjoner = Transaksjoner(DatabaseSession(datasource)),
                 )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {

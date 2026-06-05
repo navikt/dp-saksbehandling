@@ -1,18 +1,17 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
-import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Oppgave.Handling
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -43,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -56,7 +56,8 @@ class OppgaveMediator(
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
     private val sakMediator: SakMediator,
-    private val rapidsConnection: RapidsConnection,
+    private val utboks: Utboks,
+    private val transaksjoner: Transaksjoner,
 ) {
     fun lagOppgaveForInnsendingBehandling(
         innsendingMottattHendelse: InnsendingMottattHendelse,
@@ -206,11 +207,7 @@ class OppgaveMediator(
                 ?.finnBehandling(forslagTilVedtakHendelse.behandlingId)
 
         if (behandling == null) {
-            val feilmelding =
-                "Mottatt forslag til vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                    "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
-            logger.error { feilmelding }
-            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
+            loggOgAlertBehandlingIkkeFunnet(forslagTilVedtakHendelse)
         } else {
             oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
             when (oppgave == null) {
@@ -229,13 +226,15 @@ class OppgaveMediator(
                         ).also {
                             it.settKlarTilBehandling(forslagTilVedtakHendelse)
                         }
-                    if (forslagTilVedtakHendelse.behandletHendelseType == "Søknad") {
-                        sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse)
+                    transaksjoner.transaksjon { ctx ->
+                        if (forslagTilVedtakHendelse.ident.first().digitToInt() in 4..7) {
+                            oppgave.leggTilEmneknagger(setOf(Emneknagg.Søknadsavklaring.D_NUMMER.visningsnavn))
+                        }
+                        oppgaveRepository.lagre(oppgave, ctx)
+                        if (forslagTilVedtakHendelse.behandletHendelseType == "Søknad") {
+                            sendSøknadsavklaringBehov(oppgave, forslagTilVedtakHendelse, ctx)
+                        }
                     }
-                    if (forslagTilVedtakHendelse.ident.first().digitToInt() in 4..7) {
-                        oppgave.leggTilEmneknagger(setOf(Emneknagg.Søknadsavklaring.D_NUMMER.visningsnavn))
-                    }
-                    oppgaveRepository.lagre(oppgave)
                 }
 
                 false -> {
@@ -455,22 +454,25 @@ class OppgaveMediator(
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
                 oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
-                oppgaveRepository.lagre(oppgave)
-                if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
-                    rapidsConnection.publish(
-                        key = oppgave.personIdent(),
-                        message =
-                            JsonMessage
-                                .newMessage(
-                                    eventName = "avbryt_behandling",
-                                    map =
-                                        mapOf(
-                                            "behandlingId" to oppgave.behandling.behandlingId,
-                                            "ident" to oppgave.personIdent(),
-                                            "årsak" to avbrytOppgaveHendelse.årsak.visningsnavn,
-                                        ),
-                                ).toJson(),
-                    )
+                transaksjoner.transaksjon { ctx ->
+                    oppgaveRepository.lagre(oppgave, ctx)
+                    if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
+                        utboks.send(
+                            key = oppgave.personIdent(),
+                            message =
+                                JsonMessage
+                                    .newMessage(
+                                        eventName = "avbryt_behandling",
+                                        map =
+                                            mapOf(
+                                                "behandlingId" to oppgave.behandling.behandlingId,
+                                                "ident" to oppgave.personIdent(),
+                                                "årsak" to avbrytOppgaveHendelse.årsak.visningsnavn,
+                                            ),
+                                    ).toJson(),
+                            ctx = ctx,
+                        )
+                    }
                 }
             }
         }
@@ -789,36 +791,53 @@ class OppgaveMediator(
     private fun sendSøknadsavklaringBehov(
         oppgave: Oppgave,
         forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ctx: Transaksjonskontekst.Aktiv,
     ) {
         logger.info {
             "Publiserer behov for søknadsinformasjon, behandling ${oppgave.behandling.behandlingId}, oppgave ${oppgave.oppgaveId}"
         }
-        rapidsConnection.publish(
-            JsonMessage
-                .newNeed(
-                    setOf(
-                        "EØSArbeid",
-                        "BostedslandErNorge",
-                        "PermittertGrensearbeider",
-                        "Sanksjon",
-                        "BarnOver16",
-                        "PlanleggerUtdanning",
-                        "EØSPengestøtte",
-                    ),
-                    mapOf(
-                        "ident" to forslagTilVedtakHendelse.ident,
-                        "søknadId" to forslagTilVedtakHendelse.behandletHendelseId,
-                        "behandlingId" to oppgave.behandling.behandlingId,
-                        "oppgaveId" to oppgave.oppgaveId,
-                    ),
-                ).toJson(),
+        utboks.send(
+            key = forslagTilVedtakHendelse.ident,
+            message =
+                JsonMessage
+                    .newNeed(
+                        setOf(
+                            "EØSArbeid",
+                            "BostedslandErNorge",
+                            "PermittertGrensearbeider",
+                            "Sanksjon",
+                            "BarnOver16",
+                            "PlanleggerUtdanning",
+                            "EØSPengestøtte",
+                        ),
+                        mapOf(
+                            "ident" to forslagTilVedtakHendelse.ident,
+                            "søknadId" to forslagTilVedtakHendelse.behandletHendelseId,
+                            "behandlingId" to oppgave.behandling.behandlingId,
+                            "oppgaveId" to oppgave.oppgaveId,
+                        ),
+                    ).toJson(),
+            ctx = ctx,
         )
     }
 
-    private fun sendAlertTilRapid(
-        feilType: AlertManager.AlertType,
-        utvidetFeilmelding: String,
-    ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
+    private fun loggOgAlertBehandlingIkkeFunnet(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+        val feilmelding =
+            "Mottatt forslag til vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
+                "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
+        logger.error { feilmelding }
+        transaksjoner.transaksjon {
+            utboks.send(
+                key = forslagTilVedtakHendelse.ident,
+                message =
+                    AlertManager.alertMessage(
+                        feilType = BEHANDLING_IKKE_FUNNET,
+                        utvidetFeilMelding = feilmelding,
+                    ),
+                it,
+            )
+        }
+    }
 
     private fun godkjennEllerBeslutt(
         behandlingId: UUID,

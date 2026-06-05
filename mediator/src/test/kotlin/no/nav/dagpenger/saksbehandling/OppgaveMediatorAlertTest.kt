@@ -7,10 +7,12 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
@@ -56,7 +58,8 @@ class OppgaveMediatorAlertTest {
                 mockk<SakMediator>().also {
                     every { it.finnSakHistorikk(any()) } returns sakHistorikk
                 },
-            rapidsConnection = rapid,
+            utboks = TestUtboks(rapid),
+            transaksjoner = kjørendeTransaksjoner(),
         ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1
@@ -116,7 +119,7 @@ class OppgaveMediatorAlertTest {
             oppgaveRepository =
                 mockk<OppgaveRepository>().also {
                     every { it.finnOppgaveFor(behandlingId = any()) } returns null
-                    every { it.lagre(oppgave = any()) } just runs
+                    every { it.lagre(oppgave = any(), ctx = any()) } just runs
                 },
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
@@ -124,7 +127,8 @@ class OppgaveMediatorAlertTest {
                 mockk<SakMediator>().also {
                     every { it.finnSakHistorikk(any()) } returns sakHistorikk
                 },
-            rapidsConnection = rapid,
+            utboks = TestUtboks(rapid),
+            transaksjoner = kjørendeTransaksjoner(),
         ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1

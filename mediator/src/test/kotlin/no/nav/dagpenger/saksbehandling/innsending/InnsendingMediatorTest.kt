@@ -156,7 +156,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -314,7 +315,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -402,7 +404,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = mockk<InnsendingRepository>()
             val innsendingMediator =
@@ -572,7 +575,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -690,7 +694,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -836,7 +841,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -1136,7 +1142,8 @@ class InnsendingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
                 )
             InnsendingMediator(
                 sakMediator = sakMediator,

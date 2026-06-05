@@ -191,7 +191,8 @@ internal class ApplicationBuilder(
                         behandlingKlient = behandlingKlient,
                         utsendingMediator = utsendingMediator,
                         sakMediator = sakMediator,
-                        rapidsConnection = rapid,
+                        utboks = utboks,
+                        transaksjoner = Transaksjoner(databaseSession),
                     )
                 val klageMediator =
                     KlageMediator(

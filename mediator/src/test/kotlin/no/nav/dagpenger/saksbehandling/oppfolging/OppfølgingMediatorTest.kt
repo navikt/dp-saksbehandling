@@ -49,7 +49,8 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
                 )
 
             val oppfølgingBehandler = mockk<OppfølgingBehandler>()
@@ -126,7 +127,8 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
@@ -196,7 +198,8 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
                 )
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
@@ -306,7 +309,8 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
                 )
 
             val oppfølgingBehandler = mockk<OppfølgingBehandler>()
@@ -398,7 +402,8 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
                 )
 
             val oppfølgingBehandler =
@@ -474,7 +479,8 @@ class OppfølgingMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     sakMediator = sakMediator,
-                    rapidsConnection = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
                 )
 
             // OppfølgingBehandler som lykkes med HTTP men ferdigstillOppgave feiler etterpå
