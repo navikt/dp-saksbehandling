@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utboks
 
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.prometheus.metrics.core.metrics.Counter
@@ -57,19 +58,31 @@ class PostgresRapidUtboks(
         var antallPublisert = 0
         try {
             for (melding in meldinger) {
-                try {
-                    rapidsConnection.publish(melding.key, melding.message)
-                    repository.oppdaterTilstand(melding.id, UtboksTilstand.SENDT.name)
-                    publiserteMeldingerCounter.inc("success")
-                    antallPublisert++
-                    logger.info { "Publiserte utboks id=${melding.id}" }
-                    // fnr (key) og message-innhold KUN til sikkerlogg (GDPR)
-                    sikkerlogg.info { "Publiserte utboks id=${melding.id} key=${melding.key}" }
-                } catch (e: Exception) {
+                val (_, feilet) =
+                    try {
+                        rapidsConnection.publish(
+                            listOf(OutgoingMessage(body = melding.message, key = melding.key)),
+                        )
+                    } catch (e: Exception) {
+                        publiserteMeldingerCounter.inc("failed")
+                        logger.error(e) { "Synkron publiseringsfeil utboks id=${melding.id} — stopper polling (PENDING beholdes)" }
+                        break
+                    }
+
+                if (feilet.isNotEmpty()) {
                     publiserteMeldingerCounter.inc("failed")
-                    logger.error(e) { "Feil ved publisering av utboks id=${melding.id} — stopper polling" }
+                    logger.error(feilet.first().error) {
+                        "Leveransefeil utboks id=${melding.id} — stopper polling (PENDING beholdes)"
+                    }
                     break
                 }
+
+                repository.oppdaterTilstand(melding.id, UtboksTilstand.SENDT.name)
+                publiserteMeldingerCounter.inc("success")
+                antallPublisert++
+                logger.info { "Publiserte utboks id=${melding.id}" }
+                // fnr (key) og message-innhold KUN til sikkerlogg (GDPR)
+                sikkerlogg.info { "Publiserte utboks id=${melding.id} key=${melding.key}" }
             }
         } finally {
             ventendeMeldingerGauge.set((totaltAntall - antallPublisert).toDouble())
