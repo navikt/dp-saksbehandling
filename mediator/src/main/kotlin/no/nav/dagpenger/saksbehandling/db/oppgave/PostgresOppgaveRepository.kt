@@ -71,6 +71,7 @@ class PostgresOppgaveRepository(
             val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
             val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'${it.name}'" }
             val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
+            val ekskluderEmneknaggerAsText = filter.ekskluderEmneknagger.joinToString { "'$it'" }
             val utløstAvTypeClause =
                 if (filter.utløstAvTyper.isNotEmpty()) {
                     " AND beha.utlost_av IN ($utløstAvTyperAsText) "
@@ -107,6 +108,22 @@ class PostgresOppgaveRepository(
                     else -> ""
                 }
 
+            // language=SQL
+            val ekskluderEmneknaggerClause =
+                when {
+                    filter.ekskluderEmneknagger.isNotEmpty() -> {
+                        """
+                        AND NOT EXISTS(
+                                SELECT 1
+                                FROM   emneknagg_v1 emne
+                                WHERE  emne.oppgave_id = oppg.id
+                                AND    emne.emneknagg IN ($ekskluderEmneknaggerAsText)
+                            )
+                        """.trimIndent()
+                    }
+                    else -> ""
+                }
+
             // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
             // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
             // Det sjekkes derfor mot tilganger i utplukket.
@@ -131,7 +148,7 @@ class PostgresOppgaveRepository(
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
                     AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                    """ + utløstAvTypeClause + tilstandClause + emneknaggClause
+                    """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause
 
             // language=SQL
             val unionAll = """UNION ALL"""
@@ -166,7 +183,7 @@ class PostgresOppgaveRepository(
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
-                """ + utløstAvTypeClause + tilstandClause + emneknaggClause +
+                """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause +
                     """
                     )
                     """.trimIndent()
@@ -465,7 +482,8 @@ class PostgresOppgaveRepository(
             val emneknaggClause =
                 when {
                     søkeFilter.emneknaggGruppertPerKategori.isNotEmpty() -> {
-                        // AND mellom kategorier, OR innenfor samme kategori
+                        // Benytter AND mellom kategorier, OR innenfor samme kategori
+                        // language=SQL
                         val categoryConditions =
                             søkeFilter.emneknaggGruppertPerKategori.map { (_, emneknagger) ->
                                 val emneknaggList = emneknagger.joinToString { "'$it'" }
@@ -483,6 +501,24 @@ class PostgresOppgaveRepository(
 
                     else -> ""
                 }
+
+            val ekskluderEmneknaggerAsText = søkeFilter.ekskluderEmneknagger.joinToString { "'$it'" }
+            // language=SQL
+            val ekskluderEmneknaggerClause =
+                when {
+                    søkeFilter.ekskluderEmneknagger.isNotEmpty() -> {
+                        """
+                        AND NOT EXISTS(
+                                SELECT 1
+                                FROM   emneknagg_v1 emne
+                                WHERE  emne.oppgave_id = oppg.id
+                                AND    emne.emneknagg IN ($ekskluderEmneknaggerAsText)
+                            )
+                        """.trimIndent()
+                    }
+                    else -> ""
+                }
+
             val orderByClause = søkeFilter.sorteringsfelt.orderByClause(søkeFilter.sortering)
 
             val limitAndOffsetClause =
@@ -536,6 +572,7 @@ class PostgresOppgaveRepository(
                     oppgaveIdClause,
                     behandlingIdClause,
                     emneknaggClause,
+                    ekskluderEmneknaggerClause,
                     søknadIdClause,
                 ).toString()
 

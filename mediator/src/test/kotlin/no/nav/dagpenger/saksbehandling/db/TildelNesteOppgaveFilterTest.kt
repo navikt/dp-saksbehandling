@@ -18,6 +18,7 @@ import java.time.LocalDate
 class TildelNesteOppgaveFilterTest {
     private val queryString =
         """rettighet=knagg1&rettighet=knagg2
+        &ekskluderEmneknagg=mikke&ekskluderEmneknagg=mus
         &fom=2021-01-01&tom=2023-01-01
         &udefinert=u1&udefinert=u2
         &tilstand=KLAR_TIL_KONTROLL&tilstand=UNDER_KONTROLL
@@ -49,6 +50,7 @@ class TildelNesteOppgaveFilterTest {
                 EmneknaggKategori.RETTIGHET to setOf("knagg1", "knagg2"),
                 EmneknaggKategori.UDEFINERT to setOf("u1", "u2"),
             )
+        filter.ekskluderEmneknagger shouldBe setOf("mikke", "mus")
         filter.egneAnsatteTilgang shouldBe false
         filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
         filter.navIdent shouldBe saksbehandler.navIdent

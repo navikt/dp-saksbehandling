@@ -69,7 +69,7 @@ class PostgresOppgaveRepositoryTest {
                 hendelse = TomHendelse,
             )
 
-        DBTestHelper.Companion.withBehandling(behandling = behandling) { ds ->
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val saksbehandler =
                 Saksbehandler(
@@ -86,7 +86,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = emptyMap(),
                         adressebeskyttelseTilganger = setOf(FORTROLIG),
                         navIdent = saksbehandler.navIdent,
@@ -154,7 +154,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
                             tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL),
                             egneAnsatteTilgang = false,
@@ -204,7 +204,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
                             utløstAvTyper = setOf(HendelseBehandler.Intern.Klage),
                             egneAnsatteTilgang = false,
@@ -274,7 +274,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
@@ -299,7 +299,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
@@ -358,7 +358,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
@@ -385,7 +385,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger =
@@ -430,7 +430,7 @@ class PostgresOppgaveRepositoryTest {
 
             val filter =
                 TildelNesteOppgaveFilter(
-                    periode = Periode.Companion.UBEGRENSET_PERIODE,
+                    periode = Periode.UBEGRENSET_PERIODE,
                     emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("Testknagg")),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = saksbehandler.navIdent,
@@ -527,7 +527,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = emptyMap(),
                         egneAnsatteTilgang = saksbehandlerUtført.tilganger.contains(TilgangType.EGNE_ANSATTE),
                         adressebeskyttelseTilganger = saksbehandlerUtført.adressebeskyttelseTilganger(),
@@ -545,7 +545,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     filter =
                         TildelNesteOppgaveFilter(
-                            periode = Periode.Companion.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = emptyMap(),
                             egneAnsatteTilgang = annenBeslutter.tilganger.contains(TilgangType.EGNE_ANSATTE),
                             adressebeskyttelseTilganger = annenBeslutter.adressebeskyttelseTilganger(),
@@ -661,6 +661,7 @@ class PostgresOppgaveRepositoryTest {
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(10),
+                    emneknagger = setOf("Mikke", "Mus"),
                 )
 
             this.leggTilOppgave(
@@ -742,10 +743,11 @@ class PostgresOppgaveRepositoryTest {
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
                 )
-            val opprettetIDagFilterForTestSaksbehandler =
+
+            val ekskluderEmneknaggMikkeFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
-                    periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
-                    emneknaggGruppertPerKategori = emptyMap(),
+                    periode = Periode.UBEGRENSET_PERIODE,
+                    ekskluderEmneknagger = setOf("Mikke"),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
                 )
@@ -775,7 +777,7 @@ class PostgresOppgaveRepositoryTest {
                             ansvarligIdent = testSaksbehandler.navIdent,
                             utførtAv = testSaksbehandler,
                         ),
-                    filter = opprettetIDagFilterForTestSaksbehandler,
+                    filter = ekskluderEmneknaggMikkeFilterForTestSaksbehandler,
                 ).let {
                     assertSoftly {
                         require(it != null) { "Skal finne en oppgave" }
@@ -784,6 +786,23 @@ class PostgresOppgaveRepositoryTest {
                         it.tilstand() shouldBe Oppgave.UnderBehandling
                     }
                 }
+
+//            repo
+//                .tildelOgHentNesteOppgave(
+//                    nesteOppgaveHendelse =
+//                        NesteOppgaveHendelse(
+//                            ansvarligIdent = testSaksbehandler.navIdent,
+//                            utførtAv = testSaksbehandler,
+//                        ),
+//                    filter = opprettetIDagFilterForTestSaksbehandler,
+//                ).let {
+//                    assertSoftly {
+//                        require(it != null) { "Skal finne en oppgave" }
+//                        it.oppgaveId shouldBe yngsteLedigeOppgaveOpprettetIDag.oppgaveId
+//                        it.behandlerIdent shouldBe testSaksbehandler.navIdent
+//                        it.tilstand() shouldBe Oppgave.UnderBehandling
+//                    }
+//                }
 
             // Skal ikke hente beslutter-oppgaver
             repo
@@ -980,28 +999,27 @@ class PostgresOppgaveRepositoryTest {
             this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
             this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
 
-            val repo =
-                PostgresOppgaveRepository(DatabaseSession(ds))
-                    .tildelOgHentNesteOppgave(
-                        nesteOppgaveHendelse =
-                            NesteOppgaveHendelse(
-                                ansvarligIdent = saksbehandler.navIdent,
-                                utførtAv = saksbehandler,
-                            ),
-                        filter =
-                            TildelNesteOppgaveFilter(
-                                periode = Periode.UBEGRENSET_PERIODE,
-                                egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
-                                adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger(),
-                                harBeslutterRolle = saksbehandler.tilganger.contains(TilgangType.BESLUTTER),
-                                navIdent = saksbehandler.navIdent,
-                            ),
-                    ).let {
-                        assertSoftly {
-                            require(it != null) { "Skal finne en oppgave" }
-                            it.oppgaveId shouldBe forventetOppgave.oppgaveId
-                        }
+            PostgresOppgaveRepository(DatabaseSession(ds))
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandler.navIdent,
+                            utførtAv = saksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                            adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger(),
+                            harBeslutterRolle = saksbehandler.tilganger.contains(TilgangType.BESLUTTER),
+                            navIdent = saksbehandler.navIdent,
+                        ),
+                ).let {
+                    assertSoftly {
+                        require(it != null) { "Skal finne en oppgave" }
+                        it.oppgaveId shouldBe forventetOppgave.oppgaveId
                     }
+                }
         }
     }
 
@@ -1445,6 +1463,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgave1 = this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"), opprettet = opprettetNå)
             val oppgave2 = this.leggTilOppgave(emneknagger = setOf("hubba"), opprettet = opprettetNå)
             val oppgave3 = this.leggTilOppgave(emneknagger = emptySet(), opprettet = opprettetNå)
+            val oppgave4 = this.leggTilOppgave(emneknagger = setOf("mummitrollet"), opprettet = opprettetNå)
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo
@@ -1456,7 +1475,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = emptyMap(),
                     ),
-                ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3)
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3, oppgave4)
 
             repo
                 .søk(
@@ -1490,6 +1509,29 @@ class PostgresOppgaveRepositoryTest {
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba", "bubba")),
                     ),
                 ).oppgaver shouldBe listOf(oppgave1, oppgave2)
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba")),
+                        ekskluderEmneknagger = setOf("bubba"),
+                    ),
+                ).oppgaver shouldBe listOf(oppgave2)
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        ekskluderEmneknagger = setOf("hubba", "bubba"),
+                    ),
+                ).oppgaver shouldBe listOf(oppgave3, oppgave4)
         }
     }
 
@@ -1614,7 +1656,7 @@ class PostgresOppgaveRepositoryTest {
                         tilstander =
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = Søkefilter.Paginering(2, 1),
                     ),
                 ).let {
@@ -1627,8 +1669,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = Søkefilter.Paginering(10, 0),
                     ),
                 ).let {
@@ -1642,8 +1684,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = Søkefilter.Paginering(10, 1),
                     ),
                 ).let {
@@ -1667,8 +1709,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = null,
                     ),
                 ).let {
@@ -1683,8 +1725,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = Søkefilter.Paginering(2, 0),
                         sortering = Søkefilter.Sortering.ASC,
                     ),
@@ -1699,8 +1741,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = null,
                         sortering = Søkefilter.Sortering.DESC,
                     ),
@@ -1716,8 +1758,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = Søkefilter.Paginering(2, 0),
                         sortering = Søkefilter.Sortering.DESC,
                     ),
@@ -1732,8 +1774,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = Søkefilter.Paginering(2, 1),
                         sortering = Søkefilter.Sortering.DESC,
                     ),
@@ -1769,8 +1811,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = null,
                         sorteringsfelt = Søkefilter.Sorteringsfelt.UTLOST_AV,
                         sortering = Søkefilter.Sortering.ASC,
@@ -1827,8 +1869,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = null,
                         sorteringsfelt = Søkefilter.Sorteringsfelt.STATUS,
                         sortering = Søkefilter.Sortering.ASC,
@@ -1881,8 +1923,8 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
-                        periode = Periode.Companion.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
                         paginering = null,
                         sorteringsfelt = Søkefilter.Sorteringsfelt.SAKSBEHANDLER,
                         sortering = Søkefilter.Sortering.ASC,
