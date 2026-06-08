@@ -19,6 +19,7 @@ class TildelNesteOppgaveFilterTest {
     private val queryString =
         """rettighet=knagg1&rettighet=knagg2
         &ekskluderEmneknagg=mikke&ekskluderEmneknagg=mus
+        &harDpSak=true
         &fom=2021-01-01&tom=2023-01-01
         &udefinert=u1&udefinert=u2
         &tilstand=KLAR_TIL_KONTROLL&tilstand=UNDER_KONTROLL
@@ -51,6 +52,7 @@ class TildelNesteOppgaveFilterTest {
                 EmneknaggKategori.UDEFINERT to setOf("u1", "u2"),
             )
         filter.ekskluderEmneknagger shouldBe setOf("mikke", "mus")
+        filter.harDpSak shouldBe true
         filter.egneAnsatteTilgang shouldBe false
         filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
         filter.navIdent shouldBe saksbehandler.navIdent
@@ -101,9 +103,11 @@ class TildelNesteOppgaveFilterTest {
             )
         filter.periode shouldBe Periode.UBEGRENSET_PERIODE
         filter.emneknaggGruppertPerKategori shouldBe emptyMap()
+        filter.ekskluderEmneknagger shouldBe emptySet()
         filter.egneAnsatteTilgang shouldBe false
         filter.adressebeskyttelseTilganger shouldBe setOf(UGRADERT)
         filter.navIdent shouldBe saksbehandler.navIdent
         filter.emneknaggGruppertPerKategori shouldBe emptyMap()
+        filter.harDpSak shouldBe false
     }
 }
