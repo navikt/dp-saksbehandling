@@ -1,12 +1,14 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -68,6 +70,7 @@ import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -1556,6 +1559,90 @@ OppgaveMediatorTest {
                 saksbehandler = beslutter,
                 saksbehandlerToken = "token",
             )
+        }
+    }
+
+    @Test
+    fun `Behandling til godkjenning flytter oppgave UnderKontroll til UnderBehandling hos siste saksbehandler`() {
+        val behandlingKlientMock =
+            mockk<BehandlingKlient>().also {
+                coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(true)
+                every { it.godkjenn(behandlingId = any(), any(), any()) } returns Result.success(Unit)
+            }
+
+        settOppOppgaveMediator(behandlingKlient = behandlingKlientMock) { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveMediator.sendTilKontroll(
+                SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+                saksbehandlerToken = "testToken",
+            )
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe UNDER_KONTROLL
+
+            oppgaveMediator.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.personIdent(),
+                ),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_BEHANDLING
+                it.behandlerIdent shouldBe saksbehandler.navIdent
+                it.emneknagger shouldContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+            }
+        }
+    }
+
+    @Test
+    fun `Behandling til godkjenning er idempotent når oppgave allerede er UnderBehandling`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = UNDER_BEHANDLING)
+
+            shouldNotThrowAny {
+                oppgaveMediator.behandlingTilGodkjenning(
+                    BehandlingTilGodkjenningHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        ident = oppgave.personIdent(),
+                    ),
+                )
+            }
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_BEHANDLING
+                it.emneknagger shouldNotContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+            }
+        }
+    }
+
+    @Test
+    fun `Behandling til godkjenning ignoreres stille når det ikke finnes oppgave for behandlingen`() {
+        val behandlingId = UUIDv7.ny()
+        settOppOppgaveMediator { _, oppgaveMediator ->
+            shouldNotThrowAny {
+                oppgaveMediator.behandlingTilGodkjenning(
+                    BehandlingTilGodkjenningHendelse(
+                        behandlingId = behandlingId,
+                        ident = "12345678901",
+                    ),
+                )
+            }
+
+            testRapid.inspektør.size shouldBe 0
         }
     }
 
