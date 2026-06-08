@@ -94,6 +94,7 @@ object Emneknagg {
     ) : KategorisertEmneknagg {
         RETUR_FRA_KONTROLL("Retur fra kontroll"),
         TIDLIGERE_KONTROLLERT("Tidligere kontrollert"),
+        BEHANDLING_OPPDATERT("Behandling oppdatert"),
         ;
 
         override val kategori = EmneknaggKategori.UDEFINERT

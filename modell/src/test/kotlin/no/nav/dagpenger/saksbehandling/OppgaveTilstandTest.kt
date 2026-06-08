@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -1068,5 +1069,132 @@ class OppgaveTilstandTest {
         oppgave.tilstand() shouldBe Oppgave.PåVent
         oppgave.utsattTil() shouldBe frist
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+    }
+
+    @Test
+    fun `Skal gå fra UnderKontroll til UnderBehandling hos siste saksbehandler når behandling er til godkjenning`() {
+        val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
+        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_KONTROLL,
+                behandler = beslutter,
+                emneknagger = setOf(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn),
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        tilstandsendringer =
+                            mutableListOf(
+                                Tilstandsendring(
+                                    tilstand = UNDER_BEHANDLING,
+                                    hendelse =
+                                        NesteOppgaveHendelse(
+                                            ansvarligIdent = saksbehandler.navIdent,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    tidspunkt = LocalDateTime.now().minusDays(1),
+                                ),
+                            ),
+                    ),
+            )
+
+        shouldNotThrowAny {
+            oppgave.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = testIdent,
+                ),
+            )
+        }
+
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.emneknagger shouldContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+        oppgave.emneknagger shouldContain Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn
+    }
+
+    @Test
+    fun `Skal gå fra UnderKontroll til KlarTilBehandling når det ikke finnes en siste saksbehandler`() {
+        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_KONTROLL,
+                behandler = beslutter,
+            )
+
+        shouldNotThrowAny {
+            oppgave.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = testIdent,
+                ),
+            )
+        }
+
+        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        oppgave.behandlerIdent shouldBe null
+        oppgave.emneknagger shouldContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+    }
+
+    @Test
+    fun `Skal være idempotent når oppgave allerede er UnderBehandling ved behandling til godkjenning`() {
+        val oppgave = lagOppgave(UNDER_BEHANDLING)
+        val tilstandFør = oppgave.tilstand().type
+        val behandlerFør = oppgave.behandlerIdent
+        val antallEmneknaggerFør = oppgave.emneknagger.size
+
+        shouldNotThrowAny {
+            oppgave.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = testIdent,
+                ),
+            )
+        }
+
+        oppgave.tilstand().type shouldBe tilstandFør
+        oppgave.behandlerIdent shouldBe behandlerFør
+        oppgave.emneknagger.size shouldBe antallEmneknaggerFør
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+    }
+
+    @Test
+    fun `Skal logge idempotent og ikke endre tilstand når oppgave er KlarTilKontroll ved behandling til godkjenning`() {
+        val oppgave = lagOppgave(KLAR_TIL_KONTROLL)
+        val tilstandFør = oppgave.tilstand().type
+        val behandlerFør = oppgave.behandlerIdent
+        val antallEmneknaggerFør = oppgave.emneknagger.size
+
+        shouldNotThrowAny {
+            oppgave.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = testIdent,
+                ),
+            )
+        }
+
+        oppgave.tilstand().type shouldBe tilstandFør
+        oppgave.behandlerIdent shouldBe behandlerFør
+        oppgave.emneknagger.size shouldBe antallEmneknaggerFør
+        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+        value = Type::class,
+        names = ["UNDER_KONTROLL", "UNDER_BEHANDLING", "KLAR_TIL_KONTROLL"],
+        mode = EnumSource.Mode.EXCLUDE,
+    )
+    fun `Skal kaste ulovlig tilstandsendring for behandling til godkjenning i andre tilstander enn UnderKontroll`(tilstandType: Type) {
+        val oppgave = lagOppgave(tilstandType)
+
+        shouldThrow<UlovligTilstandsendringException> {
+            oppgave.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = testIdent,
+                ),
+            )
+        }
     }
 }
