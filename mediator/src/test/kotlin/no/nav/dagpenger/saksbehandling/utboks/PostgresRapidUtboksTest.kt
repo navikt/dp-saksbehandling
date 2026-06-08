@@ -1,8 +1,10 @@
 package no.nav.dagpenger.saksbehandling.utboks
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.FailedMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.SentMessage
 import io.kotest.matchers.shouldBe
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
@@ -43,9 +45,11 @@ class PostgresRapidUtboksTest {
             }
 
             repository.hentOgTellMedTilstand(UtboksTilstand.PENDING.name).first.size shouldBe 1
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_nye_meldinger_total" }.let { snapshot ->
-                snapshot.dataPoints.single().value shouldBe 1.0
-            }
+            registry
+                .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_nye_meldinger_total" }
+                .let { snapshot ->
+                    snapshot.dataPoints.single().value shouldBe 1.0
+                }
         }
     }
 
@@ -144,10 +148,12 @@ class PostgresRapidUtboksTest {
                 it.message shouldBe """{"ident":"y"}"""
             }
 
-            registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }.let { snapshot ->
-                snapshot.dataPoints.single { it.labels["status"] == "success" }.value shouldBe 1.0
-                snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
-            }
+            registry
+                .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }
+                .let { snapshot ->
+                    snapshot.dataPoints.single { it.labels["status"] == "success" }.value shouldBe 1.0
+                    snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
+                }
         }
     }
 
@@ -173,9 +179,77 @@ class PostgresRapidUtboksTest {
 
             utboks.publiserVentende()
 
-            registry.getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }.let { snapshot ->
-                snapshot.dataPoints.single().value shouldBe 0.0
+            registry
+                .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }
+                .let { snapshot ->
+                    snapshot.dataPoints.single().value shouldBe 0.0
+                }
+        }
+    }
+
+    @Test
+    fun `publiserVentende markerer ikke SENDT ved async leveransefeil (FailedMessage)`() {
+        Postgres.withMigratedDb { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val transaksjoner = Transaksjoner(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
+            val registry = PrometheusRegistry()
+
+            val utboks =
+                PostgresRapidUtboks(
+                    repository = repository,
+                    rapidsConnection = FeilendeRapid(0, testRapid, Feilmodus.LEVERANSEFEIL),
+                    registry = registry,
+                )
+
+            transaksjoner.transaksjon { ctx ->
+                utboks.send(key = "x", message = """{"ident":"x"}""", ctx = ctx)
             }
+
+            utboks.publiserVentende()
+
+            // Leveransen feilet (future.get) → raden MÅ forbli PENDING, ellers tapes meldingen.
+            repository.hentOgTellMedTilstand(UtboksTilstand.SENDT.name).first.size shouldBe 0
+            repository
+                .hentOgTellMedTilstand(UtboksTilstand.PENDING.name)
+                .first
+                .single()
+                .key shouldBe "x"
+            registry
+                .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_utboks_publiserte_meldinger_total" }
+                .let { snapshot ->
+                    snapshot.dataPoints.single { it.labels["status"] == "failed" }.value shouldBe 1.0
+                }
+        }
+    }
+
+    @Test
+    fun `publiserVentende beholder PENDING ved synkron publiseringsfeil`() {
+        Postgres.withMigratedDb { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val transaksjoner = Transaksjoner(databaseSession)
+            val repository = PostgresUtboksRepository(databaseSession)
+            val registry = PrometheusRegistry()
+
+            val utboks =
+                PostgresRapidUtboks(
+                    repository = repository,
+                    rapidsConnection = FeilendeRapid(0, testRapid, Feilmodus.SYNKRONT_KAST),
+                    registry = registry,
+                )
+
+            transaksjoner.transaksjon { ctx ->
+                utboks.send(key = "x", message = """{"ident":"x"}""", ctx = ctx)
+            }
+
+            utboks.publiserVentende()
+
+            repository.hentOgTellMedTilstand(UtboksTilstand.SENDT.name).first.size shouldBe 0
+            repository
+                .hentOgTellMedTilstand(UtboksTilstand.PENDING.name)
+                .first
+                .single()
+                .key shouldBe "x"
         }
     }
 
@@ -201,9 +275,11 @@ class PostgresRapidUtboksTest {
 
             utboks.publiserVentende()
 
-            registry.getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }.let { snapshot ->
-                snapshot.dataPoints.single().value shouldBe 1.0
-            }
+            registry
+                .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_utboks_ventende_meldinger" }
+                .let { snapshot ->
+                    snapshot.dataPoints.single().value shouldBe 1.0
+                }
         }
     }
 
@@ -255,36 +331,44 @@ class PostgresRapidUtboksTest {
     }
 }
 
+private enum class Feilmodus {
+    /** Synkron feil fra send() (serialisering/auth/metadata) — propageres som kast. */
+    SYNKRONT_KAST,
+
+    /** Async leveransefeil rapportert via future.get() som FailedMessage uten å kaste. */
+    LEVERANSEFEIL,
+}
+
 private class FeilendeRapid(
     private val feilPåMeldingNummer: Int,
     private val delegate: RapidsConnection,
+    private val feilmodus: Feilmodus = Feilmodus.LEVERANSEFEIL,
 ) : RapidsConnection() {
     private var antallPublisert = 0
 
-    private fun failOrInc() {
-        if (antallPublisert == feilPåMeldingNummer) {
-            throw RuntimeException("Simulert Kafka-feil")
-        } else {
-            antallPublisert++
-        }
-    }
-
-    override fun publish(message: String) {
-        failOrInc()
-        delegate.publish(message)
-    }
+    override fun publish(message: String) = TODO("ikke i bruk")
 
     override fun publish(
         key: String,
         message: String,
-    ) {
-        failOrInc()
-        delegate.publish(key, message)
+    ) = TODO("ikke i bruk")
+
+    override fun publish(messages: List<OutgoingMessage>): Pair<List<SentMessage>, List<FailedMessage>> {
+        if (antallPublisert == feilPåMeldingNummer) {
+            return when (feilmodus) {
+                Feilmodus.SYNKRONT_KAST -> throw RuntimeException("Simulert synkron Kafka-feil")
+                Feilmodus.LEVERANSEFEIL ->
+                    emptyList<SentMessage>() to
+                        messages.mapIndexed { index, melding ->
+                            FailedMessage(index, melding, RuntimeException("Simulert leveransefeil"))
+                        }
+            }
+        }
+        antallPublisert++
+        return delegate.publish(messages)
     }
 
-    override fun publish(messages: List<OutgoingMessage>) = TODO()
-
-    override fun rapidName(): String = "FailOnFirstPublishRapid"
+    override fun rapidName(): String = "FeilendeRapid"
 
     override fun start() {}
 

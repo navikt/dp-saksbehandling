@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.withBehandling
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
@@ -113,6 +114,52 @@ class PostgresUtsendingRepositoryTest {
                     ),
                 )
             }.message shouldStartWith """ERROR: duplicate key value violates unique constraint "behandling_id_unique""""
+        }
+    }
+
+    @Test
+    fun `slettUtsending med aktiv transaksjonskontekst sletter raden ved commit`() {
+        withBehandling(behandling = behandling, person = testPerson) { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val repository = PostgresUtsendingRepository(databaseSession)
+            val utsending =
+                Utsending(
+                    behandlingId = behandling.behandlingId,
+                    brev = null,
+                    ident = testPerson.ident,
+                )
+            repository.lagre(utsending)
+            repository.finnUtsendingForBehandlingId(behandling.behandlingId) shouldBe utsending
+
+            Transaksjoner(databaseSession).transaksjon { ctx ->
+                repository.slettUtsending(utsendingId = utsending.id, kontekst = ctx)
+            }
+
+            repository.finnUtsendingForBehandlingId(behandling.behandlingId) shouldBe null
+        }
+    }
+
+    @Test
+    fun `slettUtsending deltar i kallerens transaksjon og rulles tilbake sammen med den`() {
+        withBehandling(behandling = behandling, person = testPerson) { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val repository = PostgresUtsendingRepository(databaseSession)
+            val utsending =
+                Utsending(
+                    behandlingId = behandling.behandlingId,
+                    brev = null,
+                    ident = testPerson.ident,
+                )
+            repository.lagre(utsending)
+
+            shouldThrow<RuntimeException> {
+                Transaksjoner(databaseSession).transaksjon { ctx ->
+                    repository.slettUtsending(utsendingId = utsending.id, kontekst = ctx)
+                    throw RuntimeException("Tvinger rollback etter sletting")
+                }
+            }
+
+            repository.finnUtsendingForBehandlingId(behandling.behandlingId) shouldBe utsending
         }
     }
 }

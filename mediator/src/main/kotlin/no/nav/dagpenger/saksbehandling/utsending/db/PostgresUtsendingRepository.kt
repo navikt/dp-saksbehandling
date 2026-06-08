@@ -156,19 +156,30 @@ class PostgresUtsendingRepository(
         }
 
     override fun slettUtsending(utsendingId: UUID): Int =
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        DELETE FROM utsending_v1
-                        WHERE id = :id
-                        """.trimIndent(),
-                    paramMap = mapOf("id" to utsendingId),
-                ).asUpdate,
-            )
+        databaseSession.transaction {
+            slettUtsending(utsendingId)
         }
+
+    override fun slettUtsending(
+        utsendingId: UUID,
+        kontekst: Transaksjonskontekst.Aktiv,
+    ): Int =
+        databaseSession.inContext(kontekst) {
+            slettUtsending(utsendingId)
+        }
+
+    private fun PostgresUnitOfWork.slettUtsending(utsendingId: UUID): Int =
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    DELETE FROM utsending_v1
+                    WHERE id = :id
+                    """.trimIndent(),
+                paramMap = mapOf("id" to utsendingId),
+            ).asUpdate,
+        )
 }
 
 private fun PostgresUnitOfWork.lagreUtsendingSak(utsendingSak: UtsendingSak) {

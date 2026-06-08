@@ -10,6 +10,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -19,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
@@ -31,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
@@ -862,5 +865,104 @@ class UtsendingMediatorTest {
                 sakId = vedtakFattetHendelse.sak!!.id,
             )
         }
+    }
+
+    @Test
+    fun `avbrytUtsendingForBehandling setter utsending til Avbrutt og lagrer`() {
+        val utsending =
+            Utsending(
+                id = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345123456",
+                type = UtsendingType.VEDTAK_DAGPENGER,
+                brev = null,
+            )
+        val utsendingRepositoryMock =
+            mockk<UtsendingRepository>().also {
+                every { it.finnUtsendingForBehandlingId(utsending.behandlingId) } returns utsending
+                every { it.lagre(utsending, any()) } just Runs
+            }
+        val utsendingMediator =
+            UtsendingMediator(
+                utsendingRepository = utsendingRepositoryMock,
+                brevProdusent = mockk(),
+                utboks = mockk(relaxed = true),
+                transaksjoner = mockk(relaxed = true),
+            )
+
+        utsendingMediator.avbrytUtsendingForBehandling(utsending.behandlingId)
+
+        utsending.tilstand().type shouldBe Avbrutt
+        verify(exactly = 1) { utsendingRepositoryMock.lagre(utsending, any()) }
+    }
+
+    @Test
+    fun `avbrytUtsendingForBehandling gjør ingenting når det ikke finnes en utsending`() {
+        val behandlingId = UUIDv7.ny()
+        val utsendingRepositoryMock =
+            mockk<UtsendingRepository>().also {
+                every { it.finnUtsendingForBehandlingId(behandlingId) } returns null
+            }
+        val utsendingMediator =
+            UtsendingMediator(
+                utsendingRepository = utsendingRepositoryMock,
+                brevProdusent = mockk(),
+                utboks = mockk(relaxed = true),
+                transaksjoner = mockk(relaxed = true),
+            )
+
+        utsendingMediator.avbrytUtsendingForBehandling(behandlingId)
+
+        verify(exactly = 0) { utsendingRepositoryMock.lagre(any(), any()) }
+    }
+
+    @Test
+    fun `slettUtsendingForBehandling sletter utsending når den finnes`() {
+        val utsending =
+            Utsending(
+                id = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345123456",
+                type = UtsendingType.VEDTAK_DAGPENGER,
+                brev = null,
+            )
+        val ctx = Transaksjonskontekst.Aktiv(mockk())
+        val utsendingRepositoryMock =
+            mockk<UtsendingRepository>().also {
+                every { it.finnUtsendingForBehandlingId(utsending.behandlingId) } returns utsending
+                every { it.slettUtsending(utsending.id, ctx) } returns 1
+            }
+        val utsendingMediator =
+            UtsendingMediator(
+                utsendingRepository = utsendingRepositoryMock,
+                brevProdusent = mockk(),
+                utboks = mockk(relaxed = true),
+                transaksjoner = mockk(relaxed = true),
+            )
+
+        utsendingMediator.slettUtsendingForBehandling(utsending.behandlingId, ctx)
+
+        verify(exactly = 1) { utsendingRepositoryMock.slettUtsending(utsending.id, ctx) }
+    }
+
+    @Test
+    fun `slettUtsendingForBehandling gjør ingenting når det ikke finnes en utsending`() {
+        val behandlingId = UUIDv7.ny()
+        val ctx = Transaksjonskontekst.Aktiv(mockk())
+        val utsendingRepositoryMock =
+            mockk<UtsendingRepository>().also {
+                every { it.finnUtsendingForBehandlingId(behandlingId) } returns null
+            }
+        val utsendingMediator =
+            UtsendingMediator(
+                utsendingRepository = utsendingRepositoryMock,
+                brevProdusent = mockk(),
+                utboks = mockk(relaxed = true),
+                transaksjoner = mockk(relaxed = true),
+            )
+
+        utsendingMediator.slettUtsendingForBehandling(behandlingId, ctx)
+
+        verify(exactly = 0) { utsendingRepositoryMock.slettUtsending(any(), any<Transaksjonskontekst.Aktiv>()) }
     }
 }

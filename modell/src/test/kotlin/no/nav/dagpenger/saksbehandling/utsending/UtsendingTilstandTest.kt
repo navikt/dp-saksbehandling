@@ -70,4 +70,34 @@ class UtsendingTilstandTest {
             )
         }
     }
+
+    @Test
+    fun `Kan avbryte utsending som venter på vedtak`() {
+        val utsending = Utsending(behandlingId = behandlingId, ident = ident, brev = "html")
+        utsending.tilstand() shouldBe Utsending.VenterPåVedtak
+
+        utsending.avbryt()
+        utsending.tilstand() shouldBe Utsending.Avbrutt
+
+        // Idempotent: avbryt på nytt endrer ingenting
+        utsending.avbryt()
+        utsending.tilstand() shouldBe Utsending.Avbrutt
+    }
+
+    @Test
+    fun `Kan ikke avbryte utsending som har startet`() {
+        val utsending = Utsending(behandlingId = behandlingId, ident = ident, brev = "html")
+        utsending.startUtsending(
+            StartUtsendingHendelse(
+                behandlingId = behandlingId,
+                ident = ident,
+                utsendingSak = UtsendingSak(id = "sakId", kontekst = "fagsystem"),
+            ),
+        )
+        utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
+
+        shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
+            utsending.avbryt()
+        }
+    }
 }

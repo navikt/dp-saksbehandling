@@ -1,0 +1,24 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: dp-saksbehandling-alerts
+  namespace: teamdagpenger
+  labels:
+    team: teamdagpenger
+spec:
+  groups:
+    - name: dp-saksbehandling-utboks
+      rules:
+        - alert: UtboksDrenererIkke
+          expr: >-
+            min_over_time(
+              dp_saksbehandling_utboks_ventende_meldinger{app="dp-saksbehandling"}[10m]
+            ) > 0
+          for: 10m
+          annotations:
+            consequence: '*dp-saksbehandling* publiserer ikke ventende utboks-meldinger (FIFO står fast) — avbryt_behandling/klage/distribuering blir ikke sendt'
+            action: '`kubectl logs -l app=dp-saksbehandling | grep -i utboks`. Sannsynlig poison-melding (f.eks. for stor) først i kø — fiks/fjern raden i kafka_utboks_v1'
+          labels:
+            namespace: teamdagpenger
+            severity: critical

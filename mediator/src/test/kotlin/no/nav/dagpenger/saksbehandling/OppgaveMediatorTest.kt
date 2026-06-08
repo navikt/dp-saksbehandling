@@ -56,6 +56,7 @@ import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -90,6 +91,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
+import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
@@ -1040,6 +1042,49 @@ OppgaveMediatorTest {
     }
 
     @Test
+    fun `Endring av meldingOmVedtakKilde er atomisk - rulles tilbake hvis sletting av utsending feiler`() {
+        settOppOppgaveMediator { datasource, _ ->
+            val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
+            oppgave.meldingOmVedtakKilde() shouldBe DP_SAK
+
+            val kastendeUtsendingMediator =
+                mockk<UtsendingMediator>().also {
+                    every { it.finnUtsendingForBehandlingId(any()) } returns
+                        Utsending(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            brev = null,
+                            ident = testIdent,
+                        )
+                    every {
+                        it.slettUtsending(any(), any<Transaksjonskontekst.Aktiv>())
+                    } throws RuntimeException("Simulert DB-feil ved sletting av utsending")
+                }
+
+            val oppgaveMediatorMedKastendeSlett =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(datasource)),
+                    behandlingKlient = mockk(relaxed = true),
+                    utsendingMediator = kastendeUtsendingMediator,
+                    sakMediator = mockk(relaxed = true),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(datasource)),
+                )
+
+            shouldThrow<RuntimeException> {
+                oppgaveMediatorMedKastendeSlett.endreMeldingOmVedtakKilde(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtakKilde = GOSYS,
+                    saksbehandler = saksbehandler,
+                )
+            }
+
+            PostgresOppgaveRepository(DatabaseSession(datasource))
+                .hentOppgave(oppgave.oppgaveId)
+                .meldingOmVedtakKilde() shouldBe DP_SAK
+        }
+    }
+
+    @Test
     fun `Livssyklus for oppgave når godkjenning av behandling feiler, men vedtaket likevel fattes av regelmotor`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
@@ -1337,6 +1382,48 @@ OppgaveMediatorTest {
             avbrytMelding["behandlingId"].asString() shouldBe oppgave.behandling.behandlingId.toString()
             avbrytMelding["ident"].asString() shouldBe oppgave.personIdent()
             avbrytMelding["årsak"].asString() shouldBe avbrytOppgaveHendelse.årsak.visningsnavn
+        }
+    }
+
+    @Test
+    fun `Når oppgave avbrytes skal utsending som venter på vedtak også avbrytes`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave()
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(datasource))
+            utsendingRepository.lagre(
+                Utsending(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.personIdent(),
+                    brev = "<html>brev</html>",
+                ),
+            )
+            utsendingRepository
+                .hentUtsendingForBehandlingId(oppgave.behandling.behandlingId)
+                .tilstand()
+                .type shouldBe Utsending.Tilstand.Type.VenterPåVedtak
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.avbryt(
+                AvbrytOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    navIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe AVBRUTT
+            utsendingRepository
+                .hentUtsendingForBehandlingId(oppgave.behandling.behandlingId)
+                .tilstand()
+                .type shouldBe Utsending.Tilstand.Type.Avbrutt
         }
     }
 

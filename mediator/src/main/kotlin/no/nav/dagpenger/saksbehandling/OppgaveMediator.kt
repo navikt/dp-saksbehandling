@@ -423,11 +423,11 @@ class OppgaveMediator(
                         utførtAv = saksbehandler,
                     ),
                 )
-                oppgaveRepository.lagre(oppgave)
-            }
-            if (meldingOmVedtakKilde != DP_SAK) {
-                utsendingMediator.finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)?.let { utsending ->
-                    utsendingMediator.slettUtsending(utsendingId = utsending.id)
+                transaksjoner.transaksjon { ctx ->
+                    oppgaveRepository.lagre(oppgave, ctx)
+                    if (meldingOmVedtakKilde != DP_SAK) {
+                        utsendingMediator.slettUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
+                    }
                 }
             }
         }
@@ -456,6 +456,7 @@ class OppgaveMediator(
                 oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
                 transaksjoner.transaksjon { ctx ->
                     oppgaveRepository.lagre(oppgave, ctx)
+                    utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
                     if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
                         utboks.send(
                             key = oppgave.personIdent(),
@@ -648,6 +649,7 @@ class OppgaveMediator(
                     logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
                     oppgave.avbryt(hendelse)
                     oppgaveRepository.lagre(oppgave, ctx)
+                    utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
                     logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
                 }
             }
