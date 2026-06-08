@@ -426,11 +426,7 @@ class OppgaveMediator(
                 transaksjoner.transaksjon { ctx ->
                     oppgaveRepository.lagre(oppgave, ctx)
                     if (meldingOmVedtakKilde != DP_SAK) {
-                        utsendingMediator
-                            .finnUtsendingForBehandlingId(oppgave.behandling.behandlingId)
-                            ?.let { utsending ->
-                                utsendingMediator.slettUtsending(utsendingId = utsending.id, ctx)
-                            }
+                        utsendingMediator.slettUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
                     }
                 }
             }
