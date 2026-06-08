@@ -1158,11 +1158,28 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal logge idempotent og ikke endre tilstand når oppgave er KlarTilKontroll ved behandling til godkjenning`() {
-        val oppgave = lagOppgave(KLAR_TIL_KONTROLL)
-        val tilstandFør = oppgave.tilstand().type
-        val behandlerFør = oppgave.behandlerIdent
-        val antallEmneknaggerFør = oppgave.emneknagger.size
+    fun `Skal gå fra KlarTilKontroll til UnderBehandling hos siste saksbehandler når behandling er til godkjenning`() {
+        val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
+        val oppgave =
+            lagOppgave(
+                tilstandType = KLAR_TIL_KONTROLL,
+                behandler = null,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        tilstandsendringer =
+                            mutableListOf(
+                                Tilstandsendring(
+                                    tilstand = UNDER_BEHANDLING,
+                                    hendelse =
+                                        NesteOppgaveHendelse(
+                                            ansvarligIdent = saksbehandler.navIdent,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    tidspunkt = LocalDateTime.now().minusDays(1),
+                                ),
+                            ),
+                    ),
+            )
 
         shouldNotThrowAny {
             oppgave.behandlingTilGodkjenning(
@@ -1173,10 +1190,9 @@ class OppgaveTilstandTest {
             )
         }
 
-        oppgave.tilstand().type shouldBe tilstandFør
-        oppgave.behandlerIdent shouldBe behandlerFør
-        oppgave.emneknagger.size shouldBe antallEmneknaggerFør
-        oppgave.emneknagger shouldNotContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.emneknagger shouldContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
     }
 
     @ParameterizedTest
@@ -1185,7 +1201,9 @@ class OppgaveTilstandTest {
         names = ["UNDER_KONTROLL", "UNDER_BEHANDLING", "KLAR_TIL_KONTROLL"],
         mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `Skal kaste ulovlig tilstandsendring for behandling til godkjenning i andre tilstander enn UnderKontroll`(tilstandType: Type) {
+    fun `Skal kaste ulovlig tilstandsendring for behandling til godkjenning i andre tilstander enn kontroll-tilstandene`(
+        tilstandType: Type,
+    ) {
         val oppgave = lagOppgave(tilstandType)
 
         shouldThrow<UlovligTilstandsendringException> {

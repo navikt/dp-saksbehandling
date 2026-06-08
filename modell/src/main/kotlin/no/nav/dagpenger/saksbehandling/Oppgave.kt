@@ -312,6 +312,27 @@ data class Oppgave private constructor(
 
     fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse): Handling = tilstand.behandlingTilGodkjenning(this, hendelse)
 
+    private fun returnerTilSaksbehandling(hendelse: BehandlingTilGodkjenningHendelse): Handling {
+        when (val sisteSaksbehandler = sisteSaksbehandler()) {
+            null -> {
+                logger.error {
+                    "Oppgave $oppgaveId i tilstand ${tilstand.type} for behandling ${hendelse.behandlingId} " +
+                        "mangler saksbehandler. Dette er en brutt invariant: en oppgave til kontroll skal " +
+                        "alltid ha en registrert saksbehandler. Ruter til KlarTilBehandling."
+                }
+                endreTilstand(KlarTilBehandling, hendelse)
+                behandlerIdent = null
+            }
+
+            else -> {
+                endreTilstand(UnderBehandling, hendelse)
+                behandlerIdent = sisteSaksbehandler
+            }
+        }
+        _emneknagger.add(Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn)
+        return Handling.LAGRE_OPPGAVE
+    }
+
     fun oppgaverPåVentMedUtgåttFrist(hendelse: PåVentFristUtgåttHendelse) {
         tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
@@ -838,14 +859,7 @@ data class Oppgave private constructor(
         override fun behandlingTilGodkjenning(
             oppgave: Oppgave,
             hendelse: BehandlingTilGodkjenningHendelse,
-        ): Handling {
-            logger.info {
-                "Oppgave ${oppgave.oppgaveId} er i tilstand $type ved behandling til godkjenning " +
-                    "for behandling ${hendelse.behandlingId}. Oppgaven venter på beslutter og blir værende. " +
-                    "Ingen tilstandsendring."
-            }
-            return Handling.INGEN
-        }
+        ): Handling = oppgave.returnerTilSaksbehandling(hendelse)
 
         override fun avbryt(
             oppgave: Oppgave,
@@ -998,26 +1012,7 @@ data class Oppgave private constructor(
         override fun behandlingTilGodkjenning(
             oppgave: Oppgave,
             hendelse: BehandlingTilGodkjenningHendelse,
-        ): Handling {
-            when (val sisteSaksbehandler = oppgave.sisteSaksbehandler()) {
-                null -> {
-                    logger.error {
-                        "Oppgave ${oppgave.oppgaveId} i tilstand $type for behandling ${hendelse.behandlingId} " +
-                            "mangler saksbehandler. Dette er en brutt invariant: en oppgave under kontroll skal " +
-                            "alltid ha en registrert saksbehandler. Ruter til KlarTilBehandling."
-                    }
-                    oppgave.endreTilstand(KlarTilBehandling, hendelse)
-                    oppgave.behandlerIdent = null
-                }
-
-                else -> {
-                    oppgave.endreTilstand(UnderBehandling, hendelse)
-                    oppgave.behandlerIdent = sisteSaksbehandler
-                }
-            }
-            oppgave._emneknagger.add(Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn)
-            return Handling.LAGRE_OPPGAVE
-        }
+        ): Handling = oppgave.returnerTilSaksbehandling(hendelse)
 
         override fun avbryt(
             oppgave: Oppgave,

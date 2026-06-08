@@ -1609,6 +1609,39 @@ OppgaveMediatorTest {
     }
 
     @Test
+    fun `Behandling til godkjenning flytter oppgave KlarTilKontroll til UnderBehandling hos siste saksbehandler`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveMediator.sendTilKontroll(
+                SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+                saksbehandlerToken = "testToken",
+            )
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_KONTROLL
+
+            oppgaveMediator.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.personIdent(),
+                ),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe UNDER_BEHANDLING
+                it.behandlerIdent shouldBe saksbehandler.navIdent
+                it.emneknagger shouldContain Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn
+            }
+        }
+    }
+
+    @Test
     fun `Behandling til godkjenning er idempotent når oppgave allerede er UnderBehandling`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(tilstand = UNDER_BEHANDLING)
