@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -457,6 +458,76 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             PostgresOppgaveRepository(DatabaseSession(ds)).lagre(klageOppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `Oppgave returnert maskinelt fra kontroll til saksbehandler skal oversendes statistikk som RETURNERT_MASKINELT`() {
+        val behandling = TestHelper.lagBehandling()
+        val oppgave =
+            TestHelper.lagOppgave(
+                behandling = behandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+        DBTestHelper.withMigratedDb { ds ->
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = behandling,
+                sak = sak,
+                oppgave = oppgave,
+                merkSomEgenSak = true,
+            )
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(DatabaseSession(ds))
+
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = TestHelper.saksbehandler.navIdent,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+            oppgave.sendTilKontroll(
+                SendTilKontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = TestHelper.saksbehandler,
+                ),
+            )
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            PostgresOppgaveRepository(DatabaseSession(ds)).lagre(oppgave)
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().forEach {
+                postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(it.tilstandsendring.tilstandsendringId)
+            }
+
+            oppgave.behandlingTilGodkjenning(
+                BehandlingTilGodkjenningHendelse(
+                    behandlingId = behandling.behandlingId,
+                    ident = testPerson.ident,
+                ),
+            )
+            PostgresOppgaveRepository(DatabaseSession(ds)).lagre(oppgave)
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().let {
+                it.size shouldBe 1
+                val tilstandsendring = it.single()
+                tilstandsendring.tilstandsendring.tilstand shouldBe "RETURNERT_MASKINELT"
+                tilstandsendring.saksbehandlerIdent shouldBe null
+                tilstandsendring.beslutterIdent shouldBe null
+            }
         }
     }
 }

@@ -64,6 +64,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         WHEN log.tilstand       = 'UNDER_BEHANDLING'
                                         AND  log.hendelse_type  = 'ReturnerTilSaksbehandlingHendelse' THEN
                                             'UNDERKJENT_BESLUTTER'
+                                        WHEN log.tilstand       = 'UNDER_BEHANDLING'
+                                        AND  log.hendelse_type  = 'BehandlingTilGodkjenningHendelse' THEN
+                                            'RETURNERT_MASKINELT'
                                         ELSE
                                             log.tilstand
                                         END                     AS tilstand
