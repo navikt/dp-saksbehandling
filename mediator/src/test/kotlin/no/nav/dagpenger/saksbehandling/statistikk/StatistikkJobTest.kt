@@ -6,6 +6,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.SentMessage
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -239,16 +241,18 @@ class StatistikkJobTest {
     }
 
     @Test
-    fun `Skal ikke publisere oppgavetilstandsendringer til statistikk hvis tidligere kjøring ikke er fullført`() {
+    fun `Skal ikke publisere oppgavetilstandsendringer til statistikk hvis tidligere kjøring ikke er fullført, men kaste feil`() {
         every { saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført() } returns false
 
         runBlocking {
-            StatistikkJob(
-                rapidsConnection = testRapid,
-                saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
-            ).executeJob()
+            shouldThrow<IllegalStateException> {
+                StatistikkJob(
+                    rapidsConnection = testRapid,
+                    saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
+                ).executeJob()
+            }
         }
-        assert(testRapid.inspektør.size == 0)
+        testRapid.inspektør.size shouldBe 0
     }
 
     @Test
