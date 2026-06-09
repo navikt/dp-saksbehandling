@@ -24,6 +24,16 @@ internal object JobMetrics {
         lastSuccess.labelValues(jobName).set(Instant.now().epochSecond.toDouble())
     }
 
+    /**
+     * Seeder [lastSuccess]-gaugen ved jobbstart slik at tidsserien alltid eksisterer.
+     * Uten dette får en jobb som feiler på hver kjøring siden pod-start aldri noen
+     * last_success-serie, og staleness-alarmen (som joiner på `job`) kan ikke fyre.
+     * Forankres i boot-tid: en jobb ødelagt-fra-boot blir gammel og alarmen fyrer.
+     */
+    fun seedLastSuccess(jobName: String) {
+        lastSuccess.labelValues(jobName).set(Instant.now().epochSecond.toDouble())
+    }
+
     fun failure(jobName: String) {
         executions.labelValues(jobName, "failure").inc()
     }

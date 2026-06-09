@@ -66,6 +66,7 @@ abstract class Job(
     ): Timer {
         logger.info { "Jobb $jobName vil kjøre med intervall ${period.milliseconds.inWholeMinutes} minutter med første kjøring $startAt" }
         JobMetrics.period(jobName, period)
+        JobMetrics.seedLastSuccess(jobName)
         return fixedRateTimer(
             name = jobName,
             daemon = daemon,

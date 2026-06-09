@@ -9,6 +9,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
+import io.prometheus.metrics.model.snapshots.GaugeSnapshot
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
@@ -97,6 +98,24 @@ class JobTest {
                     .single { it.labels["job"] == "kastendeTestJob" && it.labels["status"] == "failure" }
                     .value
             failures shouldBeGreaterThan 2.0
+        }
+    }
+
+    @Test
+    fun `Skal seede last_success ved jobbstart slik at staleness-alarmen har en serie aa joine paa`() {
+        runBlocking {
+            val testJob = KastendeTestJob()
+            testJob.startJob(startAt = now, period = 200L)
+
+            // Selv om jobben aldri lykkes, må last_success-serien finnes (seedet ved start).
+            // Uten seed ville serien mangle og staleness-alarmen (join på `job`) aldri fyre.
+            val lastSuccess =
+                PrometheusRegistry.defaultRegistry
+                    .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_job_last_success_timestamp_seconds" }
+                    .dataPoints
+                    .single { it.labels["job"] == "kastendeTestJob" }
+                    .value
+            lastSuccess shouldBeGreaterThan 0.0
         }
     }
 
