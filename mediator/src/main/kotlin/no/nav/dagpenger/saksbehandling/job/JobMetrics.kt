@@ -25,13 +25,13 @@ internal object JobMetrics {
     }
 
     /**
-     * Seeder [lastSuccess]-gaugen ved jobbstart slik at tidsserien alltid eksisterer.
-     * Uten dette får en jobb som feiler på hver kjøring siden pod-start aldri noen
-     * last_success-serie, og staleness-alarmen (som joiner på `job`) kan ikke fyre.
-     * Forankres i boot-tid: en jobb ødelagt-fra-boot blir gammel og alarmen fyrer.
+     * Markerer at jobben er startet (boot-baseline), i en *egen* gauge — ikke [lastSuccess].
+     * Hensikt: gi staleness-alarmen en serie å joine på selv for jobber som aldri har
+     * lyktes i gjeldende prosess, uten å forurense [lastSuccess] (som dashbord leser som
+     * "kun ekte suksesser"). Alarmen bruker `last_success or started`.
      */
-    fun seedLastSuccess(jobName: String) {
-        lastSuccess.labelValues(jobName).set(Instant.now().epochSecond.toDouble())
+    fun markStarted(jobName: String) {
+        started.labelValues(jobName).set(Instant.now().epochSecond.toDouble())
     }
 
     fun failure(jobName: String) {
@@ -80,6 +80,14 @@ internal object JobMetrics {
             .builder()
             .name("${PREFIX}last_success_timestamp_seconds")
             .help("Tidspunkt (epoch seconds) for siste vellykkede kjøring")
+            .labelNames("job")
+            .register()
+
+    val started: Gauge =
+        Gauge
+            .builder()
+            .name("${PREFIX}started_timestamp_seconds")
+            .help("Tidspunkt (epoch seconds) for jobbstart (boot-baseline for staleness-alarm)")
             .labelNames("job")
             .register()
 
