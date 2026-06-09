@@ -317,7 +317,7 @@ data class Oppgave private constructor(
             null -> {
                 logger.error {
                     "Oppgave $oppgaveId i tilstand ${tilstand.type} for behandling ${hendelse.behandlingId} " +
-                        "mangler saksbehandler. Dette er en brutt invariant: en oppgave til kontroll skal " +
+                        "mangler saksbehandler. En oppgave til kontroll skal " +
                         "alltid ha en registrert saksbehandler. Ruter til KlarTilBehandling."
                 }
                 endreTilstand(KlarTilBehandling, hendelse)
@@ -556,8 +556,7 @@ data class Oppgave private constructor(
         ): Handling {
             logger.info {
                 "Oppgave ${oppgave.oppgaveId} er allerede UnderBehandling ved behandling til godkjenning " +
-                    "for behandling ${hendelse.behandlingId}. Idempotent ekko (typisk vår egen beslutter-returner). " +
-                    "Ingen tilstandsendring."
+                    "for behandling ${hendelse.behandlingId}. Ingen tilstandsendring."
             }
             return Handling.INGEN
         }
