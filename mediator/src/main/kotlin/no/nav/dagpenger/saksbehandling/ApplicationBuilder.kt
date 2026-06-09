@@ -46,6 +46,7 @@ import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingTilGodkjenningMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
@@ -275,6 +276,7 @@ internal class ApplicationBuilder(
                 BehandlingOpprettetMottak(rapid, sakMediator)
                 SøknadBehandlingOpprettetMottak(rapid, innsendingMediator)
                 BehandlingAvbruttMottak(rapid, oppgaveMediator)
+                BehandlingTilGodkjenningMottak(rapid, oppgaveMediator)
                 BehandlingsresultatMottak(rapid, oppgaveMediator)
                 ForslagTilBehandlingsresultatMottak(rapid, oppgaveMediator)
                 SøknadsavklaringLøsningMottak(rapid, oppgaveMediator)

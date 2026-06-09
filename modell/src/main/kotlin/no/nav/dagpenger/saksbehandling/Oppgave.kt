@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -309,6 +310,29 @@ data class Oppgave private constructor(
         tilstand.returnerTilSaksbehandling(this, returnerTilSaksbehandlingHendelse)
     }
 
+    fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse): Handling = tilstand.behandlingTilGodkjenning(this, hendelse)
+
+    private fun returnerTilSaksbehandling(hendelse: BehandlingTilGodkjenningHendelse): Handling {
+        when (val sisteSaksbehandler = sisteSaksbehandler()) {
+            null -> {
+                logger.error {
+                    "Oppgave $oppgaveId i tilstand ${tilstand.type} for behandling ${hendelse.behandlingId} " +
+                        "mangler saksbehandler. En oppgave til kontroll skal " +
+                        "alltid ha en registrert saksbehandler. Ruter til KlarTilBehandling."
+                }
+                endreTilstand(KlarTilBehandling, hendelse)
+                behandlerIdent = null
+            }
+
+            else -> {
+                endreTilstand(UnderBehandling, hendelse)
+                behandlerIdent = sisteSaksbehandler
+            }
+        }
+        _emneknagger.add(Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn)
+        return Handling.LAGRE_OPPGAVE
+    }
+
     fun oppgaverPåVentMedUtgåttFrist(hendelse: PåVentFristUtgåttHendelse) {
         tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
@@ -524,6 +548,17 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
+        }
+
+        override fun behandlingTilGodkjenning(
+            oppgave: Oppgave,
+            hendelse: BehandlingTilGodkjenningHendelse,
+        ): Handling {
+            logger.info {
+                "Oppgave ${oppgave.oppgaveId} er allerede UnderBehandling ved behandling til godkjenning " +
+                    "for behandling ${hendelse.behandlingId}. Ingen tilstandsendring."
+            }
+            return Handling.INGEN
         }
 
         override fun tildel(
@@ -820,6 +855,11 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
+        override fun behandlingTilGodkjenning(
+            oppgave: Oppgave,
+            hendelse: BehandlingTilGodkjenningHendelse,
+        ): Handling = oppgave.returnerTilSaksbehandling(hendelse)
+
         override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
@@ -967,6 +1007,11 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(KlarTilKontroll, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
         }
+
+        override fun behandlingTilGodkjenning(
+            oppgave: Oppgave,
+            hendelse: BehandlingTilGodkjenningHendelse,
+        ): Handling = oppgave.returnerTilSaksbehandling(hendelse)
 
         override fun avbryt(
             oppgave: Oppgave,
@@ -1232,6 +1277,15 @@ data class Oppgave private constructor(
                 message = "Kan ikke håndtere hendelse om å returnere til saksbehandling fra kontroll i tilstand $type",
             )
         }
+
+        fun behandlingTilGodkjenning(
+            oppgave: Oppgave,
+            hendelse: BehandlingTilGodkjenningHendelse,
+        ): Handling =
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om behandling til godkjenning i tilstand $type",
+            )
 
         fun lagreBrevKvittering(
             oppgave: Oppgave,
