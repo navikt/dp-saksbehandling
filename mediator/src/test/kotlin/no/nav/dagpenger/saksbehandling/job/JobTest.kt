@@ -102,20 +102,21 @@ class JobTest {
     }
 
     @Test
-    fun `Skal seede last_success ved jobbstart slik at staleness-alarmen har en serie aa joine paa`() {
+    fun `Skal markere started ved jobbstart slik at staleness-alarmen har en serie aa joine paa`() {
         runBlocking {
             val testJob = KastendeTestJob()
             testJob.startJob(startAt = now, period = 200L)
 
-            // Selv om jobben aldri lykkes, må last_success-serien finnes (seedet ved start).
-            // Uten seed ville serien mangle og staleness-alarmen (join på `job`) aldri fyre.
-            val lastSuccess =
+            // Selv om jobben aldri lykkes, må started-serien finnes (satt ved start) slik at
+            // staleness-alarmen (last_success or started, join på exported_job) kan fyre.
+            // last_success forblir uberørt for jobber som aldri har lyktes.
+            val started =
                 PrometheusRegistry.defaultRegistry
-                    .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_job_last_success_timestamp_seconds" }
+                    .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_job_started_timestamp_seconds" }
                     .dataPoints
                     .single { it.labels["job"] == "kastendeTestJob" }
                     .value
-            lastSuccess shouldBeGreaterThan 0.0
+            started shouldBeGreaterThan 0.0
         }
     }
 
