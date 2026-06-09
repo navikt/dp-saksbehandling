@@ -25,29 +25,39 @@ spec:
     - name: dp-saksbehandling-jobber
       rules:
         - alert: BakgrunnsjobbKjorerIkke
-          # Appens label `job` kolliderer med Prometheus' scrape-`job` og omdøpes til
-          # `exported_job` (honor_labels=false). Derfor grupperes det på exported_job.
+          # Appens metrikk-label `job` (jobbnavnet) kolliderer med Prometheus' scrape-`job`.
+          # Avhengig av honor_labels havner jobbnavnet i `exported_job` ELLER `job`. Vi
+          # grupperer derfor på begge og coalescer til `jobb` via label_replace, slik at
+          # annoteringen alltid får jobbnavnet uansett oppsett.
           # last_success settes kun av lederen; started settes på alle pods ved jobbstart.
           # `last_success or started` gir alltid en serie å joine på (også for jobber som
           # aldri har lyktes), uten å forurense last_success som dashbord leser.
-          # max by (exported_job) leser ferskeste verdi på tvers av pods.
           # Terskel = 2 * intervall, med gulv på 5m for jobber med svært korte intervaller (f.eks. utboks 5s).
           expr: >-
-            (
-              time() - max by (exported_job) (
-                dp_saksbehandling_job_last_success_timestamp_seconds{app="dp-saksbehandling"}
-                or
-                dp_saksbehandling_job_started_timestamp_seconds{app="dp-saksbehandling"}
-              )
-            )
-            >
-            max by (exported_job) (
-              clamp_min(2 * dp_saksbehandling_job_period_seconds{app="dp-saksbehandling"}, 300)
+            label_replace(
+              label_replace(
+                (
+                  (
+                    time() - max by (job, exported_job) (
+                      dp_saksbehandling_job_last_success_timestamp_seconds{app="dp-saksbehandling"}
+                      or
+                      dp_saksbehandling_job_started_timestamp_seconds{app="dp-saksbehandling"}
+                    )
+                  )
+                  >
+                  max by (job, exported_job) (
+                    clamp_min(2 * dp_saksbehandling_job_period_seconds{app="dp-saksbehandling"}, 300)
+                  )
+                ),
+                "jobb", "$1", "job", "(.+)"
+              ),
+              "jobb", "$1", "exported_job", "(.+)"
             )
           for: 10m
           annotations:
-            consequence: 'Bakgrunnsjobben *{{ $labels.exported_job }}* i *dp-saksbehandling* har ikke fullført en vellykket kjøring innen 2x sitt intervall — jobben feiler vedvarende eller kjører ikke (scheduler eller leader nede)'
-            action: '`kubectl logs -l app=dp-saksbehandling | grep -i {{ $labels.exported_job }}`. Sjekk siste feil i loggen; ved mistanke om leder-problem verifiser leader election'
+            summary: 'Bakgrunnsjobb {{ $labels.jobb }} i dp-saksbehandling har stoppet'
+            consequence: 'Bakgrunnsjobben *{{ $labels.jobb }}* i *dp-saksbehandling* har ikke fullført en vellykket kjøring på {{ $value | humanizeDuration }} (terskel: 2x jobbens intervall). Jobben feiler vedvarende, eller scheduler/leder er nede.'
+            action: 'Sjekk loggene: `kubectl logs -l app=dp-saksbehandling --since=1h | grep -i {{ $labels.jobb }}`. Finn siste feil; ved mistanke om leder-problem verifiser leader election. Restart av pod gir jobben en ny grace-periode.'
           labels:
             namespace: teamdagpenger
             severity: warning
