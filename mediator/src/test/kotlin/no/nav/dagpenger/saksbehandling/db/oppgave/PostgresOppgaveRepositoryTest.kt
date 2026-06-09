@@ -5,6 +5,8 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
@@ -48,6 +50,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
+import javax.sql.DataSource
 
 class PostgresOppgaveRepositoryTest {
     private val saksbehandler =
@@ -1011,14 +1015,14 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Tildeling av neste oppgave ut fra søkefilter med og uten harDpSak`() {
         DBTestHelper.withMigratedDb { ds ->
-
+            val sakRepo = PostgresSakRepository(DatabaseSession(ds))
             val eldsteOppgave =
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(8),
                     person = testPerson,
                 )
-            val midtersteOppgave =
+            val nestEldsteOppgave =
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(4),
@@ -1037,12 +1041,26 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(1),
                     person = personSomHarDpSak,
                 )
-            val sakRepo = PostgresSakRepository(DatabaseSession(ds))
             sakRepo.hentSakIdForBehandlingId(oppgaveForPersonMedDpSak.behandling.behandlingId).let { sakId ->
-                println("Merker sak $sakId")
                 sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
             }
 
+            val personSomHarDpSakMedNødbrems =
+                Person(
+                    ident = "08080066226",
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                )
+            val oppgaveForNødbremsetPersonMedDpSak =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(2),
+                    person = personSomHarDpSakMedNødbrems,
+                )
+            sakRepo.hentSakIdForBehandlingId(oppgaveForNødbremsetPersonMedDpSak.behandling.behandlingId).let { sakId ->
+                sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
+            }
+            ds.nødbremsPerson(personSomHarDpSakMedNødbrems.id)
             val åpentFilter =
                 TildelNesteOppgaveFilter(
                     periode = Periode.UBEGRENSET_PERIODE,
@@ -1100,7 +1118,7 @@ class PostgresOppgaveRepositoryTest {
                 ).let {
                     assertSoftly {
                         require(it != null) { "Skal finne en oppgave" }
-                        it.oppgaveId shouldBe midtersteOppgave.oppgaveId
+                        it.oppgaveId shouldBe nestEldsteOppgave.oppgaveId
                         it.behandlerIdent shouldBe saksbehandler.navIdent
                         it.tilstand() shouldBe Oppgave.UnderBehandling
                     }
@@ -1633,30 +1651,41 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver tilhørende personer med sak i dp-sak`() {
-        val nyTestperson =
-            Person(
-                ident = "02020299999",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
         DBTestHelper.withMigratedDb { ds ->
-            val oppgave1 = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
-            val oppgave2 = this.leggTilOppgave(opprettet = opprettetNå, person = nyTestperson)
             val sakRepo = PostgresSakRepository(DatabaseSession(ds))
-            sakRepo.hentSakIdForBehandlingId(oppgave2.behandling.behandlingId).let { sakId ->
-                println("Merker sak $sakId")
+            val oppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
+
+            val personMedDpSak =
+                Person(
+                    ident = "02020299999",
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                )
+            val oppgaveDpSak = this.leggTilOppgave(opprettet = opprettetNå.minusDays(2), person = personMedDpSak)
+            sakRepo.hentSakIdForBehandlingId(oppgaveDpSak.behandling.behandlingId).let { sakId ->
                 sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
             }
 
-            val oppgaveRepo = PostgresOppgaveRepository(DatabaseSession(ds))
+            val nødbremsetPerson =
+                Person(
+                    ident = "11220077777",
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                )
+            val oppgaveForNødbremset = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1), person = nødbremsetPerson)
+            sakRepo.hentSakIdForBehandlingId(oppgaveForNødbremset.behandling.behandlingId).let { sakId ->
+                sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
+            }
+            ds.nødbremsPerson(nødbremsetPerson.id)
 
+            val oppgaveRepo = PostgresOppgaveRepository(DatabaseSession(ds))
             oppgaveRepo
                 .søk(
                     Søkefilter(
                         tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
-                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
+                ).oppgaver shouldBe listOf(oppgave, oppgaveDpSak, oppgaveForNødbremset)
 
             oppgaveRepo
                 .søk(
@@ -1665,7 +1694,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         harDpSak = true,
                     ),
-                ).oppgaver shouldBe listOf(oppgave2)
+                ).oppgaver shouldBe listOf(oppgaveDpSak)
         }
     }
 
@@ -2350,4 +2379,26 @@ class PostgresOppgaveRepositoryTest {
             distinkteEmneknagger shouldBe setOf("Avslag", "EØS-inntekt", "D-nummer")
         }
     }
+
+    private fun DataSource.nødbremsPerson(personId: UUID) =
+        sessionOf(this).use { session ->
+            session.run(
+                action =
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            INSERT INTO nodbremset_person_v1
+                            ( person_id )
+                            VALUES
+                            ( :person_id )
+                            ON CONFLICT DO NOTHING 
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                    ).asUpdate,
+            )
+        }
 }
