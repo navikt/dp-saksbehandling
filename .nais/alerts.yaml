@@ -22,3 +22,26 @@ spec:
           labels:
             namespace: teamdagpenger
             severity: critical
+    - name: dp-saksbehandling-jobber
+      rules:
+        - alert: BakgrunnsjobbKjorerIkke
+          # last_success settes kun av lederen, og period settes på alle pods.
+          # Derfor max by (job) for å lese lederens ferskeste suksess på tvers av pods.
+          # Terskel = 3 * intervall, med gulv på 5m for jobber med svært korte intervaller (f.eks. utboks 5s).
+          expr: >-
+            (
+              time() - max by (job) (
+                dp_saksbehandling_job_last_success_timestamp_seconds{app="dp-saksbehandling"}
+              )
+            )
+            >
+            max by (job) (
+              clamp_min(3 * dp_saksbehandling_job_period_seconds{app="dp-saksbehandling"}, 300)
+            )
+          for: 10m
+          annotations:
+            consequence: 'Bakgrunnsjobben *{{ $labels.job }}* i *dp-saksbehandling* har ikke fullført en vellykket kjøring innen 3x sitt intervall — jobben feiler vedvarende eller kjører ikke (scheduler eller leader nede)'
+            action: '`kubectl logs -l app=dp-saksbehandling | grep -i {{ $labels.job }}`. Sjekk siste feil i loggen; ved mistanke om leder-problem verifiser leader election'
+          labels:
+            namespace: teamdagpenger
+            severity: warning
