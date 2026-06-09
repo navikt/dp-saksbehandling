@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -378,6 +379,40 @@ class OppgaveMediator(
                     oppgaveRepository.lagre(oppgave)
                     logger.info {
                         "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
+                }
+            }
+        }
+    }
+
+    fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse) {
+        val oppgave = oppgaveRepository.finnOppgaveFor(hendelse.behandlingId)
+        if (oppgave == null) {
+            logger.info {
+                "Mottatt BehandlingTilGodkjenningHendelse for behandling ${hendelse.behandlingId}, " +
+                    "men fant ingen oppgave. Dette er forventet ved førstegangs TilGodkjenning, hvor " +
+                    "oppgaven opprettes av forslag_til_behandlingsresultat. Ignorerer hendelsen."
+            }
+            return
+        }
+        withLoggingContext(
+            "oppgaveId" to oppgave.oppgaveId.toString(),
+            "behandlingId" to oppgave.behandling.behandlingId.toString(),
+        ) {
+            logger.info {
+                "Mottatt BehandlingTilGodkjenningHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+            }
+            when (oppgave.behandlingTilGodkjenning(hendelse)) {
+                Handling.LAGRE_OPPGAVE -> {
+                    oppgaveRepository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet BehandlingTilGodkjenningHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
+                }
+
+                Handling.INGEN -> {
+                    logger.info {
+                        "BehandlingTilGodkjenningHendelse ga ingen tilstandsendring. Tilstand: ${oppgave.tilstand().type}"
                     }
                 }
             }

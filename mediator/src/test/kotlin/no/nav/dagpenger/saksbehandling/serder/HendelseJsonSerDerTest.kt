@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -132,6 +133,13 @@ class HendelseJsonSerDerTest {
                                 grupper = emptySet(),
                                 tilganger = setOf(TilgangType.SAKSBEHANDLER),
                             ),
+                    ),
+                ),
+                Arguments.of(
+                    "BehandlingTilGodkjenningHendelse",
+                    BehandlingTilGodkjenningHendelse(
+                        behandlingId = fixedUUID,
+                        ident = "12345678901",
                     ),
                 ),
             )
