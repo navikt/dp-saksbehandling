@@ -38,8 +38,9 @@ class StatistikkJob(
         if (saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført()) {
             logger.info { "Starter publisering av oppgavetilstandsendringer til statistikk." }
         } else {
-            logger.error { "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring." }
-            return
+            val errMessage = "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring."
+            logger.error { errMessage }
+            throw IllegalStateException(errMessage)
         }
         runCatching {
             val oppgaveTilstandsendringer =
