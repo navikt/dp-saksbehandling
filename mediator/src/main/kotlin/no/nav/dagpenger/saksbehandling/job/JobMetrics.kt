@@ -18,6 +18,7 @@ internal object JobMetrics {
     private const val PREFIX = "dp_saksbehandling_job_"
     private const val NANOS_PER_SECOND = 1_000_000_000.0
     private const val MILLIS_PER_SECOND = 1_000.0
+    const val LABEL_JOBBNAVN = "jobbnavn"
 
     fun success(jobName: String) {
         executions.labelValues(jobName, "success").inc()
@@ -64,7 +65,7 @@ internal object JobMetrics {
             .builder()
             .name("${PREFIX}executions_total")
             .help("Antall jobb-kjøringer per status")
-            .labelNames("job", "status")
+            .labelNames(LABEL_JOBBNAVN, "status")
             .register()
 
     val duration: Histogram =
@@ -72,7 +73,7 @@ internal object JobMetrics {
             .builder()
             .name("${PREFIX}duration_seconds")
             .help("Kjøretid for jobb-kjøring")
-            .labelNames("job")
+            .labelNames(LABEL_JOBBNAVN)
             .register()
 
     val lastSuccess: Gauge =
@@ -80,7 +81,7 @@ internal object JobMetrics {
             .builder()
             .name("${PREFIX}last_success_timestamp_seconds")
             .help("Tidspunkt (epoch seconds) for siste vellykkede kjøring")
-            .labelNames("job")
+            .labelNames(LABEL_JOBBNAVN)
             .register()
 
     val started: Gauge =
@@ -88,7 +89,7 @@ internal object JobMetrics {
             .builder()
             .name("${PREFIX}started_timestamp_seconds")
             .help("Tidspunkt (epoch seconds) for jobbstart (boot-baseline for staleness-alarm)")
-            .labelNames("job")
+            .labelNames(LABEL_JOBBNAVN)
             .register()
 
     val period: Gauge =
@@ -96,6 +97,6 @@ internal object JobMetrics {
             .builder()
             .name("${PREFIX}period_seconds")
             .help("Konfigurert intervall for jobb i sekunder")
-            .labelNames("job")
+            .labelNames(LABEL_JOBBNAVN)
             .register()
 }

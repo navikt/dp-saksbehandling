@@ -95,7 +95,7 @@ class JobTest {
                 PrometheusRegistry.defaultRegistry
                     .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_job_executions_total" }
                     .dataPoints
-                    .single { it.labels["job"] == "kastendeTestJob" && it.labels["status"] == "failure" }
+                    .single { it.labels[JobMetrics.LABEL_JOBBNAVN] == "kastendeTestJob" && it.labels["status"] == "failure" }
                     .value
             failures shouldBeGreaterThan 2.0
         }
@@ -108,13 +108,13 @@ class JobTest {
             testJob.startJob(startAt = now, period = 200L)
 
             // Selv om jobben aldri lykkes, må started-serien finnes (satt ved start) slik at
-            // staleness-alarmen (last_success or started, join på exported_job) kan fyre.
+            // staleness-alarmen (last_success or started, join på jobbnavn) kan fyre.
             // last_success forblir uberørt for jobber som aldri har lyktes.
             val started =
                 PrometheusRegistry.defaultRegistry
                     .getSnapShot<GaugeSnapshot> { it == "dp_saksbehandling_job_started_timestamp_seconds" }
                     .dataPoints
-                    .single { it.labels["job"] == "kastendeTestJob" }
+                    .single { it.labels[JobMetrics.LABEL_JOBBNAVN] == "kastendeTestJob" }
                     .value
             started shouldBeGreaterThan 0.0
         }
