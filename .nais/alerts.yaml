@@ -45,9 +45,9 @@ spec:
             )
           for: 10m
           annotations:
-            summary: "Bakgrunnsjobb {{ $labels.jobbnavn }} i dp-saksbehandling har stoppet"
-            consequence: "Bakgrunnsjobben *{{ $labels.jobbnavn }}* i *dp-saksbehandling* har ikke fullført en vellykket kjøring på {{ $value | humanizeDuration }} (terskel: 2x jobbens intervall). Jobben feiler vedvarende, eller scheduler/leder er nede."
-            action: "Sjekk loggene: `kubectl logs -l app=dp-saksbehandling --since=1h | grep -i {{ $labels.jobbnavn }}`. Finn siste feil; ved mistanke om leder-problem verifiser leader election. Restart av pod gir jobben en ny grace-periode."
+            summary: 'Bakgrunnsjobb \{{ $labels.jobbnavn }} i dp-saksbehandling har stoppet'
+            consequence: 'Bakgrunnsjobben *\{{ $labels.jobbnavn }}* i *dp-saksbehandling* har ikke fullført en vellykket kjøring på \{{ $value | humanizeDuration }} (terskel: 2x jobbens intervall). Jobben feiler vedvarende, eller scheduler/leder er nede.'
+            action: 'Sjekk loggene: `kubectl logs -l app=dp-saksbehandling --since=1h | grep -i \{{ $labels.jobbnavn }}`. Finn siste feil; ved mistanke om leder-problem verifiser leader election. Restart av pod gir jobben en ny grace-periode.'
           labels:
             namespace: teamdagpenger
             severity: warning
