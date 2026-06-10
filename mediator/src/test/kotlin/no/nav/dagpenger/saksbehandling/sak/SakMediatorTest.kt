@@ -779,10 +779,9 @@ class SakMediatorTest {
                             opprettet = LocalDateTime.now(),
                             type = Søknad,
                         ),
-                    ).also {
-                        assertAvbrytBehandlingHendelsePåRapid()
-                    }
+                    )
             }
+            testRapid.inspektør.size shouldBe 0
 
             val søknadsbehandlingOpprettetHendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -796,19 +795,17 @@ class SakMediatorTest {
                 it
                     .knyttTilSak(
                         søknadsbehandlingOpprettetHendelse,
-                    ).also {
-                        assertAvbrytBehandlingHendelsePåRapid()
-                    }
+                    )
             }
+            assertAvbrytBehandlingHendelsePåRapid()
 
             shouldThrow<NødbremsetPersonException> {
                 it
                     .opprettEllerKnyttTilSak(
                         søknadsbehandlingOpprettetHendelse,
-                    ).also {
-                        assertAvbrytBehandlingHendelsePåRapid()
-                    }
+                    )
             }
+            assertAvbrytBehandlingHendelsePåRapid()
 
             val dpBehandlingOpprettetHendelse =
                 DpBehandlingOpprettetHendelse(
@@ -824,18 +821,17 @@ class SakMediatorTest {
                 it
                     .opprettEllerKnyttTilSak(
                         dpBehandlingOpprettetHendelse,
-                    ).also {
-                        assertAvbrytBehandlingHendelsePåRapid()
-                    }
+                    )
             }
+            assertAvbrytBehandlingHendelsePåRapid()
+
             shouldThrow<NødbremsetPersonException> {
                 it
                     .knyttTilSak(
                         dpBehandlingOpprettetHendelse,
-                    ).also {
-                        assertAvbrytBehandlingHendelsePåRapid()
-                    }
+                    )
             }
+            assertAvbrytBehandlingHendelsePåRapid()
         }
     }
 }

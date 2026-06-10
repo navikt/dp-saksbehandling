@@ -125,7 +125,7 @@ class SakMediator(
         behandlingOpprettetHendelse: BehandlingOpprettetHendelse,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): SakHistorikk {
-        if (avbrytVedNødbremsetPerson(behandlingOpprettetHendelse.ident, behandlingOpprettetHendelse.behandlingId)) {
+        if (personMediator.erNødbremset(behandlingOpprettetHendelse.ident)) {
             throw NødbremsetPersonException(behandlingOpprettetHendelse.ident)
         }
         val sakHistorikk = sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident)
