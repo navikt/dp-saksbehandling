@@ -24,6 +24,7 @@ class SøkefilterTest {
                 this["fom"] = "2021-01-01"
                 this["tom"] = "2023-01-01"
                 this["mineOppgaver"] = "true"
+                this["harDpSak"] = "true"
                 this["antallOppgaver"] = "10"
                 this["side"] = "1"
             }.let {
@@ -53,6 +54,7 @@ class SøkefilterTest {
                             ),
                     )
                 søkefilter.saksbehandlerIdent shouldBe "testIdent"
+                søkefilter.harDpSak shouldBe true
                 søkefilter.paginering shouldBe Søkefilter.Paginering(10, 0)
                 søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.STATUS
                 søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
@@ -70,6 +72,7 @@ class SøkefilterTest {
         søkefilter.periode shouldBe Periode.UBEGRENSET_PERIODE
         søkefilter.tilstander shouldBe Oppgave.Tilstand.Type.søkbareTilstander
         søkefilter.ekskluderEmneknagger shouldBe emptySet()
+        søkefilter.harDpSak shouldBe false
         søkefilter.saksbehandlerIdent shouldBe null
         søkefilter.personIdent shouldBe null
         søkefilter.oppgaveId shouldBe null

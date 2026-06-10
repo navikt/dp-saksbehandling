@@ -20,6 +20,7 @@ data class Søkefilter(
     val periode: Periode,
     val tilstander: Set<Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
+    val harDpSak: Boolean = false,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
@@ -99,6 +100,7 @@ data class Søkefilter(
                         mineOppgaver -> saksbehandlerIdent
                         else -> null
                     },
+                harDpSak = builder.harDpSak(),
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 ekskluderEmneknagger = builder.ekskluderEmneknagger(),
                 utløstAvTyper = utløstAvTyper,
@@ -118,6 +120,7 @@ data class TildelNesteOppgaveFilter(
     val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
+    val harDpSak: Boolean = false,
     val harBeslutterRolle: Boolean = false,
     val navIdent: String,
 ) {
@@ -141,6 +144,7 @@ data class TildelNesteOppgaveFilter(
                 utløstAvTyper = utløstAvTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
+                harDpSak = builder.harDpSak(),
                 harBeslutterRolle = harBeslutterRolle,
                 navIdent = saksbehandler.navIdent,
             )
@@ -219,6 +223,8 @@ class FilterBuilder {
     }
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
+
+    fun harDpSak(): Boolean = stringValues["harDpSak"]?.toBoolean() ?: false
 
     fun paginering(): Søkefilter.Paginering {
         val antallOppgaver = stringValues["antallOppgaver"]

@@ -124,6 +124,23 @@ class PostgresOppgaveRepository(
                     else -> ""
                 }
 
+            //language=PostgreSQL
+            val harDpSakClause =
+                if (filter.harDpSak) {
+                    """
+                    AND EXISTS(
+                        SELECT 1
+                        FROM        sak_v2 sak
+                        LEFT JOIN   nodbremset_person_v1 nod on nod.person_id = sak.person_id
+                        WHERE       sak.person_id = pers.id
+                        AND         sak.er_dp_sak
+                        AND         nod.person_id IS NULL
+                        )
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+
             // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
             // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
             // Det sjekkes derfor mot tilganger i utplukket.
@@ -148,7 +165,7 @@ class PostgresOppgaveRepository(
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
                     AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                    """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause
+                    """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause + harDpSakClause
 
             // language=SQL
             val unionAll = """UNION ALL"""
@@ -183,7 +200,7 @@ class PostgresOppgaveRepository(
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
-                """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause +
+                """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause + harDpSakClause +
                     """
                     )
                     """.trimIndent()
@@ -503,7 +520,7 @@ class PostgresOppgaveRepository(
                 }
 
             val ekskluderEmneknaggerAsText = søkeFilter.ekskluderEmneknagger.joinToString { "'$it'" }
-            // language=SQL
+            // language=PostgreSQL
             val ekskluderEmneknaggerClause =
                 when {
                     søkeFilter.ekskluderEmneknagger.isNotEmpty() -> {
@@ -517,6 +534,23 @@ class PostgresOppgaveRepository(
                         """.trimIndent()
                     }
                     else -> ""
+                }
+
+            //language=PostgreSQL
+            val harDpSakClause =
+                if (søkeFilter.harDpSak) {
+                    """
+                    AND EXISTS(
+                        SELECT 1
+                        FROM        sak_v2 sak
+                        LEFT JOIN   nodbremset_person_v1 nod ON nod.person_id = sak.person_id
+                        WHERE       sak.person_id = pers.id
+                        AND         sak.er_dp_sak
+                        AND         nod.person_id IS NULL
+                    )
+                    """.trimIndent()
+                } else {
+                    ""
                 }
 
             val orderByClause = søkeFilter.sorteringsfelt.orderByClause(søkeFilter.sortering)
@@ -573,6 +607,7 @@ class PostgresOppgaveRepository(
                     behandlingIdClause,
                     emneknaggClause,
                     ekskluderEmneknaggerClause,
+                    harDpSakClause,
                     søknadIdClause,
                 ).toString()
 
