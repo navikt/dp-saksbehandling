@@ -83,6 +83,7 @@ class PostgresKlageRepositoryTest {
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
                 )
+            requireNotNull(sak)
             sakMediator.knyttTilSak(
                 behandlingOpprettetHendelse =
                     BehandlingOpprettetHendelse(

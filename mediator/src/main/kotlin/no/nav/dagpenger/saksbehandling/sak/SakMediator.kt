@@ -81,16 +81,12 @@ class SakMediator(
         ident: String,
         behandlingskjedeId: UUID,
         behandling: Behandling,
-    ): Sak {
-        val sak =
-            Sak(
-                sakId = behandlingskjedeId,
-                opprettet = behandling.opprettet,
-            ).also {
-                it.leggTilBehandling(behandling)
-            }
+    ): Sak? {
+        if (avbrytVedNødbremsetPerson(ident, behandling.behandlingId)) {
+            return null
+        }
 
-        runCatching {
+        return runCatching {
             personMediator.finnEllerOpprettPerson(ident)
         }.onFailure { e ->
             when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
@@ -106,21 +102,32 @@ class SakMediator(
                     throw e
                 }
             }
-        }.onSuccess { person ->
+        }.map { person ->
+            val sak =
+                Sak(
+                    sakId = behandlingskjedeId,
+                    opprettet = behandling.opprettet,
+                ).also {
+                    it.leggTilBehandling(behandling)
+                }
+
             val sakHistorikk =
                 sakRepository.finnSakHistorikk(ident) ?: SakHistorikk(
                     person = person,
                 )
             sakHistorikk.leggTilSak(sak)
             sakRepository.lagre(sakHistorikk)
-        }
-        return sak
+            sak
+        }.getOrNull()
     }
 
     fun knyttTilSak(
         behandlingOpprettetHendelse: BehandlingOpprettetHendelse,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): SakHistorikk {
+        if (avbrytVedNødbremsetPerson(behandlingOpprettetHendelse.ident, behandlingOpprettetHendelse.behandlingId)) {
+            throw NødbremsetPersonException(behandlingOpprettetHendelse.ident)
+        }
         val sakHistorikk = sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident)
         sakHistorikk.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
             sjekkResultat(
@@ -134,6 +141,9 @@ class SakMediator(
     }
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+        if (avbrytVedNødbremsetPerson(søknadsbehandlingOpprettetHendelse.ident, søknadsbehandlingOpprettetHendelse.behandlingId)) {
+            throw NødbremsetPersonException(søknadsbehandlingOpprettetHendelse.ident)
+        }
         sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(søknadsbehandlingOpprettetHendelse).also { resultat ->
                 sjekkResultat(
@@ -147,6 +157,9 @@ class SakMediator(
     }
 
     fun knyttTilSak(hendelse: DpBehandlingOpprettetHendelse) {
+        if (avbrytVedNødbremsetPerson(hendelse.ident, hendelse.behandlingId)) {
+            throw NødbremsetPersonException(hendelse.ident)
+        }
         sakRepository.hentSakHistorikk(hendelse.ident).also {
             it.knyttTilSak(hendelse).also { resultat ->
                 sjekkResultat(
@@ -288,5 +301,21 @@ class SakMediator(
             behandling = behandling,
             ctx = ctx,
         )
+    }
+
+    private fun avbrytVedNødbremsetPerson(
+        ident: String,
+        behandlingId: UUID,
+    ): Boolean {
+        val erNødbremset = personMediator.erNødbremset(ident)
+        if (erNødbremset) {
+            logger.info { "Avbryter behandling $behandlingId for person som er nødbremset" }
+            sendAvbrytBehandling(
+                behandlingId = behandlingId,
+                ident = ident,
+                årsak = "Person er nødbremset",
+            )
+        }
+        return erNødbremset
     }
 }

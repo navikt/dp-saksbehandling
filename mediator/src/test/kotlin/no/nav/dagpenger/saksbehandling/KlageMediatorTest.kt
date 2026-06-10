@@ -1069,6 +1069,7 @@ class KlageMediatorTest {
                             hendelse = hendelse,
                         ),
                 )
+            requireNotNull(sak)
 
             test(klageMediator, oppgaveMediator, sak.sakId)
         }
@@ -1136,6 +1137,7 @@ class KlageMediatorTest {
                             hendelse = hendelse,
                         ),
                 )
+            requireNotNull(sak)
 
             shouldThrow<RuntimeException> {
                 klageMediator.opprettManuellKlage(
@@ -1220,6 +1222,7 @@ class KlageMediatorTest {
                             hendelse = hendelse,
                         ),
                 )
+            requireNotNull(sak)
 
             shouldThrow<RuntimeException> {
                 klageMediator.opprettKlage(

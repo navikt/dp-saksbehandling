@@ -36,6 +36,8 @@ class PersonMediator(
             }
         }
 
+    fun erNødbremset(ident: String) = personRepository.erNødbremset(ident)
+
     private fun validerPerson(person: Person) {
         if (person.adressebeskyttelseGradering != UGRADERT) {
             throw AdresseBeeskyttetPersonException()

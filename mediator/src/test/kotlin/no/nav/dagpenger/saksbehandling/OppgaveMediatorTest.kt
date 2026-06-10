@@ -2086,6 +2086,8 @@ OppgaveMediatorTest {
                                 utløstAv = DpBehandling.Søknad,
                             ),
                     )
+                requireNotNull(sak)
+
                 sakMediator.knyttTilSak(
                     behandlingOpprettetHendelse =
                         BehandlingOpprettetHendelse(

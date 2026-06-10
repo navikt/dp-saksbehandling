@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
+import no.nav.dagpenger.saksbehandling.sak.NødbremsetPersonException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
@@ -196,6 +197,22 @@ fun Application.statusPages() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Forbidden, problem)
+                }
+
+                is NødbremsetPersonException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Personen er nodbremset",
+                            detail = cause.message,
+                            status = HttpStatusCode.UnprocessableEntity.value,
+                            instance = call.request.path(),
+                            type =
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:person-nodbremset")
+                                    .toString(),
+                        )
+                    sikkerLogger.error(cause) { "Personen er nodbremset: ${cause.ident}" }
+                    call.respond(HttpStatusCode.UnprocessableEntity, problem)
                 }
 
                 is BehandlingKreverIkkeTotrinnskontrollException -> {

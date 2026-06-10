@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UgyldigOpplysningException
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.sak.NødbremsetPersonException
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
@@ -243,7 +244,7 @@ class StatuspageTest {
     @Test
     fun `Error håndtering av DateTimeParseException`() {
         testApplication {
-            val message = "Feil jved parsing av dato/tid"
+            val message = "Feil ved parsing av dato/tid"
             val path = "/DateTimeParseException"
             application {
                 mockApi()
@@ -353,6 +354,35 @@ class StatuspageTest {
 
             client.get(path).let { response ->
                 response.status.value shouldBe 403
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    httpProblem.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av NødbremsetPersonException`() {
+        val path = "/nodbremset"
+        val httpProblem = """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:person-nodbremset",
+                      "title": "Personen er nodbremset",
+                      "detail": "Personen er nodbremset",
+                      "status": 422,
+                      "instance": "$path"
+                    }
+                    """
+        testApplication {
+            application {
+                mockApi()
+                routing {
+                    get("/nodbremset") { throw NødbremsetPersonException("ident") }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status.value shouldBe 422
                 response.bodyAsText() shouldEqualSpecifiedJson
                     //language=JSON
                     httpProblem.trimIndent()

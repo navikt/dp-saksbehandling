@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.sak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.fail
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -14,8 +15,10 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling.Søknad
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
@@ -25,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -137,7 +141,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
@@ -145,7 +149,7 @@ class SakMediatorTest {
                 it.alleSaker().single().let { sak ->
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
-                    sak.behandlinger().single().utløstAv shouldBe HendelseBehandler.DpBehandling.Søknad
+                    sak.behandlinger().single().utløstAv shouldBe Søknad
                 }
             }
         }
@@ -174,7 +178,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
@@ -217,7 +221,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
             sakMediator.knyttTilSak(meldekortbehandlingOpprettetHendelse)
@@ -251,7 +255,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
             sakMediator.knyttTilSak(manuellBehandlingOpprettetHendelse)
@@ -287,9 +291,10 @@ class SakMediatorTest {
                             behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                             opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                             hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            utløstAv = Søknad,
                         ),
                 )
+            requireNotNull(sak)
 
             sakMediator.oppdaterSakMedArenaSakId(
                 VedtakFattetHendelse(
@@ -359,9 +364,10 @@ class SakMediatorTest {
                             behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                             opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                             hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            utløstAv = Søknad,
                         ),
                 )
+            requireNotNull(sak)
 
             sakMediator.finnSisteDagpengeSakId(ident = testIdent) shouldBe null
 
@@ -427,7 +433,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
 
@@ -492,7 +498,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
 
@@ -529,9 +535,11 @@ class SakMediatorTest {
                             behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                             opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                             hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            utløstAv = Søknad,
                         ),
                 )
+            requireNotNull(sak1)
+
             sakMediator.merkSakenSomDpSak(
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
@@ -557,7 +565,7 @@ class SakMediatorTest {
                         behandlingId = endaEnSøknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = endaEnSøknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = endaEnSøknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
             sakMediator.merkSakenSomDpSak(
@@ -627,7 +635,7 @@ class SakMediatorTest {
                         behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                         opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelseNyRett,
-                        utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        utløstAv = Søknad,
                     ),
             )
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
@@ -647,9 +655,10 @@ class SakMediatorTest {
                             behandlingId = endaEnSøknadsbehandlingOpprettetHendelseNyRett.behandlingId,
                             opprettet = endaEnSøknadsbehandlingOpprettetHendelseNyRett.opprettet,
                             hendelse = endaEnSøknadsbehandlingOpprettetHendelseNyRett,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            utløstAv = Søknad,
                         ),
                 )
+            requireNotNull(sak)
             sakMediator
                 .hentSakHistorikk(endaEnSøknadsbehandlingOpprettetHendelseNyRett.ident)
                 .alleSaker()
@@ -683,6 +692,150 @@ class SakMediatorTest {
                 sak.behandlinger().size shouldBe 2
                 sak.behandlinger().first() shouldBe behandling
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
+        }
+    }
+
+    @Test
+    fun `Skal ikke opprette sak for person som er nødbremset, men sende avbryt melding`() {
+        val mockMediator =
+            mockk<PersonMediator>().also {
+                every { it.erNødbremset(testIdent) } returns true
+            }
+
+        SakMediator(
+            personMediator = mockMediator,
+            sakRepository = mockk(),
+            rapidsConnection = testRapid,
+        ).also {
+            it.opprettSak(
+                ident = testIdent,
+                behandlingskjedeId = TestHelper.behandlingId,
+                behandling = TestHelper.testBehandling,
+            )
+            assertAvbrytBehandlingHendelsePåRapid
+
+            it
+                .opprettEllerKnyttTilSak(
+                    DpBehandlingOpprettetHendelse(
+                        behandlingId = TestHelper.testBehandling.behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                        // Oppprette ny sak dersom basert på behandling er null
+                        basertPåBehandling = null,
+                        behandlingskjedeId = UUIDv7.ny(),
+                        type = HendelseBehandler.DpBehandling.Meldekort,
+                    ),
+                ).also {
+                    assertAvbrytBehandlingHendelsePåRapid
+                }
+
+            it
+                .opprettEllerKnyttTilSak(
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = UUIDv7.ny(),
+                        behandlingId = TestHelper.testBehandling.behandlingId,
+                        // Oppprette ny sak dersom basert på behandling er null
+                        basertPåBehandling = null,
+                        behandlingskjedeId = UUIDv7.ny(),
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
+                ).also {
+                    assertAvbrytBehandlingHendelsePåRapid
+                }
+        }
+    }
+
+    private val assertAvbrytBehandlingHendelsePåRapid: () -> Unit = {
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).let {
+            it["@event_name"].stringValue() shouldBe "avbryt_behandling"
+            it["behandlingId"].asUUID() shouldBe TestHelper.behandlingId
+            it["ident"].stringValue() shouldBe testIdent
+            it["årsak"].stringValue() shouldBe "Person er nødbremset"
+        }
+        testRapid.reset()
+    }
+
+    @Test
+    fun `Skal kaste exception ved knytning mot sak hvis personen er nødbremset, samt sende avbryt melding`() {
+        val mockMediator =
+            mockk<PersonMediator>().also {
+                every { it.erNødbremset(testIdent) } returns true
+            }
+
+        SakMediator(
+            personMediator = mockMediator,
+            sakRepository = mockk(),
+            rapidsConnection = testRapid,
+        ).also {
+            shouldThrow<NødbremsetPersonException> {
+                it
+                    .knyttTilSak(
+                        BehandlingOpprettetHendelse(
+                            behandlingId = TestHelper.testBehandling.behandlingId,
+                            ident = testIdent,
+                            sakId = UUIDv7.ny(),
+                            opprettet = LocalDateTime.now(),
+                            type = Søknad,
+                        ),
+                    ).also {
+                        assertAvbrytBehandlingHendelsePåRapid()
+                    }
+            }
+
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = TestHelper.testBehandling.behandlingId,
+                    basertPåBehandling = UUIDv7.ny(),
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+            shouldThrow<NødbremsetPersonException> {
+                it
+                    .knyttTilSak(
+                        søknadsbehandlingOpprettetHendelse,
+                    ).also {
+                        assertAvbrytBehandlingHendelsePåRapid()
+                    }
+            }
+
+            shouldThrow<NødbremsetPersonException> {
+                it
+                    .opprettEllerKnyttTilSak(
+                        søknadsbehandlingOpprettetHendelse,
+                    ).also {
+                        assertAvbrytBehandlingHendelsePåRapid()
+                    }
+            }
+
+            val dpBehandlingOpprettetHendelse =
+                DpBehandlingOpprettetHendelse(
+                    behandlingId = TestHelper.testBehandling.behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                    basertPåBehandling = UUIDv7.ny(),
+                    behandlingskjedeId = UUIDv7.ny(),
+                    type = HendelseBehandler.DpBehandling.Meldekort,
+                )
+
+            shouldThrow<NødbremsetPersonException> {
+                it
+                    .opprettEllerKnyttTilSak(
+                        dpBehandlingOpprettetHendelse,
+                    ).also {
+                        assertAvbrytBehandlingHendelsePåRapid()
+                    }
+            }
+            shouldThrow<NødbremsetPersonException> {
+                it
+                    .knyttTilSak(
+                        dpBehandlingOpprettetHendelse,
+                    ).also {
+                        assertAvbrytBehandlingHendelsePåRapid()
+                    }
+            }
         }
     }
 }
