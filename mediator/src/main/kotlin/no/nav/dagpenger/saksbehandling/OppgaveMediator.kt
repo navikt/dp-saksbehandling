@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -310,11 +311,8 @@ class OppgaveMediator(
                                     behandlingId = oppgave.behandling.behandlingId,
                                     ident = oppgave.personIdent(),
                                     saksbehandlerToken = saksbehandlerToken,
-                                ).onFailure {
-                                    logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
-                                }.getOrThrow()
+                                ).let { håndterMuligKonflikt(it) }
                         }
-
                         false -> {
                             logger.info {
                                 "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
@@ -326,6 +324,14 @@ class OppgaveMediator(
                         "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                     }
                 }
+            }
+        }
+    }
+
+    private fun håndterMuligKonflikt(it: Result<Unit>) {
+        it.exceptionOrNull()?.let {
+            if (!(it is BehandlingException && it.status == 409 && it.tilAlleredeTilBeslutning() == AlleredeTilBeslutning)) {
+                throw it
             }
         }
     }
