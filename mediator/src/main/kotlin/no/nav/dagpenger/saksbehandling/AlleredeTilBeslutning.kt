@@ -6,17 +6,15 @@ import no.nav.dagpenger.saksbehandling.serder.objectMapper
 object AlleredeTilBeslutning
 
 internal fun BehandlingException.tilAlleredeTilBeslutning(): AlleredeTilBeslutning? =
-    try {
-        val jsonNode = objectMapper.readTree(this.text)
-        if (jsonNode.get("nåværendeTilstand").stringValue() == "TilBeslutning" &&
-            jsonNode
-                .get("operasjon")
-                .stringValue() == "godkjenn"
-        ) {
-            AlleredeTilBeslutning
-        } else {
-            null
-        }
-    } catch (_: Exception) {
-        null
+    this.text?.let {
+        runCatching {
+            val jsonNode = objectMapper.readTree(it)
+            if (jsonNode.path("nåværendeTilstand").stringValue() == "TilBeslutning" &&
+                jsonNode.path("operasjon").stringValue() == "godkjenn"
+            ) {
+                AlleredeTilBeslutning
+            } else {
+                null
+            }
+        }.getOrNull()
     }
