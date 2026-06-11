@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -43,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
@@ -310,9 +312,15 @@ class OppgaveMediator(
                                     behandlingId = oppgave.behandling.behandlingId,
                                     ident = oppgave.personIdent(),
                                     saksbehandlerToken = saksbehandlerToken,
-                                ).onFailure {
-                                    logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
-                                }.getOrThrow()
+                                ).let {
+                                    when (it.isFailure) {
+                                        true -> {
+                                            håndterMuligKonflikt(it)
+                                        }
+
+                                        else -> {}
+                                    }
+                                }
                         }
 
                         false -> {
@@ -326,6 +334,16 @@ class OppgaveMediator(
                         "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                     }
                 }
+            }
+        }
+    }
+
+    private fun håndterMuligKonflikt(it: Result<Unit>) {
+        it.exceptionOrNull()?.let {
+            if (it is BehandlingException && it.status == 409 && it.toNoe() == Noe) {
+                //monae fikser :) 
+            } else {
+                throw it
             }
         }
     }
