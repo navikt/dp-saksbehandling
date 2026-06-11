@@ -3,9 +3,9 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 
-object Noe
+object AlleredeTilBeslutning
 
-internal fun BehandlingException.toNoe(): Noe? =
+internal fun BehandlingException.tilAlleredeTilBeslutning(): AlleredeTilBeslutning? =
     try {
         val jsonNode = objectMapper.readTree(this.text)
         if (jsonNode.get("nåværendeTilstand").stringValue() == "TilBeslutning" &&
@@ -13,7 +13,7 @@ internal fun BehandlingException.toNoe(): Noe? =
                 .get("operasjon")
                 .stringValue() == "godkjenn"
         ) {
-            Noe
+            AlleredeTilBeslutning
         } else {
             null
         }

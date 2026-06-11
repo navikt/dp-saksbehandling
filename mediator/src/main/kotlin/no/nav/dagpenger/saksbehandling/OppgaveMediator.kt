@@ -44,7 +44,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
@@ -312,17 +311,8 @@ class OppgaveMediator(
                                     behandlingId = oppgave.behandling.behandlingId,
                                     ident = oppgave.personIdent(),
                                     saksbehandlerToken = saksbehandlerToken,
-                                ).let {
-                                    when (it.isFailure) {
-                                        true -> {
-                                            håndterMuligKonflikt(it)
-                                        }
-
-                                        else -> {}
-                                    }
-                                }
+                                ).let { håndterMuligKonflikt(it) }
                         }
-
                         false -> {
                             logger.info {
                                 "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
@@ -340,9 +330,7 @@ class OppgaveMediator(
 
     private fun håndterMuligKonflikt(it: Result<Unit>) {
         it.exceptionOrNull()?.let {
-            if (it is BehandlingException && it.status == 409 && it.toNoe() == Noe) {
-                //monae fikser :) 
-            } else {
+            if (!(it is BehandlingException && it.status == 409 && it.tilAlleredeTilBeslutning() == AlleredeTilBeslutning)) {
                 throw it
             }
         }

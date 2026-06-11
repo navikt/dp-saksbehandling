@@ -1609,6 +1609,32 @@ OppgaveMediatorTest {
     }
 
     @Test
+    fun `Send til kontroll skal ikke feile dersom behandlingen er allerede til beslutning`() {
+        val behandlingKlientMock =
+            mockk<BehandlingKlient>().also {
+                coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(true)
+                every { it.godkjenn(behandlingId = any(), any(), any()) } returns
+                    Result.failure(
+                        BehandlingException("""{"nåværendeTilstand":"TilBeslutning","operasjon":"godkjenn"}""", 409),
+                    )
+            }
+
+        settOppOppgaveMediator(behandlingKlient = behandlingKlientMock) { datasource, oppgaveMediator ->
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = Type.UNDER_BEHANDLING,
+                )
+
+            oppgaveMediator.sendTilKontroll(
+                SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+                saksbehandlerToken = "testToken",
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe KLAR_TIL_KONTROLL
+        }
+    }
+
+    @Test
     fun `Behandling til godkjenning flytter oppgave KlarTilKontroll til UnderBehandling hos siste saksbehandler`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
