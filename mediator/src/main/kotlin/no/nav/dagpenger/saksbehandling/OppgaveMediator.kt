@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.meldekortkontroll.HarAvvikendeMeldkortSyklusException
 import no.nav.dagpenger.saksbehandling.meldekortkontroll.MeldekortKontrollKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
@@ -315,6 +316,7 @@ class OppgaveMediator(
                                     saksbehandlerToken = saksbehandlerToken,
                                 ).let { håndterMuligKonflikt(it) }
                         }
+
                         false -> {
                             logger.info {
                                 "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
@@ -651,8 +653,7 @@ class OppgaveMediator(
             )
 
         godkjennEllerBeslutt(
-            behandlingId = oppgave.behandling.behandlingId,
-            ident = oppgave.personIdent(),
+            oppgave = oppgave,
             saksbehandlerToken = saksbehandlerToken,
         ).onSuccess {
             oppgaveRepository.lagre(oppgave)
@@ -664,8 +665,7 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         godkjennEllerBeslutt(
-            behandlingId = oppgave.behandling.behandlingId,
-            ident = oppgave.personIdent(),
+            oppgave = oppgave,
             saksbehandlerToken = saksbehandlerToken,
         ).onSuccess {
             oppgaveRepository.lagre(oppgave)
@@ -884,25 +884,41 @@ class OppgaveMediator(
         }
     }
 
+    private suspend fun feilVedAvvikendeMeldkortSyklus(oppgave: Oppgave) {
+        oppgave.søknadId()?.let { søknadId ->
+            if (meldekortKontrollKlient
+                    .harAvvikendeMeldkortSyklus(
+                        ident = oppgave.personIdent(),
+                        søknadId = søknadId,
+                    ).getOrThrow()
+            ) {
+                throw HarAvvikendeMeldkortSyklusException(oppgave.behandling.behandlingId)
+            }
+        }
+    }
+
     private fun godkjennEllerBeslutt(
-        behandlingId: UUID,
-        ident: String,
+        oppgave: Oppgave,
         saksbehandlerToken: String,
-    ): Result<Unit> =
-        runBlocking {
+    ): Result<Unit> {
+        val behandlingId = oppgave.behandling.behandlingId
+        val ident = oppgave.personIdent()
+        return runBlocking {
             behandlingKlient
                 .kreverTotrinnskontroll(
                     behandlingId = behandlingId,
                     saksbehandlerToken = saksbehandlerToken,
                 ).mapCatching {
                     when (it) {
-                        true ->
+                        true -> {
+                            feilVedAvvikendeMeldkortSyklus(oppgave)
                             behandlingKlient
                                 .beslutt(
                                     behandlingId = behandlingId,
                                     ident = ident,
                                     saksbehandlerToken = saksbehandlerToken,
                                 ).getOrThrow()
+                        }
 
                         false ->
                             behandlingKlient
@@ -914,4 +930,5 @@ class OppgaveMediator(
                     }
                 }
         }
+    }
 }
