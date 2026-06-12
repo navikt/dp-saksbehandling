@@ -42,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtsendingDistribuertMottakForKlage
+import no.nav.dagpenger.saksbehandling.meldekortkontroll.MeldekortKontrollKlient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -131,6 +132,11 @@ internal class ApplicationBuilder(
                     BehandlingHttpKlient(
                         dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
                         tokenProvider = Configuration.dpBehandlingOboExchanger,
+                    )
+                val meldekortKontrollKlient =
+                    MeldekortKontrollKlient(
+                        meldkortKontrollUrl = Configuration.meldekortKontrollApiUrl,
+                        tokenProvider = Configuration.meldekortKontrollTokenProvider,
                     )
                 val meldingOmVedtakKlient =
                     MeldingOmVedtakKlient(

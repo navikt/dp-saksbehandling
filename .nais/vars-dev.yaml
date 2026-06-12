@@ -37,6 +37,10 @@ dp-behandling:
 dp-melding-om-vedtak:
   scope: "api://dev-gcp.teamdagpenger.dp-melding-om-vedtak/.default"
 
+dp-meldekortregister:
+  url: "http://dp-meldekortregister/api/har-bruker-delvis-overlappende-meldekort-eller-endret-meldesyklus"
+  scope: "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default"
+
 
 wonderwalled: true
 
