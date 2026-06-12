@@ -135,7 +135,7 @@ internal class ApplicationBuilder(
                     )
                 val meldekortKontrollKlient =
                     MeldekortKontrollKlient(
-                        meldkortKontrollUrl = Configuration.meldekortKontrollApiUrl,
+                        meldekortRegisterUrl = Configuration.meldekortKontrollApiUrl,
                         tokenProvider = Configuration.meldekortKontrollTokenProvider,
                     )
                 val meldingOmVedtakKlient =

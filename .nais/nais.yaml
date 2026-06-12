@@ -74,9 +74,9 @@ spec:
       value: "{{ dp-behandling.scope }}"
     - name: DP_MELDING_OM_VEDTAK_API_SCOPE
       value: "{{ dp-melding-om-vedtak.scope }}"
-    - name: DP_MELDEKORTKONTROLL_API_URL
+    - name: DP_MELDEKORTREGISTER_API_URL
       value: "{{ dp-meldekortregister.url }}"
-    - name: DP_MELDEKORTKONTROLL_API_SCOPE
+    - name: DP_MELDEKORTREGISTER_API_SCOPE
       value: "{{ dp-meldekortregister.scope }}"
 
   azure:

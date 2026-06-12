@@ -16,7 +16,7 @@ import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import java.util.UUID
 
 class MeldekortKontrollKlient(
-    private val meldkortKontrollUrl: String,
+    private val meldekortRegisterUrl: String,
     private val tokenProvider: () -> String,
     private val httpClient: HttpClient = lagMeldekortKontrollHttpKlient(),
 ) {
@@ -25,7 +25,7 @@ class MeldekortKontrollKlient(
         søknadId: UUID,
     ): Result<Boolean> =
         httpClient
-            .post(meldkortKontrollUrl) {
+            .post(meldekortRegisterUrl) {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(
