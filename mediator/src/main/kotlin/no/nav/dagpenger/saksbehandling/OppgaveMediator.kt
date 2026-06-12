@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.meldekortkontroll.MeldekortKontrollKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -60,6 +61,7 @@ class OppgaveMediator(
     private val sakMediator: SakMediator,
     private val utboks: Utboks,
     private val transaksjoner: Transaksjoner,
+    private val meldekortKontrollKlient: MeldekortKontrollKlient,
 ) {
     fun lagOppgaveForInnsendingBehandling(
         innsendingMottattHendelse: InnsendingMottattHendelse,

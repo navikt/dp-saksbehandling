@@ -73,6 +73,7 @@ class OppgaveMediatorTilgangskontrollTest {
                 sakMediator = mockk(),
                 utboks = mockk(relaxed = true),
                 transaksjoner = kjørendeTransaksjoner(),
+                meldekortKontrollKlient = mockk(relaxed = true),
             )
 
         if (forventetTilgang) {
@@ -96,6 +97,7 @@ class OppgaveMediatorTilgangskontrollTest {
                 sakMediator = mockk(),
                 utboks = mockk(relaxed = true),
                 transaksjoner = kjørendeTransaksjoner(),
+                meldekortKontrollKlient = mockk(relaxed = true),
             )
 
         shouldNotThrow<ManglendeTilgang> {

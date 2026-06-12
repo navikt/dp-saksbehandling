@@ -51,6 +51,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(databaseSession),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             val oppfølgingBehandler = mockk<OppfølgingBehandler>()
@@ -129,6 +130,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
@@ -200,6 +202,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
             val saksbehandler = Saksbehandler("Z999999", emptySet(), setOf(TilgangType.SAKSBEHANDLER))
             val mediator =
@@ -311,6 +314,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(databaseSession),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             val oppfølgingBehandler = mockk<OppfølgingBehandler>()
@@ -349,7 +353,7 @@ class OppfølgingMediatorTest {
                 mockk<OppgaveMediator>().also {
                     every {
                         it.ferdigstillOppgave(
-                            any<no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse>(),
+                            any<OppfølgingFerdigstiltHendelse>(),
                             any(),
                         )
                     } throws
@@ -404,6 +408,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(databaseSession),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             val oppfølgingBehandler =
@@ -481,6 +486,7 @@ class OppfølgingMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(databaseSession),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             // OppfølgingBehandler som lykkes med HTTP men ferdigstillOppgave feiler etterpå

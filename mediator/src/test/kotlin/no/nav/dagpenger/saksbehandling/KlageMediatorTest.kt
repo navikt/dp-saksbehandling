@@ -1030,6 +1030,7 @@ class KlageMediatorTest {
                     sakMediator = sakMediator,
                     utboks = TestUtboks(testRapid),
                     transaksjoner = Transaksjoner(DatabaseSession(dataSource)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
             val klageMediator =
                 KlageMediator(
@@ -1132,7 +1133,7 @@ class KlageMediatorTest {
                     behandling =
                         Behandling(
                             behandlingId = hendelse.behandlingId,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            utløstAv = DpBehandling.Søknad,
                             opprettet = hendelse.opprettet,
                             hendelse = hendelse,
                         ),
@@ -1217,7 +1218,7 @@ class KlageMediatorTest {
                     behandling =
                         Behandling(
                             behandlingId = hendelse.behandlingId,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                            utløstAv = DpBehandling.Søknad,
                             opprettet = hendelse.opprettet,
                             hendelse = hendelse,
                         ),
@@ -1252,7 +1253,7 @@ class KlageMediatorTest {
                     RuntimeException("Simulert feil ved utsending-opprettelse")
             }
 
-        setupMediatorerOgSak(utsendingMediatorMock) { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak(utsendingMediatorMock) { klageMediator, _, sakId ->
             val behandlingId =
                 klageMediator
                     .opprettManuellKlage(

@@ -241,6 +241,7 @@ OppgaveMediatorTest {
                 sakMediator = sakMediatorMock,
                 utboks = TestUtboks(testRapid),
                 transaksjoner = kjørendeTransaksjoner(),
+                meldekortKontrollKlient = mockk(relaxed = true),
             )
 
         oppgaveMediator.opprettEllerOppdaterOppgave(
@@ -1071,6 +1072,7 @@ OppgaveMediatorTest {
                     sakMediator = mockk(relaxed = true),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(datasource)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             shouldThrow<RuntimeException> {
@@ -1815,6 +1817,7 @@ OppgaveMediatorTest {
                     sakMediator = mockk(),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             oppgaveMediator
@@ -1892,6 +1895,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -1990,6 +1994,7 @@ OppgaveMediatorTest {
                 sakMediator = sakMediator,
                 utboks = TestUtboks(testRapid),
                 transaksjoner = Transaksjoner(DatabaseSession(this)),
+                meldekortKontrollKlient = mockk(relaxed = true),
             )
 
         val hendelse =
@@ -2097,6 +2102,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     utboks = TestUtboks(testRapid),
                     transaksjoner = Transaksjoner(DatabaseSession(datasource)),
+                    meldekortKontrollKlient = mockk(relaxed = true),
                 )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {

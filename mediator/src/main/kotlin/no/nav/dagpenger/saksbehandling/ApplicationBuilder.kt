@@ -200,6 +200,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         utboks = utboks,
                         transaksjoner = Transaksjoner(databaseSession),
+                        meldekortKontrollKlient = meldekortKontrollKlient,
                     )
                 val klageMediator =
                     KlageMediator(
