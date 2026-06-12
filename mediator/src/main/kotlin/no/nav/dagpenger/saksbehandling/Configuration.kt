@@ -44,7 +44,7 @@ object Configuration {
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
                 "DP_MELDEKORTREGISTER_API_URL" to
-                    "http://dp-meldekortregister/api/har-bruker-delvis-overlappende-meldekort-eller-endret-meldesyklus",
+                    "http://dp-meldekortregister/api/har-bruker-meldekort-med-endret-meldesyklus",
                 "DP_MELDEKORTREGISTER_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default",
             ),
         )
