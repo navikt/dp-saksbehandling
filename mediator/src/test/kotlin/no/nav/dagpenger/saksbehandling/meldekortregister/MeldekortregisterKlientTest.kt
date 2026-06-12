@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.meldekortkontroll
+package no.nav.dagpenger.saksbehandling.meldekortregister
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
@@ -16,40 +16,40 @@ import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class MeldekortKontrollKlientTest {
+class MeldekortregisterKlientTest {
     private val testTokenProvider: () -> String = { "token" }
-    private val baseUrl = "http://meldekortkontroll"
+    private val baseUrl = "http://meldekortregister"
     private val testIdent = "12345678901"
     private val testSøknadId = UUID.randomUUID()
 
     @Test
-    fun `Skal returnere success med true når tjenesten svarer harAvvikendeMeldkortSyklus=true`() {
+    fun `Skal returnere success med true når tjenesten svarer at bruker har avvikende meldesyklus`() {
         val mockEngine =
             MockEngine { _ ->
                 respond(
-                    """{"harAvvikendeMeldkortSyklus":true}""",
+                    """{"harAvvikendeMeldesyklus":true}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
 
         resultat shouldBe Result.success(true)
     }
 
     @Test
-    fun `Skal returnere success med false når tjenesten svarer harAvvikendeMeldkortSyklus=false`() {
+    fun `Skal returnere success med false når tjenesten svarer at bruker ikke har avvikende meldesyklus`() {
         val mockEngine =
             MockEngine { _ ->
                 respond(
-                    """{"harAvvikendeMeldkortSyklus":false}""",
+                    """{"harAvvikendeMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
 
         resultat shouldBe Result.success(false)
     }
@@ -64,9 +64,9 @@ class MeldekortKontrollKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
 
         resultat shouldBe Result.success(false)
     }
@@ -81,9 +81,9 @@ class MeldekortKontrollKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
 
         resultat.isFailure shouldBe true
     }
@@ -95,13 +95,13 @@ class MeldekortKontrollKlientTest {
             MockEngine { request ->
                 actualAuthHeader = request.headers["Authorization"]
                 respond(
-                    """{"harAvvikendeMeldkortSyklus":false}""",
+                    """{"harAvvikendeMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        runBlocking { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+        runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
 
         actualAuthHeader shouldBe "Bearer token"
     }
@@ -113,13 +113,13 @@ class MeldekortKontrollKlientTest {
             MockEngine { request ->
                 actualContentType = request.body.contentType
                 respond(
-                    """{"harAvvikendeMeldkortSyklus":false}""",
+                    """{"harAvvikendeMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        runBlocking { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+        runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
 
         actualContentType shouldBe ContentType.Application.Json
     }
@@ -129,15 +129,15 @@ class MeldekortKontrollKlientTest {
         val mockEngine =
             MockEngine { _ ->
                 respond(
-                    """{"harAvvikendeMeldkortSyklus":false}""",
+                    """{"harAvvikendeMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
         val collectorRegistry = PrometheusRegistry()
-        val klient = MeldekortKontrollKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine, collectorRegistry))
+        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine, collectorRegistry))
 
         runBlocking {
-            repeat(3) { klient.harAvvikendeMeldkortSyklus(testIdent, testSøknadId) }
+            repeat(3) { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
         }
 
         collectorRegistry
@@ -157,5 +157,5 @@ class MeldekortKontrollKlientTest {
     private fun lagHttpKlient(
         engine: MockEngine,
         prometheusRegistry: PrometheusRegistry = PrometheusRegistry(),
-    ) = lagMeldekortKontrollHttpKlient(prometheusRegistry, engine)
+    ) = lagMeldekortregisterHttpKlient(prometheusRegistry, engine)
 }

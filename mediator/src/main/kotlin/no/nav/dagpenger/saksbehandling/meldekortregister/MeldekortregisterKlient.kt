@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.meldekortkontroll
+package no.nav.dagpenger.saksbehandling.meldekortregister
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,12 +15,12 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import java.util.UUID
 
-class MeldekortKontrollKlient(
+class MeldekortregisterKlient(
     private val meldekortRegisterUrl: String,
     private val tokenProvider: () -> String,
-    private val httpClient: HttpClient = lagMeldekortKontrollHttpKlient(),
+    private val httpClient: HttpClient = lagMeldekortregisterHttpKlient(),
 ) {
-    suspend fun harAvvikendeMeldkortSyklus(
+    suspend fun harAvvikendeMeldesyklus(
         ident: String,
         søknadId: UUID,
     ): Result<Boolean> =
@@ -29,27 +29,27 @@ class MeldekortKontrollKlient(
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(
-                    MeldekortKontrollRequest(ident, søknadId),
+                    HarAvvikendeMeldesyklusRequest(ident, søknadId),
                 )
             }.let {
                 when (it.status.value) {
-                    in 200..299 -> Result.success(it.body<MeldekortKontrollResponse>().harAvvikendeMeldkortSyklus)
+                    in 200..299 -> Result.success(it.body<HarAvvikendeMeldesyklusResponse>().harAvvikendeMeldesyklus)
                     404 -> Result.success(false)
-                    else -> Result.failure(RuntimeException("Kall til meldekortkontroll feilet med status ${it.status}"))
+                    else -> Result.failure(RuntimeException("Kall til meldekortregister feilet med status ${it.status}"))
                 }
             }
 }
 
-private data class MeldekortKontrollRequest(
+private data class HarAvvikendeMeldesyklusRequest(
     val ident: String,
     val søknadId: UUID,
 )
 
-private data class MeldekortKontrollResponse(
-    val harAvvikendeMeldkortSyklus: Boolean,
+private data class HarAvvikendeMeldesyklusResponse(
+    val harAvvikendeMeldesyklus: Boolean,
 )
 
-internal fun lagMeldekortKontrollHttpKlient(
+internal fun lagMeldekortregisterHttpKlient(
     prometheusRegistry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
     engine: HttpClientEngine = CIO.create { },
 ) = HttpClient(engine) {

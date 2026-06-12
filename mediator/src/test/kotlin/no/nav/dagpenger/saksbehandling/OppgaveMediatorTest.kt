@@ -8,7 +8,6 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -88,8 +87,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
-import no.nav.dagpenger.saksbehandling.meldekortkontroll.HarAvvikendeMeldkortSyklusException
-import no.nav.dagpenger.saksbehandling.meldekortkontroll.MeldekortKontrollKlient
+import no.nav.dagpenger.saksbehandling.meldekortregister.HarAvvikendeMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -169,9 +168,9 @@ OppgaveMediatorTest {
 
     private val behandlingIdKreverIkkeTotrinnskontroll = UUIDv7.ny()
 
-    private val meldekortKontrollKlientMock =
-        mockk<MeldekortKontrollKlient>().also {
-            coEvery { it.harAvvikendeMeldkortSyklus(any(), any()) } returns Result.success(false)
+    private val meldekortregisterKlientMock =
+        mockk<MeldekortregisterKlient>().also {
+            coEvery { it.harAvvikendeMeldesyklus(any(), any()) } returns Result.success(false)
         }
 
     private val behandlingKlientMock =
@@ -248,7 +247,7 @@ OppgaveMediatorTest {
                 sakMediator = sakMediatorMock,
                 utboks = TestUtboks(testRapid),
                 transaksjoner = kjørendeTransaksjoner(),
-                meldekortKontrollKlient = mockk(relaxed = true),
+                meldekortregisterKlient = mockk(relaxed = true),
             )
 
         oppgaveMediator.opprettEllerOppdaterOppgave(
@@ -1079,7 +1078,7 @@ OppgaveMediatorTest {
                     sakMediator = mockk(relaxed = true),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(datasource)),
-                    meldekortKontrollKlient = mockk(relaxed = true),
+                    meldekortregisterKlient = mockk(relaxed = true),
                 )
 
             shouldThrow<RuntimeException> {
@@ -1507,13 +1506,13 @@ OppgaveMediatorTest {
 
     @Test
     fun `Feil når en søknads oppgave har avvikende meldekort syklus`() {
-        val meldekortKontrollKlientMock =
-            mockk<MeldekortKontrollKlient>().also {
-                coEvery { it.harAvvikendeMeldkortSyklus(any(), any()) } returns Result.success(true)
+        val meldekortregisterKlientMock =
+            mockk<MeldekortregisterKlient>().also {
+                coEvery { it.harAvvikendeMeldesyklus(any(), any()) } returns Result.success(true)
             }
-        settOppOppgaveMediator(meldekortKontrollKlient = meldekortKontrollKlientMock) { datasource, oppgaveMediator ->
+        settOppOppgaveMediator(meldekortregisterKlient = meldekortregisterKlientMock) { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(tilstand = UNDER_KONTROLL)
-            shouldThrow<HarAvvikendeMeldkortSyklusException> {
+            shouldThrow<HarAvvikendeMeldesyklusException> {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = beslutter,
@@ -1652,7 +1651,7 @@ OppgaveMediatorTest {
         settOppOppgaveMediator(behandlingKlient = behandlingKlientMock) { datasource, oppgaveMediator ->
             val oppgave =
                 datasource.lagTestoppgave(
-                    tilstand = Type.UNDER_BEHANDLING,
+                    tilstand = UNDER_BEHANDLING,
                 )
 
             oppgaveMediator.sendTilKontroll(
@@ -1845,7 +1844,7 @@ OppgaveMediatorTest {
                     sakMediator = mockk(),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
-                    meldekortKontrollKlient = mockk(relaxed = true),
+                    meldekortregisterKlient = mockk(relaxed = true),
                 )
 
             oppgaveMediator
@@ -1923,7 +1922,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    meldekortKontrollKlient = mockk(relaxed = true),
+                    meldekortregisterKlient = mockk(relaxed = true),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -2022,7 +2021,7 @@ OppgaveMediatorTest {
                 sakMediator = sakMediator,
                 utboks = TestUtboks(testRapid),
                 transaksjoner = Transaksjoner(DatabaseSession(this)),
-                meldekortKontrollKlient = mockk(relaxed = true),
+                meldekortregisterKlient = mockk(relaxed = true),
             )
 
         val hendelse =
@@ -2102,7 +2101,7 @@ OppgaveMediatorTest {
     private fun settOppOppgaveMediator(
         hendelse: Hendelse = TomHendelse,
         behandlingKlient: BehandlingKlient = behandlingKlientMock,
-        meldekortKontrollKlient: MeldekortKontrollKlient = meldekortKontrollKlientMock,
+        meldekortregisterKlient: MeldekortregisterKlient = meldekortregisterKlientMock,
         test: (datasource: DataSource, oppgaveMediator: OppgaveMediator) -> Unit,
     ) {
         withMigratedDb { datasource ->
@@ -2131,7 +2130,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     utboks = TestUtboks(testRapid),
                     transaksjoner = Transaksjoner(DatabaseSession(datasource)),
-                    meldekortKontrollKlient = meldekortKontrollKlient,
+                    meldekortregisterKlient = meldekortregisterKlient,
                 )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {

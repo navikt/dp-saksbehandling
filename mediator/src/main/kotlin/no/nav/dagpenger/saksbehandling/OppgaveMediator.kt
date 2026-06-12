@@ -43,8 +43,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.meldekortkontroll.HarAvvikendeMeldkortSyklusException
-import no.nav.dagpenger.saksbehandling.meldekortkontroll.MeldekortKontrollKlient
+import no.nav.dagpenger.saksbehandling.meldekortregister.HarAvvikendeMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -62,7 +62,7 @@ class OppgaveMediator(
     private val sakMediator: SakMediator,
     private val utboks: Utboks,
     private val transaksjoner: Transaksjoner,
-    private val meldekortKontrollKlient: MeldekortKontrollKlient,
+    private val meldekortregisterKlient: MeldekortregisterKlient,
 ) {
     fun lagOppgaveForInnsendingBehandling(
         innsendingMottattHendelse: InnsendingMottattHendelse,
@@ -884,15 +884,15 @@ class OppgaveMediator(
         }
     }
 
-    private suspend fun feilVedAvvikendeMeldkortSyklus(oppgave: Oppgave) {
+    private suspend fun feilVedAvvikendeMeldesyklus(oppgave: Oppgave) {
         oppgave.søknadId()?.let { søknadId ->
-            if (meldekortKontrollKlient
-                    .harAvvikendeMeldkortSyklus(
+            if (meldekortregisterKlient
+                    .harAvvikendeMeldesyklus(
                         ident = oppgave.personIdent(),
                         søknadId = søknadId,
                     ).getOrThrow()
             ) {
-                throw HarAvvikendeMeldkortSyklusException(oppgave.behandling.behandlingId)
+                throw HarAvvikendeMeldesyklusException(oppgave.behandling.behandlingId)
             }
         }
     }
@@ -911,7 +911,7 @@ class OppgaveMediator(
                 ).mapCatching {
                     when (it) {
                         true -> {
-                            feilVedAvvikendeMeldkortSyklus(oppgave)
+                            feilVedAvvikendeMeldesyklus(oppgave)
                             behandlingKlient
                                 .beslutt(
                                     behandlingId = behandlingId,

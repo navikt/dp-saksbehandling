@@ -45,7 +45,7 @@ object Configuration {
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
                 "DP_MELDEKORTREGISTER_API_URL" to
                     "http://dp-meldekortregister/api/har-bruker-delvis-overlappende-meldekort-eller-endret-meldesyklus",
-                "DP_MELDEKORTREGISTER_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekortkontroll/.default",
+                "DP_MELDEKORTREGISTER_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default",
             ),
         )
     val properties =
@@ -70,9 +70,9 @@ object Configuration {
     val leesahTopic: String = properties[Key("LEESAH_TOPIC", stringType)]
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
 
-    val meldekortKontrollApiUrl: String = properties[Key("DP_MELDEKORTREGISTER_API_URL", stringType)]
-    val meldekortKontrollApiScope: String = properties[Key("DP_MELDEKORTREGISTER_API_SCOPE", stringType)]
-    val meldekortKontrollTokenProvider = { clientCredentialsTokenProvider(meldekortKontrollApiScope) }
+    val meldekortregisterApiUrl: String = properties[Key("DP_MELDEKORTREGISTER_API_URL", stringType)]
+    val meldekortregisterApiScope: String = properties[Key("DP_MELDEKORTREGISTER_API_SCOPE", stringType)]
+    val meldekortregisterTokenProvider = { clientCredentialsTokenProvider(meldekortregisterApiScope) }
 
     private val clientCredentialsTokenProvider = { scope: String ->
         azureAdClient.clientCredentials(scope).access_token

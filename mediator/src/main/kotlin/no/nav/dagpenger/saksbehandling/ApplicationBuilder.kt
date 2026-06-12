@@ -42,7 +42,7 @@ import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtsendingDistribuertMottakForKlage
-import no.nav.dagpenger.saksbehandling.meldekortkontroll.MeldekortKontrollKlient
+import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -133,10 +133,10 @@ internal class ApplicationBuilder(
                         dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
                         tokenProvider = Configuration.dpBehandlingOboExchanger,
                     )
-                val meldekortKontrollKlient =
-                    MeldekortKontrollKlient(
-                        meldekortRegisterUrl = Configuration.meldekortKontrollApiUrl,
-                        tokenProvider = Configuration.meldekortKontrollTokenProvider,
+                val meldekortregisterKlient =
+                    MeldekortregisterKlient(
+                        meldekortRegisterUrl = Configuration.meldekortregisterApiUrl,
+                        tokenProvider = Configuration.meldekortregisterTokenProvider,
                     )
                 val meldingOmVedtakKlient =
                     MeldingOmVedtakKlient(
@@ -200,7 +200,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         utboks = utboks,
                         transaksjoner = Transaksjoner(databaseSession),
-                        meldekortKontrollKlient = meldekortKontrollKlient,
+                        meldekortregisterKlient = meldekortregisterKlient,
                     )
                 val klageMediator =
                     KlageMediator(
