@@ -2,20 +2,16 @@ package no.nav.dagpenger.saksbehandling.meldekortkontroll
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import io.ktor.serialization.jackson3.jackson
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import io.prometheus.metrics.model.snapshots.HistogramSnapshot
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -161,12 +157,5 @@ class MeldekortKontrollKlientTest {
     private fun lagHttpKlient(
         engine: MockEngine,
         prometheusRegistry: PrometheusRegistry = PrometheusRegistry(),
-    ) = HttpClient(engine) {
-        expectSuccess = false
-        install(ContentNegotiation) { jackson { } }
-        install(PrometheusMetricsPlugin) {
-            this.baseName = "dp_saksbehandling_dp_meldekortregister_http_klient"
-            this.registry = prometheusRegistry
-        }
-    }
+    ) = lagMeldekortKontrollHttpKlient(prometheusRegistry, engine)
 }
