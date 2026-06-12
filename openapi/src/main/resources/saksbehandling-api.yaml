@@ -855,6 +855,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '422':
+          description: Oppgaven kan ikke ferdigstilles. Må avbrytes.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         default:
           description: Feil
           content:
