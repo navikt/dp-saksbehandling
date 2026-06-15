@@ -20,7 +20,7 @@ class MeldekortregisterKlient(
     private val tokenProvider: () -> String,
     private val httpClient: HttpClient = lagMeldekortregisterHttpKlient(),
 ) {
-    suspend fun harAvvikendeMeldesyklus(
+    suspend fun harMeldekortMedEndretMeldesyklus(
         ident: String,
         søknadId: UUID,
     ): Result<Boolean> =
@@ -29,24 +29,27 @@ class MeldekortregisterKlient(
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(
-                    HarAvvikendeMeldesyklusRequest(ident, søknadId),
+                    HarBrukerMeldekortMedEndretMeldesyklusRequest(ident, søknadId),
                 )
             }.let {
                 when (it.status.value) {
-                    in 200..299 -> Result.success(it.body<HarAvvikendeMeldesyklusResponse>().harAvvikendeMeldesyklus)
+                    in 200..299 ->
+                        Result.success(
+                            it.body<HarBrukerMeldekortMedEndretMeldesyklusResponse>().harMeldekortMedEndretMeldesyklus,
+                        )
                     404 -> Result.success(false)
                     else -> Result.failure(RuntimeException("Kall til meldekortregister feilet med status ${it.status}"))
                 }
             }
 }
 
-private data class HarAvvikendeMeldesyklusRequest(
+private data class HarBrukerMeldekortMedEndretMeldesyklusRequest(
     val ident: String,
     val søknadId: UUID,
 )
 
-private data class HarAvvikendeMeldesyklusResponse(
-    val harAvvikendeMeldesyklus: Boolean,
+private data class HarBrukerMeldekortMedEndretMeldesyklusResponse(
+    val harMeldekortMedEndretMeldesyklus: Boolean,
 )
 
 internal fun lagMeldekortregisterHttpKlient(

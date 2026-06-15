@@ -27,13 +27,13 @@ class MeldekortregisterKlientTest {
         val mockEngine =
             MockEngine { _ ->
                 respond(
-                    """{"harAvvikendeMeldesyklus":true}""",
+                    """{"harMeldekortMedEndretMeldesyklus":true}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
         resultat shouldBe Result.success(true)
     }
@@ -43,13 +43,13 @@ class MeldekortregisterKlientTest {
         val mockEngine =
             MockEngine { _ ->
                 respond(
-                    """{"harAvvikendeMeldesyklus":false}""",
+                    """{"harMeldekortMedEndretMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
         resultat shouldBe Result.success(false)
     }
@@ -66,7 +66,7 @@ class MeldekortregisterKlientTest {
             }
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
         resultat shouldBe Result.success(false)
     }
@@ -83,7 +83,7 @@ class MeldekortregisterKlientTest {
             }
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        val resultat = runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+        val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
         resultat.isFailure shouldBe true
     }
@@ -95,13 +95,13 @@ class MeldekortregisterKlientTest {
             MockEngine { request ->
                 actualAuthHeader = request.headers["Authorization"]
                 respond(
-                    """{"harAvvikendeMeldesyklus":false}""",
+                    """{"harMeldekortMedEndretMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+        runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
         actualAuthHeader shouldBe "Bearer token"
     }
@@ -113,13 +113,13 @@ class MeldekortregisterKlientTest {
             MockEngine { request ->
                 actualContentType = request.body.contentType
                 respond(
-                    """{"harAvvikendeMeldesyklus":false}""",
+                    """{"harMeldekortMedEndretMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
-        runBlocking { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+        runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
         actualContentType shouldBe ContentType.Application.Json
     }
@@ -129,7 +129,7 @@ class MeldekortregisterKlientTest {
         val mockEngine =
             MockEngine { _ ->
                 respond(
-                    """{"harAvvikendeMeldesyklus":false}""",
+                    """{"harMeldekortMedEndretMeldesyklus":false}""",
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
@@ -137,7 +137,7 @@ class MeldekortregisterKlientTest {
         val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine, collectorRegistry))
 
         runBlocking {
-            repeat(3) { klient.harAvvikendeMeldesyklus(testIdent, testSøknadId) }
+            repeat(3) { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
         }
 
         collectorRegistry

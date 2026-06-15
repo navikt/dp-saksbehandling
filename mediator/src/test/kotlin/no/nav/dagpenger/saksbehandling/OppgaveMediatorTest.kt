@@ -87,7 +87,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
-import no.nav.dagpenger.saksbehandling.meldekortregister.HarAvvikendeMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -170,7 +170,7 @@ OppgaveMediatorTest {
 
     private val meldekortregisterKlientMock =
         mockk<MeldekortregisterKlient>().also {
-            coEvery { it.harAvvikendeMeldesyklus(any(), any()) } returns Result.success(false)
+            coEvery { it.harMeldekortMedEndretMeldesyklus(any(), any()) } returns Result.success(false)
         }
 
     private val behandlingKlientMock =
@@ -1508,11 +1508,11 @@ OppgaveMediatorTest {
     fun `Feil når en søknads oppgave har avvikende meldekort syklus`() {
         val meldekortregisterKlientMock =
             mockk<MeldekortregisterKlient>().also {
-                coEvery { it.harAvvikendeMeldesyklus(any(), any()) } returns Result.success(true)
+                coEvery { it.harMeldekortMedEndretMeldesyklus(any(), any()) } returns Result.success(true)
             }
         settOppOppgaveMediator(meldekortregisterKlient = meldekortregisterKlientMock) { datasource, oppgaveMediator ->
             val oppgave = datasource.lagTestoppgave(tilstand = UNDER_KONTROLL)
-            shouldThrow<HarAvvikendeMeldesyklusException> {
+            shouldThrow<BrukerHarEndretMeldesyklusException> {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = beslutter,

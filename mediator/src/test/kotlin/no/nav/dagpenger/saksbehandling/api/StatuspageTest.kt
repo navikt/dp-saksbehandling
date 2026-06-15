@@ -22,7 +22,7 @@ import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UgyldigOpplysningException
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.meldekortregister.HarAvvikendeMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.sak.NødbremsetPersonException
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
@@ -394,16 +394,16 @@ class StatuspageTest {
     }
 
     @Test
-    fun `Error håndtering av HarAvvikendeMeldesyklusException`() {
-        val path = "/HarAvvikendeMeldesyklusException"
+    fun `Error håndtering av BrukerHarEndretMeldesyklusException`() {
+        val path = "/BrukerHarEndretMeldesyklusException"
         val behandlingId = UUID.randomUUID()
         val expectedDetail =
-            "Personen har endret meldesyklus eller overlappende meldekort. Avbryt oppgaven og behandle den i Arena"
+            "Personen har endret meldesyklus eller overlappende meldekort. Oppgaven må avbrytes og behandles i Arena."
         testApplication {
             application {
                 mockApi()
                 routing {
-                    get(path) { throw HarAvvikendeMeldesyklusException(behandlingId) }
+                    get(path) { throw BrukerHarEndretMeldesyklusException(behandlingId) }
                 }
             }
 
@@ -414,8 +414,8 @@ class StatuspageTest {
                     //language=JSON
                     """
                     {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:avvikende-meldesyklus",
-                      "title": "Personen har avvikende meldekortsyklus",
+                      "type": "dagpenger.nav.no/saksbehandling:problem:endret-meldesyklus",
+                      "title": "Personen har endret meldesyklus",
                       "detail": "$expectedDetail",
                       "status": 422,
                       "instance": "$path"
