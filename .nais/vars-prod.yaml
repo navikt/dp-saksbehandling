@@ -37,7 +37,7 @@ dp-melding-om-vedtak:
   scope: "api://prod-gcp.teamdagpenger.dp-melding-om-vedtak/.default"
 
 dp-meldekortregister:
-  url: "http://dp-meldekortregister/api/har-bruker-delvis-overlappende-meldekort-eller-endret-meldesyklus"
+  url: "http://dp-meldekortregister/api/har-bruker-meldekort-med-endret-meldesyklus"
   scope: "api://prod-gcp.teamdagpenger.dp-meldekortregister/.default"
 
 wonderwalled: true
