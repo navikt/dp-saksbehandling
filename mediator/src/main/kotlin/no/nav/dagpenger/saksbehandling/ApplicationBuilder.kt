@@ -400,7 +400,7 @@ internal class ApplicationBuilder(
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
-        runMigration()
+        runMigration(configuration = Configuration)
 
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }

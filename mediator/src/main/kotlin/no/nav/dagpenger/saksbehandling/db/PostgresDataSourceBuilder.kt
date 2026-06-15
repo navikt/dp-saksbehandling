@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import ch.qos.logback.core.util.OptionHelper.getEnv
 import ch.qos.logback.core.util.OptionHelper.getSystemProperty
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.dagpenger.saksbehandling.Configuration
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.FluentConfiguration
 
@@ -45,19 +46,14 @@ internal object PostgresDataSourceBuilder {
             .load()
             .clean()
 
-    internal fun runMigration(initSql: String? = null): Int =
+    internal fun runMigration(
+        configuration: Configuration,
+        initSql: String? = null,
+    ): Int =
         flyWayBuilder
             .dataSource(dataSource)
             .initSql(initSql)
-            .load()
-            .migrate()
-            .migrations
-            .size
-
-    internal fun runMigrationTo(target: String): Int =
-        flyWayBuilder()
-            .dataSource(dataSource)
-            .target(target)
+//            .locations(configuration.flywayLocations)
             .load()
             .migrate()
             .migrations

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.dagpenger.saksbehandling.Configuration
 import org.flywaydb.core.internal.configuration.ConfigUtils
 import org.testcontainers.postgresql.PostgreSQLContainer
 import javax.sql.DataSource
@@ -14,14 +15,14 @@ internal object Postgres {
 
     fun withMigratedDb(block: (ds: DataSource) -> Unit) {
         withCleanDb {
-            PostgresDataSourceBuilder.runMigration()
+            PostgresDataSourceBuilder.runMigration(configuration = Configuration)
             block(PostgresDataSourceBuilder.dataSource)
         }
     }
 
     fun withMigratedDb(): HikariDataSource {
         setup()
-        PostgresDataSourceBuilder.runMigration()
+        PostgresDataSourceBuilder.runMigration(configuration = Configuration)
         return PostgresDataSourceBuilder.dataSource
     }
 
@@ -51,24 +52,6 @@ internal object Postgres {
             .clean()
             .run {
                 block()
-            }.also {
-                tearDown()
-            }
-    }
-
-    fun withCleanDb(
-        target: String,
-        setup: () -> Unit,
-        test: () -> Unit,
-    ) {
-        this.setup()
-        PostgresDataSourceBuilder
-            .clean()
-            .run {
-                PostgresDataSourceBuilder.runMigrationTo(target)
-                setup()
-                PostgresDataSourceBuilder.runMigration()
-                test()
             }.also {
                 tearDown()
             }
