@@ -38,7 +38,7 @@ dp-melding-om-vedtak:
   scope: "api://dev-gcp.teamdagpenger.dp-melding-om-vedtak/.default"
 
 dp-meldekortregister:
-  url: "http://dp-meldekortregister/api/har-bruker-meldekort-med-endret-meldesyklus"
+  url: "http://dp-meldekortregister//har-bruker-meldekort-med-endret-meldesyklus"
   scope: "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default"
 
 
