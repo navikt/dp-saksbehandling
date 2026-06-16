@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.sak.NødbremsetPersonException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -125,6 +126,21 @@ fun Application.statusPages() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.BadRequest, problem)
+                }
+                is BrukerHarEndretMeldesyklusException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Personen har endret meldesyklus",
+                            detail =
+                                "Personen har endret meldesyklus eller overlappende meldekort. Oppgaven må avbrytes og behandles i Arena.",
+                            status = HttpStatusCode.UnprocessableEntity.value,
+                            instance = call.request.path(),
+                            type =
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:endret-meldesyklus")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.UnprocessableEntity, problem)
                 }
 
                 is AlleredeTildeltException -> {

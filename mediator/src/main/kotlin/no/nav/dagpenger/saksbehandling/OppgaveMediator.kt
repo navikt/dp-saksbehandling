@@ -43,6 +43,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -60,6 +62,7 @@ class OppgaveMediator(
     private val sakMediator: SakMediator,
     private val utboks: Utboks,
     private val transaksjoner: Transaksjoner,
+    private val meldekortregisterKlient: MeldekortregisterKlient,
 ) {
     fun lagOppgaveForInnsendingBehandling(
         innsendingMottattHendelse: InnsendingMottattHendelse,
@@ -313,6 +316,7 @@ class OppgaveMediator(
                                     saksbehandlerToken = saksbehandlerToken,
                                 ).let { håndterMuligKonflikt(it) }
                         }
+
                         false -> {
                             logger.info {
                                 "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
@@ -649,8 +653,7 @@ class OppgaveMediator(
             )
 
         godkjennEllerBeslutt(
-            behandlingId = oppgave.behandling.behandlingId,
-            ident = oppgave.personIdent(),
+            oppgave = oppgave,
             saksbehandlerToken = saksbehandlerToken,
         ).onSuccess {
             oppgaveRepository.lagre(oppgave)
@@ -662,8 +665,7 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         godkjennEllerBeslutt(
-            behandlingId = oppgave.behandling.behandlingId,
-            ident = oppgave.personIdent(),
+            oppgave = oppgave,
             saksbehandlerToken = saksbehandlerToken,
         ).onSuccess {
             oppgaveRepository.lagre(oppgave)
@@ -882,25 +884,41 @@ class OppgaveMediator(
         }
     }
 
+    private suspend fun feilVedAvvikendeMeldesyklus(oppgave: Oppgave) {
+        oppgave.søknadId()?.let { søknadId ->
+            if (meldekortregisterKlient
+                    .harMeldekortMedEndretMeldesyklus(
+                        ident = oppgave.personIdent(),
+                        søknadId = søknadId,
+                    ).getOrThrow()
+            ) {
+                throw BrukerHarEndretMeldesyklusException(oppgave.behandling.behandlingId)
+            }
+        }
+    }
+
     private fun godkjennEllerBeslutt(
-        behandlingId: UUID,
-        ident: String,
+        oppgave: Oppgave,
         saksbehandlerToken: String,
-    ): Result<Unit> =
-        runBlocking {
+    ): Result<Unit> {
+        val behandlingId = oppgave.behandling.behandlingId
+        val ident = oppgave.personIdent()
+        return runBlocking {
             behandlingKlient
                 .kreverTotrinnskontroll(
                     behandlingId = behandlingId,
                     saksbehandlerToken = saksbehandlerToken,
                 ).mapCatching {
                     when (it) {
-                        true ->
+                        true -> {
+                            feilVedAvvikendeMeldesyklus(oppgave)
                             behandlingKlient
                                 .beslutt(
                                     behandlingId = behandlingId,
                                     ident = ident,
                                     saksbehandlerToken = saksbehandlerToken,
                                 ).getOrThrow()
+                        }
 
                         false ->
                             behandlingKlient
@@ -912,4 +930,5 @@ class OppgaveMediator(
                     }
                 }
         }
+    }
 }

@@ -43,6 +43,9 @@ object Configuration {
                 "LEESAH_TOPIC" to "pdl.leesah-v1",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
+                "DP_MELDEKORTREGISTER_API_URL" to
+                        "http://dp-meldekortregister/har-bruker-meldekort-med-endret-meldesyklus",
+                "DP_MELDEKORTREGISTER_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default",
             ),
         )
     val properties =
@@ -66,6 +69,10 @@ object Configuration {
     val skjermingPersonStatusTopic: String = properties[Key("SKJERMING_TOPIC", stringType)]
     val leesahTopic: String = properties[Key("LEESAH_TOPIC", stringType)]
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
+
+    val meldekortregisterApiUrl: String = properties[Key("DP_MELDEKORTREGISTER_API_URL", stringType)]
+    val meldekortregisterApiScope: String = properties[Key("DP_MELDEKORTREGISTER_API_SCOPE", stringType)]
+    val meldekortregisterTokenProvider = { clientCredentialsTokenProvider(meldekortregisterApiScope) }
 
     private val clientCredentialsTokenProvider = { scope: String ->
         azureAdClient.clientCredentials(scope).access_token
