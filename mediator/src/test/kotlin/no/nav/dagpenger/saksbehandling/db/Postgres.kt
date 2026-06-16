@@ -15,14 +15,14 @@ internal object Postgres {
 
     fun withMigratedDb(block: (ds: DataSource) -> Unit) {
         withCleanDb {
-            PostgresDataSourceBuilder.runMigration(configuration = Configuration)
+            PostgresDataSourceBuilder.runMigration(locations = Configuration.flywayLocations.split(',').toTypedArray())
             block(PostgresDataSourceBuilder.dataSource)
         }
     }
 
     fun withMigratedDb(): HikariDataSource {
         setup()
-        PostgresDataSourceBuilder.runMigration(configuration = Configuration)
+        PostgresDataSourceBuilder.runMigration(locations = Configuration.flywayLocations.split(',').toTypedArray())
         return PostgresDataSourceBuilder.dataSource
     }
 

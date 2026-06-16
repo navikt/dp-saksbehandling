@@ -407,8 +407,7 @@ internal class ApplicationBuilder(
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
-        runMigration(configuration = Configuration)
-
+        runMigration(locations = Configuration.flywayLocations.split(',').toTypedArray())
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }
 
