@@ -8,7 +8,6 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -88,6 +87,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -167,6 +168,11 @@ OppgaveMediatorTest {
 
     private val behandlingIdKreverIkkeTotrinnskontroll = UUIDv7.ny()
 
+    private val meldekortregisterKlientMock =
+        mockk<MeldekortregisterKlient>().also {
+            coEvery { it.harMeldekortMedEndretMeldesyklus(any(), any()) } returns Result.success(false)
+        }
+
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
             every { it.godkjenn(any(), any(), any()) } returns Result.success(Unit)
@@ -241,6 +247,7 @@ OppgaveMediatorTest {
                 sakMediator = sakMediatorMock,
                 utboks = TestUtboks(testRapid),
                 transaksjoner = kjørendeTransaksjoner(),
+                meldekortregisterKlient = mockk(relaxed = true),
             )
 
         oppgaveMediator.opprettEllerOppdaterOppgave(
@@ -1071,6 +1078,7 @@ OppgaveMediatorTest {
                     sakMediator = mockk(relaxed = true),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(datasource)),
+                    meldekortregisterKlient = mockk(relaxed = true),
                 )
 
             shouldThrow<RuntimeException> {
@@ -1497,6 +1505,24 @@ OppgaveMediatorTest {
     }
 
     @Test
+    fun `Feil når en søknads oppgave har avvikende meldekort syklus`() {
+        val meldekortregisterKlientMock =
+            mockk<MeldekortregisterKlient>().also {
+                coEvery { it.harMeldekortMedEndretMeldesyklus(any(), any()) } returns Result.success(true)
+            }
+        settOppOppgaveMediator(meldekortregisterKlient = meldekortregisterKlientMock) { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(tilstand = UNDER_KONTROLL)
+            shouldThrow<BrukerHarEndretMeldesyklusException> {
+                oppgaveMediator.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = "token",
+                )
+            }
+        }
+    }
+
+    @Test
     fun `Livssyklus for søknadsbehandling med brev i dp-sak som krever totrinnskontroll`() {
         val behandlingKlientMock =
             mockk<BehandlingKlient>().also {
@@ -1615,14 +1641,17 @@ OppgaveMediatorTest {
                 coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(true)
                 every { it.godkjenn(behandlingId = any(), any(), any()) } returns
                     Result.failure(
-                        BehandlingException("""{"nåværendeTilstand":"TilBeslutning","operasjon":"godkjenn"}""", 409),
+                        BehandlingException(
+                            """{"nåværendeTilstand":"TilBeslutning","operasjon":"godkjenn"}""",
+                            409,
+                        ),
                     )
             }
 
         settOppOppgaveMediator(behandlingKlient = behandlingKlientMock) { datasource, oppgaveMediator ->
             val oppgave =
                 datasource.lagTestoppgave(
-                    tilstand = Type.UNDER_BEHANDLING,
+                    tilstand = UNDER_BEHANDLING,
                 )
 
             oppgaveMediator.sendTilKontroll(
@@ -1815,6 +1844,7 @@ OppgaveMediatorTest {
                     sakMediator = mockk(),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
+                    meldekortregisterKlient = mockk(relaxed = true),
                 )
 
             oppgaveMediator
@@ -1892,6 +1922,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    meldekortregisterKlient = mockk(relaxed = true),
                 )
             val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
             val innsendingMediator =
@@ -1990,6 +2021,7 @@ OppgaveMediatorTest {
                 sakMediator = sakMediator,
                 utboks = TestUtboks(testRapid),
                 transaksjoner = Transaksjoner(DatabaseSession(this)),
+                meldekortregisterKlient = mockk(relaxed = true),
             )
 
         val hendelse =
@@ -2069,6 +2101,7 @@ OppgaveMediatorTest {
     private fun settOppOppgaveMediator(
         hendelse: Hendelse = TomHendelse,
         behandlingKlient: BehandlingKlient = behandlingKlientMock,
+        meldekortregisterKlient: MeldekortregisterKlient = meldekortregisterKlientMock,
         test: (datasource: DataSource, oppgaveMediator: OppgaveMediator) -> Unit,
     ) {
         withMigratedDb { datasource ->
@@ -2097,6 +2130,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     utboks = TestUtboks(testRapid),
                     transaksjoner = Transaksjoner(DatabaseSession(datasource)),
+                    meldekortregisterKlient = meldekortregisterKlient,
                 )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {

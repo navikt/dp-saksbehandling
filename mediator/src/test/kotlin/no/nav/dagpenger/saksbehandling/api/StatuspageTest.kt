@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -21,10 +22,12 @@ import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UgyldigOpplysningException
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.sak.NødbremsetPersonException
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
+import java.util.UUID
 
 class StatuspageTest {
     init {
@@ -386,6 +389,38 @@ class StatuspageTest {
                 response.bodyAsText() shouldEqualSpecifiedJson
                     //language=JSON
                     httpProblem.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av BrukerHarEndretMeldesyklusException`() {
+        val path = "/BrukerHarEndretMeldesyklusException"
+        val behandlingId = UUID.randomUUID()
+        val expectedDetail =
+            "Personen har endret meldesyklus eller overlappende meldekort. Oppgaven må avbrytes og behandles i Arena."
+        testApplication {
+            application {
+                mockApi()
+                routing {
+                    get(path) { throw BrukerHarEndretMeldesyklusException(behandlingId) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.UnprocessableEntity
+                response.bodyAsText().shouldContain(expectedDetail)
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:endret-meldesyklus",
+                      "title": "Personen har endret meldesyklus",
+                      "detail": "$expectedDetail",
+                      "status": 422,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
             }
         }
     }
