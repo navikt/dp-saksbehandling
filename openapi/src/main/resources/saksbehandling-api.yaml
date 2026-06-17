@@ -519,6 +519,83 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/{oppgaveId}/huskelapp:
+    put:
+      summary: Legg til en huskelapp på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HuskelappRequest'
+
+      responses:
+        '200':
+          description: Huskelappen ble lagt til
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LagreHuskelappResponse'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Huskelapp kan ikke lagres på oppgaven i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+    delete:
+      summary: Slett huskelapp på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Huskelappen slettet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LagreHuskelappResponse'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Huskelappen kan ikke slettes fra oppgaven i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/kontrollert-brev:
     put:
       summary: Beslutter kvitterer ut at brev er kontrollert i gosys
@@ -1637,6 +1714,8 @@ components:
           $ref: '#/components/schemas/OppgaveTilstand'
         notat:
           $ref: '#/components/schemas/Notat'
+        huskelapp:
+          $ref: '#/components/schemas/Huskelapp'
         lovligeEndringer:
           $ref: '#/components/schemas/LovligeEndringer'
         soknadId:
@@ -2093,6 +2172,37 @@ components:
           type: string
           format: date-time
           description: Tidspunkt notat sist ble endret
+      required:
+        - tekst
+        - sistEndretTidspunkt
+
+    HuskelappRequest:
+      type: object
+      properties:
+        tekst:
+          type: string
+      required:
+        - tekst
+
+    LagreHuskelappResponse:
+      type: object
+      properties:
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+          description: Tidspunkt notat sist ble endret
+      required:
+        - sistEndretTidspunkt
+
+    Huskelapp:
+      type: object
+      properties:
+        tekst:
+          type: string
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+          description: Tidspunkt huskelappen sist ble endret
       required:
         - tekst
         - sistEndretTidspunkt

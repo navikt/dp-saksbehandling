@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendel
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HuskelappHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -40,6 +41,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettHuskelappHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -488,6 +490,20 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgave(slettNotatHendelse.oppgaveId).let { oppgave ->
             oppgave.slettNotat(slettNotatHendelse)
             oppgaveRepository.slettNotatFor(oppgave)
+        }
+        return LocalDateTime.now()
+    }
+
+    fun lagreHuskelapp(huskelappHendelse: HuskelappHendelse): LocalDateTime =
+        oppgaveRepository.hentOppgave(huskelappHendelse.oppgaveId).let { oppgave ->
+            oppgave.lagreHuskelapp(huskelappHendelse)
+            oppgaveRepository.lagreNotatFor(oppgave)
+        }
+
+    fun slettHuskelapp(slettHuskelappHendelse: SlettHuskelappHendelse): LocalDateTime {
+        oppgaveRepository.hentOppgave(slettHuskelappHendelse.oppgaveId).let { oppgave ->
+            oppgave.slettHuskelapp(slettHuskelappHendelse)
+            oppgaveRepository.slettHuskelappFor(oppgave)
         }
         return LocalDateTime.now()
     }

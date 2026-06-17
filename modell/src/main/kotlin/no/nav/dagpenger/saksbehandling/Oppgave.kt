@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HuskelappHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
@@ -39,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettHuskelappHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -304,6 +306,18 @@ data class Oppgave private constructor(
         egneAnsatteTilgangskontroll(slettNotatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(slettNotatHendelse.utførtAv)
         tilstand.slettNotat(this, slettNotatHendelse)
+    }
+
+    fun lagreHuskelapp(huskelappHendelse: HuskelappHendelse) {
+        egneAnsatteTilgangskontroll(huskelappHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(huskelappHendelse.utførtAv)
+        tilstand.lagreHuskelapp(oppgave = this, huskelappHendelse = huskelappHendelse)
+    }
+
+    fun slettHuskelapp(slettHuskelappHendelse: SlettHuskelappHendelse) {
+        egneAnsatteTilgangskontroll(slettHuskelappHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(slettHuskelappHendelse.utførtAv)
+        tilstand.slettHuskelapp(this, slettHuskelappHendelse)
     }
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
@@ -878,6 +892,7 @@ data class Oppgave private constructor(
 
     data class UnderKontroll(
         private var notat: Notat? = null,
+        private var huskelapp: Huskelapp? = null,
     ) : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
@@ -1049,6 +1064,36 @@ data class Oppgave private constructor(
         }
 
         override fun notat(): Notat? = notat
+
+        override fun lagreHuskelapp(
+            oppgave: Oppgave,
+            huskelappHendelse: HuskelappHendelse,
+        ) {
+            when (huskelapp) {
+                null -> {
+                    huskelapp =
+                        Huskelapp(
+                            oppgave.oppgaveId,
+                            tekst = huskelappHendelse.tekst,
+                            sistEndretTidspunkt = LocalDateTime.now(),
+                            skrevetAv = huskelappHendelse.utførtAv.navIdent,
+                        )
+                }
+
+                else -> {
+                    huskelapp?.endreTekst(huskelappHendelse.tekst)
+                }
+            }
+        }
+
+        override fun slettHuskelapp(
+            oppgave: Oppgave,
+            slettHuskelappHendelse: SlettHuskelappHendelse,
+        ) {
+            huskelapp = null
+        }
+
+        override fun huskelapp(): Huskelapp? = huskelapp
     }
 
     class AlleredeTildeltException(
@@ -1121,6 +1166,8 @@ data class Oppgave private constructor(
         }
 
         fun notat(): Notat? = null
+
+        fun huskelapp(): Huskelapp? = null
 
         fun behov() = emptySet<String>()
 
@@ -1302,10 +1349,20 @@ data class Oppgave private constructor(
             notatHendelse: NotatHendelse,
         ): Unit = throw RuntimeException("Notat er ikke tillatt i tilstand $type")
 
+        fun lagreHuskelapp(
+            oppgave: Oppgave,
+            huskelappHendelse: HuskelappHendelse,
+        ): Unit = throw RuntimeException("Huskelapp er ikke tillatt i tilstand $type")
+
         fun slettNotat(
             oppgave: Oppgave,
             slettNotatHendelse: SlettNotatHendelse,
         ): Unit = throw RuntimeException("Kan ikke slette notat i tilstand $type")
+
+        fun slettHuskelapp(
+            oppgave: Oppgave,
+            slettHuskelappHendelse: SlettHuskelappHendelse,
+        ): Unit = throw RuntimeException("Kan ikke slette huskelapp i tilstand $type")
 
         fun oppgavePåVentMedUtgåttFrist(
             oppgave: Oppgave,

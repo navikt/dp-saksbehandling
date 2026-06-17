@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.Huskelapp
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
@@ -381,6 +382,26 @@ class PostgresOppgaveRepository(
         }
     }
 
+    override fun lagreHuskelappFor(oppgave: Oppgave): LocalDateTime =
+        when (val huskelapp = oppgave.tilstand().huskelapp()) {
+            null -> throw IllegalStateException("Kan ikke lagre huskelapp for oppgave uten tekst")
+            else -> {
+                databaseSession.transaction {
+                    lagreHuskelapp(
+                        oppgaveId = huskelapp.oppgaveId,
+                        tekst = huskelapp.hentTekst(),
+                        skrevetAv = huskelapp.skrevetAv,
+                    )
+                }
+            }
+        }
+
+    override fun slettHuskelappFor(oppgave: Oppgave) {
+        databaseSession.transaction {
+            slettHuskelapp(oppgaveId = oppgave.oppgaveId)
+        }
+    }
+
     override fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> =
         databaseSession.session { session ->
             session.run(
@@ -726,6 +747,32 @@ private fun finnNotat(
         )
     }
 
+private fun finnHuskelapp(
+    oppgaveId: UUID,
+    databaseSession: DatabaseSession,
+): Huskelapp? =
+    databaseSession.session { session ->
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    SELECT oppgave_id, tekst, endret_tidspunkt, skrevet_av
+                    FROM   huskelapp_v1
+                    WHERE  oppgave_id = :oppgave_Id
+                    """.trimIndent(),
+                paramMap = mapOf("oppgave_id" to oppgaveId),
+            ).map { row ->
+                Huskelapp(
+                    oppgaveId = row.uuid("oppgave_id"),
+                    tekst = row.string("tekst"),
+                    sistEndretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    skrevetAv = row.string("skrevet_av"),
+                )
+            }.asSingle,
+        )
+    }
+
 private fun hentTilstandsloggForOppgave(
     oppgaveId: UUID,
     databaseSession: DatabaseSession,
@@ -847,12 +894,50 @@ private fun PostgresUnitOfWork.lagreNotat(
         "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
     )
 
+private fun PostgresUnitOfWork.lagreHuskelapp(
+    oppgaveId: UUID,
+    tekst: String,
+    skrevetAv: String,
+): LocalDateTime =
+    session.run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                INSERT INTO huskelapp_v1
+                    (oppgave_id, tekst, skrevet_av) 
+                VALUES
+                    (:oppgave_id, :tekst, :skrevet_av) 
+                ON CONFLICT (oppgave_id) DO UPDATE SET tekst = :tekst
+                RETURNING endret_tidspunkt
+                """.trimIndent(),
+            paramMap =
+                mapOf(
+                    "oppgave_id" to oppgaveId,
+                    "tekst" to tekst,
+                    "skrevet_av" to skrevetAv,
+                ),
+        ).map { row -> row.localDateTime("endret_tidspunkt") }.asSingle,
+    ) ?: throw KanIkkeLagreHuskelappException(
+        "Kunne ikke lagre huskalapp for oppgaveId: $oppgaveId",
+    )
+
 private fun PostgresUnitOfWork.slettNotat(tilstandsloggId: UUID) {
     session.run(
         queryOf(
             //language=PostgreSQL
             statement = "DELETE FROM notat_v1 WHERE oppgave_tilstand_logg_id = :oppgave_tilstand_logg_id",
             paramMap = mapOf("oppgave_tilstand_logg_id" to tilstandsloggId),
+        ).asUpdate,
+    )
+}
+
+private fun PostgresUnitOfWork.slettHuskelapp(oppgaveId: UUID) {
+    session.run(
+        queryOf(
+            //language=PostgreSQL
+            statement = "DELETE FROM huskelapp_v1 WHERE oppgave_id = :oppgave_id",
+            paramMap = mapOf("oppgave_id" to oppgaveId),
         ).asUpdate,
     )
 }
@@ -952,7 +1037,11 @@ private fun Row.rehydrerOppgave(databaseSession: DatabaseSession): Oppgave {
                 PAA_VENT -> PåVent
                 AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                 KLAR_TIL_KONTROLL -> KlarTilKontroll
-                UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, databaseSession))
+                UNDER_KONTROLL ->
+                    UnderKontroll(
+                        notat = finnNotat(tilstandslogg.first().id, databaseSession),
+                        huskelapp = finnHuskelapp(oppgaveId = oppgaveId, databaseSession),
+                    )
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                 FERDIG_BEHANDLET -> FerdigBehandlet
                 AVBRUTT -> Avbrutt
@@ -1015,5 +1104,9 @@ class DataNotFoundException(
 ) : RuntimeException(message)
 
 class KanIkkeLagreNotatException(
+    message: String,
+) : RuntimeException(message)
+
+class KanIkkeLagreHuskelappException(
     message: String,
 ) : RuntimeException(message)

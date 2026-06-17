@@ -30,10 +30,12 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
+import no.nav.dagpenger.saksbehandling.api.models.HuskelappRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.KvalitetskontrollAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.KvalitetskontrollDTO
+import no.nav.dagpenger.saksbehandling.api.models.LagreHuskelappResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeOppgaveDTO
@@ -54,11 +56,13 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.HuskelappHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettHuskelappHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
@@ -279,6 +283,48 @@ internal fun Route.oppgaveApi(
                         }
                     }
                 }
+
+                route("huskelapp") {
+                    put {
+                        val huskelapp = call.receive<HuskelappRequestDTO>()
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val sistEndretTidspunkt =
+                                oppgaveMediator.lagreHuskelapp(
+                                    HuskelappHendelse(
+                                        oppgaveId = oppgaveId,
+                                        tekst = huskelapp.tekst,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                )
+                            call.respond(
+                                status = HttpStatusCode.OK,
+                                message = LagreHuskelappResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
+                            )
+                        }
+                    }
+                    delete {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val sistEndretTidspunkt =
+                                oppgaveMediator.slettHuskelapp(
+                                    SlettHuskelappHendelse(
+                                        oppgaveId = oppgaveId,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                )
+
+                            call.respond(
+                                status = HttpStatusCode.OK,
+                                message = LagreHuskelappResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
+                            )
+                        }
+                    }
+                }
+
                 route("tildel") {
                     put {
                         val saksbehandler = applicationCallParser.saksbehandler(call)

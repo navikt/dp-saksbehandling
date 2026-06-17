@@ -46,7 +46,11 @@ interface OppgaveRepository {
 
     fun lagreNotatFor(oppgave: Oppgave): LocalDateTime
 
+    fun lagreHuskelappFor(oppgave: Oppgave): LocalDateTime
+
     fun slettNotatFor(oppgave: Oppgave)
+
+    fun slettHuskelappFor(oppgave: Oppgave)
 
     fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID>
 
