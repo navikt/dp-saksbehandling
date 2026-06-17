@@ -44,7 +44,7 @@ object Configuration {
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
                 "DP_MELDEKORTREGISTER_API_URL" to
-                        "http://dp-meldekortregister/har-bruker-meldekort-med-endret-meldesyklus",
+                    "http://dp-meldekortregister/har-bruker-meldekort-med-endret-meldesyklus",
                 "DP_MELDEKORTREGISTER_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default",
             ),
         )
@@ -109,6 +109,13 @@ object Configuration {
             clusterName == "dev-gcp"
         } ?: false
     }
+
+    val flywayLocations =
+        if (isDev) {
+            "db/migration/common,db/migration/dev"
+        } else {
+            "db/migration/common,db/migration/prod"
+        }
 
     val utboksLevetidSendte: Duration by lazy {
         if (isDev) Duration.ofHours(1) else Duration.ofDays(7)

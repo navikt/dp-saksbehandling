@@ -55,22 +55,4 @@ internal object Postgres {
                 tearDown()
             }
     }
-
-    fun withCleanDb(
-        target: String,
-        setup: () -> Unit,
-        test: () -> Unit,
-    ) {
-        this.setup()
-        PostgresDataSourceBuilder
-            .clean()
-            .run {
-                PostgresDataSourceBuilder.runMigrationTo(target)
-                setup()
-                PostgresDataSourceBuilder.runMigration()
-                test()
-            }.also {
-                tearDown()
-            }
-    }
 }

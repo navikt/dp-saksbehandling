@@ -160,7 +160,7 @@ Models are generated from `openapi/src/main/resources/saksbehandling-api.yaml`:
 
 ### Database
 
-- PostgreSQL with Flyway migrations in `mediator/src/main/resources/db/migration/`
+- PostgreSQL with Flyway migrations in `mediator/src/main/resources/db/migration/common/`
 - Repository pattern: interfaces in `modell`, implementations as `PostgresXxxRepository` in `mediator`
 - `HendelseBehandler` is stored as text in `behandling_v1.utlost_av` column
 

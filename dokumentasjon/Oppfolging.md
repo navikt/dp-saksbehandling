@@ -102,17 +102,17 @@ Fri JSON-blob for domene-spesifikk kontekst. Backend lagrer og eksponerer den ut
 
 ## Relevant kode
 
-| Fil | Beskrivelse |
-|-----|-------------|
-| `modell/.../oppfolging/Oppfølging.kt` | Domeneobjekt med tilstandsmaskin |
-| `modell/.../oppfolging/OppfølgingAksjon.kt` | 5 aksjontyper |
+| Fil                                                 | Beskrivelse |
+|-----------------------------------------------------|-------------|
+| `modell/.../oppfolging/Oppfølging.kt`               | Domeneobjekt med tilstandsmaskin |
+| `modell/.../oppfolging/OppfølgingAksjon.kt`         | 5 aksjontyper |
 | `modell/.../hendelser/OpprettOppfølgingHendelse.kt` | Felles hendelse for Kafka og REST |
-| `mediator/.../oppfolging/OppfølgingMediator.kt` | Orkestrator |
-| `mediator/.../oppfolging/OppfølgingApi.kt` | REST-endepunkter |
-| `mediator/.../oppfolging/OppfølgingBehandler.kt` | Utfører aksjonene |
-| `mediator/.../oppfolging/OppfølgingAlarmJob.kt` | Daglig sjekk for fast-sittende FERDIGSTILL_STARTET (>24t) |
-| `mediator/.../oppfolging/OpprettOppgaveMottak.kt` | Kafka-konsument |
-| `db/migration/V109__CREATE_OPPFOLGING.sql` | Databaseskjema |
+| `mediator/.../oppfolging/OppfølgingMediator.kt`     | Orkestrator |
+| `mediator/.../oppfolging/OppfølgingApi.kt`          | REST-endepunkter |
+| `mediator/.../oppfolging/OppfølgingBehandler.kt`    | Utfører aksjonene |
+| `mediator/.../oppfolging/OppfølgingAlarmJob.kt`     | Daglig sjekk for fast-sittende FERDIGSTILL_STARTET (>24t) |
+| `mediator/.../oppfolging/OpprettOppgaveMottak.kt`   | Kafka-konsument |
+| `db/migration/common/V109__CREATE_OPPFOLGING.sql`   | Databaseskjema |
 
 ## Gjenstår / on hold
 
