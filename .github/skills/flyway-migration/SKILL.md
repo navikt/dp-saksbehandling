@@ -15,7 +15,7 @@ This skill provides patterns for managing database schema changes with Flyway.
 ## Migration File Naming
 
 ```text
-db/migration/V{version}__{description}.sql
+db/migration/common/V{version}__{description}.sql
 ```
 
 Examples:
@@ -124,7 +124,7 @@ fun createDataSource(jdbcUrl: String): HikariDataSource {
 fun runMigrations(dataSource: HikariDataSource) {
     Flyway.configure()
         .dataSource(dataSource)
-        .locations("classpath:db/migration")
+        .locations("classpath:db/migration/common")
         .load()
         .migrate()
 }

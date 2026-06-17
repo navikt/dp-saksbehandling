@@ -112,9 +112,9 @@ object Configuration {
 
     val flywayLocations =
         if (isDev) {
-            "db/migration,db/dev"
+            "db/migration/common,db/migration/dev"
         } else {
-            "db/migration,db/prod"
+            "db/migration/common,db/migration/prod"
         }
 
     val utboksLevetidSendte: Duration by lazy {
