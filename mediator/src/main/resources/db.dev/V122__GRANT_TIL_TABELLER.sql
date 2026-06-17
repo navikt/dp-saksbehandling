@@ -5,6 +5,6 @@ $$
             (SELECT 1 FROM pg_roles WHERE rolname = 'cloudsqliamuser')
         THEN
             GRANT ALL ON ALL TABLES IN SCHEMA public TO cloudsqliamuser;
-        END IF;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO cloudsqliamuser;
     END
 $$;
