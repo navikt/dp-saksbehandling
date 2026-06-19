@@ -32,7 +32,7 @@ class PostgresSakRepositoryTest {
         Behandling(
             behandlingId = behandlingId1iSak1,
             utløstAv = HendelseBehandler.DpBehandling.Søknad,
-            opprettet = nå,
+            opprettet = nå.minusDays(1),
             oppgaveId = oppgaveId,
             hendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -180,6 +180,180 @@ class PostgresSakRepositoryTest {
     }
 
     @Test
+    fun `Skal merke ny sak som dp-sak hvis personen allerede har en sak som er merket som dp-sak`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val andreBehandlingIdDpSak = UUIDv7.ny()
+            val andreSøknadHendelse =
+                DpBehandlingOpprettetHendelse(
+                    behandlingId = andreBehandlingIdDpSak,
+                    ident = DBTestHelper.testPerson.ident,
+                    opprettet = nå,
+                    basertPåBehandling = null,
+                    behandlingskjedeId = andreBehandlingIdDpSak,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                )
+            val andreBehandling =
+                Behandling(
+                    behandlingId = andreSøknadHendelse.behandlingId,
+                    utløstAv = andreSøknadHendelse.type,
+                    opprettet = andreSøknadHendelse.opprettet,
+                    hendelse = andreSøknadHendelse,
+                )
+            val andreSak =
+                Sak(
+                    opprettet = andreBehandling.opprettet,
+                ).also {
+                    it.leggTilBehandling(andreBehandling)
+                }
+            val sakHistorikk =
+                SakHistorikk(
+                    person = person,
+                ).also {
+                    it.leggTilSak(sak1)
+                }
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
+            sakRepository.lagre(sakHistorikk)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+            sakHistorikkFraDB.alleSaker().size shouldBe 1
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+
+            sakRepository.merkSakenSomDpSak(sak1.sakId, true)
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe sak1.sakId
+
+            sakHistorikkFraDB.leggTilSak(andreSak)
+            sakRepository.lagre(sakHistorikkFraDB)
+
+            val sakHistorikkFraDBEtterNySak = sakRepository.hentSakHistorikk(person.ident)
+            sakHistorikkFraDBEtterNySak.alleSaker().size shouldBe 2
+
+            // Sjekker at saker blir sortert kronologisk, med nyeste sak først
+            sakHistorikkFraDBEtterNySak
+                .alleSaker()
+                .first() shouldBe andreSak
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe andreSak.sakId
+        }
+    }
+
+    @Test
+    fun `Skal ikke merke ny sak som dp-sak hvis personen er nødbremset, selv om hen har en dp-sak`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val andreBehandlingIdDpSak = UUIDv7.ny()
+            val andreSøknadHendelse =
+                DpBehandlingOpprettetHendelse(
+                    behandlingId = andreBehandlingIdDpSak,
+                    ident = DBTestHelper.testPerson.ident,
+                    opprettet = nå,
+                    basertPåBehandling = null,
+                    behandlingskjedeId = andreBehandlingIdDpSak,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                )
+            val andreBehandling =
+                Behandling(
+                    behandlingId = andreSøknadHendelse.behandlingId,
+                    utløstAv = andreSøknadHendelse.type,
+                    opprettet = andreSøknadHendelse.opprettet,
+                    hendelse = andreSøknadHendelse,
+                )
+            val andreSak =
+                Sak(
+                    opprettet = andreBehandling.opprettet,
+                ).also {
+                    it.leggTilBehandling(andreBehandling)
+                }
+            val sakHistorikk =
+                SakHistorikk(
+                    person = person,
+                ).also {
+                    it.leggTilSak(sak1)
+                }
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
+            sakRepository.lagre(sakHistorikk)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+            sakHistorikkFraDB.alleSaker().size shouldBe 1
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+
+            sakRepository.merkSakenSomDpSak(sak1.sakId, true)
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe sak1.sakId
+
+            dataSource.nødbremsPerson(personId = person.id)
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+
+            sakHistorikkFraDB.leggTilSak(andreSak)
+            sakRepository.lagre(sakHistorikkFraDB)
+
+            val sakHistorikkFraDBEtterNySak = sakRepository.hentSakHistorikk(person.ident)
+            sakHistorikkFraDBEtterNySak.alleSaker().size shouldBe 2
+
+            // Sjekker at saker blir sortert kronologisk, med nyeste sak først
+            sakHistorikkFraDBEtterNySak
+                .alleSaker()
+                .first() shouldBe andreSak
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Skal ikke merke ny sak som dp-sak hvis personen ikke allerede har en sak som er merket som dp-sak`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val andreBehandlingIdDpSak = UUIDv7.ny()
+            val andreSøknadHendelse =
+                DpBehandlingOpprettetHendelse(
+                    behandlingId = andreBehandlingIdDpSak,
+                    ident = DBTestHelper.testPerson.ident,
+                    opprettet = nå,
+                    basertPåBehandling = null,
+                    behandlingskjedeId = andreBehandlingIdDpSak,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                )
+            val andreBehandling =
+                Behandling(
+                    behandlingId = andreSøknadHendelse.behandlingId,
+                    utløstAv = andreSøknadHendelse.type,
+                    opprettet = andreSøknadHendelse.opprettet,
+                    hendelse = andreSøknadHendelse,
+                )
+            val andreSak =
+                Sak(
+                    opprettet = andreBehandling.opprettet,
+                ).also {
+                    it.leggTilBehandling(andreBehandling)
+                }
+            val sakHistorikk =
+                SakHistorikk(
+                    person = person,
+                ).also {
+                    it.leggTilSak(sak1)
+                }
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
+            sakRepository.lagre(sakHistorikk)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+            sakHistorikkFraDB.alleSaker().size shouldBe 1
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+
+            sakHistorikkFraDB.leggTilSak(andreSak)
+            sakRepository.lagre(sakHistorikkFraDB)
+
+            val sakHistorikkFraDBEtterNySak = sakRepository.hentSakHistorikk(person.ident)
+            sakHistorikkFraDBEtterNySak.alleSaker().size shouldBe 2
+
+            // Sjekker at saker blir sortert kronologisk, med nyeste sak først
+            sakHistorikkFraDBEtterNySak
+                .alleSaker()
+                .first() shouldBe andreSak
+
+            sakRepository.finnSisteDagpengeSakId(person.ident) shouldBe null
+        }
+    }
+
+    @Test
     fun `Hent sakId basert på behandlingId`() {
         DBTestHelper.withSaker(saker = listOf(sak1)) { ds ->
             val sakRepository = PostgresSakRepository(DatabaseSession(ds))
@@ -290,4 +464,26 @@ class PostgresSakRepositoryTest {
                 ).asUpdate,
         )
     }
+
+    private fun DataSource.nødbremsPerson(personId: UUID) =
+        sessionOf(this).use { session ->
+            session.run(
+                action =
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            INSERT INTO nodbremset_person_v1
+                            ( person_id )
+                            VALUES
+                            ( :person_id )
+                            ON CONFLICT DO NOTHING 
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                    ).asUpdate,
+            )
+        }
 }

@@ -64,9 +64,9 @@ data class SakHistorikk(
 
     fun alleSaker(): List<Sak> = saker.toList()
 
-    fun dagpengeSaker(): List<Sak> = saker.toList().filterNot { it.erFerietilleggsSak() }
+    fun dagpengeSaker(): List<Sak> = saker.toList().filterNot { it.erFerietilleggSak() }
 
-    fun ferietilleggSaker(): List<Sak> = saker.toList().filter { it.erFerietilleggsSak() }
+    fun ferietilleggSaker(): List<Sak> = saker.toList().filter { it.erFerietilleggSak() }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

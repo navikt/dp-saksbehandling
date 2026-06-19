@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.db.sak
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -18,9 +17,6 @@ import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.collections.forEach
-
-private val logger = KotlinLogging.logger {}
-private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class PostgresSakRepository(
     private val databaseSession: DatabaseSession,
@@ -217,9 +213,28 @@ class PostgresSakRepository(
                 statement =
                     """
                     INSERT INTO sak_v2
-                        (id, person_id, opprettet, er_dp_sak) 
+                        ( id
+                        , person_id
+                        , opprettet
+                        , er_dp_sak
+                        ) 
                     VALUES
-                        (:id,:person_id, :opprettet, :er_dp_sak) 
+                        ( :id
+                        , :person_id
+                        , :opprettet
+                        , CASE
+                            WHEN :er_ferietillegg_sak OR EXISTS (
+                                SELECT  1
+                                FROM    sak_v2 sak
+                                LEFT JOIN nodbremset_person_v1 nod ON nod.person_id = sak.person_id
+                                WHERE   sak.person_id = :person_id
+                                AND     sak.er_dp_sak = true
+                                AND     nod.person_id IS NULL
+                            )
+                                THEN true
+                                ELSE false
+                            END
+                        ) 
                     ON CONFLICT (id) DO NOTHING 
                     """.trimIndent(),
                 paramMap =
@@ -227,7 +242,7 @@ class PostgresSakRepository(
                         "id" to sak.sakId,
                         "person_id" to personId,
                         "opprettet" to sak.opprettet,
-                        "er_dp_sak" to sak.erFerietilleggsSak(),
+                        "er_ferietillegg_sak" to sak.erFerietilleggSak(),
                     ),
             ).asUpdate,
         )
