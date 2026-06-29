@@ -353,7 +353,7 @@ data class Oppgave private constructor(
 
     fun sisteSaksbehandler(): String? =
         runCatching {
-            _tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
+            _tilstandslogg.firstOrNull { it.tilstand in listOf(UNDER_BEHANDLING, PAA_VENT) && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
         }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }

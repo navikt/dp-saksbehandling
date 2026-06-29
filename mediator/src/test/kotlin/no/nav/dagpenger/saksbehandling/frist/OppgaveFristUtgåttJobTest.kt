@@ -8,19 +8,23 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -63,8 +67,39 @@ class OppgaveFristUtgåttJobTest {
                     tilstand = PåVent,
                     utsattTil = iDag,
                     behandling = behandling2,
-                    saksbehandlerIdent = saksbehandlerIdent1,
+                    saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
                     emneknagger = setOf(TIDLIGERE_UTSATT.visningsnavn),
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            listOf(
+                                Tilstandsendring(
+                                    tilstand = Oppgave.Tilstand.Type.PAA_VENT,
+                                    hendelse =
+                                        OpprettOppfølgingHendelse(
+                                            ident = TestHelper.personIdent,
+                                            aarsak = "en grunn",
+                                            tittel = "en tittel",
+                                            beskrivelse = "en beskrivelse",
+                                            frist = iDag,
+                                            beholdOppgaven = true,
+                                            utførtAv = TestHelper.saksbehandler,
+                                        ),
+                                ),
+                                Tilstandsendring(
+                                    tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                                    hendelse =
+                                        OpprettOppfølgingHendelse(
+                                            ident = TestHelper.personIdent,
+                                            aarsak = "en grunn",
+                                            tittel = "en tittel",
+                                            beskrivelse = "en beskrivelse",
+                                            frist = iDag,
+                                            beholdOppgaven = true,
+                                            utførtAv = TestHelper.saksbehandler,
+                                        ),
+                                ),
+                            ),
+                        ),
                 )
             val oppgave3 =
                 lagOppgave(
@@ -101,9 +136,10 @@ class OppgaveFristUtgåttJobTest {
             repo.hentOppgave(oppgave2.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe UnderBehandling
                 oppgave.emneknagger shouldContain TIDLIGERE_UTSATT.visningsnavn
-                oppgave.behandlerIdent shouldBe saksbehandlerIdent1
+                oppgave.behandlerIdent shouldBe TestHelper.saksbehandler.navIdent
                 oppgave.tilstandslogg.first().tilstand shouldBe UNDER_BEHANDLING
                 oppgave.utsattTil() shouldBe null
+                oppgave.sisteSaksbehandler() shouldBe TestHelper.saksbehandler.navIdent
             }
 
             repo.hentOppgave(oppgave3.oppgaveId).let { oppgave ->
