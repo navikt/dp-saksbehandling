@@ -83,6 +83,7 @@ object Emneknagg {
         OPPFØLGING_AV_SAMORDNING("Oppfølging av samordning"),
         OPPFØLGING_AV_VEDTAK("Oppfølging av vedtak"),
         VURDERE_FEILUTBETALING("Vurdere feilutbetaling"),
+        OMPOSTERING("Ompostering"),
         ANNEN_ÅRSAK("Annen årsak"),
         ;
 
