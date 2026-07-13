@@ -1084,6 +1084,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /klage/{behandlingId}/ferdigstill-behandling:
+    put:
+      summary: Ferdigstill behandling av klage med (delvis) medhold (steg 1 av 2)
+      description: >
+        Første steg i to-stegs flyten for medhold og delvis medhold. Setter klagebehandlingen
+        til BEHANDLING_UTFORT slik at saksbehandler kan opprette revurdering manuelt. Oppgaven
+        forblir aktiv. Kall deretter PUT /klage/{behandlingId}/ferdigstill for å fullføre (steg 2).
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Behandling ferdigstilt — klage klar for revurdering
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /klage/{behandlingId}/trekk:
     put:
       summary: Trekk klage
@@ -2289,11 +2319,21 @@ components:
             $ref: '#/components/schemas/KlageOpplysning'
         utfall:
           $ref: '#/components/schemas/Utfall'
+        tilstand:
+          type: string
+          enum:
+            - BEHANDLES
+            - BEHANDLING_UTFORT
+            - OVERSEND_KLAGEINSTANS
+            - BEHANDLES_AV_KLAGEINSTANS
+            - FERDIGSTILT
+            - AVBRUTT
       required:
         - behandlingId
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
+        - tilstand
 
     TekstVerdi:
       type: object

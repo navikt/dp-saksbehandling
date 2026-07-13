@@ -265,7 +265,8 @@ class KlageDTOMapperTest {
                                 "DELVIS_MEDHOLD",
                                 "MEDHOLD"
                             ]
-                        }
+                        },
+                        "tilstand": "BEHANDLES"
                     }
                     """
             }

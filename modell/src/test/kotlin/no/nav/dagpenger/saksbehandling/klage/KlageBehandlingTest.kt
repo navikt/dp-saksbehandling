@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
@@ -30,8 +31,6 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandling
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandlingMedUtfall
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -363,10 +362,9 @@ class KlageBehandlingTest {
         klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
     }
 
-    @ParameterizedTest
-    @CsvSource("MEDHOLD,DELVIS_MEDHOLDE", delimiter = ',')
-    fun `vedtak distribuert hendelse for en klagebehandling med MEDHOLD eller DELVIS_MEDHOLD er ikke implementert`(utfallType: String) {
-        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.valueOf(utfallType))
+    @Test
+    fun `vedtak distribuert hendelse for en klagebehandling med MEDHOLD skal kaste exception - MEDHOLD går ikke via utsending`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.MEDHOLD)
         val hendelse =
             UtsendingDistribuert(
                 behandlingId = klageBehandling.behandlingId,
@@ -376,7 +374,108 @@ class KlageBehandlingTest {
                 distribusjonId = "distribusjonId",
             )
 
-        shouldThrow<NotImplementedError> { klageBehandling.vedtakDistribuert(hendelse) }
+        shouldThrow<IllegalStateException> { klageBehandling.vedtakDistribuert(hendelse) }
+    }
+
+    @Test
+    fun `Medhold klagebehandling får tilstand behandling utført når alle synlige og påkrevde opplysninger er utfylt`() {
+        val klageBehandling = KlageBehandling()
+        svarPåAlleOpplysningerMedUtfall(klageBehandling, UtfallType.MEDHOLD)
+        klageBehandling.ferdigstillBehandling(
+            behandlendeEnhet = "4408",
+            hendelse = KlageBehandlingFerdigstilt(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+        )
+
+        klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+    }
+
+    @Test
+    fun `ferdigstillBehandling med ikke-MEDHOLD utfall skal kaste exception`() {
+        val klageBehandling = KlageBehandling()
+        svarPåAlleOpplysningerMedUtfall(klageBehandling, UtfallType.AVVIST)
+
+        shouldThrow<IllegalStateException> {
+            klageBehandling.ferdigstillBehandling(
+                behandlendeEnhet = "4408",
+                hendelse = KlageBehandlingFerdigstilt(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+            )
+        }
+    }
+
+    @Test
+    fun `behandlingUtført fra tilstand BEHANDLES med MEDHOLD skal kaste exception - må bruke ferdigstillBehandling først`() {
+        val klageBehandling = KlageBehandling()
+        svarPåAlleOpplysningerMedUtfall(klageBehandling, UtfallType.MEDHOLD)
+
+        shouldThrow<IllegalStateException> {
+            klageBehandling.behandlingUtført(
+                behandlendeEnhet = "4408",
+                hendelse = KlageBehandlingUtført(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+            )
+        }
+
+        klageBehandling.tilstand().type shouldBe BEHANDLES
+    }
+
+    @Test
+    fun `Medhold klagebehandling ferdigstilles etter revurdering - andre kall på behandlingUtført gir tilstand FERDIGSTILT`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.MEDHOLD)
+        klageBehandling.behandlingUtført(
+            behandlendeEnhet = "4408",
+            hendelse = KlageBehandlingUtført(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+        )
+
+        klageBehandling.tilstand().type shouldBe FERDIGSTILT
+    }
+
+    @Test
+    fun `Delvis medhold klagebehandling får tilstand behandling utført via ferdigstillBehandling`() {
+        val klageBehandling = KlageBehandling()
+        svarPåAlleOpplysningerMedUtfall(klageBehandling, UtfallType.DELVIS_MEDHOLD)
+        klageBehandling.ferdigstillBehandling(
+            behandlendeEnhet = "4408",
+            hendelse = KlageBehandlingFerdigstilt(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+        )
+
+        klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
+    }
+
+    @Test
+    fun `behandlingUtført fra tilstand BEHANDLES med DELVIS_MEDHOLD skal kaste exception - må bruke ferdigstillBehandling først`() {
+        val klageBehandling = KlageBehandling()
+        svarPåAlleOpplysningerMedUtfall(klageBehandling, UtfallType.DELVIS_MEDHOLD)
+
+        shouldThrow<IllegalStateException> {
+            klageBehandling.behandlingUtført(
+                behandlendeEnhet = "4408",
+                hendelse = KlageBehandlingUtført(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+            )
+        }
+
+        klageBehandling.tilstand().type shouldBe BEHANDLES
+    }
+
+    @Test
+    fun `Delvis medhold klagebehandling ferdigstilles etter revurdering - andre kall på behandlingUtført gir tilstand FERDIGSTILT`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.DELVIS_MEDHOLD)
+        klageBehandling.behandlingUtført(
+            behandlendeEnhet = "4408",
+            hendelse = KlageBehandlingUtført(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+        )
+
+        klageBehandling.tilstand().type shouldBe FERDIGSTILT
+    }
+
+    @Test
+    fun `behandlingUtført i tilstand BEHANDLING_UTFORT med annet utfall enn MEDHOLD skal kaste exception`() {
+        val klageBehandling = lagKlageBehandlingMedUtfall(utfallType = UtfallType.AVVIST)
+
+        shouldThrow<IllegalStateException> {
+            klageBehandling.behandlingUtført(
+                behandlendeEnhet = "4408",
+                hendelse = KlageBehandlingUtført(behandlingId = klageBehandling.behandlingId, utførtAv = saksbehandler),
+            )
+        }
     }
 
     @Test
@@ -446,7 +545,13 @@ class KlageBehandlingTest {
         }
     }
 
-    private fun svarPåAlleOpplysninger(klageBehandling: KlageBehandling) {
+    private fun svarPåAlleOpplysninger(klageBehandling: KlageBehandling) =
+        svarPåAlleOpplysningerMedUtfall(klageBehandling, UtfallType.AVVIST)
+
+    private fun svarPåAlleOpplysningerMedUtfall(
+        klageBehandling: KlageBehandling,
+        utfallType: UtfallType,
+    ) {
         klageBehandling.alleOpplysninger().forEach {
             when (it.type.datatype) {
                 Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
@@ -457,7 +562,7 @@ class KlageBehandlingTest {
                             TekstVerdi(
                                 value =
                                     when (it.type) {
-                                        OpplysningType.UTFALL -> "Avvist"
+                                        OpplysningType.UTFALL -> utfallType.tekst
                                         else -> it.valgmuligheter.firstOrNull() ?: "String"
                                     },
                             ),

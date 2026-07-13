@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
@@ -603,7 +604,7 @@ class KlageMediatorTest {
     }
 
     @Test
-    fun `Kan ikke ferdigstille en klage med medhold`() {
+    fun `Kan ferdigstille en klage med medhold - første kall går til BEHANDLING_UTFORT`() {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
@@ -636,18 +637,20 @@ class KlageMediatorTest {
                     ),
             )
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
-
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
-            shouldThrow<IllegalStateException> {
-                klageMediator.behandlingUtført(
-                    hendelse =
-                        KlageBehandlingUtført(
-                            behandlingId = behandlingId,
-                            utførtAv = saksbehandler,
-                        ),
-                    saksbehandlerToken = "token",
-                )
-            }
+
+            klageMediator.ferdigstillBehandling(
+                hendelse =
+                    KlageBehandlingFerdigstilt(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLING_UTFORT
 
             oppgaveMediator
                 .hentOppgaveFor(
@@ -655,6 +658,8 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).tilstand()
                 .type shouldBe UNDER_BEHANDLING
+
+            // Ingen ny rapid-melding utover klage_behandling_opprettet — ingen utsending, ingen ferdigstill
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
                 it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"
@@ -667,7 +672,7 @@ class KlageMediatorTest {
     }
 
     @Test
-    fun `Kan ikke ferdigstille en klage med delvis medhold`() {
+    fun `Full medhold-flyt - ferdigstillBehandling etterfulgt av behandlingUtført gir FERDIGSTILT og ferdigstiller oppgaven`() {
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator
@@ -680,17 +685,7 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            klageMediator
-                .hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).tilstand()
-                .type shouldBe BEHANDLES
-
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
-
-            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
-
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -700,24 +695,180 @@ class KlageMediatorTest {
                     ),
             )
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
 
-            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.DELVIS_MEDHOLD)
+            // Steg 1: ferdigstillBehandling — klage til BEHANDLING_UTFORT, oppgave forblir aktiv
+            klageMediator.ferdigstillBehandling(
+                hendelse = KlageBehandlingFerdigstilt(behandlingId = behandlingId, utførtAv = saksbehandler),
+            )
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLING_UTFORT
+            oppgaveMediator
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe UNDER_BEHANDLING
+
+            // Steg 2: behandlingUtført — klage til FERDIGSTILT, oppgave ferdigstilles
+            klageMediator.behandlingUtført(
+                hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                saksbehandlerToken = "token",
+            )
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIGSTILT
+            oppgaveMediator
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIG_BEHANDLET
+        }
+    }
+
+    @Test
+    fun `Kan ikke hoppe over steg 1 - behandlingUtført fra BEHANDLES med medhold skal kaste exception`() {
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
+
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
+
+            // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    hendelse =
-                        KlageBehandlingUtført(
-                            behandlingId = behandlingId,
-                            utførtAv = saksbehandler,
-                        ),
+                    hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
                     saksbehandlerToken = "token",
                 )
             }
 
+            // Klagen skal fortsatt være i BEHANDLES og oppgaven skal IKKE være ferdigstilt
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLES
             oppgaveMediator
-                .hentOppgaveFor(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).tilstand()
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe UNDER_BEHANDLING
+        }
+    }
+
+    @Test
+    fun `Full delvis-medhold-flyt - ferdigstillBehandling etterfulgt av behandlingUtført gir FERDIGSTILT og ferdigstiller oppgaven`() {
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
+
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.DELVIS_MEDHOLD)
+
+            // Steg 1: ferdigstillBehandling — klage til BEHANDLING_UTFORT, oppgave forblir aktiv
+            klageMediator.ferdigstillBehandling(
+                hendelse = KlageBehandlingFerdigstilt(behandlingId = behandlingId, utførtAv = saksbehandler),
+            )
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLING_UTFORT
+            oppgaveMediator
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe UNDER_BEHANDLING
+
+            // Steg 2: behandlingUtført — klage til FERDIGSTILT, oppgave ferdigstilles
+            klageMediator.behandlingUtført(
+                hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                saksbehandlerToken = "token",
+            )
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIGSTILT
+            oppgaveMediator
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIG_BEHANDLET
+        }
+    }
+
+    @Test
+    fun `Kan ikke hoppe over steg 1 - behandlingUtført fra BEHANDLES med delvis medhold skal kaste exception`() {
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostId",
+                        ),
+                    ).behandling.behandlingId
+
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.DELVIS_MEDHOLD)
+
+            // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
+            shouldThrow<IllegalStateException> {
+                klageMediator.behandlingUtført(
+                    hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            // Klagen skal fortsatt være i BEHANDLES og oppgaven skal IKKE være ferdigstilt
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe BEHANDLES
+            oppgaveMediator
+                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
                 .type shouldBe UNDER_BEHANDLING
         }
     }
