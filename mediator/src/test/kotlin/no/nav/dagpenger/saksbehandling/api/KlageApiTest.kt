@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
@@ -332,6 +333,39 @@ class KlageApiTest {
                         utførtAv = TestHelper.saksbehandler,
                     ),
                 saksbehandlerToken = saksbehandlerToken,
+            )
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille behandling av klage med medhold (steg 1)`() {
+        val saksbehandlerToken = gyldigSaksbehandlerToken()
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.ferdigstillBehandling(
+                        hendelse =
+                            KlageBehandlingFerdigstilt(
+                                behandlingId = klageBehandlingId,
+                                utførtAv = TestHelper.saksbehandler,
+                            ),
+                    )
+                } returns mockk<KlageBehandling>(relaxed = true)
+            }
+
+        withKlageApi(mediator) {
+            client
+                .put("klage/$klageBehandlingId/ferdigstill-behandling") { autentisert(token = saksbehandlerToken) }
+                .status shouldBe HttpStatusCode.NoContent
+        }
+
+        verify(exactly = 1) {
+            mediator.ferdigstillBehandling(
+                hendelse =
+                    KlageBehandlingFerdigstilt(
+                        behandlingId = klageBehandlingId,
+                        utførtAv = TestHelper.saksbehandler,
+                    ),
             )
         }
     }

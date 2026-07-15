@@ -2,12 +2,14 @@ package no.nav.dagpenger.saksbehandling.db.klage
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
@@ -17,11 +19,13 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
@@ -187,6 +191,49 @@ class PostgresKlageRepositoryTest {
 
             hentetKlageBehandling.tilstandslogg.size shouldBe klageBehandling.tilstandslogg.size
             hentetKlageBehandling.klageinstansVedtak() shouldBe kaKlageVedtak
+        }
+    }
+
+    @Test
+    fun `Skal kunne rehydrere KlageBehandlingFerdigstilt-hendelse fra tilstandsloggen`() {
+        val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        setupDBOgSak { klageRepository, _ ->
+            val klageMottattHendelse =
+                KlageMottattHendelse(
+                    ident = testPerson.ident,
+                    sakId = UUIDv7.ny(),
+                    opprettet = nå,
+                    journalpostId = "journalpostId",
+                )
+            val ferdigstiltHendelse =
+                KlageBehandlingFerdigstilt(
+                    behandlingId = klageId,
+                    utførtAv = TestHelper.saksbehandler,
+                )
+
+            val klageBehandling =
+                KlageBehandling.rehydrer(
+                    behandlingId = klageId,
+                    opprettet = klageMottattHendelse.opprettet,
+                    journalpostId = "journalpostId",
+                    tilstand = KlageBehandling.BehandlingUtført,
+                    behandlendeEnhet = "4408",
+                    tilstandslogg =
+                        KlageTilstandslogg(
+                            Tilstandsendring(tilstand = BEHANDLING_UTFORT, hendelse = ferdigstiltHendelse),
+                            Tilstandsendring(tilstand = BEHANDLES, hendelse = klageMottattHendelse),
+                        ),
+                    klageinstansVedtak = null,
+                )
+
+            klageRepository.lagre(klageBehandling)
+
+            val hentet = klageRepository.hentKlageBehandling(klageId)
+            val rehydrertHendelse =
+                hentet.tilstandslogg.single { it.tilstand == BEHANDLING_UTFORT }.hendelse
+
+            rehydrertHendelse.shouldBeInstanceOf<KlageBehandlingFerdigstilt>()
+            rehydrertHendelse shouldBe ferdigstiltHendelse
         }
     }
 

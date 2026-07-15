@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
@@ -121,6 +122,26 @@ fun Route.klageApi(
                                 saksbehandlerToken = call.request.jwt(),
                             )
                         auditlogg.opprett("Ferdigstilte en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                route("ferdigstill-behandling") {
+                    put {
+                        val behandlingId = call.finnUUID("behandlingId")
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+                        val klageBehandling =
+                            mediator.ferdigstillBehandling(
+                                hendelse =
+                                    KlageBehandlingFerdigstilt(
+                                        behandlingId = behandlingId,
+                                        utførtAv = saksbehandler,
+                                    ),
+                            )
+                        auditlogg.opprett(
+                            "Ferdigstilte behandling av klage (medhold/delvis medhold)",
+                            klageBehandling.personIdent(),
+                            saksbehandler.navIdent,
+                        )
                         call.respond(HttpStatusCode.NoContent)
                     }
                 }

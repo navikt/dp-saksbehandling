@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.api.KlageView.utfallOpplysninger
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageDTOTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningBoolskDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
@@ -45,6 +46,15 @@ class KlageDTOMapper(
             saksbehandler = oppslag.hentBehandler(saksbehandler.navIdent),
             behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfallOpplysninger = utfallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
+            tilstand =
+                when (klageBehandling.tilstand().type) {
+                    KlageBehandling.KlageTilstand.Type.BEHANDLES -> KlageDTOTilstandDTO.BEHANDLES
+                    KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT -> KlageDTOTilstandDTO.BEHANDLING_UTFORT
+                    KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS -> KlageDTOTilstandDTO.OVERSEND_KLAGEINSTANS
+                    KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS -> KlageDTOTilstandDTO.BEHANDLES_AV_KLAGEINSTANS
+                    KlageBehandling.KlageTilstand.Type.FERDIGSTILT -> KlageDTOTilstandDTO.FERDIGSTILT
+                    KlageBehandling.KlageTilstand.Type.AVBRUTT -> KlageDTOTilstandDTO.AVBRUTT
+                },
             utfall =
                 UtfallDTO(
                     verdi =

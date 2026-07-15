@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
@@ -177,20 +178,13 @@ class KlageMediator(
     fun behandlingUtført(
         hendelse: KlageBehandlingUtført,
         saksbehandlerToken: String,
-    ): KlageBehandling {
-        val oppgave =
-            sjekkTilgangOgEierAvOppgave(behandlingId = hendelse.behandlingId, saksbehandler = hendelse.utførtAv)
-
-        return runBlocking {
+    ): KlageBehandling =
+        runBlocking {
             val saksbehandlerDeferred =
                 async(Dispatchers.IO) {
                     oppslag.hentBehandler(
                         ident = hendelse.utførtAv.navIdent,
                     )
-                }
-            val personDeferred =
-                async(Dispatchers.IO) {
-                    oppslag.hentPerson(oppgave.personIdent())
                 }
             val klageBehandling =
                 klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
@@ -199,64 +193,110 @@ class KlageMediator(
                         hendelse = hendelse,
                     )
                 }
-            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
-
-            val utsendingType =
-                when (klageBehandling.utfall()) {
-                    UtfallType.OPPRETTHOLDELSE -> UtsendingType.KLAGE_OVERSENDELSE
-                    UtfallType.AVVIST -> UtsendingType.KLAGE_AVVIST
-                    else -> null
-                }
-
-            val html =
-                utsendingType?.let {
-                    async(Dispatchers.IO) {
-                        meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
-                            person = personDeferred.await(),
-                            saksbehandler = saksbehandlerDeferred.await(),
-                            beslutter = null,
-                            behandlingId = oppgave.behandling.behandlingId,
-                            saksbehandlerToken = saksbehandlerToken,
-                            utløstAvType = HendelseBehandler.Intern.Klage,
-                            sakId = sakId.toString(),
+            val utfallType = requireNotNull(klageBehandling.utfall())
+            when (utfallType) {
+                UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST -> {
+                    val oppgave =
+                        sjekkTilgangOgEierAvOppgave(
+                            behandlingId = hendelse.behandlingId,
+                            saksbehandler = hendelse.utførtAv,
                         )
-                    }.await().getOrThrow()
-                }
 
-            transaksjoner.transaksjon { ctx ->
-                if (utsendingType != null && html != null) {
-                    utsendingMediator.opprettUtsending(
-                        behandlingId = oppgave.behandling.behandlingId,
-                        brev = html,
-                        ident = oppgave.personIdent(),
-                        type = utsendingType,
-                        ctx = ctx,
+                    val personDeferred =
+                        async(Dispatchers.IO) {
+                            oppslag.hentPerson(oppgave.personIdent())
+                        }
+                    val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
+
+                    val utsendingType =
+                        when (utfallType) {
+                            UtfallType.OPPRETTHOLDELSE -> UtsendingType.KLAGE_OVERSENDELSE
+                            UtfallType.AVVIST -> UtsendingType.KLAGE_AVVIST
+                        }
+
+                    val html =
+                        async(Dispatchers.IO) {
+                            meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
+                                person = personDeferred.await(),
+                                saksbehandler = saksbehandlerDeferred.await(),
+                                beslutter = null,
+                                behandlingId = oppgave.behandling.behandlingId,
+                                saksbehandlerToken = saksbehandlerToken,
+                                utløstAvType = HendelseBehandler.Intern.Klage,
+                                sakId = sakId.toString(),
+                            )
+                        }.await().getOrThrow()
+
+                    transaksjoner.transaksjon { ctx ->
+                        utsendingMediator.opprettUtsending(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            brev = html,
+                            ident = oppgave.personIdent(),
+                            type = utsendingType,
+                            ctx = ctx,
+                        )
+                        klageRepository.lagre(klageBehandling, ctx)
+                        oppgaveMediator.ferdigstillOppgave(
+                            behandlingId = hendelse.behandlingId,
+                            saksbehandler = hendelse.utførtAv,
+                            ctx = ctx,
+                        )
+                    }
+                    logger.info {
+                        "Klagebehandling ${klageBehandling.behandlingId} utført — utsending, klage og oppgave lagret i transaksjon"
+                    }
+                    utsendingMediator.mottaStartUtsending(
+                        StartUtsendingHendelse(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            utsendingSak =
+                                UtsendingSak(
+                                    id = sakId.toString(),
+                                    kontekst = "Dagpenger",
+                                ),
+                            ident = oppgave.personIdent(),
+                        ),
                     )
                 }
-                klageRepository.lagre(klageBehandling, ctx)
-                oppgaveMediator.ferdigstillOppgave(
-                    behandlingId = hendelse.behandlingId,
-                    saksbehandler = hendelse.utførtAv,
-                    ctx = ctx,
-                )
+
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> {
+                    // Ingen eierskapskontroll — enhver saksbehandler kan ferdigstille en klage
+                    // med (delvis) medhold. Dette er andre kall i to-stegs medhold-flyten:
+                    // steg 1 (ferdigstill-behandling): BEHANDLES → BEHANDLING_UTFORT
+                    // steg 2 (ferdigstill):            BEHANDLING_UTFORT → FERDIGSTILT
+                    transaksjoner.transaksjon { ctx ->
+                        klageRepository.lagre(klageBehandling, ctx)
+                        oppgaveMediator.ferdigstillOppgave(
+                            behandlingId = hendelse.behandlingId,
+                            saksbehandler = hendelse.utførtAv,
+                            ctx = ctx,
+                        )
+                    }
+                    logger.info { "Klagebehandling ${klageBehandling.behandlingId} utført — klage og oppgave lagret i transaksjon" }
+                }
             }
+            klageBehandling
+        }
 
-            logger.info { "Klagebehandling ${klageBehandling.behandlingId} utført — utsending, klage og oppgave lagret i transaksjon" }
-
-            if (utsendingType != null) {
-                utsendingMediator.mottaStartUtsending(
-                    StartUtsendingHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
-                        utsendingSak =
-                            UtsendingSak(
-                                id = sakId.toString(),
-                                kontekst = "Dagpenger",
-                            ),
-                        ident = oppgave.personIdent(),
-                    ),
-                )
-            }
-
+    fun ferdigstillBehandling(hendelse: KlageBehandlingFerdigstilt): KlageBehandling {
+        sjekkTilgangOgEierAvOppgave(
+            behandlingId = hendelse.behandlingId,
+            saksbehandler = hendelse.utførtAv,
+        )
+        return runBlocking {
+            val saksbehandler =
+                async(Dispatchers.IO) {
+                    oppslag.hentBehandler(ident = hendelse.utførtAv.navIdent)
+                }
+            val klageBehandling =
+                klageRepository.hentKlageBehandling(hendelse.behandlingId).also {
+                    // Domenet validerer at utfall er MEDHOLD — kaster ellers
+                    it.ferdigstillBehandling(
+                        behandlendeEnhet = saksbehandler.await().enhet.enhetNr,
+                        hendelse = hendelse,
+                    )
+                }
+            klageRepository.lagre(klageBehandling)
+            logger.info { "Klagebehandling ${klageBehandling.behandlingId} — behandling ferdigstilt (MEDHOLD), klar for revurdering" }
             klageBehandling
         }
     }
@@ -331,10 +371,12 @@ class KlageMediator(
     }
 
     fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
-        klageRepository.hentKlageBehandling(behandlingId = klageinstansVedtakHendelse.klageId).let { klageBehandling ->
-            klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
-            klageRepository.lagre(klageBehandling)
-        }
+        klageRepository
+            .hentKlageBehandling(behandlingId = klageinstansVedtakHendelse.klageId)
+            .let { klageBehandling ->
+                klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
+                klageRepository.lagre(klageBehandling)
+            }
     }
 
     private fun sjekkTilgangTilOppgave(

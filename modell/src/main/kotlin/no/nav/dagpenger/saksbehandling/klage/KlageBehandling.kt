@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
@@ -213,6 +214,20 @@ data class KlageBehandling private constructor(
         )
     }
 
+    fun ferdigstillBehandling(
+        behandlendeEnhet: String,
+        hendelse: KlageBehandlingFerdigstilt,
+    ) {
+        if (!this.kanFerdigstilles()) {
+            throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
+        }
+        this.behandlendeEnhet = behandlendeEnhet
+        tilstand.ferdigstillBehandling(
+            klageBehandling = this,
+            hendelse = hendelse,
+        )
+    }
+
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
         tilstand.oversendtKlageinstans(
             klageBehandling = this,
@@ -259,12 +274,10 @@ data class KlageBehandling private constructor(
                     )
                 }
 
-                UtfallType.MEDHOLD -> {
-                    throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
-                }
-
-                UtfallType.DELVIS_MEDHOLD -> {
-                    throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> {
+                    throw IllegalStateException(
+                        "Kan ikke ferdigstille klage med $utfall via dette endepunktet — bruk ferdigstillBehandling først",
+                    )
                 }
             }
         }
@@ -277,6 +290,21 @@ data class KlageBehandling private constructor(
                 nyTilstand = Avbrutt,
                 hendelse = hendelse,
             )
+        }
+
+        override fun ferdigstillBehandling(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageBehandlingFerdigstilt,
+        ) {
+            val utfall = requireNotNull(klageBehandling.utfall()) { "Utfall må være satt" }
+            when (utfall) {
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD ->
+                    klageBehandling.endreTilstand(nyTilstand = BehandlingUtført, hendelse = hendelse)
+
+                else -> throw IllegalStateException(
+                    "Kan ikke ferdigstille behandling med utfall $utfall — kun MEDHOLD og DELVIS_MEDHOLD er gyldig",
+                )
+            }
         }
     }
 
@@ -302,6 +330,25 @@ data class KlageBehandling private constructor(
     object BehandlingUtført : KlageTilstand {
         override val type: Type = Type.BEHANDLING_UTFORT
 
+        override fun behandlingUtført(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageBehandlingUtført,
+        ) {
+            val utfall =
+                requireNotNull(klageBehandling.utfall()) {
+                    "Utfall må være satt"
+                }
+            when (utfall) {
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> {
+                    klageBehandling.endreTilstand(nyTilstand = Ferdigstilt, hendelse = hendelse)
+                }
+
+                else -> throw IllegalStateException(
+                    "Kan ikke kalle behandlingUtført i tilstand $type med utfall $utfall",
+                )
+            }
+        }
+
         override fun vedtakDistribuert(
             klageBehandling: KlageBehandling,
             hendelse: UtsendingDistribuert,
@@ -319,8 +366,9 @@ data class KlageBehandling private constructor(
                     KlageAksjon.OversendKlageinstans(klageBehandling)
                 }
 
-                UtfallType.MEDHOLD -> TODO("Not implemented yet for MEDHOLD")
-                UtfallType.DELVIS_MEDHOLD -> TODO("Not implemented yet for DELVIS_MEDHOLD")
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> throw IllegalStateException(
+                    "$utfall skal ikke gå via vedtakDistribuert — ingen utsending sendes for medhold/delvis medhold",
+                )
                 UtfallType.AVVIST -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = Ferdigstilt,
@@ -371,6 +419,11 @@ data class KlageBehandling private constructor(
             klageBehandling: KlageBehandling,
             hendelse: KlageBehandlingUtført,
         ): Unit = throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
+
+        fun ferdigstillBehandling(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageBehandlingFerdigstilt,
+        ): Unit = throw IllegalStateException("Kan ikke ferdigstille behandling i tilstand $type")
 
         fun avbryt(
             klageBehandling: KlageBehandling,
