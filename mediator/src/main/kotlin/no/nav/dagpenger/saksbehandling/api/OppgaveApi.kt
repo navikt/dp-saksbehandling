@@ -482,6 +482,7 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbeh
                 UtsettOppgaveAarsakDTO.AVVENT_PERMITTERINGSÅRSAK -> PåVent.AVVENT_PERMITTERINGSÅRSAK
                 UtsettOppgaveAarsakDTO.AVVENT_RAPPORTERINGSFRIST -> PåVent.AVVENT_RAPPORTERINGSFRIST
                 UtsettOppgaveAarsakDTO.AVVENT_SVAR_PÅ_FORESPØRSEL -> PåVent.AVVENT_SVAR_PÅ_FORESPØRSEL
+                UtsettOppgaveAarsakDTO.MANGLENDE_FUNKSJONALITET -> PåVent.MANGLENDE_FUNKSJONALITET
                 UtsettOppgaveAarsakDTO.ANNET -> PåVent.AVVENT_ANNET
             },
     )

@@ -337,6 +337,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "MANGLENDE_FUNKSJONALITET",
                           "ANNET"
                         ],
                         "avbrytAarsaker": [
@@ -675,6 +676,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "MANGLENDE_FUNKSJONALITET",
                           "ANNET"
                         ],
                         "avbrytAarsaker": [
@@ -845,6 +847,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "MANGLENDE_FUNKSJONALITET",
                           "ANNET"
                         ],
                         "avbrytAarsaker": [

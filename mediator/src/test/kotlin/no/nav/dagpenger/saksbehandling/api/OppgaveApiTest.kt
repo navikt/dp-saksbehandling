@@ -245,6 +245,7 @@ class OppgaveApiTest {
                                         "AVVENT_PERMITTERINGSÅRSAK",
                                         "AVVENT_RAPPORTERINGSFRIST",
                                         "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                                        "MANGLENDE_FUNKSJONALITET",
                                         "ANNET"
                                     ],
                                     "avbrytAarsaker": [
@@ -1264,7 +1265,7 @@ class OppgaveApiTest {
                         "ident": "${TestHelper.saksbehandler.navIdent}"
                       },
                       "lovligeEndringer" : {
-                          "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "ANNET" ],
+                          "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "MANGLENDE_FUNKSJONALITET", "ANNET" ],
                           "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "INGEN_BEHANDLING", "ANNET" ],
                           "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "INHABILITET", "FRAVÆR", "ANNET" ]
                       },
