@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_EKSPORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
@@ -419,6 +420,51 @@ class EmneknaggBuilderTest {
             setOf(
                 INNVILGELSE.visningsnavn,
                 Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `emneknagger når eksport skal vurderes`() {
+        val behandlingsresultat =
+            lagBehandlingsresultat(
+                behandletHendelseType = "Søknad",
+                harRettighet = true,
+                ForenkletOpplysning(
+                    id = OpplysningTyper.SKAL_EKSPORT_VURDERES.opplysningTypeId,
+                    verdi = true,
+                ),
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
+                    verdi = true,
+                ),
+            )
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
+            setOf(
+                INNVILGELSE.visningsnavn,
+                RETTIGHET_ORDINÆR.visningsnavn,
+                Regelknagg.RETTIGHET_EKSPORT.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `eksport-emneknagg settes ikke når skalEksportVurderes er false`() {
+        val behandlingsresultat =
+            lagBehandlingsresultat(
+                behandletHendelseType = "Søknad",
+                harRettighet = true,
+                ForenkletOpplysning(
+                    id = OpplysningTyper.SKAL_EKSPORT_VURDERES.opplysningTypeId,
+                    verdi = false,
+                ),
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
+                    verdi = true,
+                ),
+            )
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
+            setOf(
+                INNVILGELSE.visningsnavn,
+                RETTIGHET_ORDINÆR.visningsnavn,
             )
     }
 
