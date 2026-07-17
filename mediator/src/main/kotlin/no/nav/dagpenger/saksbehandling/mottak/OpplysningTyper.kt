@@ -56,4 +56,7 @@ enum class OpplysningTyper(
     KRAV_TIL_UTDANNING_ELLER_OPPLÆRING(
         opplysningTypeId = UUID.fromString("0194881f-9445-734c-a7ee-045edf29b52d"),
     ),
+    SKAL_EKSPORT_VURDERES(
+        opplysningTypeId = UUID.fromString("019f608d-f9c5-7ccc-a6f3-c53531d1f00c"),
+    ),
 }
