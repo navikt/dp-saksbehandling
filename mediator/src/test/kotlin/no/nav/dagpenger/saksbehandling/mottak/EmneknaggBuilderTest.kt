@@ -19,10 +19,10 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_EKSPORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Søknadsavklaring.EKSPORT
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import tools.jackson.module.kotlin.jacksonObjectMapper
@@ -442,7 +442,7 @@ class EmneknaggBuilderTest {
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_ORDINÆR.visningsnavn,
-                Regelknagg.RETTIGHET_EKSPORT.visningsnavn,
+                EKSPORT.visningsnavn,
             )
     }
 
