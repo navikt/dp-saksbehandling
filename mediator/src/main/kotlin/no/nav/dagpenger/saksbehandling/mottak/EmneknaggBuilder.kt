@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.EKSPORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
@@ -21,7 +22,6 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Søknadsavklaring.EKSPORT
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_KONKURS
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
@@ -42,6 +42,7 @@ class EmneknaggBuilder(
             addAll(rettighetEmneknagger())
             addAll(søknadEmneknagger())
             addAll(behandletHendelseEmneknagger())
+            addAll(eksportEmneknagger())
         }
 
     private fun rettighetEmneknagger(): Set<String> =
@@ -49,6 +50,13 @@ class EmneknaggBuilder(
             .filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
             .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
             .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
+            .toSet()
+
+    private fun eksportEmneknagger(): Set<String> =
+        opplysningerNode
+            .filter { it["opplysningTypeId"].asUUID() in eksportOpplysningIder }
+            .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
+            .mapNotNull { eksportTilEmneknagg[it["opplysningTypeId"].asUUID()] }
             .toSet()
 
     private fun søknadEmneknagger(): Set<String> {
@@ -118,10 +126,16 @@ class EmneknaggBuilder(
             RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI.opplysningTypeId to
                 RETTIGHET_PERMITTERT_FISK.visningsnavn,
             RETTIGHET_DAGPENGER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.visningsnavn,
-            SKAL_EKSPORT_VURDERES.opplysningTypeId to EKSPORT.visningsnavn,
         )
 
     private val rettighetOpplysningIder = rettighetTilEmneknagg.keys
+
+    private val eksportTilEmneknagg =
+        mapOf(
+            SKAL_EKSPORT_VURDERES.opplysningTypeId to EKSPORT.visningsnavn,
+        )
+
+    private val eksportOpplysningIder = eksportTilEmneknagg.keys
 
     private val avslåtteVilkårTilEmneknagger =
         mapOf(
