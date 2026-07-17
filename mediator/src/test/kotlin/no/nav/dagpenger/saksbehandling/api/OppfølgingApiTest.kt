@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RedigerOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAksjon
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
@@ -341,6 +342,71 @@ class OppfølgingApiTest {
                   "lovligeSaker": []
                 }
                 """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `Skal kunne redigere tittel, beskrivelse og frist`() {
+        val slot = slot<RedigerOppfølgingHendelse>()
+        val mediator =
+            mockk<OppfølgingMediator>().also {
+                every { it.rediger(capture(slot)) } returns Unit
+            }
+        withOppfølgingApi(mediator) {
+            client
+                .put("oppfolging/$oppfølgingId") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "tittel": "Ny tittel",
+                            "beskrivelse": "Ny beskrivelse",
+                            "frist": "2026-01-15"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.oppfølgingId shouldBe oppfølgingId
+                        it.tittel shouldBe "Ny tittel"
+                        it.beskrivelse shouldBe "Ny beskrivelse"
+                        it.frist shouldBe LocalDate.of(2026, 1, 15)
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne redigere uten beskrivelse og frist`() {
+        val slot = slot<RedigerOppfølgingHendelse>()
+        val mediator =
+            mockk<OppfølgingMediator>().also {
+                every { it.rediger(capture(slot)) } returns Unit
+            }
+        withOppfølgingApi(mediator) {
+            client
+                .put("oppfolging/$oppfølgingId") {
+                    autentisert()
+                    this.header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "tittel": "Bare tittel"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                    slot.captured.let {
+                        it.tittel shouldBe "Bare tittel"
+                        it.beskrivelse shouldBe ""
+                        it.frist shouldBe null
+                    }
+                }
         }
     }
 

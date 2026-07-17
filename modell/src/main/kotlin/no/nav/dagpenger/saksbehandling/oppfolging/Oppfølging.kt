@@ -9,16 +9,25 @@ import java.util.UUID
 class Oppfølging private constructor(
     val id: UUID = UUIDv7.ny(),
     val person: Person,
-    val tittel: String,
-    val beskrivelse: String = "",
+    tittel: String,
+    beskrivelse: String = "",
     val strukturertData: Map<String, Any> = emptyMap(),
-    val frist: LocalDate? = null,
+    frist: LocalDate? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     private var vurdering: String? = null,
     private var tilstand: Tilstand = Tilstand.BEHANDLES,
     private var resultat: Resultat = Resultat.Ingen,
     private var valgtSakId: UUID? = null,
 ) {
+    var tittel: String = tittel
+        private set
+
+    var beskrivelse: String = beskrivelse
+        private set
+
+    var frist: LocalDate? = frist
+        private set
+
     companion object {
         fun opprett(
             id: UUID = UUIDv7.ny(),
@@ -95,6 +104,19 @@ class Oppfølging private constructor(
         data class Oppfølging(
             val behandlingId: UUID,
         ) : Resultat()
+    }
+
+    fun rediger(
+        tittel: String,
+        beskrivelse: String,
+        frist: LocalDate?,
+    ) {
+        if (tilstand != Tilstand.BEHANDLES) {
+            throw UlovligTilstandsendringException("Kan ikke redigere oppfølging fra tilstand $tilstand")
+        }
+        this.tittel = tittel
+        this.beskrivelse = beskrivelse
+        this.frist = frist
     }
 
     fun startFerdigstilling(

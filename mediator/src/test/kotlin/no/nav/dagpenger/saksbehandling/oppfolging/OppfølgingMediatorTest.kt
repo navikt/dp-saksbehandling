@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RedigerOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
@@ -107,6 +108,67 @@ class OppfølgingMediatorTest {
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgaver.first().oppgaveId, saksbehandler)
             oppdatertOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+        }
+    }
+
+    @Test
+    fun `rediger oppdaterer tittel, beskrivelse og frist og persisterer i database`() {
+        DBTestHelper.withPerson { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
+                    meldekortregisterKlient = mockk(relaxed = true),
+                )
+            val mediator =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = mockk(),
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val resultat =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "MeldekortKorrigering",
+                        tittel = "Original tittel",
+                        beskrivelse = "Original beskrivelse",
+                    ),
+                )
+
+            val nyFrist = LocalDate.now().plusDays(14)
+            mediator.rediger(
+                RedigerOppfølgingHendelse(
+                    oppfølgingId = resultat.oppfølgingId,
+                    tittel = "Ny tittel",
+                    beskrivelse = "Ny beskrivelse",
+                    frist = nyFrist,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            // Hent fra en ny repository-instans for å bekrefte at endringen faktisk er persistert
+            val rehentetOppfølging = PostgresOppfølgingRepository(DatabaseSession(ds)).hent(resultat.oppfølgingId)
+            rehentetOppfølging.tittel shouldBe "Ny tittel"
+            rehentetOppfølging.beskrivelse shouldBe "Ny beskrivelse"
+            rehentetOppfølging.frist shouldBe nyFrist
         }
     }
 

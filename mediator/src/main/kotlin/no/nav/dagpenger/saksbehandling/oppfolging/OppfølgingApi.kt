@@ -17,11 +17,13 @@ import no.nav.dagpenger.saksbehandling.api.models.FerdigstillOppfolgingRequestDT
 import no.nav.dagpenger.saksbehandling.api.models.OppfolgingDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettOppfolgingRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettOppfolgingResponseDTO
+import no.nav.dagpenger.saksbehandling.api.models.RedigerOppfolgingRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnBehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.TynnSakDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RedigerOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
 
@@ -69,6 +71,23 @@ internal fun Route.oppfølgingApi(
                         HttpStatusCode.OK,
                         oppfølging.tilDTO(lovligeSaker),
                     )
+                }
+
+                put {
+                    val behandlingId = call.finnUUID("behandlingId")
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val request = call.receive<RedigerOppfolgingRequestDTO>()
+                    oppfølgingMediator.rediger(
+                        hendelse =
+                            RedigerOppfølgingHendelse(
+                                oppfølgingId = behandlingId,
+                                tittel = request.tittel,
+                                beskrivelse = request.beskrivelse ?: "",
+                                frist = request.frist,
+                                utførtAv = saksbehandler,
+                            ),
+                    )
+                    call.respond(HttpStatusCode.NoContent)
                 }
 
                 route("ferdigstill") {

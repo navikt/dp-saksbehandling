@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.RedigerOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -166,6 +167,17 @@ class OppfølgingMediator(
             oppgaveMediator.ferdigstillOppgave(ferdigstiltHendelse, ctx)
             oppfølgingRepository.lagre(oppfølging, ctx)
         }
+    }
+
+    fun rediger(hendelse: RedigerOppfølgingHendelse) {
+        val oppfølging = hent(id = hendelse.oppfølgingId, saksbehandler = hendelse.utførtAv)
+        oppfølging.rediger(
+            tittel = hendelse.tittel,
+            beskrivelse = hendelse.beskrivelse,
+            frist = hendelse.frist,
+        )
+        oppfølgingRepository.lagre(oppfølging)
+        logger.info { "Redigerte oppfølging ${oppfølging.id}" }
     }
 
     fun hent(

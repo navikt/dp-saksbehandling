@@ -82,6 +82,44 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
       security:
         - azureAd: [ ]
+    put:
+      summary: Rediger tittel, beskrivelse og frist for en oppfølging under behandling
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedigerOppfolgingRequest'
+      responses:
+        '204':
+          description: Oppfølging oppdatert
+        '404':
+          description: Oppfølging ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppfølgingen kan ikke redigeres i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+      security:
+        - azureAd: [ ]
   /oppfolging/{behandlingId}/ferdigstill:
     put:
       summary: Ferdigstill oppfølging
@@ -2778,6 +2816,23 @@ components:
         - personIdent
         - tittel
         - aarsak
+
+    RedigerOppfolgingRequest:
+      type: object
+      properties:
+        tittel:
+          type: string
+          description: Kort tittel for oppgaven
+          maxLength: 200
+        beskrivelse:
+          type: string
+          description: Utfyllende beskrivelse av oppgaven
+        frist:
+          type: string
+          format: date
+          description: Frist for oppgaven (YYYY-MM-DD). Oppgaven settes på vent til denne dato.
+      required:
+        - tittel
 
     OpprettOppfolgingResponse:
       type: object

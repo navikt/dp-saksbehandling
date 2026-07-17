@@ -198,4 +198,66 @@ class OppfølgingTest {
         oppgave.valgtSakId() shouldBe sakId
         (oppgave.resultat() as Oppfølging.Resultat.RettTilDagpenger).behandlingId shouldBe behandlingId
     }
+
+    @Test
+    fun `Skal redigere tittel, beskrivelse og frist når tilstand er BEHANDLES`() {
+        val oppgave =
+            Oppfølging.opprett(
+                person = testPerson,
+                tittel = "Original tittel",
+                beskrivelse = "Original beskrivelse",
+            )
+        val nyFrist =
+            java.time.LocalDate
+                .now()
+                .plusDays(7)
+
+        oppgave.rediger(
+            tittel = "Ny tittel",
+            beskrivelse = "Ny beskrivelse",
+            frist = nyFrist,
+        )
+
+        oppgave.tittel shouldBe "Ny tittel"
+        oppgave.beskrivelse shouldBe "Ny beskrivelse"
+        oppgave.frist shouldBe nyFrist
+    }
+
+    @Test
+    fun `Skal kunne blanke ut beskrivelse og frist ved redigering`() {
+        val oppgave =
+            Oppfølging.opprett(
+                person = testPerson,
+                tittel = "Tittel",
+                beskrivelse = "Beskrivelse",
+            )
+
+        oppgave.rediger(
+            tittel = "Tittel",
+            beskrivelse = "",
+            frist = null,
+        )
+
+        oppgave.beskrivelse shouldBe ""
+        oppgave.frist shouldBe null
+    }
+
+    @Test
+    fun `Skal feile ved redigering når tilstand ikke er BEHANDLES`() {
+        val oppgave =
+            Oppfølging.opprett(
+                person = testPerson,
+                tittel = "Test",
+            )
+        oppgave.startFerdigstilling(vurdering = "Vurdering", valgtSakId = null)
+        oppgave.ferdigstill(aksjonType = OppfølgingAksjon.Type.AVSLUTT)
+
+        shouldThrow<Oppfølging.UlovligTilstandsendringException> {
+            oppgave.rediger(
+                tittel = "Ny tittel",
+                beskrivelse = "Ny beskrivelse",
+                frist = null,
+            )
+        }
+    }
 }

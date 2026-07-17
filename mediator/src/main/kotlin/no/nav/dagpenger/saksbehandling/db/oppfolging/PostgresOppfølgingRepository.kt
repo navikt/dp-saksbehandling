@@ -55,7 +55,10 @@ class PostgresOppfølgingRepository(
                         )
                         ON CONFLICT (id) 
                         DO UPDATE 
-                        SET tilstand = :tilstand,
+                        SET tittel = :tittel,
+                            beskrivelse = :beskrivelse,
+                            frist = :frist,
+                            tilstand = :tilstand,
                             vurdering = :vurdering,
                             resultat_type = :resultat_type,
                             resultat_behandling_id = :resultat_behandling_id,
