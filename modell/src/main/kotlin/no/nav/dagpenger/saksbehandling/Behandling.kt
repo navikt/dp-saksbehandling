@@ -41,6 +41,8 @@ sealed class HendelseBehandler(
 
         data object Revurdering : DpBehandling("REVURDERING", "Omgjøring")
 
+        data object RevurderingEtterKlage : DpBehandling("REVURDERING_ETTER_KLAGE", "KlageFørsteinstans")
+
         data object Ferietillegg : DpBehandling("FERIETILLEGG", "Ferietillegg")
 
         data object Arbeidssøkerperiode : DpBehandling("ARBEIDSSØKERPERIODE", "Arbeidssøkerperiode")
@@ -49,8 +51,16 @@ sealed class HendelseBehandler(
 
         companion object {
             private val behandletHendelseTyper by lazy {
-                listOf(Søknad, Meldekort, Manuell, Revurdering, Ferietillegg, Arbeidssøkerperiode, Samordning)
-                    .associateBy { it.behandletHendelseType }
+                listOf(
+                    Søknad,
+                    Meldekort,
+                    Manuell,
+                    Revurdering,
+                    RevurderingEtterKlage,
+                    Ferietillegg,
+                    Arbeidssøkerperiode,
+                    Samordning,
+                ).associateBy { it.behandletHendelseType }
             }
 
             fun fraBehandletHendelseType(type: String): DpBehandling =
@@ -76,6 +86,7 @@ sealed class HendelseBehandler(
                 DpBehandling.Meldekort,
                 DpBehandling.Manuell,
                 DpBehandling.Revurdering,
+                DpBehandling.RevurderingEtterKlage,
                 DpBehandling.Ferietillegg,
                 DpBehandling.Arbeidssøkerperiode,
                 DpBehandling.Samordning,

@@ -221,6 +221,7 @@ private fun HendelseBehandler.tilMeldingOmVedtakBehandlingstype(): String =
         is HendelseBehandler.DpBehandling.Manuell -> "MANUELL"
         is HendelseBehandler.Intern.Innsending -> "INNSENDING"
         is HendelseBehandler.DpBehandling.Revurdering -> "REVURDERING"
+        is HendelseBehandler.DpBehandling.RevurderingEtterKlage -> "REVURDERING_ETTER_KLAGE"
         is HendelseBehandler.Intern.Oppfølging -> "OPPFØLGING"
         is HendelseBehandler.DpBehandling.Ferietillegg -> "FERIETILLEGG"
         is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> "ARBEIDSSØKERPERIODE"

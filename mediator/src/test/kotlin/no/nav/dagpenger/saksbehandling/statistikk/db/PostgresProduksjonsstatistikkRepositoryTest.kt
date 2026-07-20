@@ -209,13 +209,14 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
-            utløstAvAlle.size shouldBe 10
+            utløstAvAlle.size shouldBe 11
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Søknad }.antall shouldBe 4
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 2
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Innsending }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Meldekort }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Manuell }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Revurdering }.antall shouldBe 0
+            utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.RevurderingEtterKlage }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Oppfølging }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }.antall shouldBe 0
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Arbeidssøkerperiode }.antall shouldBe 0
@@ -230,13 +231,14 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ),
                 )
 
-            utløstAvFilterFerdigBehandlet.size shouldBe 10
+            utløstAvFilterFerdigBehandlet.size shouldBe 11
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Søknad }.antall shouldBe 2
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 1
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Innsending }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Meldekort }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Manuell }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Revurdering }.antall shouldBe 0
+            utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.RevurderingEtterKlage }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Oppfølging }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }.antall shouldBe 0
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Arbeidssøkerperiode }.antall shouldBe 0

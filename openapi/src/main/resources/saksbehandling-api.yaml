@@ -1891,6 +1891,7 @@ components:
         - SØKNAD
         - MANUELL
         - REVURDERING
+        - REVURDERING_ETTER_KLAGE
         - KLAGE
         - INNSENDING
         - TILBAKEKREVING

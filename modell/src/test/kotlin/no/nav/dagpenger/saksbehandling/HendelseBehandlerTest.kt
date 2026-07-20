@@ -17,6 +17,7 @@ class HendelseBehandlerTest {
                 Arguments.of("MELDEKORT", HendelseBehandler.DpBehandling.Meldekort),
                 Arguments.of("MANUELL", HendelseBehandler.DpBehandling.Manuell),
                 Arguments.of("REVURDERING", HendelseBehandler.DpBehandling.Revurdering),
+                Arguments.of("REVURDERING_ETTER_KLAGE", HendelseBehandler.DpBehandling.RevurderingEtterKlage),
                 Arguments.of("FERIETILLEGG", HendelseBehandler.DpBehandling.Ferietillegg),
                 Arguments.of("ARBEIDSSØKERPERIODE", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
                 Arguments.of("SAMORDNING", HendelseBehandler.DpBehandling.Samordning),
@@ -32,6 +33,7 @@ class HendelseBehandlerTest {
                 Arguments.of("Meldekort", HendelseBehandler.DpBehandling.Meldekort),
                 Arguments.of("Manuell", HendelseBehandler.DpBehandling.Manuell),
                 Arguments.of("Omgjøring", HendelseBehandler.DpBehandling.Revurdering),
+                Arguments.of("KlageFørsteinstans", HendelseBehandler.DpBehandling.RevurderingEtterKlage),
                 Arguments.of("Ferietillegg", HendelseBehandler.DpBehandling.Ferietillegg),
                 Arguments.of("Arbeidssøkerperiode", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
                 Arguments.of("Samordning", HendelseBehandler.DpBehandling.Samordning),
@@ -72,13 +74,14 @@ class HendelseBehandlerTest {
 
     @Test
     fun `entries inneholder alle kjente typer`() {
-        HendelseBehandler.entries.size shouldBe 10
+        HendelseBehandler.entries.size shouldBe 11
         HendelseBehandler.entries.map { it.name }.toSet() shouldBe
             setOf(
                 "SØKNAD",
                 "MELDEKORT",
                 "MANUELL",
                 "REVURDERING",
+                "REVURDERING_ETTER_KLAGE",
                 "FERIETILLEGG",
                 "ARBEIDSSØKERPERIODE",
                 "SAMORDNING",
@@ -99,6 +102,7 @@ class HendelseBehandlerTest {
     fun `behandletHendelseType returnerer Kafka-verdi`() {
         HendelseBehandler.DpBehandling.Søknad.behandletHendelseType shouldBe "Søknad"
         HendelseBehandler.DpBehandling.Revurdering.behandletHendelseType shouldBe "Omgjøring"
+        HendelseBehandler.DpBehandling.RevurderingEtterKlage.behandletHendelseType shouldBe "KlageFørsteinstans"
     }
 
     @Test
