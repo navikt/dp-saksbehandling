@@ -479,7 +479,11 @@ class PostgresOppgaveRepository(
                 }
 
             val saksbehandlerClause =
-                søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident " } ?: ""
+                when {
+                    søkeFilter.utenSaksbehandler -> " AND oppg.saksbehandler_ident IS NULL "
+                    søkeFilter.saksbehandlerIdent != null -> "AND oppg.saksbehandler_ident = :saksbehandler_ident "
+                    else -> ""
+                }
 
             val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident " } ?: ""
 
@@ -1008,6 +1012,9 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
 
         Søkefilter.Sorteringsfelt.SAKSBEHANDLER ->
             """ ORDER BY oppg.saksbehandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+
+        Søkefilter.Sorteringsfelt.UTSATT_TIL ->
+            """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
     }
 
 class DataNotFoundException(
