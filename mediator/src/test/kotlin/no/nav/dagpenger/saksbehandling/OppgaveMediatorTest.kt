@@ -1930,6 +1930,7 @@ OppgaveMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),

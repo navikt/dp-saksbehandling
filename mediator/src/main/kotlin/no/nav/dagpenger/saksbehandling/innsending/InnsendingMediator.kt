@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.innsending
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
@@ -14,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -31,6 +33,7 @@ class InnsendingMediator(
     private val sakMediator: SakMediator,
     private val oppgaveMediator: OppgaveMediator,
     private val personMediator: PersonMediator,
+    private val klageMediator: KlageMediator,
     private val innsendingRepository: InnsendingRepository,
     private val innsendingBehandler: InnsendingBehandler,
     private val transaksjoner: Transaksjoner,
@@ -40,6 +43,8 @@ class InnsendingMediator(
         if (sisteSakId != null) {
             if (hendelse.erEttersendingMedSøknadId()) {
                 taImotEttersendingTilSøknad(hendelse)
+            } else if (hendelse.erKlage()) {
+                taImotKlage(hendelse, sisteSakId)
             } else {
                 taImotInnsendingPåSisteSak(hendelse, sisteSakId)
             }
@@ -82,6 +87,21 @@ class InnsendingMediator(
         } else {
             oppgaveMediator.settEmneknaggEttersending(hendelse)
         }
+    }
+
+    private fun taImotKlage(
+        hendelse: InnsendingMottattHendelse,
+        sisteSakId: UUID,
+    ) {
+        klageMediator.opprettKlage(
+            KlageMottattHendelse(
+                ident = hendelse.ident,
+                opprettet = hendelse.registrertTidspunkt,
+                journalpostId = hendelse.journalpostId,
+                sakId = sisteSakId,
+                utførtAv = hendelse.utførtAv,
+            ),
+        )
     }
 
     private fun taImotInnsendingPåSisteSak(

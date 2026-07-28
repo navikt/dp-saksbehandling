@@ -12,6 +12,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -28,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
+import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -37,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHe
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KLAGE_SKJEMAKODE
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -88,6 +91,7 @@ class InnsendingMediatorTest {
             every { it.finnEllerOpprettPerson(personMedSak.ident) } returns personMedSak
             every { it.finnEllerOpprettPerson(personUtenSak.ident) } returns personUtenSak
             every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
+            every { it.erNødbremset(testPerson.ident) } returns false
         }
 
     @Test
@@ -166,6 +170,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler =
                         mockk<InnsendingBehandler>().also {
@@ -237,6 +242,7 @@ class InnsendingMediatorTest {
                 sakMediator = sakMediator,
                 oppgaveMediator = oppgaveMediator,
                 personMediator = personMediatorMock,
+                klageMediator = mockk(),
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler =
                     mockk<InnsendingBehandler>().also {
@@ -267,6 +273,151 @@ class InnsendingMediatorTest {
                 innsending.innsendingResultat() shouldBe Innsending.InnsendingResultat.Ingen
                 innsending.valgtSakId() shouldBe sak.sakId
             }
+        }
+    }
+
+    @Test
+    fun `Skal lage oppgave og klagebehandling knyttet til siste sak vi eier`() {
+        val sak =
+            Sak(
+                sakId = sakId,
+                opprettet = DBTestHelper.opprettetNå,
+                behandlinger =
+                    mutableSetOf(
+                        Behandling(
+                            behandlingId = behandlingIdSøknad,
+                            opprettet = DBTestHelper.opprettetNå,
+                            hendelse =
+                                SøknadsbehandlingOpprettetHendelse(
+                                    søknadId = søknadId,
+                                    behandlingId = behandlingIdSøknad,
+                                    ident = testPerson.ident,
+                                    opprettet = DBTestHelper.opprettetNå,
+                                ),
+                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                        ),
+                    ),
+            )
+
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler1",
+                emptySet(),
+            )
+
+        DBTestHelper.withMigratedDb {
+            val behandling =
+                Behandling(
+                    behandlingId = behandlingIdSøknad,
+                    opprettet = DBTestHelper.opprettetNå,
+                    hendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
+                            behandlingId = behandlingIdSøknad,
+                            ident = testPerson.ident,
+                            opprettet = DBTestHelper.opprettetNå,
+                        ),
+                    utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                )
+            opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                sak = sak,
+                behandling = behandling,
+                oppgave =
+                    TestHelper.lagOppgave(
+                        person = testPerson,
+                        behandling = behandling,
+                        tilstand = Oppgave.FerdigBehandlet,
+                    ),
+            )
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediatorMock,
+                    sakRepository = PostgresSakRepository(DatabaseSession(it)),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val transaksjoner = Transaksjoner(DatabaseSession(it))
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = transaksjoner,
+                    meldekortregisterKlient = mockk(relaxed = true),
+                )
+            val innsendingRepository = PostgresInnsendingRepository(DatabaseSession(it))
+            val klageMediator =
+                KlageMediator(
+                    transaksjoner = transaksjoner,
+                    klageRepository = PostgresKlageRepository(DatabaseSession(it)),
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = mockk(relaxed = true),
+                    oppslag = mockk(relaxed = true),
+                    meldingOmVedtakKlient = mockk(relaxed = true),
+                    sakMediator = sakMediator,
+                    utboks = mockk(relaxed = true),
+                )
+            val innsendingMediator =
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    klageMediator = klageMediator,
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler =
+                        mockk<InnsendingBehandler>().also {
+                            coEvery {
+                                it.utførAksjon(any(), any())
+                            } returns
+                                InnsendingFerdigstiltHendelse(
+                                    innsendingId = UUIDv7.ny(),
+                                    aksjonType = Aksjon.Type.AVSLUTT,
+                                    opprettetBehandlingId = null,
+                                    utførtAv = saksbehandler,
+                                )
+                        },
+                    transaksjoner = transaksjoner,
+                )
+            sakMediator.merkSakenSomDpSak(
+                vedtakFattetHendelse =
+                    VedtakFattetHendelse(
+                        behandlingId = sak.behandlinger().first().behandlingId,
+                        behandletHendelseId = søknadId.toString(),
+                        behandletHendelseType = "Søknad",
+                        ident = testPerson.ident,
+                        sak =
+                            UtsendingSak(
+                                id = sakId.toString(),
+                                kontekst = "Dagpenger",
+                            ),
+                        automatiskBehandlet = false,
+                    ),
+            )
+
+            innsendingMediator.taImotInnsending(
+                InnsendingMottattHendelse(
+                    ident = testPerson.ident,
+                    journalpostId = journalpostId,
+                    registrertTidspunkt = registrertTidspunkt,
+                    søknadId = null,
+                    skjemaKode = KLAGE_SKJEMAKODE,
+                    kategori = Kategori.KLAGE,
+                ),
+            )
+            val sakHistorikk = sakMediator.hentSakHistorikk(ident = testPerson.ident)
+            sakHistorikk.finnSak { it.sakId == sak.sakId }?.let { sak ->
+                sak.behandlinger().size shouldBe 2
+                sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Klage
+            } ?: fail("Sak med id ${sak.sakId} ikke funnet")
+
+            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            val klageOppgave =
+                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                    it.behandling.utløstAv == HendelseBehandler.Intern.Klage
+                }
+            klageOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         }
     }
 
@@ -326,6 +477,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
@@ -416,6 +568,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = mockk(relaxed = true),
@@ -455,6 +608,7 @@ class InnsendingMediatorTest {
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
+                klageMediator = mockk(),
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
                 transaksjoner = mockk(relaxed = true),
@@ -501,6 +655,7 @@ class InnsendingMediatorTest {
                 sakMediator = sakMediatorMock,
                 oppgaveMediator = oppgaveMediatorMock,
                 personMediator = personMediatorMock,
+                klageMediator = mockk(),
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
                 transaksjoner = mockk(relaxed = true),
@@ -588,6 +743,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
@@ -708,6 +864,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler =
                         InnsendingBehandler(
@@ -856,6 +1013,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler =
                         InnsendingBehandler(
@@ -989,6 +1147,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
@@ -1070,6 +1229,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = oppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
@@ -1156,6 +1316,7 @@ class InnsendingMediatorTest {
                 sakMediator = sakMediator,
                 oppgaveMediator = ekteOppgaveMediator,
                 personMediator = personMediatorMock,
+                klageMediator = mockk(),
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = mockk(),
                 transaksjoner = Transaksjoner(databaseSession),
@@ -1183,6 +1344,7 @@ class InnsendingMediatorTest {
                     sakMediator = sakMediator,
                     oppgaveMediator = feilendeOppgaveMediator,
                     personMediator = personMediatorMock,
+                    klageMediator = mockk(),
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),

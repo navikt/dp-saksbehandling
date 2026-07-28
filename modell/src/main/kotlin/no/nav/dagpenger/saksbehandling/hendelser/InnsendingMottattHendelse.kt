@@ -15,7 +15,11 @@ data class InnsendingMottattHendelse(
     override val utførtAv: Behandler = Applikasjon.DpMottak,
 ) : Hendelse(utførtAv) {
     fun erEttersendingMedSøknadId() = kategori == Kategori.ETTERSENDING && søknadId != null
+
+    fun erKlage(): Boolean = skjemaKode == KLAGE_SKJEMAKODE
 }
+
+const val KLAGE_SKJEMAKODE = "NAV 90-00.08 K"
 
 enum class Kategori(
     val visningsnavn: String,

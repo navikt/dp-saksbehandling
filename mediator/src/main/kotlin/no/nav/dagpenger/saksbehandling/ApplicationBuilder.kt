@@ -231,6 +231,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         oppgaveMediator = oppgaveMediator,
                         personMediator = personMediator,
+                        klageMediator = klageMediator,
                         innsendingRepository = innsendingRepository,
                         innsendingBehandler =
                             InnsendingBehandler(
