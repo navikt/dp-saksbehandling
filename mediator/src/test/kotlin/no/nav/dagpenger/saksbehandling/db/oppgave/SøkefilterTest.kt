@@ -16,7 +16,7 @@ class SøkefilterTest {
         Parameters
             .build {
                 this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
-                this.appendAll("ekskluderEmneknagg", listOf("D-nummer", "Utdanning"))
+                this.appendAll("ekskluderEmneknagg", listOf("D-nummer", "Planlegger utdanning"))
                 this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
                 this.appendAll("rettighet", listOf("Permittert", "Permittert fisk"))
                 this["sorteringsfelt"] = "status"
@@ -44,7 +44,7 @@ class SøkefilterTest {
                         HendelseBehandler.DpBehandling.Søknad,
                         HendelseBehandler.Intern.Klage,
                     )
-                søkefilter.ekskluderEmneknagger shouldBe setOf("D-nummer", "Utdanning")
+                søkefilter.ekskluderEmneknagger shouldBe setOf("D-nummer", "Planlegger utdanning")
                 søkefilter.emneknaggGruppertPerKategori shouldBe
                     mapOf(
                         EmneknaggKategori.RETTIGHET to

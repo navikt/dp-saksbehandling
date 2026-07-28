@@ -111,7 +111,7 @@ object Emneknagg {
         GRENSEARBEIDER("Grensearbeider"),
         MULIG_SANKSJON("Mulig sanksjon"),
         BARN_OVER_16("Barn over 16"),
-        UTDANNING("Utdanning"),
+        PLANLEGGER_UTDANNING("Planlegger utdanning"),
         EØS_PENGESTØTTE("EØS-pengestøtte"),
         D_NUMMER("D-nummer"),
         ;

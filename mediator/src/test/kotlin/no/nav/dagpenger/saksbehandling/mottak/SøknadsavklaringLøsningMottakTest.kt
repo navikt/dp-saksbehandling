@@ -36,7 +36,15 @@ class SøknadsavklaringLøsningMottakTest {
         verify(exactly = 1) {
             oppgaveMediator.leggTilEmneknagger(
                 oppgaveId,
-                setOf("EØS-inntekt", "Bosatt utland", "Grensearbeider", "Mulig sanksjon", "Barn over 16", "Utdanning", "EØS-pengestøtte"),
+                setOf(
+                    "EØS-inntekt",
+                    "Bosatt utland",
+                    "Grensearbeider",
+                    "Mulig sanksjon",
+                    "Barn over 16",
+                    "Planlegger utdanning",
+                    "EØS-pengestøtte",
+                ),
             )
         }
     }
@@ -88,7 +96,7 @@ class SøknadsavklaringLøsningMottakTest {
     }
 
     @Test
-    fun `Skal legge til Utdanning emneknagg når PlanleggerUtdanning er true`() {
+    fun `Skal legge til Planlegger utdanning emneknagg når PlanleggerUtdanning er true`() {
         val oppgaveMediator =
             mockk<OppgaveMediator>().also {
                 every { it.leggTilEmneknagger(any<UUID>(), any()) } returns Unit
@@ -107,7 +115,7 @@ class SøknadsavklaringLøsningMottakTest {
         )
 
         verify(exactly = 1) {
-            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("Utdanning"))
+            oppgaveMediator.leggTilEmneknagger(oppgaveId, setOf("Planlegger utdanning"))
         }
     }
 

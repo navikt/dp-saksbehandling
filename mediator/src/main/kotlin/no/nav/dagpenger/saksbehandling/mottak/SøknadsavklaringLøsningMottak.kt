@@ -71,7 +71,7 @@ internal class SøknadsavklaringLøsningMottak(
                 emneknagger.add(Emneknagg.Søknadsavklaring.BARN_OVER_16.visningsnavn)
             }
             if (løsning["PlanleggerUtdanning"]?.get("verdi")?.asBoolean() == true) {
-                emneknagger.add(Emneknagg.Søknadsavklaring.UTDANNING.visningsnavn)
+                emneknagger.add(Emneknagg.Søknadsavklaring.PLANLEGGER_UTDANNING.visningsnavn)
             }
             if (løsning["EØSPengestøtte"]?.get("verdi")?.asBoolean() == true) {
                 emneknagger.add(Emneknagg.Søknadsavklaring.EØS_PENGESTØTTE.visningsnavn)
