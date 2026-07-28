@@ -1775,6 +1775,17 @@ class PostgresOppgaveRepositoryTest {
                             ),
                     ),
                 ).oppgaver.size shouldBe 1
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        utenSaksbehandler = true,
+                    ),
+                ).oppgaver.size shouldBe 1
         }
     }
 
@@ -2045,6 +2056,45 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver[2] shouldBe oppgaveKlarTilBehandling
                     it.oppgaver[3] shouldBe oppgavePåVent
                     it.oppgaver[4] shouldBe oppgaveUnderBehandling
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne sortere oppgaver på utsattTil`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+
+            val oppgaveOmToDager =
+                this.leggTilOppgave(opprettet = opprettetNå, tilstand = Oppgave.UnderBehandling).let {
+                    repo.lagre(it.copy(tilstand = Oppgave.PåVent, utsattTil = LocalDate.now().plusDays(2)))
+                    repo.hentOppgave(it.oppgaveId)
+                }
+            val oppgaveOmEnDag =
+                this.leggTilOppgave(opprettet = opprettetNå, tilstand = Oppgave.UnderBehandling).let {
+                    repo.lagre(it.copy(tilstand = Oppgave.PåVent, utsattTil = LocalDate.now().plusDays(1)))
+                    repo.hentOppgave(it.oppgaveId)
+                }
+            val oppgaveUtenUtsattTil =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    tilstand = Oppgave.KlarTilBehandling,
+                )
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sorteringsfelt = Søkefilter.Sorteringsfelt.UTSATT_TIL,
+                        sortering = Søkefilter.Sortering.ASC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 3
+                    it.oppgaver[0] shouldBe oppgaveOmEnDag
+                    it.oppgaver[1] shouldBe oppgaveOmToDager
+                    it.oppgaver[2] shouldBe oppgaveUtenUtsattTil
                 }
         }
     }
