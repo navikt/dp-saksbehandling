@@ -35,14 +35,14 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.TilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
@@ -148,9 +148,9 @@ internal class OppgaveDTOMapper(
             person = lagPersonDTO(oppgave.person, person),
             tidspunktOpprettet = oppgave.opprettet,
             behandlingType = oppgave.tilBehandlingTypeDTO(),
-            utlostAv = oppgave.tilUtlostAvDTO(),
+            utlostAv = oppgave.tilUtlostAvTypeDTO(),
             emneknagger = oppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
-            tilstand = oppgave.tilstand().tilTilstandDTO(),
+            tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
             utsattTilDato = oppgave.utsattTil(),
             saksbehandler = sisteSaksbehandlerDTO,
@@ -262,7 +262,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         personIdent = this.personIdent(),
         tidspunktOpprettet = this.opprettet,
         behandlingType = this.tilBehandlingTypeDTO(),
-        utlostAv = this.tilUtlostAvDTO(),
+        utlostAv = this.tilUtlostAvTypeDTO(),
         emneknagger = this.emneknagger.tilOppgaveEmneknaggerDTOListe(),
         skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
@@ -272,7 +272,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
-        tilstand = this.tilstand().tilTilstandDTO(),
+        tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         lovligeEndringer =
             LovligeEndringerDTO(
                 paaVentAarsaker = this.lovligePåVentÅrsaker(),
@@ -293,26 +293,26 @@ internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktRe
         totaltAntallOppgaver = this.totaltAntallOppgaver,
     )
 
-internal fun Oppgave.Tilstand.tilTilstandDTO(): TilstandDTO =
+internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO =
     when (this) {
         is Oppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        is Oppgave.KlarTilBehandling -> TilstandDTO.KLAR_TIL_BEHANDLING
-        is Oppgave.UnderBehandling -> TilstandDTO.UNDER_BEHANDLING
-        is Oppgave.FerdigBehandlet -> TilstandDTO.FERDIG_BEHANDLET
-        is Oppgave.PåVent -> TilstandDTO.PAA_VENT
-        is Oppgave.KlarTilKontroll -> TilstandDTO.KLAR_TIL_KONTROLL
-        is Oppgave.UnderKontroll -> TilstandDTO.UNDER_KONTROLL
-        is Oppgave.AvventerLåsAvBehandling -> TilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
-        is Oppgave.AvventerOpplåsingAvBehandling -> TilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
-        is Oppgave.Avbrutt -> TilstandDTO.AVBRUTT
-        is Oppgave.AvbruttMaskinelt -> TilstandDTO.AVBRUTT_MASKINELT
+        is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        is Oppgave.PåVent -> OppgaveTilstandDTO.PAA_VENT
+        is Oppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
+        is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
+        is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
+        is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
+        is Oppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
+        is Oppgave.AvbruttMaskinelt -> OppgaveTilstandDTO.AVBRUTT_MASKINELT
     }
 
 internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
     TildeltOppgaveDTO(
-        nyTilstand = this.tilstand().tilTilstandDTO(),
+        nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
         behandlingType = this.tilBehandlingTypeDTO(),
-        utlostAv = this.tilUtlostAvDTO(),
+        utlostAv = this.tilUtlostAvTypeDTO(),
     )
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
@@ -323,7 +323,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
     }
 
-internal fun Oppgave.tilUtlostAvDTO(): UtlostAvDTO = UtlostAvDTO.valueOf(this.behandling.utløstAv.name)
+internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = UtlostAvTypeDTO.valueOf(this.behandling.utløstAv.name)
 
 internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
     when (this.tilstand().type) {

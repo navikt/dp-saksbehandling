@@ -24,7 +24,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -974,9 +974,9 @@ class OppgaveDTOMapperTest {
     }
 
     @Test
-    fun `alle HendelseBehandler-navn finnes som verdi i UtlostAvDTO`() {
+    fun `alle HendelseBehandler-navn finnes som verdi i UtlostAvTypeDTO`() {
         HendelseBehandler.entries.forEach { hendelseBehandler ->
-            UtlostAvDTO.valueOf(hendelseBehandler.name)
+            UtlostAvTypeDTO.valueOf(hendelseBehandler.name)
         }
     }
 }
