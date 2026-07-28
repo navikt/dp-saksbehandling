@@ -60,8 +60,6 @@ spec:
       value: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig}}"
     - name: GRUPPE_STRENGT_FORTROLIG_UTLAND
       value: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}"
-    - name: GRUPPE_STSB_ADMIN
-      value: "{{azure.grupper.stsb_admin}}"
     - name: PDL_API_URL
       value: https://{{pdl.host}}
     - name: PDL_API_SCOPE
@@ -90,7 +88,6 @@ spec:
           - id: "{{azure.grupper.saksbehandler}}"
           - id: "{{azure.grupper.beslutter}}"
           - id: "{{azure.grupper.egne_ansatte}}"
-          - id: "{{azure.grupper.stsb_admin}}"
         extra:
           - NAVident
   accessPolicy:

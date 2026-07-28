@@ -7,7 +7,6 @@ azure:
     adressebeskyttelse_fortrolig: "2e1dc582-f762-4510-a660-88bf68fb7128"  # 0000-GA-Fortrolig_Adresse
     adressebeskyttelse_strengt_fortrolig: "a1b518e2-3947-478d-8929-e5d685c47cac"  # 0000-GA-Strengt_Fortrolig_Adresse,
     adressebeskyttelse_strengt_fortrolig_utland: "fc792042-93d8-4d5e-a501-55c45c03c576" #0000-GA-Person-EndreStrengtFortroligUtland
-    stsb_admin: "3e28466f-c53d-46da-8b44-a4abc2ad4593" # 0000-GA-Dagpenger-Saksbehandler (alle saksbehandlere har tilgang i dev)
 
 db:
   highAvailability: false
