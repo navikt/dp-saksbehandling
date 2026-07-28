@@ -419,7 +419,7 @@ internal class ApplicationBuilder(
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
         statistikkJob.cancel()
-//        oppgaveTilstandAlertJob.cancel()
+        oppgaveTilstandAlertJob.cancel()
         innsendingAlarmJob.cancel()
         utboksJob.cancel()
         utboksOppryddingJob.cancel()
