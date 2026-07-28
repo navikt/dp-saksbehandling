@@ -7,6 +7,7 @@ azure:
     adressebeskyttelse_fortrolig: "e98efc34-12d1-401f-b059-f17e62834065"  # 0000-GA-Fortrolig_Adresse
     adressebeskyttelse_strengt_fortrolig: "2931da41-8b8e-42cd-99c0-04a169ddae40"  # 0000-GA-Strengt_Fortrolig_Adresse,
     adressebeskyttelse_strengt_fortrolig_utland: "d9555b40-e0ab-4c6d-ba0b-0f1b9ecc252b" #0000-GA-Person-EndreStrengtFortroligUtland
+    stsb_admin: "eb9ef9c9-c021-453b-afcb-29ee2ec51cc0" # dp-saksbehandling-admin
 db:
   highAvailability: true
   pointInTimeRecovery: true

@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.oppfølgingApi
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import no.nav.dagpenger.saksbehandling.statistikk.api.adminStatistikkApi
 import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
 
@@ -84,6 +85,7 @@ internal fun Application.installerApis(
         )
         sakApi(mediator = sakMediator)
         statistikkApi(produksjonsstatistikkRepository)
+        adminStatistikkApi()
         innsendingApi(innsendingMediator, applicationCallParser, auditlogg)
         klageApi(
             mediator = klageMediator,

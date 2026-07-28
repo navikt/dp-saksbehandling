@@ -60,6 +60,8 @@ spec:
       value: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig}}"
     - name: GRUPPE_STRENGT_FORTROLIG_UTLAND
       value: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}"
+    - name: GRUPPE_STSB_ADMIN
+      value: "{{azure.grupper.stsb_admin}}"
     - name: PDL_API_URL
       value: https://{{pdl.host}}
     - name: PDL_API_SCOPE

@@ -91,6 +91,7 @@ object Configuration {
     val strengtFortroligADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG", stringType)] }
     val strengtFortroligUtlandADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG_UTLAND", stringType)] }
     val fortroligADGruppe by lazy { properties[Key("GRUPPE_FORTROLIG", stringType)] }
+    val stsbAdminADGruppe by lazy { properties[Key("GRUPPE_STSB_ADMIN", stringType)] }
     val applicationCallParser: ApplicationCallParser by lazy {
         ApplicationCallParser(
             TilgangMapper(

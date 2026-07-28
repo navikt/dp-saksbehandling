@@ -24,6 +24,11 @@ fun Application.authConfig() {
             jwtClaims.måVæreApp()
             JWTPrincipal(jwtClaims.payload)
         }
+
+        jwt("azureAd-stsb-admin") { jwtClaims ->
+            jwtClaims.måInneholde(autorisertADGruppe = Configuration.stsbAdminADGruppe)
+            JWTPrincipal(jwtClaims.payload)
+        }
     }
 }
 
