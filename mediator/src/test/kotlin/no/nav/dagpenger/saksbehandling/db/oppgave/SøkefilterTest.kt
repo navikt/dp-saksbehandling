@@ -175,4 +175,64 @@ class SøkefilterTest {
                 søkefilter.sortering shouldBe Søkefilter.Sortering.ASC
             }
     }
+
+    @Test
+    fun `Skal kunne sette sorteringsfelt til UTSATT_TIL`() {
+        Parameters
+            .build {
+                this["sorteringsfelt"] = "utsattTil"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.UTSATT_TIL
+            }
+    }
+
+    @Test
+    fun `Skal kunne filtrere på en eksplisitt saksbehandlerIdent`() {
+        Parameters
+            .build {
+                this["saksbehandlerIdent"] = "annenIdent"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.saksbehandlerIdent shouldBe "annenIdent"
+                søkefilter.utenSaksbehandler shouldBe false
+            }
+    }
+
+    @Test
+    fun `Eksplisitt saksbehandlerIdent skal vinne over mineOppgaver`() {
+        Parameters
+            .build {
+                this["saksbehandlerIdent"] = "annenIdent"
+                this["mineOppgaver"] = "true"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.saksbehandlerIdent shouldBe "annenIdent"
+            }
+    }
+
+    @Test
+    fun `Skal kunne filtrere på oppgaver uten saksbehandler`() {
+        Parameters
+            .build {
+                this["utenSaksbehandler"] = "true"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.utenSaksbehandler shouldBe true
+                søkefilter.saksbehandlerIdent shouldBe null
+            }
+    }
+
+    @Test
+    fun `utenSaksbehandler skal vinne over mineOppgaver og eksplisitt saksbehandlerIdent`() {
+        Parameters
+            .build {
+                this["utenSaksbehandler"] = "true"
+                this["mineOppgaver"] = "true"
+                this["saksbehandlerIdent"] = "annenIdent"
+            }.let {
+                val søkefilter = Søkefilter.fra(it, "testIdent")
+                søkefilter.saksbehandlerIdent shouldBe null
+            }
+    }
 }

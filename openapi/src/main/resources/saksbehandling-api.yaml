@@ -376,6 +376,18 @@ paths:
           schema:
             type: boolean
         - in: query
+          name: saksbehandlerIdent
+          description: Filtrer på oppgaver tildelt en bestemt saksbehandler (NAV-ident)
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: utenSaksbehandler
+          description: Vis kun oppgaver som ikke er tildelt en saksbehandler
+          required: false
+          schema:
+            type: boolean
+        - in: query
           name: antallOppgaver
           required: false
           schema:
@@ -396,6 +408,7 @@ paths:
               - utlostAv
               - status
               - saksbehandler
+              - utsattTil
             default: opprettet
         - in: query
           name: sortering

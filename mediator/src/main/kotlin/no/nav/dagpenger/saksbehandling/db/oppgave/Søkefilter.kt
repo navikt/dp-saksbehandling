@@ -20,6 +20,7 @@ data class Søkefilter(
     val periode: Periode,
     val tilstander: Set<Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
+    val utenSaksbehandler: Boolean = false,
     val harDpSak: Boolean = false,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
@@ -37,6 +38,7 @@ data class Søkefilter(
         UTLOST_AV,
         STATUS,
         SAKSBEHANDLER,
+        UTSATT_TIL,
         ;
 
         companion object {
@@ -45,6 +47,7 @@ data class Søkefilter(
                     "utlostav" -> UTLOST_AV
                     "status" -> STATUS
                     "saksbehandler" -> SAKSBEHANDLER
+                    "utsatttil" -> UTSATT_TIL
                     else -> OPPRETTET
                 }
         }
@@ -87,6 +90,8 @@ data class Søkefilter(
 
             val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
+            val eksplisittSaksbehandlerIdent = builder.saksbehandlerIdent()
+            val utenSaksbehandler = builder.utenSaksbehandler()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
             val sorteringsfelt = builder.sorteringsfelt()
@@ -97,9 +102,12 @@ data class Søkefilter(
                 tilstander = tilstander,
                 saksbehandlerIdent =
                     when {
+                        utenSaksbehandler -> null
+                        eksplisittSaksbehandlerIdent != null -> eksplisittSaksbehandlerIdent
                         mineOppgaver -> saksbehandlerIdent
                         else -> null
                     },
+                utenSaksbehandler = utenSaksbehandler,
                 harDpSak = builder.harDpSak(),
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 ekskluderEmneknagger = builder.ekskluderEmneknagger(),
@@ -223,6 +231,10 @@ class FilterBuilder {
     }
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
+
+    fun saksbehandlerIdent(): String? = stringValues["saksbehandlerIdent"]?.trim()?.takeIf { it.isNotBlank() }
+
+    fun utenSaksbehandler(): Boolean = stringValues["utenSaksbehandler"]?.toBoolean() ?: false
 
     fun harDpSak(): Boolean = stringValues["harDpSak"]?.toBoolean() ?: false
 
