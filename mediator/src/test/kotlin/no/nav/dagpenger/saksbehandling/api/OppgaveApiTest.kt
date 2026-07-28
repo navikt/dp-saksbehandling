@@ -67,13 +67,13 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.TilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -206,7 +206,7 @@ class OppgaveApiTest {
                                 "emneknagger": [],
                                 "skjermesSomEgneAnsatte": ${oppgave1.person.skjermesSomEgneAnsatte},
                                 "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                                "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                                "tilstand": "${TilstandDTO.KLAR_TIL_BEHANDLING}",
                                 "lovligeEndringer": {
                                     "paaVentAarsaker": [],
                                     "avbrytAarsaker": [],
@@ -222,7 +222,7 @@ class OppgaveApiTest {
                                 "emneknagger": [],
                                 "skjermesSomEgneAnsatte": ${oppgave2.person.skjermesSomEgneAnsatte},
                                 "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                                "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                                "tilstand": "${TilstandDTO.KLAR_TIL_BEHANDLING}",
                                 "lovligeEndringer": {
                                     "paaVentAarsaker": [],
                                     "avbrytAarsaker": [],
@@ -236,7 +236,7 @@ class OppgaveApiTest {
                                 "emneknagger": [],
                                 "skjermesSomEgneAnsatte": ${oppgave3.person.skjermesSomEgneAnsatte},
                                 "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                                "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                                "tilstand": "${TilstandDTO.UNDER_BEHANDLING}",
                                 "lovligeEndringer": {
                                     "paaVentAarsaker": [
                                         "AVVENT_SVAR",
@@ -695,7 +695,7 @@ class OppgaveApiTest {
                             "skjermesSomEgneAnsatte": ${oppgave.person.skjermesSomEgneAnsatte}
                           },
                           "emneknagger": [],
-                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                          "tilstand": "${TilstandDTO.KLAR_TIL_BEHANDLING}",
                           "soknadId": "${TestHelper.søknadId}"
                         }
                         """.trimIndent()
@@ -748,7 +748,7 @@ class OppgaveApiTest {
                 response.bodyAsText() shouldEqualSpecifiedJson
                     """
                     {
-                      "nyTilstand" : "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                      "nyTilstand" : "${TilstandDTO.UNDER_BEHANDLING}",
                       "behandlingType" : "RETT_TIL_DAGPENGER",
                       "utlostAv" : "SØKNAD"
                     }
@@ -1043,9 +1043,9 @@ class OppgaveApiTest {
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
-                        utlostAv = testOppgave.tilUtlostAvTypeDTO(),
+                        utlostAv = testOppgave.tilUtlostAvDTO(),
                         emneknagger = testOppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
-                        tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
+                        tilstand = testOppgave.tilstand().tilTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
                                 ident = TestHelper.saksbehandler.navIdent,
@@ -1129,7 +1129,7 @@ class OppgaveApiTest {
                         "skjermesSomEgneAnsatte": ${testOppgave.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
+                      "tilstand": "${TilstandDTO.UNDER_KONTROLL}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {
                         "ident": "${TestHelper.saksbehandler.navIdent}"
@@ -1190,9 +1190,9 @@ class OppgaveApiTest {
                             ),
                         tidspunktOpprettet = oppgave.opprettet,
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
-                        utlostAv = oppgave.tilUtlostAvTypeDTO(),
+                        utlostAv = oppgave.tilUtlostAvDTO(),
                         emneknagger = oppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
-                        tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
+                        tilstand = oppgave.tilstand().tilTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
                                 ident = TestHelper.saksbehandler.navIdent,
@@ -1259,7 +1259,7 @@ class OppgaveApiTest {
                         "skjermesSomEgneAnsatte": ${oppgave.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                      "tilstand": "${TilstandDTO.UNDER_BEHANDLING}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {
                         "ident": "${TestHelper.saksbehandler.navIdent}"
@@ -1439,11 +1439,11 @@ class OppgaveApiTest {
                                         behandlerIdent = "saksbehandlerIdent",
                                         tidspunktOpprettet = opprettet,
                                         behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-                                        utlostAv = UtlostAvTypeDTO.SØKNAD,
+                                        utlostAv = UtlostAvDTO.SØKNAD,
                                         emneknagger = emptyList(),
                                         skjermesSomEgneAnsatte = false,
                                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                                        tilstand = OppgaveTilstandDTO.UNDER_BEHANDLING,
+                                        tilstand = TilstandDTO.UNDER_BEHANDLING,
                                         lovligeEndringer =
                                             LovligeEndringerDTO(
                                                 paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
@@ -1466,11 +1466,11 @@ class OppgaveApiTest {
                             behandlerIdent = "saksbehandlerIdent",
                             tidspunktOpprettet = ferietilleggOpprettet,
                             behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-                            utlostAv = UtlostAvTypeDTO.FERIETILLEGG,
+                            utlostAv = UtlostAvDTO.FERIETILLEGG,
                             emneknagger = emptyList(),
                             skjermesSomEgneAnsatte = false,
                             adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                            tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
+                            tilstand = TilstandDTO.FERDIG_BEHANDLET,
                             lovligeEndringer =
                                 LovligeEndringerDTO(
                                     paaVentAarsaker = emptyList(),
@@ -1488,11 +1488,11 @@ class OppgaveApiTest {
                             behandlerIdent = "saksbehandlerIdent",
                             tidspunktOpprettet = opprettet,
                             behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-                            utlostAv = UtlostAvTypeDTO.SØKNAD,
+                            utlostAv = UtlostAvDTO.SØKNAD,
                             emneknagger = emptyList(),
                             skjermesSomEgneAnsatte = false,
                             adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                            tilstand = OppgaveTilstandDTO.UNDER_BEHANDLING,
+                            tilstand = TilstandDTO.UNDER_BEHANDLING,
                             lovligeEndringer =
                                 LovligeEndringerDTO(
                                     paaVentAarsaker = UtsettOppgaveAarsakDTO.entries,
@@ -1517,11 +1517,11 @@ class OppgaveApiTest {
                                         behandlerIdent = "saksbehandlerIdent",
                                         tidspunktOpprettet = ferietilleggOpprettet,
                                         behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
-                                        utlostAv = UtlostAvTypeDTO.FERIETILLEGG,
+                                        utlostAv = UtlostAvDTO.FERIETILLEGG,
                                         emneknagger = emptyList(),
                                         skjermesSomEgneAnsatte = false,
                                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                                        tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
+                                        tilstand = TilstandDTO.FERDIG_BEHANDLET,
                                         lovligeEndringer =
                                             LovligeEndringerDTO(
                                                 paaVentAarsaker = emptyList(),
