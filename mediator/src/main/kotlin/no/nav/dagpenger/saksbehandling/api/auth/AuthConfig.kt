@@ -26,7 +26,7 @@ fun Application.authConfig() {
         }
 
         jwt("azureAd-stsb-admin") { jwtClaims ->
-            jwtClaims.måInneholde(autorisertADGruppe = Configuration.stsbAdminADGruppe)
+            jwtClaims.måInneholdeEnAv(autorisertADGrupper = Configuration.stsbAdminADGrupper)
             JWTPrincipal(jwtClaims.payload)
         }
     }
@@ -62,6 +62,21 @@ private fun JWTCredential.måInneholde(autorisertADGruppe: String) {
 
     if (!groups.contains(autorisertADGruppe)) {
         val errorMessage = "Credential inneholder ikke riktig gruppe. Forventet $autorisertADGruppe men var $groups"
+        logger.warn { errorMessage }
+        throw IllegalAccessException(errorMessage)
+    }
+}
+
+private fun JWTCredential.måInneholdeEnAv(autorisertADGrupper: List<String>) {
+    val groups = this.payload.claims["groups"]?.asList(String::class.java)
+    if (groups == null) {
+        val errorMessage = "Credential inneholder ikke groups claim"
+        logger.warn { errorMessage }
+        throw IllegalAccessException(errorMessage)
+    }
+
+    if (groups.none { it in autorisertADGrupper }) {
+        val errorMessage = "Credential inneholder ikke en av de autoriserte gruppene. Forventet en av $autorisertADGrupper men var $groups"
         logger.warn { errorMessage }
         throw IllegalAccessException(errorMessage)
     }

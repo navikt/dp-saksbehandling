@@ -11,16 +11,11 @@ import kotlinx.html.h1
 import kotlinx.html.head
 import kotlinx.html.p
 import kotlinx.html.title
-import no.nav.dagpenger.saksbehandling.Configuration
 
 internal fun Application.adminStatistikkApi() {
     routing {
-        if (Configuration.isDev) {
+        authenticate("azureAd-stsb-admin") {
             route("/statistikk/admin") { adminRoutes() }
-        } else {
-            authenticate("azureAd-stsb-admin") {
-                route("/statistikk/admin") { adminRoutes() }
-            }
         }
     }
 }
