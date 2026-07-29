@@ -4,8 +4,7 @@ import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import java.util.UUID
 
 interface SaksbehandlingsstatistikkRepository {
-
-    fun tidligereTilstandsendringerErOverført(): Boolean
+    fun oppgaveTilstandsendringerIkkeOverfort(): List<OppgaveITilstand>
 
     fun oppgaveTilstandsendringer(): List<OppgaveITilstand>
 

@@ -10,24 +10,21 @@ import java.util.UUID
 class PostgresSaksbehandlingsstatistikkRepository(
     private val databaseSession: DatabaseSession,
 ) : SaksbehandlingsstatistikkRepository {
-
-    override fun tidligereTilstandsendringerErOverført(): Boolean =
+    override fun oppgaveTilstandsendringerIkkeOverfort(): List<OppgaveITilstand> =
         databaseSession.session { session ->
-            val count =
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = """
-                        SELECT COUNT(*) as count
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        SELECT *
                         FROM   saksbehandling_statistikk_v1
                         WHERE  overfort_til_statistikk = FALSE;
                     """,
-                        paramMap = mapOf(),
-                    ).map { row ->
-                        row.int("count")
-                    }.asSingle,
-                )
-            count == 0
+                    paramMap = mapOf(),
+                ).map { row ->
+                    row.mapToOppgaveTilstand()
+                }.asList,
+            )
         }
 
     // Henter oppgavetilstander som skal sendes til statistikk.
