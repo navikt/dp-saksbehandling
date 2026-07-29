@@ -284,6 +284,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     førsteTilstandsendring
                 }
 
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().single() shouldBe førsteTilstandsendring
             postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(førsteTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
@@ -326,6 +327,8 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                         )
                     andreTilstandsendring
                 }
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().single() shouldBe andreTilstandsendring
             postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(andreTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
@@ -368,8 +371,11 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                         )
                     tredjeTilstandsendring
                 }
+
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().single() shouldBe tredjeTilstandsendring
             postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tredjeTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().size shouldBe 0
         }
     }
 
