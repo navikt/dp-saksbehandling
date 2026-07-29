@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
+import kotliquery.Row
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
@@ -122,32 +123,35 @@ class PostgresSaksbehandlingsstatistikkRepository(
                         RETURNING   *
                         """,
                 ).map { row ->
-                    OppgaveITilstand(
-                        oppgaveId = row.uuid("oppgave_id"),
-                        mottatt = row.localDateTime("mottatt"),
-                        sakId = row.uuid("sak_id"),
-                        behandlingId = row.uuid("behandling_id"),
-                        personIdent = row.string("person_ident"),
-                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                        beslutterIdent = row.stringOrNull("beslutter_ident"),
-                        versjon = Configuration.versjon,
-                        tilstandsendring =
-                            OppgaveITilstand.Tilstandsendring(
-                                sekvensnummer = row.long("sekvensnummer"),
-                                tilstandsendringId = row.uuid("tilstand_id"),
-                                tilstand = row.string("tilstand"),
-                                tidspunkt = row.localDateTime("tilstand_tidspunkt"),
-                            ),
-                        utløstAv = row.string("utlost_av"),
-                        behandlingResultat = row.stringOrNull("behandling_resultat"),
-                        behandlingÅrsak = row.stringOrNull("behandling_aarsak"),
-                        fagsystem = row.stringOrNull("fagsystem"),
-                        arenaSakId = row.stringOrNull("arena_sak_id"),
-                        resultatBegrunnelse = row.stringOrNull("resultat_begrunnelse"),
-                    )
+                    row.mapToOppgaveTilstand()
                 }.asList,
             )
         }
+
+    private fun Row.mapToOppgaveTilstand(): OppgaveITilstand =
+        OppgaveITilstand(
+            oppgaveId = this.uuid("oppgave_id"),
+            mottatt = this.localDateTime("mottatt"),
+            sakId = this.uuid("sak_id"),
+            behandlingId = this.uuid("behandling_id"),
+            personIdent = this.string("person_ident"),
+            saksbehandlerIdent = this.stringOrNull("saksbehandler_ident"),
+            beslutterIdent = this.stringOrNull("beslutter_ident"),
+            versjon = Configuration.versjon,
+            tilstandsendring =
+                OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = this.long("sekvensnummer"),
+                    tilstandsendringId = this.uuid("tilstand_id"),
+                    tilstand = this.string("tilstand"),
+                    tidspunkt = this.localDateTime("tilstand_tidspunkt"),
+                ),
+            utløstAv = this.string("utlost_av"),
+            behandlingResultat = this.stringOrNull("behandling_resultat"),
+            behandlingÅrsak = this.stringOrNull("behandling_aarsak"),
+            fagsystem = this.stringOrNull("fagsystem"),
+            arenaSakId = this.stringOrNull("arena_sak_id"),
+            resultatBegrunnelse = this.stringOrNull("resultat_begrunnelse"),
+        )
 
     override fun markerTilstandsendringerSomOverført(tilstandId: UUID): Int =
         databaseSession.session { session ->
