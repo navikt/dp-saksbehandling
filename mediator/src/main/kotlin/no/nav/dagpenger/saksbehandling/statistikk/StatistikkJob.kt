@@ -35,18 +35,18 @@ class StatistikkJob(
     }
 
     override suspend fun executeJob() {
-        if (saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført()) {
-            logger.info { "Starter publisering av oppgavetilstandsendringer til statistikk." }
-        } else {
-            val errMessage = "Ikke alle oppgavetilstandsendringer er publisert til statistikk. Avbryter kjøring."
-            logger.error { errMessage }
-            throw IllegalStateException(errMessage)
-        }
         runCatching {
             val oppgaveTilstandsendringer =
-                saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer().also {
-                    it.loggOppgaveTilstandsEndringer()
-                }
+                saksbehandlingsstatistikkRepository
+                    .oppgaveTilstandsendringerIkkeOverfort()
+                    .also {
+                        logger.info { "Fant ${it.size} oppgavetilstandsendringerIkkeOverfort" }
+                    }.toMutableList()
+
+            oppgaveTilstandsendringer.addAll(
+                saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer(),
+            )
+            oppgaveTilstandsendringer.loggOppgaveTilstandsEndringer()
 
             oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
                 val melding =
@@ -96,6 +96,7 @@ class StatistikkJob(
             logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
         }.onFailure {
             logger.error(it) { "Feil under kjøring av StatistikkJob: $it" }
+            // todo Sende alert til STSB.
         }
     }
 }

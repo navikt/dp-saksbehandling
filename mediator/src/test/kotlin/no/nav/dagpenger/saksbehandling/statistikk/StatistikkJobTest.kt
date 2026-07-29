@@ -6,8 +6,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.SentMessage
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -120,9 +118,34 @@ class StatistikkJobTest {
             arenaSakId = null,
             resultatBegrunnelse = "AVVENT_MELDEKORT",
         )
+
+    val oppgaveTilResending =
+        OppgaveITilstand(
+            oppgaveId = UUIDv7.ny(),
+            mottatt = mottatt,
+            sakId = UUIDv7.ny(),
+            behandlingId = UUIDv7.ny(),
+            personIdent = "12345612345",
+            saksbehandlerIdent = null,
+            beslutterIdent = null,
+            versjon = "dp:saksbehandling:1.2.3",
+            tilstandsendring =
+                OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = 4,
+                    tilstandsendringId = UUIDv7.ny(),
+                    tilstand = "PAA_VENT",
+                    tidspunkt = mottatt.minusDays(1),
+                ),
+            utløstAv = "SØKNAD",
+            behandlingResultat = null,
+            fagsystem = null,
+            behandlingÅrsak = null,
+            arenaSakId = null,
+            resultatBegrunnelse = "AVVENT_MELDEKORT",
+        )
     private val saksbehandlingsstatistikkRepository =
         mockk<SaksbehandlingsstatistikkRepository>().also {
-            every { it.tidligereTilstandsendringerErOverført() } returns true
+            every { it.oppgaveTilstandsendringerIkkeOverfort() } returns listOf(oppgaveTilResending)
             every { it.oppgaveTilstandsendringer() } returns
                 listOf(
                     søknadKlarTilBehandling,
@@ -130,6 +153,7 @@ class StatistikkJobTest {
                     innsendingFerdigBehandlet,
                     oppgavePåVent,
                 )
+            every { it.markerTilstandsendringerSomOverført(oppgaveTilResending.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(søknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId) } returns 1
@@ -150,6 +174,28 @@ class StatistikkJobTest {
             {
               "@event_name": "oppgave_til_statistikk_v7",
               "oppgave": {
+                "oppgaveId": "${oppgaveTilResending.oppgaveId}",
+                "mottatt": "${oppgaveTilResending.mottatt.format(ISO_TIMESTAMP)}",
+                "sakId": "${oppgaveTilResending.sakId}",
+                "behandlingId": "${oppgaveTilResending.behandlingId}",
+                "personIdent": "12345612345",
+                "tilstandsendring": {
+                  "sekvensnummer": ${oppgaveTilResending.tilstandsendring.sekvensnummer},
+                  "tilstandsendringId": "${oppgaveTilResending.tilstandsendring.tilstandsendringId}",
+                  "tilstand": "${oppgaveTilResending.tilstandsendring.tilstand}",
+                  "tidspunkt": "${oppgaveTilResending.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
+                },
+                "utløstAv": "SØKNAD",
+                "versjon": "dp:saksbehandling:1.2.3"
+              }
+            }
+            """.trimIndent()
+
+        testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "oppgave_til_statistikk_v7",
+              "oppgave": {
                 "oppgaveId": "${søknadKlarTilBehandling.oppgaveId}",
                 "mottatt": "${søknadKlarTilBehandling.mottatt.format(ISO_TIMESTAMP)}",
                 "sakId": "${søknadKlarTilBehandling.sakId}",
@@ -166,7 +212,7 @@ class StatistikkJobTest {
               }
             }
             """.trimIndent()
-        testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
+        testRapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
               "@event_name": "oppgave_til_statistikk_v7",
@@ -193,7 +239,7 @@ class StatistikkJobTest {
               }
             }
             """.trimIndent()
-        testRapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
+        testRapid.inspektør.message(3).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
               "@event_name": "oppgave_til_statistikk_v7",
@@ -216,7 +262,7 @@ class StatistikkJobTest {
               }
             }
             """.trimIndent()
-        testRapid.inspektør.message(3).toString() shouldEqualSpecifiedJsonIgnoringOrder
+        testRapid.inspektør.message(4).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
               "@event_name": "oppgave_til_statistikk_v7",
@@ -241,21 +287,6 @@ class StatistikkJobTest {
     }
 
     @Test
-    fun `Skal ikke publisere oppgavetilstandsendringer til statistikk hvis tidligere kjøring ikke er fullført, men kaste feil`() {
-        every { saksbehandlingsstatistikkRepository.tidligereTilstandsendringerErOverført() } returns false
-
-        runBlocking {
-            shouldThrow<IllegalStateException> {
-                StatistikkJob(
-                    rapidsConnection = testRapid,
-                    saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
-                ).executeJob()
-            }
-        }
-        testRapid.inspektør.size shouldBe 0
-    }
-
-    @Test
     fun `Skal ikke markere tilstandsendring som overført ved leveransefeil og skal stoppe videre publisering`() {
         // Feiler på melding nr 3 (innsendingFerdigBehandlet) med FailedMessage uten å kaste
         val rapidMedLeveransefeil = FeilendePåIndeksRapid(feilPåIndeks = 3, delegate = testRapid)
@@ -270,19 +301,24 @@ class StatistikkJobTest {
         // De to første ble levert og markert
         verify(exactly = 1) {
             saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
-                søknadKlarTilBehandling.tilstandsendring.tilstandsendringId,
+                oppgaveTilResending.tilstandsendring.tilstandsendringId,
             )
         }
         verify(exactly = 1) {
-            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId)
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                søknadKlarTilBehandling.tilstandsendring.tilstandsendringId,
+            )
         }
         // Den feilede og den etterfølgende skal IKKE markeres (ellers stille hull i statistikken)
         verify(exactly = 0) {
             saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
-                innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId,
+                søknadAvbrutt.tilstandsendring.tilstandsendringId,
             )
         }
         verify(exactly = 0) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId,
+            )
             saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId)
         }
     }
