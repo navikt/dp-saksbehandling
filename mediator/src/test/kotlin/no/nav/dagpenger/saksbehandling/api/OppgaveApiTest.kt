@@ -245,6 +245,7 @@ class OppgaveApiTest {
                                         "AVVENT_PERMITTERINGSÅRSAK",
                                         "AVVENT_RAPPORTERINGSFRIST",
                                         "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                                        "SØKT_FOR_TIDLIG",
                                         "MANGLENDE_FUNKSJONALITET",
                                         "ANNET"
                                     ],
@@ -259,6 +260,7 @@ class OppgaveApiTest {
                                         "MANGLER_KOMPETANSE",
                                         "INHABILITET",
                                         "FRAVÆR",
+                                        "KONTROLL_AV_KLAGE",
                                         "ANNET"
                                     ],
                                     "returnerTilSaksbehandlingAarsaker": []
@@ -1265,9 +1267,9 @@ class OppgaveApiTest {
                         "ident": "${TestHelper.saksbehandler.navIdent}"
                       },
                       "lovligeEndringer" : {
-                          "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "MANGLENDE_FUNKSJONALITET", "ANNET" ],
+                          "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "SØKT_FOR_TIDLIG", "MANGLENDE_FUNKSJONALITET", "ANNET" ],
                           "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "INGEN_BEHANDLING", "ANNET" ],
-                          "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "INHABILITET", "FRAVÆR", "ANNET" ]
+                          "leggTilbakeAarsaker": [ "MANGLER_KOMPETANSE", "INHABILITET", "FRAVÆR", "KONTROLL_AV_KLAGE", "ANNET" ]
                       },
                       "historikk": [
                         {

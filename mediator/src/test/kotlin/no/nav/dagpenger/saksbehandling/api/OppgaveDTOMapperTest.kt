@@ -174,6 +174,7 @@ class OppgaveDTOMapperTest {
                           "MANGLER_KOMPETANSE",
                           "INHABILITET",
                           "FRAVÆR",
+                          "KONTROLL_AV_KLAGE",
                           "ANNET"
                         ],
                         "returnerTilSaksbehandlingAarsaker": [
@@ -337,6 +338,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "SØKT_FOR_TIDLIG",
                           "MANGLENDE_FUNKSJONALITET",
                           "ANNET"
                         ],
@@ -351,6 +353,7 @@ class OppgaveDTOMapperTest {
                           "MANGLER_KOMPETANSE",
                           "INHABILITET",
                           "FRAVÆR",
+                          "KONTROLL_AV_KLAGE",
                           "ANNET"
                         ],
                         "returnerTilSaksbehandlingAarsaker": [],
@@ -512,6 +515,7 @@ class OppgaveDTOMapperTest {
                           "MANGLER_KOMPETANSE",
                           "INHABILITET",
                           "FRAVÆR",
+                          "KONTROLL_AV_KLAGE",
                           "ANNET"
                         ],
                         "returnerTilSaksbehandlingAarsaker": [
@@ -676,6 +680,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "SØKT_FOR_TIDLIG",
                           "MANGLENDE_FUNKSJONALITET",
                           "ANNET"
                         ],
@@ -690,6 +695,7 @@ class OppgaveDTOMapperTest {
                           "MANGLER_KOMPETANSE",
                           "INHABILITET",
                           "FRAVÆR",
+                          "KONTROLL_AV_KLAGE",
                           "ANNET"
                         ],
                         "returnerTilSaksbehandlingAarsaker": []
@@ -847,6 +853,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "SØKT_FOR_TIDLIG",
                           "MANGLENDE_FUNKSJONALITET",
                           "ANNET"
                         ],
@@ -861,6 +868,7 @@ class OppgaveDTOMapperTest {
                           "MANGLER_KOMPETANSE",
                           "INHABILITET",
                           "FRAVÆR",
+                          "KONTROLL_AV_KLAGE",
                           "ANNET"
                         ],
                         "returnerTilSaksbehandlingAarsaker": [],

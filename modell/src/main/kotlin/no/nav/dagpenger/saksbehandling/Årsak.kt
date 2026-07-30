@@ -14,6 +14,7 @@ enum class FjernOppgaveAnsvarÅrsak(
     MANGLER_KOMPETANSE("Mangler kompetanse"),
     INHABILITET("Inhabilitet"),
     FRAVÆR("Fravær"),
+    KONTROLL_AV_KLAGE("Kontroll av klage"),
     ANNET("Annet"),
 }
 

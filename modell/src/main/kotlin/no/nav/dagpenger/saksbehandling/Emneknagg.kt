@@ -55,7 +55,8 @@ object Emneknagg {
         AVVENT_PERMITTERINGSÅRSAK("Avvent permitteringsårsak"),
         AVVENT_RAPPORTERINGSFRIST("Avvent rapporteringsfrist"),
         AVVENT_SVAR_PÅ_FORESPØRSEL("Sendt forespørsel"),
-        MANGLENDE_FUNKSJONALITET("Manglende funksjonalitet"),
+        AVVENT_SØKT_FOR_TIDLIG("Søkt for tidlig"),
+        AVVENT_MANGLENDE_FUNKSJONALITET("Manglende funksjonalitet"),
         AVVENT_ANNET("Utsatt annen årsak"),
         TIDLIGERE_UTSATT("Tidligere utsatt"),
         ;
