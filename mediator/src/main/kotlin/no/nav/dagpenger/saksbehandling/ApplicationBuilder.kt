@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.job.Job
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Sekund
@@ -86,7 +87,6 @@ import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
-import java.util.Timer
 
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
@@ -98,17 +98,7 @@ internal class ApplicationBuilder(
             tokenSupplier = Configuration.pdlTokenProvider,
         )
 
-    private lateinit var innsendingAlarmJob: Timer
-    private lateinit var utsendingAlarmJob: Timer
-    private lateinit var oversendKlageinstansAlarmJob: Timer
-    private lateinit var oppfølgingAlarmJob: Timer
-    private lateinit var oppgaveFristUtgåttJob: Timer
-    private lateinit var metrikkJob: Timer
-    private lateinit var utboksJob: Timer
-    private lateinit var utboksOppryddingJob: Timer
     private val utboksRepository = PostgresUtboksRepository(databaseSession)
-    private lateinit var statistikkJob: Timer
-    private lateinit var oppgaveTilstandAlertJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication
@@ -247,7 +237,11 @@ internal class ApplicationBuilder(
                     oppgaveDTOMapper =
                         OppgaveDTOMapper(
                             oppslag = oppslag,
-                            oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+                            oppgaveHistorikkDTOMapper =
+                                OppgaveHistorikkDTOMapper(
+                                    oppgaveRepository,
+                                    saksbehandlerOppslag,
+                                ),
                             sakMediator = sakMediator,
                         ),
                     produksjonsstatistikkRepository = PostgresProduksjonsstatistikkRepository(databaseSession),
@@ -276,7 +270,10 @@ internal class ApplicationBuilder(
                             )
                             adressebeskyttetStream(
                                 Configuration.leesahTopic,
-                                AdressebeskyttelseConsumer(personRepository, pdlKlient)::oppdaterAdressebeskyttelseGradering,
+                                AdressebeskyttelseConsumer(
+                                    personRepository,
+                                    pdlKlient,
+                                )::oppdaterAdressebeskyttelseGradering,
                             )
                         }
                 }
@@ -332,71 +329,65 @@ internal class ApplicationBuilder(
                     rapidsConnection = rapid,
                     oppfølgingMediator = oppfølgingMediator,
                 )
-                utsendingAlarmJob =
-                    UtsendingAlarmJob(
-                        rapidsConnection = rapid,
-                        utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
-                    ).startJob(
-                        period = 60.Minutt,
-                    )
-                innsendingAlarmJob =
-                    InnsendingAlarmJob(
-                        rapidsConnection = rapid,
-                        innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
-                    ).startJob(
-                        period = 1.Dag,
-                    )
-                oppfølgingAlarmJob =
-                    OppfølgingAlarmJob(
-                        rapidsConnection = rapid,
-                        oppfølgingAlarmRepository = OppfølgingAlarmRepository(dataSource),
-                    ).startJob(
-                        period = 1.Dag,
-                    )
-                oppgaveTilstandAlertJob =
-                    OppgaveTilstandAlertJob(
-                        rapidsConnection = rapid,
-                        oppgaveMediator = oppgaveMediator,
-                    ).startJob(
-                        period = 1.Dag,
-                    )
-                oversendKlageinstansAlarmJob =
-                    OversendKlageinstansAlarmJob(
-                        rapidsConnection = rapid,
-                        repository = OversendKlageinstansAlarmRepository(dataSource),
-                    ).startJob(
-                        period = 60.Minutt,
-                    )
-                oppgaveFristUtgåttJob =
-                    OppgaveFristUtgåttJob(oppgaveMediator).startJob(
-                        startAt = getNextOccurrence(3, 0),
-                        period = 1.Dag,
-                    )
-                statistikkJob =
-                    StatistikkJob(
-                        rapidsConnection = rapid,
-                        saksbehandlingsstatistikkRepository = PostgresSaksbehandlingsstatistikkRepository(databaseSession),
-                    ).startJob(
-                        startAt = now,
-                        period = 5.Minutt,
-                    )
-                metrikkJob =
-                    MetrikkJob().startJob(
-                        startAt = now,
-                        period = 5.Minutt,
-                    )
-                utboksJob =
-                    UtboksPubliseringJob(
-                        vedlikehold = utboks,
-                    ).startJob(
-                        startAt = now,
-                        period = 5.Sekund,
-                    )
-                utboksOppryddingJob =
-                    UtboksOppryddingJob(utboks = utboks).startJob(
-                        startAt = getNextOccurrence(3, 30),
-                        period = 1.Dag,
-                    )
+
+                UtsendingAlarmJob(
+                    rapidsConnection = rapid,
+                    utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
+                ).startJob(
+                    period = 60.Minutt,
+                )
+                InnsendingAlarmJob(
+                    rapidsConnection = rapid,
+                    innsendingAlarmRepository = InnsendingAlarmRepository(dataSource),
+                ).startJob(
+                    period = 1.Dag,
+                )
+                OppfølgingAlarmJob(
+                    rapidsConnection = rapid,
+                    oppfølgingAlarmRepository = OppfølgingAlarmRepository(dataSource),
+                ).startJob(
+                    period = 1.Dag,
+                )
+                OppgaveTilstandAlertJob(
+                    rapidsConnection = rapid,
+                    oppgaveMediator = oppgaveMediator,
+                ).startJob(
+                    period = 1.Dag,
+                )
+                OversendKlageinstansAlarmJob(
+                    rapidsConnection = rapid,
+                    repository = OversendKlageinstansAlarmRepository(dataSource),
+                ).startJob(
+                    period = 60.Minutt,
+                )
+                OppgaveFristUtgåttJob(oppgaveMediator).startJob(
+                    startAt = getNextOccurrence(3, 0),
+                    period = 1.Dag,
+                )
+                StatistikkJob(
+                    rapidsConnection = rapid,
+                    saksbehandlingsstatistikkRepository =
+                        PostgresSaksbehandlingsstatistikkRepository(
+                            databaseSession,
+                        ),
+                ).startJob(
+                    startAt = now,
+                    period = 5.Minutt,
+                )
+                MetrikkJob().startJob(
+                    startAt = now,
+                    period = 5.Minutt,
+                )
+                UtboksPubliseringJob(
+                    vedlikehold = utboks,
+                ).startJob(
+                    startAt = now,
+                    period = 5.Sekund,
+                )
+                UtboksOppryddingJob(utboks = utboks).startJob(
+                    startAt = getNextOccurrence(3, 30),
+                    period = 1.Dag,
+                )
             }
 
     init {
@@ -410,19 +401,11 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
+        logger.info { "Jobber startet: ${Job.registrerteJobber()}" }
     }
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {
-        utsendingAlarmJob.cancel()
-        oversendKlageinstansAlarmJob.cancel()
-        oppfølgingAlarmJob.cancel()
-        oppgaveFristUtgåttJob.cancel()
-        metrikkJob.cancel()
-        statistikkJob.cancel()
-        oppgaveTilstandAlertJob.cancel()
-        innsendingAlarmJob.cancel()
-        utboksJob.cancel()
-        utboksOppryddingJob.cancel()
+        Job.cancelAllJobs()
         logger.info { "Skrur av applikasjonen" }
     }
 

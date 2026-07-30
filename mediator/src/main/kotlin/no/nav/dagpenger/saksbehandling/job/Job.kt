@@ -10,6 +10,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Date
 import java.util.Timer
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.fixedRateTimer
 import kotlin.system.measureNanoTime
@@ -18,9 +19,27 @@ import kotlin.time.Duration.Companion.milliseconds
 abstract class Job(
     private val leaderElector: suspend () -> Result<Boolean> = LeaderElector::isLeader,
 ) {
+    private var timer: Timer? = null
+
+    fun cancel() {
+        timer?.cancel()
+    }
+
     private val isRunning = AtomicBoolean(false)
 
     companion object {
+        private val registrerteJobber = ConcurrentHashMap<String, Job>()
+
+        suspend fun executeJob(jobName: String) {
+            registrerteJobber[jobName]?.executeJob()
+        }
+
+        fun registrerteJobber() = registrerteJobber.keys
+
+        fun cancelAllJobs() {
+            registrerteJobber.values.forEach { it.cancel() }
+        }
+
         val now = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
         val omFemMinutter =
             Date.from(
@@ -64,6 +83,8 @@ abstract class Job(
         startAt: Date = omFemMinutter,
         period: Long = 1.Dag,
     ): Timer {
+        require(timer == null) { "Jobb $jobName er allerede startet — kall ikke startJob() to ganger" }
+        registrerteJobber[jobName] = this
         logger.info { "Jobb $jobName vil kjøre med intervall ${period.milliseconds.inWholeMinutes} minutter med første kjøring $startAt" }
         JobMetrics.period(jobName, period)
         JobMetrics.markStarted(jobName)
@@ -72,44 +93,55 @@ abstract class Job(
             daemon = daemon,
             startAt = startAt,
             period = period,
-            action = { executeJobIfLeader() },
-        )
+            action = { executeIfNotRunningAndLeader() },
+        ).also { timer = it }
     }
 
-    private fun executeJobIfLeader() {
+    private fun executeIfNotRunningAndLeader() {
         runBlocking {
-            // Prevent overlapping executions on the same pod
-            if (!isRunning.compareAndSet(false, true)) {
-                logger.warn { "Jobb $jobName kjører fortsatt fra forrige intervall, hopper over denne kjøringen" }
-                JobMetrics.skippedOverlap(jobName)
-                return@runBlocking
+            executeIfNotRunning {
+                executeJobIfLeader {
+                    executeJob()
+                }
             }
+        }
+    }
 
+    private suspend fun executeIfNotRunning(executeJob: suspend () -> Unit) {
+        if (!isRunning.compareAndSet(false, true)) {
+            logger.warn { "Jobb $jobName kjører fortsatt fra forrige intervall, hopper over denne kjøringen" }
+            JobMetrics.skippedOverlap(jobName)
+        } else {
             try {
-                leaderElector()
-                    .onSuccess {
-                        when (it) {
-                            true -> {
-                                logger.info { "Starter jobb $jobName" }
-                                var duration: Long? = null
-                                try {
-                                    duration = measureNanoTime { executeJob() }
-                                    JobMetrics.success(jobName)
-                                } catch (e: Exception) {
-                                    JobMetrics.failure(jobName)
-                                    logger.error(e) { "Jobb $jobName feilet — fortsetter ved neste kjøringstidspunkt" }
-                                } finally {
-                                    JobMetrics.duration(jobName, duration)
-                                }
-                            }
-                            false -> logger.debug { "Er ikke leder, kjører ikke jobb: $jobName" }
-                        }
-                    }.onFailure {
-                        logger.error(it) { "Kunne ikke avgjøre om jeg er leder for jobb: $jobName" }
-                    }
+                executeJob()
             } finally {
                 isRunning.set(false)
             }
         }
+    }
+
+    private suspend fun executeJobIfLeader(executeJob: suspend () -> Unit) {
+        leaderElector()
+            .onSuccess {
+                when (it) {
+                    true -> {
+                        logger.info { "Starter jobb $jobName" }
+                        var duration: Long? = null
+                        try {
+                            duration = measureNanoTime { executeJob() }
+                            JobMetrics.success(jobName)
+                        } catch (e: Exception) {
+                            JobMetrics.failure(jobName)
+                            logger.error(e) { "Jobb $jobName feilet — fortsetter ved neste kjøringstidspunkt" }
+                        } finally {
+                            JobMetrics.duration(jobName, duration)
+                        }
+                    }
+
+                    false -> logger.debug { "Er ikke leder, kjører ikke jobb: $jobName" }
+                }
+            }.onFailure {
+                logger.error(it) { "Kunne ikke avgjøre om jeg er leder for jobb: $jobName" }
+            }
     }
 }
