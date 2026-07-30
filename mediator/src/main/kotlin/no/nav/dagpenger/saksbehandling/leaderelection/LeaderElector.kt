@@ -42,9 +42,6 @@ object LeaderElector {
             val url = Configuration.properties[Key("ELECTOR_GET_URL", stringType)]
             val hostName = Configuration.properties[Key("HOSTNAME", stringType)]
             httpClient.get(url).body<Leader>().let {
-                log.info {
-                    "leader is ${it.name}, I am $hostName"
-                }
                 it.name == hostName
             }
         }
