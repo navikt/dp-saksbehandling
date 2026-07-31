@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.db.person
 
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import java.util.UUID
 
 interface PersonRepository {
@@ -14,7 +16,10 @@ interface PersonRepository {
 
     fun hentPersonForBehandlingId(behandlingId: UUID): Person
 
-    fun lagre(person: Person)
+    fun lagre(
+        person: Person,
+        ctx: Transaksjonskontekst = IkkeAktiv,
+    )
 
     fun erNødbremset(ident: String): Boolean
 }

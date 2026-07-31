@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import java.util.UUID
@@ -129,10 +130,12 @@ class PostgresPersonRepository(
         finnPersonForBehandlingId(behandlingId)
             ?: throw DataNotFoundException("Kan ikke finne person fra behandlingId $behandlingId")
 
-    override fun lagre(person: Person) =
-        databaseSession.transaction {
-            lagre(person)
-        }
+    override fun lagre(
+        person: Person,
+        ctx: Transaksjonskontekst,
+    ) = databaseSession.inContext(ctx) {
+        lagre(person)
+    }
 
     override fun oppdaterSkjermingStatus(
         fnr: String,

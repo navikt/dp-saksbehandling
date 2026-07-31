@@ -6,6 +6,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import java.util.UUID
 
@@ -46,9 +48,10 @@ class PersonMediator(
     fun registrerInhabilitet(
         person: Person,
         navIdent: String,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ) {
         val oppdatertPerson = person.registrerInhabilitet(navIdent)
-        personRepository.lagre(oppdatertPerson)
+        personRepository.lagre(oppdatertPerson, ctx)
     }
 
     private fun validerPerson(person: Person) {

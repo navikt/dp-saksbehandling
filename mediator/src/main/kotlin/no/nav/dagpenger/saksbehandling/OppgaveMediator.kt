@@ -272,12 +272,15 @@ class OppgaveMediator(
             .hentOppgave(fjernOppgaveAnsvarHendelse.oppgaveId)
             .let { oppgave ->
                 oppgave.fjernAnsvar(fjernOppgaveAnsvarHendelse)
-                oppgaveRepository.lagre(oppgave)
-                if (fjernOppgaveAnsvarHendelse.årsak == FjernOppgaveAnsvarÅrsak.INHABILITET) {
-                    personMediator.registrerInhabilitet(
-                        person = oppgave.person,
-                        navIdent = fjernOppgaveAnsvarHendelse.utførtAv.navIdent,
-                    )
+                transaksjoner.transaksjon { aktiv ->
+                    oppgaveRepository.lagre(oppgave, aktiv)
+                    if (fjernOppgaveAnsvarHendelse.årsak == FjernOppgaveAnsvarÅrsak.INHABILITET) {
+                        personMediator.registrerInhabilitet(
+                            person = oppgave.person,
+                            navIdent = fjernOppgaveAnsvarHendelse.utførtAv.navIdent,
+                            ctx = aktiv,
+                        )
+                    }
                 }
             }
     }
