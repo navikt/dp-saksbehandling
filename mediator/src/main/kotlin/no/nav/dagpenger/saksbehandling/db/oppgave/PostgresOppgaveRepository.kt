@@ -167,6 +167,11 @@ class PostgresOppgaveRepository(
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
                     AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
+                    AND NOT EXISTS (
+                        SELECT 1 FROM inhabilitet_v1 inh
+                        WHERE  inh.nav_ident = :navIdent
+                        AND    inh.person_id = pers.id
+                    )
                     """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause + harDpSakClause
 
             // language=SQL
@@ -202,6 +207,11 @@ class PostgresOppgaveRepository(
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
+                    AND NOT EXISTS (
+                        SELECT 1 FROM inhabilitet_v1 inh
+                        WHERE  inh.nav_ident = :navIdent
+                        AND    inh.person_id = pers.id
+                    )
                 """ + utløstAvTypeClause + tilstandClause + emneknaggClause + ekskluderEmneknaggerClause + harDpSakClause +
                     """
                     )

@@ -48,6 +48,7 @@ class Oppslag(
                 ident = ident,
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte.await(),
                 adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
+                inhabileNavIdenter = emptyList(),
             )
         }
 }

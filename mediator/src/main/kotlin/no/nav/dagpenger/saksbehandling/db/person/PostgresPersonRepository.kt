@@ -98,7 +98,7 @@ class PostgresPersonRepository(
             ident = this.string("ident"),
             skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
             adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
-            inhabile = session.hentInhabileNavIdenter(personId),
+            inhabileNavIdenter = session.hentInhabileNavIdenter(personId),
         )
     }
 
@@ -221,43 +221,6 @@ class PostgresPersonRepository(
                 }.asSingle,
             ) ?: false
         }
-
-    override fun opprettInhabilitet(
-        person: Person,
-        navIdent: String,
-    ) {
-        databaseSession.transaction {
-            opprettInhabilitet(person, navIdent)
-        }
-    }
-
-    override fun inhabileNavIdenter(person: Person): List<String> {
-        TODO("Not yet implemented")
-    }
-}
-
-private fun PostgresUnitOfWork.opprettInhabilitet(
-    person: Person,
-    navIdent: String,
-) {
-    session.run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO inhabilitet_v1
-                    (person_id, nav_ident) 
-                VALUES
-                    (:person_id, :nav_ident) 
-                ON CONFLICT DO NOTHING            
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "person_id" to person.id,
-                    "nav_ident" to navIdent,
-                ),
-        ).asUpdate,
-    )
 }
 
 private fun PostgresUnitOfWork.lagre(person: Person) {
@@ -281,6 +244,27 @@ private fun PostgresUnitOfWork.lagre(person: Person) {
                 ),
         ).asUpdate,
     )
+
+    person.inhabileNavIdenter.forEach { navIdent ->
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO inhabilitet_v1
+                        (person_id, nav_ident) 
+                    VALUES
+                        (:person_id, :nav_ident) 
+                    ON CONFLICT DO NOTHING            
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "person_id" to person.id,
+                        "nav_ident" to navIdent,
+                    ),
+            ).asUpdate,
+        )
+    }
 }
 
 private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering =

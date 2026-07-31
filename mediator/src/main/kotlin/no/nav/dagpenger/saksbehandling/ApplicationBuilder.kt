@@ -185,6 +185,7 @@ internal class ApplicationBuilder(
                 val oppgaveMediator =
                     OppgaveMediator(
                         oppgaveRepository = oppgaveRepository,
+                        personMediator = personMediator,
                         behandlingKlient = behandlingKlient,
                         utsendingMediator = utsendingMediator,
                         sakMediator = sakMediator,

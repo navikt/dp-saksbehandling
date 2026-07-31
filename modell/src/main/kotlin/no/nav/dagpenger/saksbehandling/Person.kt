@@ -16,21 +16,8 @@ data class Person(
     val ident: String,
     val skjermesSomEgneAnsatte: Boolean,
     val adressebeskyttelseGradering: AdressebeskyttelseGradering,
-    val inhabile: List<String>,
+    val inhabileNavIdenter: List<String>,
 ) {
-    constructor(
-        id: UUID = UUIDv7.ny(),
-        ident: String,
-        skjermesSomEgneAnsatte: Boolean,
-        adressebeskyttelseGradering: AdressebeskyttelseGradering,
-    ) : this(
-        id = id,
-        ident = ident,
-        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-        adressebeskyttelseGradering = adressebeskyttelseGradering,
-        inhabile = emptyList(),
-    )
-
     init {
         require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
     }
@@ -70,10 +57,15 @@ data class Person(
     }
 
     fun habilitetTilgangskontroll(saksbehandler: Saksbehandler) {
-        require(!inhabile.contains(saksbehandler.navIdent)) {
+        require(!inhabileNavIdenter.contains(saksbehandler.navIdent)) {
             throw Inhabil("Saksbehandler er inhabil for denne personen")
         }
     }
+
+    /**
+     * Registrerer at [navIdent] er inhabil for denne personen. Inhabilitet er permanent og kan ikke fjernes.
+     */
+    fun registrerInhabilitet(navIdent: String): Person = copy(inhabileNavIdenter = (inhabileNavIdenter + navIdent).distinct())
 }
 
 enum class AdressebeskyttelseGradering {

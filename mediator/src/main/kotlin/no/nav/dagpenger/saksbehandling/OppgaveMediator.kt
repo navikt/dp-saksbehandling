@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -57,6 +58,7 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class OppgaveMediator(
     private val oppgaveRepository: OppgaveRepository,
+    private val personMediator: PersonMediator,
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
     private val sakMediator: SakMediator,
@@ -191,8 +193,7 @@ class OppgaveMediator(
         saksbehandler: Saksbehandler,
     ): Oppgave =
         oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
-            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
-            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
+            oppgave.tilgangskontrollPerson(saksbehandler)
         }
 
     fun hentOppgaveFor(
@@ -200,8 +201,7 @@ class OppgaveMediator(
         saksbehandler: Saksbehandler,
     ): Oppgave =
         oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
-            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
-            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
+            oppgave.tilgangskontrollPerson(saksbehandler)
         }
 
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
@@ -273,6 +273,12 @@ class OppgaveMediator(
             .let { oppgave ->
                 oppgave.fjernAnsvar(fjernOppgaveAnsvarHendelse)
                 oppgaveRepository.lagre(oppgave)
+                if (fjernOppgaveAnsvarHendelse.årsak == FjernOppgaveAnsvarÅrsak.INHABILITET) {
+                    personMediator.registrerInhabilitet(
+                        person = oppgave.person,
+                        navIdent = fjernOppgaveAnsvarHendelse.utførtAv.navIdent,
+                    )
+                }
             }
     }
 

@@ -31,11 +31,13 @@ object TestHelpers {
             id: UUID = personId,
             addresseBeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
             skjermesSomEgneAnsatte: Boolean = false,
+            inhabileNavIdenter: List<String> = emptyList(),
         ) = Person(
             id = id,
             ident = ident,
             skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
             adressebeskyttelseGradering = addresseBeskyttelseGradering,
+            inhabileNavIdenter = inhabileNavIdenter,
         )
     }
 

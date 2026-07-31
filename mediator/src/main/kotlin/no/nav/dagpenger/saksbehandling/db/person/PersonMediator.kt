@@ -29,6 +29,7 @@ class PersonMediator(
                         ident = ident,
                         skjermesSomEgneAnsatte = erSkjermet.await(),
                         adressebeskyttelseGradering = adressebeskyttelseGradering.await(),
+                        inhabileNavIdenter = emptyList(),
                     )
                 validerPerson(person)
                 personRepository.lagre(person)
@@ -37,6 +38,18 @@ class PersonMediator(
         }
 
     fun erNødbremset(ident: String) = personRepository.erNødbremset(ident)
+
+    /**
+     * Registrerer at [navIdent] er inhabil for [person]. Inhabilitet er permanent og gjelder personen,
+     * ikke enkeltoppgaver.
+     */
+    fun registrerInhabilitet(
+        person: Person,
+        navIdent: String,
+    ) {
+        val oppdatertPerson = person.registrerInhabilitet(navIdent)
+        personRepository.lagre(oppdatertPerson)
+    }
 
     private fun validerPerson(person: Person) {
         if (person.adressebeskyttelseGradering != UGRADERT) {

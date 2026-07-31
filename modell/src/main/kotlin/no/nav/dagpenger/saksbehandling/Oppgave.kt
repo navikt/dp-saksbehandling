@@ -196,9 +196,7 @@ data class Oppgave private constructor(
 
     fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
 
-    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) = this.person.egneAnsatteTilgangskontroll(saksbehandler)
-
-    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) = this.person.adressebeskyttelseTilgangskontroll(saksbehandler)
+    fun tilgangskontrollPerson(saksbehandler: Saksbehandler) = this.person.harTilgang(saksbehandler)
 
     fun utsattTil() = this.utsattTil
 
@@ -214,8 +212,7 @@ data class Oppgave private constructor(
     }
 
     fun avbryt(avbrytOppgaveHendelse: AvbrytOppgaveHendelse) {
-        adressebeskyttelseTilgangskontroll(avbrytOppgaveHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(avbrytOppgaveHendelse.utførtAv)
+        tilgangskontrollPerson(avbrytOppgaveHendelse.utførtAv)
         this._emneknagger.add(avbrytOppgaveHendelse.årsak.visningsnavn)
         tilstand.avbryt(this, avbrytOppgaveHendelse)
     }
@@ -223,26 +220,22 @@ data class Oppgave private constructor(
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
-        adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
+        tilgangskontrollPerson(godkjentBehandlingHendelse.utførtAv)
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
     fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
-        adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
+        tilgangskontrollPerson(avbruttHendelse.utførtAv)
         tilstand.ferdigstill(this, avbruttHendelse)
     }
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
-        adressebeskyttelseTilgangskontroll(innsendingFerdigstiltHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(innsendingFerdigstiltHendelse.utførtAv)
+        tilgangskontrollPerson(innsendingFerdigstiltHendelse.utførtAv)
         tilstand.ferdigstill(this, innsendingFerdigstiltHendelse)
     }
 
     fun ferdigstill(oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse) {
-        adressebeskyttelseTilgangskontroll(oppfølgingFerdigstiltHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(oppfølgingFerdigstiltHendelse.utførtAv)
+        tilgangskontrollPerson(oppfølgingFerdigstiltHendelse.utførtAv)
         tilstand.ferdigstill(this, oppfølgingFerdigstiltHendelse)
     }
 
@@ -251,28 +244,24 @@ data class Oppgave private constructor(
     }
 
     fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
-        egneAnsatteTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+        tilgangskontrollPerson(settOppgaveAnsvarHendelse.utførtAv)
         tilstand.tildel(this, settOppgaveAnsvarHendelse)
     }
 
     fun utsett(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
-        egneAnsatteTilgangskontroll(utsettOppgaveHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(utsettOppgaveHendelse.utførtAv)
+        tilgangskontrollPerson(utsettOppgaveHendelse.utførtAv)
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
     fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
-        egneAnsatteTilgangskontroll(sendTilKontrollHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(sendTilKontrollHendelse.utførtAv)
+        tilgangskontrollPerson(sendTilKontrollHendelse.utførtAv)
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
     fun klargjørForBehandling(hendelse: OpprettOppfølgingHendelse) {
         val saksbehandler = hendelse.utførtAv as? Saksbehandler
         saksbehandler?.let {
-            egneAnsatteTilgangskontroll(it)
-            adressebeskyttelseTilgangskontroll(it)
+            tilgangskontrollPerson(it)
         }
 
         tilstand.klargjørForBehandling(this, hendelse)
@@ -283,26 +272,22 @@ data class Oppgave private constructor(
     }
 
     fun endreMeldingOmVedtakKilde(endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse) {
-        egneAnsatteTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
+        tilgangskontrollPerson(endreMeldingOmVedtakKildeHendelse.utførtAv)
         tilstand.endreMeldingOmVedtakKilde(this, endreMeldingOmVedtakKildeHendelse)
     }
 
     fun lagreBrevKvittering(lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse) {
-        egneAnsatteTilgangskontroll(lagreBrevKvitteringHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(lagreBrevKvitteringHendelse.utførtAv)
+        tilgangskontrollPerson(lagreBrevKvitteringHendelse.utførtAv)
         tilstand.lagreBrevKvittering(this, lagreBrevKvitteringHendelse)
     }
 
     fun lagreNotat(notatHendelse: NotatHendelse) {
-        egneAnsatteTilgangskontroll(notatHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(notatHendelse.utførtAv)
+        tilgangskontrollPerson(notatHendelse.utførtAv)
         tilstand.lagreNotat(this, notatHendelse)
     }
 
     fun slettNotat(slettNotatHendelse: SlettNotatHendelse) {
-        egneAnsatteTilgangskontroll(slettNotatHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(slettNotatHendelse.utførtAv)
+        tilgangskontrollPerson(slettNotatHendelse.utførtAv)
         tilstand.slettNotat(this, slettNotatHendelse)
     }
 

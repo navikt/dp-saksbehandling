@@ -17,11 +17,4 @@ interface PersonRepository {
     fun lagre(person: Person)
 
     fun erNødbremset(ident: String): Boolean
-
-    fun opprettInhabilitet(
-        person: Person,
-        navIdent: String,
-    )
-
-    fun inhabileNavIdenter(person: Person): List<String>
 }
