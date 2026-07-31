@@ -43,10 +43,10 @@ class PostgresPersonRepositoryTest {
             val navIdent = "saksbehandler"
 
             repo.lagre(testPerson)
-            repo.hentPerson(ident = testPerson.ident).inhabile shouldBe emptyList()
+            repo.hentPerson(ident = testPerson.ident).inhabileNavIdenter shouldBe emptyList()
 
-            repo.opprettInhabilitet(person = testPerson, navIdent = navIdent)
-            repo.hentPerson(ident = testPerson.ident).inhabile shouldBe listOf(navIdent)
+            repo.lagre(testPerson.registrerInhabilitet(navIdent))
+            repo.hentPerson(ident = testPerson.ident).inhabileNavIdenter shouldBe listOf(navIdent)
         }
     }
 

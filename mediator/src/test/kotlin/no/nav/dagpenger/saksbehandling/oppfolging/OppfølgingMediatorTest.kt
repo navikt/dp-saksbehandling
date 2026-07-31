@@ -46,6 +46,7 @@ class OppfølgingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -125,6 +126,7 @@ class OppfølgingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -186,6 +188,7 @@ class OppfølgingMediatorTest {
             val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = oppgaveRepository,
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -258,6 +261,7 @@ class OppfølgingMediatorTest {
             val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = oppgaveRepository,
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -370,6 +374,7 @@ class OppfølgingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -464,6 +469,7 @@ class OppfølgingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -542,6 +548,7 @@ class OppfølgingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),

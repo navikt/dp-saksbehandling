@@ -27,6 +27,7 @@ object ModellTestHelper {
         behandler: Saksbehandler? = null,
         skjermesSomEgneAnsatte: Boolean = false,
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+        inhabileSaksbehandlerIdenter: List<String> = emptyList(),
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         emneknagger: Set<String> = emptySet(),
         hendelse: Hendelse = TomHendelse,
@@ -54,6 +55,7 @@ object ModellTestHelper {
             lagPerson(
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
+                inhabileSaksbehandlerIdenter = inhabileSaksbehandlerIdenter,
             )
         val behandling =
             Behandling(
@@ -76,21 +78,25 @@ object ModellTestHelper {
         )
     }
 
-    internal fun lagSaksbehandler(saksbehandlerTilgang: TilgangType = TilgangType.SAKSBEHANDLER) =
-        Saksbehandler(
-            navIdent = "saksbehandler",
-            grupper = setOf(),
-            tilganger = setOf(saksbehandlerTilgang),
-        )
+    internal fun lagSaksbehandler(
+        navIdent: String = "saksbehandler",
+        saksbehandlerTilgang: TilgangType = TilgangType.SAKSBEHANDLER,
+    ) = Saksbehandler(
+        navIdent = navIdent,
+        grupper = setOf(),
+        tilganger = setOf(saksbehandlerTilgang),
+    )
 
     internal fun lagPerson(
         skjermesSomEgneAnsatte: Boolean = false,
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+        inhabileSaksbehandlerIdenter: List<String> = emptyList(),
     ) = Person(
         id = UUIDv7.ny(),
         ident = PERSON_IDENT,
         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
         adressebeskyttelseGradering = adressebeskyttelseGradering,
+        inhabileNavIdenter = inhabileSaksbehandlerIdenter,
     )
 
     internal val søknadId = UUIDv7.ny()

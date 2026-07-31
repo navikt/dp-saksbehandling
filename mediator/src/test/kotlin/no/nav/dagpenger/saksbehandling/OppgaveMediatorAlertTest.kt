@@ -40,6 +40,7 @@ class OppgaveMediatorAlertTest {
                         ident = forslagTilVedtakHendelse.ident,
                         skjermesSomEgneAnsatte = false,
                         adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                        inhabileNavIdenter = emptyList(),
                     ),
                 saker =
                     mutableSetOf(
@@ -51,6 +52,7 @@ class OppgaveMediatorAlertTest {
                     ),
             )
         OppgaveMediator(
+            personMediator = mockk(relaxed = true),
             oppgaveRepository = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
@@ -89,6 +91,7 @@ class OppgaveMediatorAlertTest {
                         ident = forslagTilVedtakHendelse.ident,
                         skjermesSomEgneAnsatte = false,
                         adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                        inhabileNavIdenter = emptyList(),
                     ),
                 saker =
                     mutableSetOf(
@@ -117,6 +120,7 @@ class OppgaveMediatorAlertTest {
             )
 
         OppgaveMediator(
+            personMediator = mockk(relaxed = true),
             oppgaveRepository =
                 mockk<OppgaveRepository>().also {
                     every { it.finnOppgaveFor(behandlingId = any()) } returns null

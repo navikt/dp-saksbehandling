@@ -59,6 +59,7 @@ class SakHistorikkTest {
             ident = "12345678901",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
 
     @Test

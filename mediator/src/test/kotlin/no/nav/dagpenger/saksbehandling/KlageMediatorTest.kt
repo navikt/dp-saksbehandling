@@ -127,6 +127,7 @@ class KlageMediatorTest {
                     ident = testPersonIdent,
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 )
             coEvery { it.hentPersonMedSkjermingOgAdressebeskyttelse(testPersonIdent) } returns person
             coEvery { it.hentPerson(testPersonIdent) } returns
@@ -1175,6 +1176,7 @@ class KlageMediatorTest {
 
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediator,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(dataSource)),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
@@ -1199,6 +1201,7 @@ class KlageMediatorTest {
                     ident = testPersonIdent,
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 ),
             )
             val hendelse =
@@ -1266,6 +1269,7 @@ class KlageMediatorTest {
                     ident = testPersonIdent,
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 ),
             )
 
@@ -1351,6 +1355,7 @@ class KlageMediatorTest {
                     ident = testPersonIdent,
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 ),
             )
 

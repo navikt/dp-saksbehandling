@@ -154,6 +154,32 @@ class OppgaveTilgangTest {
         }
     }
 
+    @Test
+    fun `Inhabilitet tilganger ved tildeling av oppgaver`() {
+        val habilSaksbehandler = lagSaksbehandler()
+        val inhabilSaksbehandler = lagSaksbehandler(navIdent = "inhabil123")
+        val oppgave = lagOppgave(inhabileSaksbehandlerIdenter = listOf(inhabilSaksbehandler.navIdent))
+
+        shouldNotThrow<Inhabil> {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = habilSaksbehandler.navIdent,
+                    utførtAv = habilSaksbehandler,
+                ),
+            )
+        }
+        shouldThrow<Inhabil> {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = inhabilSaksbehandler.navIdent,
+                    utførtAv = inhabilSaksbehandler,
+                ),
+            )
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("adressebeskyttelseTester")
     fun `Adressebeskyttelse tilganger ved henting av oppgave`(
@@ -162,7 +188,7 @@ class OppgaveTilgangTest {
         forventetTilgang: Boolean,
     ) {
         val oppgave = lagOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = saksbehandlerTilgang)
 
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
@@ -223,7 +249,7 @@ class OppgaveTilgangTest {
         forventetTilgang: Boolean,
     ) {
         val oppgave = lagOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = saksbehandlerTilgang)
 
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
@@ -338,7 +364,7 @@ class OppgaveTilgangTest {
                 tilstandType = UNDER_BEHANDLING,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = saksbehandlerTilgang)
 
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
@@ -380,7 +406,7 @@ class OppgaveTilgangTest {
                 tilstandType = UNDER_BEHANDLING,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = saksbehandlerTilgang)
         oppgave.behandlerIdent = saksbehandler.navIdent
 
         if (forventetTilgang) {
@@ -444,7 +470,7 @@ class OppgaveTilgangTest {
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,
     ) {
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = saksbehandlerTilgang)
         val oppgave =
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
@@ -743,7 +769,7 @@ class OppgaveTilgangTest {
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,
     ) {
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = saksbehandlerTilgang)
         val oppgave =
             lagOppgave(
                 adressebeskyttelseGradering = adressebeskyttelseGradering,

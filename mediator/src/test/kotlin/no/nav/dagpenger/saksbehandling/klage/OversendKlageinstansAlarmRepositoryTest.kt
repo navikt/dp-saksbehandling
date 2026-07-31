@@ -20,6 +20,7 @@ class OversendKlageinstansAlarmRepositoryTest {
             ident = "12345678910",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
 
     @Test

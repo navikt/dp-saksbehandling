@@ -38,6 +38,7 @@ class DBTestHelper private constructor(
                 ident = "12345678901",
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
+                inhabileNavIdenter = emptyList(),
             )
 
         fun withMigratedDb(block: DBTestHelper.(DataSource) -> Unit) {

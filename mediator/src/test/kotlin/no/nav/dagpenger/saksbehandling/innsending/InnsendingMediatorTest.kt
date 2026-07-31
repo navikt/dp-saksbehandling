@@ -64,6 +64,7 @@ class InnsendingMediatorTest {
             ident = "44444422222",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
     private val personUtenSak =
         Person(
@@ -71,6 +72,7 @@ class InnsendingMediatorTest {
             ident = "11111122222",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
     private val skjemaKode = "NAVe"
     private val sakMediatorMock: SakMediator =
@@ -156,6 +158,7 @@ class InnsendingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -339,6 +342,7 @@ class InnsendingMediatorTest {
             val transaksjoner = Transaksjoner(DatabaseSession(it))
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -463,6 +467,7 @@ class InnsendingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -554,6 +559,7 @@ class InnsendingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -729,6 +735,7 @@ class InnsendingMediatorTest {
                 )
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk { every { avbrytUtsendingForBehandling(any(), any()) } just Runs },
@@ -850,6 +857,7 @@ class InnsendingMediatorTest {
                 }
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -999,6 +1007,7 @@ class InnsendingMediatorTest {
                 }
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(it)),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -1304,6 +1313,7 @@ class InnsendingMediatorTest {
             // Oppretter innsending med ekte oppgaveMediator
             val ekteOppgaveMediator =
                 OppgaveMediator(
+                    personMediator = personMediatorMock,
                     oppgaveRepository = PostgresOppgaveRepository(databaseSession),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),

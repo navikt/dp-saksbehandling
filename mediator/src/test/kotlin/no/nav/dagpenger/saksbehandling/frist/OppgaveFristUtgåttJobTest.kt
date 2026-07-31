@@ -42,6 +42,7 @@ class OppgaveFristUtgåttJobTest {
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
                 OppgaveMediator(
+                    personMediator = mockk(relaxed = true),
                     oppgaveRepository = repo,
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),

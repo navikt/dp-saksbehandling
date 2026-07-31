@@ -50,6 +50,7 @@ internal object TestHelper {
             ident = personIdent,
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
 
     val testBehandling =
@@ -158,6 +159,7 @@ internal object TestHelper {
         ident = ident,
         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
         adressebeskyttelseGradering = addresseBeskyttelseGradering,
+        inhabileNavIdenter = emptyList(),
     )
 
     val beslutter =

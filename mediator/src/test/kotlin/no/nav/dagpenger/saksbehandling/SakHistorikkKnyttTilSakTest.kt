@@ -30,6 +30,7 @@ class SakHistorikkKnyttTilSakTest {
             ident = "12345678910",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
 
     private val søknadOmNyRettBehandling =

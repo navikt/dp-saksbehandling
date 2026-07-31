@@ -236,6 +236,7 @@ class PostgresOppgaveRepositoryTest {
                             ident = "12345123451",
                             skjermesSomEgneAnsatte = true,
                             adressebeskyttelseGradering = UGRADERT,
+                            inhabileNavIdenter = emptyList(),
                         ),
                 )
 
@@ -248,6 +249,7 @@ class PostgresOppgaveRepositoryTest {
                             ident = "11111222222",
                             skjermesSomEgneAnsatte = false,
                             adressebeskyttelseGradering = UGRADERT,
+                            inhabileNavIdenter = emptyList(),
                         ),
                 )
 
@@ -259,6 +261,7 @@ class PostgresOppgaveRepositoryTest {
                         ident = "11111333333",
                         skjermesSomEgneAnsatte = false,
                         adressebeskyttelseGradering = UGRADERT,
+                        inhabileNavIdenter = emptyList(),
                     ),
             )
 
@@ -319,6 +322,91 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Tildel neste ledige oppgave ekskluderer personer saksbehandler er inhabil for`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val inhabilSaksbehandler =
+                Saksbehandler(
+                    navIdent = "inhabilSaksbehandler",
+                    grupper = emptySet(),
+                )
+
+            val eldsteOppgaveMedInhabilitet =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(5),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                            inhabileNavIdenter = listOf(inhabilSaksbehandler.navIdent),
+                        ),
+                )
+
+            val nyesteOppgaveUtenInhabilitet =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person =
+                        Person(
+                            ident = "11111222222",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                            inhabileNavIdenter = emptyList(),
+                        ),
+                )
+
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+
+            val nesteOppgave =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = inhabilSaksbehandler.navIdent,
+                            utførtAv = inhabilSaksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknaggGruppertPerKategori = mapOf(),
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = inhabilSaksbehandler.navIdent,
+                        ),
+                )!!
+
+            // Den eldste oppgaven er filtrert bort fordi saksbehandler er inhabil for personen,
+            // så den nest eldste (uten inhabilitet) blir tildelt i stedet.
+            nesteOppgave.oppgaveId shouldBe nyesteOppgaveUtenInhabilitet.oppgaveId
+            nesteOppgave.behandlerIdent shouldBe inhabilSaksbehandler.navIdent
+            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+
+            val habilSaksbehandler =
+                Saksbehandler(
+                    navIdent = "habilSaksbehandler",
+                    grupper = emptySet(),
+                )
+            val nesteOppgaveForHabilSaksbehandler =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = habilSaksbehandler.navIdent,
+                            utførtAv = habilSaksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknaggGruppertPerKategori = mapOf(),
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = habilSaksbehandler.navIdent,
+                        ),
+                )!!
+
+            nesteOppgaveForHabilSaksbehandler.oppgaveId shouldBe eldsteOppgaveMedInhabilitet.oppgaveId
+            nesteOppgaveForHabilSaksbehandler.behandlerIdent shouldBe habilSaksbehandler.navIdent
+        }
+    }
+
+    @Test
     fun `Tildel neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
         DBTestHelper.withMigratedDb { ds ->
 
@@ -331,6 +419,7 @@ class PostgresOppgaveRepositoryTest {
                             ident = "12345123451",
                             skjermesSomEgneAnsatte = false,
                             adressebeskyttelseGradering = FORTROLIG,
+                            inhabileNavIdenter = emptyList(),
                         ),
                 )
 
@@ -343,6 +432,7 @@ class PostgresOppgaveRepositoryTest {
                             ident = "11111222222",
                             skjermesSomEgneAnsatte = false,
                             adressebeskyttelseGradering = UGRADERT,
+                            inhabileNavIdenter = emptyList(),
                         ),
                 )
 
@@ -1034,6 +1124,7 @@ class PostgresOppgaveRepositoryTest {
                     ident = "03030311221",
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 )
             val oppgaveForPersonMedDpSak =
                 this.leggTilOppgave(
@@ -1050,6 +1141,7 @@ class PostgresOppgaveRepositoryTest {
                     ident = "08080066226",
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 )
             val oppgaveForNødbremsetPersonMedDpSak =
                 this.leggTilOppgave(
@@ -1420,12 +1512,14 @@ class PostgresOppgaveRepositoryTest {
                 ident = "12345678910",
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
+                inhabileNavIdenter = emptyList(),
             )
         val gry =
             Person(
                 ident = "10987654321",
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
+                inhabileNavIdenter = emptyList(),
             )
 
         DBTestHelper.withMigratedDb { ds ->
@@ -1511,6 +1605,7 @@ class PostgresOppgaveRepositoryTest {
                 ident = hendelse.ident,
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
+                inhabileNavIdenter = emptyList(),
             )
 
         val behandling =
@@ -1660,6 +1755,7 @@ class PostgresOppgaveRepositoryTest {
                     ident = "02020299999",
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 )
             val oppgaveDpSak = this.leggTilOppgave(opprettet = opprettetNå.minusDays(2), person = personMedDpSak)
             sakRepo.hentSakIdForBehandlingId(oppgaveDpSak.behandling.behandlingId).let { sakId ->
@@ -1671,6 +1767,7 @@ class PostgresOppgaveRepositoryTest {
                     ident = "11220077777",
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
+                    inhabileNavIdenter = emptyList(),
                 )
             val oppgaveForNødbremset = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1), person = nødbremsetPerson)
             sakRepo.hentSakIdForBehandlingId(oppgaveForNødbremset.behandling.behandlingId).let { sakId ->

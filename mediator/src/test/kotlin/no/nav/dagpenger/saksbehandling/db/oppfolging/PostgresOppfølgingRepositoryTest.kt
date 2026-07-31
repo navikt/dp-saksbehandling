@@ -19,6 +19,7 @@ class PostgresOppfølgingRepositoryTest {
             ident = "12345678901",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
 
     @Test

@@ -43,6 +43,7 @@ class PostgresKlageRepositoryTest {
             ident = "12345678901",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            inhabileNavIdenter = emptyList(),
         )
     val klageId = UUIDv7.ny()
 
