@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.db.person
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
+import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
@@ -36,7 +37,7 @@ class PostgresPersonRepository(
                             "ident" to ident,
                         ),
                 ).map { row ->
-                    row.tilPerson()
+                    row.tilPerson(session)
                 }.asSingle,
             )
         }
@@ -59,7 +60,7 @@ class PostgresPersonRepository(
                             "id" to id,
                         ),
                 ).map { row ->
-                    row.tilPerson()
+                    row.tilPerson(session)
                 }.asSingle,
             )
         }
@@ -83,18 +84,41 @@ class PostgresPersonRepository(
                             "behandling_id" to behandlingId,
                         ),
                 ).map { row ->
-                    row.tilPerson()
+                    row.tilPerson(session)
                 }.asSingle,
             )
         }
     }
 
-    private fun Row.tilPerson(): Person =
-        Person(
-            id = this.uuid("id"),
+    private fun Row.tilPerson(session: Session): Person {
+        val personId = this.uuid("id")
+
+        return Person(
+            id = personId,
             ident = this.string("ident"),
             skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
             adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
+            inhabile = session.hentInhabileNavIdenter(personId),
+        )
+    }
+
+    private fun Session.hentInhabileNavIdenter(personId: UUID) =
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    SELECT nav_ident
+                    FROM   inhabilitet_v1
+                    WHERE  person_id = :person_id
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "person_id" to personId,
+                    ),
+            ).map { row ->
+                row.string("nav_ident")
+            }.asList,
         )
 
     override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
@@ -197,6 +221,43 @@ class PostgresPersonRepository(
                 }.asSingle,
             ) ?: false
         }
+
+    override fun opprettInhabilitet(
+        person: Person,
+        navIdent: String,
+    ) {
+        databaseSession.transaction {
+            opprettInhabilitet(person, navIdent)
+        }
+    }
+
+    override fun inhabileNavIdenter(person: Person): List<String> {
+        TODO("Not yet implemented")
+    }
+}
+
+private fun PostgresUnitOfWork.opprettInhabilitet(
+    person: Person,
+    navIdent: String,
+) {
+    session.run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                INSERT INTO inhabilitet_v1
+                    (person_id, nav_ident) 
+                VALUES
+                    (:person_id, :nav_ident) 
+                ON CONFLICT DO NOTHING            
+                """.trimIndent(),
+            paramMap =
+                mapOf(
+                    "person_id" to person.id,
+                    "nav_ident" to navIdent,
+                ),
+        ).asUpdate,
+    )
 }
 
 private fun PostgresUnitOfWork.lagre(person: Person) {

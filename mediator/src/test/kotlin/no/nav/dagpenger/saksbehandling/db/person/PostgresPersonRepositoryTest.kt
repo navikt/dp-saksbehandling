@@ -37,6 +37,20 @@ class PostgresPersonRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne lagre og hente inhabilitet på en person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresPersonRepository(DatabaseSession(ds))
+            val navIdent = "saksbehandler"
+
+            repo.lagre(testPerson)
+            repo.hentPerson(ident = testPerson.ident).inhabile shouldBe emptyList()
+
+            repo.opprettInhabilitet(person = testPerson, navIdent = navIdent)
+            repo.hentPerson(ident = testPerson.ident).inhabile shouldBe listOf(navIdent)
+        }
+    }
+
+    @Test
     fun `Skal sjekke om person er nødbremset`() {
         withMigratedDb { ds ->
             val repo = PostgresPersonRepository(DatabaseSession(lazy { ds }))

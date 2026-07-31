@@ -16,13 +16,33 @@ data class Person(
     val ident: String,
     val skjermesSomEgneAnsatte: Boolean,
     val adressebeskyttelseGradering: AdressebeskyttelseGradering,
+    val inhabile: List<String>,
 ) {
+    constructor(
+        id: UUID = UUIDv7.ny(),
+        ident: String,
+        skjermesSomEgneAnsatte: Boolean,
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+    ) : this(
+        id = id,
+        ident = ident,
+        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+        adressebeskyttelseGradering = adressebeskyttelseGradering,
+        inhabile = emptyList(),
+    )
+
     init {
         require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
     }
 
     override fun toString(): String =
         "Person(id=$id, skjermesSomEgneAnsatte=$skjermesSomEgneAnsatte, adressebeskyttelseGradering=$adressebeskyttelseGradering)"
+
+    fun harTilgang(saksbehandler: Saksbehandler) {
+        egneAnsatteTilgangskontroll(saksbehandler)
+        adressebeskyttelseTilgangskontroll(saksbehandler)
+        habilitetTilgangskontroll(saksbehandler)
+    }
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
         if (!this.skjermesSomEgneAnsatte) {
@@ -49,9 +69,10 @@ data class Person(
         }
     }
 
-    fun harTilgang(saksbehandler: Saksbehandler) {
-        egneAnsatteTilgangskontroll(saksbehandler)
-        adressebeskyttelseTilgangskontroll(saksbehandler)
+    fun habilitetTilgangskontroll(saksbehandler: Saksbehandler) {
+        require(!inhabile.contains(saksbehandler.navIdent)) {
+            throw Inhabil("Saksbehandler er inhabil for denne personen")
+        }
     }
 }
 
@@ -67,5 +88,9 @@ class IkkeTilgangTilEgneAnsatte(
 ) : ManglendeTilgang(message)
 
 class ManglendeTilgangTilAdressebeskyttelse(
+    message: String,
+) : ManglendeTilgang(message)
+
+class Inhabil(
     message: String,
 ) : ManglendeTilgang(message)
