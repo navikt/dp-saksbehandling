@@ -34,12 +34,12 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.serder.rehydrerHendelse
@@ -55,6 +55,8 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 class PostgresOppgaveRepository(
     private val databaseSession: DatabaseSession,
 ) : OppgaveRepository {
+    private val personRepository = PostgresPersonRepository(databaseSession)
+
     override fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
@@ -571,9 +573,6 @@ class PostgresOppgaveRepository(
             val oppgaveSelect =
                 """
                 SELECT  pers.id AS person_id, 
-                        pers.ident AS person_ident,
-                        pers.skjermes_som_egne_ansatte,
-                        pers.adressebeskyttelse_gradering,
                         oppg.id AS oppgave_id, 
                         oppg.tilstand, 
                         oppg.opprettet AS oppgave_opprettet, 
@@ -654,7 +653,7 @@ class PostgresOppgaveRepository(
                 session.run(
                     queryOf(statement = oppgaverQuery, paramMap = paramMap)
                         .map { row ->
-                            row.rehydrerOppgave(databaseSession)
+                            row.rehydrerOppgave()
                         }.asList,
                 )
             OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
@@ -675,6 +674,54 @@ class PostgresOppgaveRepository(
                     }.asList,
                 ).toSet()
         }
+
+    private fun Row.rehydrerOppgave(): Oppgave {
+        val oppgaveId = this.uuid("oppgave_id")
+        val person = personRepository.hentPerson(this.uuid("person_id"))
+        val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, databaseSession)
+
+        val tilstand =
+            runCatching {
+                when (Type.valueOf(value = string("tilstand"))) {
+                    OPPRETTET -> Opprettet
+                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                    UNDER_BEHANDLING -> UnderBehandling
+                    PAA_VENT -> PåVent
+                    AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
+                    KLAR_TIL_KONTROLL -> KlarTilKontroll
+                    UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, databaseSession))
+                    AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
+                    FERDIG_BEHANDLET -> FerdigBehandlet
+                    AVBRUTT -> Avbrutt
+                    AVBRUTT_MASKINELT -> AvbruttMaskinelt
+                }
+            }.getOrElse { t ->
+                throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
+            }
+
+        return Oppgave.rehydrer(
+            oppgaveId = oppgaveId,
+            behandlerIdent = this.stringOrNull("saksbehandler_ident"),
+            opprettet = this.localDateTime("oppgave_opprettet"),
+            emneknagger = hentEmneknaggerForOppgave(oppgaveId, databaseSession),
+            tilstand = tilstand,
+            utsattTil = this.localDateOrNull("utsatt_til"),
+            tilstandslogg = tilstandslogg,
+            behandling =
+                Behandling.rehydrer(
+                    behandlingId = this.uuid("behandling_id"),
+                    opprettet = this.localDateTime("behandling_opprettet"),
+                    hendelse = this.rehydrerHendelse(),
+                    utløstAv = HendelseBehandler.valueOf(this.string("utlost_av")),
+                ),
+            person = person,
+            meldingOmVedtak =
+                Oppgave.MeldingOmVedtak(
+                    kilde = MeldingOmVedtakKilde.valueOf(this.string("melding_om_vedtak_kilde")),
+                    kontrollertGosysBrev = Oppgave.KontrollertBrev.valueOf(this.string("kontrollert_brev")),
+                ),
+        )
+    }
 }
 
 private fun rehydrerTilstandsendringHendelse(
@@ -934,60 +981,6 @@ private fun PostgresUnitOfWork.lagre(
     tilstandslogg.forEach { tilstandsendring ->
         this.lagre(oppgaveId, tilstandsendring)
     }
-}
-
-private fun Row.rehydrerOppgave(databaseSession: DatabaseSession): Oppgave {
-    val oppgaveId = this.uuid("oppgave_id")
-    val person =
-        Person(
-            id = this.uuid("person_id"),
-            ident = this.string("person_ident"),
-            skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-            adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
-        )
-    val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, databaseSession)
-
-    val tilstand =
-        runCatching {
-            when (Type.valueOf(value = string("tilstand"))) {
-                OPPRETTET -> Opprettet
-                KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                UNDER_BEHANDLING -> UnderBehandling
-                PAA_VENT -> PåVent
-                AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
-                KLAR_TIL_KONTROLL -> KlarTilKontroll
-                UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, databaseSession))
-                AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
-                FERDIG_BEHANDLET -> FerdigBehandlet
-                AVBRUTT -> Avbrutt
-                AVBRUTT_MASKINELT -> AvbruttMaskinelt
-            }
-        }.getOrElse { t ->
-            throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
-        }
-
-    return Oppgave.rehydrer(
-        oppgaveId = oppgaveId,
-        behandlerIdent = this.stringOrNull("saksbehandler_ident"),
-        opprettet = this.localDateTime("oppgave_opprettet"),
-        emneknagger = hentEmneknaggerForOppgave(oppgaveId, databaseSession),
-        tilstand = tilstand,
-        utsattTil = this.localDateOrNull("utsatt_til"),
-        tilstandslogg = tilstandslogg,
-        behandling =
-            Behandling.rehydrer(
-                behandlingId = this.uuid("behandling_id"),
-                opprettet = this.localDateTime("behandling_opprettet"),
-                hendelse = this.rehydrerHendelse(),
-                utløstAv = HendelseBehandler.valueOf(this.string("utlost_av")),
-            ),
-        person = person,
-        meldingOmVedtak =
-            Oppgave.MeldingOmVedtak(
-                kilde = MeldingOmVedtakKilde.valueOf(this.string("melding_om_vedtak_kilde")),
-                kontrollertGosysBrev = Oppgave.KontrollertBrev.valueOf(this.string("kontrollert_brev")),
-            ),
-    )
 }
 
 private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering =

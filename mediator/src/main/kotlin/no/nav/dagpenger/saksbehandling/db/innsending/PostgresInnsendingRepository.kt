@@ -3,11 +3,10 @@ package no.nav.dagpenger.saksbehandling.db.innsending
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.queryOf
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
 import java.util.UUID
@@ -18,6 +17,8 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 class PostgresInnsendingRepository(
     private val databaseSession: DatabaseSession,
 ) : InnsendingRepository {
+    private val personRepository = PostgresPersonRepository(databaseSession)
+
     override fun lagre(
         innsending: Innsending,
         ctx: Transaksjonskontekst,
@@ -114,10 +115,7 @@ class PostgresInnsendingRepository(
                                 inns.resultat_type, 
                                 inns.resultat_behandling_id,
                                 inns.valgt_sak_id,
-                                pers.id as person_id, 
-                                pers.ident, 
-                                pers.skjermes_som_egne_ansatte, 
-                                pers.adressebeskyttelse_gradering as adressebeskyttelse
+                                inns.person_id
                         FROM    innsending_v1 inns
                         JOIN    person_v1 pers ON pers.id = inns.person_id
                         WHERE   pers.ident = :ident
@@ -150,12 +148,8 @@ class PostgresInnsendingRepository(
                                 inns.resultat_type,
                                 inns.resultat_behandling_id,
                                 inns.valgt_sak_id,
-                                pers.id as person_id, 
-                                pers.ident, 
-                                pers.skjermes_som_egne_ansatte, 
-                                pers.adressebeskyttelse_gradering as adressebeskyttelse
+                                inns.person_id
                         FROM    innsending_v1 inns
-                        JOIN    person_v1 pers ON pers.id = inns.person_id
                         WHERE   inns.id = :innsending_id
                         """.trimIndent(),
                     paramMap =
@@ -171,13 +165,7 @@ class PostgresInnsendingRepository(
     private fun Row.innsending(): Innsending =
         Innsending.rehydrer(
             innsendingId = this.uuid("innsending_id"),
-            person =
-                Person(
-                    id = this.uuid("person_id"),
-                    ident = this.string("ident"),
-                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                    adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse")),
-                ),
+            person = personRepository.hentPerson(this.uuid("person_id")),
             journalpostId = this.string("journalpost_id"),
             mottatt = this.localDateTime("mottatt"),
             skjemaKode = this.string("skjema_kode"),

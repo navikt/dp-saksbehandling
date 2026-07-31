@@ -2,16 +2,15 @@ package no.nav.dagpenger.saksbehandling.db.sak
 
 import kotliquery.Row
 import kotliquery.queryOf
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
@@ -21,6 +20,8 @@ import kotlin.collections.forEach
 class PostgresSakRepository(
     private val databaseSession: DatabaseSession,
 ) : SakRepository {
+    private val personRepository = PostgresPersonRepository(databaseSession)
+
     override fun lagre(
         sakHistorikk: SakHistorikk,
         ctx: Transaksjonskontekst,
@@ -47,9 +48,6 @@ class PostgresSakRepository(
                         """
                         SELECT 
                             per.id AS person_id,
-                            per.ident AS person_ident,
-                            per.adressebeskyttelse_gradering AS person_adressebeskyttelse_gradering,
-                            per.skjermes_som_egne_ansatte AS person_skjermes_som_egne_ansatte,
                             sak.id AS sak_id,
                             sak.opprettet AS sak_opprettet,
                             beh.id AS behandling_id,
@@ -397,14 +395,7 @@ class PostgresSakRepository(
     private fun Row.tilSakHistorikk(sakHistorikkListe: MutableList<SakHistorikk>): SakHistorikk {
         val sakHistorikk =
             sakHistorikkListe.singleOrNull() ?: SakHistorikk(
-                person =
-                    Person(
-                        id = this.uuid("person_id"),
-                        ident = this.string("person_ident"),
-                        skjermesSomEgneAnsatte = this.boolean("person_skjermes_som_egne_ansatte"),
-                        adressebeskyttelseGradering =
-                            AdressebeskyttelseGradering.valueOf(this.string("person_adressebeskyttelse_gradering")),
-                    ),
+                person = personRepository.hentPerson(this.uuid("person_id")),
             ).also { sakHistorikkListe.add(it) }
 
         // Map Sak

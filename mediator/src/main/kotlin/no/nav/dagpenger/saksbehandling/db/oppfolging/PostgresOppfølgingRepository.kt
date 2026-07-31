@@ -2,11 +2,10 @@ package no.nav.dagpenger.saksbehandling.db.oppfolging
 
 import kotliquery.Row
 import kotliquery.queryOf
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.util.UUID
@@ -14,6 +13,8 @@ import java.util.UUID
 class PostgresOppfølgingRepository(
     private val databaseSession: DatabaseSession,
 ) : OppfølgingRepository {
+    private val personRepository = PostgresPersonRepository(databaseSession)
+
     override fun lagre(
         oppfølging: Oppfølging,
         ctx: Transaksjonskontekst,
@@ -115,12 +116,8 @@ class PostgresOppfølgingRepository(
                                 go.resultat_type,
                                 go.resultat_behandling_id,
                                 go.valgt_sak_id,
-                                p.id as person_id,
-                                p.ident,
-                                p.skjermes_som_egne_ansatte,
-                                p.adressebeskyttelse_gradering as adressebeskyttelse
+                                go.person_id
                         FROM    oppfolging_v1 go
-                        JOIN    person_v1 p ON p.id = go.person_id
                         WHERE   go.id = :id
                         """.trimIndent(),
                     paramMap = mapOf("id" to id),
@@ -146,10 +143,7 @@ class PostgresOppfølgingRepository(
                                 go.resultat_type,
                                 go.resultat_behandling_id,
                                 go.valgt_sak_id,
-                                p.id as person_id,
-                                p.ident,
-                                p.skjermes_som_egne_ansatte,
-                                p.adressebeskyttelse_gradering as adressebeskyttelse
+                                go.person_id
                         FROM    oppfolging_v1 go
                         JOIN    person_v1 p ON p.id = go.person_id
                         WHERE   p.ident = :ident
@@ -163,13 +157,7 @@ class PostgresOppfølgingRepository(
     private fun Row.oppfølging(): Oppfølging =
         Oppfølging.rehydrer(
             id = this.uuid("id"),
-            person =
-                Person(
-                    id = this.uuid("person_id"),
-                    ident = this.string("ident"),
-                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                    adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse")),
-                ),
+            person = personRepository.hentPerson(this.uuid("person_id")),
             tittel = this.string("tittel"),
             beskrivelse = this.stringOrNull("beskrivelse") ?: "",
             strukturertData =
