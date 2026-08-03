@@ -113,6 +113,71 @@ class OppfølgingMediatorTest {
     }
 
     @Test
+    fun `E2E - opprette og sette oppfølgingsoppgave på vent`() {
+        DBTestHelper.withPerson { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val oppfølgingRepository = PostgresOppfølgingRepository(databaseSession)
+            val personMediator = PersonMediator(PostgresPersonRepository(databaseSession), mockk())
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresSakRepository(databaseSession),
+                    rapidsConnection = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personMediator = personMediator,
+                    oppgaveRepository = PostgresOppgaveRepository(databaseSession),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(databaseSession),
+                    meldekortregisterKlient = mockk(relaxed = true),
+                )
+
+            val oppfølgingBehandler = mockk<OppfølgingBehandler>()
+
+            val mediator =
+                OppfølgingMediator(
+                    transaksjoner = Transaksjoner(databaseSession),
+                    oppfølgingRepository = oppfølgingRepository,
+                    oppfølgingBehandler = oppfølgingBehandler,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                )
+
+            val utsattFrist = LocalDate.now().plusDays(7)
+            val resultat =
+                mediator.taImot(
+                    OpprettOppfølgingHendelse(
+                        ident = testPerson.ident,
+                        aarsak = "MeldekortKorrigering",
+                        tittel = "Meldekort trenger korrigering",
+                        beskrivelse = "Se på perioden",
+                        frist = utsattFrist,
+                        beholdOppgaven = true,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+
+            val oppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
+            oppfølging.tilstand() shouldBe "BEHANDLES"
+
+            val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
+            oppgaver.size shouldBe 1
+            oppgaver.first().behandling.utløstAv shouldBe HendelseBehandler.Intern.Oppfølging
+            oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
+            oppgaver.first().tilstand() shouldBe Oppgave.PåVent
+            oppgaver.first().behandlerIdent shouldBe saksbehandler.navIdent
+            oppgaver.first().sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            oppgaver.first().utsattTil() shouldBe utsattFrist
+            oppgaver.first().tilstandslogg.size shouldBe 3
+        }
+    }
+
+    @Test
     fun `rediger oppdaterer tittel, beskrivelse og frist og persisterer i database`() {
         DBTestHelper.withPerson { ds ->
             val databaseSession = DatabaseSession(ds)

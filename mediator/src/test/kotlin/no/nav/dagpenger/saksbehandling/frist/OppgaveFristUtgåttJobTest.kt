@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -25,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -87,7 +89,16 @@ class OppgaveFristUtgåttJobTest {
                                         ),
                                 ),
                                 Tilstandsendring(
-                                    tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                                    tilstand = UNDER_BEHANDLING,
+                                    hendelse =
+                                        SettOppgaveAnsvarHendelse(
+                                            oppgaveId = behandling2.behandlingId,
+                                            ansvarligIdent = TestHelper.saksbehandler.navIdent,
+                                            utførtAv = TestHelper.saksbehandler,
+                                        ),
+                                ),
+                                Tilstandsendring(
+                                    tilstand = OPPRETTET,
                                     hendelse =
                                         OpprettOppfølgingHendelse(
                                             ident = TestHelper.personIdent,

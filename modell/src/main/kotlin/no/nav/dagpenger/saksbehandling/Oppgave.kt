@@ -338,9 +338,12 @@ data class Oppgave private constructor(
 
     fun sisteSaksbehandler(): String? =
         runCatching {
-            _tilstandslogg.firstOrNull { it.tilstand in listOf(UNDER_BEHANDLING, PAA_VENT) && it.hendelse is AnsvarHendelse }?.let {
-                (it.hendelse as AnsvarHendelse).ansvarligIdent
-            }
+            _tilstandslogg
+                .firstOrNull {
+                    it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse
+                }?.let {
+                    (it.hendelse as AnsvarHendelse).ansvarligIdent
+                }
         }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
             .getOrThrow()
 
@@ -420,22 +423,32 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: OpprettOppfølgingHendelse,
         ) {
-            when {
-                hendelse.frist != null -> {
+            if (hendelse.beholdOppgaven) {
+                requireNotNull(hendelse.ansvarligIdent) {
+                    "ansvarligIdent må være satt for å kunne beholde oppgaven ved opprettelse av oppfølging"
+                }
+                require(hendelse.utførtAv is Saksbehandler) {
+                    "Oppgave kan kun beholdes av utførende saksbehandler"
+                }
+                oppgave.behandlerIdent = hendelse.ansvarligIdent
+                oppgave.endreTilstand(
+                    nyTilstand = UnderBehandling,
+                    hendelse =
+                        SettOppgaveAnsvarHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            ansvarligIdent = hendelse.ansvarligIdent!!,
+                            utførtAv = hendelse.utførtAv,
+                        ),
+                )
+                if (hendelse.frist != null) {
                     oppgave.utsattTil = hendelse.frist
-                    oppgave.behandlerIdent = hendelse.ansvarligIdent
-                    oppgave.endreTilstand(PåVent, hendelse)
+                    oppgave.endreTilstand(nyTilstand = PåVent, hendelse = hendelse)
                 }
-
-                hendelse.beholdOppgaven -> {
-                    requireNotNull(
-                        hendelse.ansvarligIdent,
-                    ) { "ansvarligIdent må være satt for å kunne beholde oppgaven ved opprettelse av oppfølging" }
-                    oppgave.behandlerIdent = hendelse.ansvarligIdent
-                    oppgave.endreTilstand(UnderBehandling, hendelse)
-                }
-
-                else -> {
+            } else {
+                if (hendelse.frist != null) {
+                    oppgave.utsattTil = hendelse.frist
+                    oppgave.endreTilstand(nyTilstand = PåVent, hendelse = hendelse)
+                } else {
                     oppgave.endreTilstand(KlarTilBehandling, hendelse)
                 }
             }
