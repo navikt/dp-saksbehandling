@@ -109,11 +109,11 @@ internal class OppgaveDTOMapper(
             val person = async { oppslag.hentPerson(oppgave.personIdent()) }
             val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
-                oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
+                oppgave.sisteSaksbehandlerIdent?.let { saksbehandlerIdent ->
                     async { oppslag.hentBehandler(saksbehandlerIdent) }
                 }
             val sisteBeslutterDTO =
-                oppgave.sisteBeslutter()?.let { beslutterIdent ->
+                oppgave.sisteBeslutterIdent?.let { beslutterIdent ->
                     async { oppslag.hentBehandler(beslutterIdent) }
                 }
 

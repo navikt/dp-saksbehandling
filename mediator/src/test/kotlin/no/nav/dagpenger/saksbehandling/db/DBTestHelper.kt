@@ -184,6 +184,7 @@ class DBTestHelper private constructor(
         type: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         saksbehandlerIdent: String? = null,
+        beslutterIdent: String? = null,
     ): Oppgave {
         this.lagre(person)
 
@@ -214,7 +215,13 @@ class DBTestHelper private constructor(
                 tilstand = tilstand,
                 emneknagger = emneknagger,
                 tilstandslogg = tilstandslogg,
-                behandlerIdent = saksbehandlerIdent,
+                behandlerIdent =
+                    when (tilstand) {
+                        is Oppgave.UnderKontroll -> beslutterIdent
+                        else -> saksbehandlerIdent
+                    },
+                sisteSaksbehandlerIdent = saksbehandlerIdent,
+                sisteBeslutterIdent = beslutterIdent,
                 utsattTil = null,
                 behandling = behandling,
                 person = person,
@@ -249,6 +256,8 @@ class DBTestHelper private constructor(
                 person = person,
                 utsattTil = null,
                 behandlerIdent = null,
+                sisteSaksbehandlerIdent = null,
+                sisteBeslutterIdent = null,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,

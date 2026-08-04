@@ -171,9 +171,9 @@ class OppfølgingMediatorTest {
             oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
             oppgaver.first().tilstand() shouldBe Oppgave.PåVent
             oppgaver.first().behandlerIdent shouldBe saksbehandler.navIdent
-            oppgaver.first().sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            oppgaver.first().sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
             oppgaver.first().utsattTil() shouldBe utsattFrist
-            oppgaver.first().tilstandslogg.size shouldBe 3
+            oppgaver.first().tilstandslogg.size shouldBe 2
         }
     }
 

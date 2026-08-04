@@ -929,7 +929,7 @@ class PostgresOppgaveRepositoryTest {
                         require(it != null) { "Skal finne en oppgave" }
                         it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
                         it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                        it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
+                        it.sisteBeslutterIdent shouldBe vanligBeslutter.navIdent
                     }
                 }
 
@@ -954,7 +954,7 @@ class PostgresOppgaveRepositoryTest {
                         require(it != null) { "Skal finne en oppgave" }
                         it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
                         it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                        it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
+                        it.sisteBeslutterIdent shouldBe beslutterEgneAnsatte.navIdent
                     }
                 }
 
@@ -979,7 +979,7 @@ class PostgresOppgaveRepositoryTest {
                         require(it != null) { "Skal finne en oppgave" }
                         it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
                         it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                        it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
+                        it.sisteBeslutterIdent shouldBe beslutterFortroligAdresse.navIdent
                     }
                 }
 
@@ -1004,7 +1004,7 @@ class PostgresOppgaveRepositoryTest {
                         require(it != null) { "Skal finne en oppgave" }
                         it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
                         it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                        it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
+                        it.sisteBeslutterIdent shouldBe beslutterStrengtFortroligAdresse.navIdent
                         it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
                     }
                 }
@@ -1030,7 +1030,7 @@ class PostgresOppgaveRepositoryTest {
                         require(it != null) { "Skal finne en oppgave" }
                         it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
                         it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                        it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
+                        it.sisteBeslutterIdent shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
                     }
                 }
 
@@ -1061,7 +1061,7 @@ class PostgresOppgaveRepositoryTest {
                         require(it != null) { "Skal finne en oppgave" }
                         it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
                         it.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
-                        it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
+                        it.sisteBeslutterIdent shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
                     }
                 }
         }

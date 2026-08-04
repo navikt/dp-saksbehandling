@@ -151,7 +151,7 @@ class OppgaveFristUtgåttJobTest {
                 oppgave.behandlerIdent shouldBe TestHelper.saksbehandler.navIdent
                 oppgave.tilstandslogg.first().tilstand shouldBe UNDER_BEHANDLING
                 oppgave.utsattTil() shouldBe null
-                oppgave.sisteSaksbehandler() shouldBe TestHelper.saksbehandler.navIdent
+                oppgave.sisteSaksbehandlerIdent shouldBe TestHelper.saksbehandler.navIdent
             }
 
             repo.hentOppgave(oppgave3.oppgaveId).let { oppgave ->

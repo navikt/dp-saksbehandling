@@ -323,7 +323,7 @@ class OppgaveTilgangTest {
         val egneAnsatteOppgave =
             lagOppgave(
                 UNDER_BEHANDLING,
-                behandler = saksbehandlerUtenEkstraTilganger,
+                saksbehandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
             )
 
@@ -435,7 +435,7 @@ class OppgaveTilgangTest {
         shouldThrow<ManglendeTilgang> {
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
-                behandler = saksbehandlerUtenEkstraTilganger,
+                saksbehandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
             ).let {
                 it.sendTilKontroll(
@@ -450,7 +450,7 @@ class OppgaveTilgangTest {
         shouldNotThrow<ManglendeTilgang> {
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
-                behandler = saksbehandlerMedTilgangTilEgneAnsatte,
+                saksbehandler = saksbehandlerMedTilgangTilEgneAnsatte,
                 skjermesSomEgneAnsatte = true,
             ).let {
                 it.sendTilKontroll(
@@ -475,7 +475,7 @@ class OppgaveTilgangTest {
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
-                behandler = saksbehandler,
+                saksbehandler = saksbehandler,
             )
 
         if (forventetTilgang) {
@@ -508,7 +508,7 @@ class OppgaveTilgangTest {
         shouldThrow<ManglendeTilgang> {
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
-                behandler = saksbehandlerUtenEkstraTilganger,
+                saksbehandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
             ).let { oppgave ->
                 oppgave.avbryt(
@@ -525,7 +525,7 @@ class OppgaveTilgangTest {
         shouldNotThrow<ManglendeTilgang> {
             lagOppgave(
                 tilstandType = UNDER_BEHANDLING,
-                behandler = saksbehandlerMedTilgangTilEgneAnsatte,
+                saksbehandler = saksbehandlerMedTilgangTilEgneAnsatte,
                 skjermesSomEgneAnsatte = true,
             ).let { oppgave ->
                 oppgave.avbryt(
@@ -542,7 +542,7 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Avbryting av oppgave under behandling krever at utførende saksbehandler også eier oppgaven`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, saksbehandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
             oppgave.avbryt(
                 AvbrytOppgaveHendelse(
@@ -568,7 +568,7 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Ferdigstilling av oppgave under behandling med brev krever at utførende saksbehandler også eier oppgaven`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, saksbehandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -591,11 +591,11 @@ class OppgaveTilgangTest {
     }
 
     @Test
-    fun `Ferdigstilling av oppgave under kontroll krever at utførende eier oppgaven og er beslutter`() {
-        val beslutterSomEierOppgaven = Saksbehandler("eier", setOf(), setOf(BESLUTTER))
+    fun `Ferdigstilling av oppgave under kontroll krever at utførende behandler eier oppgaven og er beslutter`() {
+        val beslutter = Saksbehandler("eier", setOf(), setOf(BESLUTTER))
         val saksbehandler = Saksbehandler("saksbehandler", setOf(), setOf(SAKSBEHANDLER))
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = saksbehandler, beslutter = beslutter)
 
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomEierOppgaven)
         shouldThrow<ManglendeTilgang> {
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -620,7 +620,7 @@ class OppgaveTilgangTest {
         val saksbehandlerSomVarBeslutter =
             Saksbehandler("saksbehandler som var beslutter", setOf(), setOf(SAKSBEHANDLER))
         val oppgaveUnderKontrollUtenBeslutter =
-            lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandlerSomVarBeslutter)
+            lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = saksbehandlerSomVarBeslutter)
         shouldThrow<ManglendeTilgang> {
             oppgaveUnderKontrollUtenBeslutter.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -636,7 +636,7 @@ class OppgaveTilgangTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "<HTML>en melding</HTML>",
-                    utførtAv = beslutterSomEierOppgaven,
+                    utførtAv = beslutter,
                 ),
             )
         }
@@ -646,15 +646,7 @@ class OppgaveTilgangTest {
     fun `Oppgave klar til kontroll kan ikke tildeles samme behandler som saksbehandlet, selv om hen er beslutter`() {
         val beslutterSomSaksbehandlet =
             Saksbehandler("beslutterSomSaksbehandlet", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = KLAR_TIL_KONTROLL)
-        oppgave.tilstandslogg.leggTil(
-            UNDER_BEHANDLING,
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
-                utførtAv = beslutterSomSaksbehandlet,
-            ),
-        )
+        val oppgave = lagOppgave(tilstandType = KLAR_TIL_KONTROLL, saksbehandler = beslutterSomSaksbehandlet)
 
         shouldThrow<ManglendeTilgang> {
             oppgave.tildel(
@@ -680,40 +672,24 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Oppgave under kontroll kan ikke ferdigstilles av samme behandler som saksbehandlet, selv om hen er beslutter`() {
-        val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
-        oppgave1.tilstandslogg.leggTil(
-            UNDER_BEHANDLING,
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave1.oppgaveId,
-                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
-                utførtAv = beslutterSomSaksbehandlet,
-            ),
-        )
+        val beslutterSomSaksbehandlet = Saksbehandler("beslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val enAnnenBeslutter = Saksbehandler("enAnnenBeslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = beslutterSomSaksbehandlet, beslutter = enAnnenBeslutter)
+
         shouldThrow<ManglendeTilgang> {
-            oppgave1.ferdigstill(
+            oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
-                    oppgaveId = oppgave1.oppgaveId,
+                    oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "<HTML>en melding</HTML>",
                     utførtAv = beslutterSomSaksbehandlet,
                 ),
             )
         }
 
-        val enAnnenBeslutter = Saksbehandler("enAnnenBeslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
-        oppgave2.tilstandslogg.leggTil(
-            UNDER_BEHANDLING,
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave2.oppgaveId,
-                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
-                utførtAv = beslutterSomSaksbehandlet,
-            ),
-        )
         shouldNotThrow<ManglendeTilgang> {
-            oppgave2.ferdigstill(
+            oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
-                    oppgaveId = oppgave2.oppgaveId,
+                    oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "<HTML>en melding</HTML>",
                     utførtAv = enAnnenBeslutter,
                 ),
@@ -723,40 +699,26 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Oppgave under kontroll kan ikke retureres til saksbehandling av samme behandler som saksbehandlet`() {
-        val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
-        oppgave1.tilstandslogg.leggTil(
-            UNDER_BEHANDLING,
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave1.oppgaveId,
-                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
-                utførtAv = beslutterSomSaksbehandlet,
-            ),
-        )
+        val beslutter1 = Saksbehandler("beslutter 1", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = beslutter1, beslutter = beslutter1)
+
         shouldThrow<ManglendeTilgang> {
             oppgave1.returnerTilSaksbehandling(
                 ReturnerTilSaksbehandlingHendelse(
                     oppgaveId = oppgave1.oppgaveId,
-                    utførtAv = beslutterSomSaksbehandlet,
+                    utførtAv = beslutter1,
                 ),
             )
         }
 
-        val enAnnenBeslutter = Saksbehandler("beslutter 2", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
-        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
-        oppgave2.tilstandslogg.leggTil(
-            UNDER_BEHANDLING,
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave2.oppgaveId,
-                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
-                utførtAv = beslutterSomSaksbehandlet,
-            ),
-        )
+        val beslutter2 = Saksbehandler("beslutter 2", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = beslutter1, beslutter = beslutter2)
+
         shouldNotThrow<ManglendeTilgang> {
             oppgave2.returnerTilSaksbehandling(
                 ReturnerTilSaksbehandlingHendelse(
                     oppgaveId = oppgave2.oppgaveId,
-                    utførtAv = enAnnenBeslutter,
+                    utførtAv = beslutter2,
                 ),
             )
         }
@@ -774,7 +736,7 @@ class OppgaveTilgangTest {
             lagOppgave(
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
                 tilstandType = UNDER_BEHANDLING,
-                behandler = saksbehandler,
+                saksbehandler = saksbehandler,
             )
 
         if (forventetTilgang) {
@@ -810,7 +772,7 @@ class OppgaveTilgangTest {
                 lagOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
-                    behandler = saksbehandler,
+                    saksbehandler = saksbehandler,
                 )
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -826,7 +788,7 @@ class OppgaveTilgangTest {
                 lagOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
-                    behandler = saksbehandlerMedEgneAnsatteTilgang,
+                    saksbehandler = saksbehandlerMedEgneAnsatteTilgang,
                 )
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -842,7 +804,7 @@ class OppgaveTilgangTest {
                 lagOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
-                    behandler = saksbehandler,
+                    saksbehandler = saksbehandler,
                 )
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -858,7 +820,7 @@ class OppgaveTilgangTest {
                 lagOppgave(
                     tilstandType = UNDER_BEHANDLING,
                     skjermesSomEgneAnsatte = true,
-                    behandler = saksbehandlerMedEgneAnsatteTilgang,
+                    saksbehandler = saksbehandlerMedEgneAnsatteTilgang,
                 )
             oppgave.ferdigstill(
                 GodkjentBehandlingHendelse(

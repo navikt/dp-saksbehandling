@@ -143,7 +143,7 @@ class PostgresOppgaveRepository(
                     ""
                 }
 
-            // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
+            // Oppdaterer behandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
             // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
             // Det sjekkes derfor mot tilganger i utplukket.
 
@@ -161,7 +161,7 @@ class PostgresOppgaveRepository(
                     JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN     person_v1     pers ON pers.id = beha.person_id
                     WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
-                    AND      oppg.saksbehandler_ident IS NULL
+                    AND      oppg.behandler_ident IS NULL
                     AND      oppg.opprettet >= :fom
                     AND      oppg.opprettet <  :tom_pluss_1_dag
                     AND    ( NOT pers.skjermes_som_egne_ansatte
@@ -200,7 +200,7 @@ class PostgresOppgaveRepository(
                         )
                     WHERE   :har_beslutter_rolle
                     AND     oppg.tilstand = 'KLAR_TIL_KONTROLL'
-                    AND     oppg.saksbehandler_ident IS NULL
+                    AND     oppg.behandler_ident IS NULL
                     AND     oppg.opprettet >= :fom
                     AND     oppg.opprettet <  :tom_pluss_1_dag
                     AND   ( NOT pers.skjermes_som_egne_ansatte
@@ -231,11 +231,17 @@ class PostgresOppgaveRepository(
             val updateNesteOppgave =
                 """
                 UPDATE oppgave_v1 oppu
-                SET    saksbehandler_ident = :saksbehandler_ident
-                     , tilstand            = CASE oppu.tilstand
-                                                     WHEN 'KLAR_TIL_BEHANDLING' THEN 'UNDER_BEHANDLING'
-                                                     WHEN 'KLAR_TIL_KONTROLL' THEN 'UNDER_KONTROLL'
-                                                  END
+                SET    behandler_ident           = :behandler_ident
+                     , siste_saksbehandler_ident = CASE oppu.tilstand
+                                                       WHEN 'KLAR_TIL_BEHANDLING' THEN :behandler_ident
+                                                   END
+                     , siste_beslutter_ident     = CASE oppu.tilstand
+                                                       WHEN 'KLAR_TIL_KONTROLL' THEN :behandler_ident
+                                                   END
+                     , tilstand                  = CASE oppu.tilstand
+                                                       WHEN 'KLAR_TIL_BEHANDLING' THEN 'UNDER_BEHANDLING'
+                                                       WHEN 'KLAR_TIL_KONTROLL' THEN 'UNDER_KONTROLL'
+                                                   END
                 FROM  neste_oppgave next
                 WHERE next.id = oppu.id
                 RETURNING *
@@ -256,7 +262,7 @@ class PostgresOppgaveRepository(
                         statement = statement,
                         paramMap =
                             mapOf(
-                                "saksbehandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
+                                "behandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
                                 "fom" to filter.periode.fom,
                                 "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
                                 "har_tilgang_til_egne_ansatte" to filter.egneAnsatteTilgang,
@@ -492,8 +498,8 @@ class PostgresOppgaveRepository(
 
             val saksbehandlerClause =
                 when {
-                    søkeFilter.utenSaksbehandler -> " AND oppg.saksbehandler_ident IS NULL "
-                    søkeFilter.saksbehandlerIdent != null -> "AND oppg.saksbehandler_ident = :saksbehandler_ident "
+                    søkeFilter.utenSaksbehandler -> " AND oppg.behandler_ident IS NULL "
+                    søkeFilter.saksbehandlerIdent != null -> "AND oppg.behandler_ident = :behandler_ident "
                     else -> ""
                 }
 
@@ -587,7 +593,9 @@ class PostgresOppgaveRepository(
                         oppg.tilstand, 
                         oppg.opprettet AS oppgave_opprettet, 
                         oppg.behandling_id, 
-                        oppg.saksbehandler_ident,
+                        oppg.behandler_ident,
+                        oppg.siste_saksbehandler_ident,
+                        oppg.siste_beslutter_ident,
                         oppg.utsatt_til,
                         oppg.melding_om_vedtak_kilde,
                         oppg.kontrollert_brev,
@@ -643,7 +651,7 @@ class PostgresOppgaveRepository(
                 mapOf(
                     "fom" to søkeFilter.periode.fom,
                     "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                    "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                    "behandler_ident" to søkeFilter.saksbehandlerIdent,
                     "person_ident" to søkeFilter.personIdent,
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,
@@ -711,7 +719,9 @@ class PostgresOppgaveRepository(
 
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
-            behandlerIdent = this.stringOrNull("saksbehandler_ident"),
+            behandlerIdent = this.stringOrNull("behandler_ident"),
+            sisteSaksbehandlerIdent = this.stringOrNull("siste_saksbehandler_ident"),
+            sisteBeslutterIdent = this.stringOrNull("siste_beslutter_ident"),
             opprettet = this.localDateTime("oppgave_opprettet"),
             emneknagger = hentEmneknaggerForOppgave(oppgaveId, databaseSession),
             tilstand = tilstand,
@@ -830,7 +840,9 @@ private fun PostgresUnitOfWork.lagre(oppgave: Oppgave) {
                         behandling_id,
                         tilstand,
                         opprettet,
-                        saksbehandler_ident,
+                        behandler_ident,
+                        siste_saksbehandler_ident,
+                        siste_beslutter_ident,
                         utsatt_til,
                         melding_om_vedtak_kilde,
                         kontrollert_brev
@@ -841,14 +853,18 @@ private fun PostgresUnitOfWork.lagre(oppgave: Oppgave) {
                         :behandling_id,
                         :tilstand,
                         :opprettet,
-                        :saksbehandler_ident,
+                        :behandler_ident,
+                        :siste_saksbehandler_ident,
+                        :siste_beslutter_ident,
                         :utsatt_til,
                         :melding_om_vedtak_kilde,
                         :kontrollert_brev
                     ) 
                 ON CONFLICT(id) DO UPDATE SET
                  tilstand = :tilstand,
-                 saksbehandler_ident = :saksbehandler_ident,
+                 behandler_ident = :behandler_ident,
+                 siste_saksbehandler_ident = :siste_saksbehandler_ident,
+                 siste_beslutter_ident = :siste_beslutter_ident,
                  utsatt_til = :utsatt_til,
                  melding_om_vedtak_kilde = :melding_om_vedtak_kilde,
                  kontrollert_brev = :kontrollert_brev
@@ -859,7 +875,9 @@ private fun PostgresUnitOfWork.lagre(oppgave: Oppgave) {
                     "behandling_id" to oppgave.behandling.behandlingId,
                     "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
-                    "saksbehandler_ident" to oppgave.behandlerIdent,
+                    "behandler_ident" to oppgave.behandlerIdent,
+                    "siste_saksbehandler_ident" to oppgave.sisteSaksbehandlerIdent,
+                    "siste_beslutter_ident" to oppgave.sisteBeslutterIdent,
                     "utsatt_til" to oppgave.utsattTil(),
                     "melding_om_vedtak_kilde" to oppgave.meldingOmVedtakKilde().name,
                     "kontrollert_brev" to oppgave.kontrollertBrev().name,
@@ -1014,7 +1032,7 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
             """ ORDER BY oppg.tilstand ${sortering.name}, oppg.id ${sortering.name} """
 
         Søkefilter.Sorteringsfelt.SAKSBEHANDLER ->
-            """ ORDER BY oppg.saksbehandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+            """ ORDER BY oppg.behandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
 
         Søkefilter.Sorteringsfelt.UTSATT_TIL ->
             """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """

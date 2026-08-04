@@ -33,7 +33,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
-import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -68,8 +67,9 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal på nytt kunne tildele en oppgave UnderKontroll til samme beslutter`() {
+        val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf(SAKSBEHANDLER))
         val beslutter = Saksbehandler("beslutter", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, beslutter)
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = saksbehandler, beslutter = beslutter)
         shouldNotThrow<AlleredeTildeltException> {
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -214,7 +214,7 @@ class OppgaveTilstandTest {
             setOf(UNDER_BEHANDLING)
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = saksbehandler)
+            val oppgave = lagOppgave(tilstand, saksbehandler = saksbehandler)
             shouldNotThrowAny {
                 oppgave.ferdigstill(
                     avbruttHendelse =
@@ -228,7 +228,7 @@ class OppgaveTilstandTest {
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = saksbehandler)
+            val oppgave = lagOppgave(tilstand, saksbehandler = saksbehandler)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     avbruttHendelse =
@@ -256,7 +256,7 @@ class OppgaveTilstandTest {
             )
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = null)
+            val oppgave = lagOppgave(tilstand, saksbehandler = null)
             shouldNotThrowAny {
                 oppgave.avbryt(
                     BehandlingAvbruttHendelse(
@@ -294,7 +294,7 @@ class OppgaveTilstandTest {
         val lovligeTilstander = setOf(UNDER_BEHANDLING)
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstandType = tilstand, behandler = saksbehandler)
+            val oppgave = lagOppgave(tilstandType = tilstand, saksbehandler = saksbehandler)
             shouldNotThrowAny {
                 oppgave.avbryt(
                     AvbrytOppgaveHendelse(
@@ -336,7 +336,7 @@ class OppgaveTilstandTest {
             )
 
         lovligeTilstander.forEach { tilstand ->
-            val oppgave = lagOppgave(tilstand, behandler = null)
+            val oppgave = lagOppgave(tilstand, saksbehandler = null)
             shouldNotThrowAny {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
@@ -379,7 +379,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderBehandling til KlarTilBehandling når oppgaveansvar fjernes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, saksbehandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(
@@ -396,7 +396,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderBehandling til Avbrutt når oppgaven avbrytes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, saksbehandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.avbryt(
@@ -413,7 +413,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderKontroll til KlarTilKontroll når oppgaveansvar fjernes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(
@@ -435,22 +435,8 @@ class OppgaveTilstandTest {
         val oppgave =
             lagOppgave(
                 tilstandType = UNDER_KONTROLL,
-                behandler = beslutter,
-                tilstandslogg =
-                    OppgaveTilstandslogg(
-                        tilstandsendringer =
-                            mutableListOf(
-                                Tilstandsendring(
-                                    tilstand = UNDER_BEHANDLING,
-                                    hendelse =
-                                        NesteOppgaveHendelse(
-                                            ansvarligIdent = saksbehandler.navIdent,
-                                            utførtAv = saksbehandler,
-                                        ),
-                                    tidspunkt = LocalDateTime.now().minusDays(1),
-                                ),
-                            ),
-                    ),
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
             )
 
         shouldNotThrowAny {
@@ -470,7 +456,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå fra UnderBehandling til FerdigBehandlet når saksbehandler godkjenner en behandling`() {
         val saksbehandler = Saksbehandler("sIdent", emptySet())
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, saksbehandler = saksbehandler)
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -758,7 +744,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra KlarTilBehandling til Avbrutt når oppgaven avbrytes`() {
-        val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, saksbehandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.avbryt(
@@ -816,8 +802,9 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal ferdigstille med brev i ny løsning fra UnderKontroll`() {
-        val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
+        val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf(SAKSBEHANDLER))
+        val beslutter = Saksbehandler("beslutter", emptySet(), setOf(BESLUTTER))
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = saksbehandler, beslutter = beslutter)
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
                 GodkjentBehandlingHendelse(
@@ -829,38 +816,6 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-    }
-
-    @Test
-    fun `Finn siste saksbehandler når oppgave er tildelt via neste-oppgave funksjon`() {
-        val saksbehandler = Saksbehandler("Z080808", emptySet())
-        val oppgave =
-            lagOppgave(
-                tilstandType = UNDER_BEHANDLING,
-                tilstandslogg =
-                    OppgaveTilstandslogg().also {
-                        it.leggTil(
-                            nyTilstand = KLAR_TIL_BEHANDLING,
-                            hendelse =
-                                ForslagTilVedtakHendelse(
-                                    ident = "11111155555",
-                                    behandlingId = UUIDv7.ny(),
-                                    behandletHendelseId = UUIDv7.ny().toString(),
-                                    behandletHendelseType = "Søknad",
-                                    emneknagger = emptySet(),
-                                ),
-                        )
-                        it.leggTil(
-                            nyTilstand = UNDER_BEHANDLING,
-                            hendelse =
-                                NesteOppgaveHendelse(
-                                    ansvarligIdent = saksbehandler.navIdent,
-                                    utførtAv = saksbehandler,
-                                ),
-                        )
-                    },
-            )
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
     }
 
     @Test
@@ -877,11 +832,11 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.sisteSaksbehandler() shouldBe null
+        oppgave.sisteSaksbehandlerIdent shouldBe null
 
         val saksbehandler1 = Saksbehandler("saksbehandler 1", emptySet())
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler1.navIdent
 
         oppgave.fjernAnsvar(
             FjernOppgaveAnsvarHendelse(
@@ -889,14 +844,14 @@ class OppgaveTilstandTest {
                 utførtAv = saksbehandler1,
             ),
         )
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe null
 
         val saksbehandler2 = Saksbehandler("saksbehandler 2", emptySet())
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler2.navIdent
 
         oppgave.sendTilKontroll(SendTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler2.navIdent
 
         val beslutter1 = Saksbehandler("beslutter 1", emptySet(), setOf(BESLUTTER))
         oppgave.tildel(
@@ -906,18 +861,18 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter1,
             ),
         )
-        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
+        oppgave.sisteBeslutterIdent shouldBe beslutter1.navIdent
 
         oppgave.returnerTilSaksbehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
 
-        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.sisteBeslutterIdent shouldBe beslutter1.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler2.navIdent
 
         val beslutter2 = Saksbehandler("beslutter 2", emptySet(), setOf(BESLUTTER))
         oppgave.sendTilKontroll(SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
 
-        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.sisteBeslutterIdent shouldBe beslutter1.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler2.navIdent
         oppgave.tilstand().type shouldBe UNDER_KONTROLL
 
         oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
@@ -928,8 +883,8 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter2,
             ),
         )
-        oppgave.sisteBeslutter() shouldBe beslutter2.navIdent
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.sisteBeslutterIdent shouldBe beslutter2.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler2.navIdent
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -998,7 +953,7 @@ class OppgaveTilstandTest {
 
         lagOppgave(
             tilstandType = PAA_VENT,
-            behandler = saksbehandler,
+            saksbehandler = saksbehandler,
         ).let {
             it.settEmneknagg(innsendingMottattHendelse)
             it.tilstand() shouldBe Oppgave.UnderBehandling
@@ -1030,7 +985,7 @@ class OppgaveTilstandTest {
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.utsattTil() shouldBe null
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
     }
 
     @Test
@@ -1078,23 +1033,9 @@ class OppgaveTilstandTest {
         val oppgave =
             lagOppgave(
                 tilstandType = UNDER_KONTROLL,
-                behandler = beslutter,
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
                 emneknagger = setOf(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn),
-                tilstandslogg =
-                    OppgaveTilstandslogg(
-                        tilstandsendringer =
-                            mutableListOf(
-                                Tilstandsendring(
-                                    tilstand = UNDER_BEHANDLING,
-                                    hendelse =
-                                        NesteOppgaveHendelse(
-                                            ansvarligIdent = saksbehandler.navIdent,
-                                            utførtAv = saksbehandler,
-                                        ),
-                                    tidspunkt = LocalDateTime.now().minusDays(1),
-                                ),
-                            ),
-                    ),
             )
 
         shouldNotThrowAny {
@@ -1118,7 +1059,7 @@ class OppgaveTilstandTest {
         val oppgave =
             lagOppgave(
                 tilstandType = UNDER_KONTROLL,
-                behandler = beslutter,
+                beslutter = beslutter,
             )
 
         shouldNotThrowAny {
@@ -1163,22 +1104,7 @@ class OppgaveTilstandTest {
         val oppgave =
             lagOppgave(
                 tilstandType = KLAR_TIL_KONTROLL,
-                behandler = null,
-                tilstandslogg =
-                    OppgaveTilstandslogg(
-                        tilstandsendringer =
-                            mutableListOf(
-                                Tilstandsendring(
-                                    tilstand = UNDER_BEHANDLING,
-                                    hendelse =
-                                        NesteOppgaveHendelse(
-                                            ansvarligIdent = saksbehandler.navIdent,
-                                            utførtAv = saksbehandler,
-                                        ),
-                                    tidspunkt = LocalDateTime.now().minusDays(1),
-                                ),
-                            ),
-                    ),
+                saksbehandler = saksbehandler,
             )
 
         shouldNotThrowAny {

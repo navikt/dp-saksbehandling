@@ -24,7 +24,8 @@ object ModellTestHelper {
 
     internal fun lagOppgave(
         tilstandType: Type = KLAR_TIL_BEHANDLING,
-        behandler: Saksbehandler? = null,
+        saksbehandler: Saksbehandler? = null,
+        beslutter: Saksbehandler? = null,
         skjermesSomEgneAnsatte: Boolean = false,
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
         inhabileSaksbehandlerIdenter: List<String> = emptyList(),
@@ -66,7 +67,13 @@ object ModellTestHelper {
             )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
-            behandlerIdent = behandler?.navIdent,
+            behandlerIdent =
+                when (tilstand) {
+                    is Oppgave.UnderKontroll -> beslutter?.navIdent
+                    else -> saksbehandler?.navIdent
+                },
+            sisteSaksbehandlerIdent = saksbehandler?.navIdent,
+            sisteBeslutterIdent = beslutter?.navIdent,
             opprettet = LocalDateTime.now(),
             emneknagger = emneknagger,
             tilstand = tilstand,

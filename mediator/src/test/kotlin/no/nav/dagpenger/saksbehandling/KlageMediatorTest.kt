@@ -362,7 +362,7 @@ class KlageMediatorTest {
             oppgave.tilstand().type shouldBe UNDER_BEHANDLING
             oppgave.behandlerIdent shouldBe saksbehandler.navIdent
             oppgave.tilstandslogg.size shouldBe 3
-            oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 

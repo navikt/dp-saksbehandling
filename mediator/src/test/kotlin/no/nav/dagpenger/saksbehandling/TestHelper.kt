@@ -224,6 +224,7 @@ internal object TestHelper {
         tilstand: Oppgave.Tilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
+        beslutterIdent: String? = null,
         person: Person = testPerson,
         behandling: Behandling = lagBehandling(opprettet = opprettet),
         emneknagger: Set<String> = emptySet(),
@@ -234,7 +235,13 @@ internal object TestHelper {
     ): Oppgave =
         Oppgave.rehydrer(
             oppgaveId = oppgaveId,
-            behandlerIdent = saksbehandlerIdent,
+            behandlerIdent =
+                when (tilstand) {
+                    is Oppgave.UnderKontroll -> beslutterIdent
+                    else -> saksbehandlerIdent
+                },
+            sisteSaksbehandlerIdent = saksbehandlerIdent,
+            sisteBeslutterIdent = beslutterIdent,
             opprettet = opprettet,
             emneknagger = emneknagger,
             tilstand = tilstand,

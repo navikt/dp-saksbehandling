@@ -74,6 +74,8 @@ class OppgaveDTOMapperTest {
             val oppgave =
                 TestHelper.lagOppgave(
                     tilstand = Oppgave.UnderKontroll(),
+                    saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                    beslutterIdent = TestHelper.beslutter.navIdent,
                     opprettet = etTidspunkt,
                     person = TestHelper.testPerson,
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
@@ -238,6 +240,8 @@ class OppgaveDTOMapperTest {
             val oppgave =
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
+                    saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                    beslutterIdent = TestHelper.beslutter.navIdent,
                     opprettet = etTidspunkt,
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
@@ -418,6 +422,8 @@ class OppgaveDTOMapperTest {
             val oppgave =
                 TestHelper.lagOppgave(
                     tilstand = Oppgave.UnderKontroll(),
+                    saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                    beslutterIdent = TestHelper.beslutter.navIdent,
                     opprettet = etTidspunkt,
                     person = nødbremsetPerson,
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
@@ -581,6 +587,8 @@ class OppgaveDTOMapperTest {
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
                     behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Manuell),
+                    saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                    beslutterIdent = TestHelper.beslutter.navIdent,
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
                 )
             OppgaveDTOMapper(
@@ -752,6 +760,8 @@ class OppgaveDTOMapperTest {
             val oppgave =
                 TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
+                    saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                    beslutterIdent = TestHelper.beslutter.navIdent,
                     opprettet = etTidspunkt,
                     behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Meldekort),
                     tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),

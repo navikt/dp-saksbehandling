@@ -296,7 +296,7 @@ OppgaveMediatorTest {
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
-            oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            oppgaveTilKontroll.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
         }
     }
 
@@ -327,7 +327,7 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
                 it.tilstand().type shouldBe KLAR_TIL_KONTROLL
                 it.behandlerIdent shouldBe null
-                it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+                it.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
             }
 
             oppgaveMediator.tildelOppgave(
@@ -340,8 +340,8 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
                 it.tilstand().type shouldBe UNDER_KONTROLL
                 it.behandlerIdent shouldBe beslutter.navIdent
-                it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
-                it.sisteBeslutter() shouldBe beslutter.navIdent
+                it.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+                it.sisteBeslutterIdent shouldBe beslutter.navIdent
             }
 
             oppgaveMediator.returnerTilSaksbehandling(
@@ -356,8 +356,8 @@ OppgaveMediatorTest {
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
                 it.tilstand().type shouldBe UNDER_BEHANDLING
                 it.behandlerIdent shouldBe saksbehandler.navIdent
-                it.sisteSaksbehandler() shouldBe saksbehandler.navIdent
-                it.sisteBeslutter() shouldBe beslutter.navIdent
+                it.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+                it.sisteBeslutterIdent shouldBe beslutter.navIdent
             }
             oppgaveMediator.sendTilKontroll(
                 SendTilKontrollHendelse(
@@ -392,8 +392,8 @@ OppgaveMediatorTest {
             val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             oppgaveUnderKontroll.tilstand().type shouldBe UNDER_KONTROLL
             oppgaveUnderKontroll.behandlerIdent shouldBe beslutter.navIdent
-            oppgaveUnderKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
-            oppgaveUnderKontroll.sisteBeslutter() shouldBe beslutter.navIdent
+            oppgaveUnderKontroll.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+            oppgaveUnderKontroll.sisteBeslutterIdent shouldBe beslutter.navIdent
         }
     }
 

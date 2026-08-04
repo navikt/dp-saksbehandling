@@ -22,7 +22,7 @@ class MeldingOmVedtakMediator(
     ): String {
         val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
         val sisteSaksbehandler =
-            oppgave.sisteSaksbehandler()
+            oppgave.sisteSaksbehandlerIdent
                 ?: throw RuntimeException("Oppgave ${oppgave.oppgaveId} har ingen saksbehandler")
 
         return coroutineScope {
@@ -30,7 +30,7 @@ class MeldingOmVedtakMediator(
             val sisteSaksbehandler = async(Dispatchers.IO) { oppslag.hentBehandler(sisteSaksbehandler) }
             val beslutterDeferred =
                 async(Dispatchers.IO) {
-                    oppgave.sisteBeslutter()?.let { oppslag.hentBehandler(it) }
+                    oppgave.sisteBeslutterIdent?.let { oppslag.hentBehandler(it) }
                 }
             val sakIdDeferred =
                 async(Dispatchers.IO) {

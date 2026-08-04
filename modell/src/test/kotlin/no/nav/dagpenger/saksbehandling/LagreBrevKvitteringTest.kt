@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligKvitteringAvKontrollertBrev
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -20,12 +21,13 @@ import org.junit.jupiter.params.provider.EnumSource
 class LagreBrevKvitteringTest {
     val oppgaveId = UUIDv7.ny()
 
-    private val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet(), tilganger = setOf(BESLUTTER))
+    private val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet(), tilganger = setOf(SAKSBEHANDLER))
+    private val beslutter = Saksbehandler("beslutter", grupper = emptySet(), tilganger = setOf(BESLUTTER))
 
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlig endring av brevkontroll for melding om vedtak`(tilstandstype: Type) {
-        val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
+        val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler = saksbehandler, beslutter = beslutter)
 
         if (tilstandstype != UNDER_KONTROLL) {
             shouldThrow<UlovligKvitteringAvKontrollertBrev> {
@@ -45,8 +47,9 @@ class LagreBrevKvitteringTest {
     fun `Skal kunne endre brevkontroll for melding om vedtak i tilstand UNDER_KONTROLL`() {
         val oppgave =
             lagOppgave(
-                UNDER_KONTROLL,
-                saksbehandler,
+                tilstandType = UNDER_KONTROLL,
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
                 meldingOmVedtakKilde =
                     Oppgave.MeldingOmVedtak(
                         kilde = GOSYS,
@@ -60,7 +63,7 @@ class LagreBrevKvitteringTest {
                     LagreBrevKvitteringHendelse(
                         oppgaveId = oppgaveId,
                         kontrollertBrev = JA,
-                        utførtAv = saksbehandler,
+                        utførtAv = beslutter,
                     ),
             )
         }
@@ -72,7 +75,7 @@ class LagreBrevKvitteringTest {
                     LagreBrevKvitteringHendelse(
                         oppgaveId = oppgaveId,
                         kontrollertBrev = IKKE_RELEVANT,
-                        utførtAv = saksbehandler,
+                        utførtAv = beslutter,
                     ),
             )
         }

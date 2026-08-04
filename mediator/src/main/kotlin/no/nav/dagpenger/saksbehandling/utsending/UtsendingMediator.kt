@@ -243,13 +243,13 @@ class UtsendingMediator(
                 val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
                 val saksbehandler =
                     async(Dispatchers.IO) {
-                        oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
+                        oppgave.sisteSaksbehandlerIdent?.let { saksbehandlerIdent ->
                             oppslag.hentBehandler(saksbehandlerIdent)
                         } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
                     }
                 val beslutter =
                     async(Dispatchers.IO) {
-                        oppgave.sisteBeslutter()?.let { beslutterIdent ->
+                        oppgave.sisteBeslutterIdent?.let { beslutterIdent ->
                             oppslag.hentBehandler(beslutterIdent)
                         }
                     }

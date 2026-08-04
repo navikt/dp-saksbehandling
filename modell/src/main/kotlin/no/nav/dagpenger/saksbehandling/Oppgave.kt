@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -56,6 +55,8 @@ data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: LocalDateTime,
     var behandlerIdent: String? = null,
+    var sisteSaksbehandlerIdent: String? = null,
+    var sisteBeslutterIdent: String? = null,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = KlarTilBehandling,
     private var utsattTil: LocalDate? = null,
@@ -68,6 +69,8 @@ data class Oppgave private constructor(
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
         behandlerIdent: String? = null,
+        sisteSaksbehandlerIdent: String? = null,
+        sisteBeslutterIdent: String? = null,
         person: Person,
         behandling: Behandling,
         hendelse: Hendelse = TomHendelse,
@@ -75,6 +78,8 @@ data class Oppgave private constructor(
     ) : this(
         oppgaveId = UUIDv7.ny(),
         behandlerIdent = behandlerIdent,
+        sisteSaksbehandlerIdent = sisteSaksbehandlerIdent,
+        sisteBeslutterIdent = sisteBeslutterIdent,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         tilstand = Opprettet,
@@ -104,6 +109,8 @@ data class Oppgave private constructor(
         fun rehydrer(
             oppgaveId: UUID,
             behandlerIdent: String?,
+            sisteSaksbehandlerIdent: String?,
+            sisteBeslutterIdent: String?,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
             tilstand: Tilstand,
@@ -117,6 +124,8 @@ data class Oppgave private constructor(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 behandlerIdent = behandlerIdent,
+                sisteSaksbehandlerIdent = sisteSaksbehandlerIdent,
+                sisteBeslutterIdent = sisteBeslutterIdent,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
                 utsattTil = utsattTil,
@@ -154,11 +163,11 @@ data class Oppgave private constructor(
             beslutter: Saksbehandler,
             hendelseNavn: String,
         ) {
-            require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
+            require(oppgave.sisteSaksbehandlerIdent != beslutter.navIdent) {
                 throw Tilstand.KanIkkeBeslutteEgenSaksbehandling(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
                         "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
-                        "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
+                        "${oppgave.sisteSaksbehandlerIdent} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
                 )
             }
         }
@@ -298,7 +307,7 @@ data class Oppgave private constructor(
     fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse): Handling = tilstand.behandlingTilGodkjenning(this, hendelse)
 
     private fun returnerTilSaksbehandling(hendelse: BehandlingTilGodkjenningHendelse): Handling {
-        when (val sisteSaksbehandler = sisteSaksbehandler()) {
+        when (sisteSaksbehandlerIdent) {
             null -> {
                 logger.error {
                     "Oppgave $oppgaveId i tilstand ${tilstand.type} for behandling ${hendelse.behandlingId} " +
@@ -311,7 +320,7 @@ data class Oppgave private constructor(
 
             else -> {
                 endreTilstand(UnderBehandling, hendelse)
-                behandlerIdent = sisteSaksbehandler
+                behandlerIdent = sisteSaksbehandlerIdent
             }
         }
         _emneknagger.add(Emneknagg.Kontroll.BEHANDLING_OPPDATERT.visningsnavn)
@@ -335,25 +344,6 @@ data class Oppgave private constructor(
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
     }
-
-    fun sisteSaksbehandler(): String? =
-        runCatching {
-            _tilstandslogg
-                .firstOrNull {
-                    it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse
-                }?.let {
-                    (it.hendelse as AnsvarHendelse).ansvarligIdent
-                }
-        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
-            .getOrThrow()
-
-    fun sisteBeslutter(): String? =
-        runCatching {
-            _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
-                (it.hendelse as AnsvarHendelse).ansvarligIdent
-            }
-        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
-            .getOrThrow()
 
     fun søknadId(): UUID? =
         runCatching {
@@ -431,25 +421,19 @@ data class Oppgave private constructor(
                     "Oppgave kan kun beholdes av utførende saksbehandler"
                 }
                 oppgave.behandlerIdent = hendelse.ansvarligIdent
-                oppgave.endreTilstand(
-                    nyTilstand = UnderBehandling,
-                    hendelse =
-                        SettOppgaveAnsvarHendelse(
-                            oppgaveId = oppgave.oppgaveId,
-                            ansvarligIdent = hendelse.ansvarligIdent!!,
-                            utførtAv = hendelse.utførtAv,
-                        ),
-                )
+                oppgave.sisteSaksbehandlerIdent = hendelse.ansvarligIdent
                 if (hendelse.frist != null) {
                     oppgave.utsattTil = hendelse.frist
                     oppgave.endreTilstand(nyTilstand = PåVent, hendelse = hendelse)
+                } else {
+                    oppgave.endreTilstand(nyTilstand = UnderBehandling, hendelse = hendelse)
                 }
             } else {
                 if (hendelse.frist != null) {
                     oppgave.utsattTil = hendelse.frist
                     oppgave.endreTilstand(nyTilstand = PåVent, hendelse = hendelse)
                 } else {
-                    oppgave.endreTilstand(KlarTilBehandling, hendelse)
+                    oppgave.endreTilstand(nyTilstand = KlarTilBehandling, hendelse = hendelse)
                 }
             }
         }
@@ -480,6 +464,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
+            oppgave.sisteSaksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
         override fun ferdigstill(
@@ -522,11 +507,11 @@ data class Oppgave private constructor(
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
                 oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }
-            if (oppgave.sisteBeslutter() == null) {
+            if (oppgave.sisteBeslutterIdent == null) {
                 oppgave.behandlerIdent = null
                 oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
             } else {
-                oppgave.behandlerIdent = oppgave.sisteBeslutter()
+                oppgave.behandlerIdent = oppgave.sisteBeslutterIdent
                 oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
                 oppgave._emneknagger.add(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
                 oppgave._emneknagger.remove(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
@@ -539,6 +524,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
+            oppgave.sisteSaksbehandlerIdent = null
         }
 
         override fun avbryt(
@@ -585,6 +571,7 @@ data class Oppgave private constructor(
                     true -> utsettOppgaveHendelse.navIdent
                     false -> null
                 }
+            oppgave.sisteSaksbehandlerIdent = oppgave.behandlerIdent
             oppgave.utsattTil = utsettOppgaveHendelse.utsattTil
         }
 
@@ -616,6 +603,7 @@ data class Oppgave private constructor(
                 "Mottok vedtak fattet hendelse i tilstand $type. Automatisk = ${vedtakFattetHendelse.automatiskBehandlet}. Ferdigstiller oppgave."
             }
             oppgave.behandlerIdent = vedtakFattetHendelse.saksbehandlerIdent
+            oppgave.sisteSaksbehandlerIdent = vedtakFattetHendelse.saksbehandlerIdent
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             return Handling.LAGRE_OPPGAVE
         }
@@ -772,6 +760,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
+            oppgave.sisteSaksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
             oppgave.utsattTil = null
         }
 
@@ -781,6 +770,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
+            oppgave.sisteSaksbehandlerIdent = null
             oppgave.utsattTil = null
         }
 
@@ -851,6 +841,7 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(UnderKontroll(), settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
+            oppgave.sisteBeslutterIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
         override fun behandlingTilGodkjenning(
@@ -895,6 +886,7 @@ data class Oppgave private constructor(
                 "Mottok vedtak fattet hendelse i tilstand $type. Automatisk = ${vedtakFattetHendelse.automatiskBehandlet}. Ferdigstiller oppgave."
             }
             oppgave.behandlerIdent = vedtakFattetHendelse.beslutterIdent
+            oppgave.sisteBeslutterIdent = vedtakFattetHendelse.beslutterIdent
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             return Handling.LAGRE_OPPGAVE
         }
@@ -990,7 +982,7 @@ data class Oppgave private constructor(
             )
 
             oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
-            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
+            oppgave.behandlerIdent = oppgave.sisteSaksbehandlerIdent
             oppgave._emneknagger.add(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
             oppgave._emneknagger.remove(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
@@ -1004,6 +996,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(KlarTilKontroll, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
+            oppgave.sisteBeslutterIdent = null
         }
 
         override fun behandlingTilGodkjenning(
