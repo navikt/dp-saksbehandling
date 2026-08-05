@@ -499,7 +499,9 @@ class PostgresOppgaveRepository(
             val saksbehandlerClause =
                 when {
                     søkeFilter.utenSaksbehandler -> " AND oppg.behandler_ident IS NULL "
-                    søkeFilter.saksbehandlerIdent != null -> "AND oppg.behandler_ident = :behandler_ident "
+                    søkeFilter.saksbehandlerIdent != null ->
+                        "AND ( oppg.siste_saksbehandler_ident = :behandler_ident " +
+                            "OR oppg.siste_beslutter_ident = :behandler_ident ) "
                     else -> ""
                 }
 

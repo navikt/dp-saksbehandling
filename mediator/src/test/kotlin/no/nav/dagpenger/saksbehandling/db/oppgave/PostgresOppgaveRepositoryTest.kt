@@ -1796,7 +1796,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver tildelt en gitt saksbehandler`() {
+    fun `Skal kunne søke etter oppgaver hvor en gitt saksbehandler er siste saksbehandler eller siste beslutter`() {
         val enUkeSiden = opprettetNå.minusDays(7)
         val saksbehandler1 = "saksbehandler1"
         val saksbehandler2 = "saksbehandler2"
@@ -1816,6 +1816,7 @@ class PostgresOppgaveRepositoryTest {
             this.leggTilOppgave(
                 tilstand = Oppgave.FerdigBehandlet,
                 saksbehandlerIdent = saksbehandler2,
+                beslutterIdent = saksbehandler1,
                 emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
             )
             this.leggTilOppgave(
@@ -1834,7 +1835,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         saksbehandlerIdent = saksbehandler1,
                     ),
-                ).oppgaver.size shouldBe 1
+                ).oppgaver.size shouldBe 2
 
             repo
                 .søk(
