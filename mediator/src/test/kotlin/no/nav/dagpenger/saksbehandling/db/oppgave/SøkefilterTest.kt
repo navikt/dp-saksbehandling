@@ -188,7 +188,7 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Skal kunne filtrere på en eksplisitt saksbehandlerIdent`() {
+    fun `Skal kunne filtrere på en eksplisitt behandlerIdent`() {
         Parameters
             .build {
                 this["saksbehandlerIdent"] = "annenIdent"
@@ -200,7 +200,7 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Eksplisitt saksbehandlerIdent skal vinne over mineOppgaver`() {
+    fun `Eksplisitt behandlerIdent skal vinne over mineOppgaver`() {
         Parameters
             .build {
                 this["saksbehandlerIdent"] = "annenIdent"

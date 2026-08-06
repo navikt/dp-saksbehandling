@@ -90,7 +90,7 @@ data class Søkefilter(
 
             val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
-            val eksplisittSaksbehandlerIdent = builder.behandlerIdent()
+            val eksplisittBehandlerIdent = builder.behandlerIdent()
             val utenBehandler = builder.utenBehandler()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
@@ -103,7 +103,7 @@ data class Søkefilter(
                 behandlerIdent =
                     when {
                         utenBehandler -> null
-                        eksplisittSaksbehandlerIdent != null -> eksplisittSaksbehandlerIdent
+                        eksplisittBehandlerIdent != null -> eksplisittBehandlerIdent
                         mineOppgaver -> saksbehandlerIdent
                         else -> null
                     },
