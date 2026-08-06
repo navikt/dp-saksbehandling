@@ -2383,6 +2383,8 @@ components:
             - BEHANDLES_AV_KLAGEINSTANS
             - FERDIGSTILT
             - AVBRUTT
+        klageinstansBehandling:
+          $ref: '#/components/schemas/KlageinstansBehandling'
       required:
         - behandlingId
         - utfall
@@ -2698,6 +2700,48 @@ components:
       required:
         - verdi
         - tilgjengeligeUtfall
+
+    KlageinstansUtfall:
+      type: object
+      properties:
+        verdi:
+          type: string
+          enum:
+            - TRUKKET
+            - RETUR
+            - OPPHEVET
+            - MEDHOLD
+            - DELVIS_MEDHOLD
+            - STADFESTELSE
+            - UGUNST
+            - AVVIST
+            - HENLAGT
+
+        tilgjengeligeKlageinstansUtfall:
+          type: array
+          items:
+            type: string
+          description: Tilgjengelige utfall for klagebehandling i KA
+      required:
+        - verdi
+        - tilgjengeligeKlageinstansUtfall
+
+    KlageinstansBehandling:
+      type: object
+      properties:
+        behandlingId:
+          type: string
+          format: uuid
+        utfall:
+          $ref: '#/components/schemas/KlageinstansUtfall'
+        journalpostIder:
+          type: array
+          items:
+            type: string
+      required:
+        - behandlingId
+        - utfall
+        - journalpostIder
 
     FerdigstillInnsendingRequest:
       type: object

@@ -14,6 +14,9 @@ import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningFlerListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageinstansBehandlingDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageinstansUtfallDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageinstansUtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.ListeVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
@@ -70,6 +73,101 @@ class KlageDTOMapper(
                             .filterNot { it == UtfallDTOVerdiDTO.IKKE_SATT }
                             .map { it.value },
                 ),
+            klageinstansBehandling =
+                klageBehandling.klageinstansVedtak()?.let { klageinstansVedtak ->
+                    val klageinstansUtfallDTO =
+                        when (klageinstansVedtak.utfall()) {
+                            "STADFESTELSE" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.STADFESTELSE,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "MEDHOLD" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.MEDHOLD,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "DELVIS_MEDHOLD" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.DELVIS_MEDHOLD,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "TRUKKET" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.TRUKKET,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "RETUR" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.RETUR,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "OPPHEVET" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.OPPHEVET,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "UGUNST" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.UGUNST,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "AVVIST" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.AVVIST,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            "HENLAGT" ->
+                                KlageinstansUtfallDTO(
+                                    verdi = KlageinstansUtfallDTOVerdiDTO.HENLAGT,
+                                    tilgjengeligeKlageinstansUtfall =
+                                        KlageinstansUtfallDTOVerdiDTO.entries
+                                            .map {
+                                                it.value
+                                            },
+                                )
+                            else -> null
+                        }
+                    val klageinstansUtfallDTONotNull = requireNotNull(klageinstansUtfallDTO)
+
+                    KlageinstansBehandlingDTO(
+                        behandlingId = klageinstansVedtak.id,
+                        utfall = klageinstansUtfallDTONotNull,
+                        journalpostIder = klageinstansVedtak.journalpostIder,
+                    )
+                },
         )
     }
 
