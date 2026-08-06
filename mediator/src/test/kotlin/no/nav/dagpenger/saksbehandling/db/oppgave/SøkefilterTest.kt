@@ -53,7 +53,7 @@ class SøkefilterTest {
                                 "Permittert fisk",
                             ),
                     )
-                søkefilter.saksbehandlerIdent shouldBe "testIdent"
+                søkefilter.behandlerIdent shouldBe "testIdent"
                 søkefilter.harDpSak shouldBe true
                 søkefilter.paginering shouldBe Søkefilter.Paginering(10, 0)
                 søkefilter.sorteringsfelt shouldBe Søkefilter.Sorteringsfelt.STATUS
@@ -73,7 +73,7 @@ class SøkefilterTest {
         søkefilter.tilstander shouldBe Oppgave.Tilstand.Type.søkbareTilstander
         søkefilter.ekskluderEmneknagger shouldBe emptySet()
         søkefilter.harDpSak shouldBe false
-        søkefilter.saksbehandlerIdent shouldBe null
+        søkefilter.behandlerIdent shouldBe null
         søkefilter.personIdent shouldBe null
         søkefilter.oppgaveId shouldBe null
         søkefilter.behandlingId shouldBe null
@@ -194,8 +194,8 @@ class SøkefilterTest {
                 this["saksbehandlerIdent"] = "annenIdent"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.saksbehandlerIdent shouldBe "annenIdent"
-                søkefilter.utenSaksbehandler shouldBe false
+                søkefilter.behandlerIdent shouldBe "annenIdent"
+                søkefilter.utenBehandler shouldBe false
             }
     }
 
@@ -207,7 +207,7 @@ class SøkefilterTest {
                 this["mineOppgaver"] = "true"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.saksbehandlerIdent shouldBe "annenIdent"
+                søkefilter.behandlerIdent shouldBe "annenIdent"
             }
     }
 
@@ -218,8 +218,8 @@ class SøkefilterTest {
                 this["utenSaksbehandler"] = "true"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.utenSaksbehandler shouldBe true
-                søkefilter.saksbehandlerIdent shouldBe null
+                søkefilter.utenBehandler shouldBe true
+                søkefilter.behandlerIdent shouldBe null
             }
     }
 
@@ -232,7 +232,7 @@ class SøkefilterTest {
                 this["saksbehandlerIdent"] = "annenIdent"
             }.let {
                 val søkefilter = Søkefilter.fra(it, "testIdent")
-                søkefilter.saksbehandlerIdent shouldBe null
+                søkefilter.behandlerIdent shouldBe null
             }
     }
 }

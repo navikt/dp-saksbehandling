@@ -180,7 +180,7 @@ class OppgaveApiTest {
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
                             tilstander = søkbareTilstander,
-                            saksbehandlerIdent = null,
+                            behandlerIdent = null,
                             personIdent = null,
                             oppgaveId = null,
                             behandlingId = null,
@@ -423,7 +423,7 @@ class OppgaveApiTest {
                                     tom = LocalDate.parse("2023-01-01"),
                                 ),
                             tilstander = setOf(UNDER_BEHANDLING),
-                            saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                            behandlerIdent = TestHelper.saksbehandler.navIdent,
                         ),
                     )
                 } returns søkResultat

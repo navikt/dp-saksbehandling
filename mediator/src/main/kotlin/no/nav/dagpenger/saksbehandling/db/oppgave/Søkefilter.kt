@@ -19,8 +19,8 @@ import java.util.UUID
 data class Søkefilter(
     val periode: Periode,
     val tilstander: Set<Tilstand.Type>,
-    val saksbehandlerIdent: String? = null,
-    val utenSaksbehandler: Boolean = false,
+    val behandlerIdent: String? = null,
+    val utenBehandler: Boolean = false,
     val harDpSak: Boolean = false,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
@@ -90,8 +90,8 @@ data class Søkefilter(
 
             val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
-            val eksplisittSaksbehandlerIdent = builder.saksbehandlerIdent()
-            val utenSaksbehandler = builder.utenSaksbehandler()
+            val eksplisittSaksbehandlerIdent = builder.behandlerIdent()
+            val utenBehandler = builder.utenBehandler()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
             val sorteringsfelt = builder.sorteringsfelt()
@@ -100,14 +100,14 @@ data class Søkefilter(
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
                 tilstander = tilstander,
-                saksbehandlerIdent =
+                behandlerIdent =
                     when {
-                        utenSaksbehandler -> null
+                        utenBehandler -> null
                         eksplisittSaksbehandlerIdent != null -> eksplisittSaksbehandlerIdent
                         mineOppgaver -> saksbehandlerIdent
                         else -> null
                     },
-                utenSaksbehandler = utenSaksbehandler,
+                utenBehandler = utenBehandler,
                 harDpSak = builder.harDpSak(),
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 ekskluderEmneknagger = builder.ekskluderEmneknagger(),
@@ -232,9 +232,9 @@ class FilterBuilder {
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 
-    fun saksbehandlerIdent(): String? = stringValues["saksbehandlerIdent"]?.trim()?.takeIf { it.isNotBlank() }
+    fun behandlerIdent(): String? = stringValues["saksbehandlerIdent"]?.trim()?.takeIf { it.isNotBlank() }
 
-    fun utenSaksbehandler(): Boolean = stringValues["utenSaksbehandler"]?.toBoolean() ?: false
+    fun utenBehandler(): Boolean = stringValues["utenSaksbehandler"]?.toBoolean() ?: false
 
     fun harDpSak(): Boolean = stringValues["harDpSak"]?.toBoolean() ?: false
 

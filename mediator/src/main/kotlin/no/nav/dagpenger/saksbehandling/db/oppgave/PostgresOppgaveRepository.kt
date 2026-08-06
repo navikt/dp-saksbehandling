@@ -301,7 +301,7 @@ class PostgresOppgaveRepository(
                 Søkefilter(
                     tilstander = setOf(tilstand),
                     periode = UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = null,
+                    behandlerIdent = null,
                 ),
         ).oppgaver
 
@@ -469,7 +469,7 @@ class PostgresOppgaveRepository(
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
                     tilstander = Type.søkbareTilstander,
-                    saksbehandlerIdent = null,
+                    behandlerIdent = null,
                     personIdent = ident,
                     paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
                     sortering = Søkefilter.Sortering.DESC,
@@ -498,8 +498,8 @@ class PostgresOppgaveRepository(
 
             val saksbehandlerClause =
                 when {
-                    søkeFilter.utenSaksbehandler -> " AND oppg.behandler_ident IS NULL "
-                    søkeFilter.saksbehandlerIdent != null ->
+                    søkeFilter.utenBehandler -> " AND oppg.behandler_ident IS NULL "
+                    søkeFilter.behandlerIdent != null ->
                         "AND ( oppg.siste_saksbehandler_ident = :behandler_ident " +
                             "OR oppg.siste_beslutter_ident = :behandler_ident ) "
                     else -> ""
@@ -653,7 +653,7 @@ class PostgresOppgaveRepository(
                 mapOf(
                     "fom" to søkeFilter.periode.fom,
                     "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                    "behandler_ident" to søkeFilter.saksbehandlerIdent,
+                    "behandler_ident" to søkeFilter.behandlerIdent,
                     "person_ident" to søkeFilter.personIdent,
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,

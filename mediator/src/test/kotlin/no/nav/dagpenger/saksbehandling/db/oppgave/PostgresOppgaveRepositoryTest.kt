@@ -1833,7 +1833,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        saksbehandlerIdent = saksbehandler1,
+                        behandlerIdent = saksbehandler1,
                     ),
                 ).oppgaver.size shouldBe 2
 
@@ -1844,7 +1844,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        saksbehandlerIdent = saksbehandler2,
+                        behandlerIdent = saksbehandler2,
                     ),
                 ).oppgaver.size shouldBe 2
 
@@ -1855,7 +1855,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        saksbehandlerIdent = null,
+                        behandlerIdent = null,
                     ),
                 ).oppgaver.size shouldBe 4
 
@@ -1866,7 +1866,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        saksbehandlerIdent = saksbehandler2,
+                        behandlerIdent = saksbehandler2,
                         emneknaggGruppertPerKategori =
                             mapOf(
                                 Emneknagg.Regelknagg.INNVILGELSE.kategori to setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
@@ -1881,7 +1881,7 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
-                        utenSaksbehandler = true,
+                        utenBehandler = true,
                     ),
                 ).oppgaver.size shouldBe 1
         }
@@ -2297,7 +2297,7 @@ class PostgresOppgaveRepositoryTest {
                     Søkefilter(
                         periode = Periode.UBEGRENSET_PERIODE,
                         tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
-                        saksbehandlerIdent = null,
+                        behandlerIdent = null,
                         personIdent = null,
                         oppgaveId = null,
                         behandlingId = null,
