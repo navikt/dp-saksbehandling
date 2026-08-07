@@ -35,9 +35,20 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.klage.FormkravSteg
+import no.nav.dagpenger.saksbehandling.klage.FristvurderingSteg
+import no.nav.dagpenger.saksbehandling.klage.FullmektigSteg
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
+import no.nav.dagpenger.saksbehandling.klage.KlagenGjelderSteg
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansSteg
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.klage.VurderUtfallSteg
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -67,11 +78,44 @@ class KlageApiTest {
 
     @Test
     fun `Skal hente klageDTO`() {
+//        val klageBehandling =
+//            mockk<KlageBehandling>(relaxed = true).also {
+//                every { it.behandlingId } returns klageBehandlingId
+//                every { it.personIdent() } returns "12345678901"
+//                every { it.tilstand } returns KlageBehandling.Behandles
+//            }
+
+        val klageId = UUIDv7.ny()
         val klageBehandling =
-            mockk<KlageBehandling>(relaxed = true).also {
-                every { it.behandlingId } returns klageBehandlingId
-                every { it.personIdent() } returns "12345678901"
-            }
+            KlageBehandling.rehydrer(
+                behandlingId = klageId,
+                opprettet = opprettet,
+                opplysninger = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+                tilstand = KlageBehandling.Ferdigstilt,
+                journalpostId = null,
+                behandlendeEnhet = "4449",
+                tilstandslogg = KlageTilstandslogg(),
+                steg =
+                    listOf(
+                        KlagenGjelderSteg,
+                        FristvurderingSteg,
+                        FormkravSteg,
+                        VurderUtfallSteg,
+                        OversendKlageinstansSteg,
+                        FullmektigSteg,
+                    ),
+                klageinstansVedtak =
+                    KlageinstansVedtak.from(
+                        KlageinstansVedtakHendelse(
+                            type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                            klageId = klageId,
+                            klageinstansVedtakId = UUIDv7.ny(),
+                            avsluttet = LocalDateTime.now(),
+                            utfall = "MEDHOLD",
+                            journalpostIder = listOf("12345"),
+                        ),
+                    ),
+            )
         val mediator =
             mockk<KlageMediator>().also {
                 every {

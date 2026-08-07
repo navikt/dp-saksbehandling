@@ -7,10 +7,21 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
+import no.nav.dagpenger.saksbehandling.klage.FormkravSteg
+import no.nav.dagpenger.saksbehandling.klage.FristvurderingSteg
+import no.nav.dagpenger.saksbehandling.klage.FullmektigSteg
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
+import no.nav.dagpenger.saksbehandling.klage.KlagenGjelderSteg
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansSteg
+import no.nav.dagpenger.saksbehandling.klage.VurderUtfallSteg
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -27,9 +38,36 @@ class KlageDTOMapperTest {
     @Test
     fun `Skal mappe KlageBehandling til KlageDTO`() {
         runBlocking {
+            val klageId = UUIDv7.ny()
             val klageBehandling =
-                KlageBehandling(
+                KlageBehandling.rehydrer(
+                    behandlingId = klageId,
                     opprettet = opprettet,
+                    opplysninger = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+                    tilstand = KlageBehandling.Ferdigstilt,
+                    journalpostId = null,
+                    behandlendeEnhet = "4449",
+                    tilstandslogg = KlageTilstandslogg(),
+                    steg =
+                        listOf(
+                            KlagenGjelderSteg,
+                            FristvurderingSteg,
+                            FormkravSteg,
+                            VurderUtfallSteg,
+                            OversendKlageinstansSteg,
+                            FullmektigSteg,
+                        ),
+                    klageinstansVedtak =
+                        KlageinstansVedtak.from(
+                            KlageinstansVedtakHendelse(
+                                type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                                klageId = klageId,
+                                klageinstansVedtakId = UUIDv7.ny(),
+                                avsluttet = LocalDateTime.now(),
+                                utfall = "UGUNST",
+                                journalpostIder = listOf("12345"),
+                            ),
+                        ),
                 )
             val saksbehandlerDTO =
                 BehandlerDTO(
@@ -266,7 +304,26 @@ class KlageDTOMapperTest {
                                 "MEDHOLD"
                             ]
                         },
-                        "tilstand": "BEHANDLES"
+                        "tilstand": "FERDIGSTILT",
+                        "klageinstansBehandling": {
+                            "behandlingId": "${klageBehandling.klageinstansVedtak()!!.id}",
+                            "journalpostIder": ["12345"],
+                            "utfall": {
+                                "verdi": "UGUNST",
+                                "tilgjengeligeKlageinstansUtfall": [
+                                    "TRUKKET",
+                                    "RETUR",
+                                    "OPPHEVET",
+                                    "MEDHOLD",
+                                    "DELVIS_MEDHOLD",
+                                    "STADFESTELSE",
+                                    "UGUNST",
+                                    "AVVIST",
+                                    "HENLAGT"
+                              ]
+                            },
+                            "journalpostIder": ["12345"]
+                        }
                     }
                     """
             }

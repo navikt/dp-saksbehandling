@@ -21,6 +21,14 @@ sealed class KlageinstansVedtak {
 
         enum class Utfall {
             STADFESTELSE,
+            TRUKKET,
+            RETUR,
+            OPPHEVET,
+            MEDHOLD,
+            DELVIS_MEDHOLD,
+            UGUNST,
+            AVVIST,
+            HENLAGT,
         }
     }
 
