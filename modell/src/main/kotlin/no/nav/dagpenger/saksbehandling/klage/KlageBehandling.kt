@@ -172,7 +172,7 @@ data class KlageBehandling private constructor(
     ) {
         logger.info {
             "Endrer klagetilstand fra ${this.tilstand.type} til ${nyTilstand.type} for klage ${this.behandlingId} " +
-                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
@@ -181,7 +181,7 @@ data class KlageBehandling private constructor(
     private fun ignorerDistribuertVedtak(tilstand: Type): KlageAksjon {
         logger.warn {
             "Mottok hendelse om distribuert vedtak for klage ${this.behandlingId} som allerede er i tilstand " +
-                "$tilstand. Ignorerer hendelsen (idempotent håndtering av redelivery)."
+                    "$tilstand. Ignorerer hendelsen (idempotent håndtering av redelivery)."
         }
         return KlageAksjon.IngenAksjon(this.behandlingId)
     }
@@ -248,12 +248,11 @@ data class KlageBehandling private constructor(
             hendelse = hendelse,
         )
 
-    fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
+    fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse): KlageAksjon =
         tilstand.mottaKlageinstansVedtak(
             klageBehandling = this,
             hendelse = klageinstansVedtakHendelse,
         )
-    }
 
     object Behandles : KlageTilstand {
         override val type: Type = BEHANDLES
@@ -369,6 +368,7 @@ data class KlageBehandling private constructor(
                 UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> throw IllegalStateException(
                     "$utfall skal ikke gå via vedtakDistribuert — ingen utsending sendes for medhold/delvis medhold",
                 )
+
                 UtfallType.AVVIST -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = Ferdigstilt,
@@ -397,9 +397,21 @@ data class KlageBehandling private constructor(
         override fun mottaKlageinstansVedtak(
             klageBehandling: KlageBehandling,
             hendelse: KlageinstansVedtakHendelse,
-        ) {
-            klageBehandling.klageinstansVedtak = KlageinstansVedtak.from(hendelse)
+        ): KlageAksjon {
+            val klageinstansVedtak = KlageinstansVedtak.from(hendelse)
+            klageBehandling.klageinstansVedtak = klageinstansVedtak
             klageBehandling.endreTilstand(Ferdigstilt, hendelse)
+            return when (klageinstansVedtak) {
+                is KlageinstansVedtak.Klage ->
+                    if (klageinstansVedtak.utfall.skalStarteRevurdering()) {
+                        KlageAksjon.StartRevurdering(
+                            klageBehandling = klageBehandling,
+                            kabalReferanse = klageinstansVedtak.id,
+                        )
+                    } else {
+                        KlageAksjon.IngenAksjon(klageBehandling.behandlingId)
+                    }
+            }
         }
 
         override fun vedtakDistribuert(
@@ -443,7 +455,7 @@ data class KlageBehandling private constructor(
         fun mottaKlageinstansVedtak(
             klageBehandling: KlageBehandling,
             hendelse: KlageinstansVedtakHendelse,
-        ): Unit = throw IllegalStateException("Kan ikke motta klageinstans vedtak i tilstand $type")
+        ): KlageAksjon = throw IllegalStateException("Kan ikke motta klageinstans vedtak i tilstand $type")
 
         enum class Type {
             BEHANDLES,

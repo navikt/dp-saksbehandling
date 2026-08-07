@@ -29,6 +29,13 @@ sealed class KlageinstansVedtak {
             UGUNST,
             AVVIST,
             HENLAGT,
+            ;
+
+            fun skalStarteRevurdering(): Boolean =
+                when (this) {
+                    MEDHOLD, DELVIS_MEDHOLD, OPPHEVET, RETUR, UGUNST -> true
+                    STADFESTELSE, TRUKKET, AVVIST, HENLAGT -> false
+                }
         }
     }
 

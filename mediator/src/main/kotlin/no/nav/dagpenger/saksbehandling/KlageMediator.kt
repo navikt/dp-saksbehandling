@@ -366,6 +366,10 @@ class KlageMediator(
                 is KlageAksjon.IngenAksjon -> {
                     // Ingen handling nødvendig
                 }
+
+                is KlageAksjon.StartRevurdering -> {
+                    error("Kan ikke starte revurdering som følge av vedtakDistribuert-hendelse")
+                }
             }
         }
     }
@@ -374,8 +378,19 @@ class KlageMediator(
         klageRepository
             .hentKlageBehandling(behandlingId = klageinstansVedtakHendelse.klageId)
             .let { klageBehandling ->
-                klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
+                val aksjon = klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
                 klageRepository.lagre(klageBehandling)
+                when (aksjon) {
+                    is KlageAksjon.StartRevurdering -> {
+                        // TODO: Opprett revurderingsbehandling i dp-behandling via BehandlingKlient,
+                        // se plan for automatisk revurdering ved Kabal-vedtak.
+                        logger.info { "Klage ${aksjon.behandlingId} krever revurdering (kabalReferanse=${aksjon.kabalReferanse})" }
+                    }
+
+                    is KlageAksjon.IngenAksjon, is KlageAksjon.OversendKlageinstans -> {
+                        // Ingen handling nødvendig
+                    }
+                }
             }
     }
 

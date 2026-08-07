@@ -12,8 +12,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse.KlageVedtakType
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Behandles
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlesAvKlageinstans
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
@@ -542,6 +545,65 @@ class KlageBehandlingTest {
                         utførtAv = saksbehandler,
                     ),
             )
+        }
+    }
+
+    @Test
+    fun `mottaKlageinstansVedtak med utfall som skal starte revurdering gir KlageAksjon StartRevurdering og tilstand FERDIGSTILT`() {
+        listOf(
+            KlageinstansVedtak.Klage.Utfall.MEDHOLD,
+            KlageinstansVedtak.Klage.Utfall.DELVIS_MEDHOLD,
+            KlageinstansVedtak.Klage.Utfall.OPPHEVET,
+            KlageinstansVedtak.Klage.Utfall.RETUR,
+            KlageinstansVedtak.Klage.Utfall.UGUNST,
+        ).forEach { utfall ->
+            val klageBehandling =
+                lagKlageBehandling(tilstand = BehandlesAvKlageinstans)
+            val klageinstansVedtakId = UUID.randomUUID()
+            val hendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageVedtakType.KLAGE,
+                    klageId = klageBehandling.behandlingId,
+                    klageinstansVedtakId = klageinstansVedtakId,
+                    avsluttet = LocalDateTime.now(),
+                    utfall = utfall.name,
+                    journalpostIder = listOf("journalpostId1"),
+                )
+
+            val aksjon = klageBehandling.mottaKlageinstansVedtak(hendelse)
+
+            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+            aksjon.shouldBeInstanceOf<KlageAksjon.StartRevurdering>()
+            aksjon.kabalReferanse shouldBe klageinstansVedtakId
+            aksjon.behandlingId shouldBe klageBehandling.behandlingId
+        }
+    }
+
+    @Test
+    fun `mottaKlageinstansVedtak med utfall som ikke skal starte revurdering gir KlageAksjon IngenAksjon og tilstand FERDIGSTILT`() {
+        listOf(
+            KlageinstansVedtak.Klage.Utfall.STADFESTELSE,
+            KlageinstansVedtak.Klage.Utfall.TRUKKET,
+            KlageinstansVedtak.Klage.Utfall.AVVIST,
+            KlageinstansVedtak.Klage.Utfall.HENLAGT,
+        ).forEach { utfall ->
+            val klageBehandling =
+                lagKlageBehandling(tilstand = BehandlesAvKlageinstans)
+            val hendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageVedtakType.KLAGE,
+                    klageId = klageBehandling.behandlingId,
+                    klageinstansVedtakId = UUID.randomUUID(),
+                    avsluttet = LocalDateTime.now(),
+                    utfall = utfall.name,
+                    journalpostIder = listOf("journalpostId1"),
+                )
+
+            val aksjon = klageBehandling.mottaKlageinstansVedtak(hendelse)
+
+            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+            aksjon.shouldBeInstanceOf<KlageAksjon.IngenAksjon>()
+            aksjon.behandlingId shouldBe klageBehandling.behandlingId
         }
     }
 
