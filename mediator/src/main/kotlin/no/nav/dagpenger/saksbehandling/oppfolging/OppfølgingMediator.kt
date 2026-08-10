@@ -118,6 +118,7 @@ class OppfølgingMediator(
 
             is OppfølgingAksjon.OpprettManuellBehandling,
             is OppfølgingAksjon.OpprettRevurderingBehandling,
+            is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage,
             -> ferdigstillEksternt(oppfølging, hendelse)
         }
 

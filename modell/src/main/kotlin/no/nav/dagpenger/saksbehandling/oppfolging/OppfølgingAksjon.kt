@@ -8,6 +8,7 @@ sealed class OppfølgingAksjon {
         AVSLUTT,
         OPPRETT_MANUELL_BEHANDLING,
         OPPRETT_REVURDERING_BEHANDLING,
+        OPPRETT_REVURDERING_BEHANDLING_ETTER_KLAGE,
         OPPRETT_KLAGE,
         OPPRETT_OPPFOLGING,
     }
@@ -37,6 +38,15 @@ sealed class OppfølgingAksjon {
         override val type: Type = Type.OPPRETT_REVURDERING_BEHANDLING
 
         override fun toString() = "OpprettRevurderingBehandling(valgtSakId=$valgtSakId)"
+    }
+
+    data class OpprettRevurderingBehandlingEtterKlage(
+        val saksbehandlerToken: String,
+        override val valgtSakId: UUID,
+    ) : OppfølgingAksjon() {
+        override val type: Type = Type.OPPRETT_REVURDERING_BEHANDLING_ETTER_KLAGE
+
+        override fun toString() = "OpprettRevurderingBehandlingEtterKlage(valgtSakId=$valgtSakId)"
     }
 
     data class OpprettKlage(

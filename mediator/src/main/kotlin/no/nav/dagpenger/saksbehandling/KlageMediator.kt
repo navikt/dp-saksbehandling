@@ -62,6 +62,11 @@ class KlageMediator(
         return klageRepository.hentKlageBehandling(behandlingId)
     }
 
+    // Brukes av OppfølgingBehandler for å slå opp klagebehandlingen en oppfølgingsoppgave er
+    // basert på (jf. mottaKlageinstansVedtak). Dette er et internt mediator-til-mediator-kall
+    // uten en saksbehandler i konteksten, og gjør derfor ingen tilgangssjekk mot en oppgave.
+    fun hentKlageBehandlingUtenTilgangssjekk(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+
     fun opprettKlage(
         klageMottattHendelse: KlageMottattHendelse,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,

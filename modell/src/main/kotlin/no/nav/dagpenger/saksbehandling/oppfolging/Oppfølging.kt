@@ -164,6 +164,13 @@ class Oppfølging private constructor(
                 this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
             }
 
+            OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING_ETTER_KLAGE -> {
+                requireNotNull(opprettetBehandlingId) {
+                    "behandlingId kan ikke være null etter opprettelse av revurdering etter klage"
+                }
+                this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
+            }
+
             OppfølgingAksjon.Type.OPPRETT_OPPFOLGING -> {
                 requireNotNull(opprettetBehandlingId) {
                     "behandlingId kan ikke være null etter opprettelse av oppfølging"

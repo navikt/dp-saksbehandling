@@ -8,6 +8,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
+import java.util.UUID
 
 class OppfølgingBehandler(
     private val klageMediator: KlageMediator,
@@ -46,13 +48,36 @@ class OppfølgingBehandler(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
     ): OppfølgingFerdigstiltHendelse {
-        val (saksbehandlerToken, behandlingstype) =
+        val (saksbehandlerToken, behandlingstype, begrunnelse) =
             when (val aksjon = hendelse.aksjon) {
                 is OppfølgingAksjon.OpprettManuellBehandling ->
-                    aksjon.saksbehandlerToken to BehandlingstypeDTO.MANUELL
+                    Triple(aksjon.saksbehandlerToken, BehandlingstypeDTO.MANUELL, oppfølging.vurdering() ?: "Opprettet fra oppfølging")
 
                 is OppfølgingAksjon.OpprettRevurderingBehandling ->
-                    aksjon.saksbehandlerToken to BehandlingstypeDTO.REVURDERING
+                    Triple(aksjon.saksbehandlerToken, BehandlingstypeDTO.REVURDERING, oppfølging.vurdering() ?: "Opprettet fra oppfølging")
+
+                is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage -> {
+                    val klageBehandlingId =
+                        requireNotNull(oppfølging.strukturertData["basertPåBehandling"] as? String) {
+                            "Oppfølging ${oppfølging.id} mangler basertPåBehandling i strukturertData - kan ikke opprette revurdering etter klage"
+                        }.let(UUID::fromString)
+
+                    val klageBehandling = klageMediator.hentKlageBehandlingUtenTilgangssjekk(klageBehandlingId)
+                    val klageinstansVedtak =
+                        klageBehandling.klageinstansVedtak() as? KlageinstansVedtak.Klage
+                            ?: error("Klagebehandling $klageBehandlingId mangler klageinstansvedtak")
+                    val kabalReferanse = klageinstansVedtak.id
+
+                    // TODO steg 4: bruk kabalReferanse til å opprette en NyKlage (OmgjøringEtterKlage) i
+                    // dp-behandling med kildesystem=Klageinstans istedenfor en plain Revurdering, slik at
+                    // dp-behandling selv kjenner referansen til Kabal-vedtaket.
+                    Triple(
+                        aksjon.saksbehandlerToken,
+                        BehandlingstypeDTO.REVURDERING,
+                        (oppfølging.vurdering() ?: "Opprettet fra oppfølging") +
+                            " (revurdering etter klageinstansvedtak $kabalReferanse, basert på klagebehandling $klageBehandlingId)",
+                    )
+                }
 
                 else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: $aksjon")
             }
@@ -64,7 +89,7 @@ class OppfølgingBehandler(
                 behandlingstype = behandlingstype,
                 hendelseDato = oppfølging.opprettet.toLocalDate(),
                 hendelseId = oppfølging.id.toString(),
-                begrunnelse = oppfølging.vurdering() ?: "Opprettet fra oppfølging",
+                begrunnelse = begrunnelse,
             ).let { result ->
                 return OppfølgingFerdigstiltHendelse(
                     oppfølgingId = oppfølging.id,
