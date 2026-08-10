@@ -186,7 +186,7 @@ class KlageMediatorTest {
                 it["ident"].stringValue() shouldBe testPersonIdent
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
             oppgave.tilstandslogg.size shouldBe 2
@@ -357,7 +357,7 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe UNDER_BEHANDLING
             oppgave.behandlerIdent shouldBe saksbehandler.navIdent
@@ -481,7 +481,7 @@ class KlageMediatorTest {
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -561,7 +561,7 @@ class KlageMediatorTest {
                 ).tilstand()
                 .type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -590,7 +590,7 @@ class KlageMediatorTest {
                 .type shouldBe AVBRUTT
 
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe FERDIG_BEHANDLET
             testRapid.inspektør.size shouldBe 1
@@ -625,7 +625,7 @@ class KlageMediatorTest {
                 ).tilstand()
                 .type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -654,7 +654,7 @@ class KlageMediatorTest {
                 .type shouldBe BEHANDLING_UTFORT
 
             oppgaveMediator
-                .hentOppgaveFor(
+                .hentOppgaveMedTilgangssjekk(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).tilstand()
@@ -686,7 +686,7 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -707,7 +707,7 @@ class KlageMediatorTest {
                 .tilstand()
                 .type shouldBe BEHANDLING_UTFORT
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe UNDER_BEHANDLING
 
@@ -721,7 +721,7 @@ class KlageMediatorTest {
                 .tilstand()
                 .type shouldBe FERDIGSTILT
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe FERDIG_BEHANDLET
         }
@@ -741,7 +741,7 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -767,7 +767,7 @@ class KlageMediatorTest {
                 .tilstand()
                 .type shouldBe BEHANDLES
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe UNDER_BEHANDLING
         }
@@ -787,7 +787,7 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -808,7 +808,7 @@ class KlageMediatorTest {
                 .tilstand()
                 .type shouldBe BEHANDLING_UTFORT
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe UNDER_BEHANDLING
 
@@ -822,7 +822,7 @@ class KlageMediatorTest {
                 .tilstand()
                 .type shouldBe FERDIGSTILT
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe FERDIG_BEHANDLET
         }
@@ -842,7 +842,7 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave = oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -868,7 +868,7 @@ class KlageMediatorTest {
                 .tilstand()
                 .type shouldBe BEHANDLES
             oppgaveMediator
-                .hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
                 .type shouldBe UNDER_BEHANDLING
         }

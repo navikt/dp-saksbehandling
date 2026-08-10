@@ -196,7 +196,7 @@ class OppgaveMediator(
             oppgave.tilgangskontrollPerson(saksbehandler)
         }
 
-    fun hentOppgaveFor(
+    fun hentOppgaveMedTilgangssjekk(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): Oppgave =

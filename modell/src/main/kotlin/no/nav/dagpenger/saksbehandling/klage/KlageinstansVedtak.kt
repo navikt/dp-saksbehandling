@@ -20,12 +20,12 @@ sealed class KlageinstansVedtak {
         override fun utfall(): String = utfall.name
 
         enum class Utfall {
-            STADFESTELSE,
             TRUKKET,
             RETUR,
             OPPHEVET,
             MEDHOLD,
             DELVIS_MEDHOLD,
+            STADFESTELSE,
             UGUNST,
             AVVIST,
             HENLAGT,

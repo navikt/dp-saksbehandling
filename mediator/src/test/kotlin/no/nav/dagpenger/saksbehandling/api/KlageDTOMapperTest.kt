@@ -39,6 +39,7 @@ class KlageDTOMapperTest {
     fun `Skal mappe KlageBehandling til KlageDTO`() {
         runBlocking {
             val klageId = UUIDv7.ny()
+            val kaJournalposter = listOf("KA-journalpost-1", "KA-journalpost-2")
             val klageBehandling =
                 KlageBehandling.rehydrer(
                     behandlingId = klageId,
@@ -65,7 +66,7 @@ class KlageDTOMapperTest {
                                 klageinstansVedtakId = UUIDv7.ny(),
                                 avsluttet = LocalDateTime.now(),
                                 utfall = "UGUNST",
-                                journalpostIder = listOf("12345"),
+                                journalpostIder = kaJournalposter,
                             ),
                         ),
                 )
@@ -307,7 +308,7 @@ class KlageDTOMapperTest {
                         "tilstand": "FERDIGSTILT",
                         "klageinstansBehandling": {
                             "behandlingId": "${klageBehandling.klageinstansVedtak()!!.id}",
-                            "journalpostIder": ["12345"],
+                            "journalpostIder": ["KA-journalpost-1", "KA-journalpost-2"],
                             "utfall": {
                                 "verdi": "UGUNST",
                                 "tilgjengeligeKlageinstansUtfall": [
@@ -321,8 +322,7 @@ class KlageDTOMapperTest {
                                     "AVVIST",
                                     "HENLAGT"
                               ]
-                            },
-                            "journalpostIder": ["12345"]
+                            }
                         }
                     }
                     """

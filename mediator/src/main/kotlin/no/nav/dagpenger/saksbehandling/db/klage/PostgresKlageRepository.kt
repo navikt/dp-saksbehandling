@@ -209,7 +209,7 @@ class PostgresKlageRepository(
                 databaseSession = databaseSession,
             )
         val opprettet = this.localDateTime("opprettet")
-        val kavVedtak = this.kaVedtakOrNull()
+        val kaVedtak = this.kaVedtakOrNull()
 
         return KlageBehandling.rehydrer(
             behandlingId = behandlingId,
@@ -219,7 +219,7 @@ class PostgresKlageRepository(
             opplysninger = opplysninger,
             tilstandslogg = tilstandslogg,
             opprettet = opprettet,
-            klageinstansVedtak = kavVedtak,
+            klageinstansVedtak = kaVedtak,
         )
     }
 

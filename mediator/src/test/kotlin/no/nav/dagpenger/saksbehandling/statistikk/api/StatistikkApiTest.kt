@@ -102,7 +102,7 @@ class StatistikkApiTest {
 
     @Test
     fun `Hent produksjonsstatistikk gruppert på utlostAv når bruker er autentisert og ingen gruppering er valgt`() {
-        val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
+        val dato = LocalDateTime.of(2026, 6, 13, 10, 45).plusSeconds(33)
         val mockProduksjonsstatistikkRepository =
             mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentTilstanderMedUtløstAvFilter(any()) } returns
@@ -110,7 +110,7 @@ class StatistikkApiTest {
                         TilstandStatistikk(
                             tilstand = KLAR_TIL_BEHANDLING,
                             antall = 1,
-                            eldsteOppgaveTidspunkt = iGår,
+                            eldsteOppgaveTidspunkt = dato,
                         ),
                     )
                 every { it.hentUtløstAvMedTilstandFilter(any()) } returns
@@ -161,7 +161,7 @@ class StatistikkApiTest {
                           "grupper" : [ {
                             "navn" : "KLAR_TIL_BEHANDLING",
                             "total" : 1,
-                            "eldsteOppgave" : "$iGår"
+                            "eldsteOppgave" : "$dato"
                           } ],
                           "serier" : [ {
                             "navn" : "SØKNAD",

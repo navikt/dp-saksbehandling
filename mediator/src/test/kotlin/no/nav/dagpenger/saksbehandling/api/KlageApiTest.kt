@@ -23,6 +23,7 @@ import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigMaskinToken
@@ -41,6 +42,10 @@ import no.nav.dagpenger.saksbehandling.klage.FormkravSteg
 import no.nav.dagpenger.saksbehandling.klage.FristvurderingSteg
 import no.nav.dagpenger.saksbehandling.klage.FullmektigSteg
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Companion.rehydrer
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.klage.KlagenGjelderSteg
@@ -55,10 +60,10 @@ import java.time.LocalDateTime
 
 class KlageApiTest {
     private val klageBehandlingId = UUIDv7.ny()
-    private val journalpostId = "journalpostId"
+    private val ident = "12345612345"
+    private val sakId = UUIDv7.ny()
     private val opplysningId = UUIDv7.ny()
     private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
-    private val dato = LocalDateTime.of(2025, 1, 1, 1, 1)
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
@@ -78,23 +83,47 @@ class KlageApiTest {
 
     @Test
     fun `Skal hente klageDTO`() {
-//        val klageBehandling =
-//            mockk<KlageBehandling>(relaxed = true).also {
-//                every { it.behandlingId } returns klageBehandlingId
-//                every { it.personIdent() } returns "12345678901"
-//                every { it.tilstand } returns KlageBehandling.Behandles
-//            }
-
-        val klageId = UUIDv7.ny()
         val klageBehandling =
-            KlageBehandling.rehydrer(
-                behandlingId = klageId,
+            rehydrer(
+                behandlingId = klageBehandlingId,
                 opprettet = opprettet,
                 opplysninger = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
                 tilstand = KlageBehandling.Ferdigstilt,
                 journalpostId = null,
                 behandlendeEnhet = "4449",
-                tilstandslogg = KlageTilstandslogg(),
+                tilstandslogg =
+                    KlageTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = BEHANDLES,
+                            hendelse =
+                                KlageMottattHendelse(
+                                    ident = ident,
+                                    opprettet = opprettet,
+                                    journalpostId = "JP1",
+                                    sakId = sakId,
+                                ),
+                        ),
+                        Tilstandsendring(
+                            tilstand = BEHANDLING_UTFORT,
+                            hendelse =
+                                KlageBehandlingUtført(
+                                    behandlingId = klageBehandlingId,
+                                    utførtAv = TestHelper.saksbehandler,
+                                ),
+                        ),
+                        Tilstandsendring(
+                            tilstand = FERDIGSTILT,
+                            hendelse =
+                                KlageinstansVedtakHendelse(
+                                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                                    klageId = klageBehandlingId,
+                                    klageinstansVedtakId = UUIDv7.ny(),
+                                    avsluttet = LocalDateTime.now(),
+                                    utfall = "MEDHOLD",
+                                    journalpostIder = listOf("KA12345"),
+                                ),
+                        ),
+                    ),
                 steg =
                     listOf(
                         KlagenGjelderSteg,
@@ -108,15 +137,15 @@ class KlageApiTest {
                     KlageinstansVedtak.from(
                         KlageinstansVedtakHendelse(
                             type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
-                            klageId = klageId,
-                            klageinstansVedtakId = UUIDv7.ny(),
+                            klageId = klageBehandlingId,
+                            klageinstansVedtakId = sakId,
                             avsluttet = LocalDateTime.now(),
                             utfall = "MEDHOLD",
                             journalpostIder = listOf("12345"),
                         ),
                     ),
             )
-        val mediator =
+        val klageMediator =
             mockk<KlageMediator>().also {
                 every {
                     it.hentKlageBehandling(
@@ -126,7 +155,7 @@ class KlageApiTest {
                 } returns klageBehandling
             }
 
-        withKlageApi(mediator) {
+        withKlageApi(klageMediator) {
             client.get("klage/$klageBehandlingId") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -143,7 +172,7 @@ class KlageApiTest {
         val oppgave =
             TestHelper.lagOppgave(
                 behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage),
-                opprettet = dato,
+                opprettet = opprettet,
             )
         val ident = oppgave.personIdent()
         val mediator =
@@ -154,7 +183,7 @@ class KlageApiTest {
                             KlageMottattHendelse(
                                 ident = oppgave.personIdent(),
                                 sakId = sakId,
-                                opprettet = dato,
+                                opprettet = opprettet,
                                 journalpostId = "journalpostId",
                             ),
                     )
@@ -171,7 +200,7 @@ class KlageApiTest {
                         """
                         {
                             "journalpostId": "journalpostId",
-                            "opprettet": "$dato",
+                            "opprettet": "$opprettet",
                             "sakId": "$sakId",
                             "personIdent": {"ident":  "$ident"}
                         }
@@ -200,7 +229,7 @@ class KlageApiTest {
                     KlageMottattHendelse(
                         ident = ident,
                         sakId = sakId,
-                        opprettet = dato,
+                        opprettet = opprettet,
                         journalpostId = "journalpostId",
                     ),
             )
@@ -213,7 +242,7 @@ class KlageApiTest {
         val oppgave =
             TestHelper.lagOppgave(
                 behandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage),
-                opprettet = dato,
+                opprettet = opprettet,
             )
         val ident = oppgave.personIdent()
         val sakId = UUIDv7.ny()
@@ -225,7 +254,7 @@ class KlageApiTest {
                             ManuellKlageMottattHendelse(
                                 ident = oppgave.personIdent(),
                                 sakId = sakId,
-                                opprettet = dato,
+                                opprettet = opprettet,
                                 journalpostId = "journalpostId",
                                 utførtAv = TestHelper.saksbehandler,
                             ),
@@ -243,7 +272,7 @@ class KlageApiTest {
                         """
                         {
                             "journalpostId": "journalpostId",
-                            "opprettet": "$dato",
+                            "opprettet": "$opprettet",
                             "sakId": "$sakId",
                             "personIdent": {"ident":  "$ident"}
                         }
@@ -272,7 +301,7 @@ class KlageApiTest {
                     ManuellKlageMottattHendelse(
                         ident = ident,
                         sakId = sakId,
-                        opprettet = dato,
+                        opprettet = opprettet,
                         journalpostId = "journalpostId",
                         utførtAv = TestHelper.saksbehandler,
                     ),

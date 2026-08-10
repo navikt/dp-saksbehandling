@@ -49,7 +49,7 @@ class KlageMediator(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): KlageBehandling {
-        sjekkTilgangTilOppgave(
+        oppgaveMediator.hentOppgaveMedTilgangssjekk(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
@@ -159,7 +159,7 @@ class KlageMediator(
         verdi: Verdi,
         saksbehandler: Saksbehandler,
     ): KlageBehandling {
-        sjekkTilgangOgEierAvOppgave(behandlingId, saksbehandler)
+        oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
         return klageRepository.hentKlageBehandling(behandlingId).also { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
@@ -197,7 +197,7 @@ class KlageMediator(
             when (utfallType) {
                 UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST -> {
                     val oppgave =
-                        sjekkTilgangOgEierAvOppgave(
+                        oppgaveMediator.hentOppgaveMedTilgangssjekk(
                             behandlingId = hendelse.behandlingId,
                             saksbehandler = hendelse.utførtAv,
                         )
@@ -278,7 +278,7 @@ class KlageMediator(
         }
 
     fun ferdigstillBehandling(hendelse: KlageBehandlingFerdigstilt): KlageBehandling {
-        sjekkTilgangOgEierAvOppgave(
+        oppgaveMediator.hentOppgaveMedTilgangssjekk(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
         )
@@ -304,7 +304,7 @@ class KlageMediator(
     // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
     // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
     fun avbrytKlage(hendelse: AvbruttHendelse): KlageBehandling {
-        sjekkTilgangOgEierAvOppgave(
+        oppgaveMediator.hentOppgaveMedTilgangssjekk(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
         )
@@ -378,24 +378,4 @@ class KlageMediator(
                 klageRepository.lagre(klageBehandling)
             }
     }
-
-    private fun sjekkTilgangTilOppgave(
-        behandlingId: UUID,
-        saksbehandler: Saksbehandler,
-    ): Oppgave =
-        oppgaveMediator.hentOppgaveFor(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
-        )
-
-    private fun sjekkTilgangOgEierAvOppgave(
-        behandlingId: UUID,
-        saksbehandler: Saksbehandler,
-    ): Oppgave =
-        sjekkTilgangTilOppgave(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
-        ).also {
-            requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
-        }
 }

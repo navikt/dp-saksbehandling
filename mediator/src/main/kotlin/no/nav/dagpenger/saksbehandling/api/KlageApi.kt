@@ -84,7 +84,11 @@ fun Route.klageApi(
                             behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
-                    auditlogg.les("Så en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
+                    auditlogg.les(
+                        melding = "Så en klagebehandling",
+                        ident = klageBehandling.personIdent(),
+                        saksbehandler = saksbehandler.navIdent,
+                    )
                     val klageDTO =
                         klageDtoMapper.tilDto(
                             klageBehandling = klageBehandling,
