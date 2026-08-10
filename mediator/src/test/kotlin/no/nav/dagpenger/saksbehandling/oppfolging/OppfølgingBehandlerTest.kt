@@ -10,7 +10,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
+import no.nav.dagpenger.saksbehandling.behandling.OpprettBehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
@@ -52,18 +52,11 @@ class OppfølgingBehandlerTest {
             }
 
         val opprettetBehandlingId = UUID.randomUUID()
-        val begrunnelseSlot = slot<String>()
+        val opprettBehandlingTypeDTOSlot = slot<OpprettBehandlingTypeDTO>()
         val behandlingKlientMock =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.opprettBehandling(
-                        personIdent = any(),
-                        saksbehandlerToken = any(),
-                        behandlingstype = any(),
-                        hendelseDato = any(),
-                        hendelseId = any(),
-                        begrunnelse = capture(begrunnelseSlot),
-                    )
+                    it.opprettBehandling(capture(opprettBehandlingTypeDTOSlot), any())
                 } returns Result.success(opprettetBehandlingId)
             }
 
@@ -102,17 +95,16 @@ class OppfølgingBehandlerTest {
         ferdigstiltHendelse.opprettetBehandlingId shouldBe opprettetBehandlingId
 
         verify(exactly = 1) {
-            behandlingKlientMock.opprettBehandling(
-                personIdent = oppfølging.person.ident,
-                saksbehandlerToken = "token",
-                behandlingstype = BehandlingstypeDTO.REVURDERING,
-                hendelseDato = oppfølging.opprettet.toLocalDate(),
-                hendelseId = oppfølging.id.toString(),
-                begrunnelse = any(),
-            )
+            behandlingKlientMock.opprettBehandling(any(), "token")
         }
-        begrunnelseSlot.captured shouldContain kabalReferanse.toString()
-        begrunnelseSlot.captured shouldContain klageBehandling.behandlingId.toString()
+        with(opprettBehandlingTypeDTOSlot.captured) {
+            shouldBeInstanceOf<OpprettBehandlingTypeDTO.Revurdering>()
+            personIdent shouldBe oppfølging.person.ident
+            hendelseDato shouldBe oppfølging.opprettet.toLocalDate()
+            hendelseId shouldBe oppfølging.id.toString()
+            begrunnelse shouldContain kabalReferanse.toString()
+            begrunnelse shouldContain klageBehandling.behandlingId.toString()
+        }
     }
 
     @Test

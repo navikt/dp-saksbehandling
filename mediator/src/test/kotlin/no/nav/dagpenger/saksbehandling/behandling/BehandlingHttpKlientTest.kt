@@ -103,12 +103,8 @@ class BehandlingHttpKlientTest {
             val hendelseDato = LocalDate.now()
             behandlingKlient
                 .opprettBehandling(
-                    personIdent = ident,
+                    opprettBehandlingTypeDTO = OpprettBehandlingTypeDTO.Revurdering(ident, hendelseDato, hendelseId, "begrunnelse"),
                     saksbehandlerToken = saksbehandlerToken,
-                    behandlingstype = BehandlingstypeDTO.REVURDERING,
-                    hendelseDato = hendelseDato,
-                    hendelseId = hendelseId,
-                    begrunnelse = "begrunnelse",
                 ).getOrThrow() shouldBe behandlingId
 
             requireNotNull(requestData).let {
@@ -131,12 +127,9 @@ class BehandlingHttpKlientTest {
                 delay = 20.milliseconds,
                 timeOut = 10.milliseconds,
             ).opprettBehandling(
-                personIdent = ident,
+                opprettBehandlingTypeDTO =
+                    OpprettBehandlingTypeDTO.Revurdering(ident, hendelseDato, UUIDv7.ny().toString(), "begrunnelse"),
                 saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.REVURDERING,
-                hendelseDato = hendelseDato,
-                hendelseId = UUIDv7.ny().toString(),
-                begrunnelse = "begrunnelse",
             ).isFailure
         }
     }
@@ -149,12 +142,8 @@ class BehandlingHttpKlientTest {
             val hendelseDato = LocalDate.now()
             behandlingKlient
                 .opprettBehandling(
-                    personIdent = ident,
+                    opprettBehandlingTypeDTO = OpprettBehandlingTypeDTO.Manuell(ident, hendelseDato, hendelseId, "begrunnelse"),
                     saksbehandlerToken = saksbehandlerToken,
-                    behandlingstype = BehandlingstypeDTO.MANUELL,
-                    hendelseDato = hendelseDato,
-                    hendelseId = hendelseId,
-                    begrunnelse = "begrunnelse",
                 ).getOrThrow() shouldBe behandlingId
 
             requireNotNull(requestData).let {
@@ -177,12 +166,9 @@ class BehandlingHttpKlientTest {
                 delay = 20.milliseconds,
                 timeOut = 10.milliseconds,
             ).opprettBehandling(
-                personIdent = ident,
+                opprettBehandlingTypeDTO =
+                    OpprettBehandlingTypeDTO.Manuell(ident, hendelseDato, UUIDv7.ny().toString(), "begrunnelse"),
                 saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.MANUELL,
-                hendelseDato = hendelseDato,
-                hendelseId = UUIDv7.ny().toString(),
-                begrunnelse = "begrunnelse",
             ).isFailure
         }
     }

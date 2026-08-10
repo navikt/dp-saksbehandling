@@ -852,7 +852,7 @@ class InnsendingMediatorTest {
                 )
             val behandlingKlientMock =
                 mockk<BehandlingKlient>().also { behandlingKlientMock ->
-                    coEvery { behandlingKlientMock.opprettBehandling(any(), any(), any(), any(), any(), any()) } returns
+                    coEvery { behandlingKlientMock.opprettBehandling(any(), any()) } returns
                         Result.success(behandlingIdRevurdering)
                 }
             val oppgaveMediator =
@@ -1002,7 +1002,7 @@ class InnsendingMediatorTest {
                 )
             val behandlingKlientMock =
                 mockk<BehandlingKlient>().also { behandlingKlientMock ->
-                    coEvery { behandlingKlientMock.opprettBehandling(any(), any(), any(), any(), any(), any()) } returns
+                    coEvery { behandlingKlientMock.opprettBehandling(any(), any()) } returns
                         Result.success(behandlingIdManuell)
                 }
             val oppgaveMediator =

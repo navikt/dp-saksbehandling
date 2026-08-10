@@ -37,12 +37,8 @@ interface BehandlingKlient {
     ): Result<Unit>
 
     fun opprettBehandling(
-        personIdent: String,
+        opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,
         saksbehandlerToken: String,
-        behandlingstype: BehandlingstypeDTO,
-        hendelseDato: LocalDate,
-        hendelseId: String,
-        begrunnelse: String,
     ): Result<UUID>
 
     fun godkjenn(
@@ -101,12 +97,8 @@ internal class BehandlingHttpKlient(
     ): Result<Unit> = kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
 
     override fun opprettBehandling(
-        personIdent: String,
+        opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,
         saksbehandlerToken: String,
-        behandlingstype: BehandlingstypeDTO,
-        hendelseDato: LocalDate,
-        hendelseId: String,
-        begrunnelse: String,
     ): Result<UUID> =
         runBlocking {
             runCatching {
@@ -115,20 +107,12 @@ internal class BehandlingHttpKlient(
                         header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                         header(HttpHeaders.ContentType, ContentType.Application.Json)
                         accept(ContentType.Application.Json)
-                        setBody(
-                            NyBehandlingRequest(
-                                ident = personIdent,
-                                behandlingstype = behandlingstype.verdi,
-                                id = hendelseId,
-                                skjedde = hendelseDato,
-                                begrunnelse = begrunnelse,
-                            ),
-                        )
+                        setBody(opprettBehandlingTypeDTO.toRequestBody())
                     }.body<BehandlingDTO>()
                     .behandlingId
                     .let { behandlingId ->
                         logger.info {
-                            "Behandling av type ${behandlingstype.verdi} opprettet. HendelseId: $hendelseId. Ny behandling har id: $behandlingId"
+                            "Behandling av type ${opprettBehandlingTypeDTO.behandlingstype} opprettet. HendelseId: ${opprettBehandlingTypeDTO.hendelseId}. Ny behandling har id: $behandlingId"
                         }
                         UUID.fromString(behandlingId)
                     }
@@ -199,7 +183,7 @@ private data class DpBehandlingIdentRequest(
     val ident: String,
 )
 
-private data class NyBehandlingRequest(
+open class NyBehandlingRequest(
     val ident: String,
     val behandlingstype: String,
     val id: String,
@@ -207,11 +191,40 @@ private data class NyBehandlingRequest(
     val begrunnelse: String,
 )
 
-enum class BehandlingstypeDTO(
-    val verdi: String,
+sealed class OpprettBehandlingTypeDTO(
+    val personIdent: String,
+    val hendelseDato: LocalDate,
+    val hendelseId: String,
+    val begrunnelse: String,
 ) {
-    MANUELL("Manuell"),
-    REVURDERING("Revurdering"),
+    abstract val behandlingstype: String
+
+    open fun toRequestBody(): NyBehandlingRequest =
+        NyBehandlingRequest(
+            ident = personIdent,
+            behandlingstype = behandlingstype,
+            id = hendelseId,
+            skjedde = hendelseDato,
+            begrunnelse = begrunnelse,
+        )
+
+    class Manuell(
+        ident: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
+    ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
+        override val behandlingstype = "Manuell"
+    }
+
+    class Revurdering(
+        ident: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
+    ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
+        override val behandlingstype = "Revurdering"
+    }
 }
 
 private data class BehandlingDTO(
