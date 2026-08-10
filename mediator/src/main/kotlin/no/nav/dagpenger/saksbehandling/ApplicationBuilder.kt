@@ -216,7 +216,7 @@ internal class ApplicationBuilder(
                         personMediator = personMediator,
                         sakMediator = sakMediator,
                         oppgaveMediator = oppgaveMediator,
-                    )
+                    ).also { klageMediator.oppfølgingMediator = it }
                 val innsendingMediator =
                     InnsendingMediator(
                         sakMediator = sakMediator,

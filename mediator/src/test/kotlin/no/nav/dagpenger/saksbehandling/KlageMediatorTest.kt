@@ -329,6 +329,168 @@ class KlageMediatorTest {
     }
 
     @Test
+    fun `mottaKlageinstansVedtak med MEDHOLD skal opprette oppfølgingsoppgave for revurdering`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>(relaxed = true).also {
+                every { it.finnUtsendingForBehandlingId(vedtakIdKlagenGjelder) } returns
+                    Utsending(
+                        behandlingId = vedtakIdKlagenGjelder,
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdTilVedtakBrukerHarKlagdPå",
+                        brev = null,
+                    )
+            }
+        val oppfølgingMediatorMock =
+            mockk<no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator>(relaxed = true)
+
+        setupMediatorerOgSak(utsendingMediatorMock, oppfølgingMediatorMock) { klageMediator, _, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostIdBrukersKlage",
+                        ),
+                    ).behandling.behandlingId
+
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
+
+            klageMediator.behandlingUtført(
+                hendelse =
+                    KlageBehandlingUtført(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
+            )
+
+            klageMediator.vedtakDistribuert(
+                hendelse =
+                    UtsendingDistribuert(
+                        behandlingId = behandlingId,
+                        utsendingId = UUID.randomUUID(),
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdKlageVedtak",
+                        distribusjonId = "distId",
+                    ),
+            )
+
+            klageMediator.oversendtTilKlageinstans(
+                OversendtKlageinstansHendelse(behandlingId),
+            )
+
+            val kabalReferanse = UUID.randomUUID()
+            klageMediator.mottaKlageinstansVedtak(
+                KlageinstansVedtakHendelse(
+                    type = KlageVedtakType.KLAGE,
+                    klageId = behandlingId,
+                    klageinstansVedtakId = kabalReferanse,
+                    avsluttet = nå,
+                    utfall = "MEDHOLD",
+                    journalpostIder = listOf("journalpostId1"),
+                ),
+            )
+
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIGSTILT
+
+            verify(exactly = 1) {
+                oppfølgingMediatorMock.taImot(
+                    match { hendelse ->
+                        hendelse.ident == testPersonIdent &&
+                            hendelse.aarsak == "KlageinstansVedtak" &&
+                            hendelse.strukturertData["kabalReferanse"] == kabalReferanse.toString() &&
+                            hendelse.strukturertData["kabalUtfall"] == "MEDHOLD" &&
+                            hendelse.strukturertData["basertPåBehandling"] == behandlingId.toString()
+                    },
+                    ctx = any(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `mottaKlageinstansVedtak med STADFESTELSE skal ikke opprette oppfølgingsoppgave`() {
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>(relaxed = true).also {
+                every { it.finnUtsendingForBehandlingId(vedtakIdKlagenGjelder) } returns
+                    Utsending(
+                        behandlingId = vedtakIdKlagenGjelder,
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdTilVedtakBrukerHarKlagdPå",
+                        brev = null,
+                    )
+            }
+        val oppfølgingMediatorMock =
+            mockk<no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator>(relaxed = true)
+
+        setupMediatorerOgSak(utsendingMediatorMock, oppfølgingMediatorMock) { klageMediator, _, sakId ->
+            val behandlingId =
+                klageMediator
+                    .opprettKlage(
+                        KlageMottattHendelse(
+                            ident = testPersonIdent,
+                            sakId = sakId,
+                            opprettet = nå,
+                            journalpostId = "journalpostIdBrukersKlage",
+                        ),
+                    ).behandling.behandlingId
+
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
+
+            klageMediator.behandlingUtført(
+                hendelse =
+                    KlageBehandlingUtført(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
+            )
+
+            klageMediator.vedtakDistribuert(
+                hendelse =
+                    UtsendingDistribuert(
+                        behandlingId = behandlingId,
+                        utsendingId = UUID.randomUUID(),
+                        ident = testPersonIdent,
+                        journalpostId = "journalpostIdKlageVedtak",
+                        distribusjonId = "distId",
+                    ),
+            )
+
+            klageMediator.oversendtTilKlageinstans(
+                OversendtKlageinstansHendelse(behandlingId),
+            )
+
+            klageMediator.mottaKlageinstansVedtak(
+                KlageinstansVedtakHendelse(
+                    type = KlageVedtakType.KLAGE,
+                    klageId = behandlingId,
+                    klageinstansVedtakId = UUID.randomUUID(),
+                    avsluttet = nå,
+                    utfall = "STADFESTELSE",
+                    journalpostIder = listOf("journalpostId1"),
+                ),
+            )
+
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand()
+                .type shouldBe FERDIGSTILT
+
+            verify(exactly = 0) {
+                oppfølgingMediatorMock.taImot(any(), any())
+            }
+        }
+    }
+
+    @Test
     fun `Livssyklus til en manuell klage som ferdigstilles med opprettholdelse`() {
         val utsendingMediatorMock =
             mockk<UtsendingMediator>(relaxed = true).also {
@@ -1161,6 +1323,7 @@ class KlageMediatorTest {
 
     private fun setupMediatorerOgSak(
         utsendingMediator: UtsendingMediator = mockk(relaxed = true),
+        oppfølgingMediator: no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator = mockk(relaxed = true),
         test: (KlageMediator, OppgaveMediator, UUID) -> Unit,
     ) {
         withMigratedDb { dataSource ->
@@ -1195,7 +1358,7 @@ class KlageMediatorTest {
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
                     utboks = TestUtboks(testRapid),
-                )
+                ).also { it.oppfølgingMediator = oppfølgingMediator }
             personRepository.lagre(
                 Person(
                     ident = testPersonIdent,

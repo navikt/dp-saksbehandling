@@ -29,6 +29,15 @@ sealed class KlageinstansVedtak {
             UGUNST,
             AVVIST,
             HENLAGT,
+            ;
+
+            // Utfall som innebærer at klageinstansen har opphevet eller endret vårt vedtak,
+            // og at det derfor må startes en ny revurdering av den opprinnelige behandlingen.
+            fun skalStarteRevurdering(): Boolean =
+                when (this) {
+                    MEDHOLD, DELVIS_MEDHOLD, OPPHEVET, RETUR, UGUNST -> true
+                    STADFESTELSE, TRUKKET, AVVIST, HENLAGT -> false
+                }
         }
     }
 
