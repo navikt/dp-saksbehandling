@@ -107,7 +107,7 @@ internal class BehandlingHttpKlient(
                         header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                         header(HttpHeaders.ContentType, ContentType.Application.Json)
                         accept(ContentType.Application.Json)
-                        setBody(opprettBehandlingTypeDTO.toRequestBody())
+                        setBody(opprettBehandlingTypeDTO.toMap())
                     }.body<BehandlingDTO>()
                     .behandlingId
                     .let { behandlingId ->
@@ -183,29 +183,6 @@ private data class DpBehandlingIdentRequest(
     val ident: String,
 )
 
-sealed interface BehandlingRequestBody
-
-open class NyBehandlingRequest(
-    val ident: String,
-    val behandlingstype: String,
-    val skjedde: LocalDate,
-    val begrunnelse: String,
-) : BehandlingRequestBody
-
-/**
- * Request-body for behandlingstype "OmgjøringEtterKlage" i dp-behandling.
- * "id" her er klagens referanse i kildesystemet (Kabal), ikke en intern hendelseId -
- * dette feltet finnes bare på denne behandlingstypen i dp-behandlings kontrakt.
- */
-data class NyKlageRequest(
-    val ident: String,
-    val behandlingstype: String,
-    val id: String,
-    val kildesystem: String,
-    val skjedde: LocalDate,
-    val begrunnelse: String,
-) : BehandlingRequestBody
-
 sealed class OpprettBehandlingTypeDTO(
     val personIdent: String,
     val hendelseDato: LocalDate,
@@ -214,12 +191,12 @@ sealed class OpprettBehandlingTypeDTO(
 ) {
     abstract val behandlingstype: String
 
-    open fun toRequestBody(): BehandlingRequestBody =
-        NyBehandlingRequest(
-            ident = personIdent,
-            behandlingstype = behandlingstype,
-            skjedde = hendelseDato,
-            begrunnelse = begrunnelse,
+    open fun toMap(): Map<String, Any> =
+        mapOf(
+            "ident" to personIdent,
+            "behandlingstype" to behandlingstype,
+            "skjedde" to hendelseDato.toString(),
+            "begrunnelse" to begrunnelse,
         )
 
     class Manuell(
@@ -243,7 +220,8 @@ sealed class OpprettBehandlingTypeDTO(
     /**
      * Revurdering opprettet på bakgrunn av et klageinstansvedtak (Kabal). Sendes til dp-behandling
      * som behandlingstype "OmgjøringEtterKlage" med kildesystem=Klageinstans og [kabalReferanse]
-     * som klagens id i kildesystemet.
+     * som klagens id i kildesystemet (jf. dp-behandlings NyKlage-skjema, som er det eneste skjemaet
+     * med et id-felt).
      */
     class RevurderingEtterKlage(
         ident: String,
@@ -254,15 +232,12 @@ sealed class OpprettBehandlingTypeDTO(
     ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
         override val behandlingstype = "OmgjøringEtterKlage"
 
-        override fun toRequestBody() =
-            NyKlageRequest(
-                ident = personIdent,
-                behandlingstype = behandlingstype,
-                id = kabalReferanse.toString(),
-                kildesystem = "Klageinstans",
-                skjedde = hendelseDato,
-                begrunnelse = begrunnelse,
-            )
+        override fun toMap(): Map<String, Any> =
+            super.toMap() +
+                mapOf(
+                    "id" to kabalReferanse.toString(),
+                    "kildesystem" to "Klageinstans",
+                )
     }
 }
 
