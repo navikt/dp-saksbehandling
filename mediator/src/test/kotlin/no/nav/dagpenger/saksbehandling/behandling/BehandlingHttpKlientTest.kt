@@ -114,7 +114,6 @@ class BehandlingHttpKlientTest {
                     {
                     "ident":"$ident",
                     "behandlingstype": "Revurdering",
-                    "id": "$hendelseId",
                     "skjedde": "$hendelseDato",
                     "begrunnelse": "begrunnelse"
                     }
@@ -153,7 +152,6 @@ class BehandlingHttpKlientTest {
                     {
                     "ident":"$ident",
                     "behandlingstype": "Manuell",
-                    "id": "$hendelseId",
                     "skjedde": "$hendelseDato",
                     "begrunnelse": "begrunnelse"
                     }

@@ -188,17 +188,16 @@ sealed interface BehandlingRequestBody
 open class NyBehandlingRequest(
     val ident: String,
     val behandlingstype: String,
-    val id: String,
     val skjedde: LocalDate,
     val begrunnelse: String,
 ) : BehandlingRequestBody
 
 /**
  * Request-body for behandlingstype "OmgjøringEtterKlage" i dp-behandling.
- * Merk at "id" her betyr noe annet enn i [NyBehandlingRequest] - det er klagens
- * referanse i kildesystemet (Kabal), ikke en intern hendelseId.
+ * "id" her er klagens referanse i kildesystemet (Kabal), ikke en intern hendelseId -
+ * dette feltet finnes bare på denne behandlingstypen i dp-behandlings kontrakt.
  */
-data class NyKlageBehandlingRequest(
+data class NyKlageRequest(
     val ident: String,
     val behandlingstype: String,
     val id: String,
@@ -219,7 +218,6 @@ sealed class OpprettBehandlingTypeDTO(
         NyBehandlingRequest(
             ident = personIdent,
             behandlingstype = behandlingstype,
-            id = hendelseId,
             skjedde = hendelseDato,
             begrunnelse = begrunnelse,
         )
@@ -257,7 +255,7 @@ sealed class OpprettBehandlingTypeDTO(
         override val behandlingstype = "OmgjøringEtterKlage"
 
         override fun toRequestBody() =
-            NyKlageBehandlingRequest(
+            NyKlageRequest(
                 ident = personIdent,
                 behandlingstype = behandlingstype,
                 id = kabalReferanse.toString(),
