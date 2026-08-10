@@ -183,13 +183,29 @@ private data class DpBehandlingIdentRequest(
     val ident: String,
 )
 
+sealed interface BehandlingRequestBody
+
 open class NyBehandlingRequest(
     val ident: String,
     val behandlingstype: String,
     val id: String,
     val skjedde: LocalDate,
     val begrunnelse: String,
-)
+) : BehandlingRequestBody
+
+/**
+ * Request-body for behandlingstype "OmgjøringEtterKlage" i dp-behandling.
+ * Merk at "id" her betyr noe annet enn i [NyBehandlingRequest] - det er klagens
+ * referanse i kildesystemet (Kabal), ikke en intern hendelseId.
+ */
+data class NyKlageBehandlingRequest(
+    val ident: String,
+    val behandlingstype: String,
+    val id: String,
+    val kildesystem: String,
+    val skjedde: LocalDate,
+    val begrunnelse: String,
+) : BehandlingRequestBody
 
 sealed class OpprettBehandlingTypeDTO(
     val personIdent: String,
@@ -199,7 +215,7 @@ sealed class OpprettBehandlingTypeDTO(
 ) {
     abstract val behandlingstype: String
 
-    open fun toRequestBody(): NyBehandlingRequest =
+    open fun toRequestBody(): BehandlingRequestBody =
         NyBehandlingRequest(
             ident = personIdent,
             behandlingstype = behandlingstype,
@@ -224,6 +240,31 @@ sealed class OpprettBehandlingTypeDTO(
         begrunnelse: String,
     ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
         override val behandlingstype = "Revurdering"
+    }
+
+    /**
+     * Revurdering opprettet på bakgrunn av et klageinstansvedtak (Kabal). Sendes til dp-behandling
+     * som behandlingstype "OmgjøringEtterKlage" med kildesystem=Klageinstans og [kabalReferanse]
+     * som klagens id i kildesystemet.
+     */
+    class RevurderingEtterKlage(
+        ident: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
+        val kabalReferanse: UUID,
+    ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
+        override val behandlingstype = "OmgjøringEtterKlage"
+
+        override fun toRequestBody() =
+            NyKlageBehandlingRequest(
+                ident = personIdent,
+                behandlingstype = behandlingstype,
+                id = kabalReferanse.toString(),
+                kildesystem = "Klageinstans",
+                skjedde = hendelseDato,
+                begrunnelse = begrunnelse,
+            )
     }
 }
 

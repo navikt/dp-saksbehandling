@@ -83,13 +83,14 @@ class OppfølgingBehandler(
                             ?: error("Klagebehandling $klageBehandlingId mangler klageinstansvedtak")
                     val kabalReferanse = klageinstansVedtak.id
 
-                    // TODO steg 4: bruk kabalReferanse til å opprette en NyKlage (OmgjøringEtterKlage) i
-                    // dp-behandling med kildesystem=Klageinstans istedenfor en plain Revurdering, slik at
-                    // dp-behandling selv kjenner referansen til Kabal-vedtaket.
-                    val begrunnelse =
-                        (oppfølging.vurdering() ?: "Opprettet fra oppfølging") +
-                            " (revurdering etter klageinstansvedtak $kabalReferanse, basert på klagebehandling $klageBehandlingId)"
-                    OpprettBehandlingTypeDTO.Revurdering(oppfølging.person.ident, hendelseDato, hendelseId, begrunnelse)
+                    val begrunnelse = oppfølging.vurdering() ?: "Opprettet fra oppfølging"
+                    OpprettBehandlingTypeDTO.RevurderingEtterKlage(
+                        ident = oppfølging.person.ident,
+                        hendelseDato = hendelseDato,
+                        hendelseId = hendelseId,
+                        begrunnelse = begrunnelse,
+                        kabalReferanse = kabalReferanse,
+                    )
                 }
 
                 else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: ${hendelse.aksjon}")

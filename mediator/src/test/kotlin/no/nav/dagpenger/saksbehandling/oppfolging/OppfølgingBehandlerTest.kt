@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.oppfolging
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
@@ -75,6 +74,7 @@ class OppfølgingBehandlerTest {
             )
 
         val valgtSakId = UUID.randomUUID()
+        oppfølging.startFerdigstilling(vurdering = "Skal revurderes", valgtSakId = valgtSakId)
         val ferdigstiltHendelse =
             oppfølgingBehandler.opprettBehandling(
                 oppfølging = oppfølging,
@@ -98,12 +98,12 @@ class OppfølgingBehandlerTest {
             behandlingKlientMock.opprettBehandling(any(), "token")
         }
         with(opprettBehandlingTypeDTOSlot.captured) {
-            shouldBeInstanceOf<OpprettBehandlingTypeDTO.Revurdering>()
+            shouldBeInstanceOf<OpprettBehandlingTypeDTO.RevurderingEtterKlage>()
             personIdent shouldBe oppfølging.person.ident
             hendelseDato shouldBe oppfølging.opprettet.toLocalDate()
             hendelseId shouldBe oppfølging.id.toString()
-            begrunnelse shouldContain kabalReferanse.toString()
-            begrunnelse shouldContain klageBehandling.behandlingId.toString()
+            this.kabalReferanse shouldBe kabalReferanse
+            begrunnelse shouldBe "Skal revurderes"
         }
     }
 

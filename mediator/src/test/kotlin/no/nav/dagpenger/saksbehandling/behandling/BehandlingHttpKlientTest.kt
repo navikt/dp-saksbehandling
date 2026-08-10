@@ -174,6 +174,45 @@ class BehandlingHttpKlientTest {
     }
 
     @Test
+    fun `Kall til dp-behandling for å opprette revurdering etter klage`() {
+        runBlocking {
+            val behandlingKlient = behandlingKlient()
+            val hendelseId = UUIDv7.ny().toString()
+            val hendelseDato = LocalDate.now()
+            val kabalReferanse = UUIDv7.ny()
+            behandlingKlient
+                .opprettBehandling(
+                    opprettBehandlingTypeDTO =
+                        OpprettBehandlingTypeDTO.RevurderingEtterKlage(
+                            ident = ident,
+                            hendelseDato = hendelseDato,
+                            hendelseId = hendelseId,
+                            begrunnelse = "begrunnelse",
+                            kabalReferanse = kabalReferanse,
+                        ),
+                    saksbehandlerToken = saksbehandlerToken,
+                ).getOrThrow() shouldBe behandlingId
+
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                    "ident":"$ident",
+                    "behandlingstype": "OmgjøringEtterKlage",
+                    "id": "$kabalReferanse",
+                    "kildesystem": "Klageinstans",
+                    "skjedde": "$hendelseDato",
+                    "begrunnelse": "begrunnelse"
+                    }
+                    """.trimIndent()
+                it.headers[HttpHeaders.Authorization] shouldBe "Bearer $saksbehandlerToken"
+                it.headers[HttpHeaders.Accept] shouldBe "application/json"
+            }
+        }
+    }
+
+    @Test
     fun `kall mot dp-behandling happy path `(): Unit =
         runBlocking {
             val behandlingKlient = behandlingKlient()
