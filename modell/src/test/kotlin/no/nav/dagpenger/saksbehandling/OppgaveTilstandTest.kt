@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.MåVæreSisteSaksbehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
@@ -429,7 +430,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra UnderKontroll til UnderBehandling når beslutter returnerer oppgaven`() {
+    fun `Beslutter skal kunne returnere en oppgave til saksbehandler`() {
         val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         val oppgave =
@@ -451,6 +452,54 @@ class OppgaveTilstandTest {
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.emneknagger.shouldContain(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+    }
+
+    @Test
+    fun `Saksbehandler skal kunne ta en oppgave tilbake under behandling hvis den er klar til kontroll`() {
+        val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
+        val enAnnenSaksbehandler = Saksbehandler("annenSaksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
+        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
+        val oppgave1 = lagOppgave(tilstandType = KLAR_TIL_KONTROLL, saksbehandler = saksbehandler)
+        val oppgave2 = lagOppgave(tilstandType = KLAR_TIL_KONTROLL, saksbehandler = saksbehandler)
+        val oppgave3 = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler = saksbehandler, beslutter = beslutter)
+
+        shouldNotThrowAny {
+            oppgave1.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave1.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+            )
+        }
+
+        oppgave1.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave1.behandlerIdent shouldBe saksbehandler.navIdent
+
+        shouldThrow<MåVæreSisteSaksbehandler> {
+            oppgave2.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave2.oppgaveId,
+                    utførtAv = enAnnenSaksbehandler,
+                ),
+            )
+        }
+
+        oppgave2.tilstand().type shouldBe KLAR_TIL_KONTROLL
+        oppgave2.behandlerIdent shouldBe null
+        oppgave2.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+
+        shouldThrow<ManglendeTilgang> {
+            oppgave3.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave3.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+            )
+        }
+
+        oppgave3.tilstand().type shouldBe UNDER_KONTROLL
+        oppgave3.behandlerIdent shouldBe beslutter.navIdent
+        oppgave3.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
     }
 
     @Test

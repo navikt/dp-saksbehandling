@@ -172,6 +172,20 @@ data class Oppgave private constructor(
             }
         }
 
+        private fun requireSammeSaksbehandler(
+            oppgave: Oppgave,
+            saksbehandler: Saksbehandler,
+            hendelseNavn: String,
+        ) {
+            require(oppgave.sisteSaksbehandlerIdent == saksbehandler.navIdent) {
+                throw Tilstand.MåVæreSisteSaksbehandler(
+                    "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
+                        "Må være siste saksbehandler for å utføre hendelsen. Siste saksbehandler på oppgaven er " +
+                        "${oppgave.sisteSaksbehandlerIdent} og kan derfor ikke utføres av ${saksbehandler.navIdent}",
+                )
+            }
+        }
+
         private fun requireKvittertGosysBrev(
             oppgave: Oppgave,
             hendelseNavn: String,
@@ -844,6 +858,29 @@ data class Oppgave private constructor(
             oppgave.sisteBeslutterIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
+        override fun returnerTilSaksbehandling(
+            oppgave: Oppgave,
+            returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
+        ) {
+            requireSammeSaksbehandler(
+                oppgave = oppgave,
+                saksbehandler = returnerTilSaksbehandlingHendelse.utførtAv,
+                hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
+            )
+
+            oppgave.endreTilstand(
+                nyTilstand = UnderBehandling,
+                hendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = returnerTilSaksbehandlingHendelse.utførtAv.navIdent,
+                        utførtAv = returnerTilSaksbehandlingHendelse.utførtAv,
+                    ),
+            )
+            oppgave.behandlerIdent = returnerTilSaksbehandlingHendelse.utførtAv.navIdent
+            oppgave.sisteSaksbehandlerIdent = returnerTilSaksbehandlingHendelse.utførtAv.navIdent
+        }
+
         override fun behandlingTilGodkjenning(
             oppgave: Oppgave,
             hendelse: BehandlingTilGodkjenningHendelse,
@@ -1345,6 +1382,10 @@ data class Oppgave private constructor(
         }
 
         class ManglendeBeslutterTilgang(
+            message: String,
+        ) : ManglendeTilgang(message)
+
+        class MåVæreSisteSaksbehandler(
             message: String,
         ) : ManglendeTilgang(message)
 

@@ -69,8 +69,12 @@ object ModellTestHelper {
             oppgaveId = UUIDv7.ny(),
             behandlerIdent =
                 when (tilstand) {
+                    is Oppgave.UnderBehandling -> saksbehandler?.navIdent
                     is Oppgave.UnderKontroll -> beslutter?.navIdent
-                    else -> saksbehandler?.navIdent
+                    is Oppgave.PåVent -> saksbehandler?.navIdent
+                    is Oppgave.FerdigBehandlet -> beslutter?.navIdent ?: saksbehandler?.navIdent
+                    is Oppgave.Avbrutt -> beslutter?.navIdent ?: saksbehandler?.navIdent
+                    else -> null
                 },
             sisteSaksbehandlerIdent = saksbehandler?.navIdent,
             sisteBeslutterIdent = beslutter?.navIdent,
