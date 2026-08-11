@@ -18,6 +18,10 @@ class HendelseBehandlerTest {
                 Arguments.of("MANUELL", HendelseBehandler.DpBehandling.Manuell),
                 Arguments.of("REVURDERING", HendelseBehandler.DpBehandling.Revurdering),
                 Arguments.of("REVURDERING_ETTER_KLAGE", HendelseBehandler.DpBehandling.RevurderingEtterKlage),
+                Arguments.of(
+                    "REVURDERING_ETTER_VEDTAK_FRA_KLAGEINSTANS",
+                    HendelseBehandler.DpBehandling.RevurderingEtterVedtakFraKlageinstans,
+                ),
                 Arguments.of("FERIETILLEGG", HendelseBehandler.DpBehandling.Ferietillegg),
                 Arguments.of("ARBEIDSSØKERPERIODE", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
                 Arguments.of("SAMORDNING", HendelseBehandler.DpBehandling.Samordning),
@@ -34,6 +38,10 @@ class HendelseBehandlerTest {
                 Arguments.of("Manuell", HendelseBehandler.DpBehandling.Manuell),
                 Arguments.of("Omgjøring", HendelseBehandler.DpBehandling.Revurdering),
                 Arguments.of("KlageFørsteinstans", HendelseBehandler.DpBehandling.RevurderingEtterKlage),
+                Arguments.of(
+                    "KlageKlageinstans",
+                    HendelseBehandler.DpBehandling.RevurderingEtterVedtakFraKlageinstans,
+                ),
                 Arguments.of("Ferietillegg", HendelseBehandler.DpBehandling.Ferietillegg),
                 Arguments.of("Arbeidssøkerperiode", HendelseBehandler.DpBehandling.Arbeidssøkerperiode),
                 Arguments.of("Samordning", HendelseBehandler.DpBehandling.Samordning),
@@ -74,7 +82,7 @@ class HendelseBehandlerTest {
 
     @Test
     fun `entries inneholder alle kjente typer`() {
-        HendelseBehandler.entries.size shouldBe 11
+        HendelseBehandler.entries.size shouldBe 12
         HendelseBehandler.entries.map { it.name }.toSet() shouldBe
             setOf(
                 "SØKNAD",
@@ -82,6 +90,7 @@ class HendelseBehandlerTest {
                 "MANUELL",
                 "REVURDERING",
                 "REVURDERING_ETTER_KLAGE",
+                "REVURDERING_ETTER_VEDTAK_FRA_KLAGEINSTANS",
                 "FERIETILLEGG",
                 "ARBEIDSSØKERPERIODE",
                 "SAMORDNING",
