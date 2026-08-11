@@ -209,7 +209,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
 
             val utløstAvAlle = statistikkTjeneste.hentUtløstAvMedTilstandFilter(filterPeriodeFomIGårTomIDag)
 
-            utløstAvAlle.size shouldBe 11
+            utløstAvAlle.size shouldBe 12
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.DpBehandling.Søknad }.antall shouldBe 4
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 2
             utløstAvAlle.single { it.utløstAv == HendelseBehandler.Intern.Innsending }.antall shouldBe 0
@@ -231,7 +231,7 @@ class PostgresProduksjonsstatistikkRepositoryTest {
                         ),
                 )
 
-            utløstAvFilterFerdigBehandlet.size shouldBe 11
+            utløstAvFilterFerdigBehandlet.size shouldBe 12
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.DpBehandling.Søknad }.antall shouldBe 2
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Klage }.antall shouldBe 1
             utløstAvFilterFerdigBehandlet.single { it.utløstAv == HendelseBehandler.Intern.Innsending }.antall shouldBe 0
