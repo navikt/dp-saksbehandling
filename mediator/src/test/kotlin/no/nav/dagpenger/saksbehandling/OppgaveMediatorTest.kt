@@ -77,6 +77,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -394,6 +395,47 @@ OppgaveMediatorTest {
             oppgaveUnderKontroll.behandlerIdent shouldBe beslutter.navIdent
             oppgaveUnderKontroll.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
             oppgaveUnderKontroll.sisteBeslutterIdent shouldBe beslutter.navIdent
+        }
+    }
+
+    @Test
+    fun `Skal oppdatere emneknagger på klageoppgave når vi mottar utfall fra klageinstans`() {
+        val behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
+        val oppgave =
+            TestHelper.lagOppgave(
+                tilstand = FerdigBehandlet,
+                behandling = behandling,
+                saksbehandlerIdent = saksbehandler.navIdent,
+                emneknagger = setOf(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn),
+            )
+        DBTestHelper.withOppgave(oppgave) { ds ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personMediator = mockk(relaxed = true),
+                    oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds)),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = mockk(),
+                    sakMediator = mockk(),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
+                    meldekortregisterKlient = mockk(relaxed = true),
+                )
+            val klageinstansVedtakHendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    klageId = oppgave.behandling.behandlingId,
+                    klageinstansVedtakId = UUIDv7.ny(),
+                    avsluttet = LocalDateTime.now(),
+                    utfall = "OPPHEVET",
+                    journalpostIder = listOf("KA-JP-33"),
+                )
+            oppgaveMediator.håndterUtfallFraKlageinstans(klageinstansVedtakHendelse)
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+                oppgave.emneknagger shouldContain Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_OPPHEVET.visningsnavn
+                oppgave.emneknagger shouldNotContain Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn
+            }
         }
     }
 

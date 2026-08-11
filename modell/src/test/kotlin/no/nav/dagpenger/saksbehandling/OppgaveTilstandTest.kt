@@ -34,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -43,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -452,6 +454,104 @@ class OppgaveTilstandTest {
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.emneknagger.shouldContain(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+    }
+
+    @Test
+    fun `Skal sette emneknagg med klageinstansutfall og fjerne eventuell emneknagg for oversendt klageinstans`() {
+        val oppgave =
+            lagOppgave(
+                tilstandType = FERDIG_BEHANDLET,
+                emneknagger = mutableSetOf(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn),
+            )
+
+        val klageinstansVedtakHendelse =
+            KlageinstansVedtakHendelse(
+                type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                klageId = oppgave.behandling.behandlingId,
+                klageinstansVedtakId = UUIDv7.ny(),
+                avsluttet = LocalDateTime.now(),
+                utfall = "UGUNST",
+                journalpostIder = listOf("JP1"),
+            )
+
+        shouldNotThrowAny {
+            oppgave.håndterUtfallFraKlageinstans(
+                oppgave = oppgave,
+                klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+            )
+        }
+        oppgave.emneknagger.shouldContain(Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_UGUNST.visningsnavn)
+        oppgave.emneknagger.shouldNotContain(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn)
+    }
+
+    @ParameterizedTest
+    @EnumSource(Type::class)
+    fun `Skal feile hvis klageinstansutfall ikke er FERDIG_BEHANDLET`(tilstandstype: Type) {
+        if (tilstandstype != FERDIG_BEHANDLET) {
+            val oppgave = lagOppgave(tilstandType = tilstandstype)
+            val klageinstansVedtakHendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    klageId = oppgave.behandling.behandlingId,
+                    klageinstansVedtakId = UUIDv7.ny(),
+                    avsluttet = LocalDateTime.now(),
+                    utfall = "MEDHOLD",
+                    journalpostIder = listOf("JP444"),
+                )
+
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.håndterUtfallFraKlageinstans(
+                    oppgave = oppgave,
+                    klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+                )
+            }
+            oppgave.emneknagger.shouldNotContain(Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_MEDHOLD.visningsnavn)
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "TRUKKET, true",
+        "RETUR, true",
+        "OPPHEVET, true",
+        "MEDHOLD, true",
+        "DELVIS_MEDHOLD, true",
+        "STADFESTELSE, true",
+        "UGUNST, true",
+        "AVVIST, true",
+        "HENLAGT, true",
+        "UKJENT_UTFALL, false",
+    )
+    fun `Skal håndtere alle utfall fra klageinstans`(
+        utfall: String,
+        forventetOk: Boolean,
+    ) {
+        val oppgave = lagOppgave(tilstandType = FERDIG_BEHANDLET)
+        val klageinstansVedtakHendelse =
+            KlageinstansVedtakHendelse(
+                type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                klageId = oppgave.behandling.behandlingId,
+                klageinstansVedtakId = UUIDv7.ny(),
+                avsluttet = LocalDateTime.now(),
+                utfall = utfall,
+                journalpostIder = listOf("JP444"),
+            )
+
+        if (forventetOk) {
+            shouldNotThrowAny {
+                oppgave.håndterUtfallFraKlageinstans(
+                    oppgave = oppgave,
+                    klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+                )
+            }
+        } else {
+            shouldThrow<IllegalArgumentException> {
+                oppgave.håndterUtfallFraKlageinstans(
+                    oppgave = oppgave,
+                    klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+                )
+            }
+        }
     }
 
     @Test
@@ -912,7 +1012,12 @@ class OppgaveTilstandTest {
         )
         oppgave.sisteBeslutterIdent shouldBe beslutter1.navIdent
 
-        oppgave.returnerTilSaksbehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
+        oppgave.returnerTilSaksbehandling(
+            ReturnerTilSaksbehandlingHendelse(
+                oppgaveId = oppgaveId,
+                utførtAv = beslutter1,
+            ),
+        )
 
         oppgave.sisteBeslutterIdent shouldBe beslutter1.navIdent
         oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler2.navIdent
@@ -1012,7 +1117,13 @@ class OppgaveTilstandTest {
     @Test
     fun `klargjørForBehandling - uten frist og uten beholdOppgaven gir KlarTilBehandling`() {
         val oppgave = lagOppgave(OPPRETTET)
-        oppgave.klargjørForBehandling(OpprettOppfølgingHendelse(ident = "12345678910", aarsak = "Test", tittel = "Test"))
+        oppgave.klargjørForBehandling(
+            OpprettOppfølgingHendelse(
+                ident = "12345678910",
+                aarsak = "Test",
+                tittel = "Test",
+            ),
+        )
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         oppgave.behandlerIdent shouldBe null
         oppgave.utsattTil() shouldBe null

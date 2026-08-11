@@ -1,6 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDate
+
+private val logger = KotlinLogging.logger {}
 
 interface KategorisertEmneknagg {
     val visningsnavn: String
@@ -120,9 +123,44 @@ object Emneknagg {
         override val kategori = EmneknaggKategori.UDEFINERT
     }
 
+    enum class Klage(
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
+        KLAGE_AVVIST("Avvist"),
+        KLAGE_MEDHOLD("Medhold"),
+        KLAGE_DELVIS_MEDHOLD("Delvis medhold"),
+        KLAGE_OVERSENDT_KLAGEINSTANS("Oversendt klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_TRUKKET("Trukket klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_RETUR("Retur fra klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_OPPHEVET("Opphevet av klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_MEDHOLD("Medhold hos klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_DELVIS_MEDHOLD("Delvis medhold hos klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_STADFESTELSE("Stadfestelse hos klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_UGUNST("Ugunst hos klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_AVVIST("Avvist hos klageinstans"),
+        KLAGE_UTFALL_KLAGEINSTANS_HENLAGT("Henlagt av klageinstans"),
+        ;
+
+        override val kategori = EmneknaggKategori.UDEFINERT
+    }
+
     val alleKodedefinerte: List<KategorisertEmneknagg> =
         Regelknagg.entries + PåVent.entries + AvbrytBehandling.entries +
             Oppfølging.entries + Kontroll.entries + Søknadsavklaring.entries
+
+    fun utfallKlageinstansTilEmneknagg(utfallString: String): Klage =
+        when (utfallString) {
+            "TRUKKET" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_TRUKKET
+            "RETUR" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_RETUR
+            "OPPHEVET" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_OPPHEVET
+            "MEDHOLD" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_MEDHOLD
+            "DELVIS_MEDHOLD" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_DELVIS_MEDHOLD
+            "STADFESTELSE" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_STADFESTELSE
+            "UGUNST" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_UGUNST
+            "AVVIST" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_AVVIST
+            "HENLAGT" -> Klage.KLAGE_UTFALL_KLAGEINSTANS_HENLAGT
+            else -> throw IllegalArgumentException("Ukjent utfall fra klageinstans: $utfallString")
+        }
 }
 
 fun hentEmneknaggKategori(visningsnavn: String): EmneknaggKategori =

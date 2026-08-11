@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -528,6 +529,27 @@ class OppgaveMediator(
                             ctx = ctx,
                         )
                     }
+                }
+            }
+        }
+    }
+
+    fun håndterUtfallFraKlageinstans(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
+        oppgaveRepository.hentOppgaveFor(behandlingId = klageinstansVedtakHendelse.klageId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt KlageinstansVedtakHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.håndterUtfallFraKlageinstans(
+                    oppgave = oppgave,
+                    klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+                )
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet KlageinstansVedtakHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }

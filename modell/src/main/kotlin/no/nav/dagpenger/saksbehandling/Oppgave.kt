@@ -30,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
@@ -232,6 +233,16 @@ data class Oppgave private constructor(
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
         this._emneknagger.addAll(beholdEmneknagger)
         return tilstand.håndterForslagTilVedtak(this, forslagTilVedtakHendelse)
+    }
+
+    fun håndterUtfallFraKlageinstans(
+        oppgave: Oppgave,
+        klageinstansVedtakHendelse: KlageinstansVedtakHendelse,
+    ) {
+        tilstand.håndterUtfallFraKlageinstans(
+            oppgave = oppgave,
+            klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+        )
     }
 
     fun avbryt(avbrytOppgaveHendelse: AvbrytOppgaveHendelse) {
@@ -713,6 +724,16 @@ data class Oppgave private constructor(
             logger.warn { "Mottok forslagTilVedtakHendelse i tilstand $type. Ignorerer meldingen." }
             return Handling.INGEN
         }
+
+        override fun håndterUtfallFraKlageinstans(
+            oppgave: Oppgave,
+            klageinstansVedtakHendelse: KlageinstansVedtakHendelse,
+        ) {
+            Emneknagg.utfallKlageinstansTilEmneknagg(klageinstansVedtakHendelse.utfall).let { emneknagg ->
+                oppgave._emneknagger.remove(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn)
+                oppgave._emneknagger.add(emneknagg.visningsnavn)
+            }
+        }
     }
 
     object Avbrutt : Tilstand {
@@ -1159,6 +1180,16 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type",
+            )
+        }
+
+        fun håndterUtfallFraKlageinstans(
+            oppgave: Oppgave,
+            klageinstansVedtakHendelse: KlageinstansVedtakHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om utfall fra klageinstans i tilstand $type",
             )
         }
 
