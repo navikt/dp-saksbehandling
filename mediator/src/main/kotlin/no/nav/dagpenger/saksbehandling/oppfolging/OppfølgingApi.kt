@@ -113,6 +113,13 @@ internal fun Route.oppfølgingApi(
                                         valgtSakId = sakId,
                                     )
                                 }
+                                BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE -> {
+                                    val sakId = requireNotNull(request.sakId) { "sakId må være satt for revurdering etter klage" }
+                                    OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage(
+                                        saksbehandlerToken = saksbehandlerToken,
+                                        valgtSakId = sakId,
+                                    )
+                                }
                                 BehandlingVariantDTO.KLAGE -> {
                                     val sakId = requireNotNull(request.sakId) { "sakId må være satt for klage" }
                                     OppfølgingAksjon.OpprettKlage(sakId)

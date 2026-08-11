@@ -61,7 +61,7 @@ class OppfølgingTest {
 
         oppgave.startFerdigstilling(
             vurdering = "Min vurdering",
-            valgtSakId = null,
+            aksjon = OppfølgingAksjon.Avslutt(null),
         )
 
         oppgave.tilstand() shouldBe "FERDIGSTILL_STARTET"
@@ -76,7 +76,7 @@ class OppfølgingTest {
                 tittel = "Test",
             )
 
-        oppgave.startFerdigstilling(vurdering = "Vurdering", valgtSakId = null)
+        oppgave.startFerdigstilling(vurdering = "Vurdering", aksjon = OppfølgingAksjon.Avslutt(null))
         oppgave.ferdigstill(aksjonType = OppfølgingAksjon.Type.AVSLUTT)
 
         oppgave.tilstand() shouldBe "FERDIGSTILT"
@@ -92,7 +92,7 @@ class OppfølgingTest {
             )
         val behandlingId = UUID.randomUUID()
 
-        oppgave.startFerdigstilling(vurdering = "Klage", valgtSakId = null)
+        oppgave.startFerdigstilling(vurdering = "Klage", aksjon = OppfølgingAksjon.Avslutt(null))
         oppgave.ferdigstill(
             aksjonType = OppfølgingAksjon.Type.OPPRETT_KLAGE,
             opprettetBehandlingId = behandlingId,
@@ -112,7 +112,7 @@ class OppfølgingTest {
             )
         val behandlingId = UUID.randomUUID()
 
-        oppgave.startFerdigstilling(vurdering = "Manuell", valgtSakId = UUID.randomUUID())
+        oppgave.startFerdigstilling(vurdering = "Manuell", aksjon = OppfølgingAksjon.Avslutt(UUID.randomUUID()))
         oppgave.ferdigstill(
             aksjonType = OppfølgingAksjon.Type.OPPRETT_MANUELL_BEHANDLING,
             opprettetBehandlingId = behandlingId,
@@ -132,7 +132,7 @@ class OppfølgingTest {
             )
         val behandlingId = UUID.randomUUID()
 
-        oppgave.startFerdigstilling(vurdering = "Revurdering", valgtSakId = UUID.randomUUID())
+        oppgave.startFerdigstilling(vurdering = "Revurdering", aksjon = OppfølgingAksjon.Avslutt(UUID.randomUUID()))
         oppgave.ferdigstill(
             aksjonType = OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING,
             opprettetBehandlingId = behandlingId,
@@ -151,11 +151,68 @@ class OppfølgingTest {
                 tittel = "Test",
             )
 
-        oppgave.startFerdigstilling(vurdering = "Klage", valgtSakId = null)
+        oppgave.startFerdigstilling(vurdering = "Klage", aksjon = OppfølgingAksjon.Avslutt(null))
 
         shouldThrow<IllegalArgumentException> {
             oppgave.ferdigstill(aksjonType = OppfølgingAksjon.Type.OPPRETT_KLAGE)
         }
+    }
+
+    @Test
+    fun `Skal ikke kunne starte ferdigstilling med revurdering etter klage uten klagekontekst`() {
+        val oppgave =
+            Oppfølging.opprett(
+                person = testPerson,
+                tittel = "Oppfølging uten klagekontekst",
+            )
+
+        shouldThrow<IllegalArgumentException> {
+            oppgave.startFerdigstilling(
+                vurdering = "Revurdering etter klage",
+                aksjon =
+                    OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage(
+                        saksbehandlerToken = "token",
+                        valgtSakId = UUID.randomUUID(),
+                    ),
+            )
+        }
+
+        oppgave.tilstand() shouldBe "BEHANDLES"
+        oppgave.vurdering() shouldBe null
+    }
+
+    @Test
+    fun `Skal kunne starte ferdigstilling med revurdering etter klage når klagekontekst finnes`() {
+        val klageBehandlingId = UUID.randomUUID()
+        val oppgave =
+            Oppfølging.opprett(
+                person = testPerson,
+                tittel = "Vurder revurdering etter klageinstansvedtak",
+                strukturertData = mapOf("basertPåBehandling" to klageBehandlingId.toString()),
+            )
+
+        oppgave.startFerdigstilling(
+            vurdering = "Revurdering etter klage",
+            aksjon =
+                OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage(
+                    saksbehandlerToken = "token",
+                    valgtSakId = UUID.randomUUID(),
+                ),
+        )
+
+        oppgave.tilstand() shouldBe "FERDIGSTILL_STARTET"
+        oppgave.basertPåBehandlingId() shouldBe klageBehandlingId
+    }
+
+    @Test
+    fun `Oppfølging uten klagekontekst har ingen basertPåBehandlingId`() {
+        val oppgave =
+            Oppfølging.opprett(
+                person = testPerson,
+                tittel = "Vanlig oppfølging",
+            )
+
+        oppgave.basertPåBehandlingId() shouldBe null
     }
 
     @Test
@@ -167,7 +224,7 @@ class OppfølgingTest {
             )
         val sakId = UUID.randomUUID()
 
-        oppgave.startFerdigstilling(vurdering = "Med sak", valgtSakId = sakId)
+        oppgave.startFerdigstilling(vurdering = "Med sak", aksjon = OppfølgingAksjon.Avslutt(sakId))
 
         oppgave.valgtSakId() shouldBe sakId
     }
@@ -250,7 +307,7 @@ class OppfølgingTest {
                 person = testPerson,
                 tittel = "Test",
             )
-        oppgave.startFerdigstilling(vurdering = "Vurdering", valgtSakId = null)
+        oppgave.startFerdigstilling(vurdering = "Vurdering", aksjon = OppfølgingAksjon.Avslutt(null))
         oppgave.ferdigstill(aksjonType = OppfølgingAksjon.Type.AVSLUTT)
 
         shouldThrow<Oppfølging.UlovligTilstandsendringException> {

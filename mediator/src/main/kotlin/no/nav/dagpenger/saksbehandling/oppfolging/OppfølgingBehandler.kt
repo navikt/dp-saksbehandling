@@ -9,7 +9,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
-import java.util.UUID
 
 class OppfølgingBehandler(
     private val klageMediator: KlageMediator,
@@ -73,9 +72,9 @@ class OppfølgingBehandler(
 
                 is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage -> {
                     val klageBehandlingId =
-                        requireNotNull(oppfølging.strukturertData["basertPåBehandling"] as? String) {
-                            "Oppfølging ${oppfølging.id} mangler basertPåBehandling i strukturertData - kan ikke opprette revurdering etter klage"
-                        }.let(UUID::fromString)
+                        checkNotNull(oppfølging.basertPåBehandlingId()) {
+                            "Oppfølging ${oppfølging.id} mangler basertPåBehandling - skulle vært avvist i startFerdigstilling"
+                        }
 
                     val klageBehandling = klageMediator.hentKlageBehandlingUtenTilgangssjekk(klageBehandlingId)
                     val klageinstansVedtak =

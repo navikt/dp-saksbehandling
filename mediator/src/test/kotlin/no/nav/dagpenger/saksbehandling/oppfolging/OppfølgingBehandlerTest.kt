@@ -74,7 +74,7 @@ class OppfølgingBehandlerTest {
             )
 
         val valgtSakId = UUID.randomUUID()
-        oppfølging.startFerdigstilling(vurdering = "Skal revurderes", valgtSakId = valgtSakId)
+        oppfølging.startFerdigstilling(vurdering = "Skal revurderes", aksjon = OppfølgingAksjon.Avslutt(valgtSakId))
         val ferdigstiltHendelse =
             oppfølgingBehandler.opprettBehandling(
                 oppfølging = oppfølging,
