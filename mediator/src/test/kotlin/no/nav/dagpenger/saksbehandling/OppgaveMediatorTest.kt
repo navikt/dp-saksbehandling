@@ -70,9 +70,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstiltKlagebehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
@@ -89,6 +89,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -1936,6 +1937,7 @@ OppgaveMediatorTest {
                 behandling = behandling,
                 saksbehandlerIdent = saksbehandler.navIdent,
             )
+        val klageUtfall = UtfallType.OPPRETTHOLDELSE
         DBTestHelper.withOppgave(oppgave) { ds ->
             val oppgaveMediator =
                 OppgaveMediator(
@@ -1950,16 +1952,18 @@ OppgaveMediatorTest {
                 )
 
             oppgaveMediator
-                .ferdigstillOppgave(
+                .ferdigstillKlageOppgave(
                     behandlingId = oppgave.behandling.behandlingId,
+                    klageUtfall = klageUtfall,
                     saksbehandler = saksbehandler,
                 ).getOrThrow() shouldBe oppgave.oppgaveId
 
             val ferdigBehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigBehandletOppgave.tilstand() shouldBe FerdigBehandlet
             ferdigBehandletOppgave.tilstandslogg.first().hendelse shouldBe
-                GodkjentBehandlingHendelse(
+                FerdigstiltKlagebehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
+                    utfall = klageUtfall,
                     utførtAv = saksbehandler,
                 )
         }

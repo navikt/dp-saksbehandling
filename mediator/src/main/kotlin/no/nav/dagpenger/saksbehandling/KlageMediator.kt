@@ -236,8 +236,9 @@ class KlageMediator(
                             ctx = ctx,
                         )
                         klageRepository.lagre(klageBehandling, ctx)
-                        oppgaveMediator.ferdigstillOppgave(
+                        oppgaveMediator.ferdigstillKlageOppgave(
                             behandlingId = hendelse.behandlingId,
+                            klageUtfall = utfallType,
                             saksbehandler = hendelse.utførtAv,
                             ctx = ctx,
                         )
@@ -265,8 +266,9 @@ class KlageMediator(
                     // steg 2 (ferdigstill):            BEHANDLING_UTFORT → FERDIGSTILT
                     transaksjoner.transaksjon { ctx ->
                         klageRepository.lagre(klageBehandling, ctx)
-                        oppgaveMediator.ferdigstillOppgave(
+                        oppgaveMediator.ferdigstillKlageOppgave(
                             behandlingId = hendelse.behandlingId,
+                            klageUtfall = utfallType,
                             saksbehandler = hendelse.utførtAv,
                             ctx = ctx,
                         )

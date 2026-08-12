@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstiltKlagebehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -45,6 +46,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -615,16 +617,18 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(
+    fun ferdigstillKlageOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
+        klageUtfall: UtfallType,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Result<UUID> =
         runCatching {
             oppgaveRepository.hentOppgaveFor(behandlingId = behandlingId).let { oppgave ->
                 oppgave.ferdigstill(
-                    GodkjentBehandlingHendelse(
+                    FerdigstiltKlagebehandlingHendelse(
                         oppgaveId = oppgave.oppgaveId,
+                        utfall = klageUtfall,
                         utførtAv = saksbehandler,
                     ),
                 )
