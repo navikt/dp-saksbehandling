@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -79,7 +80,11 @@ internal class OppgaveHistorikkDTOMapper(
                 OPPRETTET -> "Opprettet"
                 KLAR_TIL_BEHANDLING -> "Klar til behandling"
                 UNDER_BEHANDLING -> "Under behandling"
-                FERDIG_BEHANDLET -> "Ferdig behandlet"
+                FERDIG_BEHANDLET ->
+                    when (tilstandsendring.hendelse is KlageinstansVedtakHendelse) {
+                        true -> "Ferdig behandlet hos klageinstans"
+                        false -> "Ferdig behandlet"
+                    }
                 PAA_VENT -> "På vent"
                 KLAR_TIL_KONTROLL -> "Klar til kontroll"
                 UNDER_KONTROLL -> "Under kontroll"

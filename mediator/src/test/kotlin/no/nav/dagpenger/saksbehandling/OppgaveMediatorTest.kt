@@ -399,7 +399,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal oppdatere emneknagger på klageoppgave når vi mottar utfall fra klageinstans`() {
+    fun `Skal oppdatere emneknagg på klageoppgave og legge til tilstandslogg når vi mottar utfall fra klageinstans`() {
         val behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
         val oppgave =
             TestHelper.lagOppgave(
@@ -435,6 +435,8 @@ OppgaveMediatorTest {
                 oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
                 oppgave.emneknagger shouldContain Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_OPPHEVET.visningsnavn
                 oppgave.emneknagger shouldNotContain Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn
+                oppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+                oppgave.tilstandslogg.first().hendelse shouldBe klageinstansVedtakHendelse
             }
         }
     }

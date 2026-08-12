@@ -730,6 +730,7 @@ data class Oppgave private constructor(
             klageinstansVedtakHendelse: KlageinstansVedtakHendelse,
         ) {
             Emneknagg.utfallKlageinstansTilEmneknagg(klageinstansVedtakHendelse.utfall).let { emneknagg ->
+                oppgave.tilstandslogg.leggTil(nyTilstand = oppgave.tilstand.type, hendelse = klageinstansVedtakHendelse)
                 oppgave._emneknagger.remove(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn)
                 oppgave._emneknagger.add(emneknagg.visningsnavn)
             }

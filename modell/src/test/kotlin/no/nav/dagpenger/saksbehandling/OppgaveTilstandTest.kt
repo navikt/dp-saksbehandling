@@ -457,7 +457,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal sette emneknagg med klageinstansutfall og fjerne eventuell emneknagg for oversendt klageinstans`() {
+    fun `Skal erstatte oversendt klageinstans emneknagg med klageinstansutfall og legge til tilstandsendring`() {
         val oppgave =
             lagOppgave(
                 tilstandType = FERDIG_BEHANDLET,
@@ -482,6 +482,8 @@ class OppgaveTilstandTest {
         }
         oppgave.emneknagger.shouldContain(Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_UGUNST.visningsnavn)
         oppgave.emneknagger.shouldNotContain(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn)
+        oppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+        oppgave.tilstandslogg.first().hendelse shouldBe klageinstansVedtakHendelse
     }
 
     @ParameterizedTest
@@ -522,7 +524,7 @@ class OppgaveTilstandTest {
         "HENLAGT, true",
         "UKJENT_UTFALL, false",
     )
-    fun `Skal håndtere alle utfall fra klageinstans`(
+    fun `Skal håndtere alle utfall fra klageinstans og feile ved ukjent utfall`(
         utfall: String,
         forventetOk: Boolean,
     ) {
