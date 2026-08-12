@@ -212,6 +212,7 @@ fun Application.statusPages() {
                                     .create("dagpenger.nav.no/saksbehandling:problem:manglende-tilgang")
                                     .toString(),
                         )
+                    logger.warn { "Manglende tilgang: ${cause.message}" }
                     call.respond(HttpStatusCode.Forbidden, problem)
                 }
 
