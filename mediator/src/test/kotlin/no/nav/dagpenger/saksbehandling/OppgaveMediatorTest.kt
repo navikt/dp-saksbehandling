@@ -70,13 +70,13 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstiltKlagebehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -1953,17 +1953,19 @@ OppgaveMediatorTest {
 
             oppgaveMediator
                 .ferdigstillKlageOppgave(
-                    behandlingId = oppgave.behandling.behandlingId,
+                    klageBehandlingUtført =
+                        KlageBehandlingUtført(
+                            behandlingId = behandling.behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
                     klageUtfall = klageUtfall,
-                    saksbehandler = saksbehandler,
                 ).getOrThrow() shouldBe oppgave.oppgaveId
 
             val ferdigBehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigBehandletOppgave.tilstand() shouldBe FerdigBehandlet
             ferdigBehandletOppgave.tilstandslogg.first().hendelse shouldBe
-                FerdigstiltKlagebehandlingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    utfall = klageUtfall,
+                KlageBehandlingUtført(
+                    behandlingId = oppgave.behandling.behandlingId,
                     utførtAv = saksbehandler,
                 )
         }

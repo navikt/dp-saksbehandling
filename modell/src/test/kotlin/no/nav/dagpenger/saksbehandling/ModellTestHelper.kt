@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
@@ -31,7 +30,13 @@ object ModellTestHelper {
         inhabileSaksbehandlerIdenter: List<String> = emptyList(),
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         emneknagger: Set<String> = emptySet(),
-        hendelse: Hendelse = TomHendelse,
+        behandling: Behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                hendelse = TomHendelse,
+            ),
         meldingOmVedtakKilde: Oppgave.MeldingOmVedtak =
             Oppgave.MeldingOmVedtak(
                 kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
@@ -58,13 +63,7 @@ object ModellTestHelper {
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
                 inhabileSaksbehandlerIdenter = inhabileSaksbehandlerIdenter,
             )
-        val behandling =
-            Behandling(
-                behandlingId = UUIDv7.ny(),
-                opprettet = LocalDateTime.now(),
-                utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                hendelse = hendelse,
-            )
+
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             behandlerIdent =

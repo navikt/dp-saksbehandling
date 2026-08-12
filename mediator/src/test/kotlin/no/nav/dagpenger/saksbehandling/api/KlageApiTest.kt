@@ -382,7 +382,7 @@ class KlageApiTest {
             mockk<KlageMediator>().also {
                 every {
                     it.behandlingUtført(
-                        hendelse =
+                        klageBehandlingUtført =
                             KlageBehandlingUtført(
                                 behandlingId = klageBehandlingId,
                                 utførtAv = TestHelper.saksbehandler,
@@ -400,7 +400,7 @@ class KlageApiTest {
 
         verify(exactly = 1) {
             mediator.behandlingUtført(
-                hendelse =
+                klageBehandlingUtført =
                     KlageBehandlingUtført(
                         behandlingId = klageBehandlingId,
                         utførtAv = TestHelper.saksbehandler,

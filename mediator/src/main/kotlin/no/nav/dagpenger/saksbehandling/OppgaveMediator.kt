@@ -26,13 +26,13 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstiltKlagebehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -618,19 +618,15 @@ class OppgaveMediator(
     }
 
     fun ferdigstillKlageOppgave(
-        behandlingId: UUID,
-        saksbehandler: Saksbehandler,
+        klageBehandlingUtført: KlageBehandlingUtført,
         klageUtfall: UtfallType,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Result<UUID> =
         runCatching {
-            oppgaveRepository.hentOppgaveFor(behandlingId = behandlingId).let { oppgave ->
+            oppgaveRepository.hentOppgaveFor(behandlingId = klageBehandlingUtført.behandlingId).let { oppgave ->
                 oppgave.ferdigstill(
-                    FerdigstiltKlagebehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        utfall = klageUtfall,
-                        utførtAv = saksbehandler,
-                    ),
+                    klageBehandlingUtført = klageBehandlingUtført,
+                    klageUtfall = klageUtfall,
                 )
                 oppgaveRepository.lagre(oppgave, ctx)
                 oppgave.oppgaveId

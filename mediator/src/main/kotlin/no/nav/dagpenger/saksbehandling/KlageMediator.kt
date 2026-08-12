@@ -176,21 +176,21 @@ class KlageMediator(
     }
 
     fun behandlingUtført(
-        hendelse: KlageBehandlingUtført,
+        klageBehandlingUtført: KlageBehandlingUtført,
         saksbehandlerToken: String,
     ): KlageBehandling =
         runBlocking {
             val saksbehandlerDeferred =
                 async(Dispatchers.IO) {
                     oppslag.hentBehandler(
-                        ident = hendelse.utførtAv.navIdent,
+                        ident = klageBehandlingUtført.utførtAv.navIdent,
                     )
                 }
             val klageBehandling =
-                klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+                klageRepository.hentKlageBehandling(klageBehandlingUtført.behandlingId).also { klageBehandling ->
                     klageBehandling.behandlingUtført(
                         behandlendeEnhet = saksbehandlerDeferred.await().enhet.enhetNr,
-                        hendelse = hendelse,
+                        hendelse = klageBehandlingUtført,
                     )
                 }
             val utfallType = requireNotNull(klageBehandling.utfall())
@@ -198,8 +198,8 @@ class KlageMediator(
                 UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST -> {
                     val oppgave =
                         oppgaveMediator.hentOppgaveMedTilgangssjekk(
-                            behandlingId = hendelse.behandlingId,
-                            saksbehandler = hendelse.utførtAv,
+                            behandlingId = klageBehandlingUtført.behandlingId,
+                            saksbehandler = klageBehandlingUtført.utførtAv,
                         )
 
                     val personDeferred =
@@ -237,9 +237,8 @@ class KlageMediator(
                         )
                         klageRepository.lagre(klageBehandling, ctx)
                         oppgaveMediator.ferdigstillKlageOppgave(
-                            behandlingId = hendelse.behandlingId,
+                            klageBehandlingUtført = klageBehandlingUtført,
                             klageUtfall = utfallType,
-                            saksbehandler = hendelse.utførtAv,
                             ctx = ctx,
                         )
                     }
@@ -267,9 +266,8 @@ class KlageMediator(
                     transaksjoner.transaksjon { ctx ->
                         klageRepository.lagre(klageBehandling, ctx)
                         oppgaveMediator.ferdigstillKlageOppgave(
-                            behandlingId = hendelse.behandlingId,
+                            klageBehandlingUtført = klageBehandlingUtført,
                             klageUtfall = utfallType,
-                            saksbehandler = hendelse.utførtAv,
                             ctx = ctx,
                         )
                     }

@@ -204,7 +204,7 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    hendelse =
+                    klageBehandlingUtført =
                         KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
@@ -216,7 +216,7 @@ class KlageMediatorTest {
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
             klageMediator.behandlingUtført(
-                hendelse =
+                klageBehandlingUtført =
                     KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
@@ -368,7 +368,7 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    hendelse =
+                    klageBehandlingUtført =
                         KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
@@ -379,7 +379,7 @@ class KlageMediatorTest {
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
             klageMediator.behandlingUtført(
-                hendelse =
+                klageBehandlingUtført =
                     KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
@@ -498,7 +498,7 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    hendelse =
+                    klageBehandlingUtført =
                         KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,
@@ -509,7 +509,7 @@ class KlageMediatorTest {
 
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.AVVIST)
             klageMediator.behandlingUtført(
-                hendelse =
+                klageBehandlingUtført =
                     KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
@@ -713,7 +713,7 @@ class KlageMediatorTest {
 
             // Steg 2: behandlingUtført — klage til FERDIGSTILT, oppgave ferdigstilles
             klageMediator.behandlingUtført(
-                hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
                 saksbehandlerToken = "token",
             )
             klageMediator
@@ -756,7 +756,7 @@ class KlageMediatorTest {
             // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
                     saksbehandlerToken = "token",
                 )
             }
@@ -814,7 +814,7 @@ class KlageMediatorTest {
 
             // Steg 2: behandlingUtført — klage til FERDIGSTILT, oppgave ferdigstilles
             klageMediator.behandlingUtført(
-                hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
                 saksbehandlerToken = "token",
             )
             klageMediator
@@ -857,7 +857,7 @@ class KlageMediatorTest {
             // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    hendelse = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
                     saksbehandlerToken = "token",
                 )
             }
@@ -1427,7 +1427,7 @@ class KlageMediatorTest {
 
             shouldThrow<RuntimeException> {
                 klageMediator.behandlingUtført(
-                    hendelse =
+                    klageBehandlingUtført =
                         KlageBehandlingUtført(
                             behandlingId = behandlingId,
                             utførtAv = saksbehandler,

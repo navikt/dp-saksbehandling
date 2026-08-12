@@ -34,13 +34,16 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -620,6 +623,46 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "MEDHOLD, Medhold",
+        "DELVIS_MEDHOLD, Delvis medhold",
+        "AVVIST, Avvist",
+        "OPPRETTHOLDELSE, Oversendt klageinstans",
+    )
+    fun `Skal ferdigbehandle og sette emneknagg med utfall når saksbehandler godkjenner en klagebehandling`(
+        utfallType: String,
+        forventetEmneknagg: String,
+    ) {
+        val saksbehandler = Saksbehandler("sIdent", emptySet())
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+                utløstAv = HendelseBehandler.Intern.Klage,
+                hendelse = TomHendelse,
+            )
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                saksbehandler = saksbehandler,
+                behandling = behandling,
+            )
+
+        oppgave.ferdigstill(
+            klageBehandlingUtført =
+                KlageBehandlingUtført(
+                    behandlingId = behandling.behandlingId,
+                    utførtAv = saksbehandler,
+                ),
+            klageUtfall = UtfallType.valueOf(utfallType),
+        )
+
+        oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.emneknagger shouldContain forventetEmneknagg
     }
 
     @Test

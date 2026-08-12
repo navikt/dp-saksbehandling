@@ -118,7 +118,7 @@ fun Route.klageApi(
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         val klageBehandling =
                             mediator.behandlingUtført(
-                                hendelse =
+                                klageBehandlingUtført =
                                     KlageBehandlingUtført(
                                         behandlingId = behandlingId,
                                         utførtAv = saksbehandler,

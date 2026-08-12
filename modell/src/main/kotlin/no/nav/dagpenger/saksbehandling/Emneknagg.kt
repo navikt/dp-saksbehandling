@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import java.time.LocalDate
 
 private val logger = KotlinLogging.logger {}
@@ -142,6 +143,16 @@ object Emneknagg {
         ;
 
         override val kategori = EmneknaggKategori.UDEFINERT
+
+        companion object {
+            fun fromUtfallType(utfall: UtfallType): Klage =
+                when (utfall) {
+                    UtfallType.OPPRETTHOLDELSE -> KLAGE_OVERSENDT_KLAGEINSTANS
+                    UtfallType.MEDHOLD -> KLAGE_MEDHOLD
+                    UtfallType.DELVIS_MEDHOLD -> KLAGE_DELVIS_MEDHOLD
+                    UtfallType.AVVIST -> KLAGE_AVVIST
+                }
+        }
     }
 
     val alleKodedefinerte: List<KategorisertEmneknagg> =

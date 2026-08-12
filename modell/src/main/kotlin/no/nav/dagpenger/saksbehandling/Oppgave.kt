@@ -24,13 +24,13 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstiltKlagebehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -260,17 +260,14 @@ data class Oppgave private constructor(
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
-    fun ferdigstill(ferdigstiltKlagebehandlingHendelse: FerdigstiltKlagebehandlingHendelse) {
-        tilgangskontrollPerson(ferdigstiltKlagebehandlingHendelse.utførtAv)
-        val emneknagg =
-            when (ferdigstiltKlagebehandlingHendelse.utfall) {
-                UtfallType.OPPRETTHOLDELSE -> Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS
-                UtfallType.MEDHOLD -> Emneknagg.Klage.KLAGE_MEDHOLD
-                UtfallType.DELVIS_MEDHOLD -> Emneknagg.Klage.KLAGE_DELVIS_MEDHOLD
-                UtfallType.AVVIST -> Emneknagg.Klage.KLAGE_AVVIST
-            }
+    fun ferdigstill(
+        klageBehandlingUtført: KlageBehandlingUtført,
+        klageUtfall: UtfallType,
+    ) {
+        tilgangskontrollPerson(klageBehandlingUtført.utførtAv)
+        val emneknagg = Emneknagg.Klage.fromUtfallType(klageUtfall)
         this._emneknagger.add(emneknagg.visningsnavn)
-        return tilstand.ferdigstill(this, ferdigstiltKlagebehandlingHendelse)
+        return tilstand.ferdigstill(this, klageBehandlingUtført)
     }
 
     fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
@@ -662,14 +659,14 @@ data class Oppgave private constructor(
 
         override fun ferdigstill(
             oppgave: Oppgave,
-            ferdigstiltKlagebehandlingHendelse: FerdigstiltKlagebehandlingHendelse,
+            klageBehandlingUtført: KlageBehandlingUtført,
         ) {
             requireEierskapTilOppgave(
                 oppgave = oppgave,
-                saksbehandler = ferdigstiltKlagebehandlingHendelse.utførtAv,
-                hendelseNavn = ferdigstiltKlagebehandlingHendelse.javaClass.simpleName,
+                saksbehandler = klageBehandlingUtført.utførtAv,
+                hendelseNavn = klageBehandlingUtført.javaClass.simpleName,
             )
-            oppgave.endreTilstand(FerdigBehandlet, ferdigstiltKlagebehandlingHendelse)
+            oppgave.endreTilstand(FerdigBehandlet, klageBehandlingUtført)
         }
 
         override fun ferdigstill(
@@ -1271,13 +1268,13 @@ data class Oppgave private constructor(
 
         fun ferdigstill(
             oppgave: Oppgave,
-            ferdigstiltKlagebehandlingHendelse: FerdigstiltKlagebehandlingHendelse,
+            klageBehandlingUtført: KlageBehandlingUtført,
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${ferdigstiltKlagebehandlingHendelse.javaClass.simpleName}",
+                        "${klageBehandlingUtført.javaClass.simpleName}",
             )
         }
 
