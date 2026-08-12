@@ -80,6 +80,7 @@ fun Application.statusPages() {
                                     .create("dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring")
                                     .toString(),
                         )
+                    logger.warn { "Ulovlig tilstandsendring på oppgave: ${cause.message}. Path: ${call.request.path()}" }
                     call.respond(HttpStatusCode.Conflict, problem)
                 }
 
@@ -95,6 +96,7 @@ fun Application.statusPages() {
                                     .create("dagpenger.nav.no/saksbehandling:problem:oppfolging-ulovlig-tilstandsendring")
                                     .toString(),
                         )
+                    logger.warn { "Ulovlig tilstandsendring på oppfølging: ${cause.message}. Path: ${call.request.path()}" }
                     call.respond(HttpStatusCode.Conflict, problem)
                 }
 
@@ -110,6 +112,7 @@ fun Application.statusPages() {
                                     .create("dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi")
                                     .toString(),
                         )
+                    logger.warn { "Ugyldig verdi: ${cause.message}. Path: ${call.request.path()}" }
                     call.respond(HttpStatusCode.BadRequest, problem)
                 }
 
@@ -125,6 +128,7 @@ fun Application.statusPages() {
                                     .create("dagpenger.nav.no/saksbehandling:problem:dato-tid-feil")
                                     .toString(),
                         )
+                    logger.warn { "Feil ved dato-tid parsing: ${cause.message}. Path: ${call.request.path()}" }
                     call.respond(HttpStatusCode.BadRequest, problem)
                 }
                 is BrukerHarEndretMeldesyklusException -> {
@@ -140,6 +144,7 @@ fun Application.statusPages() {
                                     .create("dagpenger.nav.no/saksbehandling:problem:endret-meldesyklus")
                                     .toString(),
                         )
+                    logger.warn { "Personen har endret meldesyklus: ${cause.message}" }
                     call.respond(HttpStatusCode.UnprocessableEntity, problem)
                 }
 

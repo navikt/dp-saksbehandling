@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTL
 import no.nav.dagpenger.saksbehandling.tilgangsstyring.ManglendeTilgang
 import java.util.UUID
 
-
 data class Person(
     val id: UUID = UUIDv7.ny(),
     val ident: String,
@@ -66,8 +65,7 @@ data class Person(
     /**
      * Registrerer at [navIdent] er inhabil for denne personen. Inhabilitet er permanent og kan ikke fjernes.
      */
-    fun registrerInhabilitet(navIdent: String): Person =
-        copy(inhabileNavIdenter = (inhabileNavIdenter + navIdent).distinct())
+    fun registrerInhabilitet(navIdent: String): Person = copy(inhabileNavIdenter = (inhabileNavIdenter + navIdent).distinct())
 }
 
 enum class AdressebeskyttelseGradering {
