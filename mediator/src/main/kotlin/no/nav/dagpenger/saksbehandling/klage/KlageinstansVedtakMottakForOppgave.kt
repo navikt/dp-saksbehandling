@@ -50,7 +50,7 @@ class KlageinstansVedtakMottakForOppgave(
         val klageinstansEventId = packet["eventId"].asUUID()
         val klageinstansVedtakId = packet["kabalReferanse"].asUUID()
         val klageinstansVedtakType = packet["type"].stringValue()
-        val vedtakType = KlageinstansVedtakHendelse.KlageinstansVedtakType.fromString(klageinstansVedtakType)
+
         withLoggingContext(
             "klageId" to klageId.toString(),
             "klageinstansVedtakId" to klageinstansVedtakId.toString(),
@@ -58,22 +58,18 @@ class KlageinstansVedtakMottakForOppgave(
         ) {
             sikkerlogger.info { "KlageinstansVedtakMottakForOppgave mottatt: ${packet.toJson()}" }
 
-            when (vedtakType) {
-                KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE -> {
-                    DetaljNode(packet["detaljer"]["klagebehandlingAvsluttet"])
-                }
-            }?.let { klagebehandlingAvsluttetNode ->
-                oppgaveMediator.håndterUtfallFraKlageinstans(
-                    KlageinstansVedtakHendelse(
-                        type = vedtakType,
-                        klageId = klageId,
-                        klageinstansVedtakId = klageinstansVedtakId,
-                        avsluttet = klagebehandlingAvsluttetNode.avsluttet,
-                        utfall = klagebehandlingAvsluttetNode.utfall,
-                        journalpostIder = klagebehandlingAvsluttetNode.journalpostIder,
-                    ),
-                )
-            }
+            val vedtakType = KlageinstansVedtakHendelse.KlageinstansVedtakType.fromString(klageinstansVedtakType)
+            val detaljNode = DetaljNode(packet["detaljer"]["klagebehandlingAvsluttet"])
+            oppgaveMediator.håndterUtfallFraKlageinstans(
+                KlageinstansVedtakHendelse(
+                    type = vedtakType,
+                    klageId = klageId,
+                    klageinstansVedtakId = klageinstansVedtakId,
+                    avsluttet = detaljNode.avsluttet,
+                    utfall = detaljNode.utfall,
+                    journalpostIder = detaljNode.journalpostIder,
+                ),
+            )
         }
     }
 

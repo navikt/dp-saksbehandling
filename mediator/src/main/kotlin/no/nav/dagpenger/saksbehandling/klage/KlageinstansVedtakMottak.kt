@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -46,48 +45,35 @@ class KlageinstansVedtakMottak(
         meterRegistry: MeterRegistry,
     ) {
         logger.info { "KlageAnkeVedtak mottat" }
-        val klageInstansEventId = packet["eventId"].asUUID()
         val klageId = packet["kildeReferanse"].asUUID()
+        val klageinstansEventId = packet["eventId"].asUUID()
         val klageinstansVedtakId = packet["kabalReferanse"].asUUID()
-        val klageInstansVedtakType = packet["type"].asText()
-        val type = KlageinstansVedtakHendelse.KlageinstansVedtakType.fromString(klageInstansVedtakType)
+        val klageinstansVedtakType = packet["type"].stringValue()
+
         withLoggingContext(
             "klageId" to klageId.toString(),
             "klageinstansVedtakId" to klageinstansVedtakId.toString(),
-            "klageInstansEventId" to klageInstansEventId.toString(),
-            "klageInstansVedtakType" to klageInstansVedtakType,
+            "klageinstansEventId" to klageinstansEventId.toString(),
         ) {
             sikkerlogger.info { "Mottok klageinstans vedtak med pakke: ${packet.toJson()}" }
 
-            if (klageInstansEventId in
-                setOf(
-                    UUID.fromString("ddedbbad-94de-4aac-8ab8-f6d0c422230d"),
-                )
-            ) {
-                logger.warn { "Skipper klageinstans vedtak med eventId $klageInstansEventId" }
-                return
-            }
+            val vedtakType = KlageinstansVedtakHendelse.KlageinstansVedtakType.fromString(klageinstansVedtakType)
+            val detaljNode = DetaljNode(packet["detaljer"]["klagebehandlingAvsluttet"])
 
-            val detaljeNode =
-                when (type) {
-                    KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE -> {
-                        DetaljeNode(packet["detaljer"]["klagebehandlingAvsluttet"])
-                    }
-                }
             klageMediator.mottaKlageinstansVedtak(
                 KlageinstansVedtakHendelse(
-                    type = type,
+                    type = vedtakType,
                     klageId = klageId,
                     klageinstansVedtakId = klageinstansVedtakId,
-                    avsluttet = detaljeNode.avsluttet,
-                    utfall = detaljeNode.utfall,
-                    journalpostIder = detaljeNode.journalpostIder,
+                    avsluttet = detaljNode.avsluttet,
+                    utfall = detaljNode.utfall,
+                    journalpostIder = detaljNode.journalpostIder,
                 ),
             )
         }
     }
 
-    private class DetaljeNode(
+    private class DetaljNode(
         jsonNode: JsonNode,
     ) {
         val avsluttet: LocalDateTime
@@ -99,8 +85,8 @@ class KlageinstansVedtakMottak(
             journalpostIder =
                 jsonNode["journalpostReferanser"]
                     .values()
-                    .map { it.asText() }
-            utfall = jsonNode["utfall"].asText()
+                    .map { it.stringValue() }
+            utfall = jsonNode["utfall"].stringValue()
         }
     }
 }
