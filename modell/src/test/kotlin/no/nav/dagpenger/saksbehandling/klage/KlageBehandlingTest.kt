@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Behandles
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -375,6 +376,63 @@ class KlageBehandlingTest {
             )
 
         shouldThrow<IllegalStateException> { klageBehandling.vedtakDistribuert(hendelse) }
+    }
+
+    @Test
+    fun `mottaKlageinstansVedtak med utfall som krever revurdering returnerer StartRevurdering og ferdigstiller klagen`() {
+        val kabalUtfall = listOf("MEDHOLD", "DELVIS_MEDHOLD", "OPPHEVET", "RETUR", "UGUNST")
+
+        kabalUtfall.forEach { utfall ->
+            val klageBehandling =
+                lagKlageBehandlingMedUtfall(
+                    tilstand = KlageBehandling.BehandlesAvKlageinstans,
+                    utfallType = UtfallType.OPPRETTHOLDELSE,
+                )
+            val kabalReferanse = UUID.randomUUID()
+            val hendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    klageId = klageBehandling.behandlingId,
+                    klageinstansVedtakId = kabalReferanse,
+                    avsluttet = LocalDateTime.now(),
+                    utfall = utfall,
+                    journalpostIder = listOf("journalpostId1"),
+                )
+
+            val aksjon = klageBehandling.mottaKlageinstansVedtak(hendelse)
+
+            aksjon.shouldBeInstanceOf<KlageAksjon.StartRevurdering>()
+            aksjon.klageBehandling shouldBe klageBehandling
+            aksjon.kabalReferanse shouldBe kabalReferanse
+            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+        }
+    }
+
+    @Test
+    fun `mottaKlageinstansVedtak med utfall som ikke krever revurdering returnerer IngenAksjon og ferdigstiller klagen`() {
+        val kabalUtfall = listOf("STADFESTELSE", "TRUKKET", "AVVIST", "HENLAGT")
+
+        kabalUtfall.forEach { utfall ->
+            val klageBehandling =
+                lagKlageBehandlingMedUtfall(
+                    tilstand = KlageBehandling.BehandlesAvKlageinstans,
+                    utfallType = UtfallType.OPPRETTHOLDELSE,
+                )
+            val hendelse =
+                KlageinstansVedtakHendelse(
+                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    klageId = klageBehandling.behandlingId,
+                    klageinstansVedtakId = UUID.randomUUID(),
+                    avsluttet = LocalDateTime.now(),
+                    utfall = utfall,
+                    journalpostIder = listOf("journalpostId1"),
+                )
+
+            val aksjon = klageBehandling.mottaKlageinstansVedtak(hendelse)
+
+            aksjon.shouldBeInstanceOf<KlageAksjon.IngenAksjon>()
+            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+        }
     }
 
     @Test

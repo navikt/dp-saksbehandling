@@ -2,12 +2,13 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
+import no.nav.dagpenger.saksbehandling.behandling.OpprettBehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
+import java.time.LocalDate
 
 class InnsendingBehandler(
     private val klageMediator: KlageMediator,
@@ -68,12 +69,14 @@ class InnsendingBehandler(
 
         behandlingKlient
             .opprettBehandling(
-                personIdent = innsending.person.ident,
+                opprettBehandlingTypeDTO =
+                    hendelse.aksjon.tilOpprettBehandlingTypeDTO(
+                        ident = innsending.person.ident,
+                        hendelseDato = innsending.mottatt.toLocalDate(),
+                        hendelseId = innsending.innsendingId.toString(),
+                        begrunnelse = vurdering,
+                    ),
                 saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = hendelse.aksjon.tilBehandlingstype(),
-                hendelseDato = innsending.mottatt.toLocalDate(),
-                hendelseId = innsending.innsendingId.toString(),
-                begrunnelse = vurdering,
             ).let { result ->
                 return InnsendingFerdigstiltHendelse(
                     innsendingId = innsending.innsendingId,
@@ -134,9 +137,14 @@ class InnsendingBehandler(
     }
 }
 
-private fun Aksjon.tilBehandlingstype(): BehandlingstypeDTO =
+private fun Aksjon.tilOpprettBehandlingTypeDTO(
+    ident: String,
+    hendelseDato: LocalDate,
+    hendelseId: String,
+    begrunnelse: String,
+): OpprettBehandlingTypeDTO =
     when (this) {
-        is Aksjon.OpprettManuellBehandling -> BehandlingstypeDTO.MANUELL
-        is Aksjon.OpprettRevurderingBehandling -> BehandlingstypeDTO.REVURDERING
+        is Aksjon.OpprettManuellBehandling -> OpprettBehandlingTypeDTO.Manuell(ident, hendelseDato, hendelseId, begrunnelse)
+        is Aksjon.OpprettRevurderingBehandling -> OpprettBehandlingTypeDTO.Revurdering(ident, hendelseDato, hendelseId, begrunnelse)
         else -> throw IllegalArgumentException("Ugyldig aksjon for behandlingstype: $this")
     }

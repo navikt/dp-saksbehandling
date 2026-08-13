@@ -75,6 +75,11 @@ fun Route.innsendingApi(
                                             valgtSakId = valgtSakId,
                                         )
                                     }
+                                    BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE -> {
+                                        throw IllegalArgumentException(
+                                            "Behandlingsvariant RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE er ikke gyldig for innsending",
+                                        )
+                                    }
                                     BehandlingVariantDTO.KLAGE -> {
                                         val valgtSakId = requestDTO.sakId
                                         requireNotNull(valgtSakId)

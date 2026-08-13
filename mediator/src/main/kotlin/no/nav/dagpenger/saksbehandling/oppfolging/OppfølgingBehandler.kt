@@ -2,12 +2,13 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
+import no.nav.dagpenger.saksbehandling.behandling.OpprettBehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppfølgingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 
 class OppfølgingBehandler(
     private val klageMediator: KlageMediator,
@@ -46,25 +47,58 @@ class OppfølgingBehandler(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
     ): OppfølgingFerdigstiltHendelse {
-        val (saksbehandlerToken, behandlingstype) =
+        val saksbehandlerToken =
             when (val aksjon = hendelse.aksjon) {
-                is OppfølgingAksjon.OpprettManuellBehandling ->
-                    aksjon.saksbehandlerToken to BehandlingstypeDTO.MANUELL
-
-                is OppfølgingAksjon.OpprettRevurderingBehandling ->
-                    aksjon.saksbehandlerToken to BehandlingstypeDTO.REVURDERING
-
+                is OppfølgingAksjon.OpprettManuellBehandling -> aksjon.saksbehandlerToken
+                is OppfølgingAksjon.OpprettRevurderingBehandling -> aksjon.saksbehandlerToken
+                is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage -> aksjon.saksbehandlerToken
                 else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: $aksjon")
+            }
+
+        val hendelseDato = oppfølging.opprettet.toLocalDate()
+        val hendelseId = oppfølging.id.toString()
+
+        val opprettBehandlingTypeDTO =
+            when (hendelse.aksjon) {
+                is OppfølgingAksjon.OpprettManuellBehandling -> {
+                    val begrunnelse = oppfølging.vurdering() ?: "Opprettet fra oppfølging"
+                    OpprettBehandlingTypeDTO.Manuell(oppfølging.person.ident, hendelseDato, hendelseId, begrunnelse)
+                }
+
+                is OppfølgingAksjon.OpprettRevurderingBehandling -> {
+                    val begrunnelse = oppfølging.vurdering() ?: "Opprettet fra oppfølging"
+                    OpprettBehandlingTypeDTO.Revurdering(oppfølging.person.ident, hendelseDato, hendelseId, begrunnelse)
+                }
+
+                is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage -> {
+                    val klageBehandlingId =
+                        checkNotNull(oppfølging.basertPåBehandlingId()) {
+                            "Oppfølging ${oppfølging.id} mangler basertPåBehandling - skulle vært avvist i startFerdigstilling"
+                        }
+
+                    val klageBehandling = klageMediator.hentKlageBehandlingUtenTilgangssjekk(klageBehandlingId)
+                    val klageinstansVedtak =
+                        klageBehandling.klageinstansVedtak() as? KlageinstansVedtak.Klage
+                            ?: error("Klagebehandling $klageBehandlingId mangler klageinstansvedtak")
+                    val kabalReferanse = klageinstansVedtak.id
+
+                    val begrunnelse = oppfølging.vurdering() ?: "Opprettet fra oppfølging"
+                    OpprettBehandlingTypeDTO.RevurderingEtterKlage(
+                        ident = oppfølging.person.ident,
+                        hendelseDato = hendelseDato,
+                        hendelseId = hendelseId,
+                        begrunnelse = begrunnelse,
+                        kabalReferanse = kabalReferanse,
+                    )
+                }
+
+                else -> throw IllegalArgumentException("Ugyldig aksjon for opprettBehandling: ${hendelse.aksjon}")
             }
 
         behandlingKlient
             .opprettBehandling(
-                personIdent = oppfølging.person.ident,
+                opprettBehandlingTypeDTO = opprettBehandlingTypeDTO,
                 saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = behandlingstype,
-                hendelseDato = oppfølging.opprettet.toLocalDate(),
-                hendelseId = oppfølging.id.toString(),
-                begrunnelse = oppfølging.vurdering() ?: "Opprettet fra oppfølging",
             ).let { result ->
                 return OppfølgingFerdigstiltHendelse(
                     oppfølgingId = oppfølging.id,

@@ -66,7 +66,7 @@ class PostgresOppfølgingRepositoryTest {
             repository.lagre(oppgave)
 
             val sakId = UUID.randomUUID()
-            oppgave.startFerdigstilling(vurdering = "Min vurdering", valgtSakId = sakId)
+            oppgave.startFerdigstilling(vurdering = "Min vurdering", aksjon = OppfølgingAksjon.Avslutt(sakId))
             repository.lagre(oppgave)
 
             val etterStart = repository.hent(oppgave.id)
@@ -98,7 +98,7 @@ class PostgresOppfølgingRepositoryTest {
                 )
             val behandlingId = UUID.randomUUID()
 
-            oppgave.startFerdigstilling(vurdering = "Klage", valgtSakId = null)
+            oppgave.startFerdigstilling(vurdering = "Klage", aksjon = OppfølgingAksjon.Avslutt(null))
             oppgave.ferdigstill(
                 aksjonType = OppfølgingAksjon.Type.OPPRETT_KLAGE,
                 opprettetBehandlingId = behandlingId,
@@ -128,7 +128,7 @@ class PostgresOppfølgingRepositoryTest {
             val behandlingId = UUID.randomUUID()
             val sakId = UUID.randomUUID()
 
-            oppgave.startFerdigstilling(vurdering = "Manuell", valgtSakId = sakId)
+            oppgave.startFerdigstilling(vurdering = "Manuell", aksjon = OppfølgingAksjon.Avslutt(sakId))
             oppgave.ferdigstill(
                 aksjonType = OppfølgingAksjon.Type.OPPRETT_MANUELL_BEHANDLING,
                 opprettetBehandlingId = behandlingId,

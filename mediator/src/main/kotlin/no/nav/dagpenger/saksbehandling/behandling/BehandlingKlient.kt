@@ -37,12 +37,8 @@ interface BehandlingKlient {
     ): Result<Unit>
 
     fun opprettBehandling(
-        personIdent: String,
+        opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,
         saksbehandlerToken: String,
-        behandlingstype: BehandlingstypeDTO,
-        hendelseDato: LocalDate,
-        hendelseId: String,
-        begrunnelse: String,
     ): Result<UUID>
 
     fun godkjenn(
@@ -101,12 +97,8 @@ internal class BehandlingHttpKlient(
     ): Result<Unit> = kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
 
     override fun opprettBehandling(
-        personIdent: String,
+        opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,
         saksbehandlerToken: String,
-        behandlingstype: BehandlingstypeDTO,
-        hendelseDato: LocalDate,
-        hendelseId: String,
-        begrunnelse: String,
     ): Result<UUID> =
         runBlocking {
             runCatching {
@@ -115,20 +107,12 @@ internal class BehandlingHttpKlient(
                         header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                         header(HttpHeaders.ContentType, ContentType.Application.Json)
                         accept(ContentType.Application.Json)
-                        setBody(
-                            NyBehandlingRequest(
-                                ident = personIdent,
-                                behandlingstype = behandlingstype.verdi,
-                                id = hendelseId,
-                                skjedde = hendelseDato,
-                                begrunnelse = begrunnelse,
-                            ),
-                        )
+                        setBody(opprettBehandlingTypeDTO.toMap())
                     }.body<BehandlingDTO>()
                     .behandlingId
                     .let { behandlingId ->
                         logger.info {
-                            "Behandling av type ${behandlingstype.verdi} opprettet. HendelseId: $hendelseId. Ny behandling har id: $behandlingId"
+                            "Behandling av type ${opprettBehandlingTypeDTO.behandlingstype} opprettet. HendelseId: ${opprettBehandlingTypeDTO.hendelseId}. Ny behandling har id: $behandlingId"
                         }
                         UUID.fromString(behandlingId)
                     }
@@ -199,19 +183,62 @@ private data class DpBehandlingIdentRequest(
     val ident: String,
 )
 
-private data class NyBehandlingRequest(
-    val ident: String,
-    val behandlingstype: String,
-    val id: String,
-    val skjedde: LocalDate,
+sealed class OpprettBehandlingTypeDTO(
+    val personIdent: String,
+    val hendelseDato: LocalDate,
+    val hendelseId: String,
     val begrunnelse: String,
-)
-
-enum class BehandlingstypeDTO(
-    val verdi: String,
 ) {
-    MANUELL("Manuell"),
-    REVURDERING("Revurdering"),
+    abstract val behandlingstype: String
+
+    open fun toMap(): Map<String, Any> =
+        mapOf(
+            "ident" to personIdent,
+            "behandlingstype" to behandlingstype,
+            "skjedde" to hendelseDato.toString(),
+            "begrunnelse" to begrunnelse,
+        )
+
+    class Manuell(
+        ident: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
+    ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
+        override val behandlingstype = "Manuell"
+    }
+
+    class Revurdering(
+        ident: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
+    ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
+        override val behandlingstype = "Revurdering"
+    }
+
+    /**
+     * Revurdering opprettet på bakgrunn av et klageinstansvedtak (Kabal). Sendes til dp-behandling
+     * som behandlingstype "OmgjøringEtterKlage" med kildesystem=Klageinstans og [kabalReferanse]
+     * som klagens id i kildesystemet (jf. dp-behandlings NyKlage-skjema, som er det eneste skjemaet
+     * med et id-felt).
+     */
+    class RevurderingEtterKlage(
+        ident: String,
+        hendelseDato: LocalDate,
+        hendelseId: String,
+        begrunnelse: String,
+        val kabalReferanse: UUID,
+    ) : OpprettBehandlingTypeDTO(ident, hendelseDato, hendelseId, begrunnelse) {
+        override val behandlingstype = "OmgjøringEtterKlage"
+
+        override fun toMap(): Map<String, Any> =
+            super.toMap() +
+                mapOf(
+                    "id" to kabalReferanse.toString(),
+                    "kildesystem" to "Klageinstans",
+                )
+    }
 }
 
 private data class BehandlingDTO(

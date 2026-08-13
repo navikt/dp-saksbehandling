@@ -248,12 +248,11 @@ data class KlageBehandling private constructor(
             hendelse = hendelse,
         )
 
-    fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
+    fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse): KlageAksjon =
         tilstand.mottaKlageinstansVedtak(
             klageBehandling = this,
             hendelse = klageinstansVedtakHendelse,
         )
-    }
 
     object Behandles : KlageTilstand {
         override val type: Type = BEHANDLES
@@ -397,9 +396,22 @@ data class KlageBehandling private constructor(
         override fun mottaKlageinstansVedtak(
             klageBehandling: KlageBehandling,
             hendelse: KlageinstansVedtakHendelse,
-        ) {
-            klageBehandling.klageinstansVedtak = KlageinstansVedtak.from(hendelse)
+        ): KlageAksjon {
+            val klageinstansVedtak = KlageinstansVedtak.from(hendelse)
+            klageBehandling.klageinstansVedtak = klageinstansVedtak
             klageBehandling.endreTilstand(Ferdigstilt, hendelse)
+
+            return when (klageinstansVedtak) {
+                is KlageinstansVedtak.Klage ->
+                    if (klageinstansVedtak.utfall.skalStarteRevurdering()) {
+                        KlageAksjon.StartRevurdering(
+                            klageBehandling = klageBehandling,
+                            kabalReferanse = klageinstansVedtak.id,
+                        )
+                    } else {
+                        KlageAksjon.IngenAksjon(klageBehandling.behandlingId)
+                    }
+            }
         }
 
         override fun vedtakDistribuert(
@@ -443,7 +455,7 @@ data class KlageBehandling private constructor(
         fun mottaKlageinstansVedtak(
             klageBehandling: KlageBehandling,
             hendelse: KlageinstansVedtakHendelse,
-        ): Unit = throw IllegalStateException("Kan ikke motta klageinstans vedtak i tilstand $type")
+        ): KlageAksjon = throw IllegalStateException("Kan ikke motta klageinstans vedtak i tilstand $type")
 
         enum class Type {
             BEHANDLES,

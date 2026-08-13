@@ -43,6 +43,9 @@ sealed class HendelseBehandler(
 
         data object RevurderingEtterKlage : DpBehandling("REVURDERING_ETTER_KLAGE", "KlageFørsteinstans")
 
+        data object RevurderingEtterVedtakFraKlageinstans :
+            DpBehandling("REVURDERING_ETTER_VEDTAK_FRA_KLAGEINSTANS", "KlageKlageinstans")
+
         data object Ferietillegg : DpBehandling("FERIETILLEGG", "Ferietillegg")
 
         data object Arbeidssøkerperiode : DpBehandling("ARBEIDSSØKERPERIODE", "Arbeidssøkerperiode")
@@ -57,6 +60,7 @@ sealed class HendelseBehandler(
                     Manuell,
                     Revurdering,
                     RevurderingEtterKlage,
+                    RevurderingEtterVedtakFraKlageinstans,
                     Ferietillegg,
                     Arbeidssøkerperiode,
                     Samordning,
@@ -87,6 +91,7 @@ sealed class HendelseBehandler(
                 DpBehandling.Manuell,
                 DpBehandling.Revurdering,
                 DpBehandling.RevurderingEtterKlage,
+                DpBehandling.RevurderingEtterVedtakFraKlageinstans,
                 DpBehandling.Ferietillegg,
                 DpBehandling.Arbeidssøkerperiode,
                 DpBehandling.Samordning,

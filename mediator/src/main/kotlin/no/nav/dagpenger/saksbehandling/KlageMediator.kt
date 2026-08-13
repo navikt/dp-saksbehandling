@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
@@ -24,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -45,6 +47,10 @@ class KlageMediator(
     private val sakMediator: SakMediator,
     private val utboks: Utboks,
 ) {
+    // Satt av ApplicationBuilder etter konstruksjon for å unngå sirkulær avhengighet:
+    // OppfølgingMediator sin OppfølgingBehandler trenger selv en referanse til KlageMediator.
+    lateinit var oppfølgingMediator: OppfølgingMediator
+
     fun hentKlageBehandling(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
@@ -55,6 +61,11 @@ class KlageMediator(
         )
         return klageRepository.hentKlageBehandling(behandlingId)
     }
+
+    // Brukes av OppfølgingBehandler for å slå opp klagebehandlingen en oppfølgingsoppgave er
+    // basert på (jf. mottaKlageinstansVedtak). Dette er et internt mediator-til-mediator-kall
+    // uten en saksbehandler i konteksten, og gjør derfor ingen tilgangssjekk mot en oppgave.
+    fun hentKlageBehandlingUtenTilgangssjekk(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
 
     fun opprettKlage(
         klageMottattHendelse: KlageMottattHendelse,
@@ -366,16 +377,55 @@ class KlageMediator(
                 is KlageAksjon.IngenAksjon -> {
                     // Ingen handling nødvendig
                 }
+
+                is KlageAksjon.StartRevurdering ->
+                    error("Uventet aksjon StartRevurdering ved distribusjon av vedtak: $aksjon")
             }
         }
     }
 
     fun mottaKlageinstansVedtak(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
-        klageRepository
-            .hentKlageBehandling(behandlingId = klageinstansVedtakHendelse.klageId)
-            .let { klageBehandling ->
-                klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
-                klageRepository.lagre(klageBehandling)
+        val klageBehandling = klageRepository.hentKlageBehandling(behandlingId = klageinstansVedtakHendelse.klageId)
+        val aksjon = klageBehandling.mottaKlageinstansVedtak(klageinstansVedtakHendelse)
+
+        transaksjoner.transaksjon { ctx ->
+            klageRepository.lagre(klageBehandling, ctx)
+
+            when (aksjon) {
+                is KlageAksjon.StartRevurdering -> {
+                    oppfølgingMediator.taImot(
+                        hendelse =
+                            OpprettOppfølgingHendelse(
+                                ident = klageBehandling.personIdent(),
+                                aarsak = Emneknagg.Oppfølging.VEDTAK_FRA_KLAGEINSTANSEN.visningsnavn,
+                                tittel = "Vurder revurdering etter klageinstansvedtak",
+                                beskrivelse =
+                                    "Klageinstansen (Kabal) har fattet vedtak med utfall " +
+                                        "${klageBehandling.klageinstansVedtak()?.utfall()} i klagebehandling " +
+                                        "${klageBehandling.behandlingId}. Vurder om det skal opprettes en " +
+                                        "revurdering av vedtaket.",
+                                strukturertData =
+                                    mapOf(
+                                        "kabalReferanse" to aksjon.kabalReferanse.toString(),
+                                        "kabalUtfall" to (klageBehandling.klageinstansVedtak()?.utfall() ?: ""),
+                                        "basertPåBehandling" to klageBehandling.behandlingId.toString(),
+                                    ),
+                                utførtAv = Applikasjon.DpSaksbehandling,
+                            ),
+                        ctx = ctx,
+                    )
+                    logger.info {
+                        "Opprettet oppfølgingsoppgave for revurdering etter klageinstansvedtak, " +
+                            "klagebehandling ${klageBehandling.behandlingId}"
+                    }
+                }
+
+                is KlageAksjon.IngenAksjon -> {
+                    // Ingen handling nødvendig
+                }
+
+                else -> error("Uventet aksjon $aksjon ved mottak av klageinstansvedtak")
             }
+        }
     }
 }

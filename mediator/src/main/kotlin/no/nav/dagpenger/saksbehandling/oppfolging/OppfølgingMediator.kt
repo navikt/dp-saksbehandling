@@ -118,6 +118,7 @@ class OppfølgingMediator(
 
             is OppfølgingAksjon.OpprettManuellBehandling,
             is OppfølgingAksjon.OpprettRevurderingBehandling,
+            is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage,
             -> ferdigstillEksternt(oppfølging, hendelse)
         }
 
@@ -132,7 +133,7 @@ class OppfølgingMediator(
         transaksjoner.transaksjon { ctx ->
             oppfølging.startFerdigstilling(
                 vurdering = hendelse.vurdering,
-                valgtSakId = hendelse.aksjon.valgtSakId,
+                aksjon = hendelse.aksjon,
             )
             oppfølgingRepository.lagre(oppfølging, ctx)
             val ferdigstiltHendelse = aksjon(ctx)
@@ -151,7 +152,7 @@ class OppfølgingMediator(
     ) {
         oppfølging.startFerdigstilling(
             vurdering = hendelse.vurdering,
-            valgtSakId = hendelse.aksjon.valgtSakId,
+            aksjon = hendelse.aksjon,
         )
         // Checkpoint: persist FERDIGSTILL_STARTET before external HTTP call
         oppfølgingRepository.lagre(oppfølging)

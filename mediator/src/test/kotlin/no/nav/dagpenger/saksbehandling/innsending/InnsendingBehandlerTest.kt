@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -9,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.behandling.BehandlingstypeDTO
+import no.nav.dagpenger.saksbehandling.behandling.OpprettBehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
@@ -98,14 +99,7 @@ class InnsendingBehandlerTest {
         val behandlingKlient =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.opprettBehandling(
-                        personIdent = testInnsending.person.ident,
-                        saksbehandlerToken = saksbehandlerToken,
-                        behandlingstype = BehandlingstypeDTO.MANUELL,
-                        hendelseDato = testInnsending.mottatt.toLocalDate(),
-                        hendelseId = testInnsending.innsendingId.toString(),
-                        begrunnelse = testInnsending.vurdering()!!,
-                    )
+                    it.opprettBehandling(any(), saksbehandlerToken)
                 } returns Result.success(behandlingId)
             }
         val innsendingBehandler =
@@ -134,15 +128,16 @@ class InnsendingBehandlerTest {
                 it.utførtAv shouldBe saksbehandler
             }
 
+        val opprettBehandlingTypeDTOSlot = slot<OpprettBehandlingTypeDTO>()
         verify(exactly = 1) {
-            behandlingKlient.opprettBehandling(
-                personIdent = testInnsending.person.ident,
-                saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.MANUELL,
-                hendelseDato = testInnsending.mottatt.toLocalDate(),
-                hendelseId = testInnsending.innsendingId.toString(),
-                begrunnelse = testInnsending.vurdering()!!,
-            )
+            behandlingKlient.opprettBehandling(capture(opprettBehandlingTypeDTOSlot), saksbehandlerToken)
+        }
+        with(opprettBehandlingTypeDTOSlot.captured) {
+            shouldBeInstanceOf<OpprettBehandlingTypeDTO.Manuell>()
+            personIdent shouldBe testInnsending.person.ident
+            hendelseDato shouldBe testInnsending.mottatt.toLocalDate()
+            hendelseId shouldBe testInnsending.innsendingId.toString()
+            begrunnelse shouldBe testInnsending.vurdering()!!
         }
     }
 
@@ -154,14 +149,7 @@ class InnsendingBehandlerTest {
         val behandlingKlient =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.opprettBehandling(
-                        personIdent = testInnsending.person.ident,
-                        saksbehandlerToken = saksbehandlerToken,
-                        behandlingstype = BehandlingstypeDTO.REVURDERING,
-                        hendelseDato = testInnsending.mottatt.toLocalDate(),
-                        hendelseId = testInnsending.innsendingId.toString(),
-                        begrunnelse = testInnsending.vurdering()!!,
-                    )
+                    it.opprettBehandling(any(), saksbehandlerToken)
                 } returns Result.success(behandlingId)
             }
         val innsendingBehandler =
@@ -190,15 +178,16 @@ class InnsendingBehandlerTest {
                 it.utførtAv shouldBe saksbehandler
             }
 
+        val opprettBehandlingTypeDTOSlot = slot<OpprettBehandlingTypeDTO>()
         verify(exactly = 1) {
-            behandlingKlient.opprettBehandling(
-                personIdent = testInnsending.person.ident,
-                saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.REVURDERING,
-                hendelseDato = testInnsending.mottatt.toLocalDate(),
-                hendelseId = testInnsending.innsendingId.toString(),
-                begrunnelse = testInnsending.vurdering()!!,
-            )
+            behandlingKlient.opprettBehandling(capture(opprettBehandlingTypeDTOSlot), saksbehandlerToken)
+        }
+        with(opprettBehandlingTypeDTOSlot.captured) {
+            shouldBeInstanceOf<OpprettBehandlingTypeDTO.Revurdering>()
+            personIdent shouldBe testInnsending.person.ident
+            hendelseDato shouldBe testInnsending.mottatt.toLocalDate()
+            hendelseId shouldBe testInnsending.innsendingId.toString()
+            begrunnelse shouldBe testInnsending.vurdering()!!
         }
     }
 

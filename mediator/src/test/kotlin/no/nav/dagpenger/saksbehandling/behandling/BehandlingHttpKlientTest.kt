@@ -103,12 +103,8 @@ class BehandlingHttpKlientTest {
             val hendelseDato = LocalDate.now()
             behandlingKlient
                 .opprettBehandling(
-                    personIdent = ident,
+                    opprettBehandlingTypeDTO = OpprettBehandlingTypeDTO.Revurdering(ident, hendelseDato, hendelseId, "begrunnelse"),
                     saksbehandlerToken = saksbehandlerToken,
-                    behandlingstype = BehandlingstypeDTO.REVURDERING,
-                    hendelseDato = hendelseDato,
-                    hendelseId = hendelseId,
-                    begrunnelse = "begrunnelse",
                 ).getOrThrow() shouldBe behandlingId
 
             requireNotNull(requestData).let {
@@ -118,7 +114,6 @@ class BehandlingHttpKlientTest {
                     {
                     "ident":"$ident",
                     "behandlingstype": "Revurdering",
-                    "id": "$hendelseId",
                     "skjedde": "$hendelseDato",
                     "begrunnelse": "begrunnelse"
                     }
@@ -131,12 +126,9 @@ class BehandlingHttpKlientTest {
                 delay = 20.milliseconds,
                 timeOut = 10.milliseconds,
             ).opprettBehandling(
-                personIdent = ident,
+                opprettBehandlingTypeDTO =
+                    OpprettBehandlingTypeDTO.Revurdering(ident, hendelseDato, UUIDv7.ny().toString(), "begrunnelse"),
                 saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.REVURDERING,
-                hendelseDato = hendelseDato,
-                hendelseId = UUIDv7.ny().toString(),
-                begrunnelse = "begrunnelse",
             ).isFailure
         }
     }
@@ -149,12 +141,8 @@ class BehandlingHttpKlientTest {
             val hendelseDato = LocalDate.now()
             behandlingKlient
                 .opprettBehandling(
-                    personIdent = ident,
+                    opprettBehandlingTypeDTO = OpprettBehandlingTypeDTO.Manuell(ident, hendelseDato, hendelseId, "begrunnelse"),
                     saksbehandlerToken = saksbehandlerToken,
-                    behandlingstype = BehandlingstypeDTO.MANUELL,
-                    hendelseDato = hendelseDato,
-                    hendelseId = hendelseId,
-                    begrunnelse = "begrunnelse",
                 ).getOrThrow() shouldBe behandlingId
 
             requireNotNull(requestData).let {
@@ -164,7 +152,6 @@ class BehandlingHttpKlientTest {
                     {
                     "ident":"$ident",
                     "behandlingstype": "Manuell",
-                    "id": "$hendelseId",
                     "skjedde": "$hendelseDato",
                     "begrunnelse": "begrunnelse"
                     }
@@ -177,13 +164,49 @@ class BehandlingHttpKlientTest {
                 delay = 20.milliseconds,
                 timeOut = 10.milliseconds,
             ).opprettBehandling(
-                personIdent = ident,
+                opprettBehandlingTypeDTO =
+                    OpprettBehandlingTypeDTO.Manuell(ident, hendelseDato, UUIDv7.ny().toString(), "begrunnelse"),
                 saksbehandlerToken = saksbehandlerToken,
-                behandlingstype = BehandlingstypeDTO.MANUELL,
-                hendelseDato = hendelseDato,
-                hendelseId = UUIDv7.ny().toString(),
-                begrunnelse = "begrunnelse",
             ).isFailure
+        }
+    }
+
+    @Test
+    fun `Kall til dp-behandling for å opprette revurdering etter klage`() {
+        runBlocking {
+            val behandlingKlient = behandlingKlient()
+            val hendelseId = UUIDv7.ny().toString()
+            val hendelseDato = LocalDate.now()
+            val kabalReferanse = UUIDv7.ny()
+            behandlingKlient
+                .opprettBehandling(
+                    opprettBehandlingTypeDTO =
+                        OpprettBehandlingTypeDTO.RevurderingEtterKlage(
+                            ident = ident,
+                            hendelseDato = hendelseDato,
+                            hendelseId = hendelseId,
+                            begrunnelse = "begrunnelse",
+                            kabalReferanse = kabalReferanse,
+                        ),
+                    saksbehandlerToken = saksbehandlerToken,
+                ).getOrThrow() shouldBe behandlingId
+
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                    "ident":"$ident",
+                    "behandlingstype": "OmgjøringEtterKlage",
+                    "id": "$kabalReferanse",
+                    "kildesystem": "Klageinstans",
+                    "skjedde": "$hendelseDato",
+                    "begrunnelse": "begrunnelse"
+                    }
+                    """.trimIndent()
+                it.headers[HttpHeaders.Authorization] shouldBe "Bearer $saksbehandlerToken"
+                it.headers[HttpHeaders.Accept] shouldBe "application/json"
+            }
         }
     }
 

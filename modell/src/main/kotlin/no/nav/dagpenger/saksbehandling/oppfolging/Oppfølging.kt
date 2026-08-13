@@ -121,14 +121,25 @@ class Oppfølging private constructor(
 
     fun startFerdigstilling(
         vurdering: String?,
-        valgtSakId: UUID?,
+        aksjon: OppfølgingAksjon,
     ) {
         if (tilstand != Tilstand.BEHANDLES) {
             throw UlovligTilstandsendringException("Kan ikke starte ferdigstilling fra tilstand $tilstand")
         }
+        krevGyldigFor(aksjon)
         this.vurdering = vurdering
-        this.valgtSakId = valgtSakId
+        this.valgtSakId = aksjon.valgtSakId
         this.tilstand = Tilstand.FERDIGSTILL_STARTET
+    }
+
+    fun basertPåBehandlingId(): UUID? = (strukturertData["basertPåBehandling"] as? String)?.let(UUID::fromString)
+
+    private fun krevGyldigFor(aksjon: OppfølgingAksjon) {
+        if (aksjon is OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage) {
+            requireNotNull(basertPåBehandlingId()) {
+                "Oppfølging $id mangler basertPåBehandling i strukturertData - kan ikke opprette revurdering etter klage"
+            }
+        }
     }
 
     fun ferdigstill(
@@ -160,6 +171,13 @@ class Oppfølging private constructor(
             OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING -> {
                 requireNotNull(opprettetBehandlingId) {
                     "behandlingId kan ikke være null etter opprettelse av revurdering"
+                }
+                this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
+            }
+
+            OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING_ETTER_KLAGE -> {
+                requireNotNull(opprettetBehandlingId) {
+                    "behandlingId kan ikke være null etter opprettelse av revurdering etter klage"
                 }
                 this.resultat = Resultat.RettTilDagpenger(opprettetBehandlingId)
             }
