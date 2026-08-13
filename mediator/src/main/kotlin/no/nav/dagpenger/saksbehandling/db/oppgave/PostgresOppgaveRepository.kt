@@ -1009,6 +1009,7 @@ private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,
     tilstandslogg: OppgaveTilstandslogg,
 ) {
+    logger.debug { "Lagrer tilstandslogg for oppgave $oppgaveId med ${tilstandslogg.size} tilstandsendringer" }
     tilstandslogg.forEach { tilstandsendring ->
         this.lagre(oppgaveId, tilstandsendring)
     }

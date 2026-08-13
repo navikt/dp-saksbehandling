@@ -479,7 +479,6 @@ class OppgaveTilstandTest {
 
         shouldNotThrowAny {
             oppgave.håndterUtfallFraKlageinstans(
-                oppgave = oppgave,
                 klageinstansVedtakHendelse = klageinstansVedtakHendelse,
             )
         }
@@ -506,7 +505,6 @@ class OppgaveTilstandTest {
 
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.håndterUtfallFraKlageinstans(
-                    oppgave = oppgave,
                     klageinstansVedtakHendelse = klageinstansVedtakHendelse,
                 )
             }
@@ -545,14 +543,12 @@ class OppgaveTilstandTest {
         if (forventetOk) {
             shouldNotThrowAny {
                 oppgave.håndterUtfallFraKlageinstans(
-                    oppgave = oppgave,
                     klageinstansVedtakHendelse = klageinstansVedtakHendelse,
                 )
             }
         } else {
             shouldThrow<IllegalArgumentException> {
                 oppgave.håndterUtfallFraKlageinstans(
-                    oppgave = oppgave,
                     klageinstansVedtakHendelse = klageinstansVedtakHendelse,
                 )
             }

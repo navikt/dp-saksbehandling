@@ -237,12 +237,9 @@ data class Oppgave private constructor(
         return tilstand.håndterForslagTilVedtak(this, forslagTilVedtakHendelse)
     }
 
-    fun håndterUtfallFraKlageinstans(
-        oppgave: Oppgave,
-        klageinstansVedtakHendelse: KlageinstansVedtakHendelse,
-    ) {
+    fun håndterUtfallFraKlageinstans(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
         tilstand.håndterUtfallFraKlageinstans(
-            oppgave = oppgave,
+            oppgave = this,
             klageinstansVedtakHendelse = klageinstansVedtakHendelse,
         )
     }

@@ -546,7 +546,6 @@ class OppgaveMediator(
                     "Mottatt KlageinstansVedtakHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.håndterUtfallFraKlageinstans(
-                    oppgave = oppgave,
                     klageinstansVedtakHendelse = klageinstansVedtakHendelse,
                 )
                 oppgaveRepository.lagre(oppgave)
