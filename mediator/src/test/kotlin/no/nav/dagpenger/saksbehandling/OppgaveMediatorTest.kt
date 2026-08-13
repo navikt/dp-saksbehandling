@@ -404,7 +404,37 @@ OppgaveMediatorTest {
         val behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
         val oppgave =
             TestHelper.lagOppgave(
+                person = TestHelper.testPerson,
                 tilstand = FerdigBehandlet,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        Tilstandsendring(
+                            tilstand = OPPRETTET,
+                            hendelse = TomHendelse,
+                            tidspunkt = LocalDateTime.of(2025, 6, 3, 12, 14, 33),
+                        ),
+                        Tilstandsendring(
+                            tilstand = KLAR_TIL_BEHANDLING,
+                            hendelse =
+                                BehandlingOpprettetHendelse(
+                                    behandlingId = behandling.behandlingId,
+                                    ident = TestHelper.testPerson.ident,
+                                    sakId = UUIDv7.ny(),
+                                    opprettet = behandling.opprettet,
+                                    type = behandling.utløstAv,
+                                ),
+                            tidspunkt = LocalDateTime.of(2025, 6, 3, 12, 14, 42),
+                        ),
+                        Tilstandsendring(
+                            tilstand = FERDIG_BEHANDLET,
+                            hendelse =
+                                KlageBehandlingUtført(
+                                    behandlingId = behandling.behandlingId,
+                                    utførtAv = saksbehandler,
+                                ),
+                            tidspunkt = LocalDateTime.of(2025, 6, 17, 8, 22, 2),
+                        ),
+                    ),
                 behandling = behandling,
                 saksbehandlerIdent = saksbehandler.navIdent,
                 emneknagger = setOf(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn),
@@ -432,12 +462,12 @@ OppgaveMediatorTest {
                 )
             oppgaveMediator.håndterUtfallFraKlageinstans(klageinstansVedtakHendelse)
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { oppgave ->
-                oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
-                oppgave.emneknagger shouldContain Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_OPPHEVET.visningsnavn
-                oppgave.emneknagger shouldNotContain Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn
-                oppgave.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
-                oppgave.tilstandslogg.first().hendelse shouldBe klageinstansVedtakHendelse
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let { oppgaveFraDb ->
+                oppgaveFraDb.tilstand().type shouldBe FERDIG_BEHANDLET
+                oppgaveFraDb.emneknagger shouldContain Emneknagg.Klage.KLAGE_UTFALL_KLAGEINSTANS_OPPHEVET.visningsnavn
+                oppgaveFraDb.emneknagger shouldNotContain Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn
+                oppgaveFraDb.tilstandslogg.first().tilstand shouldBe FERDIG_BEHANDLET
+                oppgaveFraDb.tilstandslogg.first().hendelse shouldBe klageinstansVedtakHendelse
             }
         }
     }
