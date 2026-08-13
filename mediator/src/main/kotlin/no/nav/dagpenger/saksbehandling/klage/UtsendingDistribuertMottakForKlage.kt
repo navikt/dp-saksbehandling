@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType.KLAGE_AVVIST
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType.KLAGE_OVERSENDELSE
+import java.util.UUID
 
 internal class UtsendingDistribuertMottakForKlage(
     rapidsConnection: RapidsConnection,
@@ -54,6 +55,11 @@ internal class UtsendingDistribuertMottakForKlage(
             "distribusjonId" to distribusjonId,
             "journalpostId" to journalpostId,
         ) {
+            val skipSet = setOf<UUID>(UUID.fromString("019ffae9-2bbb-779a-9df1-05e3086d340e"))
+            if (behandlingId in skipSet) {
+                logger.info { "Skipper behandlingId: $behandlingId fra UtsendingDistribuertMottakForKlage" }
+                return
+            }
             val utsendingDistribuertHendelse =
                 UtsendingDistribuert(
                     behandlingId = behandlingId,
