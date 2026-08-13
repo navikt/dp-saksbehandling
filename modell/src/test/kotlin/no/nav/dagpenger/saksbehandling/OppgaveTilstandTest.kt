@@ -469,7 +469,7 @@ class OppgaveTilstandTest {
 
         val klageinstansVedtakHendelse =
             KlageinstansVedtakHendelse(
-                type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                 klageId = oppgave.behandling.behandlingId,
                 klageinstansVedtakId = UUIDv7.ny(),
                 avsluttet = LocalDateTime.now(),
@@ -496,7 +496,7 @@ class OppgaveTilstandTest {
             val oppgave = lagOppgave(tilstandType = tilstandstype)
             val klageinstansVedtakHendelse =
                 KlageinstansVedtakHendelse(
-                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                     klageId = oppgave.behandling.behandlingId,
                     klageinstansVedtakId = UUIDv7.ny(),
                     avsluttet = LocalDateTime.now(),
@@ -534,7 +534,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(tilstandType = FERDIG_BEHANDLET)
         val klageinstansVedtakHendelse =
             KlageinstansVedtakHendelse(
-                type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                 klageId = oppgave.behandling.behandlingId,
                 klageinstansVedtakId = UUIDv7.ny(),
                 avsluttet = LocalDateTime.now(),

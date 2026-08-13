@@ -61,7 +61,7 @@ class KlageDTOMapperTest {
                     klageinstansVedtak =
                         KlageinstansVedtak.from(
                             KlageinstansVedtakHendelse(
-                                type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                                type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                                 klageId = klageId,
                                 klageinstansVedtakId = UUIDv7.ny(),
                                 avsluttet = LocalDateTime.now(),

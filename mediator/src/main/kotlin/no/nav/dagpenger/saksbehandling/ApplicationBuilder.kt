@@ -39,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottak
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottakForOppgave
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
@@ -321,6 +322,10 @@ internal class ApplicationBuilder(
                 KlageinstansVedtakMottak(
                     rapidsConnection = rapid,
                     klageMediator = klageMediator,
+                )
+                KlageinstansVedtakMottakForOppgave(
+                    rapidsConnection = rapid,
+                    oppgaveMediator = oppgaveMediator,
                 )
                 UtsendingDistribuertMottakForKlage(
                     rapidsConnection = rapid,

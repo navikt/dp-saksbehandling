@@ -423,7 +423,7 @@ OppgaveMediatorTest {
                 )
             val klageinstansVedtakHendelse =
                 KlageinstansVedtakHendelse(
-                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                     klageId = oppgave.behandling.behandlingId,
                     klageinstansVedtakId = UUIDv7.ny(),
                     avsluttet = LocalDateTime.now(),

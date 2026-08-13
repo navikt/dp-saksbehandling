@@ -35,7 +35,7 @@ sealed class KlageinstansVedtak {
     companion object {
         fun from(klageinstansVedtakHendelse: KlageinstansVedtakHendelse): KlageinstansVedtak =
             when (klageinstansVedtakHendelse.type) {
-                KlageinstansVedtakHendelse.KlageVedtakType.KLAGE ->
+                KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE ->
                     Klage(
                         id = klageinstansVedtakHendelse.klageinstansVedtakId,
                         journalpostIder = klageinstansVedtakHendelse.journalpostIder,

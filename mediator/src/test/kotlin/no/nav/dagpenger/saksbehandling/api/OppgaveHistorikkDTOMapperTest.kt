@@ -323,7 +323,7 @@ class OppgaveHistorikkDTOMapperTest {
                                     nyTilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
                                     hendelse =
                                         KlageinstansVedtakHendelse(
-                                            type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                                            type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                                             klageId = UUIDv7.ny(),
                                             klageinstansVedtakId = UUIDv7.ny(),
                                             avsluttet = LocalDateTime.now(),

@@ -3,14 +3,14 @@ package no.nav.dagpenger.saksbehandling.klage
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.KlageMediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class KlageinstansVedtakMottakTest {
+class KlageinstansVedtakMottakForOppgaveTest {
     private val testRapid = TestRapid()
     private val eventId = UUID.randomUUID().toString()
     private val klageId = UUID.randomUUID().toString()
@@ -18,11 +18,11 @@ class KlageinstansVedtakMottakTest {
     private val avsluttet = LocalDateTime.now().toString()
 
     @Test
-    fun `skal håndtere klageinstans vedtak av type klage`() {
-        val klageMediator = mockk<KlageMediator>(relaxed = true)
-        KlageinstansVedtakMottak(
+    fun `Skal håndtere klageinstans-vedtak av type klage`() {
+        val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
+        KlageinstansVedtakMottakForOppgave(
             rapidsConnection = testRapid,
-            klageMediator = klageMediator,
+            oppgaveMediator = oppgaveMediator,
         )
 
         @Language("JSON")
@@ -50,7 +50,7 @@ class KlageinstansVedtakMottakTest {
 
         testRapid.sendTestMessage(vedtakMelding)
         verify(exactly = 1) {
-            klageMediator.mottaKlageinstansVedtak(
+            oppgaveMediator.håndterUtfallFraKlageinstans(
                 KlageinstansVedtakHendelse(
                     type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                     klageId = UUID.fromString(klageId),

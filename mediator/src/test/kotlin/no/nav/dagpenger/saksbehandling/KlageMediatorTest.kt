@@ -31,7 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse.KlageVedtakType
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse.KlageinstansVedtakType
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -299,7 +299,7 @@ class KlageMediatorTest {
 
             val klageinstansVedtakHendelse =
                 KlageinstansVedtakHendelse(
-                    type = KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = UUID.randomUUID(),
                     avsluttet = nå,

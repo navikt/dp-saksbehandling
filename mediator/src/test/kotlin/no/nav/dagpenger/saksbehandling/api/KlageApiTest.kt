@@ -115,7 +115,7 @@ class KlageApiTest {
                             tilstand = FERDIGSTILT,
                             hendelse =
                                 KlageinstansVedtakHendelse(
-                                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                                    type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                                     klageId = klageBehandlingId,
                                     klageinstansVedtakId = UUIDv7.ny(),
                                     avsluttet = LocalDateTime.now(),
@@ -136,7 +136,7 @@ class KlageApiTest {
                 klageinstansVedtak =
                     KlageinstansVedtak.from(
                         KlageinstansVedtakHendelse(
-                            type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                            type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                             klageId = klageBehandlingId,
                             klageinstansVedtakId = sakId,
                             avsluttet = LocalDateTime.now(),
