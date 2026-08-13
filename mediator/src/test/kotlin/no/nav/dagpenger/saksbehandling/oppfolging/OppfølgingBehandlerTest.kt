@@ -35,7 +35,7 @@ class OppfølgingBehandlerTest {
         val aksjon =
             klageBehandling.mottaKlageinstansVedtak(
                 KlageinstansVedtakHendelse(
-                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                     klageId = klageBehandling.behandlingId,
                     klageinstansVedtakId = kabalReferanse,
                     avsluttet = LocalDateTime.now(),

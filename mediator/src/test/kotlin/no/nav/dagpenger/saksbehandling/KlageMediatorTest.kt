@@ -359,7 +359,7 @@ class KlageMediatorTest {
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
             klageMediator.behandlingUtført(
-                hendelse =
+                klageBehandlingUtført =
                     KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
@@ -385,7 +385,7 @@ class KlageMediatorTest {
             val kabalReferanse = UUID.randomUUID()
             klageMediator.mottaKlageinstansVedtak(
                 KlageinstansVedtakHendelse(
-                    type = KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = kabalReferanse,
                     avsluttet = nå,
@@ -445,7 +445,7 @@ class KlageMediatorTest {
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
             klageMediator.behandlingUtført(
-                hendelse =
+                klageBehandlingUtført =
                     KlageBehandlingUtført(
                         behandlingId = behandlingId,
                         utførtAv = saksbehandler,
@@ -470,7 +470,7 @@ class KlageMediatorTest {
 
             klageMediator.mottaKlageinstansVedtak(
                 KlageinstansVedtakHendelse(
-                    type = KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = UUID.randomUUID(),
                     avsluttet = nå,

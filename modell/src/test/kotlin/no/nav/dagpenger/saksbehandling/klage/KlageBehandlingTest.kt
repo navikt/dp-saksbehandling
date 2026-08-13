@@ -391,7 +391,7 @@ class KlageBehandlingTest {
             val kabalReferanse = UUID.randomUUID()
             val hendelse =
                 KlageinstansVedtakHendelse(
-                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                     klageId = klageBehandling.behandlingId,
                     klageinstansVedtakId = kabalReferanse,
                     avsluttet = LocalDateTime.now(),
@@ -420,7 +420,7 @@ class KlageBehandlingTest {
                 )
             val hendelse =
                 KlageinstansVedtakHendelse(
-                    type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                    type = KlageinstansVedtakHendelse.KlageinstansVedtakType.KLAGE,
                     klageId = klageBehandling.behandlingId,
                     klageinstansVedtakId = UUID.randomUUID(),
                     avsluttet = LocalDateTime.now(),
