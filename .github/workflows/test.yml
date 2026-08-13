@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'dependabot/**'
+      - 'renovate/**'
 
 jobs:
   test:

@@ -36,7 +36,7 @@ data class Person(
             return
         }
         require(saksbehandler.tilganger.contains(EGNE_ANSATTE)) {
-            throw IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
+            throw IkkeTilgangTilEgneAnsatte("Saksbehandler(${saksbehandler.navIdent}) har ikke tilgang til egne ansatte(${this.id})")
         }
     }
 
@@ -51,14 +51,14 @@ data class Person(
             },
         ) {
             throw ManglendeTilgangTilAdressebeskyttelse(
-                "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
+                "Saksbehandler(${saksbehandler.navIdent}) mangler tilgang til adressebeskyttet person(${this.id}). Adressebeskyttelse: $adressebeskyttelseGradering",
             )
         }
     }
 
     fun habilitetTilgangskontroll(saksbehandler: Saksbehandler) {
         require(!inhabileNavIdenter.contains(saksbehandler.navIdent)) {
-            throw Inhabil("Saksbehandler er inhabil for denne personen")
+            throw Inhabil("Saksbehandler(${saksbehandler.navIdent}) er inhabil for denne personen(${this.id})")
         }
     }
 

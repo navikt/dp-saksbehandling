@@ -30,8 +30,10 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
+import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
@@ -275,6 +277,72 @@ class OppgaveHistorikkDTOMapperTest {
                 historikk.single().let { historikk ->
                     historikk.tittel shouldBe "På vent"
                     historikk.body shouldBe "Avvent dokumentasjon"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal vise egen tittel for ferdig behandlet tilstand når hendelse er KlageinstansVedtakHendelse`() {
+        runBlocking {
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "saksbehandlerIdent",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+            OppgaveHistorikkDTOMapper(
+                repository =
+                    mockk<OppgaveRepository>(relaxed = true).also {
+                        every { it.finnNotat(any()) } returns null
+                    },
+                saksbehandlerOppslag =
+                    mockk<SaksbehandlerOppslag>().also {
+                        coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "fornavn",
+                                etternavn = "etternavn",
+                                enhet = enhet,
+                            )
+                    },
+            ).let { mapper ->
+                val historikk =
+                    mapper.lagOppgaveHistorikk(
+                        tilstandslogg =
+                            OppgaveTilstandslogg().also {
+                                it.leggTil(
+                                    nyTilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
+                                    hendelse =
+                                        GodkjentBehandlingHendelse(
+                                            oppgaveId = UUIDv7.ny(),
+                                            utførtAv = saksbehandler,
+                                        ),
+                                )
+                                it.leggTil(
+                                    nyTilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
+                                    hendelse =
+                                        KlageinstansVedtakHendelse(
+                                            type = KlageinstansVedtakHendelse.KlageVedtakType.KLAGE,
+                                            klageId = UUIDv7.ny(),
+                                            klageinstansVedtakId = UUIDv7.ny(),
+                                            avsluttet = LocalDateTime.now(),
+                                            utfall = "OPPHEVET",
+                                            journalpostIder = listOf("journalpostId"),
+                                        ),
+                                )
+                            },
+                    )
+
+                historikk.first().let { historikk ->
+                    historikk.tittel shouldBe "Ferdig behandlet hos klageinstans"
+                    historikk.behandler.rolle?.value shouldBe "system"
+                    historikk.behandler.navn shouldBe "Kabal"
+                }
+                historikk.last().let { historikk ->
+                    historikk.tittel shouldBe "Ferdig behandlet"
+                    historikk.behandler.rolle?.value shouldBe "saksbehandler"
+                    historikk.behandler.navn shouldBe "fornavn etternavn"
                 }
             }
         }

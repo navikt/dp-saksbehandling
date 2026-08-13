@@ -716,6 +716,7 @@ class PostgresOppgaveRepository(
                     AVBRUTT_MASKINELT -> AvbruttMaskinelt
                 }
             }.getOrElse { t ->
+                logger.error { "Kunne ikke rehydrere oppgave $oppgaveId til tilstand: ${string("tilstand")}" }
                 throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
             }
 
