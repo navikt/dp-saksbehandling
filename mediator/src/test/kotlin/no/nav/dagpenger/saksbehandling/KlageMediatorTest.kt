@@ -403,7 +403,7 @@ class KlageMediatorTest {
                 oppfølgingMediatorMock.taImot(
                     match { hendelse ->
                         hendelse.ident == testPersonIdent &&
-                            hendelse.aarsak == "KlageinstansVedtak" &&
+                            hendelse.aarsak == Emneknagg.Oppfølging.VEDTAK_FRA_KLAGEINSTANSEN.visningsnavn &&
                             hendelse.strukturertData["kabalReferanse"] == kabalReferanse.toString() &&
                             hendelse.strukturertData["kabalUtfall"] == "MEDHOLD" &&
                             hendelse.strukturertData["basertPåBehandling"] == behandlingId.toString()

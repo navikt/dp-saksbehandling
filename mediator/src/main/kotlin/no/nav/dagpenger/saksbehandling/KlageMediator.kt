@@ -397,7 +397,7 @@ class KlageMediator(
                         hendelse =
                             OpprettOppfølgingHendelse(
                                 ident = klageBehandling.personIdent(),
-                                aarsak = "KlageinstansVedtak",
+                                aarsak = Emneknagg.Oppfølging.VEDTAK_FRA_KLAGEINSTANSEN.visningsnavn,
                                 tittel = "Vurder revurdering etter klageinstansvedtak",
                                 beskrivelse =
                                     "Klageinstansen (Kabal) har fattet vedtak med utfall " +

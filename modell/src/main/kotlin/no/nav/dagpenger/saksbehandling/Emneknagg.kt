@@ -88,6 +88,7 @@ object Emneknagg {
         OPPFØLGING_AV_MELDEKORT("Oppfølging av meldekort"),
         OPPFØLGING_AV_SAMORDNING("Oppfølging av samordning"),
         OPPFØLGING_AV_VEDTAK("Oppfølging av vedtak"),
+        VEDTAK_FRA_KLAGEINSTANSEN("Vedtak fra klageinstansen"),
         VURDERE_FEILUTBETALING("Vurdere feilutbetaling"),
         OMPOSTERING("Ompostering"),
         ANNEN_ÅRSAK("Annen årsak"),
