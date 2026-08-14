@@ -158,9 +158,10 @@ class PostgresKlageRepositoryTest {
                     klageBehandling.svar(it.opplysningId, Verdi.Flervalg(it.valgmuligheter))
                 }
 
-            val tekstOpplysningUtenValg =
-                klageBehandling.finnEnStringOpplysningUtenValg().also {
-                    klageBehandling.svar(it.opplysningId, Verdi.TekstVerdi("String"))
+            val uuidVerdi = UUID.randomUUID()
+            val uuidOpplysningUtenValg =
+                klageBehandling.finnEnUuidOpplysningUtenValg().also {
+                    klageBehandling.svar(it.opplysningId, Verdi.Uuid(uuidVerdi))
                 }
 
             val boolskOpplysningMedTomVerdi =
@@ -186,8 +187,8 @@ class PostgresKlageRepositoryTest {
                     listeOpplysning.valgmuligheter,
                 )
             hentetKlageBehandling
-                .finnEnOpplysning(tekstOpplysningUtenValg.opplysningId)
-                .verdi() shouldBe Verdi.TekstVerdi("String")
+                .finnEnOpplysning(uuidOpplysningUtenValg.opplysningId)
+                .verdi() shouldBe Verdi.Uuid(uuidVerdi)
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
 
             hentetKlageBehandling.tilstandslogg.size shouldBe klageBehandling.tilstandslogg.size
@@ -247,9 +248,9 @@ class PostgresKlageRepositoryTest {
             .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }
             .opplysningId
 
-    private fun KlageBehandling.finnEnStringOpplysningUtenValg(): Opplysning =
+    private fun KlageBehandling.finnEnUuidOpplysningUtenValg(): Opplysning =
         this.synligeOpplysninger().first { opplysning ->
-            opplysning.type.datatype == Datatype.TEKST && opplysning.valgmuligheter.isEmpty()
+            opplysning.type.datatype == Datatype.UUID && opplysning.valgmuligheter.isEmpty()
         }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID =

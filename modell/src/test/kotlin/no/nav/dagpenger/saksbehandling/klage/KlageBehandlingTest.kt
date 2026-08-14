@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.Boolsk
 import no.nav.dagpenger.saksbehandling.klage.Verdi.Dato
 import no.nav.dagpenger.saksbehandling.klage.Verdi.Flervalg
 import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
+import no.nav.dagpenger.saksbehandling.klage.Verdi.Uuid
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandling
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandlingMedUtfall
 import org.junit.jupiter.api.Test
@@ -49,7 +50,7 @@ class KlageBehandlingTest {
         val klageBehandling = KlageBehandling()
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysningId()
-        val stringOpplysningId = klageBehandling.finnEnTekstOpplysningId()
+        val uuidOpplysningId = klageBehandling.finnEnUuidOpplysningId()
         val datoOpplysningId = klageBehandling.finnEnDatoOpplysningId()
         val listeOpplysningId = klageBehandling.finnEnListeOpplysningId()
 
@@ -64,10 +65,11 @@ class KlageBehandlingTest {
             it.value shouldBe true
         }
 
-        klageBehandling.svar(stringOpplysningId, TekstVerdi("String"))
-        klageBehandling.hentOpplysning(stringOpplysningId).verdi().let {
-            require(it is TekstVerdi)
-            it.value shouldBe "String"
+        val uuidVerdi = UUID.randomUUID()
+        klageBehandling.svar(uuidOpplysningId, Uuid(uuidVerdi))
+        klageBehandling.hentOpplysning(uuidOpplysningId).verdi().let {
+            require(it is Uuid)
+            it.value shouldBe uuidVerdi
         }
 
         klageBehandling.svar(datoOpplysningId, Dato(LocalDate.MIN))
@@ -103,6 +105,7 @@ class KlageBehandlingTest {
                 when (it.type.datatype) {
                     Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
                     Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi("String"))
+                    Datatype.UUID -> klageBehandling.svar(it.opplysningId, Uuid(UUID.randomUUID()))
                     Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
                     Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
                 }
@@ -627,6 +630,7 @@ class KlageBehandlingTest {
                     )
 
                 Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
+                Datatype.UUID -> klageBehandling.svar(it.opplysningId, Uuid(UUID.randomUUID()))
                 Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
             }
         }
@@ -638,10 +642,10 @@ class KlageBehandlingTest {
             .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }
             .opplysningId
 
-    private fun KlageBehandling.finnEnTekstOpplysningId(): UUID =
+    private fun KlageBehandling.finnEnUuidOpplysningId(): UUID =
         this
             .synligeOpplysninger()
-            .first { opplysning -> opplysning.type.datatype == Datatype.TEKST }
+            .first { opplysning -> opplysning.type.datatype == Datatype.UUID }
             .opplysningId
 
     private fun KlageBehandling.finnEnDatoOpplysningId(): UUID =

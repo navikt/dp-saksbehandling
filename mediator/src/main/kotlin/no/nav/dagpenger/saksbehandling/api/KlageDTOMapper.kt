@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningFlerListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningUuidDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageinstansBehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageinstansUtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageinstansUtfallDTOVerdiDTO
@@ -22,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
+import no.nav.dagpenger.saksbehandling.api.models.UuidVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
@@ -37,6 +39,7 @@ class KlageDTOMapper(
             is DatoVerdiDTO -> Verdi.Dato(oppdaterKlageOpplysningDTO.verdi)
             is ListeVerdiDTO -> Verdi.Flervalg(oppdaterKlageOpplysningDTO.verdi)
             is TekstVerdiDTO -> Verdi.TekstVerdi(oppdaterKlageOpplysningDTO.verdi)
+            is UuidVerdiDTO -> Verdi.Uuid(oppdaterKlageOpplysningDTO.verdi)
         }
 
     suspend fun tilDto(
@@ -262,6 +265,24 @@ class KlageDTOMapper(
                                 null
                             } else {
                                 (opplysning.verdi() as Verdi.Flervalg).value
+                            },
+                    )
+                }
+
+                Datatype.UUID -> {
+                    KlageOpplysningUuidDTO(
+                        opplysningId = opplysning.opplysningId,
+                        navn = opplysning.type.navn,
+                        opplysningNavnId = opplysning.type.name,
+                        paakrevd = opplysning.type.påkrevd,
+                        gruppe = finnGruppe(opplysning.type),
+                        valgmuligheter = opplysning.valgmuligheter,
+                        redigerbar = true,
+                        verdi =
+                            if (opplysning.verdi() is Verdi.TomVerdi) {
+                                null
+                            } else {
+                                (opplysning.verdi() as Verdi.Uuid).value
                             },
                     )
                 }
