@@ -738,6 +738,14 @@ data class Oppgave private constructor(
             return Handling.INGEN
         }
 
+        override fun behandlingTilGodkjenning(
+            oppgave: Oppgave,
+            hendelse: BehandlingTilGodkjenningHendelse,
+        ): Handling {
+            logger.warn { "Mottok BehandlingTilGodkjenningHendelse i tilstand $type. Ignorerer meldingen." }
+            return Handling.INGEN
+        }
+
         override fun håndterForslagTilVedtak(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
