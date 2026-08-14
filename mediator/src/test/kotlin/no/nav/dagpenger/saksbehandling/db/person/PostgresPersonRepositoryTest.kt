@@ -106,4 +106,13 @@ class PostgresPersonRepositoryTest {
             personRepository.eksistererIDPsystem(setOf(fnr1, fnr2, fnr3)) shouldBe setOf(fnr1, fnr2)
         }
     }
+
+    @Test
+    fun `Tomt sett med fødselsnumre gir tomt resultat`() {
+        withMigratedDb { ds ->
+            val personRepository = PostgresPersonRepository(DatabaseSession(ds))
+
+            personRepository.eksistererIDPsystem(emptySet()) shouldBe emptySet()
+        }
+    }
 }

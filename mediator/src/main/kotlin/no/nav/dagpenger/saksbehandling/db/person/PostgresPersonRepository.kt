@@ -183,25 +183,28 @@ class PostgresPersonRepository(
             )
         }
 
-    override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
-        val identer = fnrs.joinToString { "'$it'" }
-        return databaseSession.session { session ->
-            session
-                .run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            SELECT ident
-                            FROM   person_v1
-                            WHERE  ident IN ($identer)
-                            """.trimIndent(),
-                    ).map { row ->
-                        row.string("ident")
-                    }.asList,
-                ).toSet()
+    override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> =
+        when (fnrs.size) {
+            0 -> emptySet()
+            else ->
+                databaseSession.session { session ->
+                    session
+                        .run(
+                            queryOf(
+                                //language=PostgreSQL
+                                statement =
+                                    """
+                                    SELECT ident
+                                    FROM   person_v1
+                                    WHERE  ident = ANY(:identer)
+                                    """.trimIndent(),
+                                paramMap = mapOf("identer" to fnrs.toTypedArray()),
+                            ).map { row ->
+                                row.string("ident")
+                            }.asList,
+                        ).toSet()
+                }
         }
-    }
 
     override fun erNødbremset(ident: String): Boolean =
         databaseSession.session { session ->
