@@ -54,6 +54,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             , fagsystem
                             , arena_sak_id
                             , resultat_begrunnelse
+                            , relatert_behandling_id
                             )
                             SELECT    log.id                    AS tilstand_id
                                     , CASE
@@ -66,6 +67,10 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         WHEN log.tilstand       = 'UNDER_BEHANDLING'
                                         AND  log.hendelse_type  = 'BehandlingTilGodkjenningHendelse' THEN
                                             'RETURNERT_MASKINELT'
+                                        WHEN log.tilstand       = 'FERDIG_BEHANDLET'
+                                        AND  log.hendelse_type  = 'KlageBehandlingUtført'
+                                        AND  klage_utfall -> 'verdi' ->> 'value' = 'Opprettholdelse' THEN
+                                            'OVERSENDT_KLAGEINSTANS'
                                         ELSE
                                             log.tilstand
                                         END                     AS tilstand
@@ -84,7 +89,16 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                             log.hendelse->>'ansvarligIdent' 
                                         END                     AS beslutter_ident
                                     , beh.utlost_av             AS utlost_av
-                                    , ins.resultat_type         AS behandling_resultat
+                                    , CASE
+                                        WHEN beh.utlost_av = 'INNSENDING' THEN
+                                            ins.resultat_type
+                                        WHEN beh.utlost_av = 'KLAGE'
+                                        AND  log.hendelse_type = 'KlageBehandlingUtført' THEN
+                                            klage_utfall -> 'verdi' ->> 'value'
+                                        WHEN beh.utlost_av = 'KLAGE'
+                                        AND  log.hendelse_type = 'KlageinstansVedtakHendelse' THEN
+                                            log.hendelse ->> 'utfall'
+                                        END                     AS behandling_resultat
                                     , CASE
                                         WHEN log.hendelse_type  = 'UtsettOppgaveHendelse' THEN
                                             log.hendelse->>'årsak' 
@@ -101,15 +115,20 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                     , CASE
                                         WHEN log.hendelse_type IN ('ReturnerTilSaksbehandlingHendelse','AvbrytOppgaveHendelse') THEN 
                                             log.hendelse->>'årsak'
-                                        END                     AS resultat_begrunnelse 
+                                        END                     AS resultat_begrunnelse
+                                    , paaklaget_vedtak ->> 'verdi' ->> 'value' AS relatert_behandling_id
                             FROM      oppgave_tilstand_logg_v1      log
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
                             JOIN      sak_v2                        sak ON sak.id = beh.sak_id
                             JOIN      person_v1                     per ON per.id = beh.person_id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
-                            WHERE     beh.utlost_av != 'KLAGE'
-                            AND       beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
+                            LEFT JOIN klage_v1                      kla ON kla.id = beh.id
+                            LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) klage_utfall
+                                ON klage_utfall ->> 'type' = 'UTFALL'
+                            LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
+                                ON paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
+                            WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
                             AND       log.id >  coalesce((  SELECT      tilstand_id
                                                             FROM        saksbehandling_statistikk_v1
                                                             WHERE       overfort_til_statistikk = TRUE
