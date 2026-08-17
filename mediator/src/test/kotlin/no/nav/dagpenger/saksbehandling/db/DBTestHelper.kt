@@ -11,6 +11,8 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
+import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -18,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -27,7 +30,8 @@ class DBTestHelper private constructor(
     private val ds: DataSource,
 ) : SakRepository by PostgresSakRepository(DatabaseSession(ds)),
     OppgaveRepository by PostgresOppgaveRepository(DatabaseSession(ds)),
-    PersonRepository by PostgresPersonRepository(DatabaseSession(ds)) {
+    PersonRepository by PostgresPersonRepository(DatabaseSession(ds)),
+    KlageRepository by PostgresKlageRepository(DatabaseSession(ds)) {
     companion object {
         val sakId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
@@ -162,7 +166,11 @@ class DBTestHelper private constructor(
         behandling: Behandling,
         oppgave: Oppgave,
         merkSomEgenSak: Boolean = false,
+        klageBehandling: KlageBehandling? = null,
     ) {
+        if (klageBehandling != null) {
+            this.lagre(klageBehandling)
+        }
         sak.leggTilBehandling(behandling)
         this.lagre(person)
         this.lagre(

@@ -5,7 +5,9 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.Intern.Klage
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Sak
@@ -40,7 +42,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = KLAR_TIL_BEHANDLING,
                             hendelse = TomHendelse,
                         )
                     },
@@ -235,7 +237,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = KLAR_TIL_BEHANDLING,
                             hendelse = TomHendelse,
                         )
                     },
@@ -389,7 +391,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = KLAR_TIL_BEHANDLING,
                             hendelse = TomHendelse,
                         )
                     },
@@ -424,31 +426,36 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
     }
 
     @Test
-    fun `Tilstandsendringer på oppgave utløst av Klage skal ikke oversendes saksbehandlingsstatistikk`() {
-        val klageBehandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
+    fun `Tilstandsendringer på oppgave utløst av Klage skal oversendes saksbehandlingsstatistikk`() {
+        val klageBehandling = TestHelper.lagKlageBehandling()
+        val behandling =
+            TestHelper.lagBehandling(
+                behandlingId = klageBehandling.behandlingId,
+                opprettet = klageBehandling.opprettet,
+                utløstAvType = Klage,
+            )
         val klageOppgave =
             TestHelper.lagOppgave(
-                behandling = klageBehandling,
+                behandling = behandling,
                 tilstand = Oppgave.KlarTilBehandling,
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = KLAR_TIL_BEHANDLING,
                             hendelse = TomHendelse,
                         )
                     },
             )
-        val sak =
-            Sak(
-                opprettet = LocalDateTime.now(),
-            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
                 person = testPerson,
-                behandling = klageBehandling,
+                behandling = behandling,
                 sak = sak,
                 oppgave = klageOppgave,
                 merkSomEgenSak = true,
+                klageBehandling = klageBehandling,
             )
             val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(DatabaseSession(ds))
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
@@ -463,7 +470,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
             PostgresOppgaveRepository(DatabaseSession(ds)).lagre(klageOppgave)
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
         }
     }
 
@@ -477,7 +484,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
-                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            nyTilstand = KLAR_TIL_BEHANDLING,
                             hendelse = TomHendelse,
                         )
                     },

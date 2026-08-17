@@ -30,6 +30,8 @@ class PostgresSaksbehandlingsstatistikkRepository(
     // Henter oppgavetilstander som skal sendes til statistikk.
     // Går ikke lenger tilbake i tid enn det finnes behandlinger i behandlinger_mart på BigQuery, derfor begrensningen
     // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
+    // For å få med all historikken på første klage som inkluderes, ekskluderes klager med id
+    // 019fea97-b543-7472-b078-a6216ad52ace eller eldre.
     override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
         databaseSession.session { session ->
             session.run(
@@ -124,10 +126,13 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             JOIN      person_v1                     per ON per.id = beh.person_id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
                             LEFT JOIN klage_v1                      kla ON kla.id = beh.id
+                                                                        AND kla.id > '019fea97-b543-7472-b078-a6216ad52ace'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) klage_utfall
-                                ON klage_utfall ->> 'type' = 'UTFALL'
+                                ON  klage_utfall    ->> 'type' = 'UTFALL'
+                                AND klage_utfall    -> 'verdi' ->> 'datatype' != 'TomVerdi'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
-                                ON paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
+                                ON  paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
+                                AND paaklaget_vedtak -> 'verdi' ->> 'datatype' != 'TomVerdi'
                             WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
                             AND       log.id >  coalesce((  SELECT      tilstand_id
                                                             FROM        saksbehandling_statistikk_v1
