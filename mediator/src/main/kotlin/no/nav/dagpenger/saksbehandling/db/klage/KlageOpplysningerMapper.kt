@@ -60,7 +60,7 @@ object KlageOpplysningerMapper {
                     gen.writeEndArray()
                 }
                 is Verdi.UUID -> {
-                    gen.writeStringProperty(VERDI_DATATYPE, "Uuid")
+                    gen.writeStringProperty(VERDI_DATATYPE, "UUID")
                     gen.writeStringProperty("value", value.value.toString())
                 }
             }
@@ -87,7 +87,7 @@ object KlageOpplysningerMapper {
                             .values()
                             .map { it.asText() },
                     )
-                "Uuid" -> Verdi.UUID(node.get("value").asUUID())
+                "UUID" -> Verdi.UUID(node.get("value").asUUID())
                 else -> throw IllegalArgumentException("Unknown type: $type")
             }
         }
