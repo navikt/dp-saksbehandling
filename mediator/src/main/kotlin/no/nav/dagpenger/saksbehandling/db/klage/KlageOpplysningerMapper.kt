@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.db.klage
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.serder.applyDefault
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.core.JsonGenerator
 import tools.jackson.core.JsonParser
 import tools.jackson.databind.DeserializationContext
@@ -15,7 +15,6 @@ import tools.jackson.databind.ValueSerializer
 import tools.jackson.databind.module.SimpleModule
 import tools.jackson.module.kotlin.jacksonMapperBuilder
 import java.time.LocalDate
-import java.util.UUID
 
 object KlageOpplysningerMapper {
     private val objectMapper =
@@ -74,18 +73,18 @@ object KlageOpplysningerMapper {
             ctxt: DeserializationContext,
         ): Verdi {
             val node: JsonNode = p.readValueAsTree()
-            val type = node.get("datatype").asText()
+            val type = node.get("datatype").stringValue()
             return when (type) {
                 "TomVerdi" -> Verdi.TomVerdi
-                "TekstVerdi" -> Verdi.TekstVerdi(node.get("value").asText())
-                "Dato" -> Verdi.Dato(LocalDate.parse(node.get("value").asText()))
+                "TekstVerdi" -> Verdi.TekstVerdi(node.get("value").stringValue())
+                "Dato" -> Verdi.Dato(LocalDate.parse(node.get("value").stringValue()))
                 "Boolsk" -> Verdi.Boolsk(node.get("value").asBoolean())
                 "Flervalg" ->
                     Verdi.Flervalg(
                         node
                             .get("value")
                             .values()
-                            .map { it.asText() },
+                            .map { it.stringValue() },
                     )
                 "UUID" -> Verdi.UUID(node.get("value").asUUID())
                 else -> throw IllegalArgumentException("Unknown type: $type")
@@ -110,16 +109,16 @@ object KlageOpplysningerMapper {
             .readTree(this)
             .values()
             .map { jsonNode ->
-                val type = OpplysningType.valueOf(jsonNode.get("type").asText())
+                val type = OpplysningType.valueOf(jsonNode.get("type").stringValue())
                 Opplysning(
-                    opplysningId = jsonNode.get("opplysningId").asText().let { UUID.fromString(it) },
+                    opplysningId = jsonNode.get("opplysningId").asUUID(),
                     type = type,
                     verdi = objectMapper.convertValue(jsonNode["verdi"], Verdi::class.java),
                     valgmuligheter =
                         jsonNode
                             .get("valgmuligheter")
                             .values()
-                            .map { it.asText() },
+                            .map { it.stringValue() },
                     regler = type.regler,
                 )
             }.toSet()
