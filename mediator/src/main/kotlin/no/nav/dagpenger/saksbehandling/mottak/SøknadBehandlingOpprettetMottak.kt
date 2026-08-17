@@ -10,6 +10,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}

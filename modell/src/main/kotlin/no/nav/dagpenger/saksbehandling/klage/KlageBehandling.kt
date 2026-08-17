@@ -129,9 +129,8 @@ data class KlageBehandling private constructor(
         opplysninger
             .singleOrNull { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }
             ?.verdi()
-            ?.let { it as? Verdi.TekstVerdi }
+            ?.let { it as? Verdi.UUID }
             ?.value
-            ?.let { UUID.fromString(it) }
 
     fun hentOpplysning(opplysningId: UUID): Opplysning =
         opplysninger.singleOrNull { it.opplysningId == opplysningId }

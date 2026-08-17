@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}

@@ -10,6 +10,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 
 internal class BehandlingAvbruttMottak(
     rapidsConnection: RapidsConnection,

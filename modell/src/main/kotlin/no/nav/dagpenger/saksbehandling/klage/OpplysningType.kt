@@ -15,8 +15,8 @@ enum class OpplysningType(
         valgmuligheter = KlagenGjelderType.entries.map { it.tekst },
     ),
     KLAGEN_GJELDER_VEDTAK(
-        navn = "Saksid for påklaget vedtak",
-        datatype = Datatype.TEKST,
+        navn = "Behandlingsid for påklaget vedtak",
+        datatype = Datatype.UUID,
     ),
     KLAGEN_GJELDER_VEDTAKSDATO(
         navn = "Vedtaksdato",
@@ -137,6 +137,7 @@ enum class Datatype {
     DATO,
     BOOLSK,
     FLERVALG,
+    UUID,
 }
 
 enum class UtfallType(

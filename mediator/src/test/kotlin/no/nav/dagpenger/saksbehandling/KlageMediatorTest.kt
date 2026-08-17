@@ -65,9 +65,9 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -1059,7 +1059,7 @@ class KlageMediatorTest {
                     ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }
                     .opplysningId,
-            svar = Verdi.TekstVerdi(vedtakIdKlagenGjelder.toString()),
+            svar = Verdi.UUID(vedtakIdKlagenGjelder),
         )
 
         oppdaterOpplysning(
@@ -1180,7 +1180,7 @@ class KlageMediatorTest {
                     ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }
                     .opplysningId,
-            svar = Verdi.TekstVerdi(opprinneligVedtakId.toString()),
+            svar = Verdi.UUID(opprinneligVedtakId),
         )
 
         oppdaterOpplysning(
