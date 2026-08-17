@@ -2441,7 +2441,7 @@ components:
         - verdi
         - type
 
-    UuidVerdi:
+    UUIDVerdi:
       type: object
       properties:
         verdi:
@@ -2478,7 +2478,7 @@ components:
         - $ref: '#/components/schemas/BoolskVerdi'
         - $ref: '#/components/schemas/DatoVerdi'
         - $ref: '#/components/schemas/ListeVerdi'
-        - $ref: '#/components/schemas/UuidVerdi'
+        - $ref: '#/components/schemas/UUIDVerdi'
       discriminator:
         propertyName: type
         mapping:
@@ -2487,7 +2487,7 @@ components:
           DATO: '#/components/schemas/DatoVerdi'
           LISTEVALG: '#/components/schemas/TekstVerdi'
           FLER_LISTEVALG: '#/components/schemas/ListeVerdi'
-          UUID: '#/components/schemas/UuidVerdi'
+          UUID: '#/components/schemas/UUIDVerdi'
 
     KlageGruppe:
       type: string
@@ -2670,7 +2670,7 @@ components:
         - redigerbar
         - valgmuligheter
 
-    KlageOpplysningUuid:
+    KlageOpplysningUUID:
       type: object
       properties:
         opplysningId:
@@ -2722,7 +2722,7 @@ components:
         - $ref: '#/components/schemas/KlageOpplysningDato'
         - $ref: '#/components/schemas/KlageOpplysningListeValg'
         - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
-        - $ref: '#/components/schemas/KlageOpplysningUuid'
+        - $ref: '#/components/schemas/KlageOpplysningUUID'
 
       type: object
       discriminator:
@@ -2733,7 +2733,7 @@ components:
           DATO: '#/components/schemas/KlageOpplysningDato'
           LISTEVALG: '#/components/schemas/KlageOpplysningListeValg'
           FLER_LISTEVALG: '#/components/schemas/KlageOpplysningFlerListeValg'
-          UUID: '#/components/schemas/KlageOpplysningUuid'
+          UUID: '#/components/schemas/KlageOpplysningUUID'
 
     Utfall:
       type: object
