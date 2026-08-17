@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.klage
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.serder.applyDefault
 import tools.jackson.core.JsonGenerator
 import tools.jackson.core.JsonParser
@@ -58,6 +59,10 @@ object KlageOpplysningerMapper {
                     value.value.forEach { gen.writeString(it) }
                     gen.writeEndArray()
                 }
+                is Verdi.UUID -> {
+                    gen.writeStringProperty(VERDI_DATATYPE, "UUID")
+                    gen.writeStringProperty("value", value.value.toString())
+                }
             }
             gen.writeEndObject()
         }
@@ -82,6 +87,7 @@ object KlageOpplysningerMapper {
                             .values()
                             .map { it.asText() },
                     )
+                "UUID" -> Verdi.UUID(node.get("value").asUUID())
                 else -> throw IllegalArgumentException("Unknown type: $type")
             }
         }

@@ -150,7 +150,7 @@ class KlageDTOMapperTest {
                               "gruppe": "KLAGESAK",
                               "valgmuligheter": [],
                               "redigerbar": true,
-                              "type": "TEKST"
+                              "type": "UUID"
                             },
                             {
                               "opplysningId": "${klageBehandling.synligeOpplysninger().single {
