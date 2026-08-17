@@ -29,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.Boolsk
 import no.nav.dagpenger.saksbehandling.klage.Verdi.Dato
 import no.nav.dagpenger.saksbehandling.klage.Verdi.Flervalg
 import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
-import no.nav.dagpenger.saksbehandling.klage.Verdi.Uuid
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandling
 import no.nav.dagpenger.saksbehandling.modell.helpers.TestHelpers.Klage.lagKlageBehandlingMedUtfall
 import org.junit.jupiter.api.Test
@@ -66,9 +65,9 @@ class KlageBehandlingTest {
         }
 
         val uuidVerdi = UUID.randomUUID()
-        klageBehandling.svar(uuidOpplysningId, Uuid(uuidVerdi))
+        klageBehandling.svar(uuidOpplysningId, Verdi.UUID(uuidVerdi))
         klageBehandling.hentOpplysning(uuidOpplysningId).verdi().let {
-            require(it is Uuid)
+            require(it is Verdi.UUID)
             it.value shouldBe uuidVerdi
         }
 
@@ -105,7 +104,7 @@ class KlageBehandlingTest {
                 when (it.type.datatype) {
                     Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
                     Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi("String"))
-                    Datatype.UUID -> klageBehandling.svar(it.opplysningId, Uuid(UUID.randomUUID()))
+                    Datatype.UUID -> klageBehandling.svar(it.opplysningId, Verdi.UUID(UUID.randomUUID()))
                     Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
                     Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
                 }
@@ -630,7 +629,7 @@ class KlageBehandlingTest {
                     )
 
                 Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
-                Datatype.UUID -> klageBehandling.svar(it.opplysningId, Uuid(UUID.randomUUID()))
+                Datatype.UUID -> klageBehandling.svar(it.opplysningId, Verdi.UUID(UUID.randomUUID()))
                 Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
             }
         }

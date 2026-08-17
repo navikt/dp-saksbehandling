@@ -161,7 +161,7 @@ class PostgresKlageRepositoryTest {
             val uuidVerdi = UUID.randomUUID()
             val uuidOpplysningUtenValg =
                 klageBehandling.finnEnUuidOpplysningUtenValg().also {
-                    klageBehandling.svar(it.opplysningId, Verdi.Uuid(uuidVerdi))
+                    klageBehandling.svar(it.opplysningId, Verdi.UUID(uuidVerdi))
                 }
 
             val boolskOpplysningMedTomVerdi =
@@ -188,7 +188,7 @@ class PostgresKlageRepositoryTest {
                 )
             hentetKlageBehandling
                 .finnEnOpplysning(uuidOpplysningUtenValg.opplysningId)
-                .verdi() shouldBe Verdi.Uuid(uuidVerdi)
+                .verdi() shouldBe Verdi.UUID(uuidVerdi)
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
 
             hentetKlageBehandling.tilstandslogg.size shouldBe klageBehandling.tilstandslogg.size

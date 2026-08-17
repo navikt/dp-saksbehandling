@@ -27,7 +27,7 @@ fun lagKlagebehandling(
             ),
             Opplysning(
                 type = OpplysningType.KLAGEN_GJELDER_VEDTAK,
-                verdi = Verdi.Uuid(UUIDv7.ny()),
+                verdi = Verdi.UUID(UUIDv7.ny()),
             ),
             Opplysning(
                 type = OpplysningType.ER_KLAGEN_SKRIFTLIG,

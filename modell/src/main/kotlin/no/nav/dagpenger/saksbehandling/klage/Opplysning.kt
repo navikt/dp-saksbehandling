@@ -87,7 +87,7 @@ class Opplysning(
                 }
             }
 
-            is Verdi.Uuid -> {
+            is Verdi.UUID -> {
                 require(
                     type.datatype == Datatype.UUID,
                 ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
@@ -146,7 +146,7 @@ sealed class Verdi {
         constructor(vararg value: String) : this(value.toList())
     }
 
-    data class Uuid(
-        val value: UUID,
+    data class UUID(
+        val value: java.util.UUID,
     ) : Verdi()
 }

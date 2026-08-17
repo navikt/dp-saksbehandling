@@ -1059,7 +1059,7 @@ class KlageMediatorTest {
                     ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }
                     .opplysningId,
-            svar = Verdi.Uuid(vedtakIdKlagenGjelder),
+            svar = Verdi.UUID(vedtakIdKlagenGjelder),
         )
 
         oppdaterOpplysning(
@@ -1180,7 +1180,7 @@ class KlageMediatorTest {
                     ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }
                     .opplysningId,
-            svar = Verdi.Uuid(opprinneligVedtakId),
+            svar = Verdi.UUID(opprinneligVedtakId),
         )
 
         oppdaterOpplysning(

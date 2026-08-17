@@ -39,7 +39,7 @@ class KlageDTOMapper(
             is DatoVerdiDTO -> Verdi.Dato(oppdaterKlageOpplysningDTO.verdi)
             is ListeVerdiDTO -> Verdi.Flervalg(oppdaterKlageOpplysningDTO.verdi)
             is TekstVerdiDTO -> Verdi.TekstVerdi(oppdaterKlageOpplysningDTO.verdi)
-            is UuidVerdiDTO -> Verdi.Uuid(oppdaterKlageOpplysningDTO.verdi)
+            is UuidVerdiDTO -> Verdi.UUID(oppdaterKlageOpplysningDTO.verdi)
         }
 
     suspend fun tilDto(
@@ -282,7 +282,7 @@ class KlageDTOMapper(
                             if (opplysning.verdi() is Verdi.TomVerdi) {
                                 null
                             } else {
-                                (opplysning.verdi() as Verdi.Uuid).value
+                                (opplysning.verdi() as Verdi.UUID).value
                             },
                     )
                 }
