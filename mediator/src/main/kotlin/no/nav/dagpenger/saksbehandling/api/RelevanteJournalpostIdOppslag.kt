@@ -22,10 +22,13 @@ class RelevanteJournalpostIdOppslag(
             when (oppgave.behandling.utløstAv) {
                 is HendelseBehandler.Intern.Klage ->
                     coroutineScope {
-                        val journalpostIderKlage: String? =
-                            klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId).journalpostId()
-
-                        (setOf(journalpostIderKlage)).filterNotNull().toSet()
+                        val klageBehandling = klageRepository.hentKlageBehandling(oppgave.behandling.behandlingId)
+                        buildSet {
+                            klageBehandling.journalpostId()?.let { add(it) }
+                            klageBehandling.klageinstansVedtak()?.journalpostIder?.let {
+                                addAll(it)
+                            }
+                        }
                     }
 
                 is HendelseBehandler.Intern.Innsending ->
@@ -40,6 +43,7 @@ class RelevanteJournalpostIdOppslag(
                         val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
                         (journalpostIderSøknad.await()).toSet()
                     }
+
                 else -> journalpostForUtsending?.let { setOf(it) } ?: emptySet()
             }
         return journalposter + setOfNotNull(journalpostForUtsending)

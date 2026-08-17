@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import org.junit.jupiter.api.Test
@@ -63,7 +64,7 @@ class RelevanteJournalpostIdOppslagTest {
     }
 
     @Test
-    fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
+    fun `For klagebehandling skal vi først hente journalpost for klagen og evt klageinstansvedtak og deretter utsending`() {
         val oppgave = TestHelper.lagOppgave(behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage))
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
@@ -77,6 +78,13 @@ class RelevanteJournalpostIdOppslagTest {
                                 tilstand = KlageBehandling.Behandles,
                                 behandlendeEnhet = null,
                                 opprettet = LocalDateTime.now(),
+                                klageinstansVedtak =
+                                    KlageinstansVedtak.Klage(
+                                        id = UUIDv7.ny(),
+                                        journalpostIder = listOf("k1", "k2"),
+                                        avsluttet = LocalDateTime.now(),
+                                        utfall = KlageinstansVedtak.Klage.Utfall.MEDHOLD,
+                                    ),
                             )
                     },
                 utsendingRepository =
@@ -89,7 +97,7 @@ class RelevanteJournalpostIdOppslagTest {
                 innsendingRepository = mockk(),
             )
         runBlocking {
-            journalpostIdOppslag.hentJournalpostIder(oppgave) shouldBe listOf("1", "5")
+            journalpostIdOppslag.hentJournalpostIder(oppgave) shouldBe listOf("1", "k1", "k2", "5")
         }
     }
 
