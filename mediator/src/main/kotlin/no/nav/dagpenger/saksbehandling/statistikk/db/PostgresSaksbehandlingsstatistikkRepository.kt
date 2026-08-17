@@ -103,7 +103,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         END                     AS behandling_resultat
                                     , CASE
                                         WHEN log.hendelse_type  = 'UtsettOppgaveHendelse' THEN
-                                            log.hendelse->>'årsak' 
+                                            log.hendelse ->> 'årsak' 
                                         END                     AS behandling_aarsak
                                     , CASE
                                         WHEN sak.er_dp_sak THEN
@@ -118,7 +118,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         WHEN log.hendelse_type IN ('ReturnerTilSaksbehandlingHendelse','AvbrytOppgaveHendelse') THEN 
                                             log.hendelse->>'årsak'
                                         END                     AS resultat_begrunnelse
-                                    , paaklaget_vedtak ->> 'verdi' ->> 'value' AS relatert_behandling_id
+                                    , (paaklaget_vedtak -> 'verdi' ->> 'value')::UUID AS relatert_behandling_id
                             FROM      oppgave_tilstand_logg_v1      log
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
@@ -129,10 +129,8 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                                                         AND kla.id > '019fea97-b543-7472-b078-a6216ad52ace'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) klage_utfall
                                 ON  klage_utfall    ->> 'type' = 'UTFALL'
-                                AND klage_utfall    -> 'verdi' ->> 'datatype' != 'TomVerdi'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
                                 ON  paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
-                                AND paaklaget_vedtak -> 'verdi' ->> 'datatype' != 'TomVerdi'
                             WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
                             AND       log.id >  coalesce((  SELECT      tilstand_id
                                                             FROM        saksbehandling_statistikk_v1

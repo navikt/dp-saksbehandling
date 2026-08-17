@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
-import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import java.util.UUID
 
 class PersonMediator(
