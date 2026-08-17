@@ -65,7 +65,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.TestUtboks

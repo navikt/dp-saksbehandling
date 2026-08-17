@@ -12,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.serder.asUUID
+import no.nav.dagpenger.saksbehandling.serder.uuidOrNull
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}

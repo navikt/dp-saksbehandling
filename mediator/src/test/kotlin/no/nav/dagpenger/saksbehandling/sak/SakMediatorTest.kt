@@ -34,7 +34,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

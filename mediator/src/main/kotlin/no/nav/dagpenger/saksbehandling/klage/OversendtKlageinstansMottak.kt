@@ -10,7 +10,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")

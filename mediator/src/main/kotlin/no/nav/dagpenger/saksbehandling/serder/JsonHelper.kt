@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.mottak
+package no.nav.dagpenger.saksbehandling.serder
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import tools.jackson.databind.JsonNode

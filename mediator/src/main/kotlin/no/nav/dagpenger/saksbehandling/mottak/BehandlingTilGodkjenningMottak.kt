@@ -10,6 +10,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 
 internal class BehandlingTilGodkjenningMottak(
     rapidsConnection: RapidsConnection,

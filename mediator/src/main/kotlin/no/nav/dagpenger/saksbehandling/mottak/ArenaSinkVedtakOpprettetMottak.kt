@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.util.UUID
 

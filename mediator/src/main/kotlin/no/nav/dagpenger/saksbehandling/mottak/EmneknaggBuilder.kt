@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGE
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.SKAL_EKSPORT_VURDERES
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import no.nav.dagpenger.saksbehandling.serder.defaultObjectMapper
 import tools.jackson.databind.JsonNode
 

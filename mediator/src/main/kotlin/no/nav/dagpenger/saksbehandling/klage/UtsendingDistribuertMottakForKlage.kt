@@ -10,7 +10,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType.KLAGE_AVVIST
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType.KLAGE_OVERSENDELSE
 import java.util.UUID

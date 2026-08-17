@@ -11,7 +11,7 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 

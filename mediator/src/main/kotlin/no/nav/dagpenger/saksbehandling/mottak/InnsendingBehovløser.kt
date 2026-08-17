@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.HåndterInnsendingResultat
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
+import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode
 import java.util.UUID
 
