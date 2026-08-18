@@ -171,6 +171,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
             fagsystem = this.stringOrNull("fagsystem"),
             arenaSakId = this.stringOrNull("arena_sak_id"),
             resultatBegrunnelse = this.stringOrNull("resultat_begrunnelse"),
+            relatertBehandlingId = this.uuidOrNull("relatert_behandling_id"),
         )
 
     override fun markerTilstandsendringerSomOverført(tilstandId: UUID): Int =

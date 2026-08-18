@@ -42,6 +42,7 @@ class StatistikkJobTest {
             behandlingÅrsak = null,
             arenaSakId = null,
             resultatBegrunnelse = null,
+            relatertBehandlingId = null,
         )
 
     val søknadAvbrutt =
@@ -67,6 +68,7 @@ class StatistikkJobTest {
             fagsystem = "ARENA",
             arenaSakId = "123",
             resultatBegrunnelse = null,
+            relatertBehandlingId = null,
         )
 
     val innsendingFerdigBehandlet =
@@ -92,6 +94,7 @@ class StatistikkJobTest {
             fagsystem = "DAGPENGER",
             arenaSakId = null,
             resultatBegrunnelse = null,
+            relatertBehandlingId = null,
         )
 
     val oppgavePåVent =
@@ -117,6 +120,7 @@ class StatistikkJobTest {
             behandlingÅrsak = null,
             arenaSakId = null,
             resultatBegrunnelse = "AVVENT_MELDEKORT",
+            relatertBehandlingId = null,
         )
 
     val oppgaveTilResending =
@@ -142,6 +146,32 @@ class StatistikkJobTest {
             behandlingÅrsak = null,
             arenaSakId = null,
             resultatBegrunnelse = "AVVENT_MELDEKORT",
+            relatertBehandlingId = null,
+        )
+    val klageFerdigBehandlet =
+        OppgaveITilstand(
+            oppgaveId = UUIDv7.ny(),
+            mottatt = mottatt,
+            sakId = UUIDv7.ny(),
+            behandlingId = UUIDv7.ny(),
+            personIdent = "12345612345",
+            saksbehandlerIdent = null,
+            beslutterIdent = null,
+            versjon = "dp:saksbehandling:1.2.3",
+            tilstandsendring =
+                OppgaveITilstand.Tilstandsendring(
+                    sekvensnummer = 5,
+                    tilstandsendringId = UUIDv7.ny(),
+                    tilstand = "FERDIG_BEHANDLET",
+                    tidspunkt = mottatt,
+                ),
+            utløstAv = "KLAGE",
+            behandlingResultat = "OPPHEVET",
+            fagsystem = "DAGPENGER",
+            behandlingÅrsak = null,
+            arenaSakId = null,
+            resultatBegrunnelse = null,
+            relatertBehandlingId = UUIDv7.ny(),
         )
     private val saksbehandlingsstatistikkRepository =
         mockk<SaksbehandlingsstatistikkRepository>().also {
@@ -152,12 +182,14 @@ class StatistikkJobTest {
                     søknadAvbrutt,
                     innsendingFerdigBehandlet,
                     oppgavePåVent,
+                    klageFerdigBehandlet,
                 )
             every { it.markerTilstandsendringerSomOverført(oppgaveTilResending.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(søknadKlarTilBehandling.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(søknadAvbrutt.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId) } returns 1
             every { it.markerTilstandsendringerSomOverført(innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId) } returns 1
+            every { it.markerTilstandsendringerSomOverført(klageFerdigBehandlet.tilstandsendring.tilstandsendringId) } returns 1
         }
 
     @Test
@@ -284,6 +316,29 @@ class StatistikkJobTest {
               }
             }
             """.trimIndent()
+        testRapid.inspektør.message(5).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "oppgave_til_statistikk_v7",
+              "oppgave": {
+                "oppgaveId": "${klageFerdigBehandlet.oppgaveId}",
+                "mottatt": "${klageFerdigBehandlet.mottatt.format(ISO_TIMESTAMP)}",
+                "sakId": "${klageFerdigBehandlet.sakId}",
+                "behandlingId": "${klageFerdigBehandlet.behandlingId}",
+                "personIdent": "12345612345",
+                "tilstandsendring": {
+                  "sekvensnummer": 5,
+                  "tilstandsendringId": "${klageFerdigBehandlet.tilstandsendring.tilstandsendringId}",
+                  "tilstand": "FERDIG_BEHANDLET",
+                  "tidspunkt": "${klageFerdigBehandlet.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
+                },
+                "utløstAv": "KLAGE",
+                "versjon": "dp:saksbehandling:1.2.3",
+                "relatertBehandlingId": "${klageFerdigBehandlet.relatertBehandlingId}",
+                "behandlingResultat": "OPPHEVET"
+              }
+            }
+            """.trimIndent()
     }
 
     @Test
@@ -309,7 +364,7 @@ class StatistikkJobTest {
                 søknadKlarTilBehandling.tilstandsendring.tilstandsendringId,
             )
         }
-        // Den feilede og den etterfølgende skal IKKE markeres (ellers stille hull i statistikken)
+        // Den feilede og de etterfølgende skal IKKE markeres (ellers stille hull i statistikken)
         verify(exactly = 0) {
             saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
                 søknadAvbrutt.tilstandsendring.tilstandsendringId,
@@ -320,6 +375,11 @@ class StatistikkJobTest {
                 innsendingFerdigBehandlet.tilstandsendring.tilstandsendringId,
             )
             saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(oppgavePåVent.tilstandsendring.tilstandsendringId)
+        }
+        verify(exactly = 0) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                klageFerdigBehandlet.tilstandsendring.tilstandsendringId,
+            )
         }
     }
 }

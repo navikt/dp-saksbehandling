@@ -20,6 +20,7 @@ data class OppgaveITilstand(
     val fagsystem: String?,
     val arenaSakId: String?,
     val resultatBegrunnelse: String?,
+    val relatertBehandlingId: UUID?,
 ) {
     data class Tilstandsendring(
         val sekvensnummer: Long,
@@ -42,7 +43,8 @@ data class OppgaveITilstand(
             "behandlingÅrsak=$behandlingÅrsak, " +
             "fagsystem=$fagsystem, " +
             "arenaSakId=$arenaSakId, " +
-            "resultatBegrunnelse=$resultatBegrunnelse)"
+            "resultatBegrunnelse=$resultatBegrunnelse, " +
+            "relatertBehandlingId=$relatertBehandlingId)"
 
     fun asMap(): Map<String, Any> =
         buildMap {
@@ -61,5 +63,6 @@ data class OppgaveITilstand(
             fagsystem?.let { put("fagsystem", it) }
             arenaSakId?.let { put("arenaSakId", it) }
             resultatBegrunnelse?.let { put("resultatBegrunnelse", it) }
+            relatertBehandlingId?.let { put("relatertBehandlingId", it.toString()) }
         }
 }

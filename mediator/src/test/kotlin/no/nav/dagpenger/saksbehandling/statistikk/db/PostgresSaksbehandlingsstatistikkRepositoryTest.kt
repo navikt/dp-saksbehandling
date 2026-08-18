@@ -101,6 +101,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
                             resultatBegrunnelse = null,
+                            relatertBehandlingId = null,
                         )
                     førsteTilstandsendring
                 }
@@ -296,6 +297,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
                             resultatBegrunnelse = null,
+                            relatertBehandlingId = null,
                         )
                     førsteTilstandsendring
                 }
@@ -340,6 +342,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
                             resultatBegrunnelse = null,
+                            relatertBehandlingId = null,
                         )
                     andreTilstandsendring
                 }
@@ -384,6 +387,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
                             resultatBegrunnelse = null,
+                            relatertBehandlingId = null,
                         )
                     tredjeTilstandsendring
                 }
@@ -485,6 +489,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             PostgresOppgaveRepository(DatabaseSession(ds)).lagre(klageOppgave)
 
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().first().relatertBehandlingId shouldBe null
         }
     }
 
@@ -495,37 +500,6 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             klageBehandling = klageBehandling,
             utfallType = UtfallType.OPPRETTHOLDELSE,
         )
-//        val klageBehandlingUtført =
-//            KlageBehandlingUtført(
-//                behandlingId = klageBehandling.behandlingId,
-//                utførtAv = TestHelper.saksbehandler,
-//            )
-//        klageBehandling.behandlingUtført(
-//            behandlendeEnhet = "4449",
-//            hendelse = klageBehandlingUtført,
-//        )
-//        klageBehandling.vedtakDistribuert(
-//            hendelse = UtsendingDistribuert(
-//                behandlingId = klageBehandling.behandlingId,
-//                utsendingId = UUIDv7.ny(),
-//                ident = TestHelper.personIdent,
-//                journalpostId = "444",
-//                distribusjonId = "555",
-//            )
-//        )
-//        klageBehandling.oversendtTilKlageinstans(
-//            hendelse =
-//                OversendtKlageinstansHendelse(
-//                    behandlingId = klageBehandling.behandlingId,
-//                ),
-//        )
-//        klageBehandling.ferdigstillBehandling(
-//            behandlendeEnhet = "4449",
-//            hendelse = KlageBehandlingFerdigstilt(
-//                behandlingId = klageBehandling.behandlingId,
-//                utførtAv = TestHelper.saksbehandler
-//            )
-//        )
         val behandling =
             TestHelper.lagBehandling(
                 behandlingId = klageBehandling.behandlingId,
@@ -597,8 +571,13 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(DatabaseSession(ds))
             val oppgaveTilstandsendringer = postgresStatistikkTjeneste.oppgaveTilstandsendringer()
             oppgaveTilstandsendringer.size shouldBe 5
+            oppgaveTilstandsendringer[2].tilstandsendring.tilstand shouldBe "UNDER_BEHANDLING"
             oppgaveTilstandsendringer[3].tilstandsendring.tilstand shouldBe "OVERSENDT_KLAGEINSTANS"
+            oppgaveTilstandsendringer[3].relatertBehandlingId shouldBe påklagetVedtakVerdi.value
+            oppgaveTilstandsendringer[3].behandlingResultat shouldBe "Opprettholdelse"
             oppgaveTilstandsendringer[4].tilstandsendring.tilstand shouldBe "FERDIG_BEHANDLET"
+            oppgaveTilstandsendringer[4].relatertBehandlingId shouldBe påklagetVedtakVerdi.value
+            oppgaveTilstandsendringer[4].behandlingResultat shouldBe "STADFESTELSE"
         }
     }
 
