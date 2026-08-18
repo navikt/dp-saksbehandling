@@ -161,6 +161,8 @@ internal data class Behandlingsresultat(
 
     fun nyDagpengerettInnvilget(): Boolean = basertPåBehandlingId == null && dagpengerInnvilget()
 
+    fun nyBehandlingsKjede(): Boolean = basertPåBehandlingId == null && rettighetsperioder.isNotEmpty()
+
     data class Rettighetsperiode(
         val harRett: Boolean,
     )
