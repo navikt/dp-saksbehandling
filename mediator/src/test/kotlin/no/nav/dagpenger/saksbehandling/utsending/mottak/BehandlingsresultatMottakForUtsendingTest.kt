@@ -65,16 +65,46 @@ class BehandlingsresultatMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere avslag på søknad`() {
+    fun `Skal starte utsending ved avslag på ny søknad`() {
+        val hendelse = slot<VedtakFattetHendelse>()
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>().also {
+                every { it.startUtsendingForVedtakFattet(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
+            }
+        BehandlingsresultatMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository = sakRepositoryMock,
+        )
+
+        testRapid.sendTestMessage(behandlingsresultat(harRett = false))
+
+        verify(exactly = 1) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(capture(hendelse))
+        }
+        hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.behandletHendelseType shouldBe "Søknad"
+    }
+
+    @Test
+    fun `Skal ikke håndtere avslag på gjenopptak som ikke tilhører dp-sak`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            sakRepository = mockk<SakRepository>(),
+            sakRepository =
+                mockk<SakRepository>().also {
+                    every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
+                },
         )
 
-        testRapid.sendTestMessage(behandlingsresultat(harRett = false))
+        testRapid.sendTestMessage(behandlingsresultat(harRett = false, basertPå = UUIDv7.ny()))
 
         verify(exactly = 0) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -194,6 +224,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         søknadId: String = this.søknadId.toString(),
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
+        basertPå: java.util.UUID? = null,
         eventNavn: String = "behandlingsresultat",
     ): String =
         behandlingsresultatEvent(
@@ -202,6 +233,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
+            basertPå = basertPå,
             eventNavn = eventNavn,
         )
 }
