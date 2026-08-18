@@ -126,7 +126,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             JOIN      person_v1                     per ON per.id = beh.person_id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
                             LEFT JOIN klage_v1                      kla ON kla.id = beh.id
-                                                                        AND kla.id > '019fea97-b543-7472-b078-a6216ad52ace'
+                                                                       AND kla.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) klage_utfall
                                 ON  klage_utfall    ->> 'type' = 'UTFALL'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
