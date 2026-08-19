@@ -32,7 +32,7 @@ internal class BehandlingsresultatMottakForSak(
     ) {
         logger.info { "BehandlingsresultatMottakForSak basert på $behandlingsresultat" }
 
-        if (behandlingsresultat.avslagEllerInnvigelseAvSøknad()) {
+        if (behandlingsresultat.vedtakFattetINySak()) {
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
             logger.info { "Vedtak skal tilhøre dp-sak " }
             val vedtakFattetHendelse =

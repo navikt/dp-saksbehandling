@@ -161,7 +161,7 @@ internal data class Behandlingsresultat(
 
     fun nyDagpengerettInnvilget(): Boolean = basertPåBehandlingId == null && dagpengerInnvilget()
 
-    fun avslagEllerInnvigelseAvSøknad(): Boolean =
+    fun vedtakFattetINySak(): Boolean =
         behandletHendelseType == "Søknad" && basertPåBehandlingId == null && rettighetsperioder.isNotEmpty()
 
     data class Rettighetsperiode(
