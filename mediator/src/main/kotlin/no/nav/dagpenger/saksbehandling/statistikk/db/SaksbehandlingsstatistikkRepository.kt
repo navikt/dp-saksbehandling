@@ -4,7 +4,23 @@ import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import java.util.UUID
 
 interface SaksbehandlingsstatistikkRepository {
-    fun oppgaveTilstandsendringerIkkeOverfort(): List<OppgaveITilstand>
+    companion object {
+        /**
+         * Batchstørrelse for begge stegene i eksporten: hvor mange kandidater som materialiseres
+         * per kjøring, og hvor mange uleverte rader jobben henter. De må være samme tall — jobben
+         * materialiserer ikke nytt før backloggen er tom, og en backlog kan aldri bli større enn
+         * det materialiseringen selv produserte.
+         */
+        const val ANTALL_PER_KJØRING = 1000
+    }
+
+    /**
+     * Rader som er materialisert, men ikke bekreftet levert til statistikk.
+     *
+     * Sortert på sekvensnummer, som er materialiseringsrekkefølgen. Uten sortering ville en retry
+     * kunne levere tilstandsendringer for samme person i vilkårlig rekkefølge.
+     */
+    fun oppgaveTilstandsendringerIkkeOverfort(antall: Int): List<OppgaveITilstand>
 
     /**
      * Tar de neste kandidatene fra `statistikk_kandidat_v1`, beriker dem og legger dem i

@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job
 import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository.Companion.ANTALL_PER_KJØRING
 
 class StatistikkJob(
     private val rapidsConnection: RapidsConnection,
@@ -35,16 +36,24 @@ class StatistikkJob(
     }
 
     override suspend fun executeJob() {
-        val oppgaveTilstandsendringer =
+        val ikkeOverfort =
             saksbehandlingsstatistikkRepository
-                .oppgaveTilstandsendringerIkkeOverfort()
-                .also {
-                    logger.info { "Fant ${it.size} oppgavetilstandsendringerIkkeOverfort" }
-                }.toMutableList()
+                .oppgaveTilstandsendringerIkkeOverfort(ANTALL_PER_KJØRING)
 
-        oppgaveTilstandsendringer.addAll(
-            saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer(),
-        )
+        // Materialiser ikke nye kandidater så lenge det ligger uleverte rader. Da kan backloggen
+        // aldri vokse forbi én batch, og nye tilstandsendringer blir liggende som kandidater — en
+        // langt billigere kø. Sikrer samtidig at gammelt alltid leveres før nytt.
+        val oppgaveTilstandsendringer =
+            when (ikkeOverfort.isEmpty()) {
+                true -> saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer()
+                false -> {
+                    logger.info {
+                        "Fant ${ikkeOverfort.size} uleverte tilstandsendringer, materialiserer ikke nye"
+                    }
+                    ikkeOverfort
+                }
+            }
+
         oppgaveTilstandsendringer.loggOppgaveTilstandsEndringer()
 
         oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->

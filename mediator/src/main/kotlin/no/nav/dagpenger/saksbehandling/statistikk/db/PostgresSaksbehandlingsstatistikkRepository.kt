@@ -6,26 +6,26 @@ import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository.Companion.ANTALL_PER_KJØRING
 import java.util.UUID
 
 class PostgresSaksbehandlingsstatistikkRepository(
     private val databaseSession: DatabaseSession,
 ) : SaksbehandlingsstatistikkRepository {
-    companion object {
-        private const val ANTALL_PER_KJØRING = 1000
-    }
-
-    override fun oppgaveTilstandsendringerIkkeOverfort(): List<OppgaveITilstand> =
+    override fun oppgaveTilstandsendringerIkkeOverfort(antall: Int): List<OppgaveITilstand> =
         databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                        SELECT *
-                        FROM   saksbehandling_statistikk_v1
-                        WHERE  overfort_til_statistikk = FALSE;
-                    """,
-                    paramMap = mapOf(),
+                    statement =
+                        """
+                        SELECT   *
+                        FROM     saksbehandling_statistikk_v1
+                        WHERE    overfort_til_statistikk = FALSE
+                        ORDER BY sekvensnummer
+                        LIMIT    :antall
+                        """.trimIndent(),
+                    paramMap = mapOf("antall" to antall),
                 ).map { row ->
                     row.mapToOppgaveTilstand()
                 }.asList,

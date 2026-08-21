@@ -40,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.klage.svarPåAlleOpplysningerMedUtfall
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand
 import no.nav.dagpenger.saksbehandling.statistikk.OppgaveITilstand.Tilstandsendring
+import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository.Companion.ANTALL_PER_KJØRING
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -302,7 +303,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     førsteTilstandsendring
                 }
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().single() shouldBe førsteTilstandsendring
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort(ANTALL_PER_KJØRING).single() shouldBe førsteTilstandsendring
             postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(førsteTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
@@ -347,7 +348,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     andreTilstandsendring
                 }
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().single() shouldBe andreTilstandsendring
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort(ANTALL_PER_KJØRING).single() shouldBe andreTilstandsendring
             postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(andreTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
 
@@ -392,10 +393,10 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     tredjeTilstandsendring
                 }
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().single() shouldBe tredjeTilstandsendring
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort(ANTALL_PER_KJØRING).single() shouldBe tredjeTilstandsendring
             postgresStatistikkTjeneste.markerTilstandsendringerSomOverført(tredjeTilstandsendring.tilstandsendring.tilstandsendringId)
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
-            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort().size shouldBe 0
+            postgresStatistikkTjeneste.oppgaveTilstandsendringerIkkeOverfort(ANTALL_PER_KJØRING).size shouldBe 0
         }
     }
 
