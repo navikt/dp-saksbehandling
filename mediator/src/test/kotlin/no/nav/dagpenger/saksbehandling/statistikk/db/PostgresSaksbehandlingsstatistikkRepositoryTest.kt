@@ -439,7 +439,9 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
             PostgresOppgaveRepository(DatabaseSession(ds)).lagre(innsendingOppgave)
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
+            // Hvert kall returnerer kun tilstandsendringer som ikke er vurdert før, derfor 1 og ikke 2.
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
         }
     }
 
@@ -476,7 +478,9 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                 klageBehandling = klageBehandling,
             )
             val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(DatabaseSession(ds))
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
+            val førsteUttak = postgresStatistikkTjeneste.oppgaveTilstandsendringer()
+            førsteUttak.size shouldBe 1
+            førsteUttak.first().relatertBehandlingId shouldBe null
 
             klageOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -488,8 +492,9 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
             PostgresOppgaveRepository(DatabaseSession(ds)).lagre(klageOppgave)
 
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 2
-            postgresStatistikkTjeneste.oppgaveTilstandsendringer().first().relatertBehandlingId shouldBe null
+            // Hvert kall returnerer kun tilstandsendringer som ikke er vurdert før, derfor 1 og ikke 2.
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
         }
     }
 

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
 import kotliquery.Row
+import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
@@ -10,6 +11,10 @@ import java.util.UUID
 class PostgresSaksbehandlingsstatistikkRepository(
     private val databaseSession: DatabaseSession,
 ) : SaksbehandlingsstatistikkRepository {
+    companion object {
+        private const val ANTALL_PER_KJØRING = 1000
+    }
+
     override fun oppgaveTilstandsendringerIkkeOverfort(): List<OppgaveITilstand> =
         databaseSession.session { session ->
             session.run(
@@ -32,12 +37,60 @@ class PostgresSaksbehandlingsstatistikkRepository(
     // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
     // For å få med all historikken på første klage som inkluderes, ekskluderes klager med id
     // 019fea97-b543-7472-b078-a6216ad52ace eller eldre.
+    //
+    // Utvalget styres av statistikk_kandidat_v1, ikke av en kursor. Se V138 for hvorfor kursoren
+    // mistet rader. Uttak og markering skjer i samme transaksjon.
     override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
+        databaseSession.transaction {
+            val tilstandIder = session.taKandidater(ANTALL_PER_KJØRING)
+            when (tilstandIder.isEmpty()) {
+                true -> emptyList()
+                false -> {
+                    val oppgaveITilstander = session.materialiser(tilstandIder)
+                    // Markerer hele uttaket, også rader spørringen filtrerte bort (Oppfølging og
+                    // rader under gulvene). De vil aldri kvalifisere, og ville ellers blitt liggende
+                    // som kandidater for alltid.
+                    session.markerSomVurdert(tilstandIder)
+                    oppgaveITilstander
+                }
+            }
+        }
+
+    private fun Session.taKandidater(antall: Int): List<UUID> =
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    SELECT   tilstand_id
+                    FROM     statistikk_kandidat_v1
+                    WHERE    vurdert IS NULL
+                    ORDER BY registrert_tidspunkt, tilstand_id
+                    LIMIT    :antall
+                    """.trimIndent(),
+                paramMap = mapOf("antall" to antall),
+            ).map { it.uuid("tilstand_id") }.asList,
+        )
+
+    private fun Session.markerSomVurdert(tilstandIder: List<UUID>): Int =
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    UPDATE statistikk_kandidat_v1
+                    SET    vurdert     = timezone('Europe/Oslo'::text, current_timestamp)
+                    WHERE  tilstand_id = ANY (:tilstand_ider)
+                    """.trimIndent(),
+                paramMap = mapOf("tilstand_ider" to createArrayOf("uuid", tilstandIder)),
+            ).asUpdate,
+        )
+
+    private fun Session.materialiser(tilstandIder: List<UUID>): List<OppgaveITilstand> =
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
                         INSERT
                         INTO  saksbehandling_statistikk_v1 (
                               tilstand_id
@@ -132,21 +185,15 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
                                 ON  paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
                             WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
-                            AND       log.id >  coalesce((  SELECT      tilstand_id
-                                                            FROM        saksbehandling_statistikk_v1
-                                                            WHERE       overfort_til_statistikk = TRUE
-                                                            ORDER BY    tilstand_id DESC
-                                                            LIMIT 1
-                                                        ) , '0198cc73-16cb-7a6b-ba93-f344c11d7922')
+                            AND       log.id = ANY (:tilstand_ider)
                             ORDER BY  log.id
-                            LIMIT 1000
                         RETURNING   *
                         """,
-                ).map { row ->
-                    row.mapToOppgaveTilstand()
-                }.asList,
-            )
-        }
+                paramMap = mapOf("tilstand_ider" to createArrayOf("uuid", tilstandIder)),
+            ).map { row ->
+                row.mapToOppgaveTilstand()
+            }.asList,
+        )
 
     private fun Row.mapToOppgaveTilstand(): OppgaveITilstand =
         OppgaveITilstand(

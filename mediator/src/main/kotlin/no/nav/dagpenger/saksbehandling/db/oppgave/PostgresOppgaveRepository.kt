@@ -977,30 +977,66 @@ private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,
     tilstandsendring: Tilstandsendring<Type>,
 ) {
+    val antallLagrede =
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO oppgave_tilstand_logg_v1
+                        (id, oppgave_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                    VALUES
+                        (:id, :oppgave_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "id" to tilstandsendring.id,
+                        "oppgave_id" to oppgaveId,
+                        "tilstand" to tilstandsendring.tilstand.name,
+                        "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
+                        "hendelse" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = tilstandsendring.hendelse.tilJson()
+                            },
+                        "tidspunkt" to tilstandsendring.tidspunkt,
+                    ),
+            ).asUpdate,
+        )
+
+    // ON CONFLICT DO NOTHING over fanger både primærnøkkelen og den unike partielle indeksen for
+    // avsluttende tilstander (V115). Ble ingen loggrad skrevet, skjedde det heller ingen
+    // tilstandsendring, og da er det ingenting å rapportere til statistikk.
+    if (antallLagrede > 0) {
+        registrerStatistikkKandidat(tilstandsendring.id)
+    }
+}
+
+/**
+ * Melder tilstandsendringen inn til statistikkeksport, i samme transaksjon som tilstandsloggen.
+ *
+ * Dette erstatter kursoren `log.id > siste_overførte`. Kursoren kunne aldri bli riktig, fordi
+ * `Tilstandsendring.id` tildeles ved objektkonstruksjon mens raden blir synlig ved COMMIT — en
+ * transaksjon som committer sent havner permanent under kursoren. Kandidattabellen har ikke det
+ * problemet: raden blir synlig i nøyaktig samme øyeblikk som tilstandsendringen den peker på.
+ *
+ * Raden inneholder bare nøkkelen. Alle opplysninger hentes fortsatt av jobbens spørring ved
+ * publisering, som før.
+ */
+private fun PostgresUnitOfWork.registrerStatistikkKandidat(tilstandsendringId: UUID) {
     session.run(
         queryOf(
             //language=PostgreSQL
             statement =
                 """
-                INSERT INTO oppgave_tilstand_logg_v1
-                    (id, oppgave_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                INSERT INTO statistikk_kandidat_v1
+                    (tilstand_id)
                 VALUES
-                    (:id, :oppgave_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                    (:tilstand_id)
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to tilstandsendring.id,
-                    "oppgave_id" to oppgaveId,
-                    "tilstand" to tilstandsendring.tilstand.name,
-                    "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
-                    "hendelse" to
-                        PGobject().also {
-                            it.type = "JSONB"
-                            it.value = tilstandsendring.hendelse.tilJson()
-                        },
-                    "tidspunkt" to tilstandsendring.tidspunkt,
-                ),
+            paramMap = mapOf("tilstand_id" to tilstandsendringId),
         ).asUpdate,
     )
 }
