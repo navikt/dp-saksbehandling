@@ -1,8 +1,7 @@
 -- Overgang fra kursor til kandidattabell i dev.
 --
 -- Fyller statistikk_kandidat_v1 med tilstandsendringer som ennå ikke er eksportert, slik at
--- kandidattabellen tar over der kursoren slapp. Fra nå av legges nye kandidater inn av
--- applikasjonskoden (PostgresOppgaveRepository.registrerStatistikkKandidat).
+-- kandidattabellen tar over der kursoren slapp.
 --
 -- Forutsetter at StatistikkJob er stoppet mens dette kjører, slik at ingenting skrives til
 -- saksbehandling_statistikk_v1 samtidig.
@@ -19,11 +18,8 @@
 --                       FROM   saksbehandling_statistikk_v1 s
 --                       WHERE  s.tilstand_id = log.id);
 --
---  Alt fra og med id-en blir kandidat. Rader over den som allerede er eksportert kommer med en
---  gang til — det er bevisst. Duplikat i DVH er å foretrekke framfor tap, og volumet er lite
---  fordi id-en ligger nær kursorens posisjon.
 INSERT INTO statistikk_kandidat_v1 (tilstand_id)
 SELECT id
 FROM oppgave_tilstand_logg_v1
-WHERE id >= '00000000-0000-0000-0000-000000000000'
+WHERE id > '00000000-0000-0000-0000-000000000000'
 ON CONFLICT DO NOTHING;
