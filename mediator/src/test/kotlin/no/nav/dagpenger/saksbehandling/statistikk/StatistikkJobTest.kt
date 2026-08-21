@@ -6,6 +6,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.OutgoingMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.SentMessage
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -346,11 +347,13 @@ class StatistikkJobTest {
         // Feiler på melding nr 3 (innsendingFerdigBehandlet) med FailedMessage uten å kaste
         val rapidMedLeveransefeil = FeilendePåIndeksRapid(feilPåIndeks = 3, delegate = testRapid)
 
-        runBlocking {
-            StatistikkJob(
-                rapidsConnection = rapidMedLeveransefeil,
-                saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
-            ).executeJob()
+        shouldThrow<RuntimeException> {
+            runBlocking {
+                StatistikkJob(
+                    rapidsConnection = rapidMedLeveransefeil,
+                    saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
+                ).executeJob()
+            }
         }
 
         // De to første ble levert og markert

@@ -35,68 +35,63 @@ class StatistikkJob(
     }
 
     override suspend fun executeJob() {
-        runCatching {
-            val oppgaveTilstandsendringer =
-                saksbehandlingsstatistikkRepository
-                    .oppgaveTilstandsendringerIkkeOverfort()
-                    .also {
-                        logger.info { "Fant ${it.size} oppgavetilstandsendringerIkkeOverfort" }
-                    }.toMutableList()
+        val oppgaveTilstandsendringer =
+            saksbehandlingsstatistikkRepository
+                .oppgaveTilstandsendringerIkkeOverfort()
+                .also {
+                    logger.info { "Fant ${it.size} oppgavetilstandsendringerIkkeOverfort" }
+                }.toMutableList()
 
-            oppgaveTilstandsendringer.addAll(
-                saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer(),
-            )
-            oppgaveTilstandsendringer.loggOppgaveTilstandsEndringer()
+        oppgaveTilstandsendringer.addAll(
+            saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer(),
+        )
+        oppgaveTilstandsendringer.loggOppgaveTilstandsEndringer()
 
-            oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
-                val melding =
-                    OutgoingMessage(
-                        body =
-                            JsonMessage
-                                .newMessage(
-                                    mapOf(
-                                        "@event_name" to "oppgave_til_statistikk_v7",
-                                        "oppgave" to oppgaveTilstandsendring.asMap(),
-                                    ),
-                                ).toJson(),
-                        key = oppgaveTilstandsendring.personIdent,
-                    )
+        oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
+            val melding =
+                OutgoingMessage(
+                    body =
+                        JsonMessage
+                            .newMessage(
+                                mapOf(
+                                    "@event_name" to "oppgave_til_statistikk_v7",
+                                    "oppgave" to oppgaveTilstandsendring.asMap(),
+                                ),
+                            ).toJson(),
+                    key = oppgaveTilstandsendring.personIdent,
+                )
 
-                // (A) Synkron send()-feil propagerer ut → fanges av runCatching.onFailure (ingen markering).
-                // (B) Async leveransefeil rapporteres som FailedMessage uten å kaste.
-                val (_, feilet) = rapidsConnection.publish(listOf(melding))
-                when (feilet.isEmpty()) {
-                    true -> {
-                        saksbehandlingsstatistikkRepository
-                            .markerTilstandsendringerSomOverført(
-                                tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
-                            ).let {
-                                if (it != 1) {
-                                    logger.warn {
-                                        "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: " +
-                                            "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
-                                    }
+            // Synkron send()-feil kastes ut herfra. Async leveransefeil rapporteres i stedet som
+            // FailedMessage uten å kaste, og håndteres under.
+            val (_, feilet) = rapidsConnection.publish(listOf(melding))
+            when (feilet.isEmpty()) {
+                true -> {
+                    saksbehandlingsstatistikkRepository
+                        .markerTilstandsendringerSomOverført(
+                            tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
+                        ).let {
+                            if (it != 1) {
+                                logger.warn {
+                                    "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: " +
+                                        "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
                                 }
                             }
-                        logger.info {
-                            "Publisert oppgavetilstandsendring med " +
-                                "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                         }
-                    }
-
-                    false -> {
-                        logger.error(feilet.first().error) {
-                            "Leveransefeil for tilstandsendring ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} " +
-                                "— stopper (forblir uoverført)"
-                        }
-                        return@runCatching
+                    logger.info {
+                        "Publisert oppgavetilstandsendring med " +
+                            "id ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} til statistikk."
                     }
                 }
+
+                false -> {
+                    throw IllegalStateException(
+                        "Leveransefeil for tilstandsendring ${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId} " +
+                            "— stopper (forblir uoverført)",
+                        feilet.first().error,
+                    )
+                }
             }
-            logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
-        }.onFailure {
-            logger.error(it) { "Feil under kjøring av StatistikkJob: $it" }
-            // todo Sende alert til STSB.
         }
+        logger.info { "Publisering av oppgavetilstandsendringer til statistikk ferdig." }
     }
 }
