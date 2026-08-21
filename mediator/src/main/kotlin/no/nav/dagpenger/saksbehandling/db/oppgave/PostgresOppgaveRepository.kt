@@ -239,9 +239,11 @@ class PostgresOppgaveRepository(
                 SET    behandler_ident           = :behandler_ident
                      , siste_saksbehandler_ident = CASE oppu.tilstand
                                                        WHEN 'KLAR_TIL_BEHANDLING' THEN :behandler_ident
+                                                       ELSE oppu.siste_saksbehandler_ident
                                                    END
                      , siste_beslutter_ident     = CASE oppu.tilstand
                                                        WHEN 'KLAR_TIL_KONTROLL' THEN :behandler_ident
+                                                       ELSE oppu.siste_beslutter_ident
                                                    END
                      , tilstand                  = CASE oppu.tilstand
                                                        WHEN 'KLAR_TIL_BEHANDLING' THEN 'UNDER_BEHANDLING'
