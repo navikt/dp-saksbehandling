@@ -107,7 +107,9 @@ class PostgresOppgaveRepository(
                         categoryConditions.joinToString(" ")
                     }
 
-                    else -> ""
+                    else -> {
+                        ""
+                    }
                 }
 
             // language=SQL
@@ -123,7 +125,10 @@ class PostgresOppgaveRepository(
                             )
                         """.trimIndent()
                     }
-                    else -> ""
+
+                    else -> {
+                        ""
+                    }
                 }
 
             //language=PostgreSQL
@@ -378,7 +383,10 @@ class PostgresOppgaveRepository(
 
     override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime =
         when (val notat = oppgave.tilstand().notat()) {
-            null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
+            null -> {
+                throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
+            }
+
             else -> {
                 databaseSession.transaction {
                     lagreNotat(
@@ -498,11 +506,18 @@ class PostgresOppgaveRepository(
 
             val saksbehandlerClause =
                 when {
-                    søkeFilter.utenBehandler -> " AND oppg.behandler_ident IS NULL "
-                    søkeFilter.behandlerIdent != null ->
+                    søkeFilter.utenBehandler -> {
+                        " AND oppg.behandler_ident IS NULL "
+                    }
+
+                    søkeFilter.behandlerIdent != null -> {
                         "AND ( oppg.siste_saksbehandler_ident = :behandler_ident " +
                             "OR oppg.siste_beslutter_ident = :behandler_ident ) "
-                    else -> ""
+                    }
+
+                    else -> {
+                        ""
+                    }
                 }
 
             val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident " } ?: ""
@@ -540,7 +555,9 @@ class PostgresOppgaveRepository(
                         categoryConditions.joinToString(" ")
                     }
 
-                    else -> ""
+                    else -> {
+                        ""
+                    }
                 }
 
             val ekskluderEmneknaggerAsText = søkeFilter.ekskluderEmneknagger.joinToString { "'$it'" }
@@ -557,7 +574,10 @@ class PostgresOppgaveRepository(
                             )
                         """.trimIndent()
                     }
-                    else -> ""
+
+                    else -> {
+                        ""
+                    }
                 }
 
             //language=PostgreSQL
@@ -1004,26 +1024,11 @@ private fun PostgresUnitOfWork.lagre(
                     ),
             ).asUpdate,
         )
-
-    // ON CONFLICT DO NOTHING over fanger både primærnøkkelen og den unike partielle indeksen for
-    // avsluttende tilstander (V115). Ble ingen loggrad skrevet, skjedde det heller ingen
-    // tilstandsendring, og da er det ingenting å rapportere til statistikk.
     if (antallLagrede > 0) {
         registrerStatistikkKandidat(tilstandsendring.id)
     }
 }
 
-/**
- * Melder tilstandsendringen inn til statistikkeksport, i samme transaksjon som tilstandsloggen.
- *
- * Dette erstatter kursoren `log.id > siste_overførte`. Kursoren kunne aldri bli riktig, fordi
- * `Tilstandsendring.id` tildeles ved objektkonstruksjon mens raden blir synlig ved COMMIT — en
- * transaksjon som committer sent havner permanent under kursoren. Kandidattabellen har ikke det
- * problemet: raden blir synlig i nøyaktig samme øyeblikk som tilstandsendringen den peker på.
- *
- * Raden inneholder bare nøkkelen. Alle opplysninger hentes fortsatt av jobbens spørring ved
- * publisering, som før.
- */
 private fun PostgresUnitOfWork.registrerStatistikkKandidat(tilstandsendringId: UUID) {
     session.run(
         queryOf(
@@ -1062,20 +1067,25 @@ private fun Row.rehydrerHendelse(): Hendelse =
 
 private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sortering): String =
     when (this) {
-        Søkefilter.Sorteringsfelt.OPPRETTET ->
+        Søkefilter.Sorteringsfelt.OPPRETTET -> {
             """ ORDER BY oppg.opprettet ${sortering.name}, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.UTLOST_AV ->
+        Søkefilter.Sorteringsfelt.UTLOST_AV -> {
             """ ORDER BY beha.utlost_av ${sortering.name}, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.STATUS ->
+        Søkefilter.Sorteringsfelt.STATUS -> {
             """ ORDER BY oppg.tilstand ${sortering.name}, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.SAKSBEHANDLER ->
+        Søkefilter.Sorteringsfelt.SAKSBEHANDLER -> {
             """ ORDER BY oppg.behandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.UTSATT_TIL ->
+        Søkefilter.Sorteringsfelt.UTSATT_TIL -> {
             """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+        }
     }
 
 class DataNotFoundException(

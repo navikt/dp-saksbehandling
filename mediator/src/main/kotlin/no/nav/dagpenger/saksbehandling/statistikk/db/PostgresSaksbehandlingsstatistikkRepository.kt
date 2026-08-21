@@ -32,31 +32,23 @@ class PostgresSaksbehandlingsstatistikkRepository(
             )
         }
 
-    // Henter oppgavetilstander som skal sendes til statistikk.
-    // Går ikke lenger tilbake i tid enn det finnes behandlinger i behandlinger_mart på BigQuery, derfor begrensningen
-    // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
-    // For å få med all historikken på første klage som inkluderes, ekskluderes klager med id
-    // 019fea97-b543-7472-b078-a6216ad52ace eller eldre.
-    //
-    // Utvalget styres av statistikk_kandidat_v1, ikke av en kursor. Se V138 for hvorfor kursoren
-    // mistet rader. Uttak og markering skjer i samme transaksjon.
     override fun oppgaveTilstandsendringer(): List<OppgaveITilstand> =
         databaseSession.transaction {
-            val tilstandIder = session.taKandidater(ANTALL_PER_KJØRING)
+            val tilstandIder = session.hentKandidater(ANTALL_PER_KJØRING)
             when (tilstandIder.isEmpty()) {
-                true -> emptyList()
+                true -> {
+                    emptyList()
+                }
+
                 false -> {
                     val oppgaveITilstander = session.materialiser(tilstandIder)
-                    // Markerer hele uttaket, også rader spørringen filtrerte bort (Oppfølging og
-                    // rader under gulvene). De vil aldri kvalifisere, og ville ellers blitt liggende
-                    // som kandidater for alltid.
                     session.markerSomVurdert(tilstandIder)
                     oppgaveITilstander
                 }
             }
         }
 
-    private fun Session.taKandidater(antall: Int): List<UUID> =
+    private fun Session.hentKandidater(antall: Int): List<UUID> =
         this.run(
             queryOf(
                 //language=PostgreSQL
