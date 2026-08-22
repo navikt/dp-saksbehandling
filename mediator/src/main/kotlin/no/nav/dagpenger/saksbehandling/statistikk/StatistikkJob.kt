@@ -40,21 +40,21 @@ class StatistikkJob(
             saksbehandlingsstatistikkRepository
                 .oppgaveTilstandsendringerIkkeOverfort(ANTALL_PER_KJØRING)
 
-        // Materialiser ikke nye kandidater så lenge det ligger uleverte rader. Da kan backloggen
-        // aldri vokse forbi én batch, og nye tilstandsendringer blir liggende som kandidater — en
-        // langt billigere kø. Sikrer samtidig at gammelt alltid leveres før nytt.
         val oppgaveTilstandsendringer =
             when (ikkeOverfort.isEmpty()) {
-                true -> saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer()
+                true -> {
+                    saksbehandlingsstatistikkRepository.oppgaveTilstandsendringer()
+                }
+
                 false -> {
                     logger.info {
-                        "Fant ${ikkeOverfort.size} uleverte tilstandsendringer, materialiserer ikke nye"
+                        "Fant ${ikkeOverfort.size} uleverte tilstandsendringer, skriver ikke nye"
                     }
                     ikkeOverfort
                 }
+            }.also {
+                it.loggOppgaveTilstandsEndringer()
             }
-
-        oppgaveTilstandsendringer.loggOppgaveTilstandsEndringer()
 
         oppgaveTilstandsendringer.forEach { oppgaveTilstandsendring ->
             val melding =
@@ -70,8 +70,6 @@ class StatistikkJob(
                     key = oppgaveTilstandsendring.personIdent,
                 )
 
-            // Synkron send()-feil kastes ut herfra. Async leveransefeil rapporteres i stedet som
-            // FailedMessage uten å kaste, og håndteres under.
             val (_, feilet) = rapidsConnection.publish(listOf(melding))
             when (feilet.isEmpty()) {
                 true -> {
@@ -79,11 +77,11 @@ class StatistikkJob(
                         .markerTilstandsendringerSomOverført(
                             tilstandId = oppgaveTilstandsendring.tilstandsendring.tilstandsendringId,
                         ).let {
-                            if (it != 1) {
-                                logger.warn {
-                                    "Fikk ikke markert tilstandsendring som overført for tilstandsenringId: " +
-                                        "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}"
-                                }
+                            if (it == 0) {
+                                throw IllegalStateException(
+                                    "Fikk ikke markert tilstandsendring som overført for tilstandsendringId: " +
+                                        "${oppgaveTilstandsendring.tilstandsendring.tilstandsendringId}",
+                                )
                             }
                         }
                     logger.info {

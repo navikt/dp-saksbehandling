@@ -362,7 +362,7 @@ class StatistikkJobTest {
     }
 
     @Test
-    fun `Skal ikke materialisere nye kandidater så lenge det finnes uleverte rader`() {
+    fun `Skal ikke skrive nye statistikkrader så lenge det finnes uleverte rader`() {
         every {
             saksbehandlingsstatistikkRepository.oppgaveTilstandsendringerIkkeOverfort(any())
         } returns listOf(oppgaveTilResending)
@@ -386,7 +386,7 @@ class StatistikkJobTest {
     }
 
     @Test
-    fun `Skal materialisere nye kandidater når det ikke finnes uleverte rader`() {
+    fun `Skal skrive nye statistikkrader når det ikke finnes uleverte rader`() {
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,
@@ -399,7 +399,50 @@ class StatistikkJobTest {
     }
 
     @Test
-    fun `Skal hente uleverte rader med samme batchstørrelse som materialiseringen`() {
+    fun `Duplikate statistikkrader for samme tilstandsendring skal ikke stoppe eksporten`() {
+        every {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                søknadKlarTilBehandling.tilstandsendring.tilstandsendringId,
+            )
+        } returns 2
+
+        runBlocking {
+            StatistikkJob(
+                rapidsConnection = testRapid,
+                saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
+            ).executeJob()
+        }
+
+        testRapid.inspektør.size shouldBe 5
+    }
+
+    @Test
+    fun `Skal stoppe når ingen rad ble markert som overført`() {
+        every {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                søknadKlarTilBehandling.tilstandsendring.tilstandsendringId,
+            )
+        } returns 0
+
+        shouldThrow<IllegalStateException> {
+            runBlocking {
+                StatistikkJob(
+                    rapidsConnection = testRapid,
+                    saksbehandlingsstatistikkRepository = saksbehandlingsstatistikkRepository,
+                ).executeJob()
+            }
+        }
+
+        testRapid.inspektør.size shouldBe 1
+        verify(exactly = 0) {
+            saksbehandlingsstatistikkRepository.markerTilstandsendringerSomOverført(
+                søknadAvbrutt.tilstandsendring.tilstandsendringId,
+            )
+        }
+    }
+
+    @Test
+    fun `Skal hente uleverte rader med samme batchstørrelse som skrivingen`() {
         runBlocking {
             StatistikkJob(
                 rapidsConnection = testRapid,

@@ -41,7 +41,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                 }
 
                 false -> {
-                    val oppgaveITilstander = session.materialiser(tilstandIder)
+                    val oppgaveITilstander = session.skrivStatistikkrader(tilstandIder)
                     session.markerSomVurdert(tilstandIder)
                     oppgaveITilstander
                 }
@@ -78,7 +78,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
             ).asUpdate,
         )
 
-    private fun Session.materialiser(tilstandIder: List<UUID>): List<OppgaveITilstand> =
+    private fun Session.skrivStatistikkrader(tilstandIder: List<UUID>): List<OppgaveITilstand> =
         this.run(
             queryOf(
                 //language=PostgreSQL
