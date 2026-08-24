@@ -86,6 +86,24 @@ jobs:
           VAR: image=${{ needs.build.outputs.image }}
 ```
 
+## Deploy av branch til dev
+
+Skal en branch testes i dev, **legg branchen eksplisitt til i guarden** — aldri kommenter ut guarden.
+
+```yaml
+# ✅ Korrekt — eksplisitt branch, guarden består
+deploy-dev:
+  if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/fix/min-branch'
+
+# ❌ Feil — nå deployer enhver branch til dev
+deploy-dev:
+#    if: github.ref == 'refs/heads/main'
+```
+
+Kommenteres guarden ut, deployer hver push fra hvilken som helst branch til dev. Da blir det umulig å vite hvilken kode og hvilke Flyway-migrasjoner som faktisk står der, og en annen branch kan overskrive testoppsettet ditt uten forvarsel.
+
+Fjern branchen fra guarden igjen før merge til main.
+
 ## Caching
 
 ```yaml
@@ -217,3 +235,4 @@ jobs:
 - Upinnede action-versjoner (`@v4`)
 - Logg secrets i workflow-output
 - `pull_request_target` med `actions/checkout` av PR-branch (code injection)
+- Kommenter ut `if: github.ref`-guarden for å deploye en branch — legg branchen eksplisitt til i stedet
