@@ -3,9 +3,6 @@
 -- Tabellen ligger igjen tom i dev fra en tidligere branch-deploy. Den droppes først, slik at
 -- definisjonen blir den samme i alle miljøer: CREATE TABLE IF NOT EXISTS ville hoppet over hele
 -- definisjonen der tabellen fantes fra før, og etterlatt et skjema uten sekvensnummer.
---
--- Ingenting går tapt av å droppe. Seeden under gjenskaper alle kandidater som ennå ikke er
--- eksportert, siden de per definisjon mangler i saksbehandling_statistikk_v1.
 DROP TABLE IF EXISTS statistikk_kandidat_v1;
 
 CREATE TABLE statistikk_kandidat_v1
