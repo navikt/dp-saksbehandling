@@ -78,6 +78,10 @@ class PostgresSaksbehandlingsstatistikkRepository(
             ).asUpdate,
         )
 
+    // Går ikke lenger tilbake i tid enn det finnes behandlinger i behandlinger_mart på BigQuery, derfor begrensningen
+    // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
+    // For å få med all historikken på første klage som inkluderes, ekskluderes klager med id
+    // 01a01292-a2da-70a7-9c0c-d0ddc1db3888 eller eldre.
     private fun Session.skrivStatistikkrader(tilstandIder: List<UUID>): List<OppgaveITilstand> =
         this.run(
             queryOf(
