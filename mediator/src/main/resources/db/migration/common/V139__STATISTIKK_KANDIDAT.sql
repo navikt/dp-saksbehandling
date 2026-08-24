@@ -1,12 +1,17 @@
 -- Overgang fra kursor til kandidattabell.
+
+-- Tabellen ligger igjen tom i dev fra en tidligere branch-deploy. Den droppes først, slik at
+-- definisjonen blir den samme i alle miljøer: CREATE TABLE IF NOT EXISTS ville hoppet over hele
+-- definisjonen der tabellen fantes fra før, og etterlatt et skjema uten sekvensnummer.
 --
--- StatistikkJob fant tidligere nye rader med `log.id > siste_overførte`. Id-en er en UUIDv7 som
--- tildeles når Tilstandsendring konstrueres, ikke når raden committes, så en transaksjon som
--- committer sent havner permanent under kursoren. Kandidattabellen skrives i samme transaksjon
--- som tilstandsendringen og gjør ingen antakelse om rekkefølge.
-CREATE TABLE IF NOT EXISTS statistikk_kandidat_v1
+-- Ingenting går tapt av å droppe. Seeden under gjenskaper alle kandidater som ennå ikke er
+-- eksportert, siden de per definisjon mangler i saksbehandling_statistikk_v1.
+DROP TABLE IF EXISTS statistikk_kandidat_v1;
+
+CREATE TABLE statistikk_kandidat_v1
 (
     tilstand_id          UUID                        NOT NULL PRIMARY KEY,
+    sekvensnummer        BIGSERIAL                   NOT NULL,
     vurdert              TIMESTAMP WITHOUT TIME ZONE,
     registrert_tidspunkt TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp)
 );
@@ -29,15 +34,15 @@ WHERE opp.behandling_id >= '019928dc-f521-7723-8ff6-f07154f5097d'
   AND NOT EXISTS (SELECT 1
                   FROM saksbehandling_statistikk_v1 s
                   WHERE s.tilstand_id = log.id)
+ORDER BY log.tidspunkt
 ON CONFLICT DO NOTHING;
 
--- Indeksene lages etter seedingen, slik at de bygges én gang i stedet for å vedlikeholdes
--- underveis i innsettingen.
-
--- Jobben plukker kandidater som ennå ikke er vurdert. Partiell indeks holder den liten selv
--- når tabellen vokser, siden de vurderte faller ut.
-CREATE INDEX IF NOT EXISTS idx_statistikk_kandidat_v1_ikke_vurdert
-    ON statistikk_kandidat_v1 (tilstand_id)
+-- Jobben plukker de eldste kandidatene som ennå ikke er vurdert. Indeksen er sortert på
+-- sekvensnummer slik at den dekker både filteret og ORDER BY, så LIMIT stopper etter n rader
+-- i stedet for at hele etterslepet må sorteres. Partiell holder den liten selv når tabellen
+-- vokser, siden de vurderte faller ut av den.
+CREATE INDEX idx_statistikk_kandidat_v1_ikke_vurdert
+    ON statistikk_kandidat_v1 (sekvensnummer)
     WHERE vurdert IS NULL;
 
 -- StatistikkJob spør hvert 5. minutt etter rader som ikke er bekreftet levert til DVH.

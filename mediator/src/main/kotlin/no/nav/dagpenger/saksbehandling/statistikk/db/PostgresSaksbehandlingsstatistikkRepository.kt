@@ -57,7 +57,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                     SELECT   tilstand_id
                     FROM     statistikk_kandidat_v1
                     WHERE    vurdert IS NULL
-                    ORDER BY registrert_tidspunkt, tilstand_id
+                    ORDER BY sekvensnummer
                     LIMIT    :antall
                     """.trimIndent(),
                 paramMap = mapOf("antall" to antall),
