@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.statistikk.db
 
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -496,6 +497,48 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             // Hvert kall returnerer kun tilstandsendringer som ikke er vurdert før, derfor 1 og ikke 2.
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 1
             postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `Tilstandsendringer på klage eldre enn klagegulvet skal ikke oversendes saksbehandlingsstatistikk`() {
+        // Klager til og med denne id-en var i gang før eksporten av klage ble slått på, og ville derfor
+        // manglet begynnelsen av historikken sin i datavarehuset. De holdes utenfor uttrekket.
+        val klageEldreEnnGulvet = UUID.fromString("01a01292-a2da-70a7-9c0c-d0ddc1db3888")
+        val klageBehandling = TestHelper.lagKlageBehandling(behandlingId = klageEldreEnnGulvet)
+        val behandling =
+            TestHelper.lagBehandling(
+                behandlingId = klageBehandling.behandlingId,
+                opprettet = klageBehandling.opprettet,
+                utløstAvType = Klage,
+            )
+        val klageOppgave =
+            TestHelper.lagOppgave(
+                behandling = behandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+
+        DBTestHelper.withMigratedDb { ds ->
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = behandling,
+                sak = sak,
+                oppgave = klageOppgave,
+                merkSomEgenSak = true,
+                klageBehandling = klageBehandling,
+            )
+
+            PostgresSaksbehandlingsstatistikkRepository(DatabaseSession(ds))
+                .oppgaveTilstandsendringer()
+                .shouldBeEmpty()
         }
     }
 

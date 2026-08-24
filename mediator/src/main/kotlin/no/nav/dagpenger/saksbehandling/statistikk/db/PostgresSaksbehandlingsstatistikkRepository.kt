@@ -81,7 +81,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
     // Går ikke lenger tilbake i tid enn det finnes behandlinger i behandlinger_mart på BigQuery, derfor begrensningen
     // på beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d' (som er den første behandlingen i behandlinger_mart).
     // For å få med all historikken på første klage som inkluderes, ekskluderes klager med id
-    // 01a01292-a2da-70a7-9c0c-d0ddc1db3888 eller eldre.
+    // 01a01292-a2da-70a7-9c0c-d0ddc1db3888 eller eldre. Avgrensningen står i WHERE og ikke som betingelse på
+    // LEFT JOIN klage_v1: en LEFT JOIN beholder loggraden uansett om betingelsen slår til, så klagen ville
+    // blitt eksportert med tomt utfall og endt som UKJENT i datavarehuset i stedet for å bli holdt utenfor.
     private fun Session.skrivStatistikkrader(tilstandIder: List<UUID>): List<OppgaveITilstand> =
         this.run(
             queryOf(
@@ -175,12 +177,13 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             JOIN      person_v1                     per ON per.id = beh.person_id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
                             LEFT JOIN klage_v1                      kla ON kla.id = beh.id
-                                                                       AND kla.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) klage_utfall
                                 ON  klage_utfall    ->> 'type' = 'UTFALL'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
                                 ON  paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
                             WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
+                            AND       (   beh.utlost_av IS DISTINCT FROM 'KLAGE'
+                                       OR beh.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888' )
                             AND       log.id = ANY (:tilstand_ider)
                             ORDER BY  log.id
                         RETURNING   *
