@@ -1053,7 +1053,7 @@ private fun PostgresUnitOfWork.lagre(
     tilstandslogg: OppgaveTilstandslogg,
 ) {
     logger.debug { "Lagrer tilstandslogg for oppgave $oppgaveId med ${tilstandslogg.size} tilstandsendringer" }
-    tilstandslogg.forEach { tilstandsendring ->
+    tilstandslogg.reversed().forEach { tilstandsendring ->
         this.lagre(oppgaveId, tilstandsendring)
     }
 }

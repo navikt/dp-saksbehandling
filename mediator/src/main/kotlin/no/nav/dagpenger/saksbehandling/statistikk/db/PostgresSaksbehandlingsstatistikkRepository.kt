@@ -171,6 +171,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         END                     AS resultat_begrunnelse
                                     , (paaklaget_vedtak -> 'verdi' ->> 'value')::UUID AS relatert_behandling_id
                             FROM      oppgave_tilstand_logg_v1      log
+                            JOIN      statistikk_kandidat_v1        sta ON sta.tilstand_id = log.id
                             JOIN      oppgave_v1                    opp ON opp.id = log.oppgave_id
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
                             JOIN      sak_v2                        sak ON sak.id = beh.sak_id
@@ -185,7 +186,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             AND       (   beh.utlost_av != 'KLAGE'
                                        OR beh.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888' )
                             AND       log.id = ANY (:tilstand_ider)
-                            ORDER BY  log.id
+                            ORDER BY  sta.sekvensnummer
                         RETURNING   *
                         """,
                 paramMap = mapOf("tilstand_ider" to createArrayOf("uuid", tilstandIder)),
