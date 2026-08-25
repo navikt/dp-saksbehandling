@@ -63,6 +63,7 @@ class BehandlingsresultatMottakForSakTest {
             message["søknadId"].stringValue() shouldBe søknadId.toString()
             message["sakId"].stringValue() shouldBe sakId.toString()
             message["ident"].stringValue() shouldBe ident
+            message["førteTil"].stringValue() shouldBe "Innvilgelse"
         }
     }
 
@@ -165,6 +166,7 @@ class BehandlingsresultatMottakForSakTest {
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
         basertPå: UUID? = null,
+        førteTil: String = "Innvilgelse",
     ): String =
         behandlingsresultatEvent(
             ident = ident,
@@ -173,5 +175,6 @@ class BehandlingsresultatMottakForSakTest {
             behandletHendelseType = behandletHendelseType,
             harRett = harRett,
             basertPå = basertPå,
+            førteTil = førteTil,
         )
 }
