@@ -31,7 +31,7 @@ WHERE opp.behandling_id >= '019928dc-f521-7723-8ff6-f07154f5097d'
   AND NOT EXISTS (SELECT 1
                   FROM saksbehandling_statistikk_v1 s
                   WHERE s.tilstand_id = log.id)
-ORDER BY log.tidspunkt
+ORDER BY log.id
 ON CONFLICT DO NOTHING;
 
 -- Jobben plukker de eldste kandidatene som ennå ikke er vurdert. Indeksen er sortert på
