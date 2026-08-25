@@ -175,17 +175,17 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             JOIN      behandling_v1                 beh ON beh.id = opp.behandling_id
                             JOIN      sak_v2                        sak ON sak.id = beh.sak_id
                             JOIN      person_v1                     per ON per.id = beh.person_id
+                            JOIN      statistikk_kandidat_v1        sta ON sta.tilstand_id = log.id
                             LEFT JOIN innsending_v1                 ins ON ins.id = beh.id
                             LEFT JOIN klage_v1                      kla ON kla.id = beh.id
+                                                                        AND kla.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) klage_utfall
                                 ON  klage_utfall    ->> 'type' = 'UTFALL'
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
                                 ON  paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
                             WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
-                            AND       (   beh.utlost_av IS DISTINCT FROM 'KLAGE'
-                                       OR beh.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888' )
                             AND       log.id = ANY (:tilstand_ider)
-                            ORDER BY  log.id
+                            ORDER BY  sta.sekvensnummer
                         RETURNING   *
                         """,
                 paramMap = mapOf("tilstand_ider" to createArrayOf("uuid", tilstandIder)),
