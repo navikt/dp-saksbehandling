@@ -58,6 +58,7 @@ internal class BehandlingsresultatMottakForSak(
                                     søknadId = behandlingsresultat.behandletHendelseId,
                                     ident = packet["ident"].stringValue(),
                                     sakId = sakId,
+                                    førteTil = behandlingsresultat.førteTil,
                                 ).toMap(),
                         ).toJson(),
             )
@@ -69,6 +70,7 @@ internal class BehandlingsresultatMottakForSak(
         val søknadId: String,
         val ident: String,
         val sakId: String,
+        val førteTil: String,
     ) {
         fun toMap(): Map<String, String> =
             mapOf(
@@ -77,6 +79,7 @@ internal class BehandlingsresultatMottakForSak(
                 "søknadId" to søknadId,
                 "ident" to ident,
                 "sakId" to sakId,
+                "førteTil" to førteTil,
             )
     }
 }

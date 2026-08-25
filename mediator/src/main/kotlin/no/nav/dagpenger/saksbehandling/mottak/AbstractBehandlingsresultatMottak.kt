@@ -37,7 +37,7 @@ internal abstract class AbstractBehandlingsresultatMottak(
                 }
             }
             validate {
-                it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
+                it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk", "førteTil")
                 it.interestedIn("rettighetsperioder")
                 it.interestedIn("behandletAv")
                 it.valideringsregler()
@@ -117,6 +117,7 @@ internal data class Behandlingsresultat(
     val automatiskBehandlet: Boolean,
     val saksbehandlerIdent: String?,
     val beslutterIdent: String?,
+    val førteTil: String,
 ) {
     constructor(packet: JsonMessage) : this(
         behandlingId = packet["behandlingId"].asUUID(),
@@ -144,6 +145,7 @@ internal data class Behandlingsresultat(
                 ?.get("ident")
                 ?.takeIf { !it.isMissingNode() && !it.isNull }
                 ?.stringValue(),
+        førteTil = packet["førteTil"].stringValue(),
         rettighetsperioder =
             packet["rettighetsperioder"]
                 .takeIf { it.isArray }

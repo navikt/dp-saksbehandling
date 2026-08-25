@@ -15,6 +15,7 @@ internal fun behandlingsresultatEvent(
     basertPå: UUID? = null,
     eventNavn: String = "behandlingsresultat",
     automatiskBehandling: Boolean = false,
+    førteTil: String = "Innvilgelse",
 ): String {
     //language=JSON
     return """
@@ -33,7 +34,8 @@ internal fun behandlingsresultatEvent(
               "fraOgMed": "2025-09-09",
               "harRett": $harRett
             }
-          ]
+          ],
+          "førteTil": "$førteTil"
         }
         """.trimIndent()
 }
