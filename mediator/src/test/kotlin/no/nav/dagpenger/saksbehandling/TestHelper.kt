@@ -17,6 +17,19 @@ import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
+import no.nav.dagpenger.saksbehandling.klage.FormkravSteg
+import no.nav.dagpenger.saksbehandling.klage.FristvurderingSteg
+import no.nav.dagpenger.saksbehandling.klage.FullmektigSteg
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
+import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
+import no.nav.dagpenger.saksbehandling.klage.KlagenGjelderSteg
+import no.nav.dagpenger.saksbehandling.klage.Opplysning
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansSteg
+import no.nav.dagpenger.saksbehandling.klage.Steg
+import no.nav.dagpenger.saksbehandling.klage.VurderUtfallSteg
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
@@ -95,6 +108,8 @@ internal object TestHelper {
 
     val testOppfølging = lagOppfølging()
 
+    val testKlage = lagKlageBehandling()
+
     fun lagOppfølging(
         id: UUID = UUIDv7.ny(),
         person: Person = testPerson,
@@ -147,6 +162,37 @@ internal object TestHelper {
             vurdering = vurdering,
             innsendingResultat = innsendingResultat,
             valgtSakId = valgtSakId,
+        )
+
+    fun lagKlageBehandling(
+        behandlingId: UUID = testBehandling.behandlingId,
+        opprettet: LocalDateTime = testBehandling.opprettet,
+        opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+        tilstand: KlageBehandling.KlageTilstand = KlageBehandling.Behandles,
+        journalpostId: String? = null,
+        behandlendeEnhet: String = "4449",
+        tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
+        steg: List<Steg> =
+            listOf(
+                KlagenGjelderSteg,
+                FristvurderingSteg,
+                FormkravSteg,
+                VurderUtfallSteg,
+                OversendKlageinstansSteg,
+                FullmektigSteg,
+            ),
+        klageinstansVedtak: KlageinstansVedtak? = null,
+    ): KlageBehandling =
+        KlageBehandling.rehydrer(
+            behandlingId = behandlingId,
+            opprettet = opprettet,
+            opplysninger = opplysninger,
+            tilstand = tilstand,
+            journalpostId = journalpostId,
+            behandlendeEnhet = behandlendeEnhet,
+            tilstandslogg = tilstandslogg,
+            steg = steg,
+            klageinstansVedtak = klageinstansVedtak,
         )
 
     fun lagPerson(
