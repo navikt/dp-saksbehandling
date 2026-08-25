@@ -182,7 +182,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             LEFT JOIN LATERAL jsonb_array_elements(kla.opplysninger) paaklaget_vedtak
                                 ON  paaklaget_vedtak ->> 'type' = 'KLAGEN_GJELDER_VEDTAK'
                             WHERE     beh.id >= '019928dc-f521-7723-8ff6-f07154f5097d'
-                            AND       (   beh.utlost_av IS DISTINCT FROM 'KLAGE'
+                            AND       (   beh.utlost_av != 'KLAGE'
                                        OR beh.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888' )
                             AND       log.id = ANY (:tilstand_ider)
                             ORDER BY  log.id
