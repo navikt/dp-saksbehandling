@@ -198,7 +198,8 @@ class BehandlingsresultatMottakTest {
                   "harRett": true
                 }
               ],
-              "behandletAv": []
+              "behandletAv": [],
+              "førteTil": "Innvilgelse"
             }
             """.trimIndent()
         testRapid.sendTestMessage(behandlingsresultat)
@@ -239,7 +240,8 @@ class BehandlingsresultatMottakTest {
                   "fraOgMed": "2025-09-09",
                   "harRett": true
                 }
-              ]
+              ],
+              "førteTil": "Innvilgelse"
             }
             """.trimIndent()
         testRapid.sendTestMessage(behandlingsresultat)
@@ -269,6 +271,7 @@ class BehandlingsresultatMottakTest {
         behandletHendelseType: String = "Søknad",
         saksbehandlerIdent: String? = null,
         beslutterIdent: String? = null,
+        førteTil: String = "Innvilgelse",
     ): String {
         val saksbehandlerJson =
             if (saksbehandlerIdent != null) {
@@ -313,7 +316,8 @@ class BehandlingsresultatMottakTest {
               "saksbehandlerIdent": null,
               "beslutterIdent": null,
               "opplysninger": [],
-              "rettighetsperioder": [] $behandletAvJson
+              "rettighetsperioder": [] $behandletAvJson,
+              "førteTil": "$førteTil"
             }
             """.trimIndent()
         return json
