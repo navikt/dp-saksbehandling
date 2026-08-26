@@ -107,7 +107,9 @@ class PostgresOppgaveRepository(
                         categoryConditions.joinToString(" ")
                     }
 
-                    else -> ""
+                    else -> {
+                        ""
+                    }
                 }
 
             // language=SQL
@@ -123,7 +125,10 @@ class PostgresOppgaveRepository(
                             )
                         """.trimIndent()
                     }
-                    else -> ""
+
+                    else -> {
+                        ""
+                    }
                 }
 
             //language=PostgreSQL
@@ -234,9 +239,11 @@ class PostgresOppgaveRepository(
                 SET    behandler_ident           = :behandler_ident
                      , siste_saksbehandler_ident = CASE oppu.tilstand
                                                        WHEN 'KLAR_TIL_BEHANDLING' THEN :behandler_ident
+                                                       ELSE oppu.siste_saksbehandler_ident
                                                    END
                      , siste_beslutter_ident     = CASE oppu.tilstand
                                                        WHEN 'KLAR_TIL_KONTROLL' THEN :behandler_ident
+                                                       ELSE oppu.siste_beslutter_ident
                                                    END
                      , tilstand                  = CASE oppu.tilstand
                                                        WHEN 'KLAR_TIL_BEHANDLING' THEN 'UNDER_BEHANDLING'
@@ -378,7 +385,10 @@ class PostgresOppgaveRepository(
 
     override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime =
         when (val notat = oppgave.tilstand().notat()) {
-            null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
+            null -> {
+                throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
+            }
+
             else -> {
                 databaseSession.transaction {
                     lagreNotat(
@@ -498,11 +508,18 @@ class PostgresOppgaveRepository(
 
             val saksbehandlerClause =
                 when {
-                    søkeFilter.utenBehandler -> " AND oppg.behandler_ident IS NULL "
-                    søkeFilter.behandlerIdent != null ->
+                    søkeFilter.utenBehandler -> {
+                        " AND oppg.behandler_ident IS NULL "
+                    }
+
+                    søkeFilter.behandlerIdent != null -> {
                         "AND ( oppg.siste_saksbehandler_ident = :behandler_ident " +
                             "OR oppg.siste_beslutter_ident = :behandler_ident ) "
-                    else -> ""
+                    }
+
+                    else -> {
+                        ""
+                    }
                 }
 
             val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident " } ?: ""
@@ -540,7 +557,9 @@ class PostgresOppgaveRepository(
                         categoryConditions.joinToString(" ")
                     }
 
-                    else -> ""
+                    else -> {
+                        ""
+                    }
                 }
 
             val ekskluderEmneknaggerAsText = søkeFilter.ekskluderEmneknagger.joinToString { "'$it'" }
@@ -557,7 +576,10 @@ class PostgresOppgaveRepository(
                             )
                         """.trimIndent()
                     }
-                    else -> ""
+
+                    else -> {
+                        ""
+                    }
                 }
 
             //language=PostgreSQL
@@ -977,30 +999,51 @@ private fun PostgresUnitOfWork.lagre(
     oppgaveId: UUID,
     tilstandsendring: Tilstandsendring<Type>,
 ) {
+    val antallLagrede =
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO oppgave_tilstand_logg_v1
+                        (id, oppgave_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                    VALUES
+                        (:id, :oppgave_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "id" to tilstandsendring.id,
+                        "oppgave_id" to oppgaveId,
+                        "tilstand" to tilstandsendring.tilstand.name,
+                        "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
+                        "hendelse" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = tilstandsendring.hendelse.tilJson()
+                            },
+                        "tidspunkt" to tilstandsendring.tidspunkt,
+                    ),
+            ).asUpdate,
+        )
+    if (antallLagrede > 0) {
+        registrerStatistikkKandidat(tilstandsendring.id)
+    }
+}
+
+private fun PostgresUnitOfWork.registrerStatistikkKandidat(tilstandsendringId: UUID) {
     session.run(
         queryOf(
             //language=PostgreSQL
             statement =
                 """
-                INSERT INTO oppgave_tilstand_logg_v1
-                    (id, oppgave_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                INSERT INTO statistikk_kandidat_v1
+                    (tilstand_id)
                 VALUES
-                    (:id, :oppgave_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                    (:tilstand_id)
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to tilstandsendring.id,
-                    "oppgave_id" to oppgaveId,
-                    "tilstand" to tilstandsendring.tilstand.name,
-                    "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
-                    "hendelse" to
-                        PGobject().also {
-                            it.type = "JSONB"
-                            it.value = tilstandsendring.hendelse.tilJson()
-                        },
-                    "tidspunkt" to tilstandsendring.tidspunkt,
-                ),
+            paramMap = mapOf("tilstand_id" to tilstandsendringId),
         ).asUpdate,
     )
 }
@@ -1010,7 +1053,7 @@ private fun PostgresUnitOfWork.lagre(
     tilstandslogg: OppgaveTilstandslogg,
 ) {
     logger.debug { "Lagrer tilstandslogg for oppgave $oppgaveId med ${tilstandslogg.size} tilstandsendringer" }
-    tilstandslogg.forEach { tilstandsendring ->
+    tilstandslogg.reversed().forEach { tilstandsendring ->
         this.lagre(oppgaveId, tilstandsendring)
     }
 }
@@ -1026,20 +1069,25 @@ private fun Row.rehydrerHendelse(): Hendelse =
 
 private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sortering): String =
     when (this) {
-        Søkefilter.Sorteringsfelt.OPPRETTET ->
+        Søkefilter.Sorteringsfelt.OPPRETTET -> {
             """ ORDER BY oppg.opprettet ${sortering.name}, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.UTLOST_AV ->
+        Søkefilter.Sorteringsfelt.UTLOST_AV -> {
             """ ORDER BY beha.utlost_av ${sortering.name}, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.STATUS ->
+        Søkefilter.Sorteringsfelt.STATUS -> {
             """ ORDER BY oppg.tilstand ${sortering.name}, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.SAKSBEHANDLER ->
+        Søkefilter.Sorteringsfelt.SAKSBEHANDLER -> {
             """ ORDER BY oppg.behandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+        }
 
-        Søkefilter.Sorteringsfelt.UTSATT_TIL ->
+        Søkefilter.Sorteringsfelt.UTSATT_TIL -> {
             """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+        }
     }
 
 class DataNotFoundException(

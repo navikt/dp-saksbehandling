@@ -48,7 +48,8 @@ class BehandlingsresultatMottakForAutomatiskVedtakUtsendingTest {
                   "fraOgMed": "2025-09-09",
                   "harRett": false
                 }
-              ]
+              ],
+              "førteTil": "Innvilgelse"
             }
             """.trimIndent(),
         )

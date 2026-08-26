@@ -120,35 +120,28 @@ class PostgresOppgaveRepositoryTest {
                 person = testPerson,
             ).also { repo.lagre(it) }
 
-            lagOppgave(
-                oppgaveId = oppgaveIdKlarTilKontroll,
-                tilstand = Oppgave.KlarTilKontroll,
-                opprettet = søknadBehandlingKlarTilKontroll.opprettet,
-                behandling = søknadBehandlingKlarTilKontroll,
-                person = testPerson,
-                tilstandslogg =
-                    OppgaveTilstandslogg(
-                        Tilstandsendring(
-                            tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
-                            hendelse =
-                                SettOppgaveAnsvarHendelse(
-                                    oppgaveId = oppgaveIdKlarTilKontroll,
-                                    ansvarligIdent = saksbehandler.navIdent,
-                                    utførtAv = saksbehandler,
-                                ),
-                            tidspunkt = opprettetNå,
-                        ),
-                        Tilstandsendring(
-                            tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
-                            hendelse =
-                                SendTilKontrollHendelse(
-                                    oppgaveId = oppgaveIdKlarTilKontroll,
-                                    utførtAv = saksbehandler,
-                                ),
-                            tidspunkt = opprettetNå,
-                        ),
-                    ),
-            ).also { repo.lagre(it) }
+            val oppgaveKlarTilKontroll =
+                lagOppgave(
+                    oppgaveId = oppgaveIdKlarTilKontroll,
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = søknadBehandlingKlarTilKontroll.opprettet,
+                    behandling = søknadBehandlingKlarTilKontroll,
+                    person = testPerson,
+                )
+            oppgaveKlarTilKontroll.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveIdKlarTilKontroll,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveKlarTilKontroll.sendTilKontroll(
+                SendTilKontrollHendelse(
+                    oppgaveId = oppgaveIdKlarTilKontroll,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            repo.lagre(oppgaveKlarTilKontroll)
 
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
@@ -171,6 +164,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgave.behandling.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
             nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
+            nesteOppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
             nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
         }
     }

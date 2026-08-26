@@ -140,6 +140,33 @@ fun lagKlagebehandling(
     )
 }
 
+internal fun svarPåAlleOpplysningerMedUtfall(
+    klageBehandling: KlageBehandling,
+    utfallType: UtfallType,
+) {
+    klageBehandling.alleOpplysninger().forEach {
+        when (it.type.datatype) {
+            Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Verdi.Boolsk(true))
+            Datatype.TEKST ->
+                klageBehandling.svar(
+                    opplysningId = it.opplysningId,
+                    verdi =
+                        Verdi.TekstVerdi(
+                            value =
+                                when (it.type) {
+                                    OpplysningType.UTFALL -> utfallType.tekst
+                                    else -> it.valgmuligheter.firstOrNull() ?: "String"
+                                },
+                        ),
+                )
+
+            Datatype.DATO -> klageBehandling.svar(it.opplysningId, Verdi.Dato(LocalDate.MIN))
+            Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Verdi.Flervalg(it.valgmuligheter))
+            Datatype.UUID -> klageBehandling.svar(it.opplysningId, Verdi.UUID(UUIDv7.ny()))
+        }
+    }
+}
+
 internal fun oversendtKlageinstansOk(
     behandlingId: UUID,
     fagsakId: UUID,
