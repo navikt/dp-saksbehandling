@@ -135,8 +135,6 @@ class PostgresSakRepositoryTest {
             val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
             sakHistorikkFraDB shouldBe sakHistorikk
-
-            
         }
     }
 

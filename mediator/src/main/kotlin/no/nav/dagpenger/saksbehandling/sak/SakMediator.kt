@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
@@ -29,6 +30,7 @@ class SakMediator(
     private val personMediator: PersonMediator,
     private val sakRepository: SakRepository,
     private val rapidsConnection: RapidsConnection,
+    private val behandlingKlient: BehandlingKlient,
 ) {
     fun hentSakHistorikk(ident: String): SakHistorikk = sakRepository.hentSakHistorikk(ident)
 
@@ -116,7 +118,6 @@ class SakMediator(
                     person = person,
                 )
 
-            sakHistorikk.fjernBehandlingFraEventuellTidligereSak(behandling.behandlingId)
             sakHistorikk.leggTilSak(sak)
             sakRepository.lagre(sakHistorikk)
             sak
@@ -319,5 +320,16 @@ class SakMediator(
             )
         }
         return erNødbremset
+    }
+
+    suspend fun flyttBehandlingTilNySak(
+        ident: String,
+        behandlingId: UUID,
+    ) {
+        val sakHistorikk = sakRepository.hentSakHistorikk(ident)
+        val nySak = sakHistorikk.flyttBehandlingTilNySak(behandlingId)
+//        behandlingKlient.
+        sakRepository.lagre(sakHistorikk)
+        logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId} for person $ident" }
     }
 }

@@ -1335,6 +1335,7 @@ class KlageMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(DatabaseSession(dataSource)),
                     rapidsConnection = testRapid,
+                    behandlingKlient = mockk(),
                 )
 
             val oppgaveMediator =
@@ -1407,6 +1408,7 @@ class KlageMediatorTest {
                     personMediator = personMediator,
                     sakRepository = sakRepository,
                     rapidsConnection = testRapid,
+                    behandlingKlient = mockk(),
                 )
 
             val oppgaveMediator =
@@ -1493,6 +1495,7 @@ class KlageMediatorTest {
                     personMediator = personMediator,
                     sakRepository = sakRepository,
                     rapidsConnection = testRapid,
+                    behandlingKlient = mockk(),
                 )
 
             val oppgaveMediator =

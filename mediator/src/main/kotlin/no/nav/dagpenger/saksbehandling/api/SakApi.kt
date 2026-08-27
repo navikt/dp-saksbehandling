@@ -36,6 +36,16 @@ fun Route.sakApi(mediator: SakMediator) {
             }
         }
     }
+    authenticate("azureAd") {
+        route("behandling/{behandlingId}/flytt-til-ny-sak") {
+            post {
+                val personIdent = call.receive<PersonIdentDTO>()
+                val behandlingId = call.behandlingId()
+                mediator.flyttBehandlingTilNySak(personIdent.ident, behandlingId)
+                call.respondText { "Hurra" }
+            }
+        }
+    }
 }
 
 private fun ApplicationCall.behandlingId(): UUID =

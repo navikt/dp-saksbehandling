@@ -131,6 +131,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
 
             sakMediator.opprettSak(
@@ -168,6 +169,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
 
             sakMediator.opprettSak(
@@ -212,6 +214,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
@@ -246,6 +249,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
             sakMediator.opprettSak(
                 ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
@@ -281,6 +285,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
             val sak =
                 sakMediator.opprettSak(
@@ -354,6 +359,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
             val sak =
                 sakMediator.opprettSak(
@@ -420,6 +426,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
 
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
@@ -462,6 +469,7 @@ class SakMediatorTest {
                     every { it.hentSakHistorikk(testIdent) } returns mockSakHistorikk
                     every { it.lagre(mockSakHistorikk) } just Runs
                 },
+            behandlingKlient = mockk(),
             personMediator = mockk(relaxed = true),
             rapidsConnection = testRapid,
         ).also {
@@ -485,6 +493,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
 
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
@@ -524,6 +533,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
 
             val sak1 =
@@ -625,6 +635,7 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(DatabaseSession(ds)),
                             oppslag = oppslagMock,
                         ),
+                    behandlingKlient = mockk(),
                 )
 
             sakMediator.opprettSak(
@@ -706,6 +717,7 @@ class SakMediatorTest {
             personMediator = mockMediator,
             sakRepository = mockk(),
             rapidsConnection = testRapid,
+            behandlingKlient = mockk(),
         ).also {
             it.opprettSak(
                 ident = testIdent,
@@ -768,6 +780,7 @@ class SakMediatorTest {
             personMediator = mockMediator,
             sakRepository = mockk(),
             rapidsConnection = testRapid,
+            behandlingKlient = mockk(),
         ).also {
             shouldThrow<NødbremsetPersonException> {
                 it
