@@ -29,6 +29,13 @@ data class Sak(
     val opprettet: LocalDateTime,
     private val behandlinger: MutableSet<Behandling> = mutableSetOf(),
 ) {
+    constructor(vararg behandlinger: Behandling) : this(
+        opprettet = LocalDateTime.now(),
+        behandlinger = behandlinger.toMutableSet(),
+    )
+
+    fun hentBehandling(behandlingId: UUID): Behandling = behandlinger.single { it.behandlingId == behandlingId }
+
     fun behandlinger(): List<Behandling> = behandlinger.toList()
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)

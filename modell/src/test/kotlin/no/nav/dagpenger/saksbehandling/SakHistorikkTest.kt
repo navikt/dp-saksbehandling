@@ -1,4 +1,6 @@
 package no.nav.dagpenger.saksbehandling
+
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -97,5 +99,47 @@ class SakHistorikkTest {
         val behandlingId = sak.behandlinger().first().behandlingId
         sak.fjernBehandling(behandlingId)
         sak.behandlinger().any { it.behandlingId == behandlingId } shouldBe false
+    }
+
+    @Test
+    fun `flytter behandling til en ny sak`() {
+        val sak1 = Sak(behandling1, behandling2)
+
+        val sakHistorikk =
+            SakHistorikk(
+                person = person,
+                saker = mutableSetOf(sak1),
+            )
+
+        val nySak = sakHistorikk.flyttBehandlingTilNySak(behandling1.behandlingId)
+        sakHistorikk.alleSaker().size shouldBe 2
+        sakHistorikk.hentSak(sak1.sakId).behandlinger() shouldBe listOf(behandling2)
+        sakHistorikk.hentSak(nySak.sakId).behandlinger() shouldBe listOf(behandling1)
+    }
+
+    @Test
+    fun `kan hente sak på id`() {
+        val sakHistorikk = ModellTestHelper.lagSakHistorikk()
+        val sak = sakHistorikk.alleSaker().first()
+
+        sakHistorikk.hentSak(sak.sakId) shouldBe sak
+    }
+
+    @Test
+    fun `kaster feil når sak ikke finnes`() {
+        val sakHistorikk = ModellTestHelper.lagSakHistorikk()
+
+        shouldThrow<NoSuchElementException> {
+            sakHistorikk.hentSak(UUIDv7.ny())
+        }
+    }
+
+    @Test
+    fun `kaster feil ved flytting av ukjent behandling`() {
+        val sakHistorikk = ModellTestHelper.lagSakHistorikk()
+
+        shouldThrow<IllegalArgumentException> {
+            sakHistorikk.flyttBehandlingTilNySak(UUIDv7.ny())
+        }
     }
 }

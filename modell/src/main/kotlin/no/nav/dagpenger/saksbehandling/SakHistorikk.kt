@@ -25,7 +25,25 @@ data class SakHistorikk(
             .firstOrNull { it.behandlingId == behandlingId }
 
     fun fjernBehandlingFraEventuellTidligereSak(behandlingId: UUID) {
-        saker.firstOrNull { it.behandlinger().any { b -> b.behandlingId == behandlingId } }?.fjernBehandling(behandlingId)
+        saker
+            .firstOrNull { it.behandlinger().any { b -> b.behandlingId == behandlingId } }
+            ?.fjernBehandling(behandlingId)
+    }
+
+    fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
+        val eksisterendeSak =
+            requireNotNull(
+                saker.firstOrNull {
+                    it.behandlinger().any { b -> b.behandlingId == behandlingId }
+                },
+            ) { "Fant ikke sak for behandlingId: $behandlingId" }
+
+        val behandling = eksisterendeSak.hentBehandling(behandlingId)
+        eksisterendeSak.fjernBehandling(behandlingId)
+
+        return Sak(behandling).also {
+            this.leggTilSak(it)
+        }
     }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
@@ -82,4 +100,6 @@ data class SakHistorikk(
     }
 
     fun finnSak(function: (Sak) -> Boolean): Sak? = saker.firstOrNull(function)
+
+    fun hentSak(sakId: UUID): Sak = saker.single { it.sakId == sakId }
 }
