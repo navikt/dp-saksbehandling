@@ -145,4 +145,14 @@ class SakTest {
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
     }
+
+    @Test
+    fun `Skal kunne fjerne en behandling fra en sak`() {
+        val sak = Sak(opprettet = now)
+        sak.leggTilBehandling(behandling)
+        sak.behandlinger().size shouldBe 1
+
+        sak.fjernBehandling(behandling.behandlingId)
+        sak.behandlinger().size shouldBe 0
+    }
 }

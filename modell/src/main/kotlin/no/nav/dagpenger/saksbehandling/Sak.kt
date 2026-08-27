@@ -33,6 +33,8 @@ data class Sak(
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
 
+    fun fjernBehandling(behandlingId: UUID) = behandlinger.removeIf { it.behandlingId == behandlingId }
+
     fun erFerietilleggSak(): Boolean = behandlinger.any { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }
 
     private fun basertPåBehandlingErKnyttetTilSak(basertPåBehandlingId: UUID?): Boolean =

@@ -371,7 +371,9 @@ class PostgresSakRepository(
                         (id, person_id, utlost_av, sak_id, opprettet) 
                     VALUES
                         (:id, :person_id, :utlost_av, :sak_id, :opprettet) 
-                    ON CONFLICT (id) DO NOTHING 
+                    ON CONFLICT (id) DO UPDATE
+                    SET sak_id = EXCLUDED.sak_id
+                    WHERE behandling_v1.sak_id IS DISTINCT FROM EXCLUDED.sak_id
                     """.trimIndent(),
                 paramMap =
                     mapOf(

@@ -115,6 +115,8 @@ class SakMediator(
                 sakRepository.finnSakHistorikk(ident) ?: SakHistorikk(
                     person = person,
                 )
+
+            sakHistorikk.fjernBehandlingFraEventuellTidligereSak(behandling.behandlingId)
             sakHistorikk.leggTilSak(sak)
             sakRepository.lagre(sakHistorikk)
             sak
@@ -123,7 +125,7 @@ class SakMediator(
 
     fun knyttTilSak(
         behandlingOpprettetHendelse: BehandlingOpprettetHendelse,
-        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ): SakHistorikk {
         if (personMediator.erNødbremset(behandlingOpprettetHendelse.ident)) {
             throw NødbremsetPersonException(behandlingOpprettetHendelse.ident)
@@ -131,9 +133,9 @@ class SakMediator(
         val sakHistorikk = sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident)
         sakHistorikk.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
             sjekkResultat(
-                behandlingOpprettetHendelse.behandlingId,
-                behandlingOpprettetHendelse.javaClass.simpleName,
-                resultat,
+                behandlingId = behandlingOpprettetHendelse.behandlingId,
+                hendelseType = behandlingOpprettetHendelse.javaClass.simpleName,
+                resultat = resultat,
             )
         }
         sakRepository.lagre(sakHistorikk, ctx)
@@ -147,9 +149,9 @@ class SakMediator(
         sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(søknadsbehandlingOpprettetHendelse).also { resultat ->
                 sjekkResultat(
-                    søknadsbehandlingOpprettetHendelse.behandlingId,
-                    søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
+                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                    hendelseType = søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat = resultat,
                 )
             }
             sakRepository.lagre(it)
@@ -163,9 +165,9 @@ class SakMediator(
         sakRepository.hentSakHistorikk(hendelse.ident).also {
             it.knyttTilSak(hendelse).also { resultat ->
                 sjekkResultat(
-                    hendelse.behandlingId,
-                    hendelse.javaClass.simpleName,
-                    resultat,
+                    behandlingId = hendelse.behandlingId,
+                    hendelseType = hendelse.javaClass.simpleName,
+                    resultat = resultat,
                 )
             }
             sakRepository.lagre(it)

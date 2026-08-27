@@ -24,6 +24,10 @@ data class SakHistorikk(
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
 
+    fun fjernBehandlingFraEventuellTidligereSak(behandlingId: UUID) {
+        saker.firstOrNull { it.behandlinger().any { b -> b.behandlingId == behandlingId } }?.fjernBehandling(behandlingId)
+    }
+
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
         saker
             .map {
