@@ -82,7 +82,12 @@ class BehandlingHttpKlientTest {
                                     status = HttpStatusCode.OK,
                                 )
                             }
-
+                            "/behandling/$behandlingId/flytt" -> {
+                                respond(
+                                    content = "OK",
+                                    status = HttpStatusCode.Created,
+                                )
+                            }
                             else -> {
                                 respond(
                                     content = "Error",
@@ -94,6 +99,31 @@ class BehandlingHttpKlientTest {
                 registry = PrometheusRegistry(),
             ),
     )
+
+    @Test
+    fun `Kall til dp-behandling for å flytte en behandling til ny sak`() {
+        runBlocking {
+            val behandlingKlient = behandlingKlient()
+            behandlingKlient
+                .flytt(
+                    behandlingId = behandlingId,
+                    nyBasertPå = null,
+                    saksbehandlerToken = saksbehandlerToken,
+                ).getOrThrow() shouldBe Unit
+
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson
+                    """
+                    {
+                    "nyBasertPå": null
+                    }
+                    """.trimIndent()
+                it.headers[HttpHeaders.Authorization] shouldBe "Bearer $saksbehandlerToken"
+                it.headers[HttpHeaders.Accept] shouldBe "application/json"
+            }
+        }
+    }
 
     @Test
     fun `Kall til dp-behandling for å opprette revurdering behandling`() {
