@@ -1356,6 +1356,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /behandling/{behandlingId}/flytt-til-ny-sak:
+    post:
+      summary: Flytter en behandling til en ny sak
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdent'
+      responses:
+        '201':
+          description: Behandlingen ble flyttet til ny sak
+        '404':
+          description: Behandlingen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /person/siste-dagpenger-sak:
     post:
       summary: Hent siste dagpenger-sak for en person
