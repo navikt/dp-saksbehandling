@@ -10,6 +10,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -22,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -44,13 +46,13 @@ import javax.sql.DataSource
 
 class SakMediatorTest {
     private val testIdent = "12345678901"
-    private val behandlingskjedeId = UUIDv7.ny()
     private val søknadIdNyRett = UUIDv7.ny()
+    private val behandlingIdSøknadNyRett = UUIDv7.ny()
+    private val behandlingskjedeId = behandlingIdSøknadNyRett
     private val søknadIdGjenopptak = UUIDv7.ny()
     private val endaEnSøknadId = UUIDv7.ny()
     private val meldekortId = "123L"
     private val manuellId = UUIDv7.ny()
-    private val behandlingIdSøknadNyRett = UUIDv7.ny()
     private val behandlingIdSøknadGjenopptak = UUIDv7.ny()
     private val behandlingIdEndaEnSøknad = UUIDv7.ny()
     private val behandlingIdMeldekort = UUIDv7.ny()
@@ -152,6 +154,70 @@ class SakMediatorTest {
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
                     sak.behandlinger().single().utløstAv shouldBe Søknad
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal flytte behandling til ny sak`() {
+        withMigratedDb { ds ->
+
+            val behandlingKlientMock =
+                mockk<BehandlingKlient>().also {
+                    coEvery { it.flytt(any(), any(), any()) } returns Result.success(Unit)
+                }
+
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
+                    rapidsConnection = testRapid,
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
+                            oppslag = oppslagMock,
+                        ),
+                    behandlingKlient = behandlingKlientMock,
+                )
+
+            sakMediator.opprettSak(
+                ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
+                behandlingskjedeId = søknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
+                behandling =
+                    Behandling(
+                        behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
+                        opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
+                        hendelse = søknadsbehandlingOpprettetHendelseNyRett,
+                        utløstAv = Søknad,
+                    ),
+            )
+            sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelseGjenopptak)
+
+            runBlocking {
+                sakMediator.flyttBehandlingTilNySak(
+                    ident = søknadsbehandlingOpprettetHendelseGjenopptak.ident,
+                    behandlingId = søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId,
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
+                it.person.ident shouldBe testIdent
+                it.alleSaker().size shouldBe 2
+                it.alleSaker().last().sakId shouldBe søknadsbehandlingOpprettetHendelseNyRett.behandlingId
+                it
+                    .alleSaker()
+                    .last()
+                    .behandlinger()
+                    .single()
+                    .behandlingId shouldBe søknadsbehandlingOpprettetHendelseNyRett.behandlingId
+                it.alleSaker().first().sakId shouldBe søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId
+                it
+                    .alleSaker()
+                    .first()
+                    .behandlinger()
+                    .single()
+                    .behandlingId shouldBe
+                    søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId
             }
         }
     }

@@ -112,6 +112,7 @@ class SakHistorikkTest {
             )
 
         val nySak = sakHistorikk.flyttBehandlingTilNySak(behandling1.behandlingId)
+        nySak.sakId shouldBe behandling1.behandlingId
         sakHistorikk.alleSaker().size shouldBe 2
         sakHistorikk.hentSak(sak1.sakId).behandlinger() shouldBe listOf(behandling2)
         sakHistorikk.hentSak(nySak.sakId).behandlinger() shouldBe listOf(behandling1)

@@ -325,10 +325,11 @@ class SakMediator(
     suspend fun flyttBehandlingTilNySak(
         ident: String,
         behandlingId: UUID,
+        saksbehandlerToken: String,
     ) {
         val sakHistorikk = sakRepository.hentSakHistorikk(ident)
         val nySak = sakHistorikk.flyttBehandlingTilNySak(behandlingId)
-//        behandlingKlient.
+        behandlingKlient.flytt(behandlingId = behandlingId, nyBasertPå = null, saksbehandlerToken = saksbehandlerToken)
         sakRepository.lagre(sakHistorikk)
         logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId} for person $ident" }
     }

@@ -13,10 +13,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigMaskinToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -28,6 +34,7 @@ class SakApiTest {
     }
 
     private val behandlingId = UUIDv7.ny()
+    private val ident = "12345678901"
     private val sakId = UUIDv7.ny()
 
     @Test
@@ -84,7 +91,7 @@ class SakApiTest {
     fun `Skal returnere sakId når person har dagpenger-sak`() {
         val sakMediator =
             mockk<SakMediator>().also {
-                every { it.finnSisteDagpengeSakId("12345678901") } returns sakId
+                every { it.finnSisteDagpengeSakId(ident) } returns sakId
             }
         val token = gyldigMaskinToken()
         withSakApi(sakMediator) {
@@ -92,7 +99,7 @@ class SakApiTest {
                 .post("person/siste-dagpenger-sak") {
                     header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
-                    setBody("""{"ident": "12345678901"}""")
+                    setBody("""{"ident": "$ident"}""")
                 }.let {
                     it.status shouldBe HttpStatusCode.OK
                     it.bodyAsText() shouldBe sakId.toString()
@@ -118,12 +125,35 @@ class SakApiTest {
     }
 
     @Test
+    fun `Skal returnere 201 Created når behandling flyttes til ny sak`() {
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = TestHelper.saksbehandler.navIdent)
+        val sakMediator =
+            mockk<SakMediator>().also {
+                coEvery {
+                    it.flyttBehandlingTilNySak(
+                        ident = ident,
+                        behandlingId = behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } just Runs
+            }
+        withSakApi(sakMediator) {
+            client
+                .post("behandling/$behandlingId/flytt-til-ny-sak") {
+                    autentisert(token = saksbehandlerToken)
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"ident": "$ident"}""")
+                }.status shouldBe HttpStatusCode.Created
+        }
+    }
+
+    @Test
     fun `Skal kreve autentisering for siste-dagpenger-sak`() {
         withSakApi(mockk<SakMediator>()) {
             client
                 .post("person/siste-dagpenger-sak") {
                     contentType(ContentType.Application.Json)
-                    setBody("""{"ident": "12345678901"}""")
+                    setBody("""{"ident": "$ident"}""")
                 }.status shouldBe HttpStatusCode.Unauthorized
         }
     }

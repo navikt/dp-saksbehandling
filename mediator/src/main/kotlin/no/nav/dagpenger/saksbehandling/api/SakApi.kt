@@ -12,6 +12,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -41,8 +42,13 @@ fun Route.sakApi(mediator: SakMediator) {
             post {
                 val personIdent = call.receive<PersonIdentDTO>()
                 val behandlingId = call.behandlingId()
-                mediator.flyttBehandlingTilNySak(personIdent.ident, behandlingId)
-                call.respondText { "Hurra" }
+                val saksbehandlerToken = call.request.jwt()
+                mediator.flyttBehandlingTilNySak(
+                    ident = personIdent.ident,
+                    behandlingId = behandlingId,
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+                call.respond(HttpStatusCode.Created)
             }
         }
     }

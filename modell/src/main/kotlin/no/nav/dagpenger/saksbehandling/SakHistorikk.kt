@@ -24,12 +24,6 @@ data class SakHistorikk(
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
 
-    fun fjernBehandlingFraEventuellTidligereSak(behandlingId: UUID) {
-        saker
-            .firstOrNull { it.behandlinger().any { b -> b.behandlingId == behandlingId } }
-            ?.fjernBehandling(behandlingId)
-    }
-
     fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
         val eksisterendeSak =
             requireNotNull(
@@ -41,7 +35,11 @@ data class SakHistorikk(
         val behandling = eksisterendeSak.hentBehandling(behandlingId)
         eksisterendeSak.fjernBehandling(behandlingId)
 
-        return Sak(behandling).also {
+        return Sak(
+            sakId = behandling.behandlingId,
+            opprettet = behandling.opprettet,
+            behandlinger = mutableSetOf(behandling),
+        ).also {
             this.leggTilSak(it)
         }
     }

@@ -74,49 +74,6 @@ class PostgresSakRepository(
             )
         }
     }
-//
-//    override fun hentSakHistorikkForBehandling(behandlingId: UUID): SakHistorikk {
-//        val sakHistorikk = mutableListOf<SakHistorikk>()
-//
-//        return databaseSession.session { session ->
-//            session.run(
-//                queryOf(
-//                    //language=PostgreSQL
-//                    statement =
-//                        """
-//                        SELECT
-//                            per.id AS person_id,
-//                            sak.id AS sak_id,
-//                            sak.opprettet AS sak_opprettet,
-//                            beh.id AS behandling_id,
-//                            beh.utlost_av AS utlost_av,
-//                            beh.opprettet AS behandling_opprettet,
-//                            opp.id AS oppgave_id,
-//                            hen.hendelse_type AS hendelse_type,
-//                            hen.hendelse_data AS hendelse_data
-//                        FROM person_v1 per
-//                        JOIN sak_v2 sak ON sak.person_id = per.id
-//                        JOIN behandling_v1 beh ON beh.sak_id = sak.id
-//                        JOIN oppgave_v1 opp ON opp.behandling_id = beh.id
-//                        LEFT JOIN hendelse_v1 hen ON hen.behandling_id = beh.id
-//                        WHERE EXISTS (
-//                        SELECT 1
-//                        FROM   behandling_v1 be2
-//                        WHERE  be2.id = :behandling_id
-//                        AND    be2.person_id = per.id
-//                        )
-//                        ORDER BY sak.id DESC, beh.id DESC
-//                        """.trimIndent(),
-//                    paramMap =
-//                        mapOf(
-//                            "behandling_id" to behandlingId,
-//                        ),
-//                ).map { row ->
-//                    row.tilSakHistorikk(sakHistorikk)
-//                }.asSingle,
-//            )
-//        }
-//    }
 
     override fun finnSisteDagpengeSakId(ident: String): UUID? =
         databaseSession.session { session ->
