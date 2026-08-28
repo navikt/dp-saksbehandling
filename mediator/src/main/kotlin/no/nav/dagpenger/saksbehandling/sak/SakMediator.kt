@@ -144,7 +144,11 @@ class SakMediator(
     }
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        if (avbrytVedNødbremsetPerson(søknadsbehandlingOpprettetHendelse.ident, søknadsbehandlingOpprettetHendelse.behandlingId)) {
+        if (avbrytVedNødbremsetPerson(
+                ident = søknadsbehandlingOpprettetHendelse.ident,
+                behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+            )
+        ) {
             throw NødbremsetPersonException(søknadsbehandlingOpprettetHendelse.ident)
         }
         sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
@@ -329,8 +333,14 @@ class SakMediator(
     ) {
         val sakHistorikk = sakRepository.hentSakHistorikk(ident)
         val nySak = sakHistorikk.flyttBehandlingTilNySak(behandlingId)
-        behandlingKlient.flytt(behandlingId = behandlingId, nyBasertPå = null, saksbehandlerToken = saksbehandlerToken)
-        sakRepository.lagre(sakHistorikk)
-        logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId} for person $ident" }
+        behandlingKlient
+            .flytt(
+                behandlingId = behandlingId,
+                nyBasertPå = null,
+                saksbehandlerToken = saksbehandlerToken,
+            ).onSuccess {
+                sakRepository.lagre(sakHistorikk)
+            }.getOrThrow()
+        logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId}" }
     }
 }

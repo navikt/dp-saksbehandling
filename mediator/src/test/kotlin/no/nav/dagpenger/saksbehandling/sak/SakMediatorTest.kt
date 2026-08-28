@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -218,6 +219,63 @@ class SakMediatorTest {
                     .single()
                     .behandlingId shouldBe
                     søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId
+            }
+        }
+    }
+
+    @Test
+    fun `Skal ikke lagre sakshistorikk hvis kall til regelmotor feiler ved flytte behandling til ny sak`() {
+        withMigratedDb { ds ->
+
+            val behandlingKlientMock =
+                mockk<BehandlingKlient>().also {
+                    coEvery { it.flytt(any(), any(), any()) } returns
+                        Result.failure(BehandlingException("Feil ved flytting av behandling", 500))
+                }
+
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
+                    rapidsConnection = testRapid,
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
+                            oppslag = oppslagMock,
+                        ),
+                    behandlingKlient = behandlingKlientMock,
+                )
+
+            sakMediator.opprettSak(
+                ident = søknadsbehandlingOpprettetHendelseNyRett.ident,
+                behandlingskjedeId = søknadsbehandlingOpprettetHendelseNyRett.behandlingskjedeId!!,
+                behandling =
+                    Behandling(
+                        behandlingId = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
+                        opprettet = søknadsbehandlingOpprettetHendelseNyRett.opprettet,
+                        hendelse = søknadsbehandlingOpprettetHendelseNyRett,
+                        utløstAv = Søknad,
+                    ),
+            )
+            sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelseGjenopptak)
+
+            runBlocking {
+                shouldThrow<BehandlingException> {
+                    sakMediator.flyttBehandlingTilNySak(
+                        ident = søknadsbehandlingOpprettetHendelseGjenopptak.ident,
+                        behandlingId = søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId,
+                        saksbehandlerToken = "token",
+                    )
+                }
+            }
+
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
+                it.person.ident shouldBe testIdent
+                it.alleSaker().size shouldBe 1
+                it
+                    .alleSaker()
+                    .single()
+                    .behandlinger()
+                    .size shouldBe 2
             }
         }
     }
