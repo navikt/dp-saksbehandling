@@ -30,10 +30,9 @@ internal class BehandlingsresultatMottakForSak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        if (behandlingsresultat.nyDagpengerettInnvilget().also {
-                logger.info { "BehandlingsresultatMottakForSak med utfall: $it. Basert på $behandlingsresultat" }
-            }
-        ) {
+        logger.info { "BehandlingsresultatMottakForSak basert på $behandlingsresultat" }
+
+        if (behandlingsresultat.vedtakFattetINySak()) {
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
             logger.info { "Vedtak skal tilhøre dp-sak " }
             val vedtakFattetHendelse =

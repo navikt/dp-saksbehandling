@@ -40,10 +40,10 @@ internal class BehandlingsresultatMottakForUtsending(
         }
 
         val skalStarteUtsending =
-            (behandlingsresultat.nyDagpengerettInnvilget() || dagpengerSakId != null).also {
+            (behandlingsresultat.vedtakFattetINySak() || dagpengerSakId != null).also {
                 logger.info {
                     "BehandlingsresultatMottakForUtsending med utfall: $it. Basert på $behandlingsresultat".also { msg ->
-                        if (!behandlingsresultat.nyDagpengerettInnvilget()) {
+                        if (!behandlingsresultat.vedtakFattetINySak()) {
                             msg.plus("DagpengerSakId: $dagpengerSakId")
                         }
                     }
