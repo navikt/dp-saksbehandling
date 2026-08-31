@@ -8,6 +8,8 @@ servers:
     description: dev
   - url: https://dp-saksbehandling # Service discovery internt i clusteret
     description: prod
+security:
+  - azureAd: [ ]
 paths:
   /oppfolging:
     post:
