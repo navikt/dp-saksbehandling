@@ -68,7 +68,7 @@ class BehandlingsresultatMottakForSakTest {
     }
 
     @Test
-    fun `Skal ikke markere er_dp_sak deroms behandling resultat er innvilgelse av gjenopptak`() {
+    fun `Skal ikke markere er_dp_sak dersom behandling resultat er innvilgelse av gjenopptak`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
         BehandlingsresultatMottakForSak(
@@ -86,7 +86,7 @@ class BehandlingsresultatMottakForSakTest {
     }
 
     @Test
-    fun `Skal ikke markere er_dp_sak ved avslag på søknad`() {
+    fun `Skal ikke markere er_dp_sak dersom behandling resultat er avslag av gjenopptak`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
         BehandlingsresultatMottakForSak(
@@ -95,12 +95,50 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultatJson(harRett = false))
+        testRapid.sendTestMessage(behandlingsresultatJson(harRett = false, basertPå = UUIDv7.ny()))
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
         }
         testRapid.inspektør.size shouldBe 0
+    }
+
+    @Test
+    fun `Skal markere er_dp_sak og publisere melding om vedtak fattet utenfor Arena ved avslag på ny søknad`() {
+        val hendelse = slot<VedtakFattetHendelse>()
+        val sakMediatorMock =
+            mockk<SakMediator>().also {
+                every { it.merkSakenSomDpSak(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+            }
+        BehandlingsresultatMottakForSak(
+            rapidsConnection = testRapid,
+            sakRepository = sakRepositoryMock,
+            sakMediator = sakMediatorMock,
+        )
+
+        testRapid.sendTestMessage(behandlingsresultatJson(harRett = false))
+
+        verify(exactly = 1) {
+            sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
+        }
+        hendelse.captured.ident shouldBe ident
+        hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.sak.let {
+            require(it != null)
+            it.id shouldBe sakId.toString()
+        }
+
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).also { message ->
+            message["@event_name"].stringValue() shouldBe "vedtak_fattet_utenfor_arena"
+            message["behandlingId"].stringValue() shouldBe behandlingId.toString()
+            message["sakId"].stringValue() shouldBe sakId.toString()
+            message["ident"].stringValue() shouldBe ident
+        }
     }
 
     @Test

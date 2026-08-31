@@ -157,11 +157,7 @@ internal data class Behandlingsresultat(
                 } ?: emptyList(),
     )
 
-    private fun dagpengerInnvilget(): Boolean =
-        behandletHendelseType == "Søknad" &&
-            rettighetsperioder.any { it.harRett }
-
-    fun nyDagpengerettInnvilget(): Boolean = basertPåBehandlingId == null && dagpengerInnvilget()
+    fun vedtakFattetINySak(): Boolean = behandletHendelseType == "Søknad" && basertPåBehandlingId == null && rettighetsperioder.isNotEmpty()
 
     data class Rettighetsperiode(
         val harRett: Boolean,

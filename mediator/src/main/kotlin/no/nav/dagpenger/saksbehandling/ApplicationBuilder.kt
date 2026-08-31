@@ -84,6 +84,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForAutomatiskVedtakUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
@@ -298,12 +299,11 @@ internal class ApplicationBuilder(
                     utsendingMediator = utsendingMediator,
                     sakRepository = sakRepository,
                 )
-// TODO: Kommenter inn når vi skal skru av fatting av vedtak mot Arena.
-//                BehandlingsresultatMottakForAutomatiskVedtakUtsending(
-//                        rapidsConnection = rapid,
-//                        utsendingMediator = utsendingMediator,
-//                        sakRepository = sakRepository,
-//                    )
+                BehandlingsresultatMottakForAutomatiskVedtakUtsending(
+                    rapidsConnection = rapid,
+                    utsendingMediator = utsendingMediator,
+                    sakRepository = sakRepository,
+                )
                 BehandlingsresultatMottakForSak(
                     rapidsConnection = rapid,
                     sakRepository = sakRepository,
