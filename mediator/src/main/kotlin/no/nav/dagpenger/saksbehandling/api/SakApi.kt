@@ -12,6 +12,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
@@ -33,6 +34,21 @@ fun Route.sakApi(mediator: SakMediator) {
                 call.respondText { sakId.toString() }
             } else {
                 call.respond(HttpStatusCode.NotFound)
+            }
+        }
+    }
+    authenticate("azureAd") {
+        route("behandling/{behandlingId}/flytt-til-ny-sak") {
+            post {
+                val personIdent = call.receive<PersonIdentDTO>()
+                val behandlingId = call.behandlingId()
+                val saksbehandlerToken = call.request.jwt()
+                mediator.flyttBehandlingTilNySak(
+                    ident = personIdent.ident,
+                    behandlingId = behandlingId,
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+                call.respond(HttpStatusCode.Created)
             }
         }
     }

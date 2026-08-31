@@ -24,6 +24,26 @@ data class SakHistorikk(
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
 
+    fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
+        val eksisterendeSak =
+            requireNotNull(
+                saker.firstOrNull {
+                    it.behandlinger().any { b -> b.behandlingId == behandlingId }
+                },
+            ) { "Fant ikke sak for behandlingId: $behandlingId" }
+
+        val behandling = eksisterendeSak.hentBehandling(behandlingId)
+        eksisterendeSak.fjernBehandling(behandlingId)
+
+        return Sak(
+            sakId = behandling.behandlingId,
+            opprettet = behandling.opprettet,
+            behandlinger = mutableSetOf(behandling),
+        ).also {
+            this.leggTilSak(it)
+        }
+    }
+
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
         saker
             .map {
@@ -78,4 +98,6 @@ data class SakHistorikk(
     }
 
     fun finnSak(function: (Sak) -> Boolean): Sak? = saker.firstOrNull(function)
+
+    fun hentSak(sakId: UUID): Sak = saker.single { it.sakId == sakId }
 }

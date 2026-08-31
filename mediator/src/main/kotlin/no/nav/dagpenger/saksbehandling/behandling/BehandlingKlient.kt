@@ -52,6 +52,12 @@ interface BehandlingKlient {
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
+
+    suspend fun flytt(
+        behandlingId: UUID,
+        nyBasertPå: UUID?,
+        saksbehandlerToken: String,
+    ): Result<Unit>
 }
 
 internal class BehandlingHttpKlient(
@@ -95,6 +101,34 @@ internal class BehandlingHttpKlient(
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit> = kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
+
+    override suspend fun flytt(
+        behandlingId: UUID,
+        nyBasertPå: UUID?,
+        saksbehandlerToken: String,
+    ): Result<Unit> {
+        val urlString = "$dpBehandlingApiUrl/behandling/$behandlingId/flytt"
+
+        return try {
+            httpClient
+                .post(urlString = urlString) {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(mapOf("nyBasertPå" to nyBasertPå))
+                }.let {
+                    val statuskode = it.status.value
+                    logger.info { "Kall til dp-behandling: $urlString returnerte status $statuskode" }
+                    when (statuskode) {
+                        201 -> Result.success(Unit)
+                        else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
+                    }
+                }
+        } catch (e: Exception) {
+            logger.error { "Feil mot dp-behandling for endepunkt: $urlString med ${e.message}" }
+            Result.failure(BehandlingException(e.message, 500))
+        }
+    }
 
     override fun opprettBehandling(
         opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,

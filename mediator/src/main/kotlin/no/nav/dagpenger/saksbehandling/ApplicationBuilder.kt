@@ -170,6 +170,7 @@ internal class ApplicationBuilder(
                         personMediator = personMediator,
                         sakRepository = sakRepository,
                         rapidsConnection = rapid,
+                        behandlingKlient = behandlingKlient,
                     )
                 val utsendingMediator =
                     UtsendingMediator(

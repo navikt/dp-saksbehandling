@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.db.person.AdresseBeeskyttetPersonException
@@ -29,6 +30,7 @@ class SakMediator(
     private val personMediator: PersonMediator,
     private val sakRepository: SakRepository,
     private val rapidsConnection: RapidsConnection,
+    private val behandlingKlient: BehandlingKlient,
 ) {
     fun hentSakHistorikk(ident: String): SakHistorikk = sakRepository.hentSakHistorikk(ident)
 
@@ -115,6 +117,7 @@ class SakMediator(
                 sakRepository.finnSakHistorikk(ident) ?: SakHistorikk(
                     person = person,
                 )
+
             sakHistorikk.leggTilSak(sak)
             sakRepository.lagre(sakHistorikk)
             sak
@@ -123,7 +126,7 @@ class SakMediator(
 
     fun knyttTilSak(
         behandlingOpprettetHendelse: BehandlingOpprettetHendelse,
-        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+        ctx: Transaksjonskontekst = IkkeAktiv,
     ): SakHistorikk {
         if (personMediator.erNødbremset(behandlingOpprettetHendelse.ident)) {
             throw NødbremsetPersonException(behandlingOpprettetHendelse.ident)
@@ -131,9 +134,9 @@ class SakMediator(
         val sakHistorikk = sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident)
         sakHistorikk.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also { resultat ->
             sjekkResultat(
-                behandlingOpprettetHendelse.behandlingId,
-                behandlingOpprettetHendelse.javaClass.simpleName,
-                resultat,
+                behandlingId = behandlingOpprettetHendelse.behandlingId,
+                hendelseType = behandlingOpprettetHendelse.javaClass.simpleName,
+                resultat = resultat,
             )
         }
         sakRepository.lagre(sakHistorikk, ctx)
@@ -141,15 +144,19 @@ class SakMediator(
     }
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        if (avbrytVedNødbremsetPerson(søknadsbehandlingOpprettetHendelse.ident, søknadsbehandlingOpprettetHendelse.behandlingId)) {
+        if (avbrytVedNødbremsetPerson(
+                ident = søknadsbehandlingOpprettetHendelse.ident,
+                behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+            )
+        ) {
             throw NødbremsetPersonException(søknadsbehandlingOpprettetHendelse.ident)
         }
         sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(søknadsbehandlingOpprettetHendelse).also { resultat ->
                 sjekkResultat(
-                    søknadsbehandlingOpprettetHendelse.behandlingId,
-                    søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
-                    resultat,
+                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                    hendelseType = søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat = resultat,
                 )
             }
             sakRepository.lagre(it)
@@ -163,9 +170,9 @@ class SakMediator(
         sakRepository.hentSakHistorikk(hendelse.ident).also {
             it.knyttTilSak(hendelse).also { resultat ->
                 sjekkResultat(
-                    hendelse.behandlingId,
-                    hendelse.javaClass.simpleName,
-                    resultat,
+                    behandlingId = hendelse.behandlingId,
+                    hendelseType = hendelse.javaClass.simpleName,
+                    resultat = resultat,
                 )
             }
             sakRepository.lagre(it)
@@ -317,5 +324,23 @@ class SakMediator(
             )
         }
         return erNødbremset
+    }
+
+    suspend fun flyttBehandlingTilNySak(
+        ident: String,
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+    ) {
+        val sakHistorikk = sakRepository.hentSakHistorikk(ident)
+        val nySak = sakHistorikk.flyttBehandlingTilNySak(behandlingId)
+        behandlingKlient
+            .flytt(
+                behandlingId = behandlingId,
+                nyBasertPå = null,
+                saksbehandlerToken = saksbehandlerToken,
+            ).onSuccess {
+                sakRepository.lagre(sakHistorikk)
+            }.getOrThrow()
+        logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId}" }
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
@@ -31,6 +32,24 @@ class SakTest {
             opprettet = now,
             hendelse = TomHendelse,
         )
+
+    @Test
+    fun `kan opprette sak med behandlinger og hente behandling på id`() {
+        val annenBehandling = behandling.copy(behandlingId = UUIDv7.ny())
+        val sak = Sak(behandling, annenBehandling)
+
+        sak.behandlinger().toSet() shouldBe setOf(behandling, annenBehandling)
+        sak.hentBehandling(annenBehandling.behandlingId) shouldBe annenBehandling
+    }
+
+    @Test
+    fun `kaster feil når behandling ikke finnes`() {
+        val sak = Sak(behandling)
+
+        shouldThrow<NoSuchElementException> {
+            sak.hentBehandling(UUIDv7.ny())
+        }
+    }
 
     @Test
     fun `knyttTilSak med SøknadsbehandlingOpprettetHendelse`() {
@@ -144,5 +163,15 @@ class SakTest {
                 type = HendelseBehandler.DpBehandling.Søknad,
             ),
         ) shouldBe KnyttTilSakResultat.KnyttetTilSak(sak)
+    }
+
+    @Test
+    fun `Skal kunne fjerne en behandling fra en sak`() {
+        val sak = Sak(opprettet = now)
+        sak.leggTilBehandling(behandling)
+        sak.behandlinger().size shouldBe 1
+
+        sak.fjernBehandling(behandling.behandlingId)
+        sak.behandlinger().size shouldBe 0
     }
 }

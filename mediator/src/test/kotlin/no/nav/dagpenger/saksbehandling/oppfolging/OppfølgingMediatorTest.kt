@@ -43,6 +43,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
@@ -123,6 +124,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
@@ -188,6 +190,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
@@ -249,6 +252,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
@@ -322,6 +326,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(DatabaseSession(ds)),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveMediator =
@@ -393,6 +398,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 mockk<OppgaveMediator>().also {
@@ -436,6 +442,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
@@ -531,6 +538,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 OppgaveMediator(
@@ -610,6 +618,7 @@ class OppfølgingMediatorTest {
                     personMediator = personMediator,
                     sakRepository = PostgresSakRepository(databaseSession),
                     rapidsConnection = mockk(relaxed = true),
+                    behandlingKlient = mockk(),
                 )
             val oppgaveMediator =
                 OppgaveMediator(

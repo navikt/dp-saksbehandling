@@ -127,6 +127,18 @@ class PostgresSakRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne flytte en behandling fra en sak og starte ny sak`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
+            sakRepository.lagre(sakHistorikk)
+            this.leggTilOppgave(oppgaveId, behandling1iSak1.behandlingId)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+
+            sakHistorikkFraDB shouldBe sakHistorikk
+        }
+    }
+
+    @Test
     fun `Skal merke sak som dp-sak hvis behandling er Ferietillegg, men skal ikke hentes ifm siste sak`() {
         DBTestHelper.withPerson(person) { dataSource ->
             val behandlingIdFerietillegg = UUIDv7.ny()
