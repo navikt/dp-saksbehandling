@@ -82,12 +82,14 @@ class BehandlingHttpKlientTest {
                                     status = HttpStatusCode.OK,
                                 )
                             }
+
                             "/behandling/$behandlingId/flytt" -> {
                                 respond(
                                     content = "OK",
-                                    status = HttpStatusCode.Created,
+                                    status = HttpStatusCode.Accepted,
                                 )
                             }
+
                             else -> {
                                 respond(
                                     content = "Error",

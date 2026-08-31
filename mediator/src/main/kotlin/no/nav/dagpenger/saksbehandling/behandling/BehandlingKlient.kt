@@ -120,7 +120,7 @@ internal class BehandlingHttpKlient(
                     val statuskode = it.status.value
                     logger.info { "Kall til dp-behandling: $urlString returnerte status $statuskode" }
                     when (statuskode) {
-                        201 -> Result.success(Unit)
+                        202 -> Result.success(Unit)
                         else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
                     }
                 }
