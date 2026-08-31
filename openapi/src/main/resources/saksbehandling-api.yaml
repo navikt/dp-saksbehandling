@@ -1359,6 +1359,8 @@ paths:
   /behandling/{behandlingId}/flytt-til-ny-sak:
     post:
       summary: Flytter en behandling til en ny sak
+      security:
+        - azureAd: []
       parameters:
         - in: path
           name: behandlingId
