@@ -12,6 +12,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.SakHistorikk.BehandlingHarAlleredeStartetSakException
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -158,6 +159,21 @@ fun Application.statusPages() {
                             type =
                                 URI
                                     .create("dagpenger.nav.no/saksbehandling:problem:oppgave-eies-av-annen-behandler")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.Conflict, problem)
+                }
+
+                is BehandlingHarAlleredeStartetSakException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Behandlingen har allerede startet en ny sak. Operasjon kan ikke utføres.",
+                            detail = cause.message,
+                            status = HttpStatusCode.Conflict.value,
+                            instance = call.request.path(),
+                            type =
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:behandling-har-allerede-startet-sak")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)

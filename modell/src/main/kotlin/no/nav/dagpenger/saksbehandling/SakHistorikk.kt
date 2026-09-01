@@ -24,15 +24,27 @@ data class SakHistorikk(
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
 
-    fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
-        val eksisterendeSak =
-            requireNotNull(
-                saker.singleOrNull {
-                    it.behandlinger().any { b -> b.behandlingId == behandlingId }
-                },
-            ) { "Fant ikke sak for behandlingId: $behandlingId" }
+    private fun hentEksisterendeSakForBehandling(behandlingId: UUID): Sak =
+        try {
+            saker.single {
+                it.behandlinger().filter { b -> b.behandlingId == behandlingId }.let {
+                    when (it.size) {
+                        0 -> throw NoSuchElementException("Fant ikke sak for behandlingId: $behandlingId")
+                        1 -> true
+                        else -> throw IllegalStateException("Fant flere saker for behandlingId: $behandlingId")
+                    }
+                }
+            }
+        } catch (e: NoSuchElementException) {
+            throw IllegalArgumentException("Fant ikke sak for behandlingId: $behandlingId", e)
+        }
 
-        require(eksisterendeSak.sakId != behandlingId) { "BehandlingId: $behandlingId er allerede en sakId" }
+    fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
+        val eksisterendeSak = hentEksisterendeSakForBehandling(behandlingId)
+
+        if (eksisterendeSak.sakId == behandlingId) {
+            throw BehandlingHarAlleredeStartetSakException("Behandlingen har allerede startet en ny sak")
+        }
         val behandling = eksisterendeSak.hentBehandling(behandlingId)
         eksisterendeSak.fjernBehandling(behandlingId)
 
@@ -101,4 +113,8 @@ data class SakHistorikk(
     fun finnSak(function: (Sak) -> Boolean): Sak? = saker.firstOrNull(function)
 
     fun hentSak(sakId: UUID): Sak = saker.single { it.sakId == sakId }
+
+    class BehandlingHarAlleredeStartetSakException(
+        message: String,
+    ) : RuntimeException(message)
 }

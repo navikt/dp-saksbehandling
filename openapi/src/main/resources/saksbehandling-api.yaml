@@ -1385,6 +1385,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Behandlingen har allerede ført til en ny sak
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         default:
           description: Feil
           content:
