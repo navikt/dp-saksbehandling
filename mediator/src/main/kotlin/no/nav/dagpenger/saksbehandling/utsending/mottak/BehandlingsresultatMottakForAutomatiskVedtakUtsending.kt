@@ -37,7 +37,8 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
     ) {
         val skipSetBehandlingId = setOf<UUID>(UUID.fromString("01a05bcc-9ee5-7175-9d57-ef52e15ffa9b"))
         if (behandlingsresultat.behandlingId in skipSetBehandlingId) {
-            logger.info { "Skipper behandlingId: ${behandlingsresultat.behandlingId} fra BehandlingsresultatMottakForAutomatiskVedtakUtsending" }
+            logger.info { "Skipper behandlingId: ${behandlingsresultat.behandlingId} fra " +
+                    "BehandlingsresultatMottakForAutomatiskVedtakUtsending" }
             return
         }
         val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
