@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -219,6 +220,24 @@ class SakMediatorTest {
                     .single()
                     .behandlingId shouldBe
                     søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId
+            }
+
+            shouldThrow<SakHistorikk.BehandlingHarAlleredeStartetSakException> {
+                runBlocking {
+                    sakMediator.flyttBehandlingTilNySak(
+                        ident = søknadsbehandlingOpprettetHendelseGjenopptak.ident,
+                        behandlingId = søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId,
+                        saksbehandlerToken = "token",
+                    )
+                }
+            }
+
+            coVerify(exactly = 1) {
+                behandlingKlientMock.flytt(
+                    behandlingId = any(),
+                    nyBasertPå = any(),
+                    saksbehandlerToken = any(),
+                )
             }
         }
     }

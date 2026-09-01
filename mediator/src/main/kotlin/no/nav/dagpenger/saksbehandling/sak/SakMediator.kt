@@ -333,14 +333,16 @@ class SakMediator(
     ) {
         val sakHistorikk = sakRepository.hentSakHistorikk(ident)
         val nySak = sakHistorikk.flyttBehandlingTilNySak(behandlingId)
-        behandlingKlient
-            .flytt(
-                behandlingId = behandlingId,
-                nyBasertPå = null,
-                saksbehandlerToken = saksbehandlerToken,
-            ).onSuccess {
-                sakRepository.lagre(sakHistorikk)
-            }.getOrThrow()
-        logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId}" }
+        if (nySak != null) {
+            behandlingKlient
+                .flytt(
+                    behandlingId = behandlingId,
+                    nyBasertPå = null,
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess {
+                    sakRepository.lagre(sakHistorikk)
+                }.getOrThrow()
+            logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId}" }
+        }
     }
 }
