@@ -25,23 +25,12 @@ data class SakHistorikk(
             .firstOrNull { it.behandlingId == behandlingId }
 
     private fun hentEksisterendeSakForBehandling(behandlingId: UUID): Sak =
-        try {
-            saker.single {
-                it.behandlinger().filter { b -> b.behandlingId == behandlingId }.let {
-                    when (it.size) {
-                        0 -> throw NoSuchElementException("Fant ikke sak for behandlingId: $behandlingId")
-                        1 -> true
-                        else -> throw IllegalStateException("Fant flere saker for behandlingId: $behandlingId")
-                    }
-                }
-            }
-        } catch (e: NoSuchElementException) {
-            throw IllegalArgumentException("Fant ikke sak for behandlingId: $behandlingId", e)
+        requireNotNull(saker.singleOrNull { it.behandlinger().any { b -> b.behandlingId == behandlingId } }) {
+            "Fant ikke sak for behandling $behandlingId"
         }
 
     fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
         val eksisterendeSak = hentEksisterendeSakForBehandling(behandlingId)
-
         if (eksisterendeSak.sakId == behandlingId) {
             throw BehandlingHarAlleredeStartetSakException("Behandlingen har allerede startet en ny sak")
         }

@@ -45,7 +45,6 @@ class SakTest {
     @Test
     fun `kaster feil når behandling ikke finnes`() {
         val sak = Sak(behandling)
-
         shouldThrow<NoSuchElementException> {
             sak.hentBehandling(UUIDv7.ny())
         }
