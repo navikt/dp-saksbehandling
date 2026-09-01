@@ -27,11 +27,12 @@ data class SakHistorikk(
     fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
         val eksisterendeSak =
             requireNotNull(
-                saker.firstOrNull {
+                saker.singleOrNull {
                     it.behandlinger().any { b -> b.behandlingId == behandlingId }
                 },
             ) { "Fant ikke sak for behandlingId: $behandlingId" }
 
+        require(eksisterendeSak.sakId != behandlingId) { "BehandlingId: $behandlingId er allerede en sakId" }
         val behandling = eksisterendeSak.hentBehandling(behandlingId)
         eksisterendeSak.fjernBehandling(behandlingId)
 

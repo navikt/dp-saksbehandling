@@ -92,6 +92,26 @@ class BehandlingsresultatMottakForUtsendingTest {
     }
 
     @Test
+    fun `Skal ikke håndtere automatiske behandlinger`() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>()
+
+        BehandlingsresultatMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository =
+                mockk<SakRepository>().also {
+                    every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
+                },
+        )
+
+        testRapid.sendTestMessage(behandlingsresultat(automatiskBehandling = true))
+
+        verify(exactly = 0) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        }
+    }
+
+    @Test
     fun `Skal ikke håndtere avslag på gjenopptak som ikke tilhører dp-sak`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
@@ -223,6 +243,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
+        automatiskBehandling: Boolean = false,
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
         basertPå: java.util.UUID? = null,
@@ -233,6 +254,7 @@ class BehandlingsresultatMottakForUtsendingTest {
             behandlingId = behandlingId,
             behandletHendelseId = søknadId,
             behandletHendelseType = behandletHendelseType,
+            automatiskBehandling = automatiskBehandling,
             harRett = harRett,
             basertPå = basertPå,
             eventNavn = eventNavn,

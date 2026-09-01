@@ -24,6 +24,10 @@ internal class BehandlingsresultatMottakForUtsending(
 
     override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry")
 
+    override fun JsonMessage.valideringsregler() {
+        this.requireValue("automatisk", false)
+    }
+
     override fun håndter(
         behandlingsresultat: Behandlingsresultat,
         packet: JsonMessage,
@@ -34,7 +38,7 @@ internal class BehandlingsresultatMottakForUtsending(
         val dagpengerSakId by lazy {
             try {
                 sakRepository.hentDagpengerSakIdForBehandlingId(behandlingsresultat.behandlingId)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
         }
