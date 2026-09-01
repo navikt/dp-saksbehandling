@@ -1,9 +1,12 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 data class SakHistorikk(
     val person: Person,
@@ -32,8 +35,10 @@ data class SakHistorikk(
     fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
         val eksisterendeSak = hentEksisterendeSakForBehandling(behandlingId)
         if (eksisterendeSak.sakId == behandlingId) {
+            logger.warn { "Behandlingen $behandlingId har allerede startet en ny sak. Flyttes ikke på nytt." }
             throw BehandlingHarAlleredeStartetSakException("Behandlingen har allerede startet en ny sak")
         }
+        logger.info { "Flytter behandling $behandlingId fra sak ${eksisterendeSak.sakId} til ny sak" }
         val behandling = eksisterendeSak.hentBehandling(behandlingId)
         eksisterendeSak.fjernBehandling(behandlingId)
 

@@ -102,7 +102,7 @@ class SakHistorikkTest {
     }
 
     @Test
-    fun `flytter behandling til en ny sak`() {
+    fun `Flytter behandling til en ny sak - skal bare kunne gjøres en gang`() {
         val sak1 = Sak(behandling1, behandling2)
 
         val sakHistorikk =
@@ -116,6 +116,10 @@ class SakHistorikkTest {
         sakHistorikk.alleSaker().size shouldBe 2
         sakHistorikk.hentSak(sak1.sakId).behandlinger() shouldBe listOf(behandling2)
         sakHistorikk.hentSak(nySak.sakId).behandlinger() shouldBe listOf(behandling1)
+
+        shouldThrow<SakHistorikk.BehandlingHarAlleredeStartetSakException> {
+            sakHistorikk.flyttBehandlingTilNySak(behandling1.behandlingId)
+        }
     }
 
     @Test
