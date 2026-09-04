@@ -38,6 +38,7 @@ data class Søkefilter(
         UTLOST_AV,
         STATUS,
         SAKSBEHANDLER,
+        BESLUTTER,
         UTSATT_TIL,
         ;
 
@@ -47,6 +48,7 @@ data class Søkefilter(
                     "utlostav" -> UTLOST_AV
                     "status" -> STATUS
                     "saksbehandler" -> SAKSBEHANDLER
+                    "beslutter" -> BESLUTTER
                     "utsatttil" -> UTSATT_TIL
                     else -> OPPRETTET
                 }
@@ -261,9 +263,3 @@ class FilterBuilder {
 
     fun sortering(): Søkefilter.Sortering = Søkefilter.Sortering.fra(stringValues["sortering"])
 }
-
-private fun Set<String>.grupperEmneknaggPerKategori(): Map<String, Set<String>> =
-    this
-        .groupBy { visningsNavn ->
-            hentEmneknaggKategori(visningsNavn).name
-        }.mapValues { it.value.toSet() }

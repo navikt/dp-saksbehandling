@@ -47,6 +47,7 @@ import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMotta
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.Base64
 
 class UtsendingMediatorTest {
@@ -58,7 +59,7 @@ class UtsendingMediatorTest {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                opprettet = LocalDateTime.now(),
+                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
                 hendelse = TomHendelse,
             )
         val person = TestHelper.testPerson
@@ -224,7 +225,7 @@ class UtsendingMediatorTest {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                opprettet = LocalDateTime.now(),
+                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
                 hendelse = TomHendelse,
             )
         val person = TestHelper.testPerson
@@ -392,7 +393,7 @@ class UtsendingMediatorTest {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                opprettet = LocalDateTime.now(),
+                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
                 hendelse = TomHendelse,
             )
         val person = TestHelper.testPerson
@@ -540,7 +541,7 @@ class UtsendingMediatorTest {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = HendelseBehandler.Intern.Klage,
-                opprettet = LocalDateTime.now(),
+                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
                 hendelse = TomHendelse,
             )
         val person = lagPerson()
@@ -682,7 +683,7 @@ class UtsendingMediatorTest {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 utløstAv = HendelseBehandler.Intern.Klage,
-                opprettet = LocalDateTime.now(),
+                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
                 hendelse = TomHendelse,
             )
         val person = lagPerson()

@@ -1763,7 +1763,8 @@ class PostgresOppgaveRepositoryTest {
                     adressebeskyttelseGradering = UGRADERT,
                     inhabileNavIdenter = emptyList(),
                 )
-            val oppgaveForNødbremset = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1), person = nødbremsetPerson)
+            val oppgaveForNødbremset =
+                this.leggTilOppgave(opprettet = opprettetNå.minusDays(1), person = nødbremsetPerson)
             sakRepo.hentSakIdForBehandlingId(oppgaveForNødbremset.behandling.behandlingId).let { sakId ->
                 sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
             }
@@ -2240,6 +2241,127 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver[1] shouldBe oppgaveBj
                     it.oppgaver[2] shouldBe oppgaveMo
                     it.oppgaver[3] shouldBe oppgaveZu
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunne sortere oppgaver på beslutter`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "kasper",
+                    grupper = emptySet(),
+                    tilganger = setOf(TilgangType.SAKSBEHANDLER),
+                )
+            val trikkeførerSyvertsen =
+                Saksbehandler(
+                    navIdent = "trikkefører syvertsen",
+                    grupper = emptySet(),
+                    tilganger = setOf(TilgangType.SAKSBEHANDLER, TilgangType.BESLUTTER),
+                )
+            val tanteSofie =
+                Saksbehandler(
+                    navIdent = "tante sofie",
+                    grupper = emptySet(),
+                    tilganger = setOf(TilgangType.SAKSBEHANDLER, TilgangType.BESLUTTER),
+                )
+            val politimesterBastian =
+                Saksbehandler(
+                    navIdent = "politimester bastian",
+                    grupper = emptySet(),
+                    tilganger = setOf(TilgangType.SAKSBEHANDLER, TilgangType.BESLUTTER),
+                )
+            val oppgaveTrikkeførerSyvertsen =
+                this.leggTilOppgave(
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    beslutterIdent = trikkeførerSyvertsen.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.UnderBehandling,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            OppgaveTilstandslogg(
+                                Tilstandsendring(
+                                    tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                                    hendelse =
+                                        NesteOppgaveHendelse(
+                                            ansvarligIdent = saksbehandler.navIdent,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                ),
+                            ),
+                        ),
+                )
+            val oppgaveIdNullBeslutter = UUIDv7.ny()
+            val oppgaveNullBeslutter =
+                this.leggTilOppgave(
+                    id = oppgaveIdNullBeslutter,
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                                hendelse = TomHendelse,
+                            ),
+                        ),
+                )
+            val oppgaveIdTanteSofie = UUIDv7.ny()
+            val oppgaveTanteSofie =
+                this.leggTilOppgave(
+                    id = oppgaveIdTanteSofie,
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    beslutterIdent = tanteSofie.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.UnderKontroll(),
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                                hendelse = TomHendelse,
+                            ),
+                        ),
+                )
+
+            val oppgaveIdPolitimesterBastian = UUIDv7.ny()
+            val oppgavePolitimesterBastian =
+                this.leggTilOppgave(
+                    id = oppgaveIdPolitimesterBastian,
+                    opprettet = opprettetNå,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    beslutterIdent = politimesterBastian.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstand = Oppgave.FerdigBehandlet,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                                hendelse = TomHendelse,
+                            ),
+                        ),
+                )
+
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sorteringsfelt = Søkefilter.Sorteringsfelt.BESLUTTER,
+                        sortering = Søkefilter.Sortering.ASC,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0].oppgaveId shouldBe oppgavePolitimesterBastian.oppgaveId
+                    it.oppgaver[1].oppgaveId shouldBe oppgaveTanteSofie.oppgaveId
+                    it.oppgaver[2].oppgaveId shouldBe oppgaveTrikkeførerSyvertsen.oppgaveId
+                    it.oppgaver[3].oppgaveId shouldBe oppgaveNullBeslutter.oppgaveId
                 }
         }
     }
