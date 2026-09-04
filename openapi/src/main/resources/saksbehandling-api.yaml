@@ -410,6 +410,7 @@ paths:
               - utlostAv
               - status
               - saksbehandler
+              - beslutter
               - utsattTil
             default: opprettet
         - in: query

@@ -1082,7 +1082,11 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
         }
 
         Søkefilter.Sorteringsfelt.SAKSBEHANDLER -> {
-            """ ORDER BY oppg.behandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+            """ ORDER BY oppg.siste_saksbehandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+        }
+
+        Søkefilter.Sorteringsfelt.BESLUTTER -> {
+            """ ORDER BY oppg.siste_beslutter_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
         }
 
         Søkefilter.Sorteringsfelt.UTSATT_TIL -> {
