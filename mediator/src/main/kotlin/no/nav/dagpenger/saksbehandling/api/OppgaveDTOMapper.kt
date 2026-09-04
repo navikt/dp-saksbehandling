@@ -282,6 +282,8 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 kvalitetskontrollAarsaker = this.lovligeKvalitetskontrollÅrsaker(),
             ),
         behandlerIdent = this.behandlerIdent,
+        saksbehandlerIdent = this.sisteSaksbehandlerIdent,
+        beslutterIdent = this.sisteBeslutterIdent,
         utsattTilDato = this.utsattTil(),
     )
 

@@ -17,14 +17,14 @@ class PostgresInnsendingRepositoryTest {
         DBTestHelper.withSak(
             person = testPerson,
         ) { ds ->
-            val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+            val mottatt = LocalDateTime.of(2026, 8, 23, 12, 34, 54).truncatedTo(ChronoUnit.SECONDS)
 
             val innsending =
                 Innsending.rehydrer(
                     innsendingId = UUIDv7.ny(),
                     person = testPerson,
                     journalpostId = "jp123",
-                    mottatt = nå,
+                    mottatt = mottatt,
                     skjemaKode = "skjemaKode",
                     kategori = Kategori.NY_SØKNAD,
                     søknadId = UUIDv7.ny(),
@@ -48,7 +48,7 @@ class PostgresInnsendingRepositoryTest {
                     innsendingId = innsending.innsendingId,
                     person = testPerson.copy(ident = "22345678901"),
                     journalpostId = "nyJp",
-                    mottatt = nå.plusMonths(1),
+                    mottatt = mottatt.plusMonths(1),
                     skjemaKode = "nySkjema",
                     kategori = Kategori.ETTERSENDING,
                     søknadId = UUIDv7.ny(),

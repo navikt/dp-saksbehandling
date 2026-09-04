@@ -1684,6 +1684,10 @@ components:
           type: string
         behandlerIdent:
           type: string
+        saksbehandlerIdent:
+          type: string
+        beslutterIdent:
+          type: string
         tidspunktOpprettet:
           type: string
           format: date-time

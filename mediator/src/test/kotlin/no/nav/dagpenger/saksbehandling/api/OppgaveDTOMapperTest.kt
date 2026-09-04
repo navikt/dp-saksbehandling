@@ -18,12 +18,19 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.personIdent
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.LeggTilbakeAarsakDTO
+import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -231,6 +238,59 @@ class OppgaveDTOMapperTest {
                     """.trimIndent()
             }
         }
+    }
+
+    @Test
+    fun `Skal mappe oppgaveOversiktDTO`() {
+        val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
+        val oppgave =
+            TestHelper.lagOppgave(
+                tilstand = Oppgave.UnderKontroll(),
+                saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                beslutterIdent = TestHelper.beslutter.navIdent,
+                opprettet = etTidspunkt,
+                person = TestHelper.testPerson,
+                tilstandslogg = TestHelper.lagOppgaveTilstandslogg(),
+            )
+        val forventetOppgaveOversiktDTO =
+            OppgaveOversiktDTO(
+                oppgaveId = oppgave.oppgaveId,
+                behandlingId = oppgave.behandling.behandlingId,
+                personIdent = TestHelper.personIdent,
+                behandlerIdent = TestHelper.beslutter.navIdent,
+                saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                beslutterIdent = TestHelper.beslutter.navIdent,
+                tidspunktOpprettet = etTidspunkt,
+                behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+                utlostAv = UtlostAvTypeDTO.SØKNAD,
+                emneknagger = emptyList(),
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                tilstand = OppgaveTilstandDTO.UNDER_KONTROLL,
+                lovligeEndringer =
+                    LovligeEndringerDTO(
+                        paaVentAarsaker = emptyList(),
+                        avbrytAarsaker = emptyList(),
+                        leggTilbakeAarsaker =
+                            listOf(
+                                LeggTilbakeAarsakDTO.MANGLER_KOMPETANSE,
+                                LeggTilbakeAarsakDTO.INHABILITET,
+                                LeggTilbakeAarsakDTO.FRAVÆR,
+                                LeggTilbakeAarsakDTO.KONTROLL_AV_KLAGE,
+                                LeggTilbakeAarsakDTO.ANNET,
+                            ),
+                        returnerTilSaksbehandlingAarsaker =
+                            listOf(
+                                ReturnerTilSaksbehandlingAarsakDTO.FEIL_UTFALL,
+                                ReturnerTilSaksbehandlingAarsakDTO.FEIL_HJEMMEL,
+                                ReturnerTilSaksbehandlingAarsakDTO.HAR_MANGLER,
+                                ReturnerTilSaksbehandlingAarsakDTO.FEIL_BRUK_AV_FAGSYSTEM,
+                                ReturnerTilSaksbehandlingAarsakDTO.ANNET,
+                            ),
+                        kvalitetskontrollAarsaker = emptyList(),
+                    ),
+            )
+        oppgave.tilOppgaveOversiktDTO() shouldBe forventetOppgaveOversiktDTO
     }
 
     @Test
@@ -954,7 +1014,14 @@ class OppgaveDTOMapperTest {
                 saker = setOf(sak1, sak2),
             )
 
-        val oppgave1 = TestHelper.lagOppgave(behandling = behandling1).tilOppgaveOversiktDTO()
+        val oppgave1 =
+            TestHelper
+                .lagOppgave(
+                    behandling = behandling1,
+                    tilstand = Oppgave.UnderKontroll(),
+                    saksbehandlerIdent = "ABC123",
+                    beslutterIdent = "XYZ789",
+                ).tilOppgaveOversiktDTO()
         val oppgave2 = TestHelper.lagOppgave(behandling = behandling2).tilOppgaveOversiktDTO()
 
         val sakMediator =
