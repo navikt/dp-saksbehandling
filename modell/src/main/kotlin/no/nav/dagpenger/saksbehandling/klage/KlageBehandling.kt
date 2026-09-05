@@ -367,6 +367,7 @@ data class KlageBehandling private constructor(
                 UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> throw IllegalStateException(
                     "$utfall skal ikke gå via vedtakDistribuert — ingen utsending sendes for medhold/delvis medhold",
                 )
+
                 UtfallType.AVVIST -> {
                     klageBehandling.endreTilstand(
                         nyTilstand = Ferdigstilt,

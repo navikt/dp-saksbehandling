@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.KlageView.behandlingOpplysninger
 import no.nav.dagpenger.saksbehandling.api.KlageView.finnGruppe
 import no.nav.dagpenger.saksbehandling.api.KlageView.utfallOpplysninger
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
@@ -26,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -54,7 +56,7 @@ class KlageDTOMapper(
             utfallOpplysninger = utfallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             tilstand =
                 when (klageBehandling.tilstand().type) {
-                    KlageBehandling.KlageTilstand.Type.BEHANDLES -> KlageDTOTilstandDTO.BEHANDLES
+                    BEHANDLES -> KlageDTOTilstandDTO.BEHANDLES
                     KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT -> KlageDTOTilstandDTO.BEHANDLING_UTFORT
                     KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS -> KlageDTOTilstandDTO.OVERSEND_KLAGEINSTANS
                     KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS -> KlageDTOTilstandDTO.BEHANDLES_AV_KLAGEINSTANS
@@ -171,6 +173,7 @@ class KlageDTOMapper(
                         journalpostIder = klageinstansVedtak.journalpostIder,
                     )
                 },
+            lovligeAvbrytAarsaker = klageBehandling.lovligeAvbrytÅrsaker(),
         )
     }
 
@@ -289,3 +292,9 @@ class KlageDTOMapper(
             }
         }
 }
+
+internal fun KlageBehandling.lovligeAvbrytÅrsaker(): List<AvbrytKlageAarsakDTO> =
+    when (this.tilstand().type) {
+        BEHANDLES -> AvbrytKlageAarsakDTO.entries
+        else -> emptyList()
+    }

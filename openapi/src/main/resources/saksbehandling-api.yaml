@@ -1194,6 +1194,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /klage/{behandlingId}/avbryt:
+    put:
+      summary: Avbryt klage
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvbrytKlage'
+      responses:
+        '204':
+          description: Klagen er avbrutt
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Klagen kan ikke avbrytes i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /klage/{behandlingId}:
     get:
       summary: Hent klage basert på behandlingId til klagen
@@ -2120,6 +2158,21 @@ components:
         - INGEN_BEHANDLING
         - ANNET
 
+    AvbrytKlage:
+      type: object
+      properties:
+        aarsak:
+          $ref: '#/components/schemas/AvbrytKlageAarsak'
+      required:
+        - aarsak
+
+    AvbrytKlageAarsak:
+      type: string
+      enum:
+        - FLERE_KLAGER
+        - TRUKKET_KLAGE
+        - ANNET
+
     ReturnerTilSaksbehandling:
       type: object
       properties:
@@ -2434,12 +2487,18 @@ components:
             - AVBRUTT
         klageinstansBehandling:
           $ref: '#/components/schemas/KlageinstansBehandling'
+        lovligeAvbrytAarsaker:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvbrytKlageAarsak'
+          description: Årsaker til at klagen avbrytes
       required:
         - behandlingId
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
         - tilstand
+        - lovligeAvbrytAarsaker
 
     TekstVerdi:
       type: object

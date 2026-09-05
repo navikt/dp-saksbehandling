@@ -81,6 +81,17 @@ object Emneknagg {
         override val kategori = EmneknaggKategori.AVBRUTT_GRUNN
     }
 
+    enum class AvbrytKlage(
+        override val visningsnavn: String,
+    ) : KategorisertEmneknagg {
+        AVBRUTT_FLERE_KLAGER("Flere klager"),
+        AVBRUTT_TRUKKET_KLAGE("Trukket klage"),
+        AVBRUTT_ANNET("Annen avbruddsårsak klage"),
+        ;
+
+        override val kategori = EmneknaggKategori.AVBRUTT_GRUNN
+    }
+
     enum class Oppfølging(
         override val visningsnavn: String,
     ) : KategorisertEmneknagg {

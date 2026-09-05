@@ -10,7 +10,10 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.KlageMediator
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
@@ -112,6 +115,30 @@ fun Route.klageApi(
                         call.respond(HttpStatusCode.NoContent)
                     }
                 }
+                route("avbryt") {
+                    put {
+                        val årsak =
+                            when (call.receive<AvbrytKlageDTO>().aarsak) {
+                                AvbrytKlageAarsakDTO.FLERE_KLAGER -> Emneknagg.AvbrytKlage.AVBRUTT_FLERE_KLAGER
+                                AvbrytKlageAarsakDTO.TRUKKET_KLAGE -> Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE
+                                AvbrytKlageAarsakDTO.ANNET -> Emneknagg.AvbrytKlage.AVBRUTT_ANNET
+                            }
+
+                        val avbruttHendelse =
+                            AvbruttHendelse(
+                                behandlingId = call.finnUUID("behandlingId"),
+                                årsak = årsak,
+                                utførtAv = applicationCallParser.saksbehandler(call),
+                            )
+                        val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
+                        auditlogg.oppdater(
+                            "Avbrutte en klage",
+                            klageBehandling.personIdent(),
+                            avbruttHendelse.utførtAv.navIdent,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
                 route("ferdigstill") {
                     put {
                         val behandlingId = call.finnUUID("behandlingId")
@@ -125,7 +152,11 @@ fun Route.klageApi(
                                     ),
                                 saksbehandlerToken = call.request.jwt(),
                             )
-                        auditlogg.opprett("Ferdigstilte en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
+                        auditlogg.opprett(
+                            "Ferdigstilte en klagebehandling",
+                            klageBehandling.personIdent(),
+                            saksbehandler.navIdent,
+                        )
                         call.respond(HttpStatusCode.NoContent)
                     }
                 }
@@ -163,7 +194,11 @@ fun Route.klageApi(
                                     verdi = klageDtoMapper.tilVerdi(oppdaterKlageOpplysningDTO),
                                     saksbehandler = saksbehandler,
                                 )
-                            auditlogg.oppdater("Oppdaterte en klageopplysning", klageBehandling.personIdent(), saksbehandler.navIdent)
+                            auditlogg.oppdater(
+                                "Oppdaterte en klageopplysning",
+                                klageBehandling.personIdent(),
+                                saksbehandler.navIdent,
+                            )
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }

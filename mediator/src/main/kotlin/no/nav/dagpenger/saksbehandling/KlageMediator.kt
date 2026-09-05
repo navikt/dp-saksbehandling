@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
@@ -35,7 +36,6 @@ import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
-private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class KlageMediator(
     private val transaksjoner: Transaksjoner,
@@ -312,8 +312,6 @@ class KlageMediator(
         }
     }
 
-    // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
-    // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
     fun avbrytKlage(hendelse: AvbruttHendelse): KlageBehandling {
         oppgaveMediator.hentOppgaveMedTilgangssjekk(
             behandlingId = hendelse.behandlingId,
@@ -329,7 +327,16 @@ class KlageMediator(
 
         transaksjoner.transaksjon { ctx ->
             klageRepository.lagre(klageBehandling, ctx)
-            oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse, ctx = ctx)
+            oppgaveMediator.hentOppgaveIdFor(behandlingId = hendelse.behandlingId)?.let { oppgaveId ->
+                val avbrytOppgaveHendelse =
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgaveId,
+                        navIdent = hendelse.utførtAv.navIdent,
+                        årsak = hendelse.årsak,
+                        utførtAv = hendelse.utførtAv,
+                    )
+                oppgaveMediator.avbryt(avbrytOppgaveHendelse, ctx)
+            }
         }
         logger.info { "Klagebehandling ${klageBehandling.behandlingId} avbrutt — klage og oppgave lagret i transaksjon" }
         return klageBehandling

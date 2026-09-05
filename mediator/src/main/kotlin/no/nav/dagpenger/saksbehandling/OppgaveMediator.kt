@@ -536,6 +536,39 @@ class OppgaveMediator(
         }
     }
 
+    fun avbryt(
+        avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
+        ctx: Transaksjonskontekst.Aktiv,
+    ) {
+        oppgaveRepository.hentOppgave(avbrytOppgaveHendelse.oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
+                oppgaveRepository.lagre(oppgave, ctx)
+                utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
+                if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
+                    utboks.send(
+                        key = oppgave.personIdent(),
+                        message =
+                            JsonMessage
+                                .newMessage(
+                                    eventName = "avbryt_behandling",
+                                    map =
+                                        mapOf(
+                                            "behandlingId" to oppgave.behandling.behandlingId,
+                                            "ident" to oppgave.personIdent(),
+                                            "årsak" to avbrytOppgaveHendelse.årsak.visningsnavn,
+                                        ),
+                                ).toJson(),
+                        ctx = ctx,
+                    )
+                }
+            }
+        }
+    }
+
     fun håndterUtfallFraKlageinstans(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
         oppgaveRepository.hentOppgaveFor(behandlingId = klageinstansVedtakHendelse.klageId).let { oppgave ->
             withLoggingContext(

@@ -12,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
-import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import java.time.LocalDate
 import java.util.UUID
 
