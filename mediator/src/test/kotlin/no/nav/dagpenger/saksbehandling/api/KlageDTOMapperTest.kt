@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -36,7 +37,7 @@ class KlageDTOMapperTest {
     private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
 
     @Test
-    fun `Skal mappe KlageBehandling til KlageDTO`() {
+    fun `Skal mappe KlageBehandling til KlageDTO for ferdigstilt klagebehandling`() {
         runBlocking {
             val klageId = UUIDv7.ny()
             val kaJournalposter = listOf("KA-journalpost-1", "KA-journalpost-2")
@@ -323,7 +324,88 @@ class KlageDTOMapperTest {
                                     "HENLAGT"
                               ]
                             }
-                        }
+                        },
+                        "lovligeAvbrytAarsaker": []
+                    }
+                    """
+            }
+        }
+    }
+
+    @Test
+    fun `Skal mappe KlageBehandling til KlageDTO klage under behandling med lovlige avbrytårsaker`() {
+        runBlocking {
+            val klageId = UUIDv7.ny()
+            val klageBehandling =
+                KlageBehandling.rehydrer(
+                    behandlingId = klageId,
+                    opprettet = opprettet,
+                    opplysninger = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+                    tilstand = KlageBehandling.Behandles,
+                    journalpostId = null,
+                    behandlendeEnhet = "4449",
+                    tilstandslogg = KlageTilstandslogg(),
+                    steg =
+                        listOf(
+                            KlagenGjelderSteg,
+                            FristvurderingSteg,
+                            FormkravSteg,
+                            VurderUtfallSteg,
+                        ),
+                )
+            val saksbehandlerDTO =
+                BehandlerDTO(
+                    ident = testSaksbehandler.navIdent,
+                    fornavn = "Saksbehandler Fornavn",
+                    etternavn = "Saksbehandler Etternavn",
+                    enhet =
+                        BehandlerDTOEnhetDTO(
+                            navn = "Saksbehandler Enhetsnavn",
+                            enhetNr = "Saksbehandler Enhetsnummer",
+                            postadresse = "Saksbehandler Postadresse",
+                        ),
+                )
+            KlageDTOMapper(
+                oppslag =
+                    mockk<Oppslag>().also {
+                        coEvery { it.hentBehandler(ident = testSaksbehandler.navIdent) } returns saksbehandlerDTO
+                    },
+            ).let { mapper ->
+                val klageDTO =
+                    mapper.tilDto(
+                        klageBehandling = klageBehandling,
+                        saksbehandler = testSaksbehandler,
+                    )
+                //language=JSON
+                objectMapper.writeValueAsString(klageDTO) shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                    {
+                        "behandlingId": "${klageBehandling.behandlingId}",
+                        "saksbehandler": {
+                            "ident": "${saksbehandlerDTO.ident}",
+                            "fornavn": "${saksbehandlerDTO.fornavn}",
+                            "etternavn": "${saksbehandlerDTO.etternavn}",
+                            "enhet": {
+                                "navn": "${saksbehandlerDTO.enhet.navn}",
+                                "enhetNr": "${saksbehandlerDTO.enhet.enhetNr}",
+                                "postadresse": "${saksbehandlerDTO.enhet.postadresse}"
+                            }
+                        },
+                        "utfall": {
+                            "verdi": "IKKE_SATT",
+                            "tilgjengeligeUtfall": [
+                                "AVVIST",
+                                "OPPRETTHOLDELSE",
+                                "DELVIS_MEDHOLD",
+                                "MEDHOLD"
+                            ]
+                        },
+                        "tilstand": "BEHANDLES",
+                        "lovligeAvbrytAarsaker": [
+                            "FLERE_KLAGER",
+                            "TRUKKET_KLAGE",
+                            "ANNET"
+                        ]
                     }
                     """
             }

@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingTilGodkjenningHendelse
@@ -248,6 +249,12 @@ data class Oppgave private constructor(
         tilgangskontrollPerson(avbrytOppgaveHendelse.utførtAv)
         this._emneknagger.add(avbrytOppgaveHendelse.årsak.visningsnavn)
         tilstand.avbryt(this, avbrytOppgaveHendelse)
+    }
+
+    fun avbryt(avbrytKlageHendelse: AvbrytKlageHendelse) {
+        tilgangskontrollPerson(avbrytKlageHendelse.utførtAv)
+        this._emneknagger.add(avbrytKlageHendelse.årsak.visningsnavn)
+        tilstand.avbryt(this, avbrytKlageHendelse)
     }
 
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
@@ -704,18 +711,6 @@ data class Oppgave private constructor(
 
         override fun avbryt(
             oppgave: Oppgave,
-            avbruttHendelse: AvbruttHendelse,
-        ) {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
-                saksbehandler = avbruttHendelse.utførtAv,
-                hendelseNavn = avbruttHendelse.javaClass.simpleName,
-            )
-            oppgave.endreTilstand(Avbrutt, avbruttHendelse)
-        }
-
-        override fun avbryt(
-            oppgave: Oppgave,
             avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
         ) {
             requireEierskapTilOppgave(
@@ -724,6 +719,18 @@ data class Oppgave private constructor(
                 hendelseNavn = avbrytOppgaveHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(Avbrutt, avbrytOppgaveHendelse)
+        }
+
+        override fun avbryt(
+            oppgave: Oppgave,
+            avbrytKlageHendelse: AvbrytKlageHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = avbrytKlageHendelse.utførtAv,
+                hendelseNavn = avbrytKlageHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(Avbrutt, avbrytKlageHendelse)
         }
     }
 
@@ -1225,18 +1232,6 @@ data class Oppgave private constructor(
 
         fun avbryt(
             oppgave: Oppgave,
-            avbruttHendelse: AvbruttHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message =
-                    "Kan ikke avbryte oppgave i tilstand $type for " +
-                        "${avbruttHendelse.javaClass.simpleName}",
-            )
-        }
-
-        fun avbryt(
-            oppgave: Oppgave,
             avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
         ) {
             ulovligTilstandsendring(
@@ -1244,6 +1239,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke avbryte oppgave i tilstand $type for " +
                         "${avbrytOppgaveHendelse.javaClass.simpleName}",
+            )
+        }
+
+        fun avbryt(
+            oppgave: Oppgave,
+            avbrytKlageHendelse: AvbrytKlageHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke avbryte klageoppgave i tilstand $type for " +
+                        "${avbrytKlageHendelse.javaClass.simpleName}",
             )
         }
 

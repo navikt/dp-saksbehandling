@@ -20,6 +20,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -355,6 +356,7 @@ class KlageApiTest {
         val avbruttHendelse =
             AvbruttHendelse(
                 behandlingId = klageBehandlingId,
+                årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
                 utførtAv = TestHelper.saksbehandler,
             )
         val mediator =
@@ -368,6 +370,48 @@ class KlageApiTest {
 
         withKlageApi(mediator) {
             client.put("klage/$klageBehandlingId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+        }
+
+        verify(exactly = 1) {
+            mediator.avbrytKlage(hendelse = avbruttHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne avbryte en klage`() {
+        val token = gyldigSaksbehandlerToken()
+        val avbruttHendelse =
+            AvbruttHendelse(
+                behandlingId = klageBehandlingId,
+                årsak = Emneknagg.AvbrytKlage.AVBRUTT_FLERE_KLAGER,
+                utførtAv = TestHelper.saksbehandler,
+            )
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.avbrytKlage(
+                        hendelse = avbruttHendelse,
+                    )
+                } returns mockk<KlageBehandling>(relaxed = true)
+            }
+
+        withKlageApi(mediator) {
+            client
+                .post("klage/$klageBehandlingId/avbryt") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    header(HttpHeaders.ContentType, "application/json")
+                    //language=json
+                    setBody(
+                        """
+                        {
+                            "aarsak": "FLERE_KLAGER"
+                        }
+                        """.trimIndent(),
+                    )
+                }.let { response ->
+
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
         }
 
         verify(exactly = 1) {
@@ -628,7 +672,7 @@ class KlageApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.UPDATE
-            it.melding shouldBe "Avbrutte en klage"
+            it.melding shouldBe "Avbrøt en klagebehandling"
             it.ident shouldBe "12345678901"
         }
     }

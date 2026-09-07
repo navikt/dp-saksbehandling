@@ -4,9 +4,9 @@ import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
 
-data class AvbrytOppgaveHendelse(
+class AvbrytKlageHendelse(
     val oppgaveId: UUID,
     val navIdent: String,
-    val årsak: Emneknagg.AvbrytBehandling = Emneknagg.AvbrytBehandling.AVBRUTT_ANNET,
+    val årsak: Emneknagg.AvbrytKlage = Emneknagg.AvbrytKlage.AVBRUTT_ANNET,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

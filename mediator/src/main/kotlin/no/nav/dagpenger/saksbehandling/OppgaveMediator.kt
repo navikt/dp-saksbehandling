@@ -20,7 +20,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.Oppg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
-import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -569,6 +569,39 @@ class OppgaveMediator(
         }
     }
 
+    fun avbryt(
+        avbrytKlageHendelse: AvbrytKlageHendelse,
+        ctx: Transaksjonskontekst.Aktiv,
+    ) {
+        oppgaveRepository.hentOppgave(avbrytKlageHendelse.oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                oppgave.avbryt(avbrytKlageHendelse = avbrytKlageHendelse)
+                oppgaveRepository.lagre(oppgave, ctx)
+                utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
+                if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
+                    utboks.send(
+                        key = oppgave.personIdent(),
+                        message =
+                            JsonMessage
+                                .newMessage(
+                                    eventName = "avbryt_behandling",
+                                    map =
+                                        mapOf(
+                                            "behandlingId" to oppgave.behandling.behandlingId,
+                                            "ident" to oppgave.personIdent(),
+                                            "årsak" to avbrytKlageHendelse.årsak.visningsnavn,
+                                        ),
+                                ).toJson(),
+                        ctx = ctx,
+                    )
+                }
+            }
+        }
+    }
+
     fun håndterUtfallFraKlageinstans(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
         oppgaveRepository.hentOppgaveFor(behandlingId = klageinstansVedtakHendelse.klageId).let { oppgave ->
             withLoggingContext(
@@ -623,27 +656,6 @@ class OppgaveMediator(
                 oppgaveRepository.lagre(oppgave, ctx)
                 logger.info {
                     "Behandlet OppfølgingFerdigstiltHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                }
-            }
-        }
-    }
-
-    fun ferdigstillOppgave(
-        avbruttHendelse: AvbruttHendelse,
-        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
-    ) {
-        oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
-            withLoggingContext(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
-            ) {
-                logger.info {
-                    "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                oppgave.ferdigstill(avbruttHendelse)
-                oppgaveRepository.lagre(oppgave, ctx)
-                logger.info {
-                    "Behandlet AvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }

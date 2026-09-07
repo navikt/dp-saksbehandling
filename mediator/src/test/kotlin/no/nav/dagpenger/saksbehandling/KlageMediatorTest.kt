@@ -740,6 +740,7 @@ class KlageMediatorTest {
                 hendelse =
                     AvbruttHendelse(
                         behandlingId = behandlingId,
+                        årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
                         utførtAv = saksbehandler,
                     ),
             )
@@ -754,7 +755,7 @@ class KlageMediatorTest {
             oppgaveMediator
                 .hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
-                .type shouldBe FERDIG_BEHANDLET
+                .type shouldBe Oppgave.Tilstand.Type.AVBRUTT
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
                 it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"

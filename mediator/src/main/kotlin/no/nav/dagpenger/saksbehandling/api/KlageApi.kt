@@ -108,15 +108,16 @@ fun Route.klageApi(
                                 hendelse =
                                     AvbruttHendelse(
                                         behandlingId = behandlingId,
+                                        årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
                                         utførtAv = saksbehandler,
                                     ),
                             )
-                        auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), saksbehandler.navIdent)
+                        auditlogg.oppdater("Avbrøt en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
                         call.respond(HttpStatusCode.NoContent)
                     }
                 }
                 route("avbryt") {
-                    put {
+                    post {
                         val årsak =
                             when (call.receive<AvbrytKlageDTO>().aarsak) {
                                 AvbrytKlageAarsakDTO.FLERE_KLAGER -> Emneknagg.AvbrytKlage.AVBRUTT_FLERE_KLAGER
@@ -132,7 +133,7 @@ fun Route.klageApi(
                             )
                         val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
                         auditlogg.oppdater(
-                            "Avbrutte en klage",
+                            "Avbrøt en klagebehandling",
                             klageBehandling.personIdent(),
                             avbruttHendelse.utførtAv.navIdent,
                         )

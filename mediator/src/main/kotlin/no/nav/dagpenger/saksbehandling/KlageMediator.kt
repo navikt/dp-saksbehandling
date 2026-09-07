@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
@@ -177,15 +177,6 @@ class KlageMediator(
         }
     }
 
-    private fun requireEierAvOppgave(
-        oppgave: Oppgave,
-        saksbehandler: Saksbehandler,
-    ) {
-        require(oppgave.erEierAvOppgave(saksbehandler)) {
-            "Saksbehandler ${saksbehandler.navIdent} må eie oppgaven ${oppgave.oppgaveId}"
-        }
-    }
-
     fun behandlingUtført(
         klageBehandlingUtført: KlageBehandlingUtført,
         saksbehandlerToken: String,
@@ -328,14 +319,14 @@ class KlageMediator(
         transaksjoner.transaksjon { ctx ->
             klageRepository.lagre(klageBehandling, ctx)
             oppgaveMediator.hentOppgaveIdFor(behandlingId = hendelse.behandlingId)?.let { oppgaveId ->
-                val avbrytOppgaveHendelse =
-                    AvbrytOppgaveHendelse(
+                val avbrytKlageHendelse =
+                    AvbrytKlageHendelse(
                         oppgaveId = oppgaveId,
                         navIdent = hendelse.utførtAv.navIdent,
                         årsak = hendelse.årsak,
                         utførtAv = hendelse.utførtAv,
                     )
-                oppgaveMediator.avbryt(avbrytOppgaveHendelse, ctx)
+                oppgaveMediator.avbryt(avbrytKlageHendelse, ctx)
             }
         }
         logger.info { "Klagebehandling ${klageBehandling.behandlingId} avbrutt — klage og oppgave lagret i transaksjon" }
