@@ -112,7 +112,9 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             SELECT    log.id                    AS tilstand_id
                                     , CASE
                                         WHEN log.tilstand       = 'AVBRUTT' 
-                                        AND  log.hendelse_type  = 'AvbrytOppgaveHendelse' THEN
+                                        AND  log.hendelse_type  IN ( 'AvbrytOppgaveHendelse'
+                                                                   , 'AvbruttHendelse'
+                                                                   , 'AvbrytKlageHendelse' ) THEN
                                             'AVBRUTT_MANUELT'
                                         WHEN log.tilstand       = 'UNDER_BEHANDLING'
                                         AND  log.hendelse_type  = 'ReturnerTilSaksbehandlingHendelse' THEN
@@ -166,7 +168,10 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                         END                     AS fagsystem
                                     , sak.arena_sak_id          AS arena_sak_id
                                     , CASE
-                                        WHEN log.hendelse_type IN ('ReturnerTilSaksbehandlingHendelse','AvbrytOppgaveHendelse') THEN 
+                                        WHEN log.hendelse_type IN ( 'ReturnerTilSaksbehandlingHendelse'
+                                                                  , 'AvbrytOppgaveHendelse'
+                                                                  , 'AvbruttHendelse'
+                                                                  , 'AvbrytKlageHendelse' ) THEN 
                                             log.hendelse->>'årsak'
                                         END                     AS resultat_begrunnelse
                                     , (paaklaget_vedtak -> 'verdi' ->> 'value')::UUID AS relatert_behandling_id
