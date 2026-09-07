@@ -6,7 +6,7 @@ import java.util.UUID
 
 class AvbrytKlageHendelse(
     val oppgaveId: UUID,
-    val navIdent: String,
     val årsak: Emneknagg.AvbrytKlage = Emneknagg.AvbrytKlage.AVBRUTT_ANNET,
+    val navIdent: String,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

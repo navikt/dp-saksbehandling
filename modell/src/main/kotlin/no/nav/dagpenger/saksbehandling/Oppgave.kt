@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -272,11 +271,6 @@ data class Oppgave private constructor(
         val emneknagg = Emneknagg.Klage.fromUtfallType(klageUtfall)
         this._emneknagger.add(emneknagg.visningsnavn)
         return tilstand.ferdigstill(this, klageBehandlingUtført)
-    }
-
-    fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
-        tilgangskontrollPerson(avbruttHendelse.utførtAv)
-        tilstand.ferdigstill(this, avbruttHendelse)
     }
 
     fun ferdigstill(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
@@ -697,18 +691,6 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(FerdigBehandlet, oppfølgingFerdigstiltHendelse)
         }
 
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            avbruttHendelse: AvbruttHendelse,
-        ) {
-            requireEierskapTilOppgave(
-                oppgave = oppgave,
-                saksbehandler = avbruttHendelse.utførtAv,
-                hendelseNavn = avbruttHendelse.javaClass.simpleName,
-            )
-            oppgave.endreTilstand(FerdigBehandlet, avbruttHendelse)
-        }
-
         override fun avbryt(
             oppgave: Oppgave,
             avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
@@ -766,7 +748,10 @@ data class Oppgave private constructor(
             klageinstansVedtakHendelse: KlageinstansVedtakHendelse,
         ) {
             Emneknagg.utfallKlageinstansTilEmneknagg(klageinstansVedtakHendelse.utfall).let { emneknagg ->
-                oppgave._tilstandslogg.leggTil(nyTilstand = oppgave.tilstand.type, hendelse = klageinstansVedtakHendelse)
+                oppgave._tilstandslogg.leggTil(
+                    nyTilstand = oppgave.tilstand.type,
+                    hendelse = klageinstansVedtakHendelse,
+                )
                 oppgave._emneknagger.remove(Emneknagg.Klage.KLAGE_OVERSENDT_KLAGEINSTANS.visningsnavn)
                 oppgave._emneknagger.add(emneknagg.visningsnavn)
             }
@@ -1287,18 +1272,6 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${klageBehandlingUtført.javaClass.simpleName}",
-            )
-        }
-
-        fun ferdigstill(
-            oppgave: Oppgave,
-            avbruttHendelse: AvbruttHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${avbruttHendelse.javaClass.simpleName}",
             )
         }
 

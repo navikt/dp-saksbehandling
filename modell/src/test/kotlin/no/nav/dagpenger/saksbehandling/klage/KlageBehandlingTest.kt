@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -303,6 +304,18 @@ class KlageBehandlingTest {
         )
 
         klageBehandling.tilstand().type shouldBe AVBRUTT
+
+        (Type.values.toMutableSet() - setOf(BEHANDLES)).forEach { _ ->
+            shouldThrow<IllegalStateException> {
+                klageBehandling.avbryt(
+                    hendelse =
+                        AvbruttHendelse(
+                            behandlingId = klageBehandling.behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
+        }
     }
 
     @Test
