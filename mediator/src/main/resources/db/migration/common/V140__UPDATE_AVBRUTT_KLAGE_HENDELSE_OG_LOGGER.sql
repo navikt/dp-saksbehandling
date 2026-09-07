@@ -37,3 +37,24 @@ SET     tilstand = 'AVBRUTT'
         )::json
 WHERE   hendelse_type = 'AvbruttHendelse'
 ;
+
+DO $$
+    DECLARE
+        oppgave RECORD;
+    BEGIN
+        FOR oppgave IN
+            SELECT  oppgave_id
+            FROM    oppgave_tilstand_logg_v1 logg
+            WHERE   logg.hendelse_type = 'AvbruttHendelse'
+              AND NOT EXISTS (
+                SELECT 1
+                FROM   emneknagg_v1 emne
+                WHERE  emne.oppgave_id = logg.oppgave_id
+                AND    emne.emneknagg = 'Trukket klage'
+            )
+            LOOP
+                -- Sett inn ny emneknagg for Trukket klage
+                INSERT INTO emneknagg_v1 (oppgave_id, emneknagg)
+                VALUES (oppgave.oppgave_id, 'Trukket klage' );
+            END LOOP;
+    END $$;
