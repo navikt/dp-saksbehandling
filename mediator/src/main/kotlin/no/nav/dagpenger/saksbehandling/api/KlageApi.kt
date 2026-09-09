@@ -112,7 +112,7 @@ fun Route.klageApi(
                                         utførtAv = saksbehandler,
                                     ),
                             )
-                        auditlogg.oppdater("Avbrøt en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
+                        auditlogg.oppdater("Trakk en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
                         call.respond(HttpStatusCode.NoContent)
                     }
                 }
