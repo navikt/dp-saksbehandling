@@ -1195,7 +1195,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
 
   /klage/{behandlingId}/avbryt:
-    put:
+    post:
       summary: Avbryt klage
       parameters:
         - in: path

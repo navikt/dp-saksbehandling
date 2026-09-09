@@ -548,23 +548,6 @@ class OppgaveMediator(
                 oppgave.avbryt(avbrytKlageHendelse = avbrytKlageHendelse)
                 oppgaveRepository.lagre(oppgave, ctx)
                 utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
-                if (oppgave.behandling.utløstAv is HendelseBehandler.DpBehandling) {
-                    utboks.send(
-                        key = oppgave.personIdent(),
-                        message =
-                            JsonMessage
-                                .newMessage(
-                                    eventName = "avbryt_behandling",
-                                    map =
-                                        mapOf(
-                                            "behandlingId" to oppgave.behandling.behandlingId,
-                                            "ident" to oppgave.personIdent(),
-                                            "årsak" to avbrytKlageHendelse.årsak.visningsnavn,
-                                        ),
-                                ).toJson(),
-                        ctx = ctx,
-                    )
-                }
             }
         }
     }

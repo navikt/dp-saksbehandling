@@ -27,7 +27,12 @@ import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -57,11 +62,11 @@ class KlageDTOMapper(
             tilstand =
                 when (klageBehandling.tilstand().type) {
                     BEHANDLES -> KlageDTOTilstandDTO.BEHANDLES
-                    KlageBehandling.KlageTilstand.Type.BEHANDLING_UTFORT -> KlageDTOTilstandDTO.BEHANDLING_UTFORT
-                    KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS -> KlageDTOTilstandDTO.OVERSEND_KLAGEINSTANS
-                    KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS -> KlageDTOTilstandDTO.BEHANDLES_AV_KLAGEINSTANS
-                    KlageBehandling.KlageTilstand.Type.FERDIGSTILT -> KlageDTOTilstandDTO.FERDIGSTILT
-                    KlageBehandling.KlageTilstand.Type.AVBRUTT -> KlageDTOTilstandDTO.AVBRUTT
+                    BEHANDLING_UTFORT -> KlageDTOTilstandDTO.BEHANDLING_UTFORT
+                    OVERSEND_KLAGEINSTANS -> KlageDTOTilstandDTO.OVERSEND_KLAGEINSTANS
+                    BEHANDLES_AV_KLAGEINSTANS -> KlageDTOTilstandDTO.BEHANDLES_AV_KLAGEINSTANS
+                    FERDIGSTILT -> KlageDTOTilstandDTO.FERDIGSTILT
+                    AVBRUTT -> KlageDTOTilstandDTO.AVBRUTT
                 },
             utfall =
                 UtfallDTO(

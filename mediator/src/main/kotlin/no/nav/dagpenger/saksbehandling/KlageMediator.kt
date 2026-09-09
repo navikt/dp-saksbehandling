@@ -319,14 +319,16 @@ class KlageMediator(
         transaksjoner.transaksjon { ctx ->
             klageRepository.lagre(klageBehandling, ctx)
             oppgaveMediator.hentOppgaveIdFor(behandlingId = hendelse.behandlingId)?.let { oppgaveId ->
-                val avbrytKlageHendelse =
-                    AvbrytKlageHendelse(
-                        oppgaveId = oppgaveId,
-                        navIdent = hendelse.utførtAv.navIdent,
-                        årsak = hendelse.årsak,
-                        utførtAv = hendelse.utførtAv,
-                    )
-                oppgaveMediator.avbryt(avbrytKlageHendelse, ctx)
+                oppgaveMediator.avbryt(
+                    avbrytKlageHendelse =
+                        AvbrytKlageHendelse(
+                            oppgaveId = oppgaveId,
+                            navIdent = hendelse.utførtAv.navIdent,
+                            årsak = hendelse.årsak,
+                            utførtAv = hendelse.utførtAv,
+                        ),
+                    ctx = ctx,
+                )
             }
         }
         logger.info { "Klagebehandling ${klageBehandling.behandlingId} avbrutt — klage og oppgave lagret i transaksjon" }

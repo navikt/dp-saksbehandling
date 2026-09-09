@@ -118,17 +118,11 @@ fun Route.klageApi(
                 }
                 route("avbryt") {
                     post {
-                        val årsak =
-                            when (call.receive<AvbrytKlageDTO>().aarsak) {
-                                AvbrytKlageAarsakDTO.FLERE_KLAGER -> Emneknagg.AvbrytKlage.AVBRUTT_FLERE_KLAGER
-                                AvbrytKlageAarsakDTO.TRUKKET_KLAGE -> Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE
-                                AvbrytKlageAarsakDTO.ANNET -> Emneknagg.AvbrytKlage.AVBRUTT_ANNET
-                            }
-
+                        val avbrytKlageDTO = call.receive<AvbrytKlageDTO>()
                         val avbruttHendelse =
                             AvbruttHendelse(
                                 behandlingId = call.finnUUID("behandlingId"),
-                                årsak = årsak,
+                                årsak = avbrytKlageDTO.tilAvbrytKlageÅrsak(),
                                 utførtAv = applicationCallParser.saksbehandler(call),
                             )
                         val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
@@ -208,3 +202,10 @@ fun Route.klageApi(
         }
     }
 }
+
+private fun AvbrytKlageDTO.tilAvbrytKlageÅrsak() =
+    when (this.aarsak) {
+        AvbrytKlageAarsakDTO.FLERE_KLAGER -> Emneknagg.AvbrytKlage.AVBRUTT_FLERE_KLAGER
+        AvbrytKlageAarsakDTO.TRUKKET_KLAGE -> Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE
+        AvbrytKlageAarsakDTO.ANNET -> Emneknagg.AvbrytKlage.AVBRUTT_ANNET
+    }
