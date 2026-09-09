@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -277,6 +278,56 @@ class OppgaveHistorikkDTOMapperTest {
                 historikk.single().let { historikk ->
                     historikk.tittel shouldBe "På vent"
                     historikk.body shouldBe "Avvent dokumentasjon"
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal vise årsak til at en klage er avbrutt i body`() {
+        runBlocking {
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "saksbehandlerIdent",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+            OppgaveHistorikkDTOMapper(
+                repository =
+                    mockk<OppgaveRepository>(relaxed = true).also {
+                        every { it.finnNotat(any()) } returns null
+                    },
+                saksbehandlerOppslag =
+                    mockk<SaksbehandlerOppslag>().also {
+                        coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "fornavn",
+                                etternavn = "etternavn",
+                                enhet = enhet,
+                            )
+                    },
+            ).let { mapper ->
+                val historikk =
+                    mapper.lagOppgaveHistorikk(
+                        tilstandslogg =
+                            OppgaveTilstandslogg().also {
+                                it.leggTil(
+                                    nyTilstand = AVBRUTT,
+                                    hendelse =
+                                        AvbrytKlageHendelse(
+                                            oppgaveId = UUIDv7.ny(),
+                                            navIdent = saksbehandler.navIdent,
+                                            årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                )
+                            },
+                    )
+
+                historikk.single().let { historikk ->
+                    historikk.tittel shouldBe "Avbrutt"
+                    historikk.body shouldBe "Trukket klage"
                 }
             }
         }
