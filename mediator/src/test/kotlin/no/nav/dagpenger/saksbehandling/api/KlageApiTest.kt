@@ -672,7 +672,7 @@ class KlageApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.UPDATE
-            it.melding shouldBe "Avbrøt en klagebehandling"
+            it.melding shouldBe "Trakk en klagebehandling"
             it.ident shouldBe "12345678901"
         }
     }
