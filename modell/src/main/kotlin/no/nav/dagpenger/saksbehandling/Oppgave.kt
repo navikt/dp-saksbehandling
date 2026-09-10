@@ -725,6 +725,26 @@ data class Oppgave private constructor(
             )
             oppgave.endreTilstand(Avbrutt, avbrytKlageHendelse)
         }
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            // TODO vurder om vi skal bruke require(hendelse.tilbakekreving.behandlingsstatus == TIL_GODKJENNING)
+            if (hendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING) {
+                if (oppgave.sisteBeslutterIdent == null) {
+                    oppgave.behandlerIdent = null
+                    oppgave.endreTilstand(KlarTilKontroll, hendelse)
+                } else {
+                    oppgave.behandlerIdent = oppgave.sisteBeslutterIdent
+                    oppgave.endreTilstand(UnderKontroll(), hendelse)
+                    oppgave._emneknagger.add(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
+                    oppgave._emneknagger.remove(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+                }
+            } else {
+                logger.warn { "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                        "i tilstand $type. Ignorerer meldingen." }
+            }
+        }
     }
 
     object FerdigBehandlet : Tilstand {
@@ -878,6 +898,21 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(nyTilstand, hendelse)
             oppgave.utsattTil = null
             oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
+        }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            val nyTilstand =
+                if (oppgave.behandlerIdent == null) {
+                    KlarTilBehandling
+                } else {
+                    UnderBehandling
+                }
+            oppgave.endreTilstand(nyTilstand, hendelse)
+            oppgave.utsattTil = null
+            oppgave._emneknagger.add(Emneknagg.PåVent.FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn)
         }
     }
 
@@ -1101,7 +1136,27 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            when (hendelse.tilbakekreving.behandlingsstatus) {
+                TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET -> {
+                    oppgave.endreTilstand(FerdigBehandlet, hendelse)
+                }
 
+                TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING -> {
+                    oppgave.endreTilstand(UnderBehandling, hendelse)
+                    oppgave._emneknagger.add(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+                    oppgave._emneknagger.remove(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
+                    oppgave.behandlerIdent = oppgave.sisteSaksbehandlerIdent
+                }
+
+                else -> {
+                    super.håndter(oppgave, hendelse)
+                }
+            }
+        }
         override fun lagreNotat(
             oppgave: Oppgave,
             notatHendelse: NotatHendelse,

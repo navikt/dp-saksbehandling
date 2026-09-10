@@ -55,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 private val logger = KotlinLogging.logger {}
@@ -89,7 +90,7 @@ class OppgaveMediator(
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = IKKE_RELEVANT,
                     ),
             ).also {
                 if (!forventerBehandlingOpprettet) {
@@ -116,7 +117,7 @@ class OppgaveMediator(
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = IKKE_RELEVANT,
                     ),
             )
 
@@ -146,7 +147,7 @@ class OppgaveMediator(
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
                         kilde = DP_SAK,
-                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        kontrollertGosysBrev = IKKE_RELEVANT,
                     ),
             )
 
@@ -230,7 +231,7 @@ class OppgaveMediator(
                             meldingOmVedtak =
                                 Oppgave.MeldingOmVedtak(
                                     kilde = DP_SAK,
-                                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                                    kontrollertGosysBrev = IKKE_RELEVANT,
                                 ),
                         ).also {
                             it.settKlarTilBehandling(forslagTilVedtakHendelse)
@@ -801,27 +802,28 @@ class OppgaveMediator(
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
         val oppgaveId = oppgaveRepository.hentOppgaveIdFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
         if (oppgaveId == null) {
-            require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.OPPRETTET)
-            // her lager vi en behandling
-            sakMediator.knyttTilSak(tilbakekrevingHendelse)
-            // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
-            val saksHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
-            val behandling =
-                requireNotNull(saksHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
+            // Vurder denne: require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus in setOf(OPPRETTET, TIL_FORHÅNDSVARSEL))
 
-            val oppgave =
-                Oppgave(
-                    emneknagger = setOf("tilbakekreving"),
-                    opprettet = behandling.opprettet,
-                    person = saksHistorikk.person,
-                    behandling = behandling,
-                    meldingOmVedtak =
-                        Oppgave.MeldingOmVedtak(
-                            kilde = Oppgave.MeldingOmVedtakKilde.INGEN,
-                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-                        ),
-                )
-            oppgaveRepository.lagre(oppgave)
+            transaksjoner.transaksjon { ctx ->
+                sakMediator.knyttTilSak(tilbakekrevingHendelse, ctx)
+                // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
+                val sakHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
+                val behandling =
+                    requireNotNull(sakHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
+
+                val oppgave =
+                    Oppgave(
+                        opprettet = behandling.opprettet,
+                        person = sakHistorikk.person,
+                        behandling = behandling,
+                        meldingOmVedtak =
+                            Oppgave.MeldingOmVedtak(
+                                kilde = INGEN,
+                                kontrollertGosysBrev = IKKE_RELEVANT,
+                            ),
+                    )
+                oppgaveRepository.lagre(oppgave, ctx)
+            }
         } else {
             val oppgave = oppgaveRepository.hentOppgave(oppgaveId)
             oppgave.håndter(tilbakekrevingHendelse)
@@ -867,7 +869,7 @@ class OppgaveMediator(
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
                     kilde = DP_SAK,
-                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    kontrollertGosysBrev = IKKE_RELEVANT,
                 ),
         ).also {
             logger.info {

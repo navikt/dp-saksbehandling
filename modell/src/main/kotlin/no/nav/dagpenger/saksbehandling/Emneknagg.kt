@@ -63,6 +63,7 @@ object Emneknagg {
         MANGLENDE_FUNKSJONALITET("Manglende funksjonalitet"),
         AVVENT_ANNET("Utsatt annen årsak"),
         TIDLIGERE_UTSATT("Tidligere utsatt"),
+        FORHÅNDSVARSEL_FRIST_UTGÅTT("Forhåndsvarsel frist utgått"),
         ;
 
         override val kategori = EmneknaggKategori.PÅ_VENT

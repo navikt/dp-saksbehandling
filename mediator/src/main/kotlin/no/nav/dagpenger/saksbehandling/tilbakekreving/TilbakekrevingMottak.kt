@@ -74,7 +74,7 @@ private fun tilbakekrevingHendelseFraPacket(
     val tilbakekrevingNode = packet["tilbakekreving"]
     return TilbakekrevingHendelse(
         ident = ident,
-        eksternFagsakId = packet["eksternFagsakId"].asText(),
+        eksternFagsakId = packet["eksternFagsakId"].stringValue(),
         eksternBehandlingId = packet["eksternBehandlingId"].asUUID(),
         hendelseOpprettet = packet["hendelseOpprettet"].asLocalDateTime(),
         tilbakekreving =
@@ -83,13 +83,13 @@ private fun tilbakekrevingHendelseFraPacket(
                 sakOpprettet = tilbakekrevingNode["sakOpprettet"].asLocalDateTime(),
                 varselSendt = tilbakekrevingNode["varselSendt"]?.asOptionalLocalDate(),
                 behandlingsstatus =
-                    TilbakekrevingHendelse.BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].asText()),
+                    TilbakekrevingHendelse.BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].stringValue()),
                 forrigeBehandlingsstatus =
                     tilbakekrevingNode["forrigeBehandlingsstatus"]
-                        ?.takeIf(JsonNode::isTextual)
-                        ?.let { TilbakekrevingHendelse.BehandlingStatus.valueOf(it.asText()) },
-                totaltFeilutbetaltBeløp = BigDecimal(tilbakekrevingNode["totaltFeilutbetaltBeløp"].asText()),
-                saksbehandlingURL = tilbakekrevingNode["saksbehandlingURL"].asText(),
+                        ?.takeIf(JsonNode::isString)
+                        ?.let { TilbakekrevingHendelse.BehandlingStatus.valueOf(it.stringValue()) },
+                totaltFeilutbetaltBeløp = BigDecimal(tilbakekrevingNode["totaltFeilutbetaltBeløp"].stringValue()),
+                saksbehandlingURL = tilbakekrevingNode["saksbehandlingURL"].stringValue(),
                 fullstendigPeriode =
                     TilbakekrevingHendelse.Periode(
                         fom = tilbakekrevingNode["fullstendigPeriode"]["fom"].asLocalDate(),
