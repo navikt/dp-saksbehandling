@@ -50,6 +50,7 @@ import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -410,6 +411,9 @@ data class Oppgave private constructor(
         )
     }
 
+    fun håndter(hendelse: TilbakekrevingHendelse) {
+        tilstand.håndter(this, hendelse)
+    }
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -471,6 +475,13 @@ data class Oppgave private constructor(
                     oppgave.endreTilstand(nyTilstand = KlarTilBehandling, hendelse = hendelse)
                 }
             }
+        }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            oppgave.endreTilstand(KlarTilBehandling, hendelse)
         }
     }
 
@@ -1431,6 +1442,16 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse $hendelse for oppgave i tilstand $type",
+            )
+        }
+
+        fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere tilbakekrevinghendelse i tilstand $type",
             )
         }
 

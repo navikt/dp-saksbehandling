@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 sealed class KnyttTilSakResultat {
     data class KnyttetTilSak(
@@ -93,6 +94,24 @@ data class Sak(
                     utløstAv = behandlingOpprettetHendelse.type,
                     opprettet = behandlingOpprettetHendelse.opprettet,
                     hendelse = behandlingOpprettetHendelse,
+                ),
+            )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+        }
+
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse): KnyttTilSakResultat =
+        if (this.basertPåBehandlingErKnyttetTilSak(
+                tilbakekrevingHendelse.eksternBehandlingId,
+            )
+        ) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = tilbakekrevingHendelse.tilbakekreving.behandlingId,
+                    utløstAv = HendelseBehandler.Intern.Tilbakekreving,
+                    opprettet = tilbakekrevingHendelse.hendelseOpprettet,
+                    hendelse = tilbakekrevingHendelse,
                 ),
             )
             KnyttTilSakResultat.KnyttetTilSak(this)

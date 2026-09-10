@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 private val logger = KotlinLogging.logger {}
 
@@ -173,6 +174,19 @@ class SakMediator(
                     behandlingId = hendelse.behandlingId,
                     hendelseType = hendelse.javaClass.simpleName,
                     resultat = resultat,
+                )
+            }
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse) {
+        sakRepository.hentSakHistorikk(tilbakekrevingHendelse.ident).also {
+            it.knyttTilSak(tilbakekrevingHendelse).also { resultat ->
+                sjekkResultat(
+                    tilbakekrevingHendelse.eksternBehandlingId,
+                    tilbakekrevingHendelse.javaClass.simpleName,
+                    resultat,
                 )
             }
             sakRepository.lagre(it)

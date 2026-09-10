@@ -55,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -793,6 +794,38 @@ class OppgaveMediator(
                     "Behandlet VedtakFattetHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
+        }
+    }
+
+    fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
+        logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
+        val oppgaveId = oppgaveRepository.hentOppgaveIdFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
+        if (oppgaveId == null) {
+            require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.OPPRETTET)
+            // her lager vi en behandling
+            sakMediator.knyttTilSak(tilbakekrevingHendelse)
+            // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
+            val saksHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
+            val behandling =
+                requireNotNull(saksHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
+
+            val oppgave =
+                Oppgave(
+                    emneknagger = setOf("tilbakekreving"),
+                    opprettet = behandling.opprettet,
+                    person = saksHistorikk.person,
+                    behandling = behandling,
+                    meldingOmVedtak =
+                        Oppgave.MeldingOmVedtak(
+                            kilde = Oppgave.MeldingOmVedtakKilde.INGEN,
+                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        ),
+                )
+            oppgaveRepository.lagre(oppgave)
+        } else {
+            val oppgave = oppgaveRepository.hentOppgave(oppgaveId)
+            oppgave.håndter(tilbakekrevingHendelse)
+            oppgaveRepository.lagre(oppgave)
         }
     }
 

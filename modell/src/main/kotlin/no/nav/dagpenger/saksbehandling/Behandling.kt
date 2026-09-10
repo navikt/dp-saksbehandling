@@ -81,6 +81,8 @@ sealed class HendelseBehandler(
         data object Klage : Intern("KLAGE")
 
         data object Oppfølging : Intern("OPPFØLGING")
+
+        data object Tilbakekreving : Intern("TILBAKEKREVING")
     }
 
     companion object {

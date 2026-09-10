@@ -33,6 +33,8 @@ sealed class Applikasjon(
 
     object Kabal : Applikasjon(navn = "Kabal")
 
+    object Tilbakekreving : Applikasjon(navn = "Tilbakekreving")
+
     class Generell(
         navn: String,
     ) : Applikasjon(navn)

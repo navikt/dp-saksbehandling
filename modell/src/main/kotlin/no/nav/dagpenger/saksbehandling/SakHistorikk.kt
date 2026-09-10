@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 private val logger = KotlinLogging.logger {}
 
@@ -67,6 +68,12 @@ data class SakHistorikk(
         saker
             .map {
                 it.knyttTilSak(hendelse)
+            }.knyttTilSakResultat()
+
+    fun knyttTilSak(tilbakekrevingHendelse: TilbakekrevingHendelse): KnyttTilSakResultat =
+        saker
+            .map {
+                it.knyttTilSak(tilbakekrevingHendelse)
             }.knyttTilSakResultat()
 
     private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
