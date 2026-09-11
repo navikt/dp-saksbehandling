@@ -2944,7 +2944,7 @@ components:
         tilbakekrevingBehandlingId:
           type: string
           format: uuid
-        sakOpprettet:
+        opprettet:
           type: string
           format: date-time
         varselSendt:
@@ -2961,7 +2961,7 @@ components:
           $ref: '#/components/schemas/TilbakekrevingPeriode'
       required:
         - tilbakekrevingBehandlingId
-        - sakOpprettet
+        - opprettet
         - behandlingsstatus
         - totaltFeilutbetaltBelop
         - saksbehandlingURL

@@ -3,9 +3,9 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 sealed class KnyttTilSakResultat {
     data class KnyttetTilSak(

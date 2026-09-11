@@ -41,6 +41,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -50,7 +51,6 @@ import no.nav.dagpenger.saksbehandling.tilgangsstyring.SaksbehandlerErIkkeEier
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -412,8 +412,15 @@ data class Oppgave private constructor(
     }
 
     fun håndter(hendelse: TilbakekrevingHendelse) {
+        require(this.behandling.utløstAv == HendelseBehandler.Intern.Tilbakekreving) {
+            "Kan bare behandle tilbakekrevinghendelser for oppgaver som er utløst av tilbakekreving. " +
+                "OppgaveId: ${this.oppgaveId}, " +
+                "BehandlingId: ${this.behandling.behandlingId}, " +
+                "UtløstAv: ${this.behandling.utløstAv}"
+        }
         tilstand.håndter(this, hendelse)
     }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -481,6 +488,9 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
+            require(hendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL) {
+                "Oppgave i tilstand OPPRETTET kan kun håndtere tilbakekrevinghendelser med status TIL_FORHÅNDSVARSEL"
+            }
             oppgave.endreTilstand(KlarTilBehandling, hendelse)
         }
     }
@@ -725,6 +735,7 @@ data class Oppgave private constructor(
             )
             oppgave.endreTilstand(Avbrutt, avbrytKlageHendelse)
         }
+
         override fun håndter(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
@@ -741,8 +752,10 @@ data class Oppgave private constructor(
                     oppgave._emneknagger.remove(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
                 }
             } else {
-                logger.warn { "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
-                        "i tilstand $type. Ignorerer meldingen." }
+                logger.warn {
+                    "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                        "i tilstand $type. Ignorerer meldingen."
+                }
             }
         }
     }
@@ -1136,6 +1149,7 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
+
         override fun håndter(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
@@ -1157,6 +1171,7 @@ data class Oppgave private constructor(
                 }
             }
         }
+
         override fun lagreNotat(
             oppgave: Oppgave,
             notatHendelse: NotatHendelse,

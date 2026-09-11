@@ -11,11 +11,11 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import java.math.BigDecimal
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode
+import java.math.BigDecimal
 
 private val logger = KotlinLogging.logger {}
 
@@ -80,7 +80,7 @@ private fun tilbakekrevingHendelseFraPacket(
         tilbakekreving =
             TilbakekrevingHendelse.Tilbakekreving(
                 behandlingId = tilbakekrevingNode["behandlingId"].asUUID(),
-                sakOpprettet = tilbakekrevingNode["sakOpprettet"].asLocalDateTime(),
+                opprettet = tilbakekrevingNode["sakOpprettet"].asLocalDateTime(),
                 varselSendt = tilbakekrevingNode["varselSendt"]?.asOptionalLocalDate(),
                 behandlingsstatus =
                     TilbakekrevingHendelse.BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].stringValue()),

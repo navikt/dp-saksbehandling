@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.sak
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.UUID
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -24,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -61,7 +61,7 @@ class SakMediator(
                 requireNotNull(hendelse.behandlingskjedeId) {
                     logger.error {
                         "Mottok SøknadsbehandlingOpprettetHendelse uten behandlingskjedeId for " +
-                                "behandlingId ${hendelse.behandlingId}"
+                            "behandlingId ${hendelse.behandlingId}"
                     }
                 }
             opprettSak(
@@ -228,8 +228,7 @@ class SakMediator(
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentSakIdForBehandlingId(behandlingId)
 
-    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID =
-        sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID = sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
 
     private fun sendAvbrytBehandling(
         behandlingId: UUID,

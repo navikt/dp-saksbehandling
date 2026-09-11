@@ -323,6 +323,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
         is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
         is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
+        is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
     }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = UtlostAvTypeDTO.valueOf(this.behandling.utløstAv.name)

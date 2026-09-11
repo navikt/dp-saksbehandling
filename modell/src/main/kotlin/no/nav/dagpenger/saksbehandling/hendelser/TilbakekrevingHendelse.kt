@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
+import no.nav.dagpenger.saksbehandling.Applikasjon
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.dagpenger.saksbehandling.Applikasjon
 
 data class TilbakekrevingHendelse(
     val ident: String,
@@ -16,7 +16,7 @@ data class TilbakekrevingHendelse(
 ) : Hendelse(utførtAv) {
     data class Tilbakekreving(
         val behandlingId: UUID,
-        val sakOpprettet: LocalDateTime,
+        val opprettet: LocalDateTime,
         val varselSendt: LocalDate?,
         val behandlingsstatus: BehandlingStatus,
         val forrigeBehandlingsstatus: BehandlingStatus?,

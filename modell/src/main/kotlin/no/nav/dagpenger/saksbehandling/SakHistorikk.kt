@@ -4,8 +4,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import java.util.UUID
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 

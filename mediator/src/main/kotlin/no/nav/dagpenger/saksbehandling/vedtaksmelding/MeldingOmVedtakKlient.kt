@@ -227,6 +227,7 @@ private fun HendelseBehandler.tilMeldingOmVedtakBehandlingstype(): String =
         is HendelseBehandler.DpBehandling.Ferietillegg -> "FERIETILLEGG"
         is HendelseBehandler.DpBehandling.Arbeidssøkerperiode -> "ARBEIDSSØKERPERIODE"
         is HendelseBehandler.DpBehandling.Samordning -> "SAMORDNING"
+        is HendelseBehandler.Intern.Tilbakekreving -> "TILBAKEKREVING"
     }
 
 private data class MeldingOmVedtakDataDTO(
