@@ -48,30 +48,40 @@ class TilbakekrevingMottakTest {
     }
 
     @Test
-    fun `Skal parse tilbakekrevingHendelse korrekt`() {
+    fun `Skal parse tilbakekrevingHendelse korrekt med venter`() {
+        val slot = slot<TilbakekrevingHendelse>()
+        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET", venter = "2026-10-02"), ident)
+        verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
+        slot.captured.let { hendelse ->
+            hendelse.eksternFagsakId shouldBe "100001234"
+            hendelse.eksternBehandlingId shouldBe behandlingId
+            hendelse.ident shouldBe ident
+            hendelse.hendelseOpprettet shouldBe LocalDateTime.parse("2024-06-01T10:00:00")
+            hendelse.tilbakekreving shouldBe
+                TilbakekrevingHendelse.Tilbakekreving(
+                    behandlingId = tilbakekrevingBehandlingId,
+                    opprettet = LocalDateTime.parse("2024-05-20T08:00:00"),
+                    avventBehandlingTilDato = LocalDate.parse("2026-10-02"),
+                    varselSendt = LocalDate.parse("2024-05-21"),
+                    behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
+                    forrigeBehandlingsstatus = null,
+                    totaltFeilutbetaltBeløp = 15000.toBigDecimal(),
+                    saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                    fullstendigPeriode =
+                        TilbakekrevingHendelse.Periode(
+                            fom = LocalDate.parse("2025-01-01"),
+                            tom = LocalDate.parse("2025-06-30"),
+                        ),
+                )
+        }
+    }
+
+    @Test
+    fun `Skal parse tilbakekrevingHendelse korrekt uten venter`() {
         val slot = slot<TilbakekrevingHendelse>()
         testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"), ident)
         verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
-        val hendelse = slot.captured
-        hendelse.eksternFagsakId shouldBe "100001234"
-        hendelse.eksternBehandlingId shouldBe behandlingId
-        hendelse.ident shouldBe ident
-        hendelse.hendelseOpprettet shouldBe LocalDateTime.parse("2024-06-01T10:00:00")
-        hendelse.tilbakekreving shouldBe
-            TilbakekrevingHendelse.Tilbakekreving(
-                behandlingId = tilbakekrevingBehandlingId,
-                opprettet = LocalDateTime.parse("2024-05-20T08:00:00"),
-                varselSendt = LocalDate.parse("2024-05-21"),
-                behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
-                forrigeBehandlingsstatus = null,
-                totaltFeilutbetaltBeløp = 15000.toBigDecimal(),
-                saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
-                fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
-                        fom = LocalDate.parse("2025-01-01"),
-                        tom = LocalDate.parse("2025-06-30"),
-                    ),
-            )
+        slot.captured.tilbakekreving.avventBehandlingTilDato shouldBe null
     }
 
     @Test
@@ -96,27 +106,33 @@ class TilbakekrevingMottakTest {
     }
 
     //language=json
-    private fun tilbakekrevingMelding(status: String) =
-        """
-        {
-          "hendelsestype": "behandling_endret",
-          "versjon": 1,
-          "eksternFagsakId": "100001234",
-          "eksternBehandlingId": "$behandlingId",
-          "hendelseOpprettet": "2024-06-01T10:00:00",
-          "tilbakekreving": {
-            "behandlingId": "$tilbakekrevingBehandlingId",
-            "sakOpprettet": "2024-05-20T08:00:00",
-            "varselSendt": "2024-05-21",
-            "behandlingsstatus": "$status",
-            "forrigeBehandlingsstatus": null,
-            "totaltFeilutbetaltBeløp": "15000",
-            "saksbehandlingURL": "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
-            "fullstendigPeriode": {
-              "fom": "2025-01-01",
-              "tom": "2025-06-30"
+    private fun tilbakekrevingMelding(
+        status: String,
+        venter: String? = null,
+    ): String {
+        val venterJson = venter?.let { "\"venter\" : {\"grunn\": \"AVVENTER_BRUKERUTTALELSE\",\"gjenopptas\": \"$it\" }, " } ?: ""
+        return """
+            {
+              "hendelsestype": "behandling_endret",
+              "versjon": 1,
+              "eksternFagsakId": "100001234",
+              "eksternBehandlingId": "$behandlingId",
+              "hendelseOpprettet": "2024-06-01T10:00:00",
+              "tilbakekreving": {
+                "behandlingId": "$tilbakekrevingBehandlingId",
+                "sakOpprettet": "2024-05-20T08:00:00",
+                $venterJson
+                "varselSendt": "2024-05-21",
+                "behandlingsstatus": "$status",
+                "forrigeBehandlingsstatus": null,
+                "totaltFeilutbetaltBeløp": "15000",
+                "saksbehandlingURL": "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                "fullstendigPeriode": {
+                  "fom": "2025-01-01",
+                  "tom": "2025-06-30"
+                }
+              }
             }
-          }
-        }
-        """.trimIndent()
+            """.trimIndent()
+    }
 }

@@ -2,6 +2,9 @@ package no.nav.dagpenger.saksbehandling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
+import no.nav.dagpenger.saksbehandling.Emneknagg.Kontroll.RETUR_FRA_KONTROLL
+import no.nav.dagpenger.saksbehandling.Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.FORHÅNDSVARSEL_FRIST_UTGÅTT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
@@ -42,6 +45,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -569,8 +575,8 @@ data class Oppgave private constructor(
             } else {
                 oppgave.behandlerIdent = oppgave.sisteBeslutterIdent
                 oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
-                oppgave._emneknagger.add(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
-                oppgave._emneknagger.remove(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+                oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT.visningsnavn)
+                oppgave._emneknagger.remove(RETUR_FRA_KONTROLL.visningsnavn)
             }
         }
 
@@ -741,20 +747,39 @@ data class Oppgave private constructor(
             hendelse: TilbakekrevingHendelse,
         ) {
             // TODO vurder om vi skal bruke require(hendelse.tilbakekreving.behandlingsstatus == TIL_GODKJENNING)
-            if (hendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING) {
-                if (oppgave.sisteBeslutterIdent == null) {
-                    oppgave.behandlerIdent = null
-                    oppgave.endreTilstand(KlarTilKontroll, hendelse)
-                } else {
-                    oppgave.behandlerIdent = oppgave.sisteBeslutterIdent
-                    oppgave.endreTilstand(UnderKontroll(), hendelse)
-                    oppgave._emneknagger.add(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
-                    oppgave._emneknagger.remove(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
+            when (hendelse.tilbakekreving.behandlingsstatus) {
+                TIL_BEHANDLING -> {
+                    val avventBehandlingTilDato = hendelse.tilbakekreving.avventBehandlingTilDato
+                    if (avventBehandlingTilDato != null && avventBehandlingTilDato > LocalDate.now()) {
+                        oppgave.endreTilstand(PåVent, hendelse)
+                        // TODO verifiser at Tilbake-appen sørger for utgått frist hendelse
+                        //  oppgave.utsattTil = avventBehandlingTilDato
+                    } else {
+                        logger.info {
+                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus " +
+                                "TIL_BEHANDLING og venter.gjenopptas = $avventBehandlingTilDato. " +
+                                "Ignorerer meldingen."
+                        }
+                    }
                 }
-            } else {
-                logger.warn {
-                    "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
-                        "i tilstand $type. Ignorerer meldingen."
+
+                TIL_GODKJENNING -> {
+                    if (oppgave.sisteBeslutterIdent == null) {
+                        oppgave.behandlerIdent = null
+                        oppgave.endreTilstand(KlarTilKontroll, hendelse)
+                    } else {
+                        oppgave.behandlerIdent = oppgave.sisteBeslutterIdent
+                        oppgave.endreTilstand(UnderKontroll(), hendelse)
+                        oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT.visningsnavn)
+                        oppgave._emneknagger.remove(RETUR_FRA_KONTROLL.visningsnavn)
+                    }
+                }
+
+                else -> {
+                    logger.warn {
+                        "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                            "i tilstand $type. Ignorerer meldingen."
+                    }
                 }
             }
         }
@@ -917,15 +942,26 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
-            val nyTilstand =
-                if (oppgave.behandlerIdent == null) {
-                    KlarTilBehandling
-                } else {
-                    UnderBehandling
+            when (hendelse.tilbakekreving.behandlingsstatus) {
+                TIL_BEHANDLING -> {
+                    val nyTilstand =
+                        if (oppgave.behandlerIdent == null) {
+                            KlarTilBehandling
+                        } else {
+                            UnderBehandling
+                        }
+                    oppgave.endreTilstand(nyTilstand, hendelse)
+                    oppgave.utsattTil = null
+                    oppgave._emneknagger.add(FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn)
                 }
-            oppgave.endreTilstand(nyTilstand, hendelse)
-            oppgave.utsattTil = null
-            oppgave._emneknagger.add(Emneknagg.PåVent.FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn)
+
+                else -> {
+                    logger.warn {
+                        "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                            "i tilstand $type. Ignorerer meldingen."
+                    }
+                }
+            }
         }
     }
 
@@ -1122,8 +1158,8 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = oppgave.sisteSaksbehandlerIdent
-            oppgave._emneknagger.add(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
-            oppgave._emneknagger.remove(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
+            oppgave._emneknagger.add(RETUR_FRA_KONTROLL.visningsnavn)
+            oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT.visningsnavn)
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
                 oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }
@@ -1155,19 +1191,23 @@ data class Oppgave private constructor(
             hendelse: TilbakekrevingHendelse,
         ) {
             when (hendelse.tilbakekreving.behandlingsstatus) {
-                TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET -> {
+                AVSLUTTET -> {
                     oppgave.endreTilstand(FerdigBehandlet, hendelse)
                 }
 
-                TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING -> {
+                TIL_BEHANDLING -> {
                     oppgave.endreTilstand(UnderBehandling, hendelse)
-                    oppgave._emneknagger.add(Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn)
-                    oppgave._emneknagger.remove(Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT.visningsnavn)
+                    oppgave._emneknagger.add(RETUR_FRA_KONTROLL.visningsnavn)
+                    oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT.visningsnavn)
+                    oppgave._emneknagger.remove(FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn)
                     oppgave.behandlerIdent = oppgave.sisteSaksbehandlerIdent
                 }
 
                 else -> {
-                    super.håndter(oppgave, hendelse)
+                    logger.warn {
+                        "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                            "i tilstand ${UnderBehandling.type}. Ignorerer meldingen."
+                    }
                 }
             }
         }
@@ -1521,7 +1561,7 @@ data class Oppgave private constructor(
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere tilbakekrevinghendelse i tilstand $type",
+                message = "Kan ikke håndtere tilbakekrevinghendelse i tilstand $type. Hendelse: $hendelse",
             )
         }
 

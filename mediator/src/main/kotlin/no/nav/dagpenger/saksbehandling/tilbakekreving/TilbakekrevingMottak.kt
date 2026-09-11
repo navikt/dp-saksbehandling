@@ -71,7 +71,7 @@ private fun tilbakekrevingHendelseFraPacket(
     packet: JsonMessage,
     ident: String,
 ): TilbakekrevingHendelse {
-    val tilbakekrevingNode = packet["tilbakekreving"]
+    val tilbakekrevingNode: JsonNode = packet["tilbakekreving"]
     return TilbakekrevingHendelse(
         ident = ident,
         eksternFagsakId = packet["eksternFagsakId"].stringValue(),
@@ -81,6 +81,7 @@ private fun tilbakekrevingHendelseFraPacket(
             TilbakekrevingHendelse.Tilbakekreving(
                 behandlingId = tilbakekrevingNode["behandlingId"].asUUID(),
                 opprettet = tilbakekrevingNode["sakOpprettet"].asLocalDateTime(),
+                avventBehandlingTilDato = tilbakekrevingNode.get("venter")?.get("gjenopptas")?.asOptionalLocalDate(),
                 varselSendt = tilbakekrevingNode["varselSendt"]?.asOptionalLocalDate(),
                 behandlingsstatus =
                     TilbakekrevingHendelse.BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].stringValue()),

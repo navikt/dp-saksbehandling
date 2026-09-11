@@ -17,6 +17,7 @@ data class TilbakekrevingHendelse(
     data class Tilbakekreving(
         val behandlingId: UUID,
         val opprettet: LocalDateTime,
+        val avventBehandlingTilDato: LocalDate?,
         val varselSendt: LocalDate?,
         val behandlingsstatus: BehandlingStatus,
         val forrigeBehandlingsstatus: BehandlingStatus?,
@@ -37,4 +38,8 @@ data class TilbakekrevingHendelse(
         TIL_GODKJENNING,
         AVSLUTTET,
     }
+
+    override fun toString(): String =
+        "TilbakekrevingHendelse(eksternFagsakId=$eksternFagsakId, eksternBehandlingId=$eksternBehandlingId, " +
+            "hendelseOpprettet=$hendelseOpprettet, tilbakekreving=$tilbakekreving, utførtAv=$utførtAv)"
 }
