@@ -82,7 +82,7 @@ class HendelseBehandlerTest {
 
     @Test
     fun `entries inneholder alle kjente typer`() {
-        HendelseBehandler.entries.size shouldBe 12
+        HendelseBehandler.entries.size shouldBe 13
         HendelseBehandler.entries.map { it.name }.toSet() shouldBe
             setOf(
                 "SØKNAD",
@@ -97,6 +97,7 @@ class HendelseBehandlerTest {
                 "INNSENDING",
                 "KLAGE",
                 "OPPFØLGING",
+                "TILBAKEKREVING",
             )
     }
 

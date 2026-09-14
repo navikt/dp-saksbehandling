@@ -805,9 +805,7 @@ class OppgaveMediator(
             // Vurder denne: require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus in setOf(OPPRETTET, TIL_FORHÅNDSVARSEL))
 
             transaksjoner.transaksjon { ctx ->
-                sakMediator.knyttTilSak(tilbakekrevingHendelse, ctx)
-                // slik at når vi henter sakshistorikk har vi både person og behandlingen vi laget
-                val sakHistorikk = sakMediator.hentSakHistorikk(ident = tilbakekrevingHendelse.ident)
+                val sakHistorikk = sakMediator.knyttTilSak(tilbakekrevingHendelse, ctx)
                 val behandling =
                     requireNotNull(sakHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
 
@@ -980,13 +978,14 @@ class OppgaveMediator(
                                 ).getOrThrow()
                         }
 
-                        false ->
+                        false -> {
                             behandlingKlient
                                 .godkjenn(
                                     behandlingId = behandlingId,
                                     ident = ident,
                                     saksbehandlerToken = saksbehandlerToken,
                                 ).getOrThrow()
+                        }
                     }
                 }
         }

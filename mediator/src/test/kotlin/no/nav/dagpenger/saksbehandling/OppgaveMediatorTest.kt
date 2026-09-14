@@ -16,8 +16,12 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
+import no.nav.dagpenger.saksbehandling.Emneknagg.Kontroll.RETUR_FRA_KONTROLL
+import no.nav.dagpenger.saksbehandling.Emneknagg.Kontroll.TIDLIGERE_KONTROLLERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.FORHÅNDSVARSEL_FRIST_UTGÅTT
 import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
+import no.nav.dagpenger.saksbehandling.HendelseBehandler.Intern
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -84,6 +88,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -103,6 +109,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.provider.Arguments
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -2240,6 +2247,198 @@ OppgaveMediatorTest {
 
         return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
     }
+
+    @Test
+    fun `Livssyklus for tilbakekreving - fra opprettet til ferdig behandlet`() {
+        val søknadBehandlingId = UUIDv7.ny()
+        val søknadHendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = UUIDv7.ny(),
+                behandlingId = søknadBehandlingId,
+                ident = testIdent,
+                opprettet = LocalDateTime.now(),
+                behandlingskjedeId = UUIDv7.ny(),
+            )
+
+        settOppOppgaveMediator(hendelse = søknadHendelse) { datasource, oppgaveMediator ->
+            val tilbakekrevingBehandlingId = UUIDv7.ny()
+
+            // 1. OPPRETTET -> oppgaven opprettes og knyttes til samme sak som søknadsbehandlingen
+            val opprettet =
+                lagTilbakekrevingHendelse(
+                    eksternBehandlingId = søknadBehandlingId,
+                    tilbakekrevingBehandlingId = tilbakekrevingBehandlingId,
+                    status = BehandlingStatus.OPPRETTET,
+                )
+            oppgaveMediator.håndter(opprettet)
+
+            val oppgaveId = requireNotNull(oppgaveMediator.hentOppgaveIdFor(tilbakekrevingBehandlingId))
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe OPPRETTET
+                oppgave.behandling.hendelse shouldBe opprettet
+                oppgave.behandling.utløstAv shouldBe Intern.Tilbakekreving
+            }
+
+            PostgresSakRepository(DatabaseSession(datasource)).finnSakHistorikk(testIdent).let { sakHistorikk ->
+                requireNotNull(sakHistorikk)
+                sakHistorikk.finnBehandling(tilbakekrevingBehandlingId) shouldNotBe null
+                sakHistorikk.finnBehandling(søknadBehandlingId) shouldNotBe null
+            }
+
+            // 2. TIL_FORHÅNDSVARSEL -> KlarTilBehandling
+            val tilForhåndsvarsel =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                )
+            oppgaveMediator.håndter(tilForhåndsvarsel)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+                oppgave.tilstandslogg.first().hendelse shouldBe tilForhåndsvarsel
+            }
+
+            // 3. Saksbehandler tar oppgaven -> UnderBehandling
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+                oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            }
+
+            // 4. TIL_BEHANDLING med uttalelsesfrist fram i tid -> PåVent
+            val venterPåUttalelse =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.TIL_BEHANDLING,
+                    avventBehandlingTilDato = LocalDate.now().plusWeeks(3),
+                )
+            oppgaveMediator.håndter(venterPåUttalelse)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe PAA_VENT
+                oppgave.tilstandslogg.first().hendelse shouldBe venterPåUttalelse
+            }
+
+            // 5. TIL_BEHANDLING uten frist -> tilbake til UnderBehandling, frist-emneknagg settes
+            val fristUtgått =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.TIL_BEHANDLING,
+                )
+            oppgaveMediator.håndter(fristUtgått)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+                oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+                oppgave.emneknagger shouldContain FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn
+            }
+
+            // 6. TIL_GODKJENNING uten tidligere beslutter -> KlarTilKontroll
+            val tilGodkjenning =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.TIL_GODKJENNING,
+                )
+            oppgaveMediator.håndter(tilGodkjenning)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
+                oppgave.behandlerIdent shouldBe null
+                oppgave.tilstandslogg.first().hendelse shouldBe tilGodkjenning
+            }
+
+            // 7. Beslutter tar oppgaven -> UnderKontroll
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe UNDER_KONTROLL
+                oppgave.behandlerIdent shouldBe beslutter.navIdent
+            }
+
+            // 8. Underkjent (TIL_BEHANDLING) -> UnderBehandling hos opprinnelig saksbehandler
+            val underkjent =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.TIL_BEHANDLING,
+                )
+            oppgaveMediator.håndter(underkjent)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+                oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+                oppgave.emneknagger shouldContain RETUR_FRA_KONTROLL.visningsnavn
+                oppgave.emneknagger shouldNotContain FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn
+                oppgave.tilstandslogg.first().hendelse shouldBe underkjent
+            }
+
+            // 9. TIL_GODKJENNING på nytt -> rett til UnderKontroll hos samme beslutter
+            val tilGodkjenningIgjen =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.TIL_GODKJENNING,
+                )
+            oppgaveMediator.håndter(tilGodkjenningIgjen)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe UNDER_KONTROLL
+                oppgave.behandlerIdent shouldBe beslutter.navIdent
+                oppgave.emneknagger shouldContain TIDLIGERE_KONTROLLERT.visningsnavn
+                oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL.visningsnavn
+            }
+
+            // 10. AVSLUTTET -> FerdigBehandlet
+            val avsluttet =
+                lagTilbakekrevingHendelse(
+                    søknadBehandlingId,
+                    tilbakekrevingBehandlingId,
+                    BehandlingStatus.AVSLUTTET,
+                )
+            oppgaveMediator.håndter(avsluttet)
+            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
+                oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+                oppgave.tilstandslogg.first().hendelse shouldBe avsluttet
+            }
+        }
+    }
+
+    private fun lagTilbakekrevingHendelse(
+        eksternBehandlingId: UUID,
+        tilbakekrevingBehandlingId: UUID,
+        status: BehandlingStatus,
+        avventBehandlingTilDato: LocalDate? = null,
+    ) = TilbakekrevingHendelse(
+        ident = testIdent,
+        eksternFagsakId = "100001234",
+        eksternBehandlingId = eksternBehandlingId,
+        hendelseOpprettet = LocalDateTime.now(),
+        tilbakekreving =
+            TilbakekrevingHendelse.Tilbakekreving(
+                behandlingId = tilbakekrevingBehandlingId,
+                opprettet = LocalDateTime.now(),
+                avventBehandlingTilDato = avventBehandlingTilDato,
+                varselSendt = LocalDate.now(),
+                behandlingsstatus = status,
+                forrigeBehandlingsstatus = null,
+                totaltFeilutbetaltBeløp = BigDecimal("25000"),
+                saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                fullstendigPeriode =
+                    TilbakekrevingHendelse.Periode(
+                        fom = LocalDate.of(2025, 1, 1),
+                        tom = LocalDate.of(2025, 6, 30),
+                    ),
+            ),
+    )
 
     private fun settOppOppgaveMediator(
         hendelse: Hendelse = TomHendelse,

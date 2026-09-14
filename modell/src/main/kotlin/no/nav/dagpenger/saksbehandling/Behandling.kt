@@ -100,6 +100,7 @@ sealed class HendelseBehandler(
                 Intern.Innsending,
                 Intern.Klage,
                 Intern.Oppfølging,
+                Intern.Tilbakekreving,
             ).associateBy { it.name }
         }
 

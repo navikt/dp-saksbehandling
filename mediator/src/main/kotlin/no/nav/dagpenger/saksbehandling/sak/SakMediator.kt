@@ -183,7 +183,7 @@ class SakMediator(
     fun knyttTilSak(
         tilbakekrevingHendelse: TilbakekrevingHendelse,
         ctx: Transaksjonskontekst,
-    ) {
+    ): SakHistorikk =
         sakRepository.hentSakHistorikk(tilbakekrevingHendelse.ident).also {
             it.knyttTilSak(tilbakekrevingHendelse).also { resultat ->
                 sjekkResultat(
@@ -194,7 +194,6 @@ class SakMediator(
             }
             sakRepository.lagre(it, ctx)
         }
-    }
 
     fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
         val sak = vedtakFattetHendelse.sak
