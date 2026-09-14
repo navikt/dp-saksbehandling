@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.tilbakekreving.tilbakekrevingApi
 
 internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,
@@ -97,5 +98,6 @@ internal fun Application.installerApis(
         )
         oppfølgingApi(oppfølgingMediator, applicationCallParser, auditlogg)
         emneknaggApi(oppgaveMediator)
+        tilbakekrevingApi(oppgaveMediator, applicationCallParser, auditlogg)
     }
 }
