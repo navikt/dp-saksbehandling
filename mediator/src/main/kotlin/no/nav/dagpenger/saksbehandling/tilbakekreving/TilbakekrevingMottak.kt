@@ -31,7 +31,6 @@ internal class TilbakekrevingMottak(
             }
             validate {
                 it.requireKey(
-                    "eksternFagsakId",
                     "eksternBehandlingId",
                     "hendelseOpprettet",
                     "tilbakekreving",
@@ -50,12 +49,7 @@ internal class TilbakekrevingMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident =
-            metadata.key ?: throw IllegalArgumentException("Kan ikke hente ut tilbakekreving-endret metadata").also {
-                logger.error { "Kan ikke hente ut tilbakekreving-endret metadata" }
-            }
-
-        val hendelse = tilbakekrevingHendelseFraPacket(packet, ident)
+        val hendelse = tilbakekrevingHendelseFraPacket(packet)
 
         withLoggingContext(
             "tilbakekrevingBehandlingId" to "${hendelse.tilbakekreving.behandlingId}",
@@ -67,14 +61,9 @@ internal class TilbakekrevingMottak(
     }
 }
 
-private fun tilbakekrevingHendelseFraPacket(
-    packet: JsonMessage,
-    ident: String,
-): TilbakekrevingHendelse {
+private fun tilbakekrevingHendelseFraPacket(packet: JsonMessage): TilbakekrevingHendelse {
     val tilbakekrevingNode: JsonNode = packet["tilbakekreving"]
     return TilbakekrevingHendelse(
-        ident = ident,
-        eksternFagsakId = packet["eksternFagsakId"].stringValue(),
         eksternBehandlingId = packet["eksternBehandlingId"].asUUID(),
         hendelseOpprettet = packet["hendelseOpprettet"].asLocalDateTime(),
         tilbakekreving =

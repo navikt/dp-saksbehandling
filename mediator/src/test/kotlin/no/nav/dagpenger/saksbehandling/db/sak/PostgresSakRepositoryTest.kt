@@ -107,6 +107,17 @@ class PostgresSakRepositoryTest {
         }
 
     @Test
+    fun `Skal kunne hente sakHistorikk for en bestemt behandlingId`() {
+        DBTestHelper.withPerson(person) { dataSource ->
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
+            sakRepository.lagre(sakHistorikk)
+            this.leggTilOppgave(oppgaveId, behandling1iSak1.behandlingId)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(behandlingId1iSak1)
+            sakHistorikkFraDB shouldBe sakHistorikk
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre sakHistorikk`() {
         DBTestHelper.withPerson(person) { dataSource ->
             val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))

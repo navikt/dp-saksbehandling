@@ -71,7 +71,7 @@ class TilbakekrevingOppgaveTest {
 
         val beslutter = Saksbehandler("B654321", emptySet(), setOf(TilgangType.BESLUTTER))
         oppgave.tildel(
-            no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse(
+            SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 ansvarligIdent = beslutter.navIdent,
                 utførtAv = beslutter,
@@ -167,8 +167,6 @@ class TilbakekrevingOppgaveTest {
         status: BehandlingStatus,
         avventBehandlingTilDato: LocalDate? = null,
     ) = TilbakekrevingHendelse(
-        ident = "12345678910",
-        eksternFagsakId = "100001234",
         eksternBehandlingId = eksternBehandlingId,
         hendelseOpprettet = LocalDateTime.now(),
         tilbakekreving =

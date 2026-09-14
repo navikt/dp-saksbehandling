@@ -184,7 +184,7 @@ class SakMediator(
         tilbakekrevingHendelse: TilbakekrevingHendelse,
         ctx: Transaksjonskontekst,
     ): SakHistorikk =
-        sakRepository.hentSakHistorikk(tilbakekrevingHendelse.ident).also {
+        sakRepository.hentSakHistorikk(tilbakekrevingHendelse.eksternBehandlingId).also {
             it.knyttTilSak(tilbakekrevingHendelse).also { resultat ->
                 sjekkResultat(
                     tilbakekrevingHendelse.eksternBehandlingId,

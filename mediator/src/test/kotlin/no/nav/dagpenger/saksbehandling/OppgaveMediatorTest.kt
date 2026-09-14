@@ -408,7 +408,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal oppdatere emneknagg på klageoppgave og legge til tilstandslogg når vi mottar utfall fra klageinstans`() {
-        val behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
+        val behandling = lagBehandling(utløstAvType = Intern.Klage)
         val oppgave =
             TestHelper.lagOppgave(
                 person = TestHelper.testPerson,
@@ -1967,7 +1967,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for behandling av klage som ferdigstilles`() {
-        val behandling = lagBehandling(utløstAvType = HendelseBehandler.Intern.Klage)
+        val behandling = lagBehandling(utløstAvType = Intern.Klage)
         val oppgave =
             TestHelper.lagOppgave(
                 tilstand = UnderBehandling,
@@ -2110,7 +2110,7 @@ OppgaveMediatorTest {
             oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
                 oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
-                    oppgave.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                    oppgave.behandling.utløstAv == Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe KlarTilBehandling
 
@@ -2125,7 +2125,7 @@ OppgaveMediatorTest {
             oppgaveMediator
                 .finnOppgaverFor(ident = testPerson.ident)
                 .single { oppgave ->
-                    oppgave.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                    oppgave.behandling.utløstAv == Intern.Innsending
                 }.tilstand() shouldBe UnderBehandling
 
             oppgaveMediator.ferdigstillOppgave(
@@ -2139,7 +2139,7 @@ OppgaveMediatorTest {
             oppgaveMediator
                 .finnOppgaverFor(ident = testPerson.ident)
                 .single { oppgave ->
-                    oppgave.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                    oppgave.behandling.utløstAv == Intern.Innsending
                 }.tilstand() shouldBe FerdigBehandlet
         }
     }
@@ -2418,8 +2418,6 @@ OppgaveMediatorTest {
         status: BehandlingStatus,
         avventBehandlingTilDato: LocalDate? = null,
     ) = TilbakekrevingHendelse(
-        ident = testIdent,
-        eksternFagsakId = "100001234",
         eksternBehandlingId = eksternBehandlingId,
         hendelseOpprettet = LocalDateTime.now(),
         tilbakekreving =

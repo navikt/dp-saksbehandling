@@ -37,6 +37,49 @@ class PostgresSakRepository(
     override fun hentSakHistorikk(ident: String): SakHistorikk =
         finnSakHistorikk(ident) ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for ident $ident")
 
+    override fun hentSakHistorikk(behandlingId: UUID): SakHistorikk {
+        val sakHistorikk = mutableListOf<SakHistorikk>()
+        return databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT 
+                            sak.person_id AS person_id,
+                            sak.id AS sak_id,
+                            sak.opprettet AS sak_opprettet,
+                            beh.id AS behandling_id,
+                            beh.utlost_av AS utlost_av,
+                            beh.opprettet AS behandling_opprettet,
+                            opp.id AS oppgave_id,
+                            hen.hendelse_type AS hendelse_type,
+                            hen.hendelse_data AS hendelse_data
+                        FROM behandling_v1 beh
+                        JOIN sak_v2 sak ON sak.id = beh.sak_id
+                        LEFT JOIN oppgave_v1 opp ON opp.behandling_id = beh.id
+                        LEFT JOIN hendelse_v1 hen ON hen.behandling_id = beh.id
+                        WHERE sak.person_id = (
+                            SELECT sak2.person_id 
+                            FROM behandling_v1 beh2
+                            JOIN sak_v2 sak2 ON sak2.id = beh2.sak_id
+                            WHERE beh2.id = :behandling_id
+                            LIMIT 1
+                        )
+                        ORDER BY sak.id DESC, beh.id DESC
+                            
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                        ),
+                ).map { row ->
+                    row.tilSakHistorikk(sakHistorikk)
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for behandlingId $behandlingId")
+    }
+
     override fun finnSakHistorikk(ident: String): SakHistorikk? {
         val sakHistorikk = mutableListOf<SakHistorikk>()
 

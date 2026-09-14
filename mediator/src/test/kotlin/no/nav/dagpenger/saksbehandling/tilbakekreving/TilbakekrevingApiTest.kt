@@ -191,8 +191,6 @@ class TilbakekrevingApiTest {
         behandlingsstatus: TilbakekrevingHendelse.BehandlingStatus =
             TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING,
     ) = TilbakekrevingHendelse(
-        ident = "12345678910",
-        eksternFagsakId = "100001234",
         eksternBehandlingId = UUIDv7.ny(),
         hendelseOpprettet = LocalDateTime.of(2025, 1, 15, 10, 0),
         tilbakekreving =

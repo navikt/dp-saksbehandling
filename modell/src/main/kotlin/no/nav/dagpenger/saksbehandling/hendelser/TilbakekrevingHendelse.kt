@@ -7,8 +7,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class TilbakekrevingHendelse(
-    val ident: String,
-    val eksternFagsakId: String,
     val eksternBehandlingId: UUID,
     val hendelseOpprettet: LocalDateTime,
     val tilbakekreving: Tilbakekreving,
@@ -40,6 +38,6 @@ data class TilbakekrevingHendelse(
     }
 
     override fun toString(): String =
-        "TilbakekrevingHendelse(eksternFagsakId=$eksternFagsakId, eksternBehandlingId=$eksternBehandlingId, " +
+        "TilbakekrevingHendelse(eksternBehandlingId=$eksternBehandlingId, " +
             "hendelseOpprettet=$hendelseOpprettet, tilbakekreving=$tilbakekreving, utførtAv=$utførtAv)"
 }

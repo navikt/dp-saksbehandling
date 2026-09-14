@@ -14,6 +14,8 @@ interface SakRepository {
 
     fun hentSakHistorikk(ident: String): SakHistorikk
 
+    fun hentSakHistorikk(behandlingId: UUID): SakHistorikk
+
     fun finnSakHistorikk(ident: String): SakHistorikk?
 
     fun finnSisteDagpengeSakId(ident: String): UUID?
