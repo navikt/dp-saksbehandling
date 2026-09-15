@@ -21,7 +21,7 @@ val confluentVersion = "8.3.1"
 dependencies {
     api("org.apache.kafka:kafka-streams:$kafkaVersion")
     implementation("io.confluent:kafka-streams-avro-serde:$confluentVersion")
-    implementation("org.apache.avro:avro:1.12.1")
+    implementation("org.apache.avro:avro:1.12.2")
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.server.cio)
