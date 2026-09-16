@@ -8,11 +8,11 @@ import java.util.UUID
 interface PersonRepository {
     fun finnPerson(ident: String): Person?
 
-    fun finnPerson(id: UUID): Person?
+    fun finnPerson(personId: UUID): Person?
 
     fun hentPerson(ident: String): Person
 
-    fun hentPerson(id: UUID): Person
+    fun hentPerson(personId: UUID): Person
 
     fun hentPersonForBehandlingId(behandlingId: UUID): Person
 

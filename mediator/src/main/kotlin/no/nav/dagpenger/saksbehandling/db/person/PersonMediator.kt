@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
@@ -14,9 +15,21 @@ class PersonMediator(
     private val personRepository: PersonRepository,
     private val oppslag: Oppslag,
 ) {
-    fun hentPerson(ident: String): Person = personRepository.hentPerson(ident)
+    fun hentPerson(
+        ident: String,
+        saksbehandler: Saksbehandler,
+    ): Person =
+        personRepository.hentPerson(ident).also {
+            it.harTilgang(saksbehandler)
+        }
 
-    fun hentPerson(id: UUID): Person = personRepository.hentPerson(id)
+    fun hentPerson(
+        personId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Person =
+        personRepository.hentPerson(personId = personId).also {
+            it.harTilgang(saksbehandler)
+        }
 
     fun lagre(person: Person) = personRepository.lagre(person)
 

@@ -55,7 +55,7 @@ class KlageMediator(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): KlageBehandling {
-        oppgaveMediator.hentOppgaveMedTilgangssjekk(
+        oppgaveMediator.hentOppgaveForBehandling(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
@@ -170,7 +170,7 @@ class KlageMediator(
         verdi: Verdi,
         saksbehandler: Saksbehandler,
     ): KlageBehandling {
-        oppgaveMediator.hentOppgaveMedTilgangssjekk(behandlingId = behandlingId, saksbehandler = saksbehandler)
+        oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
         return klageRepository.hentKlageBehandling(behandlingId).also { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
@@ -199,7 +199,7 @@ class KlageMediator(
             when (utfallType) {
                 UtfallType.OPPRETTHOLDELSE, UtfallType.AVVIST -> {
                     val oppgave =
-                        oppgaveMediator.hentOppgaveMedTilgangssjekk(
+                        oppgaveMediator.hentOppgaveForBehandling(
                             behandlingId = klageBehandlingUtført.behandlingId,
                             saksbehandler = klageBehandlingUtført.utførtAv,
                         )
@@ -280,7 +280,7 @@ class KlageMediator(
         }
 
     fun ferdigstillBehandling(hendelse: KlageBehandlingFerdigstilt): KlageBehandling {
-        oppgaveMediator.hentOppgaveMedTilgangssjekk(
+        oppgaveMediator.hentOppgaveForBehandling(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
         )
@@ -304,7 +304,7 @@ class KlageMediator(
     }
 
     fun avbrytKlage(hendelse: AvbruttHendelse): KlageBehandling {
-        oppgaveMediator.hentOppgaveMedTilgangssjekk(
+        oppgaveMediator.hentOppgaveForBehandling(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
         )
