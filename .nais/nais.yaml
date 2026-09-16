@@ -88,6 +88,9 @@ spec:
           - id: "{{azure.grupper.saksbehandler}}"
           - id: "{{azure.grupper.beslutter}}"
           - id: "{{azure.grupper.egne_ansatte}}"
+          - id: "{{azure.grupper.adressebeskyttelse_fortrolig}}"
+          - id: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig}}"
+          - id: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}"
         extra:
           - NAVident
   accessPolicy:
