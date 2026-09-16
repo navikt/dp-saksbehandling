@@ -44,8 +44,8 @@ class PostgresPersonRepository(
         }
     }
 
-    override fun finnPerson(id: UUID): Person? {
-        sikkerlogg.info { "Søker etter person med id $id" }
+    override fun finnPerson(personId: UUID): Person? {
+        sikkerlogg.info { "Søker etter person med id $personId" }
         return databaseSession.session { session ->
             session.run(
                 queryOf(
@@ -58,7 +58,7 @@ class PostgresPersonRepository(
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "id" to id,
+                            "id" to personId,
                         ),
                 ).map { row ->
                     row.tilPerson(session)
@@ -124,7 +124,7 @@ class PostgresPersonRepository(
 
     override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
-    override fun hentPerson(id: UUID) = finnPerson(id) ?: throw DataNotFoundException("Kan ikke finne person med id $id")
+    override fun hentPerson(personId: UUID) = finnPerson(personId) ?: throw DataNotFoundException("Kan ikke finne person med id $personId")
 
     override fun hentPersonForBehandlingId(behandlingId: UUID) =
         finnPersonForBehandlingId(behandlingId)

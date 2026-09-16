@@ -1392,7 +1392,7 @@ class OppgaveApiTest {
         val person = TestHelper.testPerson
         val personMediatorMock =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(person.id) } returns person
+                every { it.hentPerson(personId = person.id, saksbehandler = any()) } returns person
             }
 
         val behandlingId = UUIDv7.ny()
@@ -1682,7 +1682,7 @@ class OppgaveApiTest {
         val person = TestHelper.testPerson
         val personMediator =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(person.ident) } returns person
+                every { it.hentPerson(ident = person.ident, saksbehandler = any()) } returns person
             }
         val forventetPersonIdDTO =
             PersonIdDTO(
@@ -1723,8 +1723,8 @@ class OppgaveApiTest {
     fun `Skal kaste feil når person ikke finnes`() {
         val personMediator =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(any<String>()) } throws DataNotFoundException("Fant ikke person")
-                every { it.hentPerson(any<UUID>()) } throws DataNotFoundException("Fant ikke person")
+                every { it.hentPerson(ident = any<String>(), saksbehandler = any()) } throws DataNotFoundException("Fant ikke person")
+                every { it.hentPerson(personId = any<UUID>(), saksbehandler = any()) } throws DataNotFoundException("Fant ikke person")
             }
         withOppgaveApi(
             personMediator = personMediator,

@@ -80,16 +80,26 @@ internal fun Route.oppgaveApi(
     authenticate("azureAd") {
         route("person/personId") {
             post {
+                val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                val personIdDTO = PersonIdDTO(id = personMediator.hentPerson(personIdentDTO.ident).id)
+                val personIdDTO =
+                    PersonIdDTO(
+                        id =
+                            personMediator
+                                .hentPerson(
+                                    ident = personIdentDTO.ident,
+                                    saksbehandler = saksbehandler,
+                                ).id,
+                    )
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
         }
         route("person/{personId}") {
             get {
+                val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personId: UUID = call.finnUUID("personId")
                 sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
-                val person = personMediator.hentPerson(personId)
+                val person = personMediator.hentPerson(personId = personId, saksbehandler = saksbehandler)
                 val oppgaver =
                     oppgaveMediator
                         .finnOppgaverFor(person.ident, antall = null)
