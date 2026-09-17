@@ -51,6 +51,12 @@ internal class TilbakekrevingMottak(
         meterRegistry: MeterRegistry,
     ) {
         sikkerLogger.info { "Mottok tilbakekreving hendelse: ${packet.toJson()}" }
+        val skipSetBehandlingId = setOf("1")
+        if (packet["eksternBehandlingId"].stringValue() in skipSetBehandlingId) {
+            logger.info { "Hopper over tilbakekreving hendelse for " +
+                    "behandlingId ${packet["eksternBehandlingId"].stringValue()}" }
+            return
+        }
         val hendelse = tilbakekrevingHendelseFraPacket(packet)
 
         withLoggingContext(
