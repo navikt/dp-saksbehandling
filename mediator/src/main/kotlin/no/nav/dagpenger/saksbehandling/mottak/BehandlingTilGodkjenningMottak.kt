@@ -40,7 +40,12 @@ internal class BehandlingTilGodkjenningMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
+        val ident = packet["ident"].stringValue()
+
+        if (behandlingId.toString() in setOf("019ce207-0a3a-7607-9cb1-64515f4b4a77")) {
+            logger.info { "Skipper behandlingId $behandlingId fra BehandlingTilGodkjenningMottak" }
+            return
+        }
 
         withLoggingContext("behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_endret_tilstand TilGodkjenning hendelse" }
