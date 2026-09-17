@@ -76,7 +76,6 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
-import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMottak
 import no.nav.dagpenger.saksbehandling.utboks.PostgresRapidUtboks
 import no.nav.dagpenger.saksbehandling.utboks.PostgresUtboksRepository
 import no.nav.dagpenger.saksbehandling.utboks.UtboksOppryddingJob
@@ -290,7 +289,7 @@ internal class ApplicationBuilder(
                 BehandlingsresultatMottak(rapid, oppgaveMediator)
                 ForslagTilBehandlingsresultatMottak(rapid, oppgaveMediator)
                 SøknadsavklaringLøsningMottak(rapid, oppgaveMediator)
-                TilbakekrevingMottak(rapid, oppgaveMediator)
+//                TilbakekrevingMottak(rapid, oppgaveMediator)
                 UtsendingBehovLøsningMottak(rapid, utsendingMediator)
                 InnsendingBehovløser(
                     rapidsConnection = rapid,

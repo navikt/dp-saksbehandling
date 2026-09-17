@@ -93,6 +93,27 @@ class TilbakekrevingMottakTest {
         verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
+    @Test
+    fun `Skal ignorere meldinger som har fagsystem som starter med BF (burde forstått testapplikasjon)`() {
+        testRapid.sendTestMessage(
+            //language=json
+            """
+            {
+              "hendelsestype": "behandling_endret",
+              "tilbakekreving": {
+                "behandlingsstatus": "OPPRETTET",
+                "behandlingId": "$tilbakekrevingBehandlingId",
+                "totaltFeilutbetaltBeløp": "15000"
+              },
+              "eksternFagsakId": "BF123",
+              "eksternBehandlingId": "$behandlingId",
+              "hendelseOpprettet": "2024-06-01T10:00:00"
+            }
+            """.trimIndent(),
+        )
+        verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
+    }
+
     //language=json
     private fun tilbakekrevingMelding(
         status: String,

@@ -36,6 +36,9 @@ internal class TilbakekrevingMottak(
                     "hendelseOpprettet",
                     "tilbakekreving",
                 )
+                it.interestedIn(
+                    "eksternFagsakId",
+                )
             }
         }
     }
@@ -51,10 +54,14 @@ internal class TilbakekrevingMottak(
         meterRegistry: MeterRegistry,
     ) {
         sikkerLogger.info { "Mottok tilbakekreving hendelse: ${packet.toJson()}" }
+        val behandlingIdAsString = packet["eksternBehandlingId"].stringValue()
+        val sakIdAsString = packet["eksternFagsakId"].stringValue()
         val skipSetBehandlingId = setOf("1")
-        if (packet["eksternBehandlingId"].stringValue() in skipSetBehandlingId) {
-            logger.info { "Hopper over tilbakekreving hendelse for " +
-                    "behandlingId ${packet["eksternBehandlingId"].stringValue()}" }
+        if (behandlingIdAsString in skipSetBehandlingId || sakIdAsString.startsWith("BF")) {
+            logger.info {
+                "Hopper over tilbakekreving hendelse for " +
+                    "behandlingId $behandlingIdAsString, fagsakId $sakIdAsString"
+            }
             return
         }
         val hendelse = tilbakekrevingHendelseFraPacket(packet)
