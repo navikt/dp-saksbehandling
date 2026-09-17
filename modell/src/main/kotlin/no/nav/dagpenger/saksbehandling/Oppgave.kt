@@ -392,7 +392,10 @@ data class Oppgave private constructor(
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 val hendelse = it.hendelse as ForslagTilVedtakHendelse
                 when (hendelse.behandletHendelseType) {
-                    "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
+                    "Søknad" -> {
+                        UUID.fromString(hendelse.behandletHendelseId)
+                    }
+
                     else -> {
                         logger.info {
                             "behandletHendelseType er ${hendelse.behandletHendelseType} " +
@@ -842,6 +845,14 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             logger.info { "Behandling ${behandlingAvbruttHendelse.behandlingId} er allerede avbrutt." }
+        }
+
+        override fun behandlingTilGodkjenning(
+            oppgave: Oppgave,
+            hendelse: BehandlingTilGodkjenningHendelse,
+        ): Handling {
+            logger.warn { "Mottok BehandlingTilGodkjenningHendelse i tilstand $type. Ignorerer meldingen." }
+            return Handling.INGEN
         }
 
         override fun håndter(

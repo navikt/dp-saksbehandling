@@ -1329,10 +1329,10 @@ class OppgaveTilstandTest {
     @ParameterizedTest
     @EnumSource(
         value = Type::class,
-        names = ["UNDER_KONTROLL", "UNDER_BEHANDLING", "KLAR_TIL_KONTROLL", "FERDIG_BEHANDLET"],
+        names = ["UNDER_KONTROLL", "UNDER_BEHANDLING", "KLAR_TIL_KONTROLL", "FERDIG_BEHANDLET", "AVBRUTT"],
         mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `Ulovlig tilstandsendring for behandling til godkjenning i andre tilstander enn kontroll-tilstandene og ferdig behandlet`(
+    fun `Ulovlig tilstandsendring for behandling til godkjenning i andre tilstander enn kontroll-tilstandene, ferdig og avbrutt `(
         tilstandType: Type,
     ) {
         val oppgave = lagOppgave(tilstandType)
