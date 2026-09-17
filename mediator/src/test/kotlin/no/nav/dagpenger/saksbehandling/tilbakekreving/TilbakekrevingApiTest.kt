@@ -46,7 +46,7 @@ class TilbakekrevingApiTest {
     fun `Skal returnere 404 når oppgaven ikke finnes`() {
         val oppgaveMediator =
             mockk<OppgaveMediator>().also {
-                every { it.hentOppgaveMedTilgangssjekk(any(), any()) } throws
+                every { it.hentOppgaveForBehandling(any(), any()) } throws
                     DataNotFoundException("Fant ikke oppgave for behandlingId $tilbakekrevingBehandlingId")
             }
         withTilbakekrevingApi(oppgaveMediator) {
@@ -183,7 +183,7 @@ class TilbakekrevingApiTest {
     private fun oppgaveMediatorSomReturnerer(oppgave: Oppgave) =
         mockk<OppgaveMediator>().also {
             every {
-                it.hentOppgaveMedTilgangssjekk(behandlingId = tilbakekrevingBehandlingId, saksbehandler = any())
+                it.hentOppgaveForBehandling(behandlingId = tilbakekrevingBehandlingId, saksbehandler = any())
             } returns oppgave
         }
 

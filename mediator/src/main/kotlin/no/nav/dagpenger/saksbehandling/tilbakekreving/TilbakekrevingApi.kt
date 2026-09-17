@@ -29,7 +29,7 @@ internal fun Route.tilbakekrevingApi(
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
                     val oppgave =
-                        oppgaveMediator.hentOppgaveMedTilgangssjekk(
+                        oppgaveMediator.hentOppgaveForBehandling(
                             behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
