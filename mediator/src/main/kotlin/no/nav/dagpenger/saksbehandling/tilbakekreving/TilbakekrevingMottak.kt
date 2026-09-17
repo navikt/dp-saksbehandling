@@ -18,6 +18,7 @@ import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
 internal class TilbakekrevingMottak(
     rapidsConnection: RapidsConnection,
@@ -49,6 +50,7 @@ internal class TilbakekrevingMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
+        sikkerLogger.info { "Mottok tilbakekreving hendelse: ${packet.toJson()}" }
         val hendelse = tilbakekrevingHendelseFraPacket(packet)
 
         withLoggingContext(
