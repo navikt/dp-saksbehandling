@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.tilbakekreving
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.asOptionalLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
@@ -16,6 +15,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
+import java.time.OffsetDateTime
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -55,17 +56,17 @@ internal class TilbakekrevingMottak(
     ) {
         sikkerLogger.info { "Mottok tilbakekreving hendelse: ${packet.toJson()}" }
         val behandlingIdAsString = packet["eksternBehandlingId"].stringValue()
-        val sakIdAsString = packet["eksternFagsakId"].stringValue()
+        val sakId = packet["eksternFagsakId"].asOptionalUUID()
         val skipSetBehandlingId = setOf("1")
-        if (behandlingIdAsString in skipSetBehandlingId || sakIdAsString.startsWith("BF")) {
+        if (behandlingIdAsString in skipSetBehandlingId || sakId == null) {
             logger.info {
                 "Hopper over tilbakekreving hendelse for " +
-                    "behandlingId $behandlingIdAsString, fagsakId $sakIdAsString"
+                    "behandlingId $behandlingIdAsString, sakId $sakId"
             }
             return
         }
-        val hendelse = tilbakekrevingHendelseFraPacket(packet)
 
+        val hendelse = tilbakekrevingHendelseFraPacket(packet)
         withLoggingContext(
             "tilbakekrevingBehandlingId" to "${hendelse.tilbakekreving.behandlingId}",
             "behandlingId" to "${hendelse.eksternBehandlingId}",
@@ -76,15 +77,24 @@ internal class TilbakekrevingMottak(
     }
 }
 
+private fun JsonNode.asOptionalUUID(): UUID? {
+    val textAsString = this.stringValue()
+    return runCatching {
+        UUID.fromString(textAsString)
+    }.onFailure {
+        logger.warn { "Kunne ikke parse til UUID: $textAsString" }
+    }.getOrNull()
+}
+
 private fun tilbakekrevingHendelseFraPacket(packet: JsonMessage): TilbakekrevingHendelse {
     val tilbakekrevingNode: JsonNode = packet["tilbakekreving"]
     return TilbakekrevingHendelse(
         eksternBehandlingId = packet["eksternBehandlingId"].asUUID(),
-        hendelseOpprettet = packet["hendelseOpprettet"].asLocalDateTime(),
+        hendelseOpprettet = OffsetDateTime.parse(packet["hendelseOpprettet"].stringValue()).toLocalDateTime(),
         tilbakekreving =
             TilbakekrevingHendelse.Tilbakekreving(
                 behandlingId = tilbakekrevingNode["behandlingId"].asUUID(),
-                opprettet = tilbakekrevingNode["sakOpprettet"].asLocalDateTime(),
+                opprettet = OffsetDateTime.parse(tilbakekrevingNode["sakOpprettet"].stringValue()).toLocalDateTime(),
                 avventBehandlingTilDato = tilbakekrevingNode.get("venter")?.get("gjenopptas")?.asOptionalLocalDate(),
                 varselSendt = tilbakekrevingNode["varselSendt"]?.asOptionalLocalDate(),
                 behandlingsstatus =

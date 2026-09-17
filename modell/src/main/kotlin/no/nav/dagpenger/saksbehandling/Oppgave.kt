@@ -825,6 +825,13 @@ data class Oppgave private constructor(
                 oppgave._emneknagger.add(emneknagg.visningsnavn)
             }
         }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            logger.warn { "Mottok tilbakekrevinghendelse i tilstand $type. Ignorerer meldingen." }
+        }
     }
 
     object Avbrutt : Tilstand {
@@ -835,6 +842,13 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             logger.info { "Behandling ${behandlingAvbruttHendelse.behandlingId} er allerede avbrutt." }
+        }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            logger.warn { "Mottok tilbakekrevinghendelse i tilstand $type. Ignorerer meldingen." }
         }
     }
 

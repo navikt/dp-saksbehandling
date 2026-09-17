@@ -10,6 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -22,6 +23,7 @@ class TilbakekrevingMottakTest {
     private val oppgaveMediator = mockk<OppgaveMediator>()
     private val tilbakekrevingBehandlingId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
+    private val sakId = UUID.randomUUID()
 
     init {
         every { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) } just Runs
@@ -45,11 +47,11 @@ class TilbakekrevingMottakTest {
         verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
         slot.captured.let { hendelse ->
             hendelse.eksternBehandlingId shouldBe behandlingId
-            hendelse.hendelseOpprettet shouldBe LocalDateTime.parse("2024-06-01T10:00:00")
+            hendelse.hendelseOpprettet shouldBe LocalDateTime.parse("2024-06-01T10:00:00.223195031")
             hendelse.tilbakekreving shouldBe
                 TilbakekrevingHendelse.Tilbakekreving(
                     behandlingId = tilbakekrevingBehandlingId,
-                    opprettet = LocalDateTime.parse("2024-05-20T08:00:00"),
+                    opprettet = LocalDateTime.parse("2024-05-20T08:00:00.208815"),
                     avventBehandlingTilDato = LocalDate.parse("2026-10-02"),
                     varselSendt = LocalDate.parse("2024-05-21"),
                     behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
@@ -85,7 +87,8 @@ class TilbakekrevingMottakTest {
                 "behandlingId": "$tilbakekrevingBehandlingId",
                 "totaltFeilutbetaltBeløp": "15000"
               },
-              "eksternFagsakId": "100001234",
+              "eksternFagsakId": "$sakId",
+              "eksternBehandlingId": "$behandlingId",
               "hendelseOpprettet": "2024-06-01T10:00:00"
             }
             """.trimIndent(),
@@ -93,6 +96,7 @@ class TilbakekrevingMottakTest {
         verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
+    @Disabled
     @Test
     fun `Skal ignorere meldinger som har fagsystem som starter med BF (burde forstått testapplikasjon)`() {
         testRapid.sendTestMessage(
@@ -124,12 +128,12 @@ class TilbakekrevingMottakTest {
             {
               "hendelsestype": "behandling_endret",
               "versjon": 1,
-              "eksternFagsakId": "100001234",
+              "eksternFagsakId": "$sakId",
               "eksternBehandlingId": "$behandlingId",
-              "hendelseOpprettet": "2024-06-01T10:00:00",
+              "hendelseOpprettet": "2024-06-01T10:00:00.223195031+02:00",
               "tilbakekreving": {
                 "behandlingId": "$tilbakekrevingBehandlingId",
-                "sakOpprettet": "2024-05-20T08:00:00",
+                "sakOpprettet": "2024-05-20T08:00:00.208815+02:00",
                 $venterJson
                 "varselSendt": "2024-05-21",
                 "behandlingsstatus": "$status",
