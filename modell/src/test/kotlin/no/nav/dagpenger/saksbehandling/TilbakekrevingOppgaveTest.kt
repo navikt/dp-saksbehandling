@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -144,9 +145,9 @@ class TilbakekrevingOppgaveTest {
     }
 
     @Test
-    fun `FerdigBehandlet - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
+    fun `FerdigBehandlet - TilbakekrevingHendelse blir ignorert`() {
         val oppgave = lagTilbakekrevingOppgave(FERDIG_BEHANDLET)
-        shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
+        shouldNotThrowAny {
             oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
         }
     }
