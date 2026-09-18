@@ -631,6 +631,38 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
     }
 
     @Test
+    fun `Tilstandsendringer på oppgave utløst av Tilbakekreving skal ikke oversendes saksbehandlingsstatistikk`() {
+        val tilbakekrevingBehandling = TestHelper.lagBehandling(utløstAvType = HendelseBehandler.Intern.Tilbakekreving)
+        val tilbakekrevingOppgave =
+            TestHelper.lagOppgave(
+                behandling = tilbakekrevingBehandling,
+                tilstand = Oppgave.KlarTilBehandling,
+                tilstandslogg =
+                    OppgaveTilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = KLAR_TIL_BEHANDLING,
+                            hendelse = TomHendelse,
+                        )
+                    },
+            )
+        val sak =
+            Sak(
+                opprettet = LocalDateTime.now(),
+            )
+        DBTestHelper.withMigratedDb { ds ->
+            this.opprettSakMedBehandlingOgOppgave(
+                person = testPerson,
+                behandling = tilbakekrevingBehandling,
+                sak = sak,
+                oppgave = tilbakekrevingOppgave,
+                merkSomEgenSak = true,
+            )
+            val postgresStatistikkTjeneste = PostgresSaksbehandlingsstatistikkRepository(DatabaseSession(ds))
+            postgresStatistikkTjeneste.oppgaveTilstandsendringer().size shouldBe 0
+        }
+    }
+
+    @Test
     fun `Oppgave returnert maskinelt fra kontroll til saksbehandler skal oversendes statistikk som RETURNERT_MASKINELT`() {
         val behandling = TestHelper.lagBehandling()
         val oppgave =

@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -140,12 +141,19 @@ class TilbakekrevingApiTest {
 
     @Test
     fun `Skal returnere nyeste TilbakekrevingHendelse fra tilstandsloggen`() {
+        val eldste =
+            lagTilbakekrevingHendelse(
+                behandlingsstatus = TIL_BEHANDLING,
+                opprettetTidspunkt = LocalDateTime.now().minusMinutes(1),
+            )
         val nyeste =
             lagTilbakekrevingHendelse(
                 behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING,
+                opprettetTidspunkt = LocalDateTime.now(),
             )
         val oppgave =
             lagOppgave(
+                tilstand = Oppgave.KlarTilKontroll,
                 tilstandslogg =
                     OppgaveTilstandslogg(
                         Tilstandsendring(
@@ -154,14 +162,14 @@ class TilbakekrevingApiTest {
                         ),
                         Tilstandsendring(
                             tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                            hendelse = lagTilbakekrevingHendelse(),
+                            hendelse = eldste,
                         ),
                     ),
                 behandling =
                     lagBehandling(
                         behandlingId = tilbakekrevingBehandlingId,
                         utløstAvType = HendelseBehandler.Intern.Tilbakekreving,
-                        hendelse = nyeste,
+                        hendelse = eldste,
                     ),
             )
         withTilbakekrevingApi(oppgaveMediatorSomReturnerer(oppgave)) {
@@ -188,15 +196,15 @@ class TilbakekrevingApiTest {
         }
 
     private fun lagTilbakekrevingHendelse(
-        behandlingsstatus: TilbakekrevingHendelse.BehandlingStatus =
-            TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING,
+        behandlingsstatus: TilbakekrevingHendelse.BehandlingStatus = TIL_BEHANDLING,
+        opprettetTidspunkt: LocalDateTime = LocalDateTime.of(2025, 1, 10, 9, 0),
     ) = TilbakekrevingHendelse(
         eksternBehandlingId = UUIDv7.ny(),
-        hendelseOpprettet = LocalDateTime.of(2025, 1, 15, 10, 0),
+        hendelseOpprettet = opprettetTidspunkt,
         tilbakekreving =
             TilbakekrevingHendelse.Tilbakekreving(
                 behandlingId = tilbakekrevingBehandlingId,
-                opprettet = LocalDateTime.of(2025, 1, 10, 9, 0),
+                opprettet = opprettetTidspunkt,
                 avventBehandlingTilDato = null,
                 varselSendt = LocalDate.of(2025, 1, 12),
                 behandlingsstatus = behandlingsstatus,

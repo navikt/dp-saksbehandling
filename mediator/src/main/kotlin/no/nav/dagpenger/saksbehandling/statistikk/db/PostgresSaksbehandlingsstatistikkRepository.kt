@@ -191,6 +191,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             AND       (   beh.utlost_av != 'KLAGE'
                                        OR beh.id > '01a01292-a2da-70a7-9c0c-d0ddc1db3888' )
                             AND       log.id = ANY (:tilstand_ider)
+                            AND       beh.utlost_av != 'TILBAKEKREVING'
                             ORDER BY  sta.sekvensnummer
                         RETURNING   *
                         """,
