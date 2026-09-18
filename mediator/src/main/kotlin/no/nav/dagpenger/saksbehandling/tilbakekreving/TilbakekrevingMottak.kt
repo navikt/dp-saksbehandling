@@ -56,10 +56,11 @@ internal class TilbakekrevingMottak(
         val behandlingIdAsString = packet["eksternBehandlingId"].stringValue()
         val behandlingId = behandlingIdAsString.asOptionalUUID()
         if (behandlingId == null) {
-            logger.error {
-                "Mottok tilbakekrevingHendelse med eksternBehandlingId i feil format: $behandlingIdAsString"
-            }
+            // Team Tilbake sender også hendelser generert av burde-forstaatt appen sin. Disse skal vi ignorere i dev.
             if (Configuration.isDev) {
+                logger.info {
+                    "Mottok tilbakekrevingHendelse med eksternBehandlingId i feil format: $behandlingIdAsString"
+                }
                 return
             } else {
                 throw IllegalArgumentException(
