@@ -159,10 +159,12 @@ class TilbakekrevingApiTest {
                         Tilstandsendring(
                             tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
                             hendelse = nyeste,
+                            tidspunkt = nyeste.hendelseOpprettet,
                         ),
                         Tilstandsendring(
                             tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             hendelse = eldste,
+                            tidspunkt = eldste.hendelseOpprettet,
                         ),
                     ),
                 behandling =
