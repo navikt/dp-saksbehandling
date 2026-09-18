@@ -10,7 +10,6 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -23,7 +22,6 @@ class TilbakekrevingMottakTest {
     private val oppgaveMediator = mockk<OppgaveMediator>()
     private val tilbakekrevingBehandlingId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
-    private val sakId = UUID.randomUUID()
 
     init {
         every { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) } just Runs
@@ -87,7 +85,6 @@ class TilbakekrevingMottakTest {
                 "behandlingId": "$tilbakekrevingBehandlingId",
                 "totaltFeilutbetaltBeløp": "15000"
               },
-              "eksternFagsakId": "$sakId",
               "eksternBehandlingId": "$behandlingId",
               "hendelseOpprettet": "2024-06-01T10:00:00"
             }
@@ -96,9 +93,8 @@ class TilbakekrevingMottakTest {
         verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
-    @Disabled
     @Test
-    fun `Skal ignorere meldinger som har fagsystem som starter med BF (burde forstått testapplikasjon)`() {
+    fun `Skal ignorere meldinger som ikke har eksternBehandlingId i UUID format`() {
         testRapid.sendTestMessage(
             //language=json
             """
@@ -109,8 +105,7 @@ class TilbakekrevingMottakTest {
                 "behandlingId": "$tilbakekrevingBehandlingId",
                 "totaltFeilutbetaltBeløp": "15000"
               },
-              "eksternFagsakId": "BF123",
-              "eksternBehandlingId": "$behandlingId",
+              "eksternBehandlingId": "ABC",
               "hendelseOpprettet": "2024-06-01T10:00:00"
             }
             """.trimIndent(),
@@ -128,7 +123,6 @@ class TilbakekrevingMottakTest {
             {
               "hendelsestype": "behandling_endret",
               "versjon": 1,
-              "eksternFagsakId": "$sakId",
               "eksternBehandlingId": "$behandlingId",
               "hendelseOpprettet": "2024-06-01T10:00:00.223195031+02:00",
               "tilbakekreving": {
