@@ -32,7 +32,7 @@ class TilbakekrevingMottakTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["OPPRETTET", "TIL_FORHÅNDSVARSEL", "TIL_BEHANDLING", "TIL_GODKJENNING", "AVSLUTTET"])
+    @ValueSource(strings = ["TIL_FORHÅNDSVARSEL", "TIL_BEHANDLING", "TIL_GODKJENNING", "AVSLUTTET"])
     fun `Skal motta hendelse for alle statuser og kalle oppgaveMediator`(status: String) {
         testRapid.sendTestMessage(tilbakekrevingMelding(status))
         verify(exactly = 1) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
@@ -41,7 +41,7 @@ class TilbakekrevingMottakTest {
     @Test
     fun `Skal parse tilbakekrevingHendelse korrekt med venter`() {
         val slot = slot<TilbakekrevingHendelse>()
-        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET", venter = "2026-10-02"))
+        testRapid.sendTestMessage(tilbakekrevingMelding("TIL_FORHÅNDSVARSEL", venter = "2026-10-02"))
         verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
         slot.captured.let { hendelse ->
             hendelse.eksternBehandlingId shouldBe behandlingId
@@ -52,7 +52,7 @@ class TilbakekrevingMottakTest {
                     opprettet = LocalDateTime.parse("2024-05-20T08:00:00.208815"),
                     avventBehandlingTilDato = LocalDate.parse("2026-10-02"),
                     varselSendt = LocalDate.parse("2024-05-21"),
-                    behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
+                    behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL,
                     forrigeBehandlingsstatus = null,
                     totaltFeilutbetaltBeløp = 15000.toBigDecimal(),
                     saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
@@ -68,7 +68,7 @@ class TilbakekrevingMottakTest {
     @Test
     fun `Skal parse tilbakekrevingHendelse korrekt uten venter`() {
         val slot = slot<TilbakekrevingHendelse>()
-        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"))
+        testRapid.sendTestMessage(tilbakekrevingMelding("TIL_FORHÅNDSVARSEL"))
         verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
         slot.captured.tilbakekreving.avventBehandlingTilDato shouldBe null
     }

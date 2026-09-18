@@ -108,15 +108,7 @@ class TilbakekrevingOppgaveTest {
     fun `TilbakekrevingOppgave må ha behandling utløst av tilbakekreving`() {
         val søknadOppgave = lagOppgave()
         shouldThrow<IllegalArgumentException> {
-            søknadOppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.OPPRETTET))
-        }
-    }
-
-    @Test
-    fun `UnderBehandling - OPPRETTET er ulovlig tilstandsendring`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING)
-        shouldThrow<IllegalArgumentException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.OPPRETTET))
+            søknadOppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_FORHÅNDSVARSEL))
         }
     }
 
@@ -160,7 +152,7 @@ class TilbakekrevingOppgaveTest {
                     behandlingId = tilbakekrevingBehandlingId,
                     opprettet = LocalDateTime.now(),
                     utløstAv = HendelseBehandler.Intern.Tilbakekreving,
-                    hendelse = lagTilbakekrevingHendelse(BehandlingStatus.OPPRETTET),
+                    hendelse = lagTilbakekrevingHendelse(BehandlingStatus.TIL_FORHÅNDSVARSEL),
                 ),
         )
 

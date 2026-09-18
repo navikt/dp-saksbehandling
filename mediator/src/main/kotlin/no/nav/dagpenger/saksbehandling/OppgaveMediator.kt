@@ -819,7 +819,9 @@ class OppgaveMediator(
                                 kilde = INGEN,
                                 kontrollertGosysBrev = IKKE_RELEVANT,
                             ),
-                    )
+                    ).also {
+                        it.settKlarTilBehandling(tilbakekrevingHendelse)
+                    }
                 oppgaveRepository.lagre(oppgave, ctx)
             }
         } else {

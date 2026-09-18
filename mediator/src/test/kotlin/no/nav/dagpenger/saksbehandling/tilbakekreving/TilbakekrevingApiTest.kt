@@ -210,7 +210,7 @@ class TilbakekrevingApiTest {
                 avventBehandlingTilDato = null,
                 varselSendt = LocalDate.of(2025, 1, 12),
                 behandlingsstatus = behandlingsstatus,
-                forrigeBehandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.OPPRETTET,
+                forrigeBehandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL,
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
