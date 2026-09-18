@@ -754,6 +754,7 @@ data class Oppgave private constructor(
                 TIL_BEHANDLING -> {
                     val avventBehandlingTilDato = hendelse.tilbakekreving.avventBehandlingTilDato
                     if (avventBehandlingTilDato != null && avventBehandlingTilDato > LocalDate.now()) {
+                        oppgave.utsattTil = avventBehandlingTilDato
                         oppgave.endreTilstand(PåVent, hendelse)
                         // TODO verifiser at Tilbake-appen sørger for utgått frist hendelse
                         //  oppgave.utsattTil = avventBehandlingTilDato
@@ -969,15 +970,20 @@ data class Oppgave private constructor(
         ) {
             when (hendelse.tilbakekreving.behandlingsstatus) {
                 TIL_BEHANDLING -> {
-                    val nyTilstand =
-                        if (oppgave.behandlerIdent == null) {
-                            KlarTilBehandling
-                        } else {
-                            UnderBehandling
-                        }
-                    oppgave.endreTilstand(nyTilstand, hendelse)
-                    oppgave.utsattTil = null
-                    oppgave._emneknagger.add(FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn)
+                    val avventBehandlingTilDato = hendelse.tilbakekreving.avventBehandlingTilDato
+                    if (avventBehandlingTilDato == null || avventBehandlingTilDato <= LocalDate.now()) {
+                        val nyTilstand =
+                            if (oppgave.behandlerIdent == null) {
+                                KlarTilBehandling
+                            } else {
+                                UnderBehandling
+                            }
+                        oppgave.endreTilstand(nyTilstand, hendelse)
+                        oppgave.utsattTil = null
+                        oppgave._emneknagger.add(FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn)
+                    } else if (avventBehandlingTilDato != oppgave.utsattTil) {
+                        oppgave.utsattTil = avventBehandlingTilDato
+                    }
                 }
 
                 else -> {

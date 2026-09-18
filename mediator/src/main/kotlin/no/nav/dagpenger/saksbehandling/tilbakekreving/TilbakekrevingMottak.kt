@@ -75,7 +75,9 @@ internal class TilbakekrevingMottak(
             "behandlingId" to "${hendelse.eksternBehandlingId}",
         ) {
             logger.info { "Mottok tilbakekreving hendelse med status ${hendelse.tilbakekreving.behandlingsstatus}" }
+            // i en transaksjon
             oppgaveMediator.håndter(hendelse)
+            val hendelse = hendelse.tilbakekreving
         }
     }
 }

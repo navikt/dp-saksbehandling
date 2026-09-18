@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -44,7 +45,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = BehandlingStatus.TIL_BEHANDLING,
+                status = TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -52,7 +53,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = BehandlingStatus.TIL_BEHANDLING,
+                status = TIL_BEHANDLING,
                 avventBehandlingTilDato = LocalDate.now().plusDays(10),
             ),
         )
@@ -60,7 +61,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = BehandlingStatus.TIL_BEHANDLING,
+                status = TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -82,7 +83,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = BehandlingStatus.TIL_BEHANDLING,
+                status = TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -90,7 +91,7 @@ class TilbakekrevingOppgaveTest {
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.emneknagger shouldContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
 
-        oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
+        oppgave.håndter(lagTilbakekrevingHendelse(TIL_BEHANDLING))
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.emneknagger shouldContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
@@ -102,6 +103,62 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
         oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+    }
+
+    @Test
+    fun `Skal håndtere endring i frist når tilbakekrevingen er til behandling`() {
+        val omTiDager = LocalDate.now().plusDays(10)
+        val om20dager = omTiDager.plusDays(10)
+
+        val oppgave =
+            lagTilbakekrevingOppgave(KLAR_TIL_BEHANDLING).also {
+                it.tildel(
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = it.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = TIL_BEHANDLING,
+                avventBehandlingTilDato = omTiDager,
+            ),
+        )
+        oppgave.tilstand().type shouldBe PAA_VENT
+        oppgave.utsattTil() shouldBe omTiDager
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = TIL_BEHANDLING,
+                avventBehandlingTilDato = null,
+            ),
+        )
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.utsattTil() shouldBe null
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = TIL_BEHANDLING,
+                avventBehandlingTilDato = om20dager,
+            ),
+        )
+        oppgave.tilstand().type shouldBe PAA_VENT
+        oppgave.utsattTil() shouldBe om20dager
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = TIL_BEHANDLING,
+                avventBehandlingTilDato = LocalDate.now().minusDays(1),
+            ),
+        )
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.utsattTil() shouldBe null
     }
 
     @Test
@@ -124,7 +181,7 @@ class TilbakekrevingOppgaveTest {
     fun `KlarTilBehandling - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
         val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_BEHANDLING)
         shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
+            oppgave.håndter(lagTilbakekrevingHendelse(TIL_BEHANDLING))
         }
     }
 
@@ -132,7 +189,7 @@ class TilbakekrevingOppgaveTest {
     fun `KlarTilKontroll - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
         val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_KONTROLL)
         shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
+            oppgave.håndter(lagTilbakekrevingHendelse(TIL_BEHANDLING))
         }
     }
 
