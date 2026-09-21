@@ -134,6 +134,15 @@ class TilbakekrevingOppgaveTest {
         oppgave.håndter(
             lagTilbakekrevingHendelse(
                 status = TIL_BEHANDLING,
+                avventBehandlingTilDato = om20dager,
+            ),
+        )
+        oppgave.tilstand().type shouldBe PAA_VENT
+        oppgave.utsattTil() shouldBe om20dager
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
