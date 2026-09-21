@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import java.net.URI
 
 internal fun Route.tilbakekrevingApi(
-    tilbakeKrevingMediator: TilbakekrevingMediator,
+    tilbakekrevingMediator: TilbakekrevingMediator,
     applicationCallParser: ApplicationCallParser,
     auditlogg: Auditlogg,
 ) {
@@ -25,17 +25,17 @@ internal fun Route.tilbakekrevingApi(
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
-                    val tilbakeKrevingMedPersonIdent =
-                        tilbakeKrevingMediator.hent(
+                    val tilbakekrevingMedPersonIdent =
+                        tilbakekrevingMediator.hent(
                             behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
                     auditlogg.les(
                         "Så en tilbakekreving",
-                        tilbakeKrevingMedPersonIdent.personIdent,
+                        tilbakekrevingMedPersonIdent.personIdent,
                         saksbehandler.navIdent,
                     )
-                    call.respond(HttpStatusCode.OK, tilbakeKrevingMedPersonIdent.tilbakekreving.tilTilbakekrevingDTO())
+                    call.respond(HttpStatusCode.OK, tilbakekrevingMedPersonIdent.tilbakekreving.tilTilbakekrevingDTO())
                 }
             }
         }

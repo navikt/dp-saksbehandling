@@ -12,10 +12,12 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -106,7 +108,7 @@ class TilbakekrevingOppgaveTest {
     }
 
     @Test
-    fun `Skal håndtere endring i frist når tilbakekrevingen er til behandling`() {
+    fun `Skal håndtere endring i frist når tilbakekrevingen behandles`() {
         val omTiDager = LocalDate.now().plusDays(10)
         val om20dager = omTiDager.plusDays(10)
 
@@ -168,6 +170,26 @@ class TilbakekrevingOppgaveTest {
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.utsattTil() shouldBe null
+
+        oppgave.fjernAnsvar(
+            FjernOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                utførtAv = saksbehandler,
+            ),
+        )
+        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        oppgave.behandlerIdent shouldBe null
+        oppgave.utsattTil() shouldBe null
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = BehandlingStatus.TIL_BEHANDLING,
+                avventBehandlingTilDato = omTiDager,
+            ),
+        )
+        oppgave.tilstand().type shouldBe PAA_VENT
+        oppgave.behandlerIdent shouldBe null
+        oppgave.utsattTil() shouldBe omTiDager
     }
 
     @Test
@@ -186,6 +208,9 @@ class TilbakekrevingOppgaveTest {
         }
     }
 
+    // Vi må ta høyde for at saksbehandler legger oppgaven tilbake på benk, men likevel behandler tilbakekrevingen.
+    // Disabler derfor testen inntil videre.
+    @Disabled
     @Test
     fun `KlarTilBehandling - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
         val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_BEHANDLING)

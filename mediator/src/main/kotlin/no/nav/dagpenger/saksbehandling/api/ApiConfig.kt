@@ -101,7 +101,7 @@ internal fun Application.installerApis(
         oppfølgingApi(oppfølgingMediator, applicationCallParser, auditlogg)
         emneknaggApi(oppgaveMediator)
         tilbakekrevingApi(
-            tilbakeKrevingMediator = tilbakekrevingMediator,
+            tilbakekrevingMediator = tilbakekrevingMediator,
             applicationCallParser = applicationCallParser,
             auditlogg = auditlogg,
         )

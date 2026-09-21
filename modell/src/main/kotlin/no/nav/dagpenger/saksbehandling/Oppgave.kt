@@ -547,6 +547,44 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            when (hendelse.tilbakekreving.behandlingsstatus) {
+                // Vi må ta høyde for at saksbehandler kan ha lagt oppgaven tilbake i lista, men likevel utfører
+                // behandling i Tilbake-løsningen
+                TIL_BEHANDLING -> {
+                    val avventBehandlingTilDato = hendelse.tilbakekreving.avventBehandlingTilDato
+                    if (avventBehandlingTilDato != null && avventBehandlingTilDato > LocalDate.now()) {
+                        oppgave.utsattTil = avventBehandlingTilDato
+                        oppgave.endreTilstand(PåVent, hendelse)
+                    } else {
+                        logger.info {
+                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
+                                "${hendelse.tilbakekreving.behandlingsstatus} og venter.gjenopptas = " +
+                                "$avventBehandlingTilDato. Ignorerer meldingen."
+                        }
+                    }
+                }
+
+                TIL_FORHÅNDSVARSEL -> {
+                    // Forventer hendelse med oppdatert URL.
+                    logger.info {
+                        "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
+                            "${hendelse.tilbakekreving.behandlingsstatus}. Ignorerer meldingen."
+                    }
+                }
+
+                else -> {
+                    logger.warn {
+                        "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
+                            "${hendelse.tilbakekreving.behandlingsstatus}. Ignorerer meldingen."
+                    }
+                }
+            }
+        }
     }
 
     object UnderBehandling : Tilstand {
@@ -750,20 +788,17 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
-            // TODO vurder om vi skal bruke require(hendelse.tilbakekreving.behandlingsstatus == TIL_GODKJENNING)
             when (hendelse.tilbakekreving.behandlingsstatus) {
                 TIL_BEHANDLING -> {
                     val avventBehandlingTilDato = hendelse.tilbakekreving.avventBehandlingTilDato
                     if (avventBehandlingTilDato != null && avventBehandlingTilDato > LocalDate.now()) {
                         oppgave.utsattTil = avventBehandlingTilDato
                         oppgave.endreTilstand(PåVent, hendelse)
-                        // TODO verifiser at Tilbake-appen sørger for utgått frist hendelse
-                        //  oppgave.utsattTil = avventBehandlingTilDato
                     } else {
                         logger.info {
-                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus " +
-                                "TIL_BEHANDLING og venter.gjenopptas = $avventBehandlingTilDato. " +
-                                "Ignorerer meldingen."
+                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
+                                "${hendelse.tilbakekreving.behandlingsstatus} og venter.gjenopptas = " +
+                                "$avventBehandlingTilDato. Ignorerer meldingen."
                         }
                     }
                 }
@@ -782,8 +817,10 @@ data class Oppgave private constructor(
 
                 else -> {
                     logger.warn {
-                        "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
-                            "i tilstand $type. Ignorerer meldingen."
+                        logger.info {
+                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
+                                "${hendelse.tilbakekreving.behandlingsstatus}. Ignorerer meldingen."
+                        }
                     }
                 }
             }
