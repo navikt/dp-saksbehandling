@@ -3,14 +3,14 @@ package no.nav.dagpenger.saksbehandling.tilbakekreving
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
 import java.util.UUID
 
 class PostgresTilbakekrevingRepository(
     private val databaseSession: DatabaseSession,
 ) : TilbakekrevingRepository {
     override fun lagre(
-        tilbakekreving: TilbakekrevingHendelse.Tilbakekreving,
+        tilbakekreving: Tilbakekreving,
         ctx: Transaksjonskontekst,
     ) {
         databaseSession.inContext(ctx) {
@@ -73,7 +73,7 @@ class PostgresTilbakekrevingRepository(
         }
     }
 
-    override fun hent(behandlingId: UUID): TilbakekrevingHendelse.Tilbakekreving =
+    override fun hent(behandlingId: UUID): Tilbakekreving =
         databaseSession.session { session ->
             session.run(
                 action =
@@ -97,23 +97,23 @@ class PostgresTilbakekrevingRepository(
                             """.trimIndent(),
                         paramMap = mapOf("id" to behandlingId),
                     ).map { row ->
-                        TilbakekrevingHendelse.Tilbakekreving(
+                        Tilbakekreving(
                             behandlingId = row.uuid("id"),
                             opprettet = row.localDateTime("opprettet"),
                             avventBehandlingTilDato = row.localDateOrNull("avvent_behandling_til_dato"),
                             varselSendt = row.localDateOrNull("varsel_sendt"),
                             behandlingsstatus =
-                                TilbakekrevingHendelse.BehandlingStatus.valueOf(
+                                Tilbakekreving.BehandlingStatus.valueOf(
                                     row.string("behandlingsstatus"),
                                 ),
                             forrigeBehandlingsstatus =
                                 row.stringOrNull("forrige_behandlingsstatus")?.let {
-                                    TilbakekrevingHendelse.BehandlingStatus.valueOf(it)
+                                    Tilbakekreving.BehandlingStatus.valueOf(it)
                                 },
                             totaltFeilutbetaltBeløp = row.bigDecimal("totalt_feilutbetalt_belop"),
                             saksbehandlingURL = row.string("saksbehandling_url"),
                             fullstendigPeriode =
-                                TilbakekrevingHendelse.Periode(
+                                Tilbakekreving.Periode(
                                     fom = row.localDate("fullstendig_periode_fom"),
                                     tom = row.localDate("fullstendig_periode_tom"),
                                 ),

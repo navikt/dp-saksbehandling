@@ -12,10 +12,12 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingStatus
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingStatus.TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.hendelser.Periode
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -229,7 +231,7 @@ class TilbakekrevingOppgaveTest {
         eksternBehandlingId = eksternBehandlingId,
         hendelseOpprettet = LocalDateTime.now(),
         tilbakekreving =
-            TilbakekrevingHendelse.Tilbakekreving(
+            Tilbakekreving(
                 behandlingId = tilbakekrevingBehandlingId,
                 opprettet = LocalDateTime.now().minusDays(10),
                 avventBehandlingTilDato = avventBehandlingTilDato,
@@ -239,7 +241,7 @@ class TilbakekrevingOppgaveTest {
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
+                    Periode(
                         fom = LocalDate.of(2025, 1, 1),
                         tom = LocalDate.of(2025, 6, 30),
                     ),

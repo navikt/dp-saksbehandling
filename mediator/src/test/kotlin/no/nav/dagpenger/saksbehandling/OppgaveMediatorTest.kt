@@ -88,8 +88,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -2428,7 +2429,7 @@ OppgaveMediatorTest {
         eksternBehandlingId = eksternBehandlingId,
         hendelseOpprettet = LocalDateTime.now(),
         tilbakekreving =
-            TilbakekrevingHendelse.Tilbakekreving(
+            Tilbakekreving(
                 behandlingId = tilbakekrevingBehandlingId,
                 opprettet = LocalDateTime.now(),
                 avventBehandlingTilDato = avventBehandlingTilDato,
@@ -2438,7 +2439,7 @@ OppgaveMediatorTest {
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
+                    Tilbakekreving.Periode(
                         fom = LocalDate.of(2025, 1, 1),
                         tom = LocalDate.of(2025, 6, 30),
                     ),

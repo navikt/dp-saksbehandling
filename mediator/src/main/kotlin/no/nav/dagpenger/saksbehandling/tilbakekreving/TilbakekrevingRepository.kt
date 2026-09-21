@@ -1,14 +1,14 @@
 package no.nav.dagpenger.saksbehandling.tilbakekreving
 
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
 import java.util.UUID
 
 interface TilbakekrevingRepository {
     fun lagre(
-        tilbakekreving: TilbakekrevingHendelse.Tilbakekreving,
+        tilbakekreving: Tilbakekreving,
         ctx: Transaksjonskontekst,
     )
 
-    fun hent(behandlingId: UUID): TilbakekrevingHendelse.Tilbakekreving
+    fun hent(behandlingId: UUID): Tilbakekreving
 }

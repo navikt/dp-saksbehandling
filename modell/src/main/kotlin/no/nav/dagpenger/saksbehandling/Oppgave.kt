@@ -44,10 +44,12 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus.AVSLUTTET
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus.TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus.TIL_FORHÅNDSVARSEL
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus.TIL_GODKJENNING
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.AVSLUTTET
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -497,7 +499,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
-            require(hendelse.tilbakekreving.behandlingsstatus == TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL) {
+            require(hendelse.tilbakekreving.behandlingsstatus == TIL_FORHÅNDSVARSEL) {
                 "Oppgave i tilstand OPPRETTET kan kun håndtere tilbakekrevinghendelser med status TIL_FORHÅNDSVARSEL"
             }
             oppgave.endreTilstand(KlarTilBehandling, hendelse)

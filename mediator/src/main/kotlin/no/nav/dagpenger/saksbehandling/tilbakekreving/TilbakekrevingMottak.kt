@@ -11,6 +11,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode
@@ -93,21 +94,21 @@ private fun tilbakekrevingHendelseFraPacket(packet: JsonMessage): Tilbakekreving
         eksternBehandlingId = packet["eksternBehandlingId"].asUUID(),
         hendelseOpprettet = OffsetDateTime.parse(packet["hendelseOpprettet"].stringValue()).toLocalDateTime(),
         tilbakekreving =
-            TilbakekrevingHendelse.Tilbakekreving(
+            Tilbakekreving(
                 behandlingId = tilbakekrevingNode["behandlingId"].asUUID(),
                 opprettet = OffsetDateTime.parse(tilbakekrevingNode["sakOpprettet"].stringValue()).toLocalDateTime(),
                 avventBehandlingTilDato = tilbakekrevingNode.get("venter")?.get("gjenopptas")?.asOptionalLocalDate(),
                 varselSendt = tilbakekrevingNode["varselSendt"]?.asOptionalLocalDate(),
                 behandlingsstatus =
-                    TilbakekrevingHendelse.BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].stringValue()),
+                    Tilbakekreving.BehandlingStatus.valueOf(tilbakekrevingNode["behandlingsstatus"].stringValue()),
                 forrigeBehandlingsstatus =
                     tilbakekrevingNode["forrigeBehandlingsstatus"]
                         ?.takeIf(JsonNode::isString)
-                        ?.let { TilbakekrevingHendelse.BehandlingStatus.valueOf(it.stringValue()) },
+                        ?.let { Tilbakekreving.BehandlingStatus.valueOf(it.stringValue()) },
                 totaltFeilutbetaltBeløp = BigDecimal(tilbakekrevingNode["totaltFeilutbetaltBeløp"].stringValue()),
                 saksbehandlingURL = tilbakekrevingNode["saksbehandlingURL"].stringValue(),
                 fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
+                    Tilbakekreving.Periode(
                         fom = tilbakekrevingNode["fullstendigPeriode"]["fom"].asLocalDate(),
                         tom = tilbakekrevingNode["fullstendigPeriode"]["tom"].asLocalDate(),
                     ),

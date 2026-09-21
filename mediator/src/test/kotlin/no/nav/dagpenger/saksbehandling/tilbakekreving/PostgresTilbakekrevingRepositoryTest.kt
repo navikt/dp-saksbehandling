@@ -5,7 +5,8 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -17,17 +18,17 @@ class PostgresTilbakekrevingRepositoryTest {
     fun `Skal kunne hente og lagre tilbakrevinger`() {
         val now = LocalDate.now()
         val tilbakekreving =
-            TilbakekrevingHendelse.Tilbakekreving(
+            Tilbakekreving(
                 behandlingId = UUID.randomUUID(),
                 opprettet = LocalDateTime.now(),
                 avventBehandlingTilDato = now,
                 varselSendt = now,
-                behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL,
-                forrigeBehandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                behandlingsstatus = BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                forrigeBehandlingsstatus = BehandlingStatus.TIL_FORHÅNDSVARSEL,
                 totaltFeilutbetaltBeløp = BigDecimal(100),
                 saksbehandlingURL = "http://www.bing.com/search?q=laudem",
                 fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
+                    Tilbakekreving.Periode(
                         fom = now,
                         tom = now.plusDays(2),
                     ),

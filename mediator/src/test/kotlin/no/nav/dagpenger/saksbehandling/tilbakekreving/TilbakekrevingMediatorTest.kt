@@ -18,8 +18,9 @@ import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -98,7 +99,7 @@ class TilbakekrevingMediatorTest {
         eksternBehandlingId = eksternBehandlingId,
         hendelseOpprettet = LocalDateTime.now(),
         tilbakekreving =
-            TilbakekrevingHendelse.Tilbakekreving(
+            Tilbakekreving(
                 behandlingId = tilbakekrevingBehandlingId,
                 opprettet = LocalDateTime.now(),
                 avventBehandlingTilDato = avventBehandlingTilDato,
@@ -108,7 +109,7 @@ class TilbakekrevingMediatorTest {
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
+                    Tilbakekreving.Periode(
                         fom = LocalDate.of(2025, 1, 1),
                         tom = LocalDate.of(2025, 6, 30),
                     ),

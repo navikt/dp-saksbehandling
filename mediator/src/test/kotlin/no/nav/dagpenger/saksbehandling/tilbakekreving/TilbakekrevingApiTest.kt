@@ -22,8 +22,10 @@ import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus.TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse.BehandlingStatus.TIL_BEHANDLING
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -148,7 +150,7 @@ class TilbakekrevingApiTest {
             )
         val nyeste =
             lagTilbakekrevingHendelse(
-                behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_GODKJENNING,
+                behandlingsstatus = BehandlingStatus.TIL_GODKJENNING,
                 opprettetTidspunkt = LocalDateTime.now(),
             )
         val oppgave =
@@ -198,23 +200,23 @@ class TilbakekrevingApiTest {
         }
 
     private fun lagTilbakekrevingHendelse(
-        behandlingsstatus: TilbakekrevingHendelse.BehandlingStatus = TIL_BEHANDLING,
+        behandlingsstatus: BehandlingStatus = TIL_BEHANDLING,
         opprettetTidspunkt: LocalDateTime = LocalDateTime.of(2025, 1, 10, 9, 0),
     ) = TilbakekrevingHendelse(
         eksternBehandlingId = UUIDv7.ny(),
         hendelseOpprettet = opprettetTidspunkt,
         tilbakekreving =
-            TilbakekrevingHendelse.Tilbakekreving(
+            Tilbakekreving(
                 behandlingId = tilbakekrevingBehandlingId,
                 opprettet = opprettetTidspunkt,
                 avventBehandlingTilDato = null,
                 varselSendt = LocalDate.of(2025, 1, 12),
                 behandlingsstatus = behandlingsstatus,
-                forrigeBehandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                forrigeBehandlingsstatus = BehandlingStatus.TIL_FORHÅNDSVARSEL,
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
-                    TilbakekrevingHendelse.Periode(
+                    Tilbakekreving.Periode(
                         fom = LocalDate.of(2025, 1, 1),
                         tom = LocalDate.of(2025, 6, 30),
                     ),

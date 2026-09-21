@@ -8,6 +8,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -46,17 +48,17 @@ class TilbakekrevingMottakTest {
             hendelse.eksternBehandlingId shouldBe behandlingId
             hendelse.hendelseOpprettet shouldBe LocalDateTime.parse("2024-06-01T10:00:00.223195031")
             hendelse.tilbakekreving shouldBe
-                TilbakekrevingHendelse.Tilbakekreving(
+                Tilbakekreving(
                     behandlingId = tilbakekrevingBehandlingId,
                     opprettet = LocalDateTime.parse("2024-05-20T08:00:00.208815"),
                     avventBehandlingTilDato = LocalDate.parse("2026-10-02"),
                     varselSendt = LocalDate.parse("2024-05-21"),
-                    behandlingsstatus = TilbakekrevingHendelse.BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                    behandlingsstatus = BehandlingStatus.TIL_FORHÅNDSVARSEL,
                     forrigeBehandlingsstatus = null,
                     totaltFeilutbetaltBeløp = 15000.toBigDecimal(),
                     saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                     fullstendigPeriode =
-                        TilbakekrevingHendelse.Periode(
+                        Tilbakekreving.Periode(
                             fom = LocalDate.parse("2025-01-01"),
                             tom = LocalDate.parse("2025-06-30"),
                         ),
