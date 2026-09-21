@@ -30,11 +30,16 @@ class TilbakekrevingMediator(
     fun hent(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Tilbakekreving {
-        personMediator.harTilgang(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
+    ): TilbakekrevingMedPersonIdent {
+        val person = personMediator.hentPersonForBehandlingId(behandlingId, saksbehandler)
+        return TilbakekrevingMedPersonIdent(
+            personIdent = person.ident,
+            tilbakekreving = tilbakekrevingRepository.hent(behandlingId),
         )
-        return tilbakekrevingRepository.hent(behandlingId)
     }
 }
+
+data class TilbakekrevingMedPersonIdent(
+    val personIdent: String,
+    val tilbakekreving: Tilbakekreving,
+)

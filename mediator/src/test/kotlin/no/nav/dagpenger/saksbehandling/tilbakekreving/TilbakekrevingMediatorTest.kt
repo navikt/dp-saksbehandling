@@ -76,10 +76,14 @@ class TilbakekrevingMediatorTest {
 
             mediator.håndter(tilbakekrevingHendelse)
 
-            mediator.hent(
-                behandlingId = tilbakekrevingBehandlingId,
-                saksbehandler = saksbehandlerMedTilgane,
-            ) shouldBe tilbakekrevingHendelse.tilbakekreving
+            mediator
+                .hent(
+                    behandlingId = tilbakekrevingBehandlingId,
+                    saksbehandler = saksbehandlerMedTilgane,
+                ).let {
+                    it.tilbakekreving shouldBe tilbakekrevingHendelse.tilbakekreving
+                    it.personIdent shouldBe gradertPerson.ident
+                }
 
             shouldThrow<ManglendeTilgangTilAdressebeskyttelse> {
                 mediator.hent(
