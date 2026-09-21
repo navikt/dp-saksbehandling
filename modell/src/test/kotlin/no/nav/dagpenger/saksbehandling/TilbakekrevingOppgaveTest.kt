@@ -13,9 +13,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate

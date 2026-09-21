@@ -571,6 +571,7 @@ class OppfølgingApiTest {
                     innsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakMediator = mockk(relaxed = true),
                     oppfølgingMediator = oppfølgingMediator,
+                    tilbakekrevingMediator = mockk(),
                     auditlogg = auditlogg,
                 )
             }

@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.hendelser
+package no.nav.dagpenger.saksbehandling.tilbakekreving
 
 import java.math.BigDecimal
 import java.time.LocalDate

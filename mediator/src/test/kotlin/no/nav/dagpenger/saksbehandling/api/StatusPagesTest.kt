@@ -467,6 +467,7 @@ class StatusPagesTest {
             innsendingMediator = mockk(),
             meldingOmVedtakMediator = mockk(relaxed = true),
             oppfølgingMediator = mockk(relaxed = true),
+            tilbakekrevingMediator = mockk(),
             auditlogg = TestAuditlogg(),
         )
     }

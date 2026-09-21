@@ -8,9 +8,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource

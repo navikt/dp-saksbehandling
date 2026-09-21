@@ -11,7 +11,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode

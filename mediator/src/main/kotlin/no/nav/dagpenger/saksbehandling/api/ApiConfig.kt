@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.statistikk.api.statistikkApi
 import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMediator
 import no.nav.dagpenger.saksbehandling.tilbakekreving.tilbakekrevingApi
 
 internal fun Application.installerApis(
@@ -41,6 +42,7 @@ internal fun Application.installerApis(
     innsendingMediator: InnsendingMediator,
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
     oppfølgingMediator: OppfølgingMediator,
+    tilbakekrevingMediator: TilbakekrevingMediator,
     auditlogg: Auditlogg,
 ) {
     this.authConfig()
@@ -98,6 +100,10 @@ internal fun Application.installerApis(
         )
         oppfølgingApi(oppfølgingMediator, applicationCallParser, auditlogg)
         emneknaggApi(oppgaveMediator)
-        tilbakekrevingApi(oppgaveMediator, applicationCallParser, auditlogg)
+        tilbakekrevingApi(
+            tilbakeKrevingMediator = tilbakekrevingMediator,
+            applicationCallParser = applicationCallParser,
+            auditlogg = auditlogg,
+        )
     }
 }

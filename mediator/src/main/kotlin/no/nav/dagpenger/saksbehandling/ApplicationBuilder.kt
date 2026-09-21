@@ -272,6 +272,7 @@ internal class ApplicationBuilder(
                             sakMediator = sakMediator,
                         ),
                     oppfølgingMediator = oppfølgingMediator,
+                    tilbakekrevingMediator = tilbakekrevingMediator,
                     auditlogg = ApiAuditlogg(AktivitetsloggMediator(), rapid),
                 )
 

@@ -5,8 +5,7 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate

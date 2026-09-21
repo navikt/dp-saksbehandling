@@ -18,10 +18,9 @@ import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate

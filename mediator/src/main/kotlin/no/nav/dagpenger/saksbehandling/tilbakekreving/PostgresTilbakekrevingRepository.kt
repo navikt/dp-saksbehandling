@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.tilbakekreving
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
-import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
 import java.util.UUID
 
 class PostgresTilbakekrevingRepository(

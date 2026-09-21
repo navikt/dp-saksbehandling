@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
 import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving
 import java.time.LocalDateTime
 import java.util.UUID
 
