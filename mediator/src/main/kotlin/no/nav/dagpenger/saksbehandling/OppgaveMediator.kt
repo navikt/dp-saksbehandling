@@ -798,32 +798,31 @@ class OppgaveMediator(
         }
     }
 
-    fun håndter(tilbakekrevingHendelse: TilbakekrevingHendelse) {
+    fun håndter(
+        tilbakekrevingHendelse: TilbakekrevingHendelse,
+        ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
+    ) {
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
         val oppgaveId = oppgaveRepository.hentOppgaveIdFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
         if (oppgaveId == null) {
             // Vurder denne: require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus in setOf(OPPRETTET, TIL_FORHÅNDSVARSEL))
-
-            transaksjoner.transaksjon { ctx ->
-                val sakHistorikk = sakMediator.knyttTilSak(tilbakekrevingHendelse, ctx)
-                val behandling =
-                    requireNotNull(sakHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
-
-                val oppgave =
-                    Oppgave(
-                        opprettet = behandling.opprettet,
-                        person = sakHistorikk.person,
-                        behandling = behandling,
-                        meldingOmVedtak =
-                            Oppgave.MeldingOmVedtak(
-                                kilde = INGEN,
-                                kontrollertGosysBrev = IKKE_RELEVANT,
-                            ),
-                    ).also {
-                        it.settKlarTilBehandling(tilbakekrevingHendelse)
-                    }
-                oppgaveRepository.lagre(oppgave, ctx)
-            }
+            val sakHistorikk = sakMediator.knyttTilSak(tilbakekrevingHendelse, ctx)
+            val behandling =
+                requireNotNull(sakHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
+            val oppgave =
+                Oppgave(
+                    opprettet = behandling.opprettet,
+                    person = sakHistorikk.person,
+                    behandling = behandling,
+                    meldingOmVedtak =
+                        Oppgave.MeldingOmVedtak(
+                            kilde = INGEN,
+                            kontrollertGosysBrev = IKKE_RELEVANT,
+                        ),
+                ).also {
+                    it.settKlarTilBehandling(tilbakekrevingHendelse)
+                }
+            oppgaveRepository.lagre(oppgave, ctx)
         } else {
             val oppgave = oppgaveRepository.hentOppgave(oppgaveId)
             oppgave.håndter(tilbakekrevingHendelse)

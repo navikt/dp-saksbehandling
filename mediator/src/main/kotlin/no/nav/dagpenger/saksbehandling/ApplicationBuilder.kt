@@ -76,6 +76,8 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
+import no.nav.dagpenger.saksbehandling.tilbakekreving.PostgresTilbakekrevingRepository
+import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMediator
 import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMottak
 import no.nav.dagpenger.saksbehandling.utboks.PostgresRapidUtboks
 import no.nav.dagpenger.saksbehandling.utboks.PostgresUtboksRepository
@@ -197,6 +199,13 @@ internal class ApplicationBuilder(
                         transaksjoner = Transaksjoner(databaseSession),
                         meldekortregisterKlient = meldekortregisterKlient,
                     )
+                val tilbakekrevingMediator =
+                    TilbakekrevingMediator(
+                        oppgaveMediator = oppgaveMediator,
+                        personMediator = personMediator,
+                        tilbakekrevingRepository = PostgresTilbakekrevingRepository(databaseSession),
+                        transaksjoner = Transaksjoner(databaseSession),
+                    )
                 val klageMediator =
                     KlageMediator(
                         transaksjoner = Transaksjoner(databaseSession),
@@ -290,7 +299,7 @@ internal class ApplicationBuilder(
                 BehandlingsresultatMottak(rapid, oppgaveMediator)
                 ForslagTilBehandlingsresultatMottak(rapid, oppgaveMediator)
                 SøknadsavklaringLøsningMottak(rapid, oppgaveMediator)
-                TilbakekrevingMottak(rapid, oppgaveMediator)
+                TilbakekrevingMottak(rapid, tilbakekrevingMediator)
                 UtsendingBehovLøsningMottak(rapid, utsendingMediator)
                 InnsendingBehovløser(
                     rapidsConnection = rapid,

@@ -25,10 +25,11 @@ data class Person(
     override fun toString(): String =
         "Person(id=$id, skjermesSomEgneAnsatte=$skjermesSomEgneAnsatte, adressebeskyttelseGradering=$adressebeskyttelseGradering)"
 
-    fun harTilgang(saksbehandler: Saksbehandler) {
+    fun harTilgang(saksbehandler: Saksbehandler): Boolean {
         egneAnsatteTilgangskontroll(saksbehandler)
         adressebeskyttelseTilgangskontroll(saksbehandler)
         habilitetTilgangskontroll(saksbehandler)
+        return true
     }
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {

@@ -11,7 +11,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
 import tools.jackson.databind.JsonNode
@@ -24,7 +23,7 @@ private val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
 internal class TilbakekrevingMottak(
     rapidsConnection: RapidsConnection,
-    private val oppgaveMediator: OppgaveMediator,
+    private val tilbakekrevingMediator: TilbakekrevingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -76,8 +75,7 @@ internal class TilbakekrevingMottak(
         ) {
             logger.info { "Mottok tilbakekreving hendelse med status ${hendelse.tilbakekreving.behandlingsstatus}" }
             // i en transaksjon
-            oppgaveMediator.håndter(hendelse)
-            val hendelse = hendelse.tilbakekreving
+            tilbakekrevingMediator.håndter(hendelse)
         }
     }
 }

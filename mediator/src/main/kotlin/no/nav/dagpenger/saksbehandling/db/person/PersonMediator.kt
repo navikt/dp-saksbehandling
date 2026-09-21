@@ -15,6 +15,11 @@ class PersonMediator(
     private val personRepository: PersonRepository,
     private val oppslag: Oppslag,
 ) {
+    fun harTilgang(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Boolean = personRepository.hentPersonForBehandlingId(behandlingId).harTilgang(saksbehandler)
+
     fun hentPerson(
         ident: String,
         saksbehandler: Saksbehandler,

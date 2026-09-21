@@ -8,7 +8,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -19,15 +18,15 @@ import java.util.UUID
 
 class TilbakekrevingMottakTest {
     private val testRapid = TestRapid()
-    private val oppgaveMediator = mockk<OppgaveMediator>()
+    private val tilbakekrevingMediator = mockk<TilbakekrevingMediator>()
     private val tilbakekrevingBehandlingId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
 
     init {
-        every { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) } just Runs
+        every { tilbakekrevingMediator.håndter(any<TilbakekrevingHendelse>()) } just Runs
         TilbakekrevingMottak(
             rapidsConnection = testRapid,
-            oppgaveMediator = oppgaveMediator,
+            tilbakekrevingMediator = tilbakekrevingMediator,
         )
     }
 
@@ -35,14 +34,14 @@ class TilbakekrevingMottakTest {
     @ValueSource(strings = ["TIL_FORHÅNDSVARSEL", "TIL_BEHANDLING", "TIL_GODKJENNING", "AVSLUTTET"])
     fun `Skal motta hendelse for alle statuser og kalle oppgaveMediator`(status: String) {
         testRapid.sendTestMessage(tilbakekrevingMelding(status))
-        verify(exactly = 1) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
+        verify(exactly = 1) { tilbakekrevingMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
     @Test
     fun `Skal parse tilbakekrevingHendelse korrekt med venter`() {
         val slot = slot<TilbakekrevingHendelse>()
         testRapid.sendTestMessage(tilbakekrevingMelding("TIL_FORHÅNDSVARSEL", venter = "2026-10-02"))
-        verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
+        verify(exactly = 1) { tilbakekrevingMediator.håndter(capture(slot)) }
         slot.captured.let { hendelse ->
             hendelse.eksternBehandlingId shouldBe behandlingId
             hendelse.hendelseOpprettet shouldBe LocalDateTime.parse("2024-06-01T10:00:00.223195031")
@@ -69,7 +68,7 @@ class TilbakekrevingMottakTest {
     fun `Skal parse tilbakekrevingHendelse korrekt uten venter`() {
         val slot = slot<TilbakekrevingHendelse>()
         testRapid.sendTestMessage(tilbakekrevingMelding("TIL_FORHÅNDSVARSEL"))
-        verify(exactly = 1) { oppgaveMediator.håndter(capture(slot)) }
+        verify(exactly = 1) { tilbakekrevingMediator.håndter(capture(slot)) }
         slot.captured.tilbakekreving.avventBehandlingTilDato shouldBe null
     }
 
@@ -90,7 +89,7 @@ class TilbakekrevingMottakTest {
             }
             """.trimIndent(),
         )
-        verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
+        verify(exactly = 0) { tilbakekrevingMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
     @Test
@@ -110,7 +109,7 @@ class TilbakekrevingMottakTest {
             }
             """.trimIndent(),
         )
-        verify(exactly = 0) { oppgaveMediator.håndter(any<TilbakekrevingHendelse>()) }
+        verify(exactly = 0) { tilbakekrevingMediator.håndter(any<TilbakekrevingHendelse>()) }
     }
 
     //language=json

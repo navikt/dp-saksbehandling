@@ -29,7 +29,7 @@ class BehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock =
         mockk<OppgaveMediator>().also {
-            every { it.håndter(any(), any()) } just Runs
+            every { it.håndter(any<VedtakFattetHendelse>(), any()) } just Runs
         }
 
     init {
