@@ -12,11 +12,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingStatus
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingStatus.TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.hendelser.Periode
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.hendelser.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -47,7 +45,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -55,7 +53,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = LocalDate.now().plusDays(10),
             ),
         )
@@ -63,7 +61,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -85,7 +83,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -93,7 +91,7 @@ class TilbakekrevingOppgaveTest {
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.emneknagger shouldContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
 
-        oppgave.håndter(lagTilbakekrevingHendelse(TIL_BEHANDLING))
+        oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.emneknagger shouldContain Emneknagg.Kontroll.RETUR_FRA_KONTROLL.visningsnavn
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
@@ -126,7 +124,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = omTiDager,
             ),
         )
@@ -135,7 +133,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = om20dager,
             ),
         )
@@ -144,7 +142,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = null,
             ),
         )
@@ -154,7 +152,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = om20dager,
             ),
         )
@@ -163,7 +161,7 @@ class TilbakekrevingOppgaveTest {
 
         oppgave.håndter(
             lagTilbakekrevingHendelse(
-                status = TIL_BEHANDLING,
+                status = BehandlingStatus.TIL_BEHANDLING,
                 avventBehandlingTilDato = LocalDate.now().minusDays(1),
             ),
         )
@@ -192,7 +190,7 @@ class TilbakekrevingOppgaveTest {
     fun `KlarTilBehandling - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
         val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_BEHANDLING)
         shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(TIL_BEHANDLING))
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
         }
     }
 
@@ -200,7 +198,7 @@ class TilbakekrevingOppgaveTest {
     fun `KlarTilKontroll - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
         val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_KONTROLL)
         shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(TIL_BEHANDLING))
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
         }
     }
 
@@ -241,7 +239,7 @@ class TilbakekrevingOppgaveTest {
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
-                    Periode(
+                    Tilbakekreving.Periode(
                         fom = LocalDate.of(2025, 1, 1),
                         tom = LocalDate.of(2025, 6, 30),
                     ),
