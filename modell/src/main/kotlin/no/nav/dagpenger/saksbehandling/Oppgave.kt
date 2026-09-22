@@ -562,8 +562,8 @@ data class Oppgave private constructor(
                         oppgave.endreTilstand(PåVent, hendelse)
                     } else {
                         logger.info {
-                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
-                                "${hendelse.tilbakekreving.behandlingsstatus} og venter.gjenopptas = " +
+                            "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                                "i tilstand $type. Venter.gjenopptas = " +
                                 "$avventBehandlingTilDato. Ignorerer meldingen."
                         }
                     }
@@ -572,15 +572,15 @@ data class Oppgave private constructor(
                 TIL_FORHÅNDSVARSEL -> {
                     // Forventer hendelse med oppdatert URL.
                     logger.info {
-                        "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
-                            "${hendelse.tilbakekreving.behandlingsstatus}. Ignorerer meldingen."
+                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
+                            "i tilstand $type. Ignorerer meldingen."
                     }
                 }
 
                 else -> {
                     logger.warn {
-                        "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
-                            "${hendelse.tilbakekreving.behandlingsstatus}. Ignorerer meldingen."
+                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
+                            "i tilstand $type. Ignorerer meldingen."
                     }
                 }
             }
@@ -796,8 +796,8 @@ data class Oppgave private constructor(
                         oppgave.endreTilstand(PåVent, hendelse)
                     } else {
                         logger.info {
-                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
-                                "${hendelse.tilbakekreving.behandlingsstatus} og venter.gjenopptas = " +
+                            "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                                "i tilstand $type. Venter.gjenopptas = " +
                                 "$avventBehandlingTilDato. Ignorerer meldingen."
                         }
                     }
@@ -818,8 +818,8 @@ data class Oppgave private constructor(
                 else -> {
                     logger.warn {
                         logger.info {
-                            "Mottok TilbakekrevingHendelse i tilstand $type med behandlingStatus = " +
-                                "${hendelse.tilbakekreving.behandlingsstatus}. Ignorerer meldingen."
+                            "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                                "i tilstand $type. Ignorerer meldingen."
                         }
                     }
                 }
@@ -872,7 +872,10 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
-            logger.warn { "Mottok tilbakekrevinghendelse i tilstand $type. Ignorerer meldingen." }
+            logger.warn {
+                "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                    "i tilstand $type. Ignorerer meldingen."
+            }
         }
     }
 
@@ -898,7 +901,10 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
-            logger.warn { "Mottok tilbakekrevinghendelse i tilstand $type. Ignorerer meldingen." }
+            logger.warn {
+                "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                    "i tilstand $type. Ignorerer meldingen."
+            }
         }
     }
 
@@ -1026,7 +1032,7 @@ data class Oppgave private constructor(
 
                 else -> {
                     logger.warn {
-                        "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
                             "i tilstand $type. Ignorerer meldingen."
                     }
                 }
@@ -1274,8 +1280,8 @@ data class Oppgave private constructor(
 
                 else -> {
                     logger.warn {
-                        "Mottok tilbakekrevinghendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
-                            "i tilstand ${UnderBehandling.type}. Ignorerer meldingen."
+                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
+                            "i tilstand $type. Ignorerer meldingen."
                     }
                 }
             }
