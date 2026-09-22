@@ -9,7 +9,6 @@ import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingS
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class PostgresTilbakekrevingRepositoryTest {

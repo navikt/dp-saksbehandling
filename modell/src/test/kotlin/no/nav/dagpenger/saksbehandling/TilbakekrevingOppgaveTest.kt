@@ -220,14 +220,6 @@ class TilbakekrevingOppgaveTest {
     }
 
     @Test
-    fun `KlarTilKontroll - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
-        val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_KONTROLL)
-        shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
-        }
-    }
-
-    @Test
     fun `FerdigBehandlet - TilbakekrevingHendelse blir ignorert`() {
         val oppgave = lagTilbakekrevingOppgave(FERDIG_BEHANDLET)
         shouldNotThrowAny {

@@ -1105,6 +1105,26 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
+
+        override fun håndter(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            val tilbakekrevingHendelse = hendelse.tilbakekreving
+
+            when (tilbakekrevingHendelse.behandlingsstatus) {
+                TIL_GODKJENNING -> {
+                    // Oppgaven er allerede i tilstand KlarTilKontroll, så ingen endring nødvendig
+                }
+
+                else -> {
+                    logger.warn {
+                        "Mottok TilbakekrevingHendelse med status ${tilbakekrevingHendelse.behandlingsstatus} " +
+                            "i tilstand $type. Ignorerer meldingen."
+                    }
+                }
+            }
+        }
     }
 
     object AvventerLåsAvBehandling : Tilstand {
