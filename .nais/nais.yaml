@@ -6,6 +6,7 @@ metadata:
   labels:
     team: teamdagpenger
     domene: behandling
+    subteam: stsb
 spec:
   image: "{{ image }}"
   startup:

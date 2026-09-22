@@ -15,21 +15,21 @@ import java.util.UUID
 class PostgresTilbakekrevingRepositoryTest {
     @Test
     fun `Skal kunne hente og lagre tilbakrevinger`() {
-        val now = LocalDate.now()
+        val today = LocalDate.now()
         val tilbakekreving =
             Tilbakekreving(
                 behandlingId = UUID.randomUUID(),
-                opprettet = LocalDateTime.now(),
-                avventBehandlingTilDato = now,
-                varselSendt = now,
+                opprettet = today.atStartOfDay(),
+                avventBehandlingTilDato = today,
+                varselSendt = today,
                 behandlingsstatus = BehandlingStatus.TIL_FORHÅNDSVARSEL,
                 forrigeBehandlingsstatus = BehandlingStatus.TIL_FORHÅNDSVARSEL,
                 totaltFeilutbetaltBeløp = BigDecimal(100),
                 saksbehandlingURL = "http://www.bing.com/search?q=laudem",
                 fullstendigPeriode =
                     Tilbakekreving.Periode(
-                        fom = now,
-                        tom = now.plusDays(2),
+                        fom = today,
+                        tom = today.plusDays(2),
                     ),
             )
         DBTestHelper.withMigratedDb { ds ->
