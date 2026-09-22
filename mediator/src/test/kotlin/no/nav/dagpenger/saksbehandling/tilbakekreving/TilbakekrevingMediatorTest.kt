@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class TilbakekrevingMediatorTest {
@@ -98,24 +99,27 @@ class TilbakekrevingMediatorTest {
         tilbakekrevingBehandlingId: UUID,
         status: BehandlingStatus,
         avventBehandlingTilDato: LocalDate? = null,
-    ) = TilbakekrevingHendelse(
-        eksternBehandlingId = eksternBehandlingId,
-        hendelseOpprettet = LocalDateTime.now(),
-        tilbakekreving =
-            Tilbakekreving(
-                behandlingId = tilbakekrevingBehandlingId,
-                opprettet = LocalDateTime.now(),
-                avventBehandlingTilDato = avventBehandlingTilDato,
-                varselSendt = LocalDate.now(),
-                behandlingsstatus = status,
-                forrigeBehandlingsstatus = null,
-                totaltFeilutbetaltBeløp = BigDecimal("25000"),
-                saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
-                fullstendigPeriode =
-                    Tilbakekreving.Periode(
-                        fom = LocalDate.of(2025, 1, 1),
-                        tom = LocalDate.of(2025, 6, 30),
-                    ),
-            ),
-    )
+    ): TilbakekrevingHendelse {
+        val now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        return TilbakekrevingHendelse(
+            eksternBehandlingId = eksternBehandlingId,
+            hendelseOpprettet = now,
+            tilbakekreving =
+                Tilbakekreving(
+                    behandlingId = tilbakekrevingBehandlingId,
+                    opprettet = now,
+                    avventBehandlingTilDato = avventBehandlingTilDato,
+                    varselSendt = LocalDate.now(),
+                    behandlingsstatus = status,
+                    forrigeBehandlingsstatus = null,
+                    totaltFeilutbetaltBeløp = BigDecimal("25000"),
+                    saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                    fullstendigPeriode =
+                        Tilbakekreving.Periode(
+                            fom = LocalDate.of(2025, 1, 1),
+                            tom = LocalDate.of(2025, 6, 30),
+                        ),
+                ),
+        )
+    }
 }
