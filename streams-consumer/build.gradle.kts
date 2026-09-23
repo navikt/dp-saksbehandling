@@ -21,7 +21,7 @@ val confluentVersion = "8.3.2"
 dependencies {
     api("org.apache.kafka:kafka-streams:$kafkaVersion")
     implementation("io.confluent:kafka-streams-avro-serde:$confluentVersion")
-    implementation("org.apache.avro:avro:1.12.1")
+    implementation("org.apache.avro:avro:1.12.2")
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.server.cio)
@@ -36,4 +36,8 @@ tasks.named("runKtlintFormatOverTestSourceSet") {
 
 tasks.named("runKtlintCheckOverTestSourceSet") {
     dependsOn(tasks.named("generateTestAvroJava"))
+}
+
+tasks.test {
+    systemProperty("org.apache.avro.SERIALIZABLE_PACKAGES", "no.nav.person.pdl.leesah")
 }
