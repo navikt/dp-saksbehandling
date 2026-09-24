@@ -37,7 +37,3 @@ tasks.named("runKtlintFormatOverTestSourceSet") {
 tasks.named("runKtlintCheckOverTestSourceSet") {
     dependsOn(tasks.named("generateTestAvroJava"))
 }
-
-tasks.test {
-    systemProperty("org.apache.avro.SERIALIZABLE_PACKAGES", "no.nav.person.pdl.leesah")
-}
