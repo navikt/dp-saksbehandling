@@ -1117,6 +1117,19 @@ data class Oppgave private constructor(
                     // Oppgaven er allerede i tilstand KlarTilKontroll, så ingen endring nødvendig
                 }
 
+                TIL_BEHANDLING -> {
+                    if (hendelse.tilbakekreving.forrigeBehandlingsstatus == TIL_GODKJENNING) {
+                        oppgave.behandlerIdent = oppgave.sisteSaksbehandlerIdent
+                        oppgave.endreTilstand(UnderBehandling, hendelse)
+                    } else {
+                        logger.warn {
+                            "Mottok TilbakekrevingHendelse med status ${tilbakekrevingHendelse.behandlingsstatus} " +
+                                "i tilstand $type. Forrige behandlingsstatus = " +
+                                "${tilbakekrevingHendelse.forrigeBehandlingsstatus}. Ignorerer meldingen."
+                        }
+                    }
+                }
+
                 else -> {
                     logger.warn {
                         "Mottok TilbakekrevingHendelse med status ${tilbakekrevingHendelse.behandlingsstatus} " +

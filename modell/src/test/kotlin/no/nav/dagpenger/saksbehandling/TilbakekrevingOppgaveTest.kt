@@ -17,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -70,8 +69,22 @@ class TilbakekrevingOppgaveTest {
         oppgave.tilstand().type shouldBe UNDER_BEHANDLING
         oppgave.emneknagger shouldContain Emneknagg.PåVent.FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn
 
-        oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_GODKJENNING))
+        oppgave.håndter(lagTilbakekrevingHendelse(status = BehandlingStatus.TIL_GODKJENNING))
         oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
+        oppgave.behandlerIdent shouldBe null
+
+        oppgave.håndter(
+            lagTilbakekrevingHendelse(
+                status = BehandlingStatus.TIL_BEHANDLING,
+                forrigeStatus = BehandlingStatus.TIL_GODKJENNING,
+            ),
+        )
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+
+        oppgave.håndter(lagTilbakekrevingHendelse(status = BehandlingStatus.TIL_GODKJENNING))
+        oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
+        oppgave.behandlerIdent shouldBe null
 
         val beslutter = Saksbehandler("B654321", emptySet(), setOf(TilgangType.BESLUTTER))
         oppgave.tildel(
@@ -208,17 +221,6 @@ class TilbakekrevingOppgaveTest {
         }
     }
 
-    // Vi må ta høyde for at saksbehandler legger oppgaven tilbake på benk, men likevel behandler tilbakekrevingen.
-    // Disabler derfor testen inntil videre.
-    @Disabled
-    @Test
-    fun `KlarTilBehandling - TilbakekrevingHendelse er ulovlig tilstandsendring`() {
-        val oppgave = lagTilbakekrevingOppgave(KLAR_TIL_BEHANDLING)
-        shouldThrow<Oppgave.Tilstand.UlovligTilstandsendringException> {
-            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.TIL_BEHANDLING))
-        }
-    }
-
     @Test
     fun `FerdigBehandlet - TilbakekrevingHendelse blir ignorert`() {
         val oppgave = lagTilbakekrevingOppgave(FERDIG_BEHANDLET)
@@ -241,6 +243,7 @@ class TilbakekrevingOppgaveTest {
 
     private fun lagTilbakekrevingHendelse(
         status: BehandlingStatus,
+        forrigeStatus: BehandlingStatus? = null,
         avventBehandlingTilDato: LocalDate? = null,
     ) = TilbakekrevingHendelse(
         eksternBehandlingId = eksternBehandlingId,
@@ -252,7 +255,7 @@ class TilbakekrevingOppgaveTest {
                 avventBehandlingTilDato = avventBehandlingTilDato,
                 varselSendt = LocalDate.now().minusDays(5),
                 behandlingsstatus = status,
-                forrigeBehandlingsstatus = null,
+                forrigeBehandlingsstatus = forrigeStatus,
                 totaltFeilutbetaltBeløp = BigDecimal("25000"),
                 saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                 fullstendigPeriode =
