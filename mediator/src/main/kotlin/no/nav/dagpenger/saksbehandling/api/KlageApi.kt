@@ -69,7 +69,11 @@ fun Route.klageApi(
                                 utførtAv = saksbehandler,
                             ),
                     ).let { oppgave ->
-                        auditlogg.opprett("Opprettet en manuell klage", klage.personIdent.ident, saksbehandler.navIdent)
+                        auditlogg.opprett(
+                            melding = "Opprettet en manuell klage i sak med id ${klage.sakId}",
+                            ident = klage.personIdent.ident,
+                            saksbehandler = saksbehandler.navIdent,
+                        )
                         call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
                     }
             }
@@ -88,7 +92,7 @@ fun Route.klageApi(
                             saksbehandler = saksbehandler,
                         )
                     auditlogg.les(
-                        melding = "Så en klagebehandling",
+                        melding = "Så på klagebehandling med id ${klageBehandling.behandlingId}",
                         ident = klageBehandling.personIdent(),
                         saksbehandler = saksbehandler.navIdent,
                     )
@@ -112,7 +116,11 @@ fun Route.klageApi(
                                         utførtAv = saksbehandler,
                                     ),
                             )
-                        auditlogg.oppdater("Trakk en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
+                        auditlogg.oppdater(
+                            melding = "Trakk klagebehandling med id $behandlingId",
+                            ident = klageBehandling.personIdent(),
+                            saksbehandler = saksbehandler.navIdent,
+                        )
                         call.respond(HttpStatusCode.NoContent)
                     }
                 }
@@ -127,9 +135,11 @@ fun Route.klageApi(
                             )
                         val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
                         auditlogg.oppdater(
-                            "Avbrøt en klagebehandling",
-                            klageBehandling.personIdent(),
-                            avbruttHendelse.utførtAv.navIdent,
+                            melding =
+                                "Avbrøt klagebehandling med id ${avbruttHendelse.behandlingId}, " +
+                                    "årsak ${avbruttHendelse.årsak}",
+                            ident = klageBehandling.personIdent(),
+                            saksbehandler = avbruttHendelse.utførtAv.navIdent,
                         )
                         call.respond(HttpStatusCode.NoContent)
                     }
@@ -147,10 +157,10 @@ fun Route.klageApi(
                                     ),
                                 saksbehandlerToken = call.request.jwt(),
                             )
-                        auditlogg.opprett(
-                            "Ferdigstilte en klagebehandling",
-                            klageBehandling.personIdent(),
-                            saksbehandler.navIdent,
+                        auditlogg.oppdater(
+                            melding = "Ferdigstilte klagebehandling med id ${klageBehandling.behandlingId}",
+                            ident = klageBehandling.personIdent(),
+                            saksbehandler = saksbehandler.navIdent,
                         )
                         call.respond(HttpStatusCode.NoContent)
                     }
@@ -167,10 +177,10 @@ fun Route.klageApi(
                                         utførtAv = saksbehandler,
                                     ),
                             )
-                        auditlogg.opprett(
-                            "Ferdigstilte behandling av klage (medhold/delvis medhold)",
-                            klageBehandling.personIdent(),
-                            saksbehandler.navIdent,
+                        auditlogg.oppdater(
+                            melding = "Ferdigstilte klagebehandling med id $behandlingId (medhold/delvis medhold)",
+                            ident = klageBehandling.personIdent(),
+                            saksbehandler = saksbehandler.navIdent,
                         )
                         call.respond(HttpStatusCode.NoContent)
                     }
@@ -190,9 +200,9 @@ fun Route.klageApi(
                                     saksbehandler = saksbehandler,
                                 )
                             auditlogg.oppdater(
-                                "Oppdaterte en klageopplysning",
-                                klageBehandling.personIdent(),
-                                saksbehandler.navIdent,
+                                melding = "Oppdaterte klageopplysning med id $opplysningId",
+                                ident = klageBehandling.personIdent(),
+                                saksbehandler = saksbehandler.navIdent,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }

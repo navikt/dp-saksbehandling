@@ -12,13 +12,19 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
+import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.sakApi(mediator: SakMediator) {
+fun Route.sakApi(
+    mediator: SakMediator,
+    applicationCallParser: ApplicationCallParser,
+    auditlogg: Auditlogg,
+) {
     authenticate("azureAd-maskin") {
         route("behandling/{behandlingId}/sakId") {
             get {
@@ -43,10 +49,16 @@ fun Route.sakApi(mediator: SakMediator) {
                 val personIdent = call.receive<PersonIdentDTO>()
                 val behandlingId = call.behandlingId()
                 val saksbehandlerToken = call.request.jwt()
+                val saksbehandler = applicationCallParser.saksbehandler(call)
                 mediator.flyttBehandlingTilNySak(
                     ident = personIdent.ident,
                     behandlingId = behandlingId,
                     saksbehandlerToken = saksbehandlerToken,
+                )
+                auditlogg.oppdater(
+                    melding = "Flyttet behandling $behandlingId til ny sak",
+                    ident = personIdent.ident,
+                    saksbehandler = saksbehandler.navIdent,
                 )
                 call.respond(HttpStatusCode.Created)
             }

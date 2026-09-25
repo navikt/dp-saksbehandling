@@ -31,9 +31,9 @@ internal fun Route.tilbakekrevingApi(
                             saksbehandler = saksbehandler,
                         )
                     auditlogg.les(
-                        "Så en tilbakekreving",
-                        tilbakekrevingMedPersonIdent.personIdent,
-                        saksbehandler.navIdent,
+                        melding = "Så på tilbakekreving med id ${tilbakekrevingMedPersonIdent.tilbakekreving.behandlingId}",
+                        ident = tilbakekrevingMedPersonIdent.personIdent,
+                        saksbehandler = saksbehandler.navIdent,
                     )
                     call.respond(HttpStatusCode.OK, tilbakekrevingMedPersonIdent.tilbakekreving.tilTilbakekrevingDTO())
                 }

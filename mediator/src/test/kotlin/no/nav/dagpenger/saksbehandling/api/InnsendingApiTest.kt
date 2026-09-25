@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.api
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.put
@@ -38,8 +39,8 @@ class InnsendingApiTest {
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
-        val mediator = mockk<InnsendingMediator>()
-        withInnsendingApi(mediator) {
+        val innsendingMediator = mockk<InnsendingMediator>()
+        withInnsendingApi(innsendingMediator) {
             client.get("innsending/$innsendingId").status shouldBe HttpStatusCode.Unauthorized
             client
                 .put("innsending/$innsendingId/ferdigstill") {
@@ -54,6 +55,7 @@ class InnsendingApiTest {
 
     @Test
     fun `Skal kunne hente en innsending`() {
+        val auditlogg = TestAuditlogg()
         val innsendingResultat = Innsending.InnsendingResultat.RettTilDagpenger(UUIDv7.ny())
         val sak =
             Sak(
@@ -62,6 +64,7 @@ class InnsendingApiTest {
             )
         val innsending =
             TestHelper.lagInnsending(
+                innsendingId = innsendingId,
                 vurdering = "hubba",
                 innsendingResultat = innsendingResultat,
                 valgtSakId = sak.sakId,
@@ -74,7 +77,7 @@ class InnsendingApiTest {
                         sak,
                     )
             }
-        withInnsendingApi(mediator) {
+        withInnsendingApi(mediator, auditlogg) {
             client
                 .get("innsending/$innsendingId") {
                     autentisert()
@@ -98,6 +101,12 @@ class InnsendingApiTest {
                   ]
                 }
                 """.trimIndent()
+
+            auditlogg.hendelser shouldHaveSize 1
+            auditlogg.hendelser.first().let {
+                it.operasjon shouldBe AuditOperasjon.READ
+                it.melding shouldBe "Så på innsending med id $innsendingId"
+            }
         }
     }
 
@@ -243,7 +252,7 @@ class InnsendingApiTest {
     @Test
     fun `Skal auditlogge READ ved visning av innsending`() {
         val auditlogg = TestAuditlogg()
-        val innsending = TestHelper.lagInnsending()
+        val innsending = TestHelper.lagInnsending(innsendingId = innsendingId)
         val mediator =
             mockk<InnsendingMediator>().also {
                 every { it.hentInnsending(innsendingId, any()) } returns innsending
@@ -257,7 +266,7 @@ class InnsendingApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.READ
-            it.melding shouldBe "Så en innsending"
+            it.melding shouldStartWith "Så på innsending"
             it.ident shouldBe innsending.person.ident
             it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }

@@ -41,7 +41,11 @@ fun Route.innsendingApi(
                             innsendingId = call.behandlingId(),
                             saksbehandler = saksbehandler,
                         ).let {
-                            auditlogg.les("Så en innsending", it.person.ident, saksbehandler.navIdent)
+                            auditlogg.les(
+                                melding = "Så på innsending med id ${it.innsendingId}",
+                                ident = it.person.ident,
+                                saksbehandler = saksbehandler.navIdent,
+                            )
                             call.respond(
                                 HttpStatusCode.OK,
                                 it.tilInnsendingDTO(
@@ -67,6 +71,7 @@ fun Route.innsendingApi(
                                             valgtSakId = valgtSakId,
                                         )
                                     }
+
                                     BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING -> {
                                         val valgtSakId = requestDTO.sakId
                                         requireNotNull(valgtSakId)
@@ -75,16 +80,19 @@ fun Route.innsendingApi(
                                             valgtSakId = valgtSakId,
                                         )
                                     }
+
                                     BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE -> {
                                         throw IllegalArgumentException(
                                             "Behandlingsvariant RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE er ikke gyldig for innsending",
                                         )
                                     }
+
                                     BehandlingVariantDTO.KLAGE -> {
                                         val valgtSakId = requestDTO.sakId
                                         requireNotNull(valgtSakId)
                                         Aksjon.OpprettKlage(valgtSakId)
                                     }
+
                                     BehandlingVariantDTO.OPPFOLGING -> {
                                         val nyOppgave =
                                             requireNotNull(requestDTO.nyOppgave) {

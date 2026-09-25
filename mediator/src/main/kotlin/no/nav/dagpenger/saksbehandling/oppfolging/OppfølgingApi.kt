@@ -65,7 +65,11 @@ internal fun Route.oppfølgingApi(
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
                     val oppfølging = oppfølgingMediator.hent(behandlingId, saksbehandler)
-                    auditlogg.les("Så en oppfølging", oppfølging.person.ident, saksbehandler.navIdent)
+                    auditlogg.les(
+                        melding = "Så på oppfølging med id $behandlingId",
+                        ident = oppfølging.person.ident,
+                        saksbehandler = saksbehandler.navIdent,
+                    )
                     val lovligeSaker = oppfølgingMediator.hentAlleSaker(oppfølging.person.ident)
                     call.respond(
                         HttpStatusCode.OK,
@@ -73,6 +77,7 @@ internal fun Route.oppfølgingApi(
                     )
                 }
 
+                // TODO: Denne burde vel vært auditlogget? Men vi mangler personident.
                 put {
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
@@ -100,12 +105,14 @@ internal fun Route.oppfølgingApi(
                             when (request.behandlingsvariant) {
                                 null -> OppfølgingAksjon.Avslutt(request.sakId)
                                 BehandlingVariantDTO.RETT_TIL_DAGPENGER_MANUELL -> {
-                                    val sakId = requireNotNull(request.sakId) { "sakId må være satt for manuell behandling" }
+                                    val sakId =
+                                        requireNotNull(request.sakId) { "sakId må være satt for manuell behandling" }
                                     OppfølgingAksjon.OpprettManuellBehandling(
                                         saksbehandlerToken = saksbehandlerToken,
                                         valgtSakId = sakId,
                                     )
                                 }
+
                                 BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING -> {
                                     val sakId = requireNotNull(request.sakId) { "sakId må være satt for revurdering" }
                                     OppfølgingAksjon.OpprettRevurderingBehandling(
@@ -113,19 +120,24 @@ internal fun Route.oppfølgingApi(
                                         valgtSakId = sakId,
                                     )
                                 }
+
                                 BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE -> {
-                                    val sakId = requireNotNull(request.sakId) { "sakId må være satt for revurdering etter klage" }
+                                    val sakId =
+                                        requireNotNull(request.sakId) { "sakId må være satt for revurdering etter klage" }
                                     OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage(
                                         saksbehandlerToken = saksbehandlerToken,
                                         valgtSakId = sakId,
                                     )
                                 }
+
                                 BehandlingVariantDTO.KLAGE -> {
                                     val sakId = requireNotNull(request.sakId) { "sakId må være satt for klage" }
                                     OppfølgingAksjon.OpprettKlage(sakId)
                                 }
+
                                 BehandlingVariantDTO.OPPFOLGING -> {
-                                    val nyOppgave = requireNotNull(request.nyOppgave) { "nyOppgave må være satt for oppfølging" }
+                                    val nyOppgave =
+                                        requireNotNull(request.nyOppgave) { "nyOppgave må være satt for oppfølging" }
                                     OppfølgingAksjon.OpprettOppfølging(
                                         valgtSakId = request.sakId,
                                         tittel = nyOppgave.tittel,

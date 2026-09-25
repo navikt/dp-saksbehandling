@@ -1784,7 +1784,7 @@ class OppgaveApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.READ
-            it.melding shouldBe "Så en oppgave"
+            it.melding shouldBe "Så på oppgave med id $oppgaveId"
             it.ident shouldBe "12345678901"
             it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }

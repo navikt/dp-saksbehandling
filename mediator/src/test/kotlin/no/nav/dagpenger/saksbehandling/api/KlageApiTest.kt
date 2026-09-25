@@ -586,7 +586,8 @@ class KlageApiTest {
                     it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, dato, TestHelper.saksbehandler)
                 } returns mockk<KlageBehandling>(relaxed = true)
             }
-        withKlageApi(mediator) {
+        val auditlogg = TestAuditlogg()
+        withKlageApi(klageMediator = mediator, auditlogg = auditlogg) {
             client
                 .put("klage/$klageBehandlingId/opplysning/$opplysningId") {
                     autentisert()
@@ -604,6 +605,11 @@ class KlageApiTest {
                         )
                     }
                 }
+            auditlogg.hendelser shouldHaveSize 1
+            auditlogg.hendelser.first().let {
+                it.operasjon shouldBe AuditOperasjon.UPDATE
+                it.melding shouldBe "Oppdaterte klageopplysning med id $opplysningId"
+            }
         }
     }
 
@@ -643,7 +649,7 @@ class KlageApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.READ
-            it.melding shouldBe "Så en klagebehandling"
+            it.melding shouldBe "Så på klagebehandling med id $klageBehandlingId"
             it.ident shouldBe "12345678901"
             it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }
@@ -672,7 +678,7 @@ class KlageApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.UPDATE
-            it.melding shouldBe "Trakk en klagebehandling"
+            it.melding shouldBe "Trakk klagebehandling med id $klageBehandlingId"
             it.ident shouldBe "12345678901"
         }
     }

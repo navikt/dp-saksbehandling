@@ -164,7 +164,11 @@ internal fun Route.oppgaveApi(
                             )
 
                         else -> {
-                            auditlogg.les("Hentet neste oppgave", oppgave.personIdent(), saksbehandler.navIdent)
+                            auditlogg.les(
+                                melding = "Hentet neste oppgave (id ${oppgave.oppgaveId})",
+                                ident = oppgave.personIdent(),
+                                saksbehandler = saksbehandler.navIdent,
+                            )
                             call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
                         }
                     }
@@ -177,7 +181,11 @@ internal fun Route.oppgaveApi(
                     val oppgaveId = call.finnUUID("oppgaveId")
                     withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
-                        auditlogg.les("Så en oppgave", oppgave.personIdent(), saksbehandler.navIdent)
+                        auditlogg.les(
+                            melding = "Så på oppgave med id $oppgaveId",
+                            ident = oppgave.personIdent(),
+                            saksbehandler = saksbehandler.navIdent,
+                        )
                         val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }

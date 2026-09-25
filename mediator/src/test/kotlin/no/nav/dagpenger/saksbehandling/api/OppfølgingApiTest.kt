@@ -547,7 +547,7 @@ class OppfølgingApiTest {
         auditlogg.hendelser shouldHaveSize 1
         auditlogg.hendelser.first().let {
             it.operasjon shouldBe AuditOperasjon.READ
-            it.melding shouldBe "Så en oppfølging"
+            it.melding shouldBe "Så på oppfølging med id ${oppfølging.id}"
             it.ident shouldBe oppfølging.person.ident
             it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }
