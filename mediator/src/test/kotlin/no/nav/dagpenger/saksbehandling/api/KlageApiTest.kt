@@ -65,6 +65,21 @@ class KlageApiTest {
     private val sakId = UUIDv7.ny()
     private val opplysningId = UUIDv7.ny()
     private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
+    private val oppslagMock: Oppslag =
+        mockk<Oppslag>().also {
+            coEvery { it.hentBehandler(TestHelper.saksbehandler.navIdent) } returns
+                BehandlerDTO(
+                    ident = "navIdent",
+                    fornavn = "fornavn",
+                    etternavn = "etternavn",
+                    enhet =
+                        BehandlerDTOEnhetDTO(
+                            navn = "navn",
+                            enhetNr = "enhetNr",
+                            postadresse = "postadresse",
+                        ),
+                )
+        }
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
@@ -238,7 +253,7 @@ class KlageApiTest {
     }
 
     @Test
-    fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
+    fun `Skal kunne opprette en klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
         val oppgave =
             TestHelper.lagOppgave(
@@ -262,8 +277,8 @@ class KlageApiTest {
                     )
                 } returns oppgave
             }
-
-        withKlageApi(mediator) {
+        val auditlogg = TestAuditlogg()
+        withKlageApi(klageMediator = mediator, auditlogg = auditlogg) {
             client
                 .post("klage/opprett-manuelt") {
                     header(HttpHeaders.Authorization, "Bearer $token")
@@ -307,6 +322,13 @@ class KlageApiTest {
                         utførtAv = TestHelper.saksbehandler,
                     ),
             )
+        }
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.CREATE
+            it.melding shouldBe "Opprettet en klage manuelt i sak med id $sakId"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+            it.ident shouldBe ident
         }
     }
 
@@ -368,12 +390,19 @@ class KlageApiTest {
                 } returns mockk<KlageBehandling>(relaxed = true)
             }
 
-        withKlageApi(mediator) {
+        val auditlogg = TestAuditlogg()
+        withKlageApi(klageMediator = mediator, auditlogg = auditlogg) {
             client.put("klage/$klageBehandlingId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
         }
 
         verify(exactly = 1) {
             mediator.avbrytKlage(hendelse = avbruttHendelse)
+        }
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.UPDATE
+            it.melding shouldBe "Trakk klagebehandling med id $klageBehandlingId"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }
     }
 
@@ -395,7 +424,8 @@ class KlageApiTest {
                 } returns mockk<KlageBehandling>(relaxed = true)
             }
 
-        withKlageApi(mediator) {
+        val auditlogg = TestAuditlogg()
+        withKlageApi(klageMediator = mediator, auditlogg = auditlogg) {
             client
                 .post("klage/$klageBehandlingId/avbryt") {
                     header(HttpHeaders.Authorization, "Bearer $token")
@@ -417,6 +447,11 @@ class KlageApiTest {
         verify(exactly = 1) {
             mediator.avbrytKlage(hendelse = avbruttHendelse)
         }
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.UPDATE
+            it.melding shouldBe "Avbrøt klagebehandling med id $klageBehandlingId, årsak AVBRUTT_FLERE_KLAGER"
+        }
     }
 
     @Test
@@ -436,7 +471,8 @@ class KlageApiTest {
                 } returns mockk<KlageBehandling>(relaxed = true)
             }
 
-        withKlageApi(mediator) {
+        val auditlogg = TestAuditlogg()
+        withKlageApi(klageMediator = mediator, auditlogg = auditlogg) {
             client
                 .put("klage/$klageBehandlingId/ferdigstill") { autentisert(token = saksbehandlerToken) }
                 .status shouldBe HttpStatusCode.NoContent
@@ -451,6 +487,12 @@ class KlageApiTest {
                     ),
                 saksbehandlerToken = saksbehandlerToken,
             )
+        }
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.UPDATE
+            it.melding shouldBe "Ferdigstilte klagebehandling med id $klageBehandlingId"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }
     }
 
@@ -470,7 +512,8 @@ class KlageApiTest {
                 } returns mockk<KlageBehandling>(relaxed = true)
             }
 
-        withKlageApi(mediator) {
+        val auditlogg = TestAuditlogg()
+        withKlageApi(klageMediator = mediator, auditlogg = auditlogg) {
             client
                 .put("klage/$klageBehandlingId/ferdigstill-behandling") { autentisert(token = saksbehandlerToken) }
                 .status shouldBe HttpStatusCode.NoContent
@@ -484,6 +527,12 @@ class KlageApiTest {
                         utførtAv = TestHelper.saksbehandler,
                     ),
             )
+        }
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.UPDATE
+            it.melding shouldBe "Ferdigstilte klagebehandling med id $klageBehandlingId (medhold/delvis medhold)"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
         }
     }
 
@@ -609,77 +658,8 @@ class KlageApiTest {
             auditlogg.hendelser.first().let {
                 it.operasjon shouldBe AuditOperasjon.UPDATE
                 it.melding shouldBe "Oppdaterte klageopplysning med id $opplysningId"
+                it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
             }
-        }
-    }
-
-    private val oppslagMock: Oppslag =
-        mockk<Oppslag>().also {
-            coEvery { it.hentBehandler(TestHelper.saksbehandler.navIdent) } returns
-                BehandlerDTO(
-                    ident = "navIdent",
-                    fornavn = "fornavn",
-                    etternavn = "etternavn",
-                    enhet =
-                        BehandlerDTOEnhetDTO(
-                            navn = "navn",
-                            enhetNr = "enhetNr",
-                            postadresse = "postadresse",
-                        ),
-                )
-        }
-
-    @Test
-    fun `Skal auditlogge READ ved visning av klagebehandling`() {
-        val auditlogg = TestAuditlogg()
-        val klageBehandling =
-            mockk<KlageBehandling>(relaxed = true).also {
-                every { it.behandlingId } returns klageBehandlingId
-                every { it.personIdent() } returns "12345678901"
-            }
-        val mediator =
-            mockk<KlageMediator>().also {
-                every { it.hentKlageBehandling(klageBehandlingId, any()) } returns klageBehandling
-            }
-
-        withKlageApi(mediator, auditlogg = auditlogg) {
-            client.get("klage/$klageBehandlingId") { autentisert() }
-        }
-
-        auditlogg.hendelser shouldHaveSize 1
-        auditlogg.hendelser.first().let {
-            it.operasjon shouldBe AuditOperasjon.READ
-            it.melding shouldBe "Så på klagebehandling med id $klageBehandlingId"
-            it.ident shouldBe "12345678901"
-            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
-        }
-    }
-
-    @Test
-    fun `Skal auditlogge UPDATE ved avbryt av klage`() {
-        val auditlogg = TestAuditlogg()
-        val klageBehandling =
-            mockk<KlageBehandling>(relaxed = true).also {
-                every { it.personIdent() } returns "12345678901"
-            }
-        val mediator =
-            mockk<KlageMediator>(relaxed = true).also {
-                every { it.avbrytKlage(any()) } returns klageBehandling
-            }
-
-        withKlageApi(mediator, auditlogg = auditlogg) {
-            client.put("klage/$klageBehandlingId/trekk") {
-                autentisert()
-                header(HttpHeaders.ContentType, "application/json")
-                setBody("""{"årsak": "Klagen er trukket"}""")
-            }
-        }
-
-        auditlogg.hendelser shouldHaveSize 1
-        auditlogg.hendelser.first().let {
-            it.operasjon shouldBe AuditOperasjon.UPDATE
-            it.melding shouldBe "Trakk klagebehandling med id $klageBehandlingId"
-            it.ident shouldBe "12345678901"
         }
     }
 

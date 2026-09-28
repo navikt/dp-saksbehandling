@@ -54,34 +54,31 @@ fun Route.klageApi(
     }
 
     authenticate("azureAd") {
-        route("klage/opprett-manuelt") {
-            post {
-                val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
-                val saksbehandler = applicationCallParser.saksbehandler(this.call)
-                mediator
-                    .opprettManuellKlage(
-                        manuellKlageMottattHendelse =
-                            ManuellKlageMottattHendelse(
-                                ident = klage.personIdent.ident,
-                                sakId = klage.sakId,
-                                opprettet = klage.opprettet,
-                                journalpostId = klage.journalpostId,
-                                utførtAv = saksbehandler,
-                            ),
-                    ).let { oppgave ->
-                        auditlogg.opprett(
-                            melding = "Opprettet en manuell klage i sak med id ${klage.sakId}",
-                            ident = klage.personIdent.ident,
-                            saksbehandler = saksbehandler.navIdent,
-                        )
-                        call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
-                    }
-            }
-        }
-    }
-
-    authenticate("azureAd") {
         route("klage") {
+            route("opprett-manuelt") {
+                post {
+                    val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
+                    val saksbehandler = applicationCallParser.saksbehandler(this.call)
+                    mediator
+                        .opprettManuellKlage(
+                            manuellKlageMottattHendelse =
+                                ManuellKlageMottattHendelse(
+                                    ident = klage.personIdent.ident,
+                                    sakId = klage.sakId,
+                                    opprettet = klage.opprettet,
+                                    journalpostId = klage.journalpostId,
+                                    utførtAv = saksbehandler,
+                                ),
+                        ).let { oppgave ->
+                            auditlogg.opprett(
+                                melding = "Opprettet en klage manuelt i sak med id ${klage.sakId}",
+                                ident = klage.personIdent.ident,
+                                saksbehandler = saksbehandler.navIdent,
+                            )
+                            call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
+                        }
+                }
+            }
             route("{behandlingId}") {
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
@@ -158,7 +155,7 @@ fun Route.klageApi(
                                 saksbehandlerToken = call.request.jwt(),
                             )
                         auditlogg.oppdater(
-                            melding = "Ferdigstilte klagebehandling med id ${klageBehandling.behandlingId}",
+                            melding = "Ferdigstilte klagebehandling med id $behandlingId",
                             ident = klageBehandling.personIdent(),
                             saksbehandler = saksbehandler.navIdent,
                         )
