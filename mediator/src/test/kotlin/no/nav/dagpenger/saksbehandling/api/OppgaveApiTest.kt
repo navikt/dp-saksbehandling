@@ -667,7 +667,8 @@ class OppgaveApiTest {
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(TestHelper.pdlPerson)
 
-        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
+        val auditlogg = TestAuditlogg()
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock, auditlogg = auditlogg) {
             client
                 .put("/oppgave/neste") {
                     autentisert()
@@ -702,6 +703,13 @@ class OppgaveApiTest {
                         }
                         """.trimIndent()
                 }
+            auditlogg.hendelser shouldHaveSize 1
+            auditlogg.hendelser.first().let {
+                it.operasjon shouldBe AuditOperasjon.READ
+                it.melding shouldBe "Hentet neste oppgave (id ${oppgave.oppgaveId})"
+                it.ident shouldBe TestHelper.personIdent
+                it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+            }
         }
     }
 
@@ -1787,6 +1795,62 @@ class OppgaveApiTest {
             it.melding shouldBe "Så på oppgave med id $oppgaveId"
             it.ident shouldBe "12345678901"
             it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+        }
+    }
+
+    @Test
+    fun `Skal auditlogge READ ved søk på oppgaver for en person med id`() {
+        val auditlogg = TestAuditlogg()
+        val oppgave = TestHelper.testOppgave
+        val oppgaveMediator =
+            mockk<OppgaveMediator>(relaxed = true).also {
+                every { it.finnOppgaverFor(ident = TestHelper.personIdent, antall = any()) } returns listOf(oppgave)
+            }
+
+        OppgaveApiTestHelper.withOppgaveApi(
+            oppgaveMediator = oppgaveMediator,
+            auditlogg = auditlogg,
+        ) {
+            client.get("person/${TestHelper.personId}") { autentisert() }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.READ
+            it.melding shouldBe "Så personoversikt"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+        }
+    }
+
+    @Test
+    fun `Skal auditlogge READ ved søk på oppgaver for en person med fnr`() {
+        val auditlogg = TestAuditlogg()
+        val oppgave = TestHelper.testOppgave
+        val oppgaveMediator =
+            mockk<OppgaveMediator>(relaxed = true).also {
+                every { it.finnOppgaverFor(ident = TestHelper.personIdent) } returns listOf(oppgave)
+            }
+
+        OppgaveApiTestHelper.withOppgaveApi(
+            oppgaveMediator = oppgaveMediator,
+            auditlogg = auditlogg,
+        ) {
+            client.post("person/oppgaver") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": ${TestHelper.personIdent}}""",
+                )
+            }
+        }
+
+        auditlogg.hendelser shouldHaveSize 1
+        auditlogg.hendelser.first().let {
+            it.operasjon shouldBe AuditOperasjon.READ
+            it.melding shouldBe "Søkte oppgaver for person"
+            it.saksbehandler shouldBe TestHelper.saksbehandler.navIdent
+            it.ident shouldBe TestHelper.personIdent
         }
     }
 }
