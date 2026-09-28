@@ -284,38 +284,6 @@ class OppfølgingApiTest {
     }
 
     @Test
-    fun `Skal kunne hente oppfølging med frist`() {
-        val frist = LocalDate.of(2026, 5, 15)
-        val oppfølging =
-            TestHelper.lagOppfølging(
-                id = oppfølgingId,
-                tittel = "Oppgave med frist",
-                frist = frist,
-            )
-        val mediator =
-            mockk<OppfølgingMediator>().also {
-                every { it.hent(oppfølgingId, any()) } returns oppfølging
-                every { it.hentAlleSaker(TestHelper.personIdent) } returns emptyList()
-            }
-        withOppfølgingApi(mediator) {
-            client
-                .get("oppfolging/$oppfølgingId") {
-                    autentisert()
-                    this.header(HttpHeaders.Accept, "application/json")
-                }.bodyAsText() shouldEqualSpecifiedJson
-                """
-                {
-                  "tittel": "Oppgave med frist",
-                  "frist": "2026-05-15",
-                  "beskrivelse": "",
-                  "strukturertData": {},
-                  "lovligeSaker": []
-                }
-                """.trimIndent()
-        }
-    }
-
-    @Test
     fun `Skal kunne hente oppfølging uten resultat`() {
         val oppfølging =
             TestHelper.lagOppfølging(

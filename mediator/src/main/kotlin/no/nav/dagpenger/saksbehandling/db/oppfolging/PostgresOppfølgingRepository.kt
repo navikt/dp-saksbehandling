@@ -32,7 +32,6 @@ class PostgresOppfølgingRepository(
                             tittel, 
                             beskrivelse,
                             strukturert_data,
-                            frist,
                             opprettet, 
                             tilstand, 
                             vurdering,
@@ -46,7 +45,6 @@ class PostgresOppfølgingRepository(
                             :tittel, 
                             :beskrivelse,
                             :strukturert_data::jsonb,
-                            :frist,
                             :opprettet, 
                             :tilstand, 
                             :vurdering,
@@ -58,7 +56,6 @@ class PostgresOppfølgingRepository(
                         DO UPDATE 
                         SET tittel = :tittel,
                             beskrivelse = :beskrivelse,
-                            frist = :frist,
                             tilstand = :tilstand,
                             vurdering = :vurdering,
                             resultat_type = :resultat_type,
@@ -77,7 +74,6 @@ class PostgresOppfølgingRepository(
                                 } else {
                                     objectMapper.writeValueAsString(oppfølging.strukturertData)
                                 },
-                            "frist" to oppfølging.frist,
                             "opprettet" to oppfølging.opprettet,
                             "tilstand" to oppfølging.tilstand(),
                             "vurdering" to oppfølging.vurdering(),
@@ -164,7 +160,6 @@ class PostgresOppfølgingRepository(
                 this.stringOrNull("strukturert_data")?.let {
                     objectMapper.readValue(it, Map::class.java) as Map<String, Any>
                 } ?: emptyMap(),
-            frist = this.localDateOrNull("frist"),
             opprettet = this.localDateTime("opprettet"),
             tilstand = this.string("tilstand"),
             vurdering = this.stringOrNull("vurdering"),

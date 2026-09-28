@@ -61,7 +61,6 @@ class OppfølgingMediator(
                 tittel = hendelse.tittel,
                 beskrivelse = hendelse.beskrivelse,
                 strukturertData = hendelse.strukturertData,
-                frist = hendelse.frist,
                 opprettet = hendelse.registrertTidspunkt,
             )
 
@@ -175,7 +174,6 @@ class OppfølgingMediator(
         oppfølging.rediger(
             tittel = hendelse.tittel,
             beskrivelse = hendelse.beskrivelse,
-            frist = hendelse.frist,
         )
         oppfølgingRepository.lagre(oppfølging)
         logger.info { "Redigerte oppfølging ${oppfølging.id}" }

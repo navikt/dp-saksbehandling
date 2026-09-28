@@ -171,7 +171,6 @@ private fun Oppfølging.tilDTO(lovligeSaker: List<Sak>): OppfolgingDTO =
         behandlingId = this.id,
         tittel = this.tittel,
         beskrivelse = this.beskrivelse,
-        frist = this.frist,
         strukturertData = this.strukturertData,
         lovligeSaker =
             lovligeSaker.map {

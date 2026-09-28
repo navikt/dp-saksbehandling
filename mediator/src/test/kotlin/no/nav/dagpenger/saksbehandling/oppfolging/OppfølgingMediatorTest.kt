@@ -238,7 +238,6 @@ class OppfølgingMediatorTest {
             val rehentetOppfølging = PostgresOppfølgingRepository(DatabaseSession(ds)).hent(resultat.oppfølgingId)
             rehentetOppfølging.tittel shouldBe "Ny tittel"
             rehentetOppfølging.beskrivelse shouldBe "Ny beskrivelse"
-            rehentetOppfølging.frist shouldBe nyFrist
         }
     }
 

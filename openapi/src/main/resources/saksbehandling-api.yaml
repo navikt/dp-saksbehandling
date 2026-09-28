@@ -85,7 +85,7 @@ paths:
       security:
         - azureAd: [ ]
     put:
-      summary: Rediger tittel, beskrivelse og frist for en oppfølging under behandling
+      summary: Rediger tittel og beskrivelse for en oppfølging under behandling
       parameters:
         - in: path
           name: behandlingId
@@ -2980,10 +2980,6 @@ components:
         beskrivelse:
           type: string
           description: Utfyllende beskrivelse av oppgaven
-        frist:
-          type: string
-          format: date
-          description: Frist for oppgaven (YYYY-MM-DD). Oppgaven settes på vent til denne dato.
         strukturertData:
           type: object
           additionalProperties: true

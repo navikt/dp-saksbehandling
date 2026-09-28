@@ -242,7 +242,6 @@ class OppfølgingTest {
                 tittel = "Rehydrert",
                 beskrivelse = "Beskrivelse",
                 strukturertData = mapOf("key" to "value"),
-                frist = null,
                 opprettet = java.time.LocalDateTime.now(),
                 tilstand = "FERDIGSTILT",
                 vurdering = "En vurdering",
@@ -258,31 +257,25 @@ class OppfølgingTest {
     }
 
     @Test
-    fun `Skal redigere tittel, beskrivelse og frist når tilstand er BEHANDLES`() {
+    fun `Skal redigere tittel og beskrivelse når tilstand er BEHANDLES`() {
         val oppgave =
             Oppfølging.opprett(
                 person = testPerson,
                 tittel = "Original tittel",
                 beskrivelse = "Original beskrivelse",
             )
-        val nyFrist =
-            java.time.LocalDate
-                .now()
-                .plusDays(7)
 
         oppgave.rediger(
             tittel = "Ny tittel",
             beskrivelse = "Ny beskrivelse",
-            frist = nyFrist,
         )
 
         oppgave.tittel shouldBe "Ny tittel"
         oppgave.beskrivelse shouldBe "Ny beskrivelse"
-        oppgave.frist shouldBe nyFrist
     }
 
     @Test
-    fun `Skal kunne blanke ut beskrivelse og frist ved redigering`() {
+    fun `Skal kunne blanke ut beskrivelse ved redigering`() {
         val oppgave =
             Oppfølging.opprett(
                 person = testPerson,
@@ -293,11 +286,9 @@ class OppfølgingTest {
         oppgave.rediger(
             tittel = "Tittel",
             beskrivelse = "",
-            frist = null,
         )
 
         oppgave.beskrivelse shouldBe ""
-        oppgave.frist shouldBe null
     }
 
     @Test
@@ -314,7 +305,6 @@ class OppfølgingTest {
             oppgave.rediger(
                 tittel = "Ny tittel",
                 beskrivelse = "Ny beskrivelse",
-                frist = null,
             )
         }
     }
