@@ -1,2 +1,2 @@
-ALTER TABLE oppfolging_v1
-DROP COLUMN frist;
+ALTER TABLE IF EXISTS oppfolging_v1
+DROP COLUMN IF EXISTS frist;
