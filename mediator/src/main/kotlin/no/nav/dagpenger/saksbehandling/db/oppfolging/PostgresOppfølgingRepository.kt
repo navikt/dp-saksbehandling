@@ -101,20 +101,19 @@ class PostgresOppfølgingRepository(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  go.id,
-                                go.tittel,
-                                go.beskrivelse,
-                                go.strukturert_data,
-                                go.frist,
-                                go.opprettet,
-                                go.tilstand,
-                                go.vurdering,
-                                go.resultat_type,
-                                go.resultat_behandling_id,
-                                go.valgt_sak_id,
-                                go.person_id
-                        FROM    oppfolging_v1 go
-                        WHERE   go.id = :id
+                        SELECT  o.id,
+                                o.tittel,
+                                o.beskrivelse,
+                                o.strukturert_data,
+                                o.opprettet,
+                                o.tilstand,
+                                o.vurdering,
+                                o.resultat_type,
+                                o.resultat_behandling_id,
+                                o.valgt_sak_id,
+                                o.person_id
+                        FROM    oppfolging_v1 o
+                        WHERE   o.id = :id
                         """.trimIndent(),
                     paramMap = mapOf("id" to id),
                 ).map { row -> row.oppfølging() }.asSingle,
@@ -128,20 +127,19 @@ class PostgresOppfølgingRepository(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  go.id,
-                                go.tittel,
-                                go.beskrivelse,
-                                go.strukturert_data,
-                                go.frist,
-                                go.opprettet,
-                                go.tilstand,
-                                go.vurdering,
-                                go.resultat_type,
-                                go.resultat_behandling_id,
-                                go.valgt_sak_id,
-                                go.person_id
-                        FROM    oppfolging_v1 go
-                        JOIN    person_v1 p ON p.id = go.person_id
+                        SELECT  o.id,
+                                o.tittel,
+                                o.beskrivelse,
+                                o.strukturert_data,
+                                o.opprettet,
+                                o.tilstand,
+                                o.vurdering,
+                                o.resultat_type,
+                                o.resultat_behandling_id,
+                                o.valgt_sak_id,
+                                o.person_id
+                        FROM    oppfolging_v1 o
+                        JOIN    person_v1 p ON p.id = o.person_id
                         WHERE   p.ident = :ident
                         """.trimIndent(),
                     paramMap = mapOf("ident" to ident),
