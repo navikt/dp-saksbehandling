@@ -12,7 +12,23 @@ object AlertManager {
         val type: String
     }
 
-    fun LocalDateTime.timserSiden(): String = ChronoUnit.HOURS.between(this, LocalDateTime.now()).toString()
+    fun LocalDateTime.timerSiden(): String = ChronoUnit.HOURS.between(this, LocalDateTime.now()).toString()
+
+    internal class KlageBehandlingIkkeFerdigstiltAlert(
+        val behandlingId: UUID,
+        val tilstand: String,
+        val sistEndret: LocalDateTime,
+    ) : AlertType {
+        override val feilMelding: String
+            get() {
+                return """
+                    BehandlingId: $behandlingId
+                    Klagebehandling har vært i tilstand: $tilstand i ${sistEndret.timerSiden()} timer.
+                    Sist endret: $sistEndret
+                    """.trimIndent()
+            }
+        override val type: String = "KLAGEBEHANDLING_IKKE_FERDIGSTILT_ALERT"
+    }
 
     internal class OppgaveOpprettetTilstandAlert(
         private val oppgaveId: UUID,
@@ -24,7 +40,7 @@ object AlertManager {
                 return """
                     OppgaveId: $oppgaveId
                     Utløst av: $utløstAvType
-                    Oppgave har vært i tilstand: Opprettet i ${sistEndret.timserSiden()} timer.
+                    Oppgave har vært i tilstand: Opprettet i ${sistEndret.timerSiden()} timer.
                     Sist endret: $sistEndret)
                     """.trimIndent()
             }
