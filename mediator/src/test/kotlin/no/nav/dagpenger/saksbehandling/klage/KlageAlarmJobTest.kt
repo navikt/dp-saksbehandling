@@ -6,8 +6,9 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.klage.KlageBehandlingSammendrag
+import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -20,15 +21,15 @@ class KlageAlarmJobTest {
         val behandlingId = UUIDv7.ny()
         val sistEndret = LocalDateTime.now().minusMonths(5).truncatedTo(ChronoUnit.HOURS)
         val repository =
-            mockk<KlageAlarmJobRepository> {
+            mockk<KlageRepository> {
                 every {
-                    hentBehandlingerIkkeFerdigstil(
+                    hentBehandlingerIkkeFerdigstilt(
                         type = KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS,
                         sistEndretEldreEnn = any(),
                     )
                 } returns
                     listOf(
-                        AlertManager.KlageBehandlingIkkeFerdigstiltAlert(
+                        KlageBehandlingSammendrag(
                             behandlingId = behandlingId,
                             tilstand = KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS.name,
                             sistEndret = sistEndret,
@@ -53,8 +54,8 @@ class KlageAlarmJobTest {
     @Test
     fun `sender ingen alert når ingen behandlinger er funnet`() {
         val repository =
-            mockk<KlageAlarmJobRepository> {
-                every { hentBehandlingerIkkeFerdigstil(any(), any()) } returns emptyList()
+            mockk<KlageRepository> {
+                every { hentBehandlingerIkkeFerdigstilt(any(), any()) } returns emptyList()
             }
 
         runBlocking {

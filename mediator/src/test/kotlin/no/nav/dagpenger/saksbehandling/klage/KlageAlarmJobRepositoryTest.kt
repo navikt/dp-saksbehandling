@@ -4,7 +4,9 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PGobject
 import java.time.LocalDateTime
@@ -31,8 +33,8 @@ class KlageAlarmJobRepositoryTest {
             )
 
             val behandlinger =
-                KlageAlarmJobRepository(dataSource)
-                    .hentBehandlingerIkkeFerdigstil(tilstand, grense)
+                PostgresKlageRepository(DatabaseSession(dataSource))
+                    .hentBehandlingerIkkeFerdigstilt(tilstand, grense)
 
             behandlinger.size shouldBe 1
             behandlinger.single().behandlingId shouldBe eldreBehandlingId

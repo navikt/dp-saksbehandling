@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.KlageAlarmJob
-import no.nav.dagpenger.saksbehandling.klage.KlageAlarmJobRepository
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottak
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottakForOppgave
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
@@ -383,7 +382,7 @@ internal class ApplicationBuilder(
                 )
                 KlageAlarmJob(
                     rapidsConnection = rapid,
-                    klageRepository = KlageAlarmJobRepository(dataSource),
+                    klageRepository = klageRepository,
                 ).startJob(
                     period = 1.Dag,
                 )
