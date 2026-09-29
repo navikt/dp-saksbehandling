@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -45,8 +44,15 @@ class KlageAlarmJobTest {
         testRapid.inspektør.message(0).let { message ->
             message["@event_name"].stringValue() shouldBe "saksbehandling_alert"
             message["alertType"].stringValue() shouldBe "KLAGEBEHANDLING_IKKE_FERDIGSTILT_ALERT"
-            message["feilMelding"].stringValue() shouldContain "BehandlingId: $behandlingId"
-            message["feilMelding"].stringValue() shouldContain "Sist endret: $sistEndret"
+            message["feilMelding"].stringValue() shouldBe
+                """
+                BehandlingId: $behandlingId
+                Klagebehandling har vært i tilstand: BEHANDLES_AV_KLAGEINSTANS i ${ChronoUnit.HOURS.between(
+                    sistEndret,
+                    LocalDateTime.now(),
+                )} timer.
+                Sist endret: $sistEndret
+                """.trimIndent()
             message["utvidetFeilMelding"].stringValue() shouldBe message["feilMelding"].stringValue()
         }
     }
