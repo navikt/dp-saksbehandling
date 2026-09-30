@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.Sekund
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
+import no.nav.dagpenger.saksbehandling.klage.KlageAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottak
 import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtakMottakForOppgave
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
@@ -378,6 +379,12 @@ internal class ApplicationBuilder(
                     repository = OversendKlageinstansAlarmRepository(dataSource),
                 ).startJob(
                     period = 60.Minutt,
+                )
+                KlageAlarmJob(
+                    rapidsConnection = rapid,
+                    klageRepository = klageRepository,
+                ).startJob(
+                    period = 1.Dag,
                 )
                 OppgaveFristUtgåttJob(oppgaveMediator).startJob(
                     startAt = getNextOccurrence(3, 0),

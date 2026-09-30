@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageinstansVedtak
 import no.nav.dagpenger.saksbehandling.serder.rehydrerHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -44,6 +45,38 @@ class PostgresKlageRepository(
 
     override fun hentKlageBehandling(behandlingId: UUID): KlageBehandling =
         finnKlageBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke klage med id $behandlingId")
+
+    override fun hentBehandlingerIkkeFerdigstilt(
+        type: KlageTilstand.Type,
+        sistEndretEldreEnn: LocalDateTime,
+    ): List<KlageBehandlingSammendrag> =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  id,
+                                tilstand,
+                                endret_tidspunkt
+                        FROM    klage_v1
+                        WHERE   tilstand = :type
+                        AND     endret_tidspunkt < :sistEndretEldreEnn
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "type" to type.name,
+                            "sistEndretEldreEnn" to sistEndretEldreEnn,
+                        ),
+                ).map { row ->
+                    KlageBehandlingSammendrag(
+                        behandlingId = row.uuid("id"),
+                        tilstand = row.string("tilstand"),
+                        sistEndret = row.localDateTime("endret_tidspunkt"),
+                    )
+                }.asList,
+            )
+        }
 
     private fun finnKlageBehandling(behandlingId: UUID): KlageBehandling? {
         val klageBehandling =
