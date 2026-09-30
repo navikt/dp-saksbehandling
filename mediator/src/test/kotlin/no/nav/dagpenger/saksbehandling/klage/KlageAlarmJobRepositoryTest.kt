@@ -12,8 +12,8 @@ class KlageAlarmJobRepositoryTest {
     @Test
     fun `henter bare behandlinger i angitt tilstand som er eldre enn grensen`() {
         val now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-        val førOpprettelse = now.minusHours(1)
-        val etterOpprettelse = now.plusHours(1)
+        val førOpprettelse = now.minusDays(1)
+        val etterOpprettelse = now.plusDays(1)
         val tilstand = KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS
 
         withMigratedDb { dataSource ->
@@ -28,8 +28,8 @@ class KlageAlarmJobRepositoryTest {
             listOf(behandling1, behandling2, behandling3, annenTilstandBehandling).forEach(klageRepository::lagre)
 
             klageRepository.hentBehandlingerIkkeFerdigstilt(tilstand, førOpprettelse).size shouldBe 0
-            val behandlinger = klageRepository.hentBehandlingerIkkeFerdigstilt(tilstand, etterOpprettelse)
 
+            val behandlinger = klageRepository.hentBehandlingerIkkeFerdigstilt(tilstand, etterOpprettelse)
             behandlinger.size shouldBe 3
             behandlinger.map { it.behandlingId }.toSet() shouldBe
                 setOf(behandling1.behandlingId, behandling2.behandlingId, behandling3.behandlingId)
