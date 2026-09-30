@@ -6,12 +6,14 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class KlageAlarmJobRepositoryTest {
     @Test
     fun `henter bare behandlinger i angitt tilstand som er eldre enn grensen`() {
-        val førOpprettelse = LocalDateTime.now().minusMinutes(1)
-        val etterOpprettelse = LocalDateTime.now().plusMinutes(1)
+        val now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+        val førOpprettelse = now.minusHours(1)
+        val etterOpprettelse = now.plusHours(1)
         val tilstand = KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS
 
         withMigratedDb { dataSource ->
