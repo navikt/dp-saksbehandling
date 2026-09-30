@@ -61,12 +61,12 @@ class PostgresKlageRepository(
                                 endret_tidspunkt
                         FROM    klage_v1
                         WHERE   tilstand = :type
-                        AND     endret_tidspunkt < :endretTidspunkt
+                        AND     endret_tidspunkt < :sistEndretEldreEnn
                         """.trimIndent(),
                     paramMap =
                         mapOf(
                             "type" to type.name,
-                            "endretTidspunkt" to sistEndretEldreEnn,
+                            "sistEndretEldreEnn" to sistEndretEldreEnn,
                         ),
                 ).map { row ->
                     KlageBehandlingSammendrag(

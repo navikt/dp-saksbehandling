@@ -13,10 +13,14 @@ internal class KlageAlarmJob(
     private val rapidsConnection: RapidsConnection,
     private val klageRepository: KlageRepository,
 ) : Job() {
+    companion object {
+        const val ALARM_INTERVAL_MND = 4L
+    }
+
     override val jobName: String = "KlageAlarmJob"
 
     override suspend fun executeJob() {
-        val sistEndretEldreEnn = LocalDateTime.now().minusMonths(4)
+        val sistEndretEldreEnn = LocalDateTime.now().minusMonths(ALARM_INTERVAL_MND)
         klageRepository
             .hentBehandlingerIkkeFerdigstilt(
                 type = KlageBehandling.KlageTilstand.Type.BEHANDLES_AV_KLAGEINSTANS,
@@ -29,7 +33,7 @@ internal class KlageAlarmJob(
                         sistEndret = behandling.sistEndret,
                     )
                 logger.warn {
-                    "Klagebehandling med id ${alert.behandlingId} har vært i tilstand ${alert.tilstand} i mer enn 4 måneder."
+                    "Klagebehandling med id ${alert.behandlingId} har vært i tilstand ${alert.tilstand} i mer enn $ALARM_INTERVAL_MND måneder."
                 }
                 rapidsConnection.sendAlertTilRapid(
                     feilType = alert,
