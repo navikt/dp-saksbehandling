@@ -1826,6 +1826,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+
             repo
                 .søk(
                     Søkefilter(
@@ -1835,11 +1836,33 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         behandlerIdent = saksbehandler1,
                     ),
-                ).oppgaver
-                .let {
-                    it.size shouldBe 2
-                    it shouldContain oppgaveUnderBehandlingEidAvSB1
-                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 2
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 2
+                            it shouldContain oppgaveUnderBehandlingEidAvSB1
+                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                        }
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        behandlerIdent = saksbehandler1,
+                    ),
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 2
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 2
+                            it shouldContain oppgaveUnderBehandlingEidAvSB1
+                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                        }
                 }
 
             repo
@@ -1852,11 +1875,14 @@ class PostgresOppgaveRepositoryTest {
                         behandlerIdent = saksbehandler1,
                         kunTildelteOppgaver = true,
                     ),
-                ).oppgaver
-                .let {
-                    it.size shouldBe 2
-                    it shouldContain oppgaveUnderBehandlingEidAvSB1
-                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 2
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 2
+                            it shouldContain oppgaveUnderBehandlingEidAvSB1
+                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                        }
                 }
 
             repo
@@ -1868,11 +1894,14 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         behandlerIdent = saksbehandler2,
                     ),
-                ).oppgaver
-                .let {
-                    it.size shouldBe 2
-                    it shouldContain oppgaveUnderBehandlingEidAvSB2
-                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 2
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 2
+                            it shouldContain oppgaveUnderBehandlingEidAvSB2
+                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                        }
                 }
 
             repo
@@ -1885,10 +1914,13 @@ class PostgresOppgaveRepositoryTest {
                         behandlerIdent = saksbehandler2,
                         kunTildelteOppgaver = true,
                     ),
-                ).oppgaver
-                .let {
-                    it.size shouldBe 1
-                    it shouldContain oppgaveUnderBehandlingEidAvSB2
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 1
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 1
+                            it shouldContain oppgaveUnderBehandlingEidAvSB2
+                        }
                 }
 
             repo
@@ -1900,12 +1932,15 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         kunTildelteOppgaver = true,
                     ),
-                ).oppgaver
-                .let {
-                    it.size shouldBe 3
-                    it shouldContain oppgaveUnderBehandlingEidAvSB1
-                    it shouldContain oppgaveUnderBehandlingEidAvSB2
-                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 3
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 3
+                            it shouldContain oppgaveUnderBehandlingEidAvSB1
+                            it shouldContain oppgaveUnderBehandlingEidAvSB2
+                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                        }
                 }
 
             repo
@@ -1917,8 +1952,10 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         behandlerIdent = null,
                     ),
-                ).oppgaver.size shouldBe 4
-
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 4
+                    it.oppgaver.size shouldBe 4
+                }
             repo
                 .søk(
                     Søkefilter(
@@ -1932,10 +1969,13 @@ class PostgresOppgaveRepositoryTest {
                                 Emneknagg.Regelknagg.INNVILGELSE.kategori to setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
                             ),
                     ),
-                ).oppgaver
-                .let {
-                    it.size shouldBe 1
-                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                ).let {
+                    it.totaltAntallOppgaver shouldBe 1
+                    it.oppgaver
+                        .let {
+                            it.size shouldBe 1
+                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                        }
                 }
 
             repo
