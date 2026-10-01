@@ -380,7 +380,7 @@ paths:
             type: boolean
         - in: query
           name: kunTildelteOppgaver
-          description: Filtrerer på oppgaver tildelt pålogget NAV-ident
+          description: Filtrerer på oppgaver tildelt en NAV-ident
           required: false
           schema:
             type: boolean

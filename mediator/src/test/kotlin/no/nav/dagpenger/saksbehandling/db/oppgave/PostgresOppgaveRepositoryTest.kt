@@ -1898,6 +1898,23 @@ class PostgresOppgaveRepositoryTest {
                             Oppgave.Tilstand.Type.entries
                                 .toSet(),
                         periode = Periode.UBEGRENSET_PERIODE,
+                        kunTildelteOppgaver = true,
+                    ),
+                ).oppgaver
+                .let {
+                    it.size shouldBe 3
+                    it shouldContain oppgaveUnderBehandlingEidAvSB1
+                    it shouldContain oppgaveUnderBehandlingEidAvSB2
+                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
                         behandlerIdent = null,
                     ),
                 ).oppgaver.size shouldBe 4
