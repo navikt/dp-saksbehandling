@@ -225,6 +225,13 @@ class DBTestHelper private constructor(
                 behandlerIdent =
                     when (tilstand) {
                         is Oppgave.UnderKontroll -> beslutterIdent
+                        is Oppgave.FerdigBehandlet -> {
+                            if (beslutterIdent != null) {
+                                beslutterIdent
+                            } else {
+                                saksbehandlerIdent
+                            }
+                        }
                         else -> saksbehandlerIdent
                     },
                 sisteSaksbehandlerIdent = saksbehandlerIdent,

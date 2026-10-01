@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
@@ -1791,34 +1792,38 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver hvor en gitt saksbehandler er siste saksbehandler eller siste beslutter`() {
+    fun `Skal kunne søke etter oppgaver for en gitt saksbehandlerident`() {
         val enUkeSiden = opprettetNå.minusDays(7)
         val saksbehandler1 = "saksbehandler1"
         val saksbehandler2 = "saksbehandler2"
 
         DBTestHelper.withMigratedDb { ds ->
-            this.leggTilOppgave(
-                tilstand = Oppgave.UnderBehandling,
-                opprettet = enUkeSiden,
-                saksbehandlerIdent = saksbehandler1,
-                emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
-            )
-            this.leggTilOppgave(
-                tilstand = Oppgave.UnderBehandling,
-                saksbehandlerIdent = saksbehandler2,
-                emneknagger = setOf(Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn),
-            )
-            this.leggTilOppgave(
-                tilstand = Oppgave.FerdigBehandlet,
-                saksbehandlerIdent = saksbehandler2,
-                beslutterIdent = saksbehandler1,
-                emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
-            )
-            this.leggTilOppgave(
-                tilstand = Oppgave.UnderBehandling,
-                saksbehandlerIdent = null,
-                emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
-            )
+            val oppgaveUnderBehandlingEidAvSB1 =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.UnderBehandling,
+                    opprettet = enUkeSiden,
+                    saksbehandlerIdent = saksbehandler1,
+                    emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                )
+            val oppgaveUnderBehandlingEidAvSB2 =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.UnderBehandling,
+                    saksbehandlerIdent = saksbehandler2,
+                    emneknagger = setOf(Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn),
+                )
+            val oppgaveFerdigBehandletEidAvSB1 =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.FerdigBehandlet,
+                    saksbehandlerIdent = saksbehandler2,
+                    beslutterIdent = saksbehandler1,
+                    emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                )
+            val oppgaveKlarTilBehandlingUtenSaksbehandler =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    saksbehandlerIdent = null,
+                    emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
+                )
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo
@@ -1830,7 +1835,29 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         behandlerIdent = saksbehandler1,
                     ),
-                ).oppgaver.size shouldBe 2
+                ).oppgaver
+                .let {
+                    it.size shouldBe 2
+                    it shouldContain oppgaveUnderBehandlingEidAvSB1
+                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        behandlerIdent = saksbehandler1,
+                        kunTildelteOppgaver = true,
+                    ),
+                ).oppgaver
+                .let {
+                    it.size shouldBe 2
+                    it shouldContain oppgaveUnderBehandlingEidAvSB1
+                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                }
 
             repo
                 .søk(
@@ -1841,7 +1868,28 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         behandlerIdent = saksbehandler2,
                     ),
-                ).oppgaver.size shouldBe 2
+                ).oppgaver
+                .let {
+                    it.size shouldBe 2
+                    it shouldContain oppgaveUnderBehandlingEidAvSB2
+                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            Oppgave.Tilstand.Type.entries
+                                .toSet(),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        behandlerIdent = saksbehandler2,
+                        kunTildelteOppgaver = true,
+                    ),
+                ).oppgaver
+                .let {
+                    it.size shouldBe 1
+                    it shouldContain oppgaveUnderBehandlingEidAvSB2
+                }
 
             repo
                 .søk(
@@ -1867,7 +1915,11 @@ class PostgresOppgaveRepositoryTest {
                                 Emneknagg.Regelknagg.INNVILGELSE.kategori to setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
                             ),
                     ),
-                ).oppgaver.size shouldBe 1
+                ).oppgaver
+                .let {
+                    it.size shouldBe 1
+                    it shouldContain oppgaveFerdigBehandletEidAvSB1
+                }
 
             repo
                 .søk(
@@ -1878,7 +1930,11 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         utenBehandler = true,
                     ),
-                ).oppgaver.size shouldBe 1
+                ).oppgaver
+                .let {
+                    it.size shouldBe 1
+                    it shouldContain oppgaveKlarTilBehandlingUtenSaksbehandler
+                }
         }
     }
 

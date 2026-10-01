@@ -1062,9 +1062,6 @@ private fun PostgresUnitOfWork.lagre(
     }
 }
 
-private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering =
-    AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
-
 private fun Row.rehydrerHendelse(): Hendelse =
     rehydrerHendelse(
         hendelseType = this.stringOrNull("hendelse_type"),
