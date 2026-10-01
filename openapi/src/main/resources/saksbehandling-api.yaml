@@ -374,12 +374,19 @@ paths:
             type: boolean
         - in: query
           name: mineOppgaver
+          description: Filtrerer på oppgaver der pålogget NAV-ident er/har vært saksbehandler eller beslutter
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: kunTildelteOppgaver
+          description: Filtrerer på oppgaver tildelt pålogget NAV-ident
           required: false
           schema:
             type: boolean
         - in: query
           name: saksbehandlerIdent
-          description: Filtrer på oppgaver tildelt en bestemt saksbehandler (NAV-ident)
+          description: Filtrerer på oppgaver der en bestemt NAV-ident er/har vært saksbehandler eller beslutter
           required: false
           schema:
             type: string

@@ -512,6 +512,10 @@ class PostgresOppgaveRepository(
                         " AND oppg.behandler_ident IS NULL "
                     }
 
+                    søkeFilter.behandlerIdent != null && søkeFilter.kunTildelteOppgaver -> {
+                        "AND oppg.behandler_ident = :behandler_ident "
+                    }
+
                     søkeFilter.behandlerIdent != null -> {
                         "AND ( oppg.siste_saksbehandler_ident = :behandler_ident " +
                             "OR oppg.siste_beslutter_ident = :behandler_ident ) "

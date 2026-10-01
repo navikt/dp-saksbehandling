@@ -19,6 +19,7 @@ data class Søkefilter(
     val periode: Periode,
     val tilstander: Set<Tilstand.Type>,
     val behandlerIdent: String? = null,
+    val kunTildelteOppgaver: Boolean = false,
     val utenBehandler: Boolean = false,
     val harDpSak: Boolean = false,
     val personIdent: String? = null,
@@ -91,6 +92,7 @@ data class Søkefilter(
 
             val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
+            val kunTildelteOppgaver = builder.kunTildelteOppgaver() ?: false
             val eksplisittBehandlerIdent = builder.behandlerIdent()
             val utenBehandler = builder.utenBehandler()
             val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
@@ -101,6 +103,7 @@ data class Søkefilter(
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
                 tilstander = tilstander,
+                kunTildelteOppgaver = kunTildelteOppgaver,
                 behandlerIdent =
                     when {
                         utenBehandler -> null
@@ -232,6 +235,8 @@ class FilterBuilder {
     }
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
+
+    fun kunTildelteOppgaver(): Boolean? = stringValues["kunTildelteOppgaver"]?.toBoolean()
 
     fun behandlerIdent(): String? = stringValues["saksbehandlerIdent"]?.trim()?.takeIf { it.isNotBlank() }
 
