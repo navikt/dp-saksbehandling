@@ -30,6 +30,7 @@ internal class TilbakekrevingMottak(
             precondition {
                 it.requireValue("hendelsestype", "behandling_endret")
                 it.requireValue("versjon", 1)
+                it.forbidValue("tilbakekreving.behandlingsstatus", "OPPRETTET")
             }
             validate {
                 it.requireKey(

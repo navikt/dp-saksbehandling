@@ -2264,29 +2264,7 @@ OppgaveMediatorTest {
         settOppOppgaveMediator(hendelse = søknadHendelse) { datasource, oppgaveMediator ->
             val tilbakekrevingBehandlingId = UUIDv7.ny()
 
-//            // 1. OPPRETTET -> oppgaven opprettes og knyttes til samme sak som søknadsbehandlingen
-//            val opprettet =
-//                lagTilbakekrevingHendelse(
-//                    eksternBehandlingId = søknadBehandlingId,
-//                    tilbakekrevingBehandlingId = tilbakekrevingBehandlingId,
-//                    status = BehandlingStatus.OPPRETTET,
-//                )
-//            oppgaveMediator.håndter(opprettet)
-//
-//            val oppgaveId = requireNotNull(oppgaveMediator.hentOppgaveIdFor(tilbakekrevingBehandlingId))
-//            oppgaveMediator.hentOppgave(oppgaveId, testInspektør).let { oppgave ->
-//                oppgave.tilstand().type shouldBe OPPRETTET
-//                oppgave.behandling.hendelse shouldBe opprettet
-//                oppgave.behandling.utløstAv shouldBe Intern.Tilbakekreving
-//            }
-//
-//            PostgresSakRepository(DatabaseSession(datasource)).finnSakHistorikk(testIdent).let { sakHistorikk ->
-//                requireNotNull(sakHistorikk)
-//                sakHistorikk.finnBehandling(tilbakekrevingBehandlingId) shouldNotBe null
-//                sakHistorikk.finnBehandling(søknadBehandlingId) shouldNotBe null
-//            }
-
-            // 2. TIL_FORHÅNDSVARSEL -> KlarTilBehandling
+            // TIL_FORHÅNDSVARSEL -> KlarTilBehandling
             val tilForhåndsvarsel =
                 lagTilbakekrevingHendelse(
                     eksternBehandlingId = søknadBehandlingId,
@@ -2306,7 +2284,7 @@ OppgaveMediatorTest {
 
             val tilbakeKrevingOppgaveId = oppgave.oppgaveId
 
-            // 3. Saksbehandler tar oppgaven -> UnderBehandling
+            // Saksbehandler tar oppgaven -> UnderBehandling
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = tilbakeKrevingOppgaveId,
@@ -2319,7 +2297,7 @@ OppgaveMediatorTest {
                 oppgave.behandlerIdent shouldBe saksbehandler.navIdent
             }
 
-            // 4. TIL_BEHANDLING med uttalelsesfrist fram i tid -> PåVent
+            // TIL_BEHANDLING med uttalelsesfrist fram i tid -> PåVent
             val venterPåUttalelse =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
@@ -2333,7 +2311,7 @@ OppgaveMediatorTest {
                 oppgave.tilstandslogg.first().hendelse shouldBe venterPåUttalelse
             }
 
-            // 5. TIL_BEHANDLING uten frist -> tilbake til UnderBehandling, frist-emneknagg settes
+            // TIL_BEHANDLING uten frist -> tilbake til UnderBehandling, frist-emneknagg settes
             val fristUtgått =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
@@ -2347,7 +2325,7 @@ OppgaveMediatorTest {
                 oppgave.emneknagger shouldContain FORHÅNDSVARSEL_FRIST_UTGÅTT.visningsnavn
             }
 
-            // 6. TIL_GODKJENNING uten tidligere beslutter -> KlarTilKontroll
+            // TIL_GODKJENNING uten tidligere beslutter -> KlarTilKontroll
             val tilGodkjenning =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
@@ -2361,7 +2339,7 @@ OppgaveMediatorTest {
                 oppgave.tilstandslogg.first().hendelse shouldBe tilGodkjenning
             }
 
-            // 7. Beslutter tar oppgaven -> UnderKontroll
+            // Beslutter tar oppgaven -> UnderKontroll
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = tilbakeKrevingOppgaveId,
@@ -2374,7 +2352,7 @@ OppgaveMediatorTest {
                 oppgave.behandlerIdent shouldBe beslutter.navIdent
             }
 
-            // 8. Underkjent (TIL_BEHANDLING) -> UnderBehandling hos opprinnelig saksbehandler
+            // Underkjent (TIL_BEHANDLING) -> UnderBehandling hos opprinnelig saksbehandler
             val underkjent =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
@@ -2390,7 +2368,7 @@ OppgaveMediatorTest {
                 oppgave.tilstandslogg.first().hendelse shouldBe underkjent
             }
 
-            // 9. TIL_GODKJENNING på nytt -> rett til UnderKontroll hos samme beslutter
+            // TIL_GODKJENNING på nytt -> rett til UnderKontroll hos samme beslutter
             val tilGodkjenningIgjen =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,
@@ -2405,7 +2383,7 @@ OppgaveMediatorTest {
                 oppgave.emneknagger shouldNotContain RETUR_FRA_KONTROLL.visningsnavn
             }
 
-            // 10. AVSLUTTET -> FerdigBehandlet
+            // AVSLUTTET -> FerdigBehandlet
             val avsluttet =
                 lagTilbakekrevingHendelse(
                     søknadBehandlingId,

@@ -39,6 +39,12 @@ class TilbakekrevingMottakTest {
     }
 
     @Test
+    fun `Skal ignorere hendelse med status OPPRETTET`() {
+        testRapid.sendTestMessage(tilbakekrevingMelding("OPPRETTET"))
+        verify(exactly = 0) { tilbakekrevingMediator.håndter(any<TilbakekrevingHendelse>()) }
+    }
+
+    @Test
     fun `Skal parse tilbakekrevingHendelse korrekt med venter`() {
         val slot = slot<TilbakekrevingHendelse>()
         testRapid.sendTestMessage(tilbakekrevingMelding("TIL_FORHÅNDSVARSEL", venter = "2026-10-02"))
