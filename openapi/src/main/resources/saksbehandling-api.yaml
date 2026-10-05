@@ -1185,6 +1185,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KlageAvslutningNotat'
       responses:
         '204':
           description: Klagen er trukket
@@ -2170,8 +2176,18 @@ components:
       properties:
         aarsak:
           $ref: '#/components/schemas/AvbrytKlageAarsak'
+        notat:
+          type: string
+          description: Kort begrunnelse for hvorfor klagen avsluttes og hva vurderingen bygger på
       required:
         - aarsak
+
+    KlageAvslutningNotat:
+      type: object
+      properties:
+        notat:
+          type: string
+          description: Kort begrunnelse for hvorfor klagen avsluttes og hva vurderingen bygger på
 
     AvbrytKlageAarsak:
       type: string

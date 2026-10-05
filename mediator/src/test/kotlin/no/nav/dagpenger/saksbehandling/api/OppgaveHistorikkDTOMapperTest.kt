@@ -320,6 +320,7 @@ class OppgaveHistorikkDTOMapperTest {
                                             navIdent = saksbehandler.navIdent,
                                             årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
                                             utførtAv = saksbehandler,
+                                            notat = "Brukeren ønsker ikke lenger å klage",
                                         ),
                                 )
                             },
@@ -327,7 +328,7 @@ class OppgaveHistorikkDTOMapperTest {
 
                 historikk.single().let { historikk ->
                     historikk.tittel shouldBe "Avbrutt"
-                    historikk.body shouldBe "Trukket klage"
+                    historikk.body shouldBe "Trukket klage\nBrukeren ønsker ikke lenger å klage"
                 }
             }
         }

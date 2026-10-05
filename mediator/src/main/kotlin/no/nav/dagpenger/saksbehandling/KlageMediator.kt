@@ -326,6 +326,7 @@ class KlageMediator(
                             navIdent = hendelse.utførtAv.navIdent,
                             årsak = hendelse.årsak,
                             utførtAv = hendelse.utførtAv,
+                            notat = hendelse.notat,
                         ),
                     ctx = ctx,
                 )

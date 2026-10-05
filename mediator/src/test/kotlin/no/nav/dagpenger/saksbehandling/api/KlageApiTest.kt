@@ -407,13 +407,46 @@ class KlageApiTest {
     }
 
     @Test
+    fun `Skal kunne trekke en klage med notat`() {
+        val notat = "Brukeren ønsker ikke lenger å klage"
+        val avbruttHendelse =
+            AvbruttHendelse(
+                behandlingId = klageBehandlingId,
+                årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
+                utførtAv = TestHelper.saksbehandler,
+                notat = notat,
+            )
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.avbrytKlage(hendelse = avbruttHendelse)
+                } returns mockk<KlageBehandling>(relaxed = true)
+            }
+
+        withKlageApi(klageMediator = mediator, auditlogg = TestAuditlogg()) {
+            client
+                .put("klage/$klageBehandlingId/trekk") {
+                    autentisert()
+                    header(HttpHeaders.ContentType, "application/json")
+                    setBody("""{"notat":"$notat"}""")
+                }.status shouldBe HttpStatusCode.NoContent
+        }
+
+        verify(exactly = 1) {
+            mediator.avbrytKlage(hendelse = avbruttHendelse)
+        }
+    }
+
+    @Test
     fun `Skal kunne avbryte en klage`() {
         val token = gyldigSaksbehandlerToken()
+        val notat = "Flere klager på samme vedtak"
         val avbruttHendelse =
             AvbruttHendelse(
                 behandlingId = klageBehandlingId,
                 årsak = Emneknagg.AvbrytKlage.AVBRUTT_FLERE_KLAGER,
                 utførtAv = TestHelper.saksbehandler,
+                notat = notat,
             )
         val mediator =
             mockk<KlageMediator>().also {
@@ -434,7 +467,8 @@ class KlageApiTest {
                     setBody(
                         """
                         {
-                            "aarsak": "FLERE_KLAGER"
+                            "aarsak": "FLERE_KLAGER",
+                            "notat": "$notat"
                         }
                         """.trimIndent(),
                     )

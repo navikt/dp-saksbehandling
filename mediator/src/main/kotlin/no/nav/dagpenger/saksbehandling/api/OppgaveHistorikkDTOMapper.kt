@@ -63,7 +63,11 @@ internal class OppgaveHistorikkDTOMapper(
                         when (tilstandsendring.hendelse) {
                             is FjernOppgaveAnsvarHendelse -> (tilstandsendring.hendelse as FjernOppgaveAnsvarHendelse).årsak.visningsnavn
                             is AvbrytOppgaveHendelse -> (tilstandsendring.hendelse as AvbrytOppgaveHendelse).årsak.visningsnavn
-                            is AvbrytKlageHendelse -> (tilstandsendring.hendelse as AvbrytKlageHendelse).årsak.visningsnavn
+                            is AvbrytKlageHendelse -> {
+                                val hendelse = tilstandsendring.hendelse as AvbrytKlageHendelse
+                                listOfNotNull(hendelse.årsak.visningsnavn, hendelse.notat?.takeIf { it.isNotBlank() })
+                                    .joinToString("\n")
+                            }
                             is UtsettOppgaveHendelse -> (tilstandsendring.hendelse as UtsettOppgaveHendelse).årsak.visningsnavn
                             else -> null
                         },

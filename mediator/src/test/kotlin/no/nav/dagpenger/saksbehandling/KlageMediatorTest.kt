@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytKlageHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -742,20 +743,34 @@ class KlageMediatorTest {
                         behandlingId = behandlingId,
                         årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
                         utførtAv = saksbehandler,
+                        notat = "Brukeren ønsker ikke lenger å klage",
                     ),
             )
 
-            klageMediator
-                .hentKlageBehandling(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
-                ).tilstand()
-                .type shouldBe AVBRUTT
+            val avbruttKlage =
+                klageMediator
+                    .hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    )
+            avbruttKlage.tilstand().type shouldBe AVBRUTT
+            avbruttKlage.tilstandslogg
+                .first()
+                .hendelse
+                .shouldBeInstanceOf<AvbruttHendelse>()
+                .notat shouldBe
+                "Brukeren ønsker ikke lenger å klage"
 
-            oppgaveMediator
-                .hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand()
-                .type shouldBe Oppgave.Tilstand.Type.AVBRUTT
+            val avbruttOppgave =
+                oppgaveMediator
+                    .hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            avbruttOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.AVBRUTT
+            avbruttOppgave.tilstandslogg
+                .first()
+                .hendelse
+                .shouldBeInstanceOf<AvbrytKlageHendelse>()
+                .notat shouldBe
+                "Brukeren ønsker ikke lenger å klage"
             testRapid.inspektør.size shouldBe 1
             testRapid.inspektør.message(0).let {
                 it["@event_name"].stringValue() shouldBe "klage_behandling_opprettet"

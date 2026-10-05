@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -14,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageAvslutningNotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
@@ -104,6 +106,9 @@ fun Route.klageApi(
                     put {
                         val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
+                        val notat =
+                            call.request.headers[HttpHeaders.ContentType]
+                                ?.let { call.receive<KlageAvslutningNotatDTO>().notat }
                         val klageBehandling =
                             mediator.avbrytKlage(
                                 hendelse =
@@ -111,6 +116,7 @@ fun Route.klageApi(
                                         behandlingId = behandlingId,
                                         årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
                                         utførtAv = saksbehandler,
+                                        notat = notat,
                                     ),
                             )
                         auditlogg.oppdater(
@@ -129,6 +135,7 @@ fun Route.klageApi(
                                 behandlingId = call.finnUUID("behandlingId"),
                                 årsak = avbrytKlageDTO.tilAvbrytKlageÅrsak(),
                                 utførtAv = applicationCallParser.saksbehandler(call),
+                                notat = avbrytKlageDTO.notat,
                             )
                         val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
                         auditlogg.oppdater(

@@ -9,4 +9,5 @@ class AvbrytKlageHendelse(
     val årsak: Emneknagg.AvbrytKlage = Emneknagg.AvbrytKlage.AVBRUTT_ANNET,
     val navIdent: String,
     override val utførtAv: Saksbehandler,
+    val notat: String? = null,
 ) : Hendelse(utførtAv)

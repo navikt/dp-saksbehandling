@@ -8,4 +8,5 @@ data class AvbruttHendelse(
     val behandlingId: UUID,
     val årsak: Emneknagg.AvbrytKlage = Emneknagg.AvbrytKlage.AVBRUTT_ANNET,
     override val utførtAv: Saksbehandler,
+    val notat: String? = null,
 ) : Hendelse(utførtAv)
