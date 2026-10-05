@@ -72,6 +72,7 @@ class TilbakekrevingMediatorTest {
                     eksternBehandlingId = UUID.randomUUID(),
                     tilbakekrevingBehandlingId = tilbakekrevingBehandlingId,
                     status = BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                    forrigeStatus = BehandlingStatus.OPPRETTET,
                 )
 
             mediator.håndter(tilbakekrevingHendelse)
@@ -98,6 +99,7 @@ class TilbakekrevingMediatorTest {
         eksternBehandlingId: UUID,
         tilbakekrevingBehandlingId: UUID,
         status: BehandlingStatus,
+        forrigeStatus: BehandlingStatus? = null,
         avventBehandlingTilDato: LocalDate? = null,
     ): TilbakekrevingHendelse {
         val now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
@@ -111,7 +113,7 @@ class TilbakekrevingMediatorTest {
                     avventBehandlingTilDato = avventBehandlingTilDato,
                     varselSendt = LocalDate.now(),
                     behandlingsstatus = status,
-                    forrigeBehandlingsstatus = null,
+                    forrigeBehandlingsstatus = forrigeStatus,
                     totaltFeilutbetaltBeløp = BigDecimal("25000"),
                     saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
                     fullstendigPeriode =

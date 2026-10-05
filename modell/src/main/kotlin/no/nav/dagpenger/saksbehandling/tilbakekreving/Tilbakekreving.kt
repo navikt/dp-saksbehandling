@@ -22,6 +22,7 @@ data class Tilbakekreving(
     )
 
     enum class BehandlingStatus {
+        OPPRETTET,
         TIL_FORHÅNDSVARSEL,
         TIL_BEHANDLING,
         TIL_GODKJENNING,

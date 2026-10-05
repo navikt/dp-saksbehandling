@@ -805,7 +805,6 @@ class OppgaveMediator(
         logger.info { "Mottatt TilbakekrevingHendelse med status ${tilbakekrevingHendelse.tilbakekreving.behandlingsstatus}" }
         val oppgaveId = oppgaveRepository.hentOppgaveIdFor(tilbakekrevingHendelse.tilbakekreving.behandlingId)
         if (oppgaveId == null) {
-            // Vurder denne: require(tilbakekrevingHendelse.tilbakekreving.behandlingsstatus in setOf(OPPRETTET, TIL_FORHÅNDSVARSEL))
             val sakHistorikk = sakMediator.knyttTilSak(tilbakekrevingHendelse, ctx)
             val behandling =
                 requireNotNull(sakHistorikk.finnBehandling(tilbakekrevingHendelse.tilbakekreving.behandlingId))
