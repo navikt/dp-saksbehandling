@@ -619,14 +619,16 @@ class OppgaveMediator(
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Result<UUID> =
         runCatching {
-            oppgaveRepository.hentOppgaveForBehandling(behandlingId = klageBehandlingUtført.behandlingId).let { oppgave ->
-                oppgave.ferdigstill(
-                    klageBehandlingUtført = klageBehandlingUtført,
-                    klageUtfall = klageUtfall,
-                )
-                oppgaveRepository.lagre(oppgave, ctx)
-                oppgave.oppgaveId
-            }
+            oppgaveRepository
+                .hentOppgaveForBehandling(behandlingId = klageBehandlingUtført.behandlingId)
+                .let { oppgave ->
+                    oppgave.ferdigstill(
+                        klageBehandlingUtført = klageBehandlingUtført,
+                        klageUtfall = klageUtfall,
+                    )
+                    oppgaveRepository.lagre(oppgave, ctx)
+                    oppgave.oppgaveId
+                }
         }
 
     fun ferdigstillOppgave(
@@ -703,26 +705,17 @@ class OppgaveMediator(
         hendelse: BehandlingAvbruttHendelse,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ) {
-        oppgaveRepository
-            .søk(
-                Søkefilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = Tilstand.Type.values,
-                    behandlingId = hendelse.behandlingId,
-                ),
-            ).oppgaver
-            .singleOrNull()
-            ?.let { oppgave ->
-                withLoggingContext(
-                    "oppgaveId" to oppgave.oppgaveId.toString(),
-                ) {
-                    logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
-                    oppgave.avbryt(hendelse)
-                    oppgaveRepository.lagre(oppgave, ctx)
-                    utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
-                    logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
-                }
+        oppgaveRepository.finnOppgaveForBehandling(behandlingId = hendelse.behandlingId)?.let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+            ) {
+                logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
+                oppgave.avbryt(hendelse)
+                oppgaveRepository.lagre(oppgave, ctx)
+                utsendingMediator.avbrytUtsendingForBehandling(oppgave.behandling.behandlingId, ctx)
+                logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
             }
+        }
     }
 
     fun utsettOppgave(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
