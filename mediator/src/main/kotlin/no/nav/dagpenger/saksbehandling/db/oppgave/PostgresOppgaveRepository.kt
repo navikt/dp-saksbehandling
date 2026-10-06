@@ -52,6 +52,34 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
+//language=PostgreSQL
+private val oppgaveSelect =
+    """
+    SELECT  beha.person_id AS person_id,
+            oppg.id AS oppgave_id,
+            oppg.tilstand,
+            oppg.opprettet AS oppgave_opprettet,
+            oppg.behandling_id,
+            oppg.behandler_ident,
+            oppg.siste_saksbehandler_ident,
+            oppg.siste_beslutter_ident,
+            oppg.utsatt_til,
+            oppg.melding_om_vedtak_kilde,
+            oppg.kontrollert_brev,
+            beha.opprettet AS behandling_opprettet,
+            beha.utlost_av,
+            hend.hendelse_type AS hendelse_type,
+            hend.hendelse_data AS hendelse_data
+    """.trimIndent()
+
+//language=PostgreSQL
+private val oppgaveFrom =
+    """
+    FROM        oppgave_v1 oppg
+    JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+    LEFT JOIN   hendelse_v1 hend ON hend.behandling_id = beha.id
+    """.trimIndent()
+
 class PostgresOppgaveRepository(
     private val databaseSession: DatabaseSession,
 ) : OppgaveRepository {
@@ -319,24 +347,8 @@ class PostgresOppgaveRepository(
                 queryOf(
                     statement =
                         """
-                        SELECT      beha.person_id, 
-                                    oppg.id AS oppgave_id, 
-                                    oppg.tilstand, 
-                                    oppg.opprettet AS oppgave_opprettet, 
-                                    oppg.behandling_id, 
-                                    oppg.behandler_ident,
-                                    oppg.siste_saksbehandler_ident,
-                                    oppg.siste_beslutter_ident,
-                                    oppg.utsatt_til,
-                                    oppg.melding_om_vedtak_kilde,
-                                    oppg.kontrollert_brev,
-                                    beha.opprettet AS behandling_opprettet,
-                                    beha.utlost_av,
-                                    hend.hendelse_type AS hendelse_type,
-                                    hend.hendelse_data AS hendelse_data
-                        FROM        oppgave_v1 oppg
-                        JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
-                        LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
+                        $oppgaveSelect
+                        $oppgaveFrom
                         WHERE       oppg.id = :oppgave_id
                         """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
@@ -390,24 +402,8 @@ class PostgresOppgaveRepository(
                 queryOf(
                     statement =
                         """
-                        SELECT      beha.person_id, 
-                                    oppg.id AS oppgave_id, 
-                                    oppg.tilstand, 
-                                    oppg.opprettet AS oppgave_opprettet, 
-                                    oppg.behandling_id, 
-                                    oppg.behandler_ident,
-                                    oppg.siste_saksbehandler_ident,
-                                    oppg.siste_beslutter_ident,
-                                    oppg.utsatt_til,
-                                    oppg.melding_om_vedtak_kilde,
-                                    oppg.kontrollert_brev,
-                                    beha.opprettet AS behandling_opprettet,
-                                    beha.utlost_av,
-                                    hend.hendelse_type AS hendelse_type,
-                                    hend.hendelse_data AS hendelse_data
-                        FROM        oppgave_v1 oppg
-                        JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
-                        LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
+                        $oppgaveSelect
+                        $oppgaveFrom
                         WHERE       beha.id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
@@ -664,26 +660,6 @@ class PostgresOppgaveRepository(
 
             // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
             //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
-
-            //language=PostgreSQL
-            val oppgaveSelect =
-                """
-                SELECT  pers.id AS person_id, 
-                        oppg.id AS oppgave_id, 
-                        oppg.tilstand, 
-                        oppg.opprettet AS oppgave_opprettet, 
-                        oppg.behandling_id, 
-                        oppg.behandler_ident,
-                        oppg.siste_saksbehandler_ident,
-                        oppg.siste_beslutter_ident,
-                        oppg.utsatt_til,
-                        oppg.melding_om_vedtak_kilde,
-                        oppg.kontrollert_brev,
-                        beha.opprettet AS behandling_opprettet,
-                        beha.utlost_av,
-                        hend.hendelse_type AS hendelse_type,
-                        hend.hendelse_data AS hendelse_data
-                """.trimIndent()
 
             val antallSelect =
                 """
