@@ -11,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.HendelseBehandler.DpBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -186,7 +185,8 @@ class KlageMediatorTest {
                 it["ident"].stringValue() shouldBe testPersonIdent
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
             oppgave.tilstandslogg.size shouldBe 2
@@ -259,7 +259,9 @@ class KlageMediatorTest {
                         it["ident"].stringValue() shouldBe testPersonIdent
                         it["fagsakId"].stringValue() shouldBe sakId.toString()
                         it["behandlendeEnhet"].stringValue() shouldBe klageBehandling.behandlendeEnhet()
-                        it["hjemler"].values().map { hjemmel -> hjemmel.stringValue() } shouldBe klageBehandling.hjemler()
+                        it["hjemler"]
+                            .values()
+                            .map { hjemmel -> hjemmel.stringValue() } shouldBe klageBehandling.hjemler()
                         it["tilknyttedeJournalposter"].values().map { jp -> jp["journalpostId"].stringValue() } shouldBe
                             listOf(
                                 "journalpostIdKlageVedtak",
@@ -519,7 +521,8 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe UNDER_BEHANDLING
             oppgave.behandlerIdent shouldBe saksbehandler.navIdent
@@ -643,7 +646,8 @@ class KlageMediatorTest {
                 it["mottatt"].asLocalDateTime() shouldBe nå
             }
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -696,9 +700,11 @@ class KlageMediatorTest {
                     ),
             )
 
-            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler).let { klageBehandling ->
-                klageBehandling.tilstand().type shouldBe FERDIGSTILT
-            }
+            klageMediator
+                .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .let { klageBehandling ->
+                    klageBehandling.tilstand().type shouldBe FERDIGSTILT
+                }
         }
     }
 
@@ -723,7 +729,8 @@ class KlageMediatorTest {
                 ).tilstand()
                 .type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -788,7 +795,8 @@ class KlageMediatorTest {
                 ).tilstand()
                 .type shouldBe BEHANDLES
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -849,7 +857,8 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -904,7 +913,8 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -919,7 +929,11 @@ class KlageMediatorTest {
             // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    klageBehandlingUtført =
+                        KlageBehandlingUtført(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
                     saksbehandlerToken = "token",
                 )
             }
@@ -950,7 +964,8 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -1005,7 +1020,8 @@ class KlageMediatorTest {
                         ),
                     ).behandling.behandlingId
 
-            val oppgave = oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            val oppgave =
+                oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -1020,7 +1036,11 @@ class KlageMediatorTest {
             // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
                 klageMediator.behandlingUtført(
-                    klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    klageBehandlingUtført =
+                        KlageBehandlingUtført(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
                     saksbehandlerToken = "token",
                 )
             }
@@ -1377,21 +1397,10 @@ class KlageMediatorTest {
                     opprettet = nå,
                     behandlingskjedeId = UUIDv7.ny(),
                 )
-            val sak =
-                sakMediator.opprettSak(
-                    ident = hendelse.ident,
-                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
-                    behandling =
-                        Behandling(
-                            behandlingId = hendelse.behandlingId,
-                            utløstAv = DpBehandling.Søknad,
-                            opprettet = hendelse.opprettet,
-                            hendelse = hendelse,
-                        ),
-                )
-            requireNotNull(sak)
+            sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
+            val sakId = sakMediator.hentSakIdForBehandlingId(hendelse.behandlingId)
 
-            test(klageMediator, oppgaveMediator, sak.sakId)
+            test(klageMediator, oppgaveMediator, sakId)
         }
     }
 
@@ -1447,25 +1456,15 @@ class KlageMediatorTest {
                     opprettet = nå,
                     behandlingskjedeId = UUIDv7.ny(),
                 )
-            val sak =
-                sakMediator.opprettSak(
-                    ident = hendelse.ident,
-                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
-                    behandling =
-                        Behandling(
-                            behandlingId = hendelse.behandlingId,
-                            utløstAv = DpBehandling.Søknad,
-                            opprettet = hendelse.opprettet,
-                            hendelse = hendelse,
-                        ),
-                )
-            requireNotNull(sak)
+
+            sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
+            val sakId = sakMediator.hentSakIdForBehandlingId(hendelse.behandlingId)
 
             shouldThrow<RuntimeException> {
                 klageMediator.opprettManuellKlage(
                     ManuellKlageMottattHendelse(
                         ident = testPersonIdent,
-                        sakId = sak.sakId,
+                        sakId = sakId,
                         opprettet = nå,
                         journalpostId = "12345",
                         utførtAv = saksbehandler,
@@ -1534,25 +1533,14 @@ class KlageMediatorTest {
                     opprettet = nå,
                     behandlingskjedeId = UUIDv7.ny(),
                 )
-            val sak =
-                sakMediator.opprettSak(
-                    ident = hendelse.ident,
-                    behandlingskjedeId = hendelse.behandlingskjedeId!!,
-                    behandling =
-                        Behandling(
-                            behandlingId = hendelse.behandlingId,
-                            utløstAv = DpBehandling.Søknad,
-                            opprettet = hendelse.opprettet,
-                            hendelse = hendelse,
-                        ),
-                )
-            requireNotNull(sak)
+            sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
+            val sakId = sakMediator.hentSakIdForBehandlingId(hendelse.behandlingId)
 
             shouldThrow<RuntimeException> {
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
                         ident = testPersonIdent,
-                        sakId = sak.sakId,
+                        sakId = sakId,
                         opprettet = nå,
                         journalpostId = "journalpostIdBrukersKlage",
                     ),

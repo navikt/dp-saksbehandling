@@ -2183,18 +2183,7 @@ OppgaveMediatorTest {
                 opprettet = LocalDateTime.now(),
                 behandlingskjedeId = UUIDv7.ny(),
             )
-        sakMediator.opprettSak(
-            ident = hendelse.ident,
-            behandlingskjedeId = hendelse.behandlingskjedeId!!,
-            behandling =
-                Behandling(
-                    behandlingId = hendelse.behandlingId,
-                    utløstAv = DpBehandling.Søknad,
-                    opprettet = hendelse.opprettet,
-                    hendelse = hendelse,
-                ),
-        )
-
+        sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
         val oppgave =
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -2463,26 +2452,14 @@ OppgaveMediatorTest {
                 )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {
-                val sak =
-                    sakMediator.opprettSak(
-                        ident = hendelse.ident,
-                        behandlingskjedeId = hendelse.behandlingskjedeId!!,
-                        behandling =
-                            Behandling(
-                                behandlingId = hendelse.behandlingId,
-                                opprettet = hendelse.opprettet,
-                                hendelse = hendelse,
-                                utløstAv = DpBehandling.Søknad,
-                            ),
-                    )
-                requireNotNull(sak)
-
+                sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
+                val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = hendelse.behandlingId)
                 sakMediator.knyttTilSak(
                     behandlingOpprettetHendelse =
                         BehandlingOpprettetHendelse(
                             behandlingId = hendelse.behandlingId,
                             ident = hendelse.ident,
-                            sakId = sak.sakId,
+                            sakId = sakId,
                             opprettet = hendelse.opprettet,
                             type = DpBehandling.Søknad,
                         ),

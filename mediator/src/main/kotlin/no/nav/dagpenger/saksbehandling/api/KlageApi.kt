@@ -32,6 +32,7 @@ fun Route.klageApi(
     auditlogg: Auditlogg,
 ) {
     authenticate("azureAd-maskin") {
+        // todo: Kan denne fjernes? Vi har ikke lenger noen maskin-til-maskin integrasjon som oppretter klager.
         route("klage/opprett") {
             post {
                 val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
