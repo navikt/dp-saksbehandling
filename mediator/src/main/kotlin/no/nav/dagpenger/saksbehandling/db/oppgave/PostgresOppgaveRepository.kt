@@ -462,13 +462,37 @@ class PostgresOppgaveRepository(
 
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
-        søk(
-            Søkefilter(
-                periode = UBEGRENSET_PERIODE,
-                tilstander = Type.values,
-                oppgaveId = oppgaveId,
-            ),
-        ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    statement =
+                        """
+                        SELECT      beha.person_id, 
+                                    oppg.id AS oppgave_id, 
+                                    oppg.tilstand, 
+                                    oppg.opprettet AS oppgave_opprettet, 
+                                    oppg.behandling_id, 
+                                    oppg.behandler_ident,
+                                    oppg.siste_saksbehandler_ident,
+                                    oppg.siste_beslutter_ident,
+                                    oppg.utsatt_til,
+                                    oppg.melding_om_vedtak_kilde,
+                                    oppg.kontrollert_brev,
+                                    beha.opprettet AS behandling_opprettet,
+                                    beha.utlost_av,
+                                    hend.hendelse_type AS hendelse_type,
+                                    hend.hendelse_data AS hendelse_data
+                        FROM        oppgave_v1 oppg
+                        JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+                        LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
+                        WHERE       oppg.id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.rehydrerOppgave()
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(
         ident: String,
