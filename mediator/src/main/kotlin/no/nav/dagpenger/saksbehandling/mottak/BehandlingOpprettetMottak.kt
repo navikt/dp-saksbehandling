@@ -18,7 +18,6 @@ import no.nav.dagpenger.saksbehandling.serder.asUUID
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
-private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -59,8 +58,8 @@ internal class BehandlingOpprettetMottak(
                 packet["basertPåBehandling"].asUUID()
             }
 
-        val skipSet = setOf<UUID>(UUID.fromString("019ed9e3-7416-7193-b70f-2cf2b6ac78c7"))
-        if (behandlingId in skipSet) {
+        val skipBehandlingSet = setOf<UUID>(UUID.fromString("01a10e83-19f3-70e0-9fac-7a1aa035d3af"))
+        if (behandlingId in skipBehandlingSet) {
             logger.info { "Skipper behandlingId: $behandlingId fra BehandlingOpprettetMottak" }
             return
         }

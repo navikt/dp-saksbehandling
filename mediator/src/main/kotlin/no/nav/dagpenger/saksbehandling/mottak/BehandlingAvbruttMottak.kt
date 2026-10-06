@@ -11,6 +11,9 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
+import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 internal class BehandlingAvbruttMottak(
     rapidsConnection: RapidsConnection,
@@ -39,6 +42,12 @@ internal class BehandlingAvbruttMottak(
     ) {
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
+
+        val skipBehandlingSet = setOf<UUID>(UUID.fromString("01a10e83-19f3-70e0-9fac-7a1aa035d3af"))
+        if (behandlingId in skipBehandlingSet) {
+            logger.info { "Skipper behandlingId: $behandlingId fra BehandlingAvbruttMottak" }
+            return
+        }
 
         withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_avbrutt hendelse" }
