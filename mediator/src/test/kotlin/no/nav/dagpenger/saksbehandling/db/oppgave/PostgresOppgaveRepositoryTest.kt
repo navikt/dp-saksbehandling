@@ -2664,10 +2664,10 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal hente en oppgave basert på behandlingId`() {
         DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo.hentOppgaveFor(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
+            repo.hentOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
 
             shouldThrow<DataNotFoundException> {
-                repo.hentOppgaveFor(behandlingId = UUIDv7.ny())
+                repo.hentOppgaveForBehandling(behandlingId = UUIDv7.ny())
             }
         }
     }
@@ -2676,8 +2676,8 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
         DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo.finnOppgaveFor(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
-            repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
+            repo.finnOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
+            repo.finnOppgaveForBehandling(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
 

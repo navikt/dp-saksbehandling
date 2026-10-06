@@ -205,7 +205,7 @@ class OppgaveMediator(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): Oppgave =
-        oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
+        oppgaveRepository.hentOppgaveForBehandling(behandlingId).also { oppgave ->
             oppgave.tilgangskontrollPerson(saksbehandler)
         }
 
@@ -219,7 +219,7 @@ class OppgaveMediator(
         if (behandling == null) {
             loggOgAlertBehandlingIkkeFunnet(forslagTilVedtakHendelse)
         } else {
-            oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
+            oppgave = oppgaveRepository.finnOppgaveForBehandling(forslagTilVedtakHendelse.behandlingId)
             when (oppgave == null) {
                 true -> {
                     oppgave =
@@ -410,7 +410,7 @@ class OppgaveMediator(
     }
 
     fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse) {
-        val oppgave = oppgaveRepository.finnOppgaveFor(hendelse.behandlingId)
+        val oppgave = oppgaveRepository.finnOppgaveForBehandling(hendelse.behandlingId)
         if (oppgave == null) {
             logger.info {
                 "Mottatt BehandlingTilGodkjenningHendelse for behandling ${hendelse.behandlingId}, " +
@@ -555,7 +555,7 @@ class OppgaveMediator(
     }
 
     fun håndterUtfallFraKlageinstans(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
-        oppgaveRepository.hentOppgaveFor(behandlingId = klageinstansVedtakHendelse.klageId).let { oppgave ->
+        oppgaveRepository.hentOppgaveForBehandling(behandlingId = klageinstansVedtakHendelse.klageId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
@@ -575,7 +575,7 @@ class OppgaveMediator(
     }
 
     fun ferdigstillOppgave(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {
-        oppgaveRepository.hentOppgaveFor(innsendingFerdigstiltHendelse.innsendingId).let { oppgave ->
+        oppgaveRepository.hentOppgaveForBehandling(innsendingFerdigstiltHendelse.innsendingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
@@ -596,7 +596,7 @@ class OppgaveMediator(
         oppfølgingFerdigstiltHendelse: OppfølgingFerdigstiltHendelse,
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ) {
-        oppgaveRepository.hentOppgaveFor(oppfølgingFerdigstiltHendelse.oppfølgingId).let { oppgave ->
+        oppgaveRepository.hentOppgaveForBehandling(oppfølgingFerdigstiltHendelse.oppfølgingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
@@ -619,7 +619,7 @@ class OppgaveMediator(
         ctx: Transaksjonskontekst = Transaksjonskontekst.IkkeAktiv,
     ): Result<UUID> =
         runCatching {
-            oppgaveRepository.hentOppgaveFor(behandlingId = klageBehandlingUtført.behandlingId).let { oppgave ->
+            oppgaveRepository.hentOppgaveForBehandling(behandlingId = klageBehandlingUtført.behandlingId).let { oppgave ->
                 oppgave.ferdigstill(
                     klageBehandlingUtført = klageBehandlingUtført,
                     klageUtfall = klageUtfall,
@@ -776,7 +776,7 @@ class OppgaveMediator(
         withLoggingContext("behandlingId" to vedtakFattetHendelse.behandlingId.toString()) {
             logger.info { "Mottatt VedtakFattetHendelse for behandlingId ${vedtakFattetHendelse.behandlingId}" }
             val oppgave: Oppgave =
-                oppgaveRepository.finnOppgaveFor(vedtakFattetHendelse.behandlingId)
+                oppgaveRepository.finnOppgaveForBehandling(vedtakFattetHendelse.behandlingId)
                     ?: oppretteOppgaveForAutomatiskFattetVedtak(vedtakFattetHendelse, emneknagger)
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {

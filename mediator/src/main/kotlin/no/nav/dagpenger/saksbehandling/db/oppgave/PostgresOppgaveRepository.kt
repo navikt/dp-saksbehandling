@@ -312,6 +312,56 @@ class PostgresOppgaveRepository(
                 ),
         ).oppgaver
 
+    //language=PostgreSQL
+    override fun hentOppgave(oppgaveId: UUID): Oppgave =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    statement =
+                        """
+                        SELECT      beha.person_id, 
+                                    oppg.id AS oppgave_id, 
+                                    oppg.tilstand, 
+                                    oppg.opprettet AS oppgave_opprettet, 
+                                    oppg.behandling_id, 
+                                    oppg.behandler_ident,
+                                    oppg.siste_saksbehandler_ident,
+                                    oppg.siste_beslutter_ident,
+                                    oppg.utsatt_til,
+                                    oppg.melding_om_vedtak_kilde,
+                                    oppg.kontrollert_brev,
+                                    beha.opprettet AS behandling_opprettet,
+                                    beha.utlost_av,
+                                    hend.hendelse_type AS hendelse_type,
+                                    hend.hendelse_data AS hendelse_data
+                        FROM        oppgave_v1 oppg
+                        JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+                        LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
+                        WHERE       oppg.id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.rehydrerOppgave()
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+
+    override fun finnOppgaverFor(
+        ident: String,
+        antall: Int?,
+    ): List<Oppgave> =
+        søk(
+            søkeFilter =
+                Søkefilter(
+                    periode = UBEGRENSET_PERIODE,
+                    tilstander = Type.søkbareTilstander,
+                    behandlerIdent = null,
+                    personIdent = ident,
+                    paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
+                    sortering = Søkefilter.Sortering.DESC,
+                ),
+        ).oppgaver
+
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? =
         databaseSession.session { session ->
             session.run(
@@ -330,18 +380,42 @@ class PostgresOppgaveRepository(
             )
         }
 
-    override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
-        finnOppgaveFor(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
+    override fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave =
+        finnOppgaveForBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
-    override fun finnOppgaveFor(behandlingId: UUID): Oppgave? =
-        søk(
-            søkeFilter =
-                Søkefilter(
-                    periode = UBEGRENSET_PERIODE,
-                    tilstander = Type.søkbareTilstander,
-                    behandlingId = behandlingId,
-                ),
-        ).oppgaver.singleOrNull()
+    //language=PostgreSQL
+    override fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave? =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    statement =
+                        """
+                        SELECT      beha.person_id, 
+                                    oppg.id AS oppgave_id, 
+                                    oppg.tilstand, 
+                                    oppg.opprettet AS oppgave_opprettet, 
+                                    oppg.behandling_id, 
+                                    oppg.behandler_ident,
+                                    oppg.siste_saksbehandler_ident,
+                                    oppg.siste_beslutter_ident,
+                                    oppg.utsatt_til,
+                                    oppg.melding_om_vedtak_kilde,
+                                    oppg.kontrollert_brev,
+                                    beha.opprettet AS behandling_opprettet,
+                                    beha.utlost_av,
+                                    hend.hendelse_type AS hendelse_type,
+                                    hend.hendelse_data AS hendelse_data
+                        FROM        oppgave_v1 oppg
+                        JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+                        LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
+                        WHERE       beha.id = :behandling_id
+                        """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    row.rehydrerOppgave()
+                }.asSingle,
+            )
+        }
 
     override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? =
         databaseSession.session { session ->
@@ -459,56 +533,6 @@ class PostgresOppgaveRepository(
                 }.asSingle,
             )
         }
-
-    //language=PostgreSQL
-    override fun hentOppgave(oppgaveId: UUID): Oppgave =
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    statement =
-                        """
-                        SELECT      beha.person_id, 
-                                    oppg.id AS oppgave_id, 
-                                    oppg.tilstand, 
-                                    oppg.opprettet AS oppgave_opprettet, 
-                                    oppg.behandling_id, 
-                                    oppg.behandler_ident,
-                                    oppg.siste_saksbehandler_ident,
-                                    oppg.siste_beslutter_ident,
-                                    oppg.utsatt_til,
-                                    oppg.melding_om_vedtak_kilde,
-                                    oppg.kontrollert_brev,
-                                    beha.opprettet AS behandling_opprettet,
-                                    beha.utlost_av,
-                                    hend.hendelse_type AS hendelse_type,
-                                    hend.hendelse_data AS hendelse_data
-                        FROM        oppgave_v1 oppg
-                        JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
-                        LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
-                        WHERE       oppg.id = :oppgave_id
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    row.rehydrerOppgave()
-                }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
-
-    override fun finnOppgaverFor(
-        ident: String,
-        antall: Int?,
-    ): List<Oppgave> =
-        søk(
-            søkeFilter =
-                Søkefilter(
-                    periode = UBEGRENSET_PERIODE,
-                    tilstander = Type.søkbareTilstander,
-                    behandlerIdent = null,
-                    personIdent = ident,
-                    paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
-                    sortering = Søkefilter.Sortering.DESC,
-                ),
-        ).oppgaver
 
     data class OppgaveSøkResultat(
         val oppgaver: List<Oppgave>,

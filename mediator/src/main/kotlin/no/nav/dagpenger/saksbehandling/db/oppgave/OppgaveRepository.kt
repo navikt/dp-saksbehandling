@@ -34,9 +34,9 @@ interface OppgaveRepository {
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
 
-    fun hentOppgaveFor(behandlingId: UUID): Oppgave
+    fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave
 
-    fun finnOppgaveFor(behandlingId: UUID): Oppgave?
+    fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave?
 
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 

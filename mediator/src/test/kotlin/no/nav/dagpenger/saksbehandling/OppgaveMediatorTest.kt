@@ -253,7 +253,7 @@ OppgaveMediatorTest {
                 personMediator = mockk(relaxed = true),
                 oppgaveRepository =
                     mockk<OppgaveRepository>().also {
-                        every { it.finnOppgaveFor(behandlingId = any()) } returns null
+                        every { it.finnOppgaveForBehandling(behandlingId = any()) } returns null
                     },
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
