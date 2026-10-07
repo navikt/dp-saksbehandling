@@ -73,11 +73,11 @@ private val oppgaveSelect =
     """.trimIndent()
 
 //language=PostgreSQL
-private val oppgaveFrom =
+private val oppgaveFromBasic =
     """
     FROM        oppgave_v1 oppg
     JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
-    LEFT JOIN   hendelse_v1 hend ON hend.behandling_id = beha.id
+    LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
     """.trimIndent()
 
 class PostgresOppgaveRepository(
@@ -348,7 +348,7 @@ class PostgresOppgaveRepository(
                     statement =
                         """
                         $oppgaveSelect
-                        $oppgaveFrom
+                        $oppgaveFromBasic
                         WHERE       oppg.id = :oppgave_id
                         """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
@@ -403,7 +403,7 @@ class PostgresOppgaveRepository(
                     statement =
                         """
                         $oppgaveSelect
-                        $oppgaveFrom
+                        $oppgaveFromBasic
                         WHERE       beha.id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
@@ -537,6 +537,12 @@ class PostgresOppgaveRepository(
 
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat =
         databaseSession.session { session ->
+            //language=PostgreSQL
+            val oppgaveFromSøk =
+                """
+                $oppgaveFromBasic
+                JOIN        person_v1     pers ON pers.id = beha.person_id
+                """.trimIndent()
             val tilstanderAsText = søkeFilter.tilstander.joinToString { "'$it'" }
             val tilstandClause =
                 when (søkeFilter.tilstander.isNotEmpty()) {
@@ -651,9 +657,9 @@ class PostgresOppgaveRepository(
                     ""
                 }
 
-            val orderByClause = søkeFilter.sorteringsfelt.orderByClause(søkeFilter.sortering)
+            val oppgaveOrderBy = søkeFilter.sorteringsfelt.orderByClause(søkeFilter.sortering)
 
-            val limitAndOffsetClause =
+            val oppgaveSøkLimitAndOffset =
                 søkeFilter.paginering?.let {
                     """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
                 } ?: ""
@@ -665,13 +671,9 @@ class PostgresOppgaveRepository(
                 """
                 SELECT COUNT(*) as total_count
                 """.trimIndent()
-            val fromJoinAndWhereClause =
+            val oppgaveWhere =
                 StringBuilder(
                     """
-                    FROM      oppgave_v1    oppg
-                    JOIN      behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN      person_v1     pers ON pers.id = beha.person_id
-                    LEFT JOIN hendelse_v1      hend ON hend.behandling_id = beha.id
                     WHERE     oppg.opprettet >= :fom
                     AND       oppg.opprettet <  :tom_pluss_1_dag
                     """.trimIndent(),
@@ -692,15 +694,17 @@ class PostgresOppgaveRepository(
             val oppgaverQuery =
                 """
                 $oppgaveSelect
-                $fromJoinAndWhereClause
-                $orderByClause
-                $limitAndOffsetClause   
+                $oppgaveFromSøk
+                $oppgaveWhere
+                $oppgaveOrderBy
+                $oppgaveSøkLimitAndOffset   
                 """.trimIndent()
 
             val antallOppgaverQuery =
                 """
                 $antallSelect
-                $fromJoinAndWhereClause
+                $oppgaveFromSøk
+                $oppgaveWhere
                 """.trimIndent()
 
             val paramMap =
