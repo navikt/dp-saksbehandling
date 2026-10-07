@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.math.BigDecimal
 import kotliquery.Row
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -35,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -48,6 +50,10 @@ import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -77,6 +83,7 @@ private val oppgaveFromBasic =
     """
     FROM        oppgave_v1 oppg
     JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+    JOIN        person_v1     pers ON pers.id = beha.person_id
     LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
     """.trimIndent()
 
@@ -336,7 +343,7 @@ class PostgresOppgaveRepository(
         }
     }
 
-    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
+    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<OppgaveOversiktDTO> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -344,13 +351,13 @@ class PostgresOppgaveRepository(
                     periode = UBEGRENSET_PERIODE,
                     behandlerIdent = null,
                 ),
-        ).oppgaver
+        ).oppgaveOversikt
 
-    //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         databaseSession.session { session ->
             session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement =
                         """
                         $oppgaveSelect
@@ -367,7 +374,7 @@ class PostgresOppgaveRepository(
     override fun finnOppgaverFor(
         ident: String,
         antall: Int?,
-    ): List<Oppgave> =
+    ): List<OppgaveOversiktDTO> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -378,7 +385,7 @@ class PostgresOppgaveRepository(
                     paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
                     sortering = Søkefilter.Sortering.DESC,
                 ),
-        ).oppgaver
+        ).oppgaveOversikt
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? =
         databaseSession.session { session ->
@@ -401,11 +408,11 @@ class PostgresOppgaveRepository(
     override fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave =
         finnOppgaveForBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
-    //language=PostgreSQL
     override fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave? =
         databaseSession.session { session ->
             session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement =
                         """
                         $oppgaveSelect
@@ -413,6 +420,29 @@ class PostgresOppgaveRepository(
                         WHERE       beha.id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    row.rehydrerOppgave()
+                }.asSingle,
+            )
+        }
+
+    override fun finnOppgaveForSøknad(
+        ident: String,
+        søknadId: UUID,
+    ): Oppgave? =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        $oppgaveSelect
+                        $oppgaveFromBasic
+                        WHERE       pers.ident = :ident
+                        AND         hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
+                        AND         hend.hendelse_data ->> 'søknadId' = :soknad_id 
+                        """.trimIndent(),
+                    paramMap = mapOf("ident" to ident, "soknad_id" to søknadId),
                 ).map { row ->
                     row.rehydrerOppgave()
                 }.asSingle,
@@ -541,24 +571,29 @@ class PostgresOppgaveRepository(
         val totaltAntallOppgaver: Int,
     )
 
-    override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat =
+    data class OppgaveOversiktSøkResultat(
+        val oppgaveOversikt: List<OppgaveOversiktDTO>,
+        val totaltAntallOppgaver: Int,
+    )
+
+    override fun søk(søkeFilter: Søkefilter): OppgaveOversiktSøkResultat =
         databaseSession.session { session ->
             //language=PostgreSQL
             val oppgaveOversiktSelect =
                 """
-    SELECT  oppg.id AS oppgave_id,
-            oppg.behandling_id,
-            pers.id AS person_id,
-            oppg.behandler_ident,
-            oppg.siste_saksbehandler_ident,
-            oppg.siste_beslutter_ident,
-            oppg.opprettet AS oppgave_opprettet,
-            beha.utlost_av,
-            oppg.tilstand,
-            oppg.utsatt_til,
-            tilb.totalt_feilutbetalt_belop,
-            logg.tidspunkt AS sendt_til_kontroll
-    """.trimIndent()
+                SELECT  oppg.id AS oppgave_id,
+                        oppg.behandling_id,
+                        pers.id AS person_id,
+                        oppg.behandler_ident,
+                        oppg.siste_saksbehandler_ident,
+                        oppg.siste_beslutter_ident,
+                        oppg.opprettet AS oppgave_opprettet,
+                        beha.utlost_av,
+                        oppg.tilstand,
+                        oppg.utsatt_til,
+                        tilb.totalt_feilutbetalt_belop,
+                        logg.tidspunkt AS sendt_til_kontroll
+                """.trimIndent()
 
             //language=PostgreSQL
             val oppgaveOversiktFrom =
@@ -789,11 +824,50 @@ class PostgresOppgaveRepository(
                 session.run(
                     queryOf(statement = oppgaverQuery, paramMap = paramMap)
                         .map { row ->
-                            row.rehydrerOppgave()
+                            row.tilOppgaveOversiktDTO()
                         }.asList,
                 )
-            OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
+            OppgaveOversiktSøkResultat(oppgaveOversikt = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
+    fun HendelseBehandler.tilBehandlingTypeDTO() =
+        when (this){
+        is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
+        is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
+        is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
+        is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
+    }
+    fun Row.tilOppgaveOversiktDTO(): OppgaveOversiktDTO {
+        val oppgaveId = this.uuid("oppgave_id")
+//        val utløstAv = UtlostAvTypeDTO.valueOf(this.string("utlost_av"))
+        val hendelseBehandler = HendelseBehandler.valueOf(this.string("utlost_av"))
+        val adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
+        val tilstand = OppgaveTilstandDTO.valueOf(this.string("tilstand"))
+        return OppgaveOversiktDTO(
+            oppgaveId = oppgaveId,
+            behandlingId = this.uuid("behandling_id"),
+            personIdent = this.string("person_ident"),
+            behandlerIdent = this.stringOrNull("behandler_ident"),
+            saksbehandlerIdent = this.stringOrNull("siste_saksbehandler_ident"),
+            beslutterIdent = this.stringOrNull("siste_beslutter_ident"),
+            tidspunktOpprettet = this.localDateTime("oppgave_opprettet"),
+            behandlingType = hendelseBehandler.tilBehandlingTypeDTO(),
+            utlostAv = UtlostAvTypeDTO.valueOf(this.string("utlost_av")),
+            emneknagger = TODO(),
+            skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+            adressebeskyttelseGradering = when (adressebeskyttelseGradering) {
+                AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+                AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+                AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+                AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
+            },
+            tilstand = tilstand,
+            lovligeEndringer = TODO(),
+            utsattTilDato = this.localDateOrNull("utsatt_til"),
+            totaltFeilutbetaltBelop = this.doubleOrNull("totalt_feilutbetalt_belop"),
+            sendtTilKontroll = this.localDateTimeOrNull("sendt_til_kontroll"),
+        )
+    }
 
     override fun hentDistinkteEmneknagger(): Set<String> =
         databaseSession.session { session ->

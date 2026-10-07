@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 
 interface OppgaveRepository {
     fun hentOppgave(oppgaveId: UUID): Oppgave
@@ -21,11 +22,11 @@ interface OppgaveRepository {
     fun finnOppgaverFor(
         ident: String,
         antall: Int? = 50,
-    ): List<Oppgave>
+    ): List<OppgaveOversiktDTO>
 
-    fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveSøkResultat
+    fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveOversiktSøkResultat
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
+    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<OppgaveOversiktDTO>
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
@@ -37,6 +38,11 @@ interface OppgaveRepository {
     fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave
 
     fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave?
+
+    fun finnOppgaveForSøknad(
+        ident: String,
+        søknadId: UUID,
+    ): Oppgave?
 
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 

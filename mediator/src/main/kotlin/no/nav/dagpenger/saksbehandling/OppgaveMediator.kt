@@ -16,7 +16,6 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
@@ -173,21 +172,16 @@ class OppgaveMediator(
             return
         }
 
+        val søknadId: UUID = requireNotNull(hendelse.søknadId) { "SøknadId må være satt for å kunne finne ettersending" }
         oppgaveRepository
-            .søk(
-                Søkefilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = Tilstand.Type.values,
-                    personIdent = hendelse.ident,
-                    søknadId = hendelse.søknadId,
-                ),
-            ).oppgaver
-            .singleOrNull()
-            ?.let { oppgave ->
+            .finnOppgaveForSøknad(
+                ident = hendelse.ident,
+                søknadId = søknadId,
+            )?.let { oppgave ->
                 oppgave.settEmneknagg(hendelse)
                 oppgaveRepository.lagre(oppgave, ctx)
             } ?: logger.warn {
-            "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
+            "Fant ingen oppgave for søknad med id $søknadId. Kunne ikke legge til ettersending."
         }
     }
 
