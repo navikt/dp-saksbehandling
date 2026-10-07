@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.math.BigDecimal
 import kotliquery.Row
 import kotliquery.queryOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -36,7 +35,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
+import no.nav.dagpenger.saksbehandling.api.tilAdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.tilLovligeEndringerDTO
+import no.nav.dagpenger.saksbehandling.api.tilOppgaveEmneknaggerDTOListe
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -50,10 +55,6 @@ import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -342,16 +343,6 @@ class PostgresOppgaveRepository(
             lagre(oppgave)
         }
     }
-
-    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<OppgaveOversiktDTO> =
-        søk(
-            søkeFilter =
-                Søkefilter(
-                    tilstander = setOf(tilstand),
-                    periode = UBEGRENSET_PERIODE,
-                    behandlerIdent = null,
-                ),
-        ).oppgaveOversikt
 
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         databaseSession.session { session ->
@@ -829,20 +820,23 @@ class PostgresOppgaveRepository(
                 )
             OppgaveOversiktSøkResultat(oppgaveOversikt = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
+
     fun HendelseBehandler.tilBehandlingTypeDTO() =
-        when (this){
-        is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-        is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
-        is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
-        is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
-        is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
-    }
+        when (this) {
+            is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+            is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
+            is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
+            is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
+            is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
+        }
+
     fun Row.tilOppgaveOversiktDTO(): OppgaveOversiktDTO {
         val oppgaveId = this.uuid("oppgave_id")
-//        val utløstAv = UtlostAvTypeDTO.valueOf(this.string("utlost_av"))
         val hendelseBehandler = HendelseBehandler.valueOf(this.string("utlost_av"))
         val adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
-        val tilstand = OppgaveTilstandDTO.valueOf(this.string("tilstand"))
+        val tilstandType = Type.valueOf(this.string("tilstand"))
+        // Denne vil feile dersom tilstand er OPPRETTET. Men det skal ikke være mulig å hente OPPRETTET-oppgaver.
+        val oppgaveTilstandDTO = OppgaveTilstandDTO.valueOf(this.string("tilstand"))
         return OppgaveOversiktDTO(
             oppgaveId = oppgaveId,
             behandlingId = this.uuid("behandling_id"),
@@ -853,16 +847,11 @@ class PostgresOppgaveRepository(
             tidspunktOpprettet = this.localDateTime("oppgave_opprettet"),
             behandlingType = hendelseBehandler.tilBehandlingTypeDTO(),
             utlostAv = UtlostAvTypeDTO.valueOf(this.string("utlost_av")),
-            emneknagger = TODO(),
+            emneknagger = hentEmneknaggerForOppgave(oppgaveId, databaseSession).tilOppgaveEmneknaggerDTOListe(),
             skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-            adressebeskyttelseGradering = when (adressebeskyttelseGradering) {
-                AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
-                AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
-                AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
-                AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
-            },
-            tilstand = tilstand,
-            lovligeEndringer = TODO(),
+            adressebeskyttelseGradering = adressebeskyttelseGradering.tilAdressebeskyttelseGraderingDTO(),
+            tilstand = oppgaveTilstandDTO,
+            lovligeEndringer = tilstandType.tilLovligeEndringerDTO(),
             utsattTilDato = this.localDateOrNull("utsatt_til"),
             totaltFeilutbetaltBelop = this.doubleOrNull("totalt_feilutbetalt_belop"),
             sendtTilKontroll = this.localDateTimeOrNull("sendt_til_kontroll"),

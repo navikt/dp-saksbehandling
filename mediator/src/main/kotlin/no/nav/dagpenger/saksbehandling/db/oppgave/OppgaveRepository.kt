@@ -3,13 +3,13 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 
 interface OppgaveRepository {
     fun hentOppgave(oppgaveId: UUID): Oppgave
@@ -25,8 +25,6 @@ interface OppgaveRepository {
     ): List<OppgaveOversiktDTO>
 
     fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveOversiktSøkResultat
-
-    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<OppgaveOversiktDTO>
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,

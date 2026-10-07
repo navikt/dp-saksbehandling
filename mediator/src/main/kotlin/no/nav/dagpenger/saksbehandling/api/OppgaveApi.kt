@@ -100,10 +100,7 @@ internal fun Route.oppgaveApi(
                 val personId: UUID = call.finnUUID("personId")
                 sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
                 val person = personMediator.hentPerson(personId = personId, saksbehandler = saksbehandler)
-                val oppgaver =
-                    oppgaveMediator
-                        .finnOppgaverFor(person.ident, antall = null)
-                        .tilOppgaveOversiktDTOListe()
+                val oppgaver = oppgaveMediator.finnOppgaverFor(person.ident, antall = null)
                 val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
                 auditlogg.les("Så personoversikt", person.ident, call.navIdent())
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)
@@ -112,10 +109,7 @@ internal fun Route.oppgaveApi(
         route("person/oppgaver") {
             post {
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                val oppgaver =
-                    oppgaveMediator
-                        .finnOppgaverFor(personIdentDTO.ident)
-                        .tilOppgaveOversiktDTOListe()
+                val oppgaver = oppgaveMediator.finnOppgaverFor(personIdentDTO.ident)
                 auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
                 call.respond(status = HttpStatusCode.OK, oppgaver)
             }
@@ -126,7 +120,7 @@ internal fun Route.oppgaveApi(
                 sikkerlogger.info {
                     "Henter alle oppgaver med følgende søkefilter: $søkefilter"
                 }
-                val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktResultatDTO()
+                val oppgaver = oppgaveMediator.søk(søkefilter)
                 call.respond(status = HttpStatusCode.OK, oppgaver)
             }
             route("neste") {

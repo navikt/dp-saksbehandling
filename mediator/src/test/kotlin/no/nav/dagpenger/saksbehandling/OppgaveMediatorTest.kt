@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.finnOppgaverForPerson
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
@@ -53,6 +54,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTL
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -65,7 +67,9 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -1437,7 +1441,7 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val søknadOppgave = oppgaveMediator.finnOppgaverFor(testIdent).single()
+            val søknadOppgave = oppgaveMediator.finnOppgaverForPerson(testIdent).single()
 
             val ettersendingSomManglerSøknadId =
                 InnsendingMottattHendelse(
@@ -2108,9 +2112,9 @@ OppgaveMediatorTest {
                     kategori = Kategori.KLAGE,
                 ),
             )
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single { oppgave ->
                     oppgave.behandling.utløstAv == Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe KlarTilBehandling
@@ -2124,7 +2128,7 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator
-                .finnOppgaverFor(ident = testPerson.ident)
+                .finnOppgaverForPerson(ident = testPerson.ident)
                 .single { oppgave ->
                     oppgave.behandling.utløstAv == Intern.Innsending
                 }.tilstand() shouldBe UnderBehandling
@@ -2138,7 +2142,7 @@ OppgaveMediatorTest {
                 ),
             )
             oppgaveMediator
-                .finnOppgaverFor(ident = testPerson.ident)
+                .finnOppgaverForPerson(ident = testPerson.ident)
                 .single { oppgave ->
                     oppgave.behandling.utløstAv == Intern.Innsending
                 }.tilstand() shouldBe FerdigBehandlet
@@ -2469,4 +2473,14 @@ OppgaveMediatorTest {
             test(dataSource, oppgaveMediator)
         }
     }
+
+    private fun OppgaveMediator.hentAlleOppgaverMedTilstand(tilstandType: Type): List<OppgaveOversiktDTO> =
+        this
+            .søk(
+                søkefilter =
+                    Søkefilter(
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        tilstander = setOf(tilstandType),
+                    ),
+            ).oppgaveOversikt
 }

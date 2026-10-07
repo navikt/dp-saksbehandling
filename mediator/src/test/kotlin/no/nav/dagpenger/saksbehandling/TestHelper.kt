@@ -11,6 +11,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
+import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -264,6 +271,52 @@ internal object TestHelper {
         }
     }
 
+    fun lagOppgaveOversiktDTO(
+        oppgaveId: UUID = UUIDv7.ny(),
+        personIdent: String = TestHelper.personIdent,
+        skjermesSomEgneAnsatte: Boolean = false,
+        adressebeskyttelseGradering: AdressebeskyttelseGraderingDTO = AdressebeskyttelseGraderingDTO.UGRADERT,
+        behandlingId: UUID = TestHelper.behandlingId,
+        saksbehandlerIdent: String? = null,
+        beslutterIdent: String? = null,
+        tilstand: OppgaveTilstandDTO = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
+        opprettet: LocalDateTime = opprettetNå,
+        behandlingType: BehandlingTypeDTO = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
+        utløstAv: UtlostAvTypeDTO = UtlostAvTypeDTO.SØKNAD,
+        utsattTil: LocalDate? = null,
+        emneknagger: List<EmneknaggDTO> = emptyList(),
+    ): OppgaveOversiktDTO =
+        OppgaveOversiktDTO(
+            oppgaveId = oppgaveId,
+            behandlingId = behandlingId,
+            personIdent = personIdent,
+            behandlerIdent =
+                when (tilstand) {
+                    is Oppgave.UnderKontroll -> beslutterIdent
+                    else -> saksbehandlerIdent
+                },
+            saksbehandlerIdent = saksbehandlerIdent,
+            beslutterIdent = beslutterIdent,
+            tidspunktOpprettet = opprettet,
+            behandlingType = behandlingType,
+            utlostAv = utløstAv,
+            emneknagger = emneknagger,
+            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+            adressebeskyttelseGradering = adressebeskyttelseGradering,
+            tilstand = tilstand,
+            lovligeEndringer =
+                LovligeEndringerDTO(
+                    paaVentAarsaker = emptyList(),
+                    avbrytAarsaker = emptyList(),
+                    leggTilbakeAarsaker = emptyList(),
+                    returnerTilSaksbehandlingAarsaker = emptyList(),
+                    kvalitetskontrollAarsaker = emptyList(),
+                ),
+            utsattTilDato = utsattTil,
+            totaltFeilutbetaltBelop = null,
+            sendtTilKontroll = null,
+        )
+
     fun lagOppgave(
         tilstand: Oppgave.Tilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
@@ -275,7 +328,6 @@ internal object TestHelper {
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
-        sistEndret: LocalDateTime = LocalDateTime.now(),
     ): Oppgave =
         Oppgave.rehydrer(
             oppgaveId = oppgaveId,
@@ -327,6 +379,11 @@ internal object TestHelper {
         distribusjonId = "distribusjonId",
         utsendingSak = utsendingSak,
     )
+
+    fun OppgaveMediator.finnOppgaverForPerson(ident: String): List<Oppgave> =
+        this.finnOppgaverFor(ident = ident).map {
+            this.hentOppgave(oppgaveId = it.oppgaveId, saksbehandler = TestHelper.saksbehandler)
+        }
 
     private fun randomFnr(): String {
         val birthDate =

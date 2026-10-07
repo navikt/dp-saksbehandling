@@ -163,14 +163,7 @@ internal class OppgaveDTOMapper(
                         sistEndretTidspunkt = it.sistEndretTidspunkt,
                     )
                 },
-            lovligeEndringer =
-                LovligeEndringerDTO(
-                    paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
-                    avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
-                    leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
-                    returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
-                    kvalitetskontrollAarsaker = oppgave.lovligeKvalitetskontrollÅrsaker(),
-                ),
+            lovligeEndringer = oppgave.tilstand().type.tilLovligeEndringerDTO(),
             soknadId = soknadId,
             meldingOmVedtakKilde =
                 when (oppgave.meldingOmVedtakKilde()) {
@@ -273,14 +266,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        lovligeEndringer =
-            LovligeEndringerDTO(
-                paaVentAarsaker = this.lovligePåVentÅrsaker(),
-                avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
-                leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
-                returnerTilSaksbehandlingAarsaker = this.lovligeReturnerTilSaksbehandlerÅrsaker(),
-                kvalitetskontrollAarsaker = this.lovligeKvalitetskontrollÅrsaker(),
-            ),
+        lovligeEndringer = this.tilstand().type.tilLovligeEndringerDTO(),
         behandlerIdent = this.behandlerIdent,
         saksbehandlerIdent = this.sisteSaksbehandlerIdent,
         beslutterIdent = this.sisteBeslutterIdent,
@@ -328,32 +314,49 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = UtlostAvTypeDTO.valueOf(this.behandling.utløstAv.name)
 
-internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
+    when (this) {
         UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
+    when (this) {
         UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
+    when (this) {
         in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTilSaksbehandlingAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTilSaksbehandlingAarsakDTO> =
+    when (this) {
         UNDER_KONTROLL -> ReturnerTilSaksbehandlingAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeKvalitetskontrollÅrsaker(): List<KvalitetskontrollAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeKvalitetskontrollÅrsaker(): List<KvalitetskontrollAarsakDTO> =
+    when (this) {
         UNDER_BEHANDLING -> KvalitetskontrollAarsakDTO.entries.minus(KvalitetskontrollAarsakDTO.TOTRINNSKONTROLL)
         else -> emptyList()
+    }
+
+internal fun Oppgave.Tilstand.Type.tilLovligeEndringerDTO(): LovligeEndringerDTO =
+    LovligeEndringerDTO(
+        paaVentAarsaker = this.lovligePåVentÅrsaker(),
+        avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
+        leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
+        returnerTilSaksbehandlingAarsaker = this.lovligeReturnerTilSaksbehandlerÅrsaker(),
+        kvalitetskontrollAarsaker = this.lovligeKvalitetskontrollÅrsaker(),
+    )
+
+internal fun AdressebeskyttelseGradering.tilAdressebeskyttelseGraderingDTO(): AdressebeskyttelseGraderingDTO =
+    when (this) {
+        AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+        AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+        AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+        AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
     }

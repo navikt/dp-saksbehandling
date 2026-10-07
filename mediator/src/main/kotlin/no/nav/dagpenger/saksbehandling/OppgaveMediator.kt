@@ -10,13 +10,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -184,8 +184,6 @@ class OppgaveMediator(
             "Fant ingen oppgave for søknad med id $søknadId. Kunne ikke legge til ettersending."
         }
     }
-
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
 
     fun hentOppgave(
         oppgaveId: UUID,
@@ -733,9 +731,9 @@ class OppgaveMediator(
     fun finnOppgaverFor(
         ident: String,
         antall: Int? = 50,
-    ): List<Oppgave> = oppgaveRepository.finnOppgaverFor(ident, antall)
+    ): List<OppgaveOversiktDTO> = oppgaveRepository.finnOppgaverFor(ident, antall)
 
-    fun søk(søkefilter: Søkefilter): OppgaveSøkResultat = oppgaveRepository.søk(søkefilter)
+    fun søk(søkefilter: Søkefilter): PostgresOppgaveRepository.OppgaveOversiktSøkResultat = oppgaveRepository.søk(søkefilter)
 
     fun hentDistinkteEmneknagger(): Set<String> = oppgaveRepository.hentDistinkteEmneknagger()
 
