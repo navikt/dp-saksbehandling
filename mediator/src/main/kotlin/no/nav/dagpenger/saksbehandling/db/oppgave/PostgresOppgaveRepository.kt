@@ -80,6 +80,12 @@ private val oppgaveFromBasic =
     LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
     """.trimIndent()
 
+//language=PostgreSQL
+private val oppgaveJoinTilbakekreving =
+    """
+    JOIN        tilbakekreving_v1   tilb ON tilb.id = beha.id
+    """.trimIndent()
+
 class PostgresOppgaveRepository(
     private val databaseSession: DatabaseSession,
 ) : OppgaveRepository {
@@ -538,11 +544,63 @@ class PostgresOppgaveRepository(
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat =
         databaseSession.session { session ->
             //language=PostgreSQL
-            val oppgaveFromSøk =
+            val oppgaveOversiktSelect =
                 """
-                $oppgaveFromBasic
-                JOIN        person_v1     pers ON pers.id = beha.person_id
+    SELECT  oppg.id AS oppgave_id,
+            oppg.behandling_id,
+            pers.id AS person_id,
+            oppg.behandler_ident,
+            oppg.siste_saksbehandler_ident,
+            oppg.siste_beslutter_ident,
+            oppg.opprettet AS oppgave_opprettet,
+            beha.utlost_av,
+            oppg.tilstand,
+            oppg.utsatt_til,
+            tilb.totalt_feilutbetalt_belop,
+            logg.tidspunkt AS sendt_til_kontroll
+    """.trimIndent()
+
+            //language=PostgreSQL
+            val oppgaveOversiktFrom =
+                """
+                FROM        oppgave_v1        oppg
+                JOIN        behandling_v1     beha ON beha.id = oppg.behandling_id
+                JOIN        person_v1         pers ON pers.id = beha.person_id
+                LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
+                LEFT JOIN   hendelse_v1       hend ON hend.behandling_id = beha.id
                 """.trimIndent()
+
+            //language=PostgreSQL
+            val oppgaveOversiktKontrollFrom =
+                """
+                FROM        oppgave_v1               oppg
+                JOIN        behandling_v1            beha ON beha.id = oppg.behandling_id
+                JOIN        person_v1                pers ON pers.id = beha.person_id
+                JOIN        oppgave_tilstand_logg_v1 logg ON logg.id = 
+                    (   SELECT logg2.id
+                        FROM   oppgave_tilstand_logg_v1 logg2
+                        WHERE  logg2.oppgave_id = oppg.id
+                        AND    logg2.tilstand = 'KLAR_TIL_KONTROLL'
+                        AND    logg2.hendelse_type = 'SendTilKontrollHendelse'
+                        AND    logg2.tidspunkt = 
+                        (   SELECT MIN(logg3.tidspunkt)
+                            FROM   oppgave_tilstand_logg_v1 logg3
+                            WHERE  logg3.oppgave_id = oppg.id
+                            AND    logg3.tilstand = 'KLAR_TIL_KONTROLL'
+                            AND    logg3.hendelse_type = 'SendTilKontrollHendelse'
+                            ORDER BY logg3.tidspunkt
+                            LIMIT 1
+                        )
+                    )
+                LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
+                LEFT JOIN   hendelse_v1       hend ON hend.behandling_id = beha.id
+                """.trimIndent()
+
+            val sendtTilKontrollHendelse =
+                """
+                    
+                """.trimIndent()
+
             val tilstanderAsText = søkeFilter.tilstander.joinToString { "'$it'" }
             val tilstandClause =
                 when (søkeFilter.tilstander.isNotEmpty()) {
@@ -693,8 +751,8 @@ class PostgresOppgaveRepository(
             //language=PostgreSQL
             val oppgaverQuery =
                 """
-                $oppgaveSelect
-                $oppgaveFromSøk
+                $oppgaveOversiktSelect
+                $oppgaveOversiktFrom
                 $oppgaveWhere
                 $oppgaveOrderBy
                 $oppgaveSøkLimitAndOffset   
@@ -703,7 +761,7 @@ class PostgresOppgaveRepository(
             val antallOppgaverQuery =
                 """
                 $antallSelect
-                $oppgaveFromSøk
+                $oppgaveOversiktFrom
                 $oppgaveWhere
                 """.trimIndent()
 
@@ -1125,6 +1183,9 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
         Søkefilter.Sorteringsfelt.UTSATT_TIL -> {
             """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
         }
+
+        Søkefilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP -> TODO()
+        Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> TODO()
     }
 
 class DataNotFoundException(

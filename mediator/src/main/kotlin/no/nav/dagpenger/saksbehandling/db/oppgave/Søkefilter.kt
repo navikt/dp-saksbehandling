@@ -40,6 +40,8 @@ data class Søkefilter(
         SAKSBEHANDLER,
         BESLUTTER,
         UTSATT_TIL,
+        TOTALT_FEILUTBETALT_BELOP,
+        SENDT_TIL_KONTROLL,
         ;
 
         companion object {
@@ -50,6 +52,8 @@ data class Søkefilter(
                     "saksbehandler" -> SAKSBEHANDLER
                     "beslutter" -> BESLUTTER
                     "utsatttil" -> UTSATT_TIL
+                    "totaltfeilutbetaltbelop" -> TOTALT_FEILUTBETALT_BELOP
+                    "sendttilkontroll" -> SENDT_TIL_KONTROLL
                     else -> OPPRETTET
                 }
         }

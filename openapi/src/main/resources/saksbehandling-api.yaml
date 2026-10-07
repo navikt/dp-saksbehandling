@@ -1733,6 +1733,12 @@ components:
         utsattTilDato:
           type: string
           format: date
+        totaltFeilutbetaltBelop:
+          type: number
+          format: double
+        sendtTilKontroll:
+          type: string
+          format: date-time
       required:
         - oppgaveId
         - behandlingId
