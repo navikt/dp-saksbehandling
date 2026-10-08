@@ -2482,5 +2482,5 @@ OppgaveMediatorTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         tilstander = setOf(tilstandType),
                     ),
-            ).oppgaveOversikt
+            ).oppgaver
 }

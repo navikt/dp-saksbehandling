@@ -14,10 +14,10 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
-import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
+import no.nav.dagpenger.saksbehandling.api.tilLovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -285,8 +285,9 @@ internal object TestHelper {
         utløstAv: UtlostAvTypeDTO = UtlostAvTypeDTO.SØKNAD,
         utsattTil: LocalDate? = null,
         emneknagger: List<EmneknaggDTO> = emptyList(),
-    ): OppgaveOversiktDTO =
-        OppgaveOversiktDTO(
+    ): OppgaveOversiktDTO {
+        val oppgaveTilstand = Oppgave.Tilstand.Type.valueOf(tilstand.name)
+        return OppgaveOversiktDTO(
             oppgaveId = oppgaveId,
             behandlingId = behandlingId,
             personIdent = personIdent,
@@ -304,18 +305,12 @@ internal object TestHelper {
             skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
             adressebeskyttelseGradering = adressebeskyttelseGradering,
             tilstand = tilstand,
-            lovligeEndringer =
-                LovligeEndringerDTO(
-                    paaVentAarsaker = emptyList(),
-                    avbrytAarsaker = emptyList(),
-                    leggTilbakeAarsaker = emptyList(),
-                    returnerTilSaksbehandlingAarsaker = emptyList(),
-                    kvalitetskontrollAarsaker = emptyList(),
-                ),
+            lovligeEndringer = oppgaveTilstand.tilLovligeEndringerDTO(),
             utsattTilDato = utsattTil,
             totaltFeilutbetaltBelop = null,
             sendtTilKontroll = null,
         )
+    }
 
     fun lagOppgave(
         tilstand: Oppgave.Tilstand = KlarTilBehandling,

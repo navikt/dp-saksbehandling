@@ -78,7 +78,6 @@ import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -184,7 +183,7 @@ class OppgaveApiTest {
                             behandlingId = null,
                         ),
                     )
-                } returns PostgresOppgaveRepository.OppgaveOversiktSøkResultat(listOf(oppgave1, oppgave2, oppgave3), 3)
+                } returns OppgaveOversiktResultatDTO(listOf(oppgave1, oppgave2, oppgave3), 3)
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -281,7 +280,7 @@ class OppgaveApiTest {
                         TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING),
                         TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING),
                     ).let {
-                        PostgresOppgaveRepository.OppgaveOversiktSøkResultat(it, it.size)
+                        OppgaveOversiktResultatDTO(it, it.size)
                     }
 
                 every {
@@ -319,7 +318,7 @@ class OppgaveApiTest {
                 TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING),
                 TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING),
             ).let {
-                PostgresOppgaveRepository.OppgaveOversiktSøkResultat(it, it.size)
+                OppgaveOversiktResultatDTO(it, it.size)
             }
 
         val oppgaveMediatorMock =
@@ -366,7 +365,7 @@ class OppgaveApiTest {
                 TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING),
                 TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING),
             ).let {
-                PostgresOppgaveRepository.OppgaveOversiktSøkResultat(it, it.size)
+                OppgaveOversiktResultatDTO(it, it.size)
             }
 
         val oppgaveMediatorMock =
@@ -407,7 +406,7 @@ class OppgaveApiTest {
                 TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.UNDER_BEHANDLING),
                 TestHelper.lagOppgaveOversiktDTO(tilstand = OppgaveTilstandDTO.UNDER_BEHANDLING),
             ).let {
-                PostgresOppgaveRepository.OppgaveOversiktSøkResultat(it, it.size)
+                OppgaveOversiktResultatDTO(it, it.size)
             }
 
         val oppgaveMediatorMock =

@@ -34,7 +34,6 @@ import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
@@ -44,7 +43,6 @@ import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -274,12 +272,6 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
     )
 
 internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> = this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
-
-internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO =
-    OppgaveOversiktResultatDTO(
-        oppgaver = this.oppgaver.tilOppgaveOversiktDTOListe(),
-        totaltAntallOppgaver = this.totaltAntallOppgaver,
-    )
 
 internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO =
     when (this) {

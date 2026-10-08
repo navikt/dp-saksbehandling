@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.tilAdressebeskyttelseGraderingDTO
@@ -376,7 +377,7 @@ class PostgresOppgaveRepository(
                     paginering = antall?.let { Søkefilter.Paginering(antallOppgaver = it, side = 0) },
                     sortering = Søkefilter.Sortering.DESC,
                 ),
-        ).oppgaveOversikt
+        ).oppgaver
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? =
         databaseSession.session { session ->
@@ -433,7 +434,7 @@ class PostgresOppgaveRepository(
                         AND         hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
                         AND         hend.hendelse_data ->> 'søknadId' = :soknad_id 
                         """.trimIndent(),
-                    paramMap = mapOf("ident" to ident, "soknad_id" to søknadId),
+                    paramMap = mapOf("ident" to ident, "soknad_id" to søknadId.toString()),
                 ).map { row ->
                     row.rehydrerOppgave()
                 }.asSingle,
@@ -557,17 +558,7 @@ class PostgresOppgaveRepository(
             )
         }
 
-    data class OppgaveSøkResultat(
-        val oppgaver: List<Oppgave>,
-        val totaltAntallOppgaver: Int,
-    )
-
-    data class OppgaveOversiktSøkResultat(
-        val oppgaveOversikt: List<OppgaveOversiktDTO>,
-        val totaltAntallOppgaver: Int,
-    )
-
-    override fun søk(søkeFilter: Søkefilter): OppgaveOversiktSøkResultat =
+    override fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultatDTO =
         databaseSession.session { session ->
             //language=PostgreSQL
             val oppgaveOversiktSelect =
@@ -575,6 +566,7 @@ class PostgresOppgaveRepository(
                 SELECT  oppg.id AS oppgave_id,
                         oppg.behandling_id,
                         pers.id AS person_id,
+                        pers.ident AS person_ident,
                         oppg.behandler_ident,
                         oppg.siste_saksbehandler_ident,
                         oppg.siste_beslutter_ident,
@@ -583,7 +575,9 @@ class PostgresOppgaveRepository(
                         oppg.tilstand,
                         oppg.utsatt_til,
                         tilb.totalt_feilutbetalt_belop,
-                        logg.tidspunkt AS sendt_til_kontroll
+                        pers.adressebeskyttelse_gradering,
+                        pers.skjermes_som_egne_ansatte,
+                        null AS sendt_til_kontroll
                 """.trimIndent()
 
             //language=PostgreSQL
@@ -818,7 +812,7 @@ class PostgresOppgaveRepository(
                             row.tilOppgaveOversiktDTO()
                         }.asList,
                 )
-            OppgaveOversiktSøkResultat(oppgaveOversikt = oppgaver, totaltAntallOppgaver = antallOppgaver)
+            OppgaveOversiktResultatDTO(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
 
     fun HendelseBehandler.tilBehandlingTypeDTO() =

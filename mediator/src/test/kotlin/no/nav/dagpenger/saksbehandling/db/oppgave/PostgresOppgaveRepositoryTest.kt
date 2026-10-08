@@ -1474,7 +1474,7 @@ class PostgresOppgaveRepositoryTest {
                             emneknaggGruppertPerKategori = emptyMap(),
                             utløstAvTyper = setOf(HendelseBehandler.Intern.Klage),
                         ),
-                ).oppgaveOversikt shouldBe listOf(klageOppgave)
+                ).oppgaver shouldBe listOf(klageOppgave)
         }
     }
 
@@ -1559,7 +1559,7 @@ class PostgresOppgaveRepositoryTest {
                         tilstander = Oppgave.Tilstand.Type.values,
                         søknadId = søknadId,
                     ),
-                ).oppgaveOversikt.size shouldBe 1
+                ).oppgaver.size shouldBe 1
         }
     }
 
@@ -1650,7 +1650,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = emptyMap(),
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave1, oppgave2, oppgave3, oppgave4)
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3, oppgave4)
 
             repo
                 .søk(
@@ -1661,7 +1661,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba")),
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave1, oppgave2)
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
 
             repo
                 .søk(
@@ -1672,7 +1672,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("bubba")),
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave1)
+                ).oppgaver shouldBe listOf(oppgave1)
 
             repo
                 .søk(
@@ -1690,7 +1690,7 @@ class PostgresOppgaveRepositoryTest {
                                     ),
                             ),
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave1, oppgave2)
+                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
 
             repo
                 .søk(
@@ -1702,7 +1702,7 @@ class PostgresOppgaveRepositoryTest {
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba")),
                         ekskluderEmneknagger = setOf("bubba"),
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave2)
+                ).oppgaver shouldBe listOf(oppgave2)
 
             repo
                 .søk(
@@ -1713,7 +1713,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         ekskluderEmneknagger = setOf("hubba", "bubba"),
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave3, oppgave4)
+                ).oppgaver shouldBe listOf(oppgave3, oppgave4)
         }
     }
 
@@ -1756,7 +1756,7 @@ class PostgresOppgaveRepositoryTest {
                         tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgave, oppgaveDpSak, oppgaveForNødbremset)
+                ).oppgaver shouldBe listOf(oppgave, oppgaveDpSak, oppgaveForNødbremset)
 
             oppgaveRepo
                 .søk(
@@ -1765,7 +1765,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         harDpSak = true,
                     ),
-                ).oppgaveOversikt shouldBe listOf(oppgaveDpSak)
+                ).oppgaver shouldBe listOf(oppgaveDpSak)
         }
     }
 
@@ -1816,7 +1816,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 2
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 2
                             it shouldContain oppgaveUnderBehandlingEidAvSB1.tilOppgaveOversiktDTO()
@@ -1835,7 +1835,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 2
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 2
                             it shouldContain oppgaveUnderBehandlingEidAvSB1
@@ -1855,7 +1855,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 2
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 2
                             it shouldContain oppgaveUnderBehandlingEidAvSB1.tilOppgaveOversiktDTO()
@@ -1874,7 +1874,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 2
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 2
                             it shouldContain oppgaveUnderBehandlingEidAvSB2.tilOppgaveOversiktDTO()
@@ -1894,7 +1894,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 1
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 1
                             it shouldContain oppgaveUnderBehandlingEidAvSB2.tilOppgaveOversiktDTO()
@@ -1912,7 +1912,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 3
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 3
                             it shouldContain oppgaveUnderBehandlingEidAvSB1.tilOppgaveOversiktDTO()
@@ -1932,7 +1932,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 4
-                    it.oppgaveOversikt.size shouldBe 4
+                    it.oppgaver.size shouldBe 4
                 }
             repo
                 .søk(
@@ -1949,7 +1949,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.totaltAntallOppgaver shouldBe 1
-                    it.oppgaveOversikt
+                    it.oppgaver
                         .let {
                             it.size shouldBe 1
                             it shouldContain oppgaveFerdigBehandletEidAvSB1.tilOppgaveOversiktDTO()
@@ -1965,7 +1965,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         utenBehandler = true,
                     ),
-                ).oppgaveOversikt
+                ).oppgaver
                 .let {
                     it.size shouldBe 1
                     it shouldContain oppgaveKlarTilBehandlingUtenSaksbehandler.tilOppgaveOversiktDTO()
@@ -1990,7 +1990,7 @@ class PostgresOppgaveRepositoryTest {
                         paginering = null,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 4
+                    it.oppgaver.size shouldBe 4
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2002,9 +2002,9 @@ class PostgresOppgaveRepositoryTest {
                         paginering = Søkefilter.Paginering(2, 0),
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 2
-                    it.oppgaveOversikt[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2018,9 +2018,9 @@ class PostgresOppgaveRepositoryTest {
                         paginering = Søkefilter.Paginering(2, 1),
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 2
-                    it.oppgaveOversikt[0] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2032,11 +2032,11 @@ class PostgresOppgaveRepositoryTest {
                         paginering = Søkefilter.Paginering(10, 0),
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 4
-                    it.oppgaveOversikt[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[2] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[3] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[2] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[3] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
                     it.totaltAntallOppgaver shouldBe 4
                 }
             repo
@@ -2047,7 +2047,7 @@ class PostgresOppgaveRepositoryTest {
                         paginering = Søkefilter.Paginering(10, 1),
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 0
+                    it.oppgaver.size shouldBe 0
                     it.totaltAntallOppgaver shouldBe 4
                 }
         }
@@ -2072,11 +2072,11 @@ class PostgresOppgaveRepositoryTest {
                         paginering = null,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 4
-                    it.oppgaveOversikt[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[2] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[3] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[2] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[3] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
                 }
 
             // Eksplisitt ASC skal gi eldste først
@@ -2089,9 +2089,9 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.ASC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 2
-                    it.oppgaveOversikt[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2105,11 +2105,11 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.DESC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 4
-                    it.oppgaveOversikt[0] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[2] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[3] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[2] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[3] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
                 }
 
             // DESC med paginering side 1
@@ -2122,9 +2122,9 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.DESC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 2
-                    it.oppgaveOversikt[0] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2138,9 +2138,9 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.DESC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 2
-                    it.oppgaveOversikt[0] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
                     it.totaltAntallOppgaver shouldBe 4
                 }
         }
@@ -2176,9 +2176,9 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.ASC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 2
-                    it.oppgaveOversikt[0] shouldBe oppgaveKlage.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe oppgaveSøknad.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 2
+                    it.oppgaver[0] shouldBe oppgaveKlage.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe oppgaveSøknad.tilOppgaveOversiktDTO()
                 }
         }
     }
@@ -2234,12 +2234,12 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.ASC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 5
-                    it.oppgaveOversikt[0] shouldBe oppgaveAvbrutt.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe oppgaveFerdigBehandlet.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[2] shouldBe oppgaveKlarTilBehandling.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[3] shouldBe oppgavePåVent.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[4] shouldBe oppgaveUnderBehandling.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 5
+                    it.oppgaver[0] shouldBe oppgaveAvbrutt.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe oppgaveFerdigBehandlet.tilOppgaveOversiktDTO()
+                    it.oppgaver[2] shouldBe oppgaveKlarTilBehandling.tilOppgaveOversiktDTO()
+                    it.oppgaver[3] shouldBe oppgavePåVent.tilOppgaveOversiktDTO()
+                    it.oppgaver[4] shouldBe oppgaveUnderBehandling.tilOppgaveOversiktDTO()
                 }
         }
     }
@@ -2275,10 +2275,10 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.ASC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 3
-                    it.oppgaveOversikt[0] shouldBe oppgaveOmEnDag.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe oppgaveOmToDager.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[2] shouldBe oppgaveUtenUtsattTil.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 3
+                    it.oppgaver[0] shouldBe oppgaveOmEnDag.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe oppgaveOmToDager.tilOppgaveOversiktDTO()
+                    it.oppgaver[2] shouldBe oppgaveUtenUtsattTil.tilOppgaveOversiktDTO()
                 }
         }
     }
@@ -2327,11 +2327,11 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.ASC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 4
-                    it.oppgaveOversikt[0] shouldBe oppgaveAd.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[1] shouldBe oppgaveBj.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[2] shouldBe oppgaveMo.tilOppgaveOversiktDTO()
-                    it.oppgaveOversikt[3] shouldBe oppgaveZu.tilOppgaveOversiktDTO()
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0] shouldBe oppgaveAd.tilOppgaveOversiktDTO()
+                    it.oppgaver[1] shouldBe oppgaveBj.tilOppgaveOversiktDTO()
+                    it.oppgaver[2] shouldBe oppgaveMo.tilOppgaveOversiktDTO()
+                    it.oppgaver[3] shouldBe oppgaveZu.tilOppgaveOversiktDTO()
                 }
         }
     }
@@ -2448,11 +2448,11 @@ class PostgresOppgaveRepositoryTest {
                         sortering = Søkefilter.Sortering.ASC,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 4
-                    it.oppgaveOversikt[0].oppgaveId shouldBe oppgavePolitimesterBastian.oppgaveId
-                    it.oppgaveOversikt[1].oppgaveId shouldBe oppgaveTanteSofie.oppgaveId
-                    it.oppgaveOversikt[2].oppgaveId shouldBe oppgaveTrikkeførerSyvertsen.oppgaveId
-                    it.oppgaveOversikt[3].oppgaveId shouldBe oppgaveNullBeslutter.oppgaveId
+                    it.oppgaver.size shouldBe 4
+                    it.oppgaver[0].oppgaveId shouldBe oppgavePolitimesterBastian.oppgaveId
+                    it.oppgaver[1].oppgaveId shouldBe oppgaveTanteSofie.oppgaveId
+                    it.oppgaver[2].oppgaveId shouldBe oppgaveTrikkeførerSyvertsen.oppgaveId
+                    it.oppgaver[3].oppgaveId shouldBe oppgaveNullBeslutter.oppgaveId
                 }
         }
     }
@@ -2484,7 +2484,7 @@ class PostgresOppgaveRepositoryTest {
                         tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
-                ).oppgaveOversikt
+                ).oppgaver
                 .single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
             repo
@@ -2497,7 +2497,7 @@ class PostgresOppgaveRepositoryTest {
                             ),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
-                ).oppgaveOversikt.size shouldBe 3
+                ).oppgaver.size shouldBe 3
 
             repo
                 .søk(
@@ -2510,8 +2510,8 @@ class PostgresOppgaveRepositoryTest {
                         behandlingId = null,
                     ),
                 ).let {
-                    it.oppgaveOversikt.size shouldBe 3
-                    it.oppgaveOversikt.map { oppgave -> oppgave.tilstand }.toSet() shouldBe
+                    it.oppgaver.size shouldBe 3
+                    it.oppgaver.map { oppgave -> oppgave.tilstand }.toSet() shouldBe
                         setOf(
                             OppgaveTilstandDTO.UNDER_BEHANDLING,
                             OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
@@ -2528,7 +2528,7 @@ class PostgresOppgaveRepositoryTest {
                                 tom = enUkeSiden.plusDays(2).toLocalDate(),
                             ),
                     ),
-                ).oppgaveOversikt.size shouldBe 0
+                ).oppgaver.size shouldBe 0
 
             repo
                 .søk(
@@ -2540,7 +2540,7 @@ class PostgresOppgaveRepositoryTest {
                                 tom = enUkeSiden.plusDays(2).toLocalDate(),
                             ),
                     ),
-                ).oppgaveOversikt.size shouldBe 1
+                ).oppgaver.size shouldBe 1
 
             repo
                 .søk(
@@ -2552,7 +2552,7 @@ class PostgresOppgaveRepositoryTest {
                                 tom = opprettetNå.toLocalDate(),
                             ),
                     ),
-                ).oppgaveOversikt.size shouldBe 1
+                ).oppgaver.size shouldBe 1
 
             repo
                 .søk(
@@ -2564,7 +2564,7 @@ class PostgresOppgaveRepositoryTest {
                                 tom = opprettetNå.toLocalDate(),
                             ),
                     ),
-                ).oppgaveOversikt.size shouldBe 1
+                ).oppgaver.size shouldBe 1
         }
     }
 
@@ -2602,9 +2602,9 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode(fom = iGår, tom = iGår),
                     ),
                 )
-            oppgaver.oppgaveOversikt.size shouldBe 2
-            oppgaver.oppgaveOversikt.filter { it.oppgaveId == oppgaveOpprettetTidligIGår.oppgaveId }.size shouldBe 1
-            oppgaver.oppgaveOversikt.filter { it.oppgaveId == oppgaveOpprettetSeintIGår.oppgaveId }.size shouldBe 1
+            oppgaver.oppgaver.size shouldBe 2
+            oppgaver.oppgaver.filter { it.oppgaveId == oppgaveOpprettetTidligIGår.oppgaveId }.size shouldBe 1
+            oppgaver.oppgaver.filter { it.oppgaveId == oppgaveOpprettetSeintIGår.oppgaveId }.size shouldBe 1
         }
     }
 
@@ -2630,11 +2630,11 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode(fom = iGår, tom = iDag),
                     ),
                 )
-            oppgaver.oppgaveOversikt.size shouldBe 4
-            oppgaver.oppgaveOversikt[0] shouldBe oppgaveIGår
-            oppgaver.oppgaveOversikt[1] shouldBe oppgave1
-            oppgaver.oppgaveOversikt[2] shouldBe oppgave2
-            oppgaver.oppgaveOversikt[3] shouldBe oppgave3
+            oppgaver.oppgaver.size shouldBe 4
+            oppgaver.oppgaver[0] shouldBe oppgaveIGår
+            oppgaver.oppgaver[1] shouldBe oppgave1
+            oppgaver.oppgaver[2] shouldBe oppgave2
+            oppgaver.oppgaver[3] shouldBe oppgave3
         }
     }
 

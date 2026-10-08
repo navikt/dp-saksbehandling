@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -24,7 +25,7 @@ interface OppgaveRepository {
         antall: Int? = 50,
     ): List<OppgaveOversiktDTO>
 
-    fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveOversiktSøkResultat
+    fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultatDTO
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
