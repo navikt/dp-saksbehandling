@@ -12,6 +12,7 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
@@ -1016,13 +1017,13 @@ class OppgaveDTOMapperTest {
 
         val oppgave1 =
             TestHelper
-                .lagOppgave(
-                    behandling = behandling1,
-                    tilstand = Oppgave.UnderKontroll(),
+                .lagOppgaveOversikt(
+                    behandlingId = behandling1.behandlingId,
+                    tilstand = UNDER_KONTROLL,
                     saksbehandlerIdent = "ABC123",
                     beslutterIdent = "XYZ789",
-                ).tilOppgaveOversiktDTO()
-        val oppgave2 = TestHelper.lagOppgave(behandling = behandling2).tilOppgaveOversiktDTO()
+                )
+        val oppgave2 = TestHelper.lagOppgaveOversikt(behandlingId = behandling2.behandlingId)
 
         val sakMediator =
             mockk<SakMediator>().also {
@@ -1051,10 +1052,10 @@ class OppgaveDTOMapperTest {
             val sakDTO2 = result.saker.single { it.id == sak2.sakId }
 
             sakDTO1.oppgaver shouldHaveSize 1
-            sakDTO1.oppgaver.first() shouldBe oppgave1
+            sakDTO1.oppgaver.first() shouldBe oppgave1.tilOppgaveOversiktDTO()
 
             sakDTO2.oppgaver shouldHaveSize 1
-            sakDTO2.oppgaver.first() shouldBe oppgave2
+            sakDTO2.oppgaver.first() shouldBe oppgave2.tilOppgaveOversiktDTO()
         }
     }
 

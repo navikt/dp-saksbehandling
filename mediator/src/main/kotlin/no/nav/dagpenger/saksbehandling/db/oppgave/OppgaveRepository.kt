@@ -3,8 +3,6 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -23,9 +21,9 @@ interface OppgaveRepository {
     fun finnOppgaverFor(
         ident: String,
         antall: Int? = 50,
-    ): List<OppgaveOversiktDTO>
+    ): List<OppgaveOversikt>
 
-    fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultatDTO
+    fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultat
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,

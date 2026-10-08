@@ -5,6 +5,8 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -316,7 +318,7 @@ class OppfølgingMediatorTest {
             )
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
-            val nyOppgave = oppgaver.first { it.tilstand == OppgaveTilstandDTO.PAA_VENT }
+            val nyOppgave = oppgaver.first { it.tilstand == PAA_VENT }
             nyOppgave.tilstand shouldBe OppgaveTilstandDTO.PAA_VENT
             nyOppgave.utsattTilDato shouldBe frist
             nyOppgave.behandlerIdent shouldBe saksbehandler.navIdent
@@ -388,8 +390,7 @@ class OppfølgingMediatorTest {
             )
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
-            val nyOppgave = oppgaver.first { it.tilstand == OppgaveTilstandDTO.KLAR_TIL_BEHANDLING }
-            nyOppgave.tilstand shouldBe OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+            val nyOppgave = oppgaver.first { it.tilstand == KLAR_TIL_BEHANDLING }
             nyOppgave.behandlerIdent shouldBe null
         }
     }

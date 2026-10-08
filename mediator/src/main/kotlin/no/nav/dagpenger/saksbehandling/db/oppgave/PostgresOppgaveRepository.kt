@@ -36,13 +36,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
-import no.nav.dagpenger.saksbehandling.api.tilAdressebeskyttelseGraderingDTO
-import no.nav.dagpenger.saksbehandling.api.tilLovligeEndringerDTO
-import no.nav.dagpenger.saksbehandling.api.tilOppgaveEmneknaggerDTOListe
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -366,7 +359,7 @@ class PostgresOppgaveRepository(
     override fun finnOppgaverFor(
         ident: String,
         antall: Int?,
-    ): List<OppgaveOversiktDTO> =
+    ): List<OppgaveOversikt> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -558,7 +551,7 @@ class PostgresOppgaveRepository(
             )
         }
 
-    override fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultatDTO =
+    override fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultat =
         databaseSession.session { session ->
             //language=PostgreSQL
             val oppgaveOversiktSelect =
@@ -809,10 +802,10 @@ class PostgresOppgaveRepository(
                 session.run(
                     queryOf(statement = oppgaverQuery, paramMap = paramMap)
                         .map { row ->
-                            row.tilOppgaveOversiktDTO()
+                            row.tilOppgaveOversikt()
                         }.asList,
                 )
-            OppgaveOversiktResultatDTO(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
+            OppgaveOversiktResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
 
     fun HendelseBehandler.tilBehandlingTypeDTO() =
@@ -824,33 +817,24 @@ class PostgresOppgaveRepository(
             is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
         }
 
-    fun Row.tilOppgaveOversiktDTO(): OppgaveOversiktDTO {
-        val oppgaveId = this.uuid("oppgave_id")
-        val hendelseBehandler = HendelseBehandler.valueOf(this.string("utlost_av"))
-        val adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
-        val tilstandType = Type.valueOf(this.string("tilstand"))
-        // Denne vil feile dersom tilstand er OPPRETTET. Men det skal ikke være mulig å hente OPPRETTET-oppgaver.
-        val oppgaveTilstandDTO = OppgaveTilstandDTO.valueOf(this.string("tilstand"))
-        return OppgaveOversiktDTO(
-            oppgaveId = oppgaveId,
+    fun Row.tilOppgaveOversikt(): OppgaveOversikt =
+        OppgaveOversikt(
+            oppgaveId = uuid("oppgave_id"),
             behandlingId = this.uuid("behandling_id"),
             personIdent = this.string("person_ident"),
             behandlerIdent = this.stringOrNull("behandler_ident"),
             saksbehandlerIdent = this.stringOrNull("siste_saksbehandler_ident"),
             beslutterIdent = this.stringOrNull("siste_beslutter_ident"),
             tidspunktOpprettet = this.localDateTime("oppgave_opprettet"),
-            behandlingType = hendelseBehandler.tilBehandlingTypeDTO(),
-            utlostAv = UtlostAvTypeDTO.valueOf(this.string("utlost_av")),
-            emneknagger = hentEmneknaggerForOppgave(oppgaveId, databaseSession).tilOppgaveEmneknaggerDTOListe(),
+            utlostAv = HendelseBehandler.valueOf(this.string("utlost_av")),
+            emneknagger = hentEmneknaggerForOppgave(uuid("oppgave_id"), databaseSession),
             skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-            adressebeskyttelseGradering = adressebeskyttelseGradering.tilAdressebeskyttelseGraderingDTO(),
-            tilstand = oppgaveTilstandDTO,
-            lovligeEndringer = tilstandType.tilLovligeEndringerDTO(),
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(string("adressebeskyttelse_gradering")),
+            tilstand = Oppgave.Tilstand.Type.valueOf(this.string("tilstand")),
             utsattTilDato = this.localDateOrNull("utsatt_til"),
             totaltFeilutbetaltBelop = this.doubleOrNull("totalt_feilutbetalt_belop"),
             sendtTilKontroll = this.localDateTimeOrNull("sendt_til_kontroll"),
         )
-    }
 
     override fun hentDistinkteEmneknagger(): Set<String> =
         databaseSession.session { session ->
@@ -1241,8 +1225,13 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
             """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
         }
 
-        Søkefilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP -> TODO()
-        Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> TODO()
+        Søkefilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP -> {
+            TODO()
+        }
+
+        Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> {
+            TODO()
+        }
     }
 
 class DataNotFoundException(

@@ -10,12 +10,12 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversikt
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversiktResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
@@ -731,9 +731,9 @@ class OppgaveMediator(
     fun finnOppgaverFor(
         ident: String,
         antall: Int? = 50,
-    ): List<OppgaveOversiktDTO> = oppgaveRepository.finnOppgaverFor(ident, antall)
+    ): List<OppgaveOversikt> = oppgaveRepository.finnOppgaverFor(ident, antall)
 
-    fun søk(søkefilter: Søkefilter): OppgaveOversiktResultatDTO = oppgaveRepository.søk(søkefilter)
+    fun søk(søkefilter: Søkefilter): OppgaveOversiktResultat = oppgaveRepository.søk(søkefilter)
 
     fun hentDistinkteEmneknagger(): Set<String> = oppgaveRepository.hentDistinkteEmneknagger()
 

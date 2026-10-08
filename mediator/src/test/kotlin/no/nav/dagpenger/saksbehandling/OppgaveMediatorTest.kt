@@ -54,7 +54,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTL
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -66,6 +65,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversikt
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -2474,7 +2474,7 @@ OppgaveMediatorTest {
         }
     }
 
-    private fun OppgaveMediator.hentAlleOppgaverMedTilstand(tilstandType: Type): List<OppgaveOversiktDTO> =
+    private fun OppgaveMediator.hentAlleOppgaverMedTilstand(tilstandType: Type): List<OppgaveOversikt> =
         this
             .søk(
                 søkefilter =

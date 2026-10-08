@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
@@ -19,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
@@ -33,8 +33,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.tilOppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
@@ -217,7 +215,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgave.oppgaveId shouldBe klageOppgave.oppgaveId
             nesteOppgave.behandlerIdent shouldBe saksbehandler.navIdent
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -288,7 +286,7 @@ class PostgresOppgaveRepositoryTest {
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
             nesteOppgave.behandlerIdent shouldBe saksbehandlerUtenTilgangTilEgneAnsatte.navIdent
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val saksbehandlerMedTilgangTilEgneAnsatte =
                 Saksbehandler(
@@ -314,7 +312,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingSomEgneAnsatte.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
-            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -375,7 +373,7 @@ class PostgresOppgaveRepositoryTest {
             // så den nest eldste (uten inhabilitet) blir tildelt i stedet.
             nesteOppgave.oppgaveId shouldBe nyesteOppgaveUtenInhabilitet.oppgaveId
             nesteOppgave.behandlerIdent shouldBe inhabilSaksbehandler.navIdent
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val habilSaksbehandler =
                 Saksbehandler(
@@ -461,7 +459,7 @@ class PostgresOppgaveRepositoryTest {
             requireNotNull(nesteOppgave)
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
             nesteOppgave.behandlerIdent shouldBe saksbehandlernUtenTilgangTilAdressebeskyttede.navIdent
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val saksbehandlerMedTilgangTilEgneAnsatte =
                 Saksbehandler(
@@ -491,7 +489,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
-            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -553,7 +551,7 @@ class PostgresOppgaveRepositoryTest {
             val tilstandsloggUnderBehandling =
                 OppgaveTilstandslogg(
                     Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             NesteOppgaveHendelse(
                                 ansvarligIdent = annenBeslutter.navIdent,
@@ -562,7 +560,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusDays(3),
                     ),
                     Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             NesteOppgaveHendelse(
                                 ansvarligIdent = saksbehandlerUtført.navIdent,
@@ -583,7 +581,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusDays(1),
                     ),
                     Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             PåVentFristUtgåttHendelse(
                                 oppgaveId = oppgaveId,
@@ -668,7 +666,7 @@ class PostgresOppgaveRepositoryTest {
             fun tilstandsloggUnderBehandling() =
                 OppgaveTilstandslogg(
                     Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
                         hendelse =
                             NesteOppgaveHendelse(
                                 ansvarligIdent = saksbehandlerUtført.navIdent,
@@ -1819,8 +1817,8 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 2
-                            it shouldContain oppgaveUnderBehandlingEidAvSB1.tilOppgaveOversiktDTO()
-                            it shouldContain oppgaveFerdigBehandletEidAvSB1.tilOppgaveOversiktDTO()
+                            it[0] shouldBeSame oppgaveUnderBehandlingEidAvSB1
+                            it[1] shouldBeSame oppgaveFerdigBehandletEidAvSB1
                         }
                 }
 
@@ -1838,8 +1836,8 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 2
-                            it shouldContain oppgaveUnderBehandlingEidAvSB1
-                            it shouldContain oppgaveFerdigBehandletEidAvSB1
+                            it[0] shouldBeSame oppgaveUnderBehandlingEidAvSB1
+                            it[1] shouldBeSame oppgaveFerdigBehandletEidAvSB1
                         }
                 }
 
@@ -1858,8 +1856,8 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 2
-                            it shouldContain oppgaveUnderBehandlingEidAvSB1.tilOppgaveOversiktDTO()
-                            it shouldContain oppgaveFerdigBehandletEidAvSB1.tilOppgaveOversiktDTO()
+                            it[0] shouldBeSame oppgaveUnderBehandlingEidAvSB1
+                            it[1] shouldBeSame oppgaveFerdigBehandletEidAvSB1
                         }
                 }
 
@@ -1877,8 +1875,8 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 2
-                            it shouldContain oppgaveUnderBehandlingEidAvSB2.tilOppgaveOversiktDTO()
-                            it shouldContain oppgaveFerdigBehandletEidAvSB1.tilOppgaveOversiktDTO()
+                            it[0] shouldBeSame oppgaveUnderBehandlingEidAvSB2
+                            it[1] shouldBeSame oppgaveFerdigBehandletEidAvSB1
                         }
                 }
 
@@ -1897,7 +1895,7 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 1
-                            it shouldContain oppgaveUnderBehandlingEidAvSB2.tilOppgaveOversiktDTO()
+                            it[0] shouldBeSame oppgaveUnderBehandlingEidAvSB2
                         }
                 }
 
@@ -1915,9 +1913,9 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 3
-                            it shouldContain oppgaveUnderBehandlingEidAvSB1.tilOppgaveOversiktDTO()
-                            it shouldContain oppgaveUnderBehandlingEidAvSB2.tilOppgaveOversiktDTO()
-                            it shouldContain oppgaveFerdigBehandletEidAvSB1.tilOppgaveOversiktDTO()
+                            it[0] shouldBeSame oppgaveUnderBehandlingEidAvSB1
+                            it[1] shouldBeSame oppgaveUnderBehandlingEidAvSB2
+                            it[2] shouldBeSame oppgaveFerdigBehandletEidAvSB1
                         }
                 }
 
@@ -1952,7 +1950,7 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver
                         .let {
                             it.size shouldBe 1
-                            it shouldContain oppgaveFerdigBehandletEidAvSB1.tilOppgaveOversiktDTO()
+                            it[0] shouldBeSame oppgaveFerdigBehandletEidAvSB1
                         }
                 }
 
@@ -1968,7 +1966,7 @@ class PostgresOppgaveRepositoryTest {
                 ).oppgaver
                 .let {
                     it.size shouldBe 1
-                    it shouldContain oppgaveKlarTilBehandlingUtenSaksbehandler.tilOppgaveOversiktDTO()
+                    it[0] shouldBeSame oppgaveKlarTilBehandlingUtenSaksbehandler
                 }
         }
     }
@@ -2003,8 +2001,8 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 2
-                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame eldsteOppgave
+                    it.oppgaver[1] shouldBeSame nestEldsteOppgave
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2019,8 +2017,8 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 2
-                    it.oppgaver[0] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame nestNyesteOppgave
+                    it.oppgaver[1] shouldBeSame nyesteOppgave
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2033,10 +2031,10 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 4
-                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[2] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[3] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame eldsteOppgave
+                    it.oppgaver[1] shouldBeSame nestEldsteOppgave
+                    it.oppgaver[2] shouldBeSame nestNyesteOppgave
+                    it.oppgaver[3] shouldBeSame nyesteOppgave
                     it.totaltAntallOppgaver shouldBe 4
                 }
             repo
@@ -2073,10 +2071,10 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 4
-                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[2] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[3] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame eldsteOppgave
+                    it.oppgaver[1] shouldBeSame nestEldsteOppgave
+                    it.oppgaver[2] shouldBeSame nestNyesteOppgave
+                    it.oppgaver[3] shouldBeSame nyesteOppgave
                 }
 
             // Eksplisitt ASC skal gi eldste først
@@ -2090,8 +2088,8 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 2
-                    it.oppgaver[0] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame eldsteOppgave
+                    it.oppgaver[1] shouldBeSame nestEldsteOppgave
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2106,10 +2104,10 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 4
-                    it.oppgaver[0] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[2] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[3] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame nyesteOppgave
+                    it.oppgaver[1] shouldBeSame nestNyesteOppgave
+                    it.oppgaver[2] shouldBeSame nestEldsteOppgave
+                    it.oppgaver[3] shouldBeSame eldsteOppgave
                 }
 
             // DESC med paginering side 1
@@ -2123,8 +2121,8 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 2
-                    it.oppgaver[0] shouldBe nyesteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe nestNyesteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame nyesteOppgave
+                    it.oppgaver[1] shouldBeSame nestNyesteOppgave
                     it.totaltAntallOppgaver shouldBe 4
                 }
 
@@ -2139,8 +2137,8 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 2
-                    it.oppgaver[0] shouldBe nestEldsteOppgave.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe eldsteOppgave.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame nestEldsteOppgave
+                    it.oppgaver[1] shouldBeSame eldsteOppgave
                     it.totaltAntallOppgaver shouldBe 4
                 }
         }
@@ -2177,8 +2175,8 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 2
-                    it.oppgaver[0] shouldBe oppgaveKlage.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe oppgaveSøknad.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame oppgaveKlage
+                    it.oppgaver[1] shouldBeSame oppgaveSøknad
                 }
         }
     }
@@ -2235,11 +2233,11 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 5
-                    it.oppgaver[0] shouldBe oppgaveAvbrutt.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe oppgaveFerdigBehandlet.tilOppgaveOversiktDTO()
-                    it.oppgaver[2] shouldBe oppgaveKlarTilBehandling.tilOppgaveOversiktDTO()
-                    it.oppgaver[3] shouldBe oppgavePåVent.tilOppgaveOversiktDTO()
-                    it.oppgaver[4] shouldBe oppgaveUnderBehandling.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame oppgaveAvbrutt
+                    it.oppgaver[1] shouldBeSame oppgaveFerdigBehandlet
+                    it.oppgaver[2] shouldBeSame oppgaveKlarTilBehandling
+                    it.oppgaver[3] shouldBeSame oppgavePåVent
+                    it.oppgaver[4] shouldBeSame oppgaveUnderBehandling
                 }
         }
     }
@@ -2276,9 +2274,9 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 3
-                    it.oppgaver[0] shouldBe oppgaveOmEnDag.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe oppgaveOmToDager.tilOppgaveOversiktDTO()
-                    it.oppgaver[2] shouldBe oppgaveUtenUtsattTil.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame oppgaveOmEnDag
+                    it.oppgaver[1] shouldBeSame oppgaveOmToDager
+                    it.oppgaver[2] shouldBeSame oppgaveUtenUtsattTil
                 }
         }
     }
@@ -2328,10 +2326,10 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 ).let {
                     it.oppgaver.size shouldBe 4
-                    it.oppgaver[0] shouldBe oppgaveAd.tilOppgaveOversiktDTO()
-                    it.oppgaver[1] shouldBe oppgaveBj.tilOppgaveOversiktDTO()
-                    it.oppgaver[2] shouldBe oppgaveMo.tilOppgaveOversiktDTO()
-                    it.oppgaver[3] shouldBe oppgaveZu.tilOppgaveOversiktDTO()
+                    it.oppgaver[0] shouldBeSame oppgaveAd
+                    it.oppgaver[1] shouldBeSame oppgaveBj
+                    it.oppgaver[2] shouldBeSame oppgaveMo
+                    it.oppgaver[3] shouldBeSame oppgaveZu
                 }
         }
     }
@@ -2374,7 +2372,7 @@ class PostgresOppgaveRepositoryTest {
                         OppgaveTilstandslogg(
                             OppgaveTilstandslogg(
                                 Tilstandsendring(
-                                    tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                                    tilstand = UNDER_BEHANDLING,
                                     hendelse =
                                         NesteOppgaveHendelse(
                                             ansvarligIdent = saksbehandler.navIdent,
@@ -2481,11 +2479,11 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
+                        tilstander = setOf(UNDER_BEHANDLING),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
                 ).oppgaver
-                .single() shouldBe oppgaveUnderBehandlingEnUkeGammel
+                .single() shouldBeSame oppgaveUnderBehandlingEnUkeGammel
 
             repo
                 .søk(
@@ -2493,7 +2491,7 @@ class PostgresOppgaveRepositoryTest {
                         tilstander =
                             setOf(
                                 KLAR_TIL_BEHANDLING,
-                                Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                                UNDER_BEHANDLING,
                             ),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
@@ -2512,10 +2510,7 @@ class PostgresOppgaveRepositoryTest {
                 ).let {
                     it.oppgaver.size shouldBe 3
                     it.oppgaver.map { oppgave -> oppgave.tilstand }.toSet() shouldBe
-                        setOf(
-                            OppgaveTilstandDTO.UNDER_BEHANDLING,
-                            OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
-                        )
+                        setOf(UNDER_BEHANDLING, KLAR_TIL_BEHANDLING)
                 }
 
             repo
@@ -2533,7 +2528,7 @@ class PostgresOppgaveRepositoryTest {
             repo
                 .søk(
                     Søkefilter(
-                        tilstander = setOf(Oppgave.Tilstand.Type.UNDER_BEHANDLING),
+                        tilstander = setOf(UNDER_BEHANDLING),
                         periode =
                             Periode(
                                 fom = enUkeSiden.minusDays(1).toLocalDate(),
@@ -2588,11 +2583,17 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = iGårSåSeintPåDagenSomMulig,
                 )
-            this.leggTilOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
-                opprettet = iForgårsSåSeintPåDagenSomMulig,
-            )
-            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
+            val oppgaveiForgårsSåSeintPåDagenSomMulig =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = iForgårsSåSeintPåDagenSomMulig,
+                )
+
+            val oppgaveiDagSåTidligPåDagenSomMulig =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = iDagSåTidligPåDagenSomMulig,
+                )
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaver =
@@ -2631,10 +2632,10 @@ class PostgresOppgaveRepositoryTest {
                     ),
                 )
             oppgaver.oppgaver.size shouldBe 4
-            oppgaver.oppgaver[0] shouldBe oppgaveIGår
-            oppgaver.oppgaver[1] shouldBe oppgave1
-            oppgaver.oppgaver[2] shouldBe oppgave2
-            oppgaver.oppgaver[3] shouldBe oppgave3
+            oppgaver.oppgaver[0] shouldBeSame oppgaveIGår
+            oppgaver.oppgaver[1] shouldBeSame oppgave1
+            oppgaver.oppgaver[2] shouldBeSame oppgave2
+            oppgaver.oppgaver[3] shouldBeSame oppgave3
         }
     }
 
@@ -2756,4 +2757,20 @@ class PostgresOppgaveRepositoryTest {
                     ).asUpdate,
             )
         }
+}
+
+private infix fun OppgaveOversikt.shouldBeSame(other: Oppgave) {
+    this.oppgaveId shouldBe other.oppgaveId
+    this.behandlingId shouldBe other.behandling.behandlingId
+    this.personIdent shouldBe other.personIdent()
+    this.behandlingId shouldBe other.behandling.behandlingId
+    this.saksbehandlerIdent shouldBe other.sisteSaksbehandlerIdent
+    this.beslutterIdent shouldBe other.sisteBeslutterIdent
+    this.tidspunktOpprettet shouldBe other.opprettet
+    this.utlostAv shouldBe other.behandling.utløstAv
+    this.emneknagger shouldBe other.emneknagger
+    this.skjermesSomEgneAnsatte shouldBe other.person.skjermesSomEgneAnsatte
+    this.adressebeskyttelseGradering shouldBe other.person.adressebeskyttelseGradering
+    this.tilstand shouldBe other.tilstand().type
+    this.utsattTilDato shouldBe other.utsattTil()
 }

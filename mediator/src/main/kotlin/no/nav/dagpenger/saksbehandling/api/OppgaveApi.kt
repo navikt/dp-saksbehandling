@@ -42,6 +42,8 @@ import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveIdDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.ReturnerTilSaksbehandlingAarsakDTO
@@ -109,9 +111,13 @@ internal fun Route.oppgaveApi(
         route("person/oppgaver") {
             post {
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                val oppgaver = oppgaveMediator.finnOppgaverFor(personIdentDTO.ident)
+                val oppgaveOversiktDTOS: List<OppgaveOversiktDTO> =
+                    oppgaveMediator
+                        .finnOppgaverFor(
+                            personIdentDTO.ident,
+                        ).tilOppgaveOversiktDTOListe()
                 auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
-                call.respond(status = HttpStatusCode.OK, oppgaver)
+                call.respond(status = HttpStatusCode.OK, oppgaveOversiktDTOS)
             }
         }
         route("oppgave") {
@@ -120,8 +126,8 @@ internal fun Route.oppgaveApi(
                 sikkerlogger.info {
                     "Henter alle oppgaver med følgende søkefilter: $søkefilter"
                 }
-                val oppgaver = oppgaveMediator.søk(søkefilter)
-                call.respond(status = HttpStatusCode.OK, oppgaver)
+                val oppgaveOversiktResultatDTO: OppgaveOversiktResultatDTO = oppgaveMediator.søk(søkefilter).tilOppgaveOversiktResultatDTO()
+                call.respond(status = HttpStatusCode.OK, oppgaveOversiktResultatDTO)
             }
             route("neste") {
                 put {
@@ -141,7 +147,7 @@ internal fun Route.oppgaveApi(
                             queryString = dto.queryParams,
                         )
                     when (oppgave) {
-                        null ->
+                        null -> {
                             call.respond(
                                 status = HttpStatusCode.NotFound,
                                 message =
@@ -156,6 +162,7 @@ internal fun Route.oppgaveApi(
                                                 .toString(),
                                     ),
                             )
+                        }
 
                         else -> {
                             auditlogg.les(
@@ -409,7 +416,7 @@ internal fun Route.oppgaveApi(
             get {
                 val behandlingId = call.finnUUID("behandlingId")
                 when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {
-                    null ->
+                    null -> {
                         call.respond(
                             status = HttpStatusCode.NotFound,
                             message =
@@ -424,12 +431,14 @@ internal fun Route.oppgaveApi(
                                             .toString(),
                                 ),
                         )
+                    }
 
-                    else ->
+                    else -> {
                         call.respond(
                             status = HttpStatusCode.OK,
                             message = OppgaveIdDTO(oppgaveId = oppgaveId),
                         )
+                    }
                 }
             }
         }
