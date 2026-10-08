@@ -1472,7 +1472,7 @@ class PostgresOppgaveRepositoryTest {
                             emneknaggGruppertPerKategori = emptyMap(),
                             utløstAvTyper = setOf(HendelseBehandler.Intern.Klage),
                         ),
-                ).oppgaver shouldBe listOf(klageOppgave)
+                ).oppgaver shouldBe listOf(klageOppgave.tilOppgaveOversikt())
         }
     }
 
@@ -1515,9 +1515,9 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(2),
                 )
-            repo.finnOppgaverFor(ola.ident) shouldNotContain oppgave3TilOlaSomIkkeErSøkbar
-            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave1TilOla, oppgave2TilOla)
-            repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry)
+            repo.finnOppgaverFor(ola.ident) shouldNotContain oppgave3TilOlaSomIkkeErSøkbar.tilOppgaveOversikt()
+            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave1TilOla.tilOppgaveOversikt(), oppgave2TilOla.tilOppgaveOversikt())
+            repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry.tilOppgaveOversikt())
         }
     }
 
@@ -1648,7 +1648,13 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = emptyMap(),
                     ),
-                ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3, oppgave4)
+                ).oppgaver shouldBe
+                listOf(
+                    oppgave1.tilOppgaveOversikt(),
+                    oppgave2.tilOppgaveOversikt(),
+                    oppgave3.tilOppgaveOversikt(),
+                    oppgave4.tilOppgaveOversikt(),
+                )
 
             repo
                 .søk(
@@ -1659,7 +1665,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba")),
                     ),
-                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
+                ).oppgaver shouldBe listOf(oppgave1.tilOppgaveOversikt(), oppgave2.tilOppgaveOversikt())
 
             repo
                 .søk(
@@ -1670,7 +1676,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("bubba")),
                     ),
-                ).oppgaver shouldBe listOf(oppgave1)
+                ).oppgaver shouldBe listOf(oppgave1.tilOppgaveOversikt())
 
             repo
                 .søk(
@@ -1688,7 +1694,7 @@ class PostgresOppgaveRepositoryTest {
                                     ),
                             ),
                     ),
-                ).oppgaver shouldBe listOf(oppgave1, oppgave2)
+                ).oppgaver shouldBe listOf(oppgave1.tilOppgaveOversikt(), oppgave2.tilOppgaveOversikt())
 
             repo
                 .søk(
@@ -1700,7 +1706,7 @@ class PostgresOppgaveRepositoryTest {
                         emneknaggGruppertPerKategori = mapOf(EmneknaggKategori.UDEFINERT to setOf("hubba")),
                         ekskluderEmneknagger = setOf("bubba"),
                     ),
-                ).oppgaver shouldBe listOf(oppgave2)
+                ).oppgaver shouldBe listOf(oppgave2.tilOppgaveOversikt())
 
             repo
                 .søk(
@@ -1711,7 +1717,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         ekskluderEmneknagger = setOf("hubba", "bubba"),
                     ),
-                ).oppgaver shouldBe listOf(oppgave3, oppgave4)
+                ).oppgaver shouldBe listOf(oppgave3.tilOppgaveOversikt(), oppgave4.tilOppgaveOversikt())
         }
     }
 
@@ -1754,7 +1760,12 @@ class PostgresOppgaveRepositoryTest {
                         tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode = Periode.UBEGRENSET_PERIODE,
                     ),
-                ).oppgaver shouldBe listOf(oppgave, oppgaveDpSak, oppgaveForNødbremset)
+                ).oppgaver shouldBe
+                listOf(
+                    oppgave.tilOppgaveOversikt(),
+                    oppgaveDpSak.tilOppgaveOversikt(),
+                    oppgaveForNødbremset.tilOppgaveOversikt(),
+                )
 
             oppgaveRepo
                 .søk(
@@ -1763,7 +1774,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode.UBEGRENSET_PERIODE,
                         harDpSak = true,
                     ),
-                ).oppgaver shouldBe listOf(oppgaveDpSak)
+                ).oppgaver shouldBe listOf(oppgaveDpSak.tilOppgaveOversikt())
         }
     }
 
@@ -2569,9 +2580,9 @@ class PostgresOppgaveRepositoryTest {
             val iDag = LocalDate.now()
             val iGår: LocalDate = iDag.minusDays(1)
             val iForgårs = iDag.minusDays(2)
-            val iForgårsSåSeintPåDagenSomMulig = LocalDateTime.of(iForgårs, LocalTime.MAX)
+            val iForgårsSåSeintPåDagenSomMulig = LocalDateTime.of(iForgårs, LocalTime.MAX.minusSeconds(1))
             val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
-            val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
+            val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX.minusSeconds(1))
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
             val oppgaveOpprettetTidligIGår =
                 this.leggTilOppgave(
@@ -2774,3 +2785,23 @@ private infix fun OppgaveOversikt.shouldBeSame(other: Oppgave) {
     this.tilstand shouldBe other.tilstand().type
     this.utsattTilDato shouldBe other.utsattTil()
 }
+
+// TODO: fix totaltFeilutbetaltBelop?
+private fun Oppgave.tilOppgaveOversikt(): OppgaveOversikt =
+    OppgaveOversikt(
+        oppgaveId = this.oppgaveId,
+        behandlingId = this.behandling.behandlingId,
+        personIdent = this.personIdent(),
+        saksbehandlerIdent = this.sisteSaksbehandlerIdent,
+        beslutterIdent = this.sisteBeslutterIdent,
+        behandlerIdent = this.behandlerIdent,
+        tidspunktOpprettet = this.opprettet,
+        utlostAv = this.behandling.utløstAv,
+        emneknagger = this.emneknagger,
+        skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
+        adressebeskyttelseGradering = this.person.adressebeskyttelseGradering,
+        tilstand = this.tilstand().type,
+        utsattTilDato = this.utsattTil(),
+        totaltFeilutbetaltBelop = null,
+        sendtTilKontroll = this.tilstandslogg.lastOrNull { it.tilstand == Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL }?.tidspunkt,
+    )

@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -10,10 +11,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
-import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
-import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
@@ -89,7 +86,7 @@ class OppfølgingMediatorTest {
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
-            oppgaver.first().utlostAv shouldBe UtlostAvTypeDTO.OPPFØLGING
+            oppgaver.first().utlostAv shouldBe HendelseBehandler.Intern.Oppfølging
             oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
 
             oppgaveMediator.tildelOppgave(
@@ -174,15 +171,9 @@ class OppfølgingMediatorTest {
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
-            oppgaver.first().utlostAv shouldBe UtlostAvTypeDTO.OPPFØLGING
-            oppgaver.first().emneknagger shouldBe
-                listOf(
-                    EmneknaggDTO(
-                        visningsnavn = "MeldekortKorrigering",
-                        kategori = EmneknaggKategoriDTO.UDEFINERT,
-                    ),
-                )
-            oppgaver.first().tilstand shouldBe OppgaveTilstandDTO.PAA_VENT
+            oppgaver.first().utlostAv shouldBe HendelseBehandler.Intern.Oppfølging
+            oppgaver.first().emneknagger shouldBe listOf("MeldekortKorrigering")
+            oppgaver.first().tilstand shouldBe PAA_VENT
             oppgaver.first().behandlerIdent shouldBe saksbehandler.navIdent
             oppgaver.first().saksbehandlerIdent shouldBe saksbehandler.navIdent
             oppgaver.first().utsattTilDato shouldBe utsattFrist
@@ -319,7 +310,7 @@ class OppfølgingMediatorTest {
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             val nyOppgave = oppgaver.first { it.tilstand == PAA_VENT }
-            nyOppgave.tilstand shouldBe OppgaveTilstandDTO.PAA_VENT
+            nyOppgave.tilstand shouldBe PAA_VENT
             nyOppgave.utsattTilDato shouldBe frist
             nyOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
