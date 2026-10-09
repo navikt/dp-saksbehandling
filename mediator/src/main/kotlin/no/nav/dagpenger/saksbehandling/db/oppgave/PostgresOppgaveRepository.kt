@@ -1206,7 +1206,7 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
         }
 
         Søkefilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP -> {
-            TODO()
+            """ ORDER BY tilb.totalt_feilutbetalt_belop ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
         }
 
         Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> {

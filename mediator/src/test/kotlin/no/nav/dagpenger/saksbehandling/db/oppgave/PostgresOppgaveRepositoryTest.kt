@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -19,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
@@ -37,6 +39,9 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbOpprettetNå
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
+import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -46,9 +51,16 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.tilbakekreving.PostgresTilbakekrevingRepository
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving
+import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
+import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMediator
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -2152,6 +2164,109 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne ta imot tilbakekrevingsoppgaver og søke dem frem sortert på feilutbetalt beløp`() {
+        val søknadBehandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = dbOpprettetNå.minusDays(2),
+                hendelse = TomHendelse,
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+            )
+        DBTestHelper.withBehandling(
+            behandling = søknadBehandling,
+        ) { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val personMediator =
+                PersonMediator(
+                    personRepository = PostgresPersonRepository(databaseSession = databaseSession),
+                    oppslag = mockk(relaxed = true),
+                )
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository =
+                        PostgresOppgaveRepository(
+                            databaseSession = databaseSession,
+                        ),
+                    personMediator = mockk(relaxed = true),
+                    behandlingKlient = mockk(relaxed = true),
+                    utsendingMediator = mockk(relaxed = true),
+                    sakMediator =
+                        SakMediator(
+                            personMediator = personMediator,
+                            sakRepository = PostgresSakRepository(databaseSession = databaseSession),
+                            rapidsConnection = mockk(relaxed = true),
+                            behandlingKlient = mockk(relaxed = true),
+                        ),
+                    utboks = mockk(relaxed = true),
+                    transaksjoner = mockk(relaxed = true),
+                    meldekortregisterKlient = mockk(relaxed = true),
+                )
+            val mediator =
+                TilbakekrevingMediator(
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(databaseSession = databaseSession),
+                            oppslag = mockk(relaxed = true),
+                        ),
+                    tilbakekrevingRepository = PostgresTilbakekrevingRepository(databaseSession = databaseSession),
+                    transaksjoner = Transaksjoner(databaseSession = databaseSession),
+                )
+
+            val tilbakekrevingBehandlingIdMinst = UUIDv7.ny()
+            val tilbakekrevingBehandlingIdStørst = UUIDv7.ny()
+            val tilbakekrevingBehandlingIdMiddels = UUIDv7.ny()
+            val tilbakekrevingHendelseStørst =
+                lagTilbakekrevingHendelse(
+                    eksternBehandlingId = søknadBehandling.behandlingId,
+                    tilbakekrevingBehandlingId = tilbakekrevingBehandlingIdStørst,
+                    status = BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                    forrigeStatus = BehandlingStatus.OPPRETTET,
+                    totaltFeilutbetaltBeløp = BigDecimal("50000"),
+                )
+            mediator.håndter(tilbakekrevingHendelseStørst)
+
+            val tilbakekrevingHendelseMinst =
+                lagTilbakekrevingHendelse(
+                    eksternBehandlingId = søknadBehandling.behandlingId,
+                    tilbakekrevingBehandlingId = tilbakekrevingBehandlingIdMinst,
+                    status = BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                    forrigeStatus = BehandlingStatus.OPPRETTET,
+                    totaltFeilutbetaltBeløp = BigDecimal("1000"),
+                )
+
+            mediator.håndter(tilbakekrevingHendelseMinst)
+
+            val tilbakekrevingHendelseMiddels =
+                lagTilbakekrevingHendelse(
+                    eksternBehandlingId = søknadBehandling.behandlingId,
+                    tilbakekrevingBehandlingId = tilbakekrevingBehandlingIdMiddels,
+                    status = BehandlingStatus.TIL_FORHÅNDSVARSEL,
+                    forrigeStatus = BehandlingStatus.OPPRETTET,
+                    totaltFeilutbetaltBeløp = BigDecimal("33200"),
+                )
+            mediator.håndter(tilbakekrevingHendelseMiddels)
+
+            oppgaveMediator
+                .søk(
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        paginering = null,
+                        sortering = Søkefilter.Sortering.DESC,
+                        sorteringsfelt = Søkefilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP,
+                    ),
+                ).oppgaver
+                .let {
+                    it.size shouldBe 3
+                    it[0].behandlingId shouldBe tilbakekrevingBehandlingIdStørst
+                    it[1].behandlingId shouldBe tilbakekrevingBehandlingIdMiddels
+                    it[2].behandlingId shouldBe tilbakekrevingBehandlingIdMinst
+                }
+        }
+    }
+
+    @Test
     fun `Skal kunne hente paginerte oppgaver`() {
         DBTestHelper.withMigratedDb { ds ->
             val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
@@ -2799,3 +2914,34 @@ private fun Oppgave.tilOppgaveOversikt(): OppgaveOversikt =
         totaltFeilutbetaltBelop = null,
         sendtTilKontroll = this.tilstandslogg.lastOrNull { it.tilstand == Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL }?.tidspunkt,
     )
+
+private fun lagTilbakekrevingHendelse(
+    eksternBehandlingId: UUID,
+    tilbakekrevingBehandlingId: UUID,
+    status: BehandlingStatus,
+    forrigeStatus: BehandlingStatus? = null,
+    avventBehandlingTilDato: LocalDate? = null,
+    totaltFeilutbetaltBeløp: BigDecimal = BigDecimal("25000"),
+): TilbakekrevingHendelse {
+    val now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+    return TilbakekrevingHendelse(
+        eksternBehandlingId = eksternBehandlingId,
+        hendelseOpprettet = now,
+        tilbakekreving =
+            Tilbakekreving(
+                behandlingId = tilbakekrevingBehandlingId,
+                opprettet = now,
+                avventBehandlingTilDato = avventBehandlingTilDato,
+                varselSendt = LocalDate.now(),
+                behandlingsstatus = status,
+                forrigeBehandlingsstatus = forrigeStatus,
+                totaltFeilutbetaltBeløp = totaltFeilutbetaltBeløp,
+                saksbehandlingURL = "https://tilbakekreving.intern.nav.no/behandling/$tilbakekrevingBehandlingId",
+                fullstendigPeriode =
+                    Tilbakekreving.Periode(
+                        fom = LocalDate.of(2025, 1, 1),
+                        tom = LocalDate.of(2025, 6, 30),
+                    ),
+            ),
+    )
+}
