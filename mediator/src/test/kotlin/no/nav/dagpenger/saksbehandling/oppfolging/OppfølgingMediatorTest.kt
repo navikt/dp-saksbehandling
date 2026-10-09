@@ -31,7 +31,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 class OppfølgingMediatorTest {
-    private val testPerson = DBTestHelper.testPerson
+    private val testPerson = DBTestHelper.dbTestPerson
     private val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
 
     @Test

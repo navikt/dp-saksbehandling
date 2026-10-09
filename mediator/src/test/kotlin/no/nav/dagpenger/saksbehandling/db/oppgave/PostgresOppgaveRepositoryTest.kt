@@ -34,6 +34,8 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbOpprettetNå
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -1477,7 +1479,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne hente alle oppgaver for en gitt person, sortert på opprettet`() {
+    fun `Skal kunne søke fram alle oppgaver for en gitt person, sortert på opprettet`() {
         val ola =
             Person(
                 ident = "12345678910",
@@ -1528,10 +1530,9 @@ class PostgresOppgaveRepositoryTest {
             SøknadsbehandlingOpprettetHendelse(
                 søknadId = søknadId,
                 behandlingId = UUIDv7.ny(),
-                ident = "12345678910",
-                opprettet = LocalDateTime.now(),
+                ident = dbTestPerson.ident,
+                opprettet = dbOpprettetNå,
             )
-
         val behandling =
             Behandling(
                 behandlingId = hendelse.behandlingId,
@@ -1547,17 +1548,10 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     oppgaveId = UUIDv7.ny(),
                     behandling = behandling,
-                    person = testPerson,
+                    person = dbTestPerson,
                 )
             repo.lagre(oppgave = oppgave)
-            repo
-                .søk(
-                    Søkefilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        tilstander = Oppgave.Tilstand.Type.values,
-                        søknadId = søknadId,
-                    ),
-                ).oppgaver.size shouldBe 1
+            repo.finnOppgaveForSøknad(ident = hendelse.ident, søknadId = søknadId) shouldBe oppgave
         }
     }
 
@@ -1979,6 +1973,160 @@ class PostgresOppgaveRepositoryTest {
                     it.size shouldBe 1
                     it[0] shouldBeSame oppgaveKlarTilBehandlingUtenSaksbehandler
                 }
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver filtrert på tilstand og opprettet`() {
+        val enUkeSiden = opprettetNå.minusDays(7)
+
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgaveUnderBehandlingEnUkeGammel =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.UnderBehandling,
+                    opprettet = enUkeSiden,
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                )
+            this.leggTilOppgave(
+                tilstand = Oppgave.KlarTilBehandling,
+                opprettet = opprettetNå,
+            )
+            this.leggTilOppgave(
+                tilstand = Oppgave.KlarTilBehandling,
+                opprettet = opprettetNå.minusDays(1),
+            )
+
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(UNDER_BEHANDLING),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                    ),
+                ).oppgaver
+                .single() shouldBeSame oppgaveUnderBehandlingEnUkeGammel
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander =
+                            setOf(
+                                KLAR_TIL_BEHANDLING,
+                                UNDER_BEHANDLING,
+                            ),
+                        periode = Periode.UBEGRENSET_PERIODE,
+                    ),
+                ).oppgaver.size shouldBe 3
+
+            repo
+                .søk(
+                    Søkefilter(
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                        behandlerIdent = null,
+                        personIdent = null,
+                        oppgaveId = null,
+                        behandlingId = null,
+                    ),
+                ).let {
+                    it.oppgaver.size shouldBe 3
+                    it.oppgaver.map { oppgave -> oppgave.tilstand }.toSet() shouldBe
+                        setOf(UNDER_BEHANDLING, KLAR_TIL_BEHANDLING)
+                }
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
+                        periode =
+                            Periode(
+                                fom = enUkeSiden.plusDays(1).toLocalDate(),
+                                tom = enUkeSiden.plusDays(2).toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 0
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(UNDER_BEHANDLING),
+                        periode =
+                            Periode(
+                                fom = enUkeSiden.minusDays(1).toLocalDate(),
+                                tom = enUkeSiden.plusDays(2).toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 1
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
+                        periode =
+                            Periode(
+                                fom = opprettetNå.toLocalDate(),
+                                tom = opprettetNå.toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 1
+
+            repo
+                .søk(
+                    Søkefilter(
+                        tilstander = emptySet(),
+                        periode =
+                            Periode(
+                                fom = opprettetNå.toLocalDate(),
+                                tom = opprettetNå.toLocalDate(),
+                            ),
+                    ),
+                ).oppgaver.size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver opprettet en bestemt dato, uavhengig av tid på døgnet`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val iDag = LocalDate.now()
+            val iGår: LocalDate = iDag.minusDays(1)
+            val iForgårs = iDag.minusDays(2)
+            val iForgårsSåSeintPåDagenSomMulig = LocalDateTime.of(iForgårs, LocalTime.MAX.minusSeconds(1))
+            val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
+            val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX.minusSeconds(1))
+            val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
+            val oppgaveOpprettetTidligIGår =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = iGårSåTidligPåDagenSomMulig,
+                )
+            val oppgaveOpprettetSeintIGår =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = iGårSåSeintPåDagenSomMulig,
+                )
+            val oppgaveiForgårsSåSeintPåDagenSomMulig =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = iForgårsSåSeintPåDagenSomMulig,
+                )
+
+            val oppgaveiDagSåTidligPåDagenSomMulig =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    opprettet = iDagSåTidligPåDagenSomMulig,
+                )
+
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+            val oppgaver =
+                repo.søk(
+                    Søkefilter(
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
+                        periode = Periode(fom = iGår, tom = iGår),
+                    ),
+                )
+            oppgaver.oppgaver.size shouldBe 2
+            oppgaver.oppgaver.filter { it.oppgaveId == oppgaveOpprettetTidligIGår.oppgaveId }.size shouldBe 1
+            oppgaver.oppgaver.filter { it.oppgaveId == oppgaveOpprettetSeintIGår.oppgaveId }.size shouldBe 1
         }
     }
 
@@ -2463,160 +2611,6 @@ class PostgresOppgaveRepositoryTest {
                     it.oppgaver[2].oppgaveId shouldBe oppgaveTrikkeførerSyvertsen.oppgaveId
                     it.oppgaver[3].oppgaveId shouldBe oppgaveNullBeslutter.oppgaveId
                 }
-        }
-    }
-
-    @Test
-    fun `Skal kunne søke etter oppgaver filtrert på tilstand og opprettet`() {
-        val enUkeSiden = opprettetNå.minusDays(7)
-
-        DBTestHelper.withMigratedDb { ds ->
-            val oppgaveUnderBehandlingEnUkeGammel =
-                this.leggTilOppgave(
-                    tilstand = Oppgave.UnderBehandling,
-                    opprettet = enUkeSiden,
-                    saksbehandlerIdent = saksbehandler.navIdent,
-                )
-            this.leggTilOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
-                opprettet = opprettetNå,
-            )
-            this.leggTilOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
-                opprettet = opprettetNå.minusDays(1),
-            )
-
-            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo
-                .søk(
-                    Søkefilter(
-                        tilstander = setOf(UNDER_BEHANDLING),
-                        periode = Periode.UBEGRENSET_PERIODE,
-                    ),
-                ).oppgaver
-                .single() shouldBeSame oppgaveUnderBehandlingEnUkeGammel
-
-            repo
-                .søk(
-                    Søkefilter(
-                        tilstander =
-                            setOf(
-                                KLAR_TIL_BEHANDLING,
-                                UNDER_BEHANDLING,
-                            ),
-                        periode = Periode.UBEGRENSET_PERIODE,
-                    ),
-                ).oppgaver.size shouldBe 3
-
-            repo
-                .søk(
-                    Søkefilter(
-                        periode = Periode.UBEGRENSET_PERIODE,
-                        tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
-                        behandlerIdent = null,
-                        personIdent = null,
-                        oppgaveId = null,
-                        behandlingId = null,
-                    ),
-                ).let {
-                    it.oppgaver.size shouldBe 3
-                    it.oppgaver.map { oppgave -> oppgave.tilstand }.toSet() shouldBe
-                        setOf(UNDER_BEHANDLING, KLAR_TIL_BEHANDLING)
-                }
-
-            repo
-                .søk(
-                    Søkefilter(
-                        tilstander = setOf(KLAR_TIL_BEHANDLING),
-                        periode =
-                            Periode(
-                                fom = enUkeSiden.plusDays(1).toLocalDate(),
-                                tom = enUkeSiden.plusDays(2).toLocalDate(),
-                            ),
-                    ),
-                ).oppgaver.size shouldBe 0
-
-            repo
-                .søk(
-                    Søkefilter(
-                        tilstander = setOf(UNDER_BEHANDLING),
-                        periode =
-                            Periode(
-                                fom = enUkeSiden.minusDays(1).toLocalDate(),
-                                tom = enUkeSiden.plusDays(2).toLocalDate(),
-                            ),
-                    ),
-                ).oppgaver.size shouldBe 1
-
-            repo
-                .søk(
-                    Søkefilter(
-                        tilstander = setOf(KLAR_TIL_BEHANDLING),
-                        periode =
-                            Periode(
-                                fom = opprettetNå.toLocalDate(),
-                                tom = opprettetNå.toLocalDate(),
-                            ),
-                    ),
-                ).oppgaver.size shouldBe 1
-
-            repo
-                .søk(
-                    Søkefilter(
-                        tilstander = emptySet(),
-                        periode =
-                            Periode(
-                                fom = opprettetNå.toLocalDate(),
-                                tom = opprettetNå.toLocalDate(),
-                            ),
-                    ),
-                ).oppgaver.size shouldBe 1
-        }
-    }
-
-    @Test
-    fun `Skal kunne søke etter oppgaver opprettet en bestemt dato, uavhengig av tid på døgnet`() {
-        DBTestHelper.withMigratedDb { ds ->
-            val iDag = LocalDate.now()
-            val iGår: LocalDate = iDag.minusDays(1)
-            val iForgårs = iDag.minusDays(2)
-            val iForgårsSåSeintPåDagenSomMulig = LocalDateTime.of(iForgårs, LocalTime.MAX.minusSeconds(1))
-            val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
-            val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX.minusSeconds(1))
-            val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
-            val oppgaveOpprettetTidligIGår =
-                this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilBehandling,
-                    opprettet = iGårSåTidligPåDagenSomMulig,
-                )
-            val oppgaveOpprettetSeintIGår =
-                this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilBehandling,
-                    opprettet = iGårSåSeintPåDagenSomMulig,
-                )
-            val oppgaveiForgårsSåSeintPåDagenSomMulig =
-                this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilBehandling,
-                    opprettet = iForgårsSåSeintPåDagenSomMulig,
-                )
-
-            val oppgaveiDagSåTidligPåDagenSomMulig =
-                this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilBehandling,
-                    opprettet = iDagSåTidligPåDagenSomMulig,
-                )
-
-            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            val oppgaver =
-                repo.søk(
-                    Søkefilter(
-                        tilstander = setOf(KLAR_TIL_BEHANDLING),
-                        periode = Periode(fom = iGår, tom = iGår),
-                    ),
-                )
-            oppgaver.oppgaver.size shouldBe 2
-            oppgaver.oppgaver.filter { it.oppgaveId == oppgaveOpprettetTidligIGår.oppgaveId }.size shouldBe 1
-            oppgaver.oppgaver.filter { it.oppgaveId == oppgaveOpprettetSeintIGår.oppgaveId }.size shouldBe 1
         }
     }
 

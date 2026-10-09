@@ -12,8 +12,8 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.opprettetNå
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbOpprettetNå
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -32,7 +32,7 @@ class TilbakekrevingMediatorTest {
     @Test
     fun `Skal kunne håndtere tilbakekreving hendelse`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
-        val gradertPerson = testPerson.copy(adressebeskyttelseGradering = AdressebeskyttelseGradering.STRENGT_FORTROLIG)
+        val gradertPerson = dbTestPerson.copy(adressebeskyttelseGradering = AdressebeskyttelseGradering.STRENGT_FORTROLIG)
         val saksbehandlerMedTilgane =
             TestHelper.saksbehandler.copy(
                 tilganger =
@@ -47,7 +47,7 @@ class TilbakekrevingMediatorTest {
             Behandling(
                 behandlingId = tilbakekrevingBehandlingId,
                 utløstAv = HendelseBehandler.Intern.Tilbakekreving,
-                opprettet = opprettetNå,
+                opprettet = dbOpprettetNå,
                 hendelse = TomHendelse,
             )
         DBTestHelper.withBehandling(

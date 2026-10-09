@@ -67,7 +67,7 @@ class UtsendingMediatorTest {
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
             val behandlingId = behandling.behandlingId
             val søknadId = UUIDv7.ny()
-            val sakId = DBTestHelper.sakId.toString()
+            val sakId = DBTestHelper.dbSakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
             val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
@@ -401,7 +401,7 @@ class UtsendingMediatorTest {
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
             val behandlingId = behandling.behandlingId
             val søknadId = UUIDv7.ny()
-            val sakId = DBTestHelper.sakId.toString()
+            val sakId = DBTestHelper.dbSakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et automatisk vedtaksbrev</p>"
             val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))

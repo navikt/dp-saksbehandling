@@ -61,7 +61,7 @@ class PostgresUtsendingRepositoryTest {
 
     @Test
     fun `Skal kunne hente utsending for behandlingId`() {
-        val testPerson = DBTestHelper.testPerson
+        val testPerson = DBTestHelper.dbTestPerson
 
         withBehandling(behandling = behandling, person = testPerson) { ds ->
             val repository = PostgresUtsendingRepository(DatabaseSession(ds))

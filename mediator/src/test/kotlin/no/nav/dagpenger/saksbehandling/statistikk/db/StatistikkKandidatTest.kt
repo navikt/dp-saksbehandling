@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -51,7 +51,7 @@ class StatistikkKandidatTest {
 
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = Sak(opprettet = LocalDateTime.now()),
                 oppgave = oppgave,
@@ -88,7 +88,7 @@ class StatistikkKandidatTest {
 
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = Sak(opprettet = LocalDateTime.now()),
                 oppgave = oppgave,
@@ -126,7 +126,7 @@ class StatistikkKandidatTest {
 
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = Sak(opprettet = LocalDateTime.now()),
                 oppgave = oppgave,

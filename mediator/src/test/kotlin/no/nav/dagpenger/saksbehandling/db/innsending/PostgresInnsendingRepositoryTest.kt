@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.innsending
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
@@ -15,14 +15,14 @@ class PostgresInnsendingRepositoryTest {
     @Test
     fun `Skal lagre, endre og hente innsending fra database`() {
         DBTestHelper.withSak(
-            person = testPerson,
+            person = dbTestPerson,
         ) { ds ->
             val mottatt = LocalDateTime.of(2026, 8, 23, 12, 34, 54).truncatedTo(ChronoUnit.SECONDS)
 
             val innsending =
                 Innsending.rehydrer(
                     innsendingId = UUIDv7.ny(),
-                    person = testPerson,
+                    person = dbTestPerson,
                     journalpostId = "jp123",
                     mottatt = mottatt,
                     skjemaKode = "skjemaKode",
@@ -46,7 +46,7 @@ class PostgresInnsendingRepositoryTest {
             val endretInnsending =
                 Innsending.rehydrer(
                     innsendingId = innsending.innsendingId,
-                    person = testPerson.copy(ident = "22345678901"),
+                    person = dbTestPerson.copy(ident = "22345678901"),
                     journalpostId = "nyJp",
                     mottatt = mottatt.plusMonths(1),
                     skjemaKode = "nySkjema",
@@ -55,12 +55,12 @@ class PostgresInnsendingRepositoryTest {
                     tilstand = "FERDIGSTILT",
                     vurdering = "Endret vurdering",
                     innsendingResultat = Innsending.InnsendingResultat.Klage(UUIDv7.ny()),
-                    valgtSakId = DBTestHelper.sakId,
+                    valgtSakId = DBTestHelper.dbSakId,
                 )
 
             repository.lagre(innsending = endretInnsending)
             repository.hent(innsending.innsendingId).also {
-                it.person shouldBe testPerson
+                it.person shouldBe dbTestPerson
                 it.journalpostId shouldBe innsending.journalpostId
                 it.mottatt shouldBe innsending.mottatt
                 it.skjemaKode shouldBe innsending.skjemaKode

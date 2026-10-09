@@ -2015,7 +2015,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for behandling av innsending som ferdigstilles`() {
-        val testPerson = DBTestHelper.testPerson
+        val testPerson = DBTestHelper.dbTestPerson
         val behandlingskjedeId = UUIDv7.ny()
         val sakId = behandlingskjedeId
         val søknadId = UUIDv7.ny()
@@ -2029,20 +2029,20 @@ OppgaveMediatorTest {
         val sak =
             Sak(
                 sakId = behandlingskjedeId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                             behandlingskjedeId = behandlingskjedeId,
                         ),
                     utløstAv = DpBehandling.Søknad,

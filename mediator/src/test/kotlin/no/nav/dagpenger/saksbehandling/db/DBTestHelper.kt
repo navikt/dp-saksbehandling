@@ -32,10 +32,9 @@ class DBTestHelper private constructor(
     PersonRepository by PostgresPersonRepository(DatabaseSession(ds)),
     KlageRepository by PostgresKlageRepository(DatabaseSession(ds)) {
     companion object {
-        val sakId = UUIDv7.ny()
-        val søknadId = UUIDv7.ny()
-        val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-        val testPerson =
+        val dbSakId = UUIDv7.ny()
+        val dbOpprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
+        val dbTestPerson =
             Person(
                 id = UUIDv7.ny(),
                 ident = "12345678901",
@@ -53,7 +52,7 @@ class DBTestHelper private constructor(
         }
 
         fun withPerson(
-            person: Person = testPerson,
+            person: Person = dbTestPerson,
             block: DBTestHelper.(DataSource) -> Unit,
         ) {
             Postgres.withMigratedDb { ds ->
@@ -65,7 +64,7 @@ class DBTestHelper private constructor(
         }
 
         fun withSaker(
-            person: Person = testPerson,
+            person: Person = dbTestPerson,
             saker: List<Sak>,
             block: DBTestHelper.(DataSource) -> Unit,
         ) {
@@ -81,11 +80,11 @@ class DBTestHelper private constructor(
         }
 
         fun withSak(
-            person: Person = testPerson,
+            person: Person = dbTestPerson,
             sak: Sak =
                 Sak(
-                    sakId = sakId,
-                    opprettet = opprettetNå,
+                    sakId = dbSakId,
+                    opprettet = dbOpprettetNå,
                 ),
             block: DBTestHelper.(DataSource) -> Unit,
         ) {
@@ -101,18 +100,18 @@ class DBTestHelper private constructor(
         }
 
         fun withBehandling(
-            person: Person = testPerson,
+            person: Person = dbTestPerson,
             behandling: Behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                    opprettet = opprettetNå,
+                    opprettet = dbOpprettetNå,
                     hendelse = TomHendelse,
                 ),
             sak: Sak =
                 Sak(
-                    sakId = sakId,
-                    opprettet = opprettetNå,
+                    sakId = dbSakId,
+                    opprettet = dbOpprettetNå,
                     behandlinger = mutableSetOf(behandling),
                 ),
             block: DBTestHelper.(DataSource) -> Unit,
@@ -123,12 +122,12 @@ class DBTestHelper private constructor(
         )
 
         fun withBehandlinger(
-            person: Person = testPerson,
+            person: Person = dbTestPerson,
             behandlinger: List<Behandling> = emptyList(),
             sak: Sak =
                 Sak(
-                    sakId = sakId,
-                    opprettet = opprettetNå,
+                    sakId = dbSakId,
+                    opprettet = dbOpprettetNå,
                     behandlinger = behandlinger.toMutableSet(),
                 ),
             block: DBTestHelper.(DataSource) -> Unit,
@@ -186,8 +185,8 @@ class DBTestHelper private constructor(
         id: UUID = UUIDv7.ny(),
         tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
         emneknagger: Set<String> = emptySet(),
-        person: Person = testPerson,
-        opprettet: LocalDateTime = opprettetNå,
+        person: Person = dbTestPerson,
+        opprettet: LocalDateTime = dbOpprettetNå,
         type: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         saksbehandlerIdent: String? = null,
@@ -251,13 +250,13 @@ class DBTestHelper private constructor(
         oppgaveId: UUID,
         behandlingId: UUID,
         utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
-        person: Person = testPerson,
+        person: Person = dbTestPerson,
     ) {
         val behandling =
             Behandling(
                 behandlingId = behandlingId,
                 utløstAv = utløstAvType,
-                opprettet = opprettetNå,
+                opprettet = dbOpprettetNå,
                 hendelse = TomHendelse,
             )
         Oppgave

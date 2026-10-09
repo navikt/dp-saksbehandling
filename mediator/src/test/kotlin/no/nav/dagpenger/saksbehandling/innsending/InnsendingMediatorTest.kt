@@ -54,7 +54,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class InnsendingMediatorTest {
-    private val testPerson = DBTestHelper.testPerson
+    private val testPerson = DBTestHelper.dbTestPerson
     private val søkefilterTestperson =
         Søkefilter(
             periode = Periode.UBEGRENSET_PERIODE,
@@ -113,18 +113,18 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger =
                     mutableSetOf(
                         Behandling(
                             behandlingId = behandlingIdSøknad,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                             hendelse =
                                 SøknadsbehandlingOpprettetHendelse(
                                     søknadId = søknadId,
                                     behandlingId = behandlingIdSøknad,
                                     ident = testPerson.ident,
-                                    opprettet = DBTestHelper.opprettetNå,
+                                    opprettet = DBTestHelper.dbOpprettetNå,
                                 ),
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
@@ -141,13 +141,13 @@ class InnsendingMediatorTest {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -297,18 +297,18 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger =
                     mutableSetOf(
                         Behandling(
                             behandlingId = behandlingIdSøknad,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                             hendelse =
                                 SøknadsbehandlingOpprettetHendelse(
                                     søknadId = søknadId,
                                     behandlingId = behandlingIdSøknad,
                                     ident = testPerson.ident,
-                                    opprettet = DBTestHelper.opprettetNå,
+                                    opprettet = DBTestHelper.dbOpprettetNå,
                                 ),
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
@@ -325,13 +325,13 @@ class InnsendingMediatorTest {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -444,20 +444,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -537,20 +537,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -714,20 +714,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -835,20 +835,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -986,20 +986,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1131,20 +1131,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1212,20 +1212,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1296,20 +1296,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
