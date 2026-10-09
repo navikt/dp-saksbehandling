@@ -28,7 +28,6 @@ data class Søkefilter(
     val emneknaggGruppertPerKategori: Map<EmneknaggKategori, Set<String>> = emptyMap(),
     val ekskluderEmneknagger: Set<String> = emptySet(),
     val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
-    val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
     val sorteringsfelt: Sorteringsfelt = Sorteringsfelt.OPPRETTET,
     val sortering: Sortering = Sortering.ASC,

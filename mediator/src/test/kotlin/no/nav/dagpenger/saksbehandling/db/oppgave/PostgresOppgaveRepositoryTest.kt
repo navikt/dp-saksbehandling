@@ -1524,7 +1524,28 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne hente oppgave basert på søknadId`() {
+    fun `Skal hente en oppgave basert på behandlingId`() {
+        DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+            repo.hentOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
+
+            shouldThrow<DataNotFoundException> {
+                repo.hentOppgaveForBehandling(behandlingId = UUIDv7.ny())
+            }
+        }
+    }
+
+    @Test
+    fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
+        DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+            repo.finnOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
+            repo.finnOppgaveForBehandling(behandlingId = UUIDv7.ny()) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente oppgave basert på søknadId og personIdent`() {
         val søknadId = UUIDv7.ny()
         val hendelse =
             SøknadsbehandlingOpprettetHendelse(
@@ -2641,27 +2662,6 @@ class PostgresOppgaveRepositoryTest {
             oppgaver.oppgaver[1] shouldBeSame oppgave1
             oppgaver.oppgaver[2] shouldBeSame oppgave2
             oppgaver.oppgaver[3] shouldBeSame oppgave3
-        }
-    }
-
-    @Test
-    fun `Skal hente en oppgave basert på behandlingId`() {
-        DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo.hentOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
-
-            shouldThrow<DataNotFoundException> {
-                repo.hentOppgaveForBehandling(behandlingId = UUIDv7.ny())
-            }
-        }
-    }
-
-    @Test
-    fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
-        DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
-            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo.finnOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
-            repo.finnOppgaveForBehandling(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
 

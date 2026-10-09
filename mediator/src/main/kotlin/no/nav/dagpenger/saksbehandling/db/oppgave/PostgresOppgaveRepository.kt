@@ -35,7 +35,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
-import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.PostgresUnitOfWork
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -658,14 +657,6 @@ class PostgresOppgaveRepository(
             val behandlingIdClause =
                 søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
 
-            val søknadIdClause =
-                søkeFilter.søknadId?.let {
-                    """
-                    AND hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
-                    AND hend.hendelse_data ->> 'søknadId' = :soknad_id 
-                    """.trimIndent()
-                } ?: ""
-
             val emneknaggClause =
                 when {
                     søkeFilter.emneknaggGruppertPerKategori.isNotEmpty() -> {
@@ -758,7 +749,6 @@ class PostgresOppgaveRepository(
                     emneknaggClause,
                     ekskluderEmneknaggerClause,
                     harDpSakClause,
-                    søknadIdClause,
                 ).toString()
 
             //language=PostgreSQL
@@ -786,7 +776,6 @@ class PostgresOppgaveRepository(
                     "person_ident" to søkeFilter.personIdent,
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,
-                    "soknad_id" to søkeFilter.søknadId?.toString(),
                 )
             sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
             sikkerlogger.info { "Henter oppgaver med følgende SQL: $oppgaverQuery" }
@@ -806,15 +795,6 @@ class PostgresOppgaveRepository(
                         }.asList,
                 )
             OppgaveOversiktResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
-        }
-
-    fun HendelseBehandler.tilBehandlingTypeDTO() =
-        when (this) {
-            is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
-            is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
-            is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
-            is HendelseBehandler.Intern.Oppfølging -> BehandlingTypeDTO.OPPFØLGING
-            is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
         }
 
     fun Row.tilOppgaveOversikt(): OppgaveOversikt =
