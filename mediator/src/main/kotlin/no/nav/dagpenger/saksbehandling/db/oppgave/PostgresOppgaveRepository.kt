@@ -553,6 +553,41 @@ class PostgresOppgaveRepository(
     override fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultat =
         databaseSession.session { session ->
             //language=PostgreSQL
+            val sendtTilKontrollSelect =
+                if (søkeFilter.sorteringsfelt == Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
+                    """
+                    logg.tidspunkt AS sendt_til_kontroll
+                    """.trimIndent()
+                } else {
+                    """
+                    null AS sendt_til_kontroll
+                    """.trimIndent()
+                }
+
+            //language=PostgreSQL
+            val oppgaveOversiktKontrollFrom =
+                if (søkeFilter.sorteringsfelt == Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
+                    """
+                    JOIN        oppgave_tilstand_logg_v1 logg ON logg.id = 
+                        (   SELECT logg2.id
+                            FROM   oppgave_tilstand_logg_v1 logg2
+                            WHERE  logg2.oppgave_id = oppg.id
+                            AND    logg2.tilstand = 'KLAR_TIL_KONTROLL'
+                            AND    logg2.hendelse_type = 'SendTilKontrollHendelse'
+                            AND    logg2.tidspunkt = 
+                            (   SELECT MIN(logg3.tidspunkt)
+                                FROM   oppgave_tilstand_logg_v1 logg3
+                                WHERE  logg3.oppgave_id = oppg.id
+                                AND    logg3.tilstand = 'KLAR_TIL_KONTROLL'
+                                AND    logg3.hendelse_type = 'SendTilKontrollHendelse'
+                            )
+                        )
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+
+            //language=PostgreSQL
             val oppgaveOversiktSelect =
                 """
                 SELECT  oppg.id AS oppgave_id,
@@ -569,7 +604,7 @@ class PostgresOppgaveRepository(
                         tilb.totalt_feilutbetalt_belop,
                         pers.adressebeskyttelse_gradering,
                         pers.skjermes_som_egne_ansatte,
-                        null AS sendt_til_kontroll
+                        $sendtTilKontrollSelect
                 """.trimIndent()
 
             //language=PostgreSQL
@@ -580,37 +615,7 @@ class PostgresOppgaveRepository(
                 JOIN        person_v1         pers ON pers.id = beha.person_id
                 LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
                 LEFT JOIN   hendelse_v1       hend ON hend.behandling_id = beha.id
-                """.trimIndent()
-
-            //language=PostgreSQL
-            val oppgaveOversiktKontrollFrom =
-                """
-                FROM        oppgave_v1               oppg
-                JOIN        behandling_v1            beha ON beha.id = oppg.behandling_id
-                JOIN        person_v1                pers ON pers.id = beha.person_id
-                JOIN        oppgave_tilstand_logg_v1 logg ON logg.id = 
-                    (   SELECT logg2.id
-                        FROM   oppgave_tilstand_logg_v1 logg2
-                        WHERE  logg2.oppgave_id = oppg.id
-                        AND    logg2.tilstand = 'KLAR_TIL_KONTROLL'
-                        AND    logg2.hendelse_type = 'SendTilKontrollHendelse'
-                        AND    logg2.tidspunkt = 
-                        (   SELECT MIN(logg3.tidspunkt)
-                            FROM   oppgave_tilstand_logg_v1 logg3
-                            WHERE  logg3.oppgave_id = oppg.id
-                            AND    logg3.tilstand = 'KLAR_TIL_KONTROLL'
-                            AND    logg3.hendelse_type = 'SendTilKontrollHendelse'
-                            ORDER BY logg3.tidspunkt
-                            LIMIT 1
-                        )
-                    )
-                LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
-                LEFT JOIN   hendelse_v1       hend ON hend.behandling_id = beha.id
-                """.trimIndent()
-
-            val sendtTilKontrollHendelse =
-                """
-                    
+                $oppgaveOversiktKontrollFrom
                 """.trimIndent()
 
             val tilstanderAsText = søkeFilter.tilstander.joinToString { "'$it'" }
@@ -1210,7 +1215,7 @@ private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sort
         }
 
         Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> {
-            TODO()
+            """ ORDER BY logg.tidspunkt ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
         }
     }
 

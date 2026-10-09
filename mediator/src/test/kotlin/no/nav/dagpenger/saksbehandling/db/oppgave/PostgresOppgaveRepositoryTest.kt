@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.EmneknaggKategori
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
@@ -169,7 +170,7 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = Periode.UBEGRENSET_PERIODE,
                             emneknaggGruppertPerKategori = mapOf(),
-                            tilstander = setOf(Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL),
+                            tilstander = setOf(KLAR_TIL_KONTROLL),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = beslutter.navIdent,
@@ -604,7 +605,7 @@ class PostgresOppgaveRepositoryTest {
                         tidspunkt = LocalDateTime.now().minusHours(1),
                     ),
                     Tilstandsendring(
-                        tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                        tilstand = KLAR_TIL_KONTROLL,
                         hendelse =
                             SendTilKontrollHendelse(
                                 oppgaveId = oppgaveId,
@@ -1377,7 +1378,7 @@ class PostgresOppgaveRepositoryTest {
         val tilstandslogg =
             OppgaveTilstandslogg(
                 Tilstandsendring(
-                    tilstand = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+                    tilstand = KLAR_TIL_KONTROLL,
                     hendelse =
                         SendTilKontrollHendelse(
                             oppgaveId = oppgaveIdTest,
@@ -1530,7 +1531,11 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(2),
                 )
             repo.finnOppgaverFor(ola.ident) shouldNotContain oppgave3TilOlaSomIkkeErSøkbar.tilOppgaveOversikt()
-            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave1TilOla.tilOppgaveOversikt(), oppgave2TilOla.tilOppgaveOversikt())
+            repo.finnOppgaverFor(ola.ident) shouldBe
+                listOf(
+                    oppgave1TilOla.tilOppgaveOversikt(),
+                    oppgave2TilOla.tilOppgaveOversikt(),
+                )
             repo.finnOppgaverFor(gry.ident) shouldBe listOf(oppgave1TilGry.tilOppgaveOversikt())
         }
     }
@@ -2164,7 +2169,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne ta imot tilbakekrevingsoppgaver og søke dem frem sortert på feilutbetalt beløp`() {
+    fun `Skal kunne søke dem frem tilbakekrevingsoppgaver sortert på feilutbetalt beløp`() {
         val søknadBehandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
@@ -2263,6 +2268,97 @@ class PostgresOppgaveRepositoryTest {
                     it[1].behandlingId shouldBe tilbakekrevingBehandlingIdMiddels
                     it[2].behandlingId shouldBe tilbakekrevingBehandlingIdMinst
                 }
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver til kontroll og sortere på sendt til kontroll tidspunkt`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val klarTilBehandlingOppgave =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilBehandling,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    opprettet = opprettetNå,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_BEHANDLING,
+                                hendelse = TomHendelse,
+                                tidspunkt = opprettetNå,
+                            ),
+                        ),
+                )
+            val klarTilKontrollIGår =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    opprettet = opprettetNå.minusDays(1),
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(1),
+                            ),
+                        ),
+                )
+            val klarTilKontrollIForgårs =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    opprettet = opprettetNå.minusDays(2),
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(2),
+                            ),
+                        ),
+                )
+            val klarTilKontrollIDag =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    opprettet = opprettetNå,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå,
+                            ),
+                        ),
+                )
+
+            val repo = PostgresOppgaveRepository(DatabaseSession(ds))
+            repo
+                .søk(
+                    søkeFilter =
+                        Søkefilter(
+                            tilstander = setOf(KLAR_TIL_KONTROLL),
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            sorteringsfelt = Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL,
+                            sortering = Søkefilter.Sortering.ASC,
+                        ),
+                ).oppgaver shouldBe
+                listOf(
+                    klarTilKontrollIForgårs.tilOppgaveOversikt(),
+                    klarTilKontrollIGår.tilOppgaveOversikt(),
+                    klarTilKontrollIDag.tilOppgaveOversikt(),
+                )
         }
     }
 
@@ -2912,7 +3008,7 @@ private fun Oppgave.tilOppgaveOversikt(): OppgaveOversikt =
         tilstand = this.tilstand().type,
         utsattTilDato = this.utsattTil(),
         totaltFeilutbetaltBelop = null,
-        sendtTilKontroll = this.tilstandslogg.lastOrNull { it.tilstand == Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL }?.tidspunkt,
+        sendtTilKontroll = this.tilstandslogg.lastOrNull { it.tilstand == KLAR_TIL_KONTROLL }?.tidspunkt,
     )
 
 private fun lagTilbakekrevingHendelse(
