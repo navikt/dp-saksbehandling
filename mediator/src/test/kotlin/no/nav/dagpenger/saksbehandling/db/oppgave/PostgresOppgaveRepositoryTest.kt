@@ -2278,13 +2278,13 @@ class PostgresOppgaveRepositoryTest {
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
                     type = HendelseBehandler.DpBehandling.Søknad,
-                    opprettet = opprettetNå,
+                    opprettet = opprettetNå.minusDays(4),
                     tilstandslogg =
                         OppgaveTilstandslogg(
                             Tilstandsendring(
                                 tilstand = KLAR_TIL_BEHANDLING,
                                 hendelse = TomHendelse,
-                                tidspunkt = opprettetNå,
+                                tidspunkt = opprettetNå.minusDays(4),
                             ),
                         ),
                 )
@@ -2358,6 +2358,22 @@ class PostgresOppgaveRepositoryTest {
                     klarTilKontrollIForgårs.tilOppgaveOversikt(),
                     klarTilKontrollIGår.tilOppgaveOversikt(),
                     klarTilKontrollIDag.tilOppgaveOversikt(),
+                )
+            repo
+                .søk(
+                    søkeFilter =
+                        Søkefilter(
+                            tilstander = setOf(KLAR_TIL_KONTROLL, KLAR_TIL_BEHANDLING),
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            sorteringsfelt = Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL,
+                            sortering = Søkefilter.Sortering.ASC,
+                        ),
+                ).oppgaver shouldBe
+                listOf(
+                    klarTilKontrollIForgårs.tilOppgaveOversikt(),
+                    klarTilKontrollIGår.tilOppgaveOversikt(),
+                    klarTilKontrollIDag.tilOppgaveOversikt(),
+                    klarTilBehandlingOppgave.tilOppgaveOversikt(),
                 )
         }
     }

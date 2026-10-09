@@ -568,7 +568,7 @@ class PostgresOppgaveRepository(
             val oppgaveOversiktKontrollFrom =
                 if (søkeFilter.sorteringsfelt == Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
                     """
-                    JOIN        oppgave_tilstand_logg_v1 logg ON logg.id = 
+                    LEFT JOIN oppgave_tilstand_logg_v1 logg ON logg.id = 
                         (   SELECT logg2.id
                             FROM   oppgave_tilstand_logg_v1 logg2
                             WHERE  logg2.oppgave_id = oppg.id
