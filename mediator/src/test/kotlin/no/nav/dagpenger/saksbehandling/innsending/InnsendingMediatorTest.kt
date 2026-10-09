@@ -14,7 +14,10 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
@@ -31,7 +34,9 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.innsending.InnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetForSøknadHendelse
@@ -50,6 +55,14 @@ import java.time.temporal.ChronoUnit
 
 class InnsendingMediatorTest {
     private val testPerson = DBTestHelper.testPerson
+    private val søkefilterTestperson =
+        Søkefilter(
+            periode = Periode.UBEGRENSET_PERIODE,
+            personIdent = testPerson.ident,
+            tilstander =
+                Oppgave.Tilstand.Type.entries
+                    .toSet(),
+        )
     private val sakId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
     private val behandlingIdSøknad = UUIDv7.ny()
@@ -417,12 +430,12 @@ class InnsendingMediatorTest {
                 sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Klage
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
-            oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.size shouldBe 2
             val klageOppgave =
-                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Klage
+                oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.single {
+                    it.utlostAv == HendelseBehandler.Intern.Klage
                 }
-            klageOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            klageOppgave.tilstand shouldBe KLAR_TIL_BEHANDLING
         }
     }
 
@@ -509,12 +522,12 @@ class InnsendingMediatorTest {
                 sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
-            oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.size shouldBe 2
             val innsendingOppgave =
-                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.single {
+                    it.utlostAv == HendelseBehandler.Intern.Innsending
                 }
-            innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            innsendingOppgave.tilstand shouldBe KLAR_TIL_BEHANDLING
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
         }
     }
@@ -779,10 +792,10 @@ class InnsendingMediatorTest {
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val oppgaveFørAvbryt =
-                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.single {
+                    it.utlostAv == HendelseBehandler.Intern.Innsending
                 }
-            oppgaveFørAvbryt.tilstand() shouldBe Oppgave.Opprettet
+            oppgaveFørAvbryt.tilstand shouldBe OPPRETTET
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
 
             innsendingMediator.automatiskFerdigstill(
@@ -794,10 +807,13 @@ class InnsendingMediatorTest {
                     ),
             )
             val oppgaveEtterAvbryt =
-                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
-                }
-            oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.AvbruttMaskinelt
+                oppgaveMediator
+                    .søk(søkefilter = søkefilterTestperson)
+                    .oppgaver
+                    .single {
+                        it.utlostAv == HendelseBehandler.Intern.Innsending
+                    }
+            oppgaveEtterAvbryt.tilstand shouldBe AVBRUTT_MASKINELT
             val innsendingEtterAvbryt =
                 innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
             innsendingEtterAvbryt.innsendingResultat() shouldBe
