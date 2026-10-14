@@ -61,6 +61,7 @@ import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving
 import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingStatus
 import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMediator
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -135,10 +136,10 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )
 
-            val eldsteOppgaveKlarTilKontroll =
+            val eldsteOppgaveSendtTilKontrollSist =
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
-                    opprettet = opprettetNå.minusDays(14),
+                    opprettet = opprettetNå.minusDays(40),
                     saksbehandlerIdent = saksbehandler.navIdent,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstandslogg =
@@ -160,15 +161,15 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = saksbehandler.navIdent,
                                         utførtAv = saksbehandler,
                                     ),
-                                tidspunkt = opprettetNå.minusDays(3),
+                                tidspunkt = opprettetNå.minusDays(40),
                             ),
                         ),
                 )
 
-            val midtersteOppgaveKlarTilKontroll =
+            val midtersteOppgaveSendtTilKontrollMidt =
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
-                    opprettet = opprettetNå.minusDays(7),
+                    opprettet = opprettetNå.minusDays(30),
                     saksbehandlerIdent = saksbehandler.navIdent,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstandslogg =
@@ -190,14 +191,14 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = saksbehandler.navIdent,
                                         utførtAv = saksbehandler,
                                     ),
-                                tidspunkt = opprettetNå.minusDays(3),
+                                tidspunkt = opprettetNå.minusDays(30),
                             ),
                         ),
                 )
-            val yngsteOppgaveKlarTilKontroll =
+            val yngsteOppgaveSendtTilKontrollFørst =
                 this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
-                    opprettet = opprettetNå.minusDays(1),
+                    opprettet = opprettetNå.minusDays(10),
                     saksbehandlerIdent = saksbehandler.navIdent,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstandslogg =
@@ -209,7 +210,7 @@ class PostgresOppgaveRepositoryTest {
                                         oppgaveId = UUIDv7.ny(),
                                         utførtAv = saksbehandler,
                                     ),
-                                tidspunkt = opprettetNå.minusDays(1),
+                                tidspunkt = opprettetNå.minusDays(5),
                             ),
                             Tilstandsendring(
                                 tilstand = UNDER_BEHANDLING,
@@ -219,13 +220,40 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = saksbehandler.navIdent,
                                         utførtAv = saksbehandler,
                                     ),
-                                tidspunkt = opprettetNå.minusDays(1),
+                                tidspunkt = opprettetNå.minusDays(10),
                             ),
                         ),
                 )
 
-            val nesteOppgave =
-                repo.tildelOgHentNesteOppgave(
+            repo
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutter.navIdent,
+                            utførtAv = beslutter,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknaggGruppertPerKategori = mapOf(),
+                            tilstander = setOf(KLAR_TIL_KONTROLL),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = beslutter.navIdent,
+                            harBeslutterRolle = beslutter.tilganger.contains(TilgangType.BESLUTTER),
+                            sorteringsfelt = TildelNesteOppgaveFilter.Sorteringsfelt.SENDT_TIL_KONTROLL,
+                            sortering = TildelNesteOppgaveFilter.Sortering.ASC,
+                        ),
+                )?.let { nesteOppgave ->
+
+                    nesteOppgave.oppgaveId shouldBe yngsteOppgaveSendtTilKontrollFørst.oppgaveId
+                    nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
+                    nesteOppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+                    nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                } ?: fail { "Forventet å få tildelt oppgaven som først ble sendt til kontroll" }
+
+            repo
+                .tildelOgHentNesteOppgave(
                     nesteOppgaveHendelse =
                         NesteOppgaveHendelse(
                             ansvarligIdent = beslutter.navIdent,
@@ -241,12 +269,13 @@ class PostgresOppgaveRepositoryTest {
                             navIdent = beslutter.navIdent,
                             harBeslutterRolle = beslutter.tilganger.contains(TilgangType.BESLUTTER),
                         ),
-                )!!
+                )?.let { nesteOppgave ->
 
-            nesteOppgave.oppgaveId shouldBe eldsteOppgaveKlarTilKontroll.oppgaveId
-            nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
-            nesteOppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                    nesteOppgave.oppgaveId shouldBe eldsteOppgaveSendtTilKontrollSist.oppgaveId
+                    nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
+                    nesteOppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+                    nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
+                } ?: fail { "Forventet å få tildelt eldste oppgave" }
         }
     }
 
