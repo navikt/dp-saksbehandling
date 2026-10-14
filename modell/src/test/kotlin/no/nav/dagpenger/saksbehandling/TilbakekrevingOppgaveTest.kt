@@ -5,6 +5,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.ModellTestHelper.lagSaksbehandler
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -25,7 +27,69 @@ import java.time.LocalDateTime
 class TilbakekrevingOppgaveTest {
     private val tilbakekrevingBehandlingId = UUIDv7.ny()
     private val eksternBehandlingId = UUIDv7.ny()
-    private val saksbehandler = ModellTestHelper.lagSaksbehandler()
+    private val saksbehandler = ModellTestHelper.lagSaksbehandler(navIdent = "Saksbehandler")
+    private val beslutter = lagSaksbehandler(navIdent = "Beslutter")
+
+    @Test
+    fun `Skal håndtere tilbakekreving hendelse med status AVSLUTTET`() {
+        lagTilbakekrevingOppgave(
+            tilstand = KLAR_TIL_BEHANDLING,
+        ).let { oppgave ->
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
+            oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+        }
+
+        lagTilbakekrevingOppgave(
+            tilstand = UNDER_BEHANDLING,
+            saksbehandler = saksbehandler,
+        ).let { oppgave ->
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
+            oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+            oppgave.sisteSaksbehandlerIdent shouldBe null
+        }
+
+        lagTilbakekrevingOppgave(
+            tilstand = PAA_VENT,
+            saksbehandler = saksbehandler,
+            utsattTil = LocalDate.now().plusDays(10),
+        ).let { oppgave ->
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
+            oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
+            oppgave.sisteSaksbehandlerIdent shouldBe null
+            oppgave.utsattTil() shouldBe null
+        }
+
+        lagTilbakekrevingOppgave(
+            tilstand = KLAR_TIL_KONTROLL,
+            saksbehandler = saksbehandler,
+        ).let { oppgave ->
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+        }
+
+        lagTilbakekrevingOppgave(
+            tilstand = UNDER_KONTROLL,
+            saksbehandler = saksbehandler,
+            beslutter = beslutter,
+        ).let { oppgave ->
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+            oppgave.sisteBeslutterIdent shouldBe beslutter.navIdent
+        }
+
+        lagTilbakekrevingOppgave(
+            tilstand = FERDIG_BEHANDLET,
+            saksbehandler = saksbehandler,
+            beslutter = beslutter,
+        ).let { oppgave ->
+            oppgave.håndter(lagTilbakekrevingHendelse(BehandlingStatus.AVSLUTTET))
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            oppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+            oppgave.sisteBeslutterIdent shouldBe beslutter.navIdent
+        }
+    }
 
     @Test
     fun `Livssyklus test av tilbakekreving med forhåndsvarsel og retur fra kontroll`() {
@@ -229,17 +293,24 @@ class TilbakekrevingOppgaveTest {
         }
     }
 
-    private fun lagTilbakekrevingOppgave(tilstand: Oppgave.Tilstand.Type = OPPRETTET) =
-        lagOppgave(
-            tilstandType = tilstand,
-            behandling =
-                Behandling(
-                    behandlingId = tilbakekrevingBehandlingId,
-                    opprettet = LocalDateTime.now(),
-                    utløstAv = HendelseBehandler.Intern.Tilbakekreving,
-                    hendelse = lagTilbakekrevingHendelse(BehandlingStatus.TIL_FORHÅNDSVARSEL),
-                ),
-        )
+    private fun lagTilbakekrevingOppgave(
+        tilstand: Oppgave.Tilstand.Type = OPPRETTET,
+        saksbehandler: Saksbehandler? = null,
+        beslutter: Saksbehandler? = null,
+        utsattTil: LocalDate? = null,
+    ) = lagOppgave(
+        tilstandType = tilstand,
+        saksbehandler = saksbehandler,
+        beslutter = beslutter,
+        utsattTil = utsattTil,
+        behandling =
+            Behandling(
+                behandlingId = tilbakekrevingBehandlingId,
+                opprettet = LocalDateTime.now(),
+                utløstAv = HendelseBehandler.Intern.Tilbakekreving,
+                hendelse = lagTilbakekrevingHendelse(BehandlingStatus.TIL_FORHÅNDSVARSEL),
+            ),
+    )
 
     private fun lagTilbakekrevingHendelse(
         status: BehandlingStatus,

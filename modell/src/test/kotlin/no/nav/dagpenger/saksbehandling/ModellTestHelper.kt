@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 object ModellTestHelper {
@@ -42,6 +43,7 @@ object ModellTestHelper {
                 kilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
                 kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
             ),
+        utsattTil: LocalDate? = null,
     ): Oppgave {
         val tilstand =
             when (tilstandType) {
@@ -80,7 +82,7 @@ object ModellTestHelper {
             opprettet = LocalDateTime.now(),
             emneknagger = emneknagger,
             tilstand = tilstand,
-            utsattTil = null,
+            utsattTil = utsattTil,
             tilstandslogg = tilstandslogg,
             person = person,
             behandling = behandling,

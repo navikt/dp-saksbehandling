@@ -578,12 +578,7 @@ data class Oppgave private constructor(
                 }
 
                 AVSLUTTET -> {
-                    // TODO: Håndtere at AVSLUTTET kan komme inn i tilstand KLAR_TIL_BEHANDLING
-                    //  pga automatisk avslutting når kravgrunnlaget er 0
-                    logger.warn {
-                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
-                            "i tilstand $type. Ignorerer meldingen."
-                    }
+                    avsluttTilbakekrevingOppgave(oppgave, hendelse)
                 }
 
                 else -> {
@@ -825,12 +820,7 @@ data class Oppgave private constructor(
                 }
 
                 AVSLUTTET -> {
-                    // TODO: Håndtere at AVSLUTTET kan komme inn i tilstand UNDER_BEHANDLING
-                    //  pga automatisk avslutting når kravgrunnlaget er 0
-                    logger.warn {
-                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
-                            "i tilstand ${KlarTilBehandling.type}. Ignorerer meldingen."
-                    }
+                    avsluttTilbakekrevingOppgave(oppgave, hendelse)
                 }
 
                 else -> {
@@ -1048,6 +1038,10 @@ data class Oppgave private constructor(
                     }
                 }
 
+                AVSLUTTET -> {
+                    avsluttTilbakekrevingOppgave(oppgave, hendelse)
+                }
+
                 else -> {
                     logger.warn {
                         "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus} " +
@@ -1146,6 +1140,15 @@ data class Oppgave private constructor(
                                 "${tilbakekrevingHendelse.forrigeBehandlingsstatus}. Ignorerer meldingen."
                         }
                     }
+                }
+
+                AVSLUTTET -> {
+                    logger.warn {
+                        "Mottok TilbakekrevingHendelse med status ${tilbakekrevingHendelse.behandlingsstatus} " +
+                            "i tilstand $type. Forrige behandlingsstatus = " +
+                            "${tilbakekrevingHendelse.forrigeBehandlingsstatus}. Ferdigstiller oppgave."
+                    }
+                    oppgave.endreTilstand(FerdigBehandlet, hendelse)
                 }
 
                 else -> {
@@ -1436,6 +1439,16 @@ data class Oppgave private constructor(
                         .minus(maskinelleTilstander)
                         .minus(utgåtteTilstander)
             }
+        }
+
+        fun avsluttTilbakekrevingOppgave(
+            oppgave: Oppgave,
+            hendelse: TilbakekrevingHendelse,
+        ) {
+            oppgave.sisteSaksbehandlerIdent = null
+            oppgave.behandlerIdent = null
+            oppgave.utsattTil = null
+            oppgave.endreTilstand(AvbruttMaskinelt, hendelse)
         }
 
         fun notat(): Notat? = null
