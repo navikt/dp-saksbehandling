@@ -868,8 +868,8 @@ class PostgresOppgaveRepository(
                     queryOf(
                         //language=PostgreSQL
                         """
-                        SELECT DISTINCT emneknagg
-                        FROM emneknagg_v1
+                        SELECT  emneknagg 
+                        FROM emneknagg_type_v1
                         """.trimIndent(),
                     ).map { row ->
                         row.string("emneknagg")
@@ -1153,6 +1153,21 @@ private fun PostgresUnitOfWork.lagre(
             ).asUpdate,
         )
     }
+    this.lagreEmneknaggTyper(emneknagger)
+}
+
+private fun PostgresUnitOfWork.lagreEmneknaggTyper(emneknagger: Set<String>): List<Int> {
+    val filtrerteEmneknagger = emneknagger.filterNot { it.startsWith("Ettersending") }
+    return session.batchPreparedNamedStatement(
+        //language=PostgreSQL
+        statement =
+            """
+            INSERT INTO emneknagg_type_v1 (emneknagg)
+            VALUES (:emneknagg)
+            ON CONFLICT DO NOTHING
+            """.trimIndent(),
+        params = filtrerteEmneknagger.map { mapOf("emneknagg" to it) },
+    )
 }
 
 private fun PostgresUnitOfWork.lagre(

@@ -1757,6 +1757,19 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `noe med emneknagge`() {
+        DBTestHelper.withMigratedDb { ds ->
+            this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"))
+            this.leggTilOppgave(emneknagger = setOf("hubba"))
+            this.leggTilOppgave(emneknagger = setOf("Ettersending av dokumentasjon", "Ettersending2"))
+
+            PostgresOppgaveRepository(DatabaseSession(ds)).let {
+                it.hentDistinkteEmneknagger() shouldBe setOf("hubba", "bubba")
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
         DBTestHelper.withMigratedDb { ds ->
             val oppgave1 = this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"), opprettet = opprettetNå)
