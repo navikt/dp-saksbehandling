@@ -118,46 +118,111 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Tildel neste ledige kontroll-oppgave ved søk på tilstand KLAR_TIL_KONTROLL`() {
-        val oppgaveIdKlarTilKontroll = UUIDv7.ny()
-        val søknadBehandlingKlarTilBehandling =
-            lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Søknad, opprettet = opprettetNå.minusDays(2))
-        val søknadBehandlingKlarTilKontroll =
-            lagBehandling(utløstAvType = HendelseBehandler.DpBehandling.Søknad, opprettet = opprettetNå.minusDays(1))
-        DBTestHelper.withBehandlinger(
-            person = testPerson,
-            behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
-        ) { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-
-            lagOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
-                opprettet = søknadBehandlingKlarTilBehandling.opprettet,
-                behandling = søknadBehandlingKlarTilBehandling,
-                person = testPerson,
-            ).also { repo.lagre(it) }
-
-            val oppgaveKlarTilKontroll =
-                lagOppgave(
-                    oppgaveId = oppgaveIdKlarTilKontroll,
+            val oppgaveKlarTilBehandling =
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilBehandling,
-                    opprettet = søknadBehandlingKlarTilKontroll.opprettet,
-                    behandling = søknadBehandlingKlarTilKontroll,
-                    person = testPerson,
+                    opprettet = opprettetNå.minusDays(2),
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_BEHANDLING,
+                                hendelse = TomHendelse,
+                                tidspunkt = opprettetNå,
+                            ),
+                        ),
                 )
-            oppgaveKlarTilKontroll.tildel(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgaveIdKlarTilKontroll,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-            )
-            oppgaveKlarTilKontroll.sendTilKontroll(
-                SendTilKontrollHendelse(
-                    oppgaveId = oppgaveIdKlarTilKontroll,
-                    utførtAv = saksbehandler,
-                ),
-            )
-            repo.lagre(oppgaveKlarTilKontroll)
+
+            val eldsteOppgaveKlarTilKontroll =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(14),
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå,
+                            ),
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    SettOppgaveAnsvarHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        ansvarligIdent = saksbehandler.navIdent,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(3),
+                            ),
+                        ),
+                )
+
+            val midtersteOppgaveKlarTilKontroll =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(7),
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(2),
+                            ),
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    SettOppgaveAnsvarHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        ansvarligIdent = saksbehandler.navIdent,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(3),
+                            ),
+                        ),
+                )
+            val yngsteOppgaveKlarTilKontroll =
+                this.leggTilOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(1),
+                    saksbehandlerIdent = saksbehandler.navIdent,
+                    type = HendelseBehandler.DpBehandling.Søknad,
+                    tilstandslogg =
+                        OppgaveTilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(1),
+                            ),
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    SettOppgaveAnsvarHendelse(
+                                        oppgaveId = UUIDv7.ny(),
+                                        ansvarligIdent = saksbehandler.navIdent,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                tidspunkt = opprettetNå.minusDays(1),
+                            ),
+                        ),
+                )
 
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
@@ -178,7 +243,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )!!
 
-            nesteOppgave.behandling.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
+            nesteOppgave.oppgaveId shouldBe eldsteOppgaveKlarTilKontroll.oppgaveId
             nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
             nesteOppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
             nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_KONTROLL
@@ -770,7 +835,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             this.leggTilOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
+                tilstand = Oppgave.UnderBehandling,
                 opprettet = opprettetNå.minusDays(11),
                 saksbehandlerIdent = saksbehandler.navIdent,
             )
@@ -2169,7 +2234,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke dem frem tilbakekrevingsoppgaver sortert på feilutbetalt beløp`() {
+    fun `Skal kunne søke etter tilbakekrevingsoppgaver sortert på feilutbetalt beløp`() {
         val søknadBehandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),

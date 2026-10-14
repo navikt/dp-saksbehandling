@@ -223,6 +223,8 @@ class DBTestHelper private constructor(
                 tilstandslogg = tilstandslogg,
                 behandlerIdent =
                     when (tilstand) {
+                        is Oppgave.KlarTilBehandling -> null
+                        is Oppgave.KlarTilKontroll -> null
                         is Oppgave.UnderKontroll -> beslutterIdent
                         is Oppgave.FerdigBehandlet -> {
                             if (beslutterIdent != null) {
