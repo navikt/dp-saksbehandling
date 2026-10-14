@@ -2263,7 +2263,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter tilbakekrevingsoppgaver sortert på feilutbetalt beløp`() {
+    fun `Skal kunne søke og tildele tilbakekrevingsoppgaver sortert på feilutbetalt beløp`() {
         val søknadBehandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
@@ -2280,12 +2280,13 @@ class PostgresOppgaveRepositoryTest {
                     personRepository = PostgresPersonRepository(databaseSession = databaseSession),
                     oppslag = mockk(relaxed = true),
                 )
+            val oppgaveRepository =
+                PostgresOppgaveRepository(
+                    databaseSession = databaseSession,
+                )
             val oppgaveMediator =
                 OppgaveMediator(
-                    oppgaveRepository =
-                        PostgresOppgaveRepository(
-                            databaseSession = databaseSession,
-                        ),
+                    oppgaveRepository = oppgaveRepository,
                     personMediator = mockk(relaxed = true),
                     behandlingKlient = mockk(relaxed = true),
                     utsendingMediator = mockk(relaxed = true),
@@ -2362,6 +2363,32 @@ class PostgresOppgaveRepositoryTest {
                     it[1].behandlingId shouldBe tilbakekrevingBehandlingIdMiddels
                     it[2].behandlingId shouldBe tilbakekrevingBehandlingIdMinst
                 }
+            oppgaveRepository
+                .tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandler.navIdent,
+                            utførtAv = saksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = Periode.UBEGRENSET_PERIODE,
+                            emneknaggGruppertPerKategori = mapOf(),
+                            tilstander = setOf(KLAR_TIL_BEHANDLING),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = saksbehandler.navIdent,
+                            harBeslutterRolle = saksbehandler.tilganger.contains(TilgangType.SAKSBEHANDLER),
+                            sorteringsfelt = TildelNesteOppgaveFilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP,
+                            sortering = TildelNesteOppgaveFilter.Sortering.DESC,
+                        ),
+                )?.let { nesteOppgave ->
+
+                    nesteOppgave.behandling.behandlingId shouldBe tilbakekrevingBehandlingIdStørst
+                    nesteOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+                    nesteOppgave.sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
+                    nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+                } ?: fail { "Forventet å få tildelt oppgaven med størst totalt feilutbetalt beløp" }
         }
     }
 

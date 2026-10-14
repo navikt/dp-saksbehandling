@@ -419,6 +419,8 @@ paths:
               - saksbehandler
               - beslutter
               - utsattTil
+              - totaltfeilutbetaltbelop
+              - sendttilkontroll
             default: opprettet
         - in: query
           name: sortering
