@@ -10,14 +10,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversikt
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversiktResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
@@ -173,25 +172,18 @@ class OppgaveMediator(
             return
         }
 
+        val søknadId: UUID = requireNotNull(hendelse.søknadId) { "SøknadId må være satt for å kunne finne ettersending" }
         oppgaveRepository
-            .søk(
-                Søkefilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = Tilstand.Type.values,
-                    personIdent = hendelse.ident,
-                    søknadId = hendelse.søknadId,
-                ),
-            ).oppgaver
-            .singleOrNull()
-            ?.let { oppgave ->
+            .finnOppgaveForSøknad(
+                ident = hendelse.ident,
+                søknadId = søknadId,
+            )?.let { oppgave ->
                 oppgave.settEmneknagg(hendelse)
                 oppgaveRepository.lagre(oppgave, ctx)
             } ?: logger.warn {
-            "Fant ingen oppgave for søknad med id ${hendelse.søknadId}. Kunne ikke legge til ettersending."
+            "Fant ingen oppgave for søknad med id $søknadId. Kunne ikke legge til ettersending."
         }
     }
-
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
 
     fun hentOppgave(
         oppgaveId: UUID,
@@ -739,9 +731,9 @@ class OppgaveMediator(
     fun finnOppgaverFor(
         ident: String,
         antall: Int? = 50,
-    ): List<Oppgave> = oppgaveRepository.finnOppgaverFor(ident, antall)
+    ): List<OppgaveOversikt> = oppgaveRepository.finnOppgaverFor(ident, antall)
 
-    fun søk(søkefilter: Søkefilter): OppgaveSøkResultat = oppgaveRepository.søk(søkefilter)
+    fun søk(søkefilter: Søkefilter): OppgaveOversiktResultat = oppgaveRepository.søk(søkefilter)
 
     fun hentDistinkteEmneknagger(): Set<String> = oppgaveRepository.hentDistinkteEmneknagger()
 

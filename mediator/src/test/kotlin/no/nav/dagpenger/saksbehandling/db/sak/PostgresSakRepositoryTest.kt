@@ -23,7 +23,7 @@ import javax.sql.DataSource
 
 class PostgresSakRepositoryTest {
     private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-    private val person = DBTestHelper.testPerson
+    private val person = DBTestHelper.dbTestPerson
 
     private val oppgaveId = UUIDv7.ny()
     private val søknadIdSak1 = UUIDv7.ny()
@@ -38,7 +38,7 @@ class PostgresSakRepositoryTest {
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadIdSak1,
                     behandlingId = behandlingId1iSak1,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = null,
                 ),
@@ -64,7 +64,7 @@ class PostgresSakRepositoryTest {
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId1Sak2,
                     behandlingId = behandlingId1iSak1,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = null,
                 ),
@@ -78,7 +78,7 @@ class PostgresSakRepositoryTest {
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId2Sak2,
                     behandlingId = behandlingId2iSak2,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = behandlingId1iSak2,
                 ),
@@ -156,7 +156,7 @@ class PostgresSakRepositoryTest {
             val hendelse =
                 DpBehandlingOpprettetHendelse(
                     behandlingId = behandlingIdFerietillegg,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = null,
                     behandlingskjedeId = behandlingIdFerietillegg,
@@ -209,7 +209,7 @@ class PostgresSakRepositoryTest {
             val andreSøknadHendelse =
                 DpBehandlingOpprettetHendelse(
                     behandlingId = andreBehandlingIdDpSak,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = null,
                     behandlingskjedeId = andreBehandlingIdDpSak,
@@ -267,7 +267,7 @@ class PostgresSakRepositoryTest {
             val andreSøknadHendelse =
                 DpBehandlingOpprettetHendelse(
                     behandlingId = andreBehandlingIdDpSak,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = null,
                     behandlingskjedeId = andreBehandlingIdDpSak,
@@ -329,7 +329,7 @@ class PostgresSakRepositoryTest {
             val andreSøknadHendelse =
                 DpBehandlingOpprettetHendelse(
                     behandlingId = andreBehandlingIdDpSak,
-                    ident = DBTestHelper.testPerson.ident,
+                    ident = DBTestHelper.dbTestPerson.ident,
                     opprettet = nå,
                     basertPåBehandling = null,
                     behandlingskjedeId = andreBehandlingIdDpSak,
@@ -426,19 +426,19 @@ class PostgresSakRepositoryTest {
 
             sakRepository.finnSakIdForSøknad(
                 søknadId = søknadIdSak1,
-                ident = DBTestHelper.testPerson.ident,
+                ident = DBTestHelper.dbTestPerson.ident,
             ) shouldBe null
 
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(
                 søknadId = søknadIdSak1,
-                ident = DBTestHelper.testPerson.ident,
+                ident = DBTestHelper.dbTestPerson.ident,
             ) shouldBe sak1.sakId
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(
                 søknadId = søknadId1Sak2,
-                ident = DBTestHelper.testPerson.ident,
+                ident = DBTestHelper.dbTestPerson.ident,
             ) shouldBe sak2.sakId
         }
     }

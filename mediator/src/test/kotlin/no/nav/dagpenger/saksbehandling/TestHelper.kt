@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversikt
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Kategori
@@ -103,12 +104,6 @@ internal object TestHelper {
                     ),
                 ),
         )
-
-    val testInnsending = lagInnsending()
-
-    val testOppfølging = lagOppfølging()
-
-    val testKlage = lagKlageBehandling()
 
     fun lagOppfølging(
         id: UUID = UUIDv7.ny(),
@@ -264,6 +259,42 @@ internal object TestHelper {
         }
     }
 
+    fun lagOppgaveOversikt(
+        oppgaveId: UUID = UUIDv7.ny(),
+        personIdent: String = TestHelper.personIdent,
+        skjermesSomEgneAnsatte: Boolean = false,
+        adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+        behandlingId: UUID = TestHelper.behandlingId,
+        saksbehandlerIdent: String? = null,
+        beslutterIdent: String? = null,
+        tilstand: Oppgave.Tilstand.Type = KLAR_TIL_BEHANDLING,
+        opprettet: LocalDateTime = opprettetNå,
+        utløstAv: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
+        utsattTil: LocalDate? = null,
+        emneknagger: Set<String> = emptySet(),
+    ): OppgaveOversikt =
+        OppgaveOversikt(
+            oppgaveId = oppgaveId,
+            behandlingId = behandlingId,
+            personIdent = personIdent,
+            behandlerIdent =
+                when (tilstand) {
+                    UNDER_KONTROLL -> beslutterIdent
+                    else -> saksbehandlerIdent
+                },
+            saksbehandlerIdent = saksbehandlerIdent,
+            beslutterIdent = beslutterIdent,
+            tidspunktOpprettet = opprettet,
+            utlostAv = utløstAv,
+            emneknagger = emneknagger,
+            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+            adressebeskyttelseGradering = adressebeskyttelseGradering,
+            tilstand = tilstand,
+            utsattTilDato = utsattTil,
+            totaltFeilutbetaltBelop = null,
+            sendtTilKontroll = null,
+        )
+
     fun lagOppgave(
         tilstand: Oppgave.Tilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
@@ -275,7 +306,6 @@ internal object TestHelper {
         utsattTil: LocalDate? = null,
         tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         oppgaveId: UUID = UUIDv7.ny(),
-        sistEndret: LocalDateTime = LocalDateTime.now(),
     ): Oppgave =
         Oppgave.rehydrer(
             oppgaveId = oppgaveId,
@@ -327,6 +357,11 @@ internal object TestHelper {
         distribusjonId = "distribusjonId",
         utsendingSak = utsendingSak,
     )
+
+    fun OppgaveMediator.finnOppgaverForPerson(ident: String): List<Oppgave> =
+        this.finnOppgaverFor(ident = ident).map {
+            this.hentOppgave(oppgaveId = it.oppgaveId, saksbehandler = saksbehandler)
+        }
 
     private fun randomFnr(): String {
         val birthDate =

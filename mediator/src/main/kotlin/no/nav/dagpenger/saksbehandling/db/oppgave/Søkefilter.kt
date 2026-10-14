@@ -28,7 +28,6 @@ data class Søkefilter(
     val emneknaggGruppertPerKategori: Map<EmneknaggKategori, Set<String>> = emptyMap(),
     val ekskluderEmneknagger: Set<String> = emptySet(),
     val utløstAvTyper: Set<HendelseBehandler> = emptySet(),
-    val søknadId: UUID? = null,
     val paginering: Paginering? = Paginering.DEFAULT,
     val sorteringsfelt: Sorteringsfelt = Sorteringsfelt.OPPRETTET,
     val sortering: Sortering = Sortering.ASC,
@@ -40,6 +39,8 @@ data class Søkefilter(
         SAKSBEHANDLER,
         BESLUTTER,
         UTSATT_TIL,
+        TOTALT_FEILUTBETALT_BELOP,
+        SENDT_TIL_KONTROLL,
         ;
 
         companion object {
@@ -50,6 +51,8 @@ data class Søkefilter(
                     "saksbehandler" -> SAKSBEHANDLER
                     "beslutter" -> BESLUTTER
                     "utsatttil" -> UTSATT_TIL
+                    "totaltfeilutbetaltbelop" -> TOTALT_FEILUTBETALT_BELOP
+                    "sendttilkontroll" -> SENDT_TIL_KONTROLL
                     else -> OPPRETTET
                 }
         }
@@ -89,21 +92,14 @@ data class Søkefilter(
             saksbehandlerIdent: String,
         ): Søkefilter {
             val builder = FilterBuilder(queryParameters)
-
-            val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
-            val kunTildelteOppgaver = builder.kunTildelteOppgaver() ?: false
             val eksplisittBehandlerIdent = builder.behandlerIdent()
             val utenBehandler = builder.utenBehandler()
-            val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
-            val paginering = builder.paginering()
-            val sorteringsfelt = builder.sorteringsfelt()
-            val sortering = builder.sortering()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
-                tilstander = tilstander,
-                kunTildelteOppgaver = kunTildelteOppgaver,
+                tilstander = builder.tilstander() ?: søkbareTilstander,
+                kunTildelteOppgaver = builder.kunTildelteOppgaver() ?: false,
                 behandlerIdent =
                     when {
                         utenBehandler -> null
@@ -115,10 +111,10 @@ data class Søkefilter(
                 harDpSak = builder.harDpSak(),
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 ekskluderEmneknagger = builder.ekskluderEmneknagger(),
-                utløstAvTyper = utløstAvTyper,
-                paginering = paginering,
-                sorteringsfelt = sorteringsfelt,
-                sortering = sortering,
+                utløstAvTyper = builder.utløstAvTyper() ?: emptySet(),
+                paginering = builder.paginering(),
+                sorteringsfelt = builder.sorteringsfelt(),
+                sortering = builder.sortering(),
             )
         }
     }
@@ -135,6 +131,8 @@ data class TildelNesteOppgaveFilter(
     val harDpSak: Boolean = false,
     val harBeslutterRolle: Boolean = false,
     val navIdent: String,
+    val sorteringsfelt: Sorteringsfelt = Sorteringsfelt.OPPRETTET,
+    val sortering: Sortering = Sortering.ASC,
 ) {
     companion object {
         fun fra(
@@ -142,24 +140,61 @@ data class TildelNesteOppgaveFilter(
             saksbehandler: Saksbehandler,
         ): TildelNesteOppgaveFilter {
             val builder = FilterBuilder(queryString)
-            val egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE)
-            val adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger()
-            val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
-            val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
-            val tilstander = builder.tilstander() ?: emptySet()
 
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknaggGruppertPerKategori = builder.emneknaggGruppertPerKategori(),
                 ekskluderEmneknagger = builder.ekskluderEmneknagger(),
-                tilstander = tilstander,
-                utløstAvTyper = utløstAvTyper,
-                egneAnsatteTilgang = egneAnsatteTilgang,
-                adressebeskyttelseTilganger = adressebeskyttelseTilganger,
+                tilstander = builder.tilstander() ?: emptySet(),
+                utløstAvTyper = builder.utløstAvTyper() ?: emptySet(),
+                egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE),
+                adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger(),
                 harDpSak = builder.harDpSak(),
-                harBeslutterRolle = harBeslutterRolle,
+                harBeslutterRolle = saksbehandler.tilganger.contains(TilgangType.BESLUTTER),
                 navIdent = saksbehandler.navIdent,
+                sorteringsfelt = builder.sorteringsfeltTildelNeste(),
+                sortering = builder.sorteringTildelNeste(),
             )
+        }
+    }
+
+    enum class Sorteringsfelt {
+        OPPRETTET,
+        UTLOST_AV,
+        STATUS,
+        SAKSBEHANDLER,
+        BESLUTTER,
+        UTSATT_TIL,
+        TOTALT_FEILUTBETALT_BELOP,
+        SENDT_TIL_KONTROLL,
+        ;
+
+        companion object {
+            fun fra(verdi: String?): Sorteringsfelt =
+                when (verdi?.trim()?.lowercase()) {
+                    "utlostav" -> UTLOST_AV
+                    "status" -> STATUS
+                    "saksbehandler" -> SAKSBEHANDLER
+                    "beslutter" -> BESLUTTER
+                    "utsatttil" -> UTSATT_TIL
+                    "totaltfeilutbetaltbelop" -> TOTALT_FEILUTBETALT_BELOP
+                    "sendttilkontroll" -> SENDT_TIL_KONTROLL
+                    else -> OPPRETTET
+                }
+        }
+    }
+
+    enum class Sortering {
+        ASC,
+        DESC,
+        ;
+
+        companion object {
+            fun fra(verdi: String?): Sortering =
+                when (verdi?.trim()?.uppercase()) {
+                    "DESC" -> DESC
+                    else -> ASC
+                }
         }
     }
 }
@@ -266,4 +301,9 @@ class FilterBuilder {
     fun sorteringsfelt(): Søkefilter.Sorteringsfelt = Søkefilter.Sorteringsfelt.fra(stringValues["sorteringsfelt"])
 
     fun sortering(): Søkefilter.Sortering = Søkefilter.Sortering.fra(stringValues["sortering"])
+
+    fun sorteringsfeltTildelNeste(): TildelNesteOppgaveFilter.Sorteringsfelt =
+        TildelNesteOppgaveFilter.Sorteringsfelt.fra(stringValues["sorteringsfelt"])
+
+    fun sorteringTildelNeste(): TildelNesteOppgaveFilter.Sortering = TildelNesteOppgaveFilter.Sortering.fra(stringValues["sortering"])
 }

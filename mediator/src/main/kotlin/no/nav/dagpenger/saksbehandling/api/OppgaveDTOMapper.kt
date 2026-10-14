@@ -44,7 +44,8 @@ import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversikt
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversiktResultat
 import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -58,8 +59,11 @@ internal class OppgaveDTOMapper(
 ) {
     private fun SakHistorikk?.tilSakDTOListe(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
         when (this) {
-            null -> emptyList()
-            else ->
+            null -> {
+                emptyList()
+            }
+
+            else -> {
                 this
                     .dagpengeSaker()
                     .map { sak ->
@@ -69,12 +73,16 @@ internal class OppgaveDTOMapper(
                             oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
                         )
                     }
+            }
         }
 
     private fun SakHistorikk?.tilFerietilleggsakDTOListe(oppgaver: List<OppgaveOversiktDTO>): List<SakDTO> =
         when (this) {
-            null -> emptyList()
-            else ->
+            null -> {
+                emptyList()
+            }
+
+            else -> {
                 this
                     .ferietilleggSaker()
                     .map { sak ->
@@ -84,6 +92,7 @@ internal class OppgaveDTOMapper(
                             oppgaver = oppgaver.filter { it.behandlingId in behandlingIder },
                         )
                     }
+            }
         }
 
     suspend fun lagPersonDTO(person: Person): PersonDTO {
@@ -93,14 +102,15 @@ internal class OppgaveDTOMapper(
 
     suspend fun lagPersonOversiktDTO(
         person: Person,
-        oppgaver: List<OppgaveOversiktDTO>,
+        oppgaver: List<OppgaveOversikt>,
     ): PersonOversiktDTO {
         val sakHistorikk = sakMediator.finnSakHistorikk(ident = person.ident)
+        val oppgaveOversiktDTOS = oppgaver.tilOppgaveOversiktDTOListe()
         return PersonOversiktDTO(
             person = lagPersonDTO(person = person),
-            saker = sakHistorikk.tilSakDTOListe(oppgaver),
-            oppgaver = oppgaver,
-            ferietilleggSaker = sakHistorikk.tilFerietilleggsakDTOListe(oppgaver),
+            saker = sakHistorikk.tilSakDTOListe(oppgaveOversiktDTOS),
+            oppgaver = oppgaveOversiktDTOS,
+            ferietilleggSaker = sakHistorikk.tilFerietilleggsakDTOListe(oppgaveOversiktDTOS),
         )
     }
 
@@ -150,7 +160,7 @@ internal class OppgaveDTOMapper(
             behandlingType = oppgave.tilBehandlingTypeDTO(),
             utlostAv = oppgave.tilUtlostAvTypeDTO(),
             emneknagger = oppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
-            tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
+            tilstand = oppgave.tilstand().type.tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
             utsattTilDato = oppgave.utsattTil(),
             saksbehandler = sisteSaksbehandlerDTO,
@@ -163,14 +173,7 @@ internal class OppgaveDTOMapper(
                         sistEndretTidspunkt = it.sistEndretTidspunkt,
                     )
                 },
-            lovligeEndringer =
-                LovligeEndringerDTO(
-                    paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
-                    avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
-                    leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
-                    returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
-                    kvalitetskontrollAarsaker = oppgave.lovligeKvalitetskontrollÅrsaker(),
-                ),
+            lovligeEndringer = oppgave.tilstand().type.tilLovligeEndringerDTO(),
             soknadId = soknadId,
             meldingOmVedtakKilde =
                 when (oppgave.meldingOmVedtakKilde()) {
@@ -272,53 +275,70 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
-        tilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        lovligeEndringer =
-            LovligeEndringerDTO(
-                paaVentAarsaker = this.lovligePåVentÅrsaker(),
-                avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
-                leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
-                returnerTilSaksbehandlingAarsaker = this.lovligeReturnerTilSaksbehandlerÅrsaker(),
-                kvalitetskontrollAarsaker = this.lovligeKvalitetskontrollÅrsaker(),
-            ),
+        tilstand = this.tilstand().type.tilOppgaveTilstandDTO(),
+        lovligeEndringer = this.tilstand().type.tilLovligeEndringerDTO(),
         behandlerIdent = this.behandlerIdent,
         saksbehandlerIdent = this.sisteSaksbehandlerIdent,
         beslutterIdent = this.sisteBeslutterIdent,
         utsattTilDato = this.utsattTil(),
     )
 
-internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> = this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
-
-internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO =
+internal fun OppgaveOversiktResultat.tilOppgaveOversiktResultatDTO(): OppgaveOversiktResultatDTO =
     OppgaveOversiktResultatDTO(
         oppgaver = this.oppgaver.tilOppgaveOversiktDTOListe(),
         totaltAntallOppgaver = this.totaltAntallOppgaver,
     )
 
-internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO =
+internal fun List<OppgaveOversikt>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> =
+    this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
+
+internal fun OppgaveOversikt.tilOppgaveOversiktDTO(): OppgaveOversiktDTO =
+    OppgaveOversiktDTO(
+        oppgaveId = this.oppgaveId,
+        behandlingId = this.behandlingId,
+        personIdent = this.personIdent,
+        behandlerIdent = this.behandlerIdent,
+        saksbehandlerIdent = this.saksbehandlerIdent,
+        beslutterIdent = this.behandlerIdent,
+        tidspunktOpprettet = this.tidspunktOpprettet,
+        behandlingType = this.utlostAv.tilBehandlingTypeDTO(),
+        utlostAv = this.utlostAv.tilUtlostAvTypeDTO(),
+        emneknagger = this.emneknagger.tilOppgaveEmneknaggerDTOListe(),
+        skjermesSomEgneAnsatte = this.skjermesSomEgneAnsatte,
+        adressebeskyttelseGradering = this.adressebeskyttelseGradering.tilAdressebeskyttelseGraderingDTO(),
+        tilstand = this.tilstand.tilOppgaveTilstandDTO(),
+        lovligeEndringer = this.tilstand.tilLovligeEndringerDTO(),
+        utsattTilDato = this.utsattTilDato,
+        totaltFeilutbetaltBelop = this.totaltFeilutbetaltBelop,
+        sendtTilKontroll = this.sendtTilKontroll,
+    )
+
+internal fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO(): OppgaveTilstandDTO =
     when (this) {
-        is Oppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
-        is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
-        is Oppgave.PåVent -> OppgaveTilstandDTO.PAA_VENT
-        is Oppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
-        is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
-        is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
-        is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
-        is Oppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
-        is Oppgave.AvbruttMaskinelt -> OppgaveTilstandDTO.AVBRUTT_MASKINELT
+        Oppgave.Tilstand.Type.OPPRETTET -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
+        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        Oppgave.Tilstand.Type.PAA_VENT -> OppgaveTilstandDTO.PAA_VENT
+        Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
+        Oppgave.Tilstand.Type.UNDER_KONTROLL -> OppgaveTilstandDTO.UNDER_KONTROLL
+        Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
+        Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
+        Oppgave.Tilstand.Type.AVBRUTT -> OppgaveTilstandDTO.AVBRUTT
+        Oppgave.Tilstand.Type.AVBRUTT_MASKINELT -> OppgaveTilstandDTO.AVBRUTT_MASKINELT
     }
 
 internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO =
     TildeltOppgaveDTO(
-        nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        nyTilstand = this.tilstand().type.tilOppgaveTilstandDTO(),
         behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
     )
 
-internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
-    when (this.behandling.utløstAv) {
+internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO = this.behandling.utløstAv.tilBehandlingTypeDTO()
+
+private fun HendelseBehandler.tilBehandlingTypeDTO(): BehandlingTypeDTO =
+    when (this) {
         is HendelseBehandler.DpBehandling -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         is HendelseBehandler.Intern.Klage -> BehandlingTypeDTO.KLAGE
         is HendelseBehandler.Intern.Innsending -> BehandlingTypeDTO.INNSENDING
@@ -326,34 +346,53 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO =
         is HendelseBehandler.Intern.Tilbakekreving -> BehandlingTypeDTO.TILBAKEKREVING
     }
 
-internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = UtlostAvTypeDTO.valueOf(this.behandling.utløstAv.name)
+internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = this.behandling.utløstAv.tilUtlostAvTypeDTO()
 
-internal fun Oppgave.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
-    when (this.tilstand().type) {
+private fun HendelseBehandler.tilUtlostAvTypeDTO(): UtlostAvTypeDTO = UtlostAvTypeDTO.valueOf(this.name)
+
+internal fun Oppgave.Tilstand.Type.lovligePåVentÅrsaker(): List<UtsettOppgaveAarsakDTO> =
+    when (this) {
         UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeAvbrytÅrsaker(): List<AvbrytOppgaveAarsakDTO> =
+    when (this) {
         UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeLeggTilbakeÅrsaker(): List<LeggTilbakeAarsakDTO> =
+    when (this) {
         in setOf(UNDER_BEHANDLING, UNDER_KONTROLL) -> LeggTilbakeAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTilSaksbehandlingAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeReturnerTilSaksbehandlerÅrsaker(): List<ReturnerTilSaksbehandlingAarsakDTO> =
+    when (this) {
         UNDER_KONTROLL -> ReturnerTilSaksbehandlingAarsakDTO.entries
         else -> emptyList()
     }
 
-internal fun Oppgave.lovligeKvalitetskontrollÅrsaker(): List<KvalitetskontrollAarsakDTO> =
-    when (this.tilstand().type) {
+internal fun Oppgave.Tilstand.Type.lovligeKvalitetskontrollÅrsaker(): List<KvalitetskontrollAarsakDTO> =
+    when (this) {
         UNDER_BEHANDLING -> KvalitetskontrollAarsakDTO.entries.minus(KvalitetskontrollAarsakDTO.TOTRINNSKONTROLL)
         else -> emptyList()
+    }
+
+internal fun Oppgave.Tilstand.Type.tilLovligeEndringerDTO(): LovligeEndringerDTO =
+    LovligeEndringerDTO(
+        paaVentAarsaker = this.lovligePåVentÅrsaker(),
+        avbrytAarsaker = this.lovligeAvbrytÅrsaker(),
+        leggTilbakeAarsaker = this.lovligeLeggTilbakeÅrsaker(),
+        returnerTilSaksbehandlingAarsaker = this.lovligeReturnerTilSaksbehandlerÅrsaker(),
+        kvalitetskontrollAarsaker = this.lovligeKvalitetskontrollÅrsaker(),
+    )
+
+internal fun AdressebeskyttelseGradering.tilAdressebeskyttelseGraderingDTO(): AdressebeskyttelseGraderingDTO =
+    when (this) {
+        AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+        AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+        AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+        AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
     }

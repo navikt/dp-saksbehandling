@@ -36,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.FjernOppgaveAnsvarÅrsak
 import no.nav.dagpenger.saksbehandling.KvalitetskontrollÅrsak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
@@ -77,8 +78,8 @@ import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversiktResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -154,24 +155,22 @@ class OppgaveApiTest {
     fun `GET på oppgaver uten query parameters`() {
         val iMorgen = LocalDate.now().plusDays(1)
         val oppgave1 =
-            TestHelper.lagOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
+            TestHelper.lagOppgaveOversikt(
+                tilstand = KLAR_TIL_BEHANDLING,
                 saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
                 utsattTil = iMorgen,
-                person = TestHelper.testPerson,
             )
         val oppgave2 =
-            TestHelper.lagOppgave(
-                tilstand = Oppgave.KlarTilBehandling,
-                person =
-                    TestHelper.lagPerson(
-                        skjermesSomEgneAnsatte = true,
-                    ),
+            TestHelper.lagOppgaveOversikt(
+                tilstand = KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                skjermesSomEgneAnsatte = true,
             )
+
         val oppgave3 =
-            TestHelper.lagOppgave(
-                tilstand = Oppgave.UnderBehandling,
-                person = TestHelper.testPerson,
+            TestHelper.lagOppgaveOversikt(
+                tilstand = UNDER_BEHANDLING,
+                saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
@@ -186,7 +185,7 @@ class OppgaveApiTest {
                             behandlingId = null,
                         ),
                     )
-                } returns PostgresOppgaveRepository.OppgaveSøkResultat(listOf(oppgave1, oppgave2, oppgave3), 3)
+                } returns OppgaveOversiktResultat(listOf(oppgave1, oppgave2, oppgave3), 3)
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -201,10 +200,10 @@ class OppgaveApiTest {
                         "oppgaver": [
                             {
                                 "oppgaveId": "${oppgave1.oppgaveId}",
-                                "behandlingId": "${oppgave1.behandling.behandlingId}",
-                                "personIdent": "${oppgave1.personIdent()}",
+                                "behandlingId": "${oppgave1.behandlingId}",
+                                "personIdent": "${oppgave1.personIdent}",
                                 "emneknagger": [],
-                                "skjermesSomEgneAnsatte": ${oppgave1.person.skjermesSomEgneAnsatte},
+                                "skjermesSomEgneAnsatte": ${oppgave1.skjermesSomEgneAnsatte},
                                 "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                                 "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
                                 "lovligeEndringer": {
@@ -213,14 +212,14 @@ class OppgaveApiTest {
                                     "leggTilbakeAarsaker": []
                                 },
                                 "behandlerIdent": "${oppgave1.behandlerIdent}",
-                                "utsattTilDato": "${oppgave1.utsattTil()}"
+                                "utsattTilDato": "${oppgave1.utsattTilDato}"
                             },
                             {
                                 "oppgaveId": "${oppgave2.oppgaveId}",
-                                "behandlingId": "${oppgave2.behandling.behandlingId}",
-                                "personIdent": "${oppgave2.personIdent()}",
+                                "behandlingId": "${oppgave2.behandlingId}",
+                                "personIdent": "${oppgave2.personIdent}",
                                 "emneknagger": [],
-                                "skjermesSomEgneAnsatte": ${oppgave2.person.skjermesSomEgneAnsatte},
+                                "skjermesSomEgneAnsatte": ${oppgave2.skjermesSomEgneAnsatte},
                                 "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                                 "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
                                 "lovligeEndringer": {
@@ -231,10 +230,10 @@ class OppgaveApiTest {
                             },
                             {
                                 "oppgaveId": "${oppgave3.oppgaveId}",
-                                "behandlingId": "${oppgave3.behandling.behandlingId}",
-                                "personIdent": "${oppgave3.personIdent()}",
+                                "behandlingId": "${oppgave3.behandlingId}",
+                                "personIdent": "${oppgave3.personIdent}",
                                 "emneknagger": [],
-                                "skjermesSomEgneAnsatte": ${oppgave3.person.skjermesSomEgneAnsatte},
+                                "skjermesSomEgneAnsatte": ${oppgave3.skjermesSomEgneAnsatte},
                                 "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                                 "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
                                 "lovligeEndringer": {
@@ -280,10 +279,10 @@ class OppgaveApiTest {
             mockk<OppgaveMediator>().also {
                 val oppgaveSøkResultat =
                     listOf(
-                        TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
-                        TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
+                        TestHelper.lagOppgaveOversikt(tilstand = KLAR_TIL_BEHANDLING),
+                        TestHelper.lagOppgaveOversikt(tilstand = KLAR_TIL_BEHANDLING),
                     ).let {
-                        PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+                        OppgaveOversiktResultat(it, it.size)
                     }
 
                 every {
@@ -318,10 +317,10 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver basert på emneknagg`() {
         val søkResultat =
             listOf(
-                TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
-                TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
+                TestHelper.lagOppgaveOversikt(tilstand = KLAR_TIL_BEHANDLING),
+                TestHelper.lagOppgaveOversikt(tilstand = KLAR_TIL_BEHANDLING),
             ).let {
-                PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+                OppgaveOversiktResultat(it, it.size)
             }
 
         val oppgaveMediatorMock =
@@ -365,10 +364,10 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver med sorteringsfelt og sortering`() {
         val søkResultat =
             listOf(
-                TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
-                TestHelper.lagOppgave(tilstand = Oppgave.KlarTilBehandling),
+                TestHelper.lagOppgaveOversikt(tilstand = KLAR_TIL_BEHANDLING),
+                TestHelper.lagOppgaveOversikt(tilstand = KLAR_TIL_BEHANDLING),
             ).let {
-                PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+                OppgaveOversiktResultat(it, it.size)
             }
 
         val oppgaveMediatorMock =
@@ -406,10 +405,10 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val søkResultat =
             listOf(
-                TestHelper.lagOppgave(tilstand = Oppgave.UnderBehandling),
-                TestHelper.lagOppgave(tilstand = Oppgave.UnderBehandling),
+                TestHelper.lagOppgaveOversikt(tilstand = UNDER_BEHANDLING),
+                TestHelper.lagOppgaveOversikt(tilstand = UNDER_BEHANDLING),
             ).let {
-                PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+                OppgaveOversiktResultat(it, it.size)
             }
 
         val oppgaveMediatorMock =
@@ -1055,7 +1054,7 @@ class OppgaveApiTest {
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         utlostAv = testOppgave.tilUtlostAvTypeDTO(),
                         emneknagger = testOppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
-                        tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
+                        tilstand = testOppgave.tilstand().type.tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
                                 ident = TestHelper.saksbehandler.navIdent,
@@ -1099,11 +1098,11 @@ class OppgaveApiTest {
                         notat = null,
                         lovligeEndringer =
                             LovligeEndringerDTO(
-                                paaVentAarsaker = testOppgave.lovligePåVentÅrsaker(),
-                                avbrytAarsaker = testOppgave.lovligeAvbrytÅrsaker(),
-                                leggTilbakeAarsaker = testOppgave.lovligeLeggTilbakeÅrsaker(),
-                                returnerTilSaksbehandlingAarsaker = testOppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
-                                kvalitetskontrollAarsaker = testOppgave.lovligeKvalitetskontrollÅrsaker(),
+                                paaVentAarsaker = testOppgave.tilstand().type.lovligePåVentÅrsaker(),
+                                avbrytAarsaker = testOppgave.tilstand().type.lovligeAvbrytÅrsaker(),
+                                leggTilbakeAarsaker = testOppgave.tilstand().type.lovligeLeggTilbakeÅrsaker(),
+                                returnerTilSaksbehandlingAarsaker = testOppgave.tilstand().type.lovligeReturnerTilSaksbehandlerÅrsaker(),
+                                kvalitetskontrollAarsaker = testOppgave.tilstand().type.lovligeKvalitetskontrollÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1202,7 +1201,7 @@ class OppgaveApiTest {
                         behandlingType = oppgave.tilBehandlingTypeDTO(),
                         utlostAv = oppgave.tilUtlostAvTypeDTO(),
                         emneknagger = oppgave.emneknagger.tilOppgaveEmneknaggerDTOListe(),
-                        tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
+                        tilstand = oppgave.tilstand().type.tilOppgaveTilstandDTO(),
                         saksbehandler =
                             BehandlerDTO(
                                 ident = TestHelper.saksbehandler.navIdent,
@@ -1234,11 +1233,11 @@ class OppgaveApiTest {
                         notat = null,
                         lovligeEndringer =
                             LovligeEndringerDTO(
-                                paaVentAarsaker = oppgave.lovligePåVentÅrsaker(),
-                                avbrytAarsaker = oppgave.lovligeAvbrytÅrsaker(),
-                                leggTilbakeAarsaker = oppgave.lovligeLeggTilbakeÅrsaker(),
-                                returnerTilSaksbehandlingAarsaker = oppgave.lovligeReturnerTilSaksbehandlerÅrsaker(),
-                                kvalitetskontrollAarsaker = oppgave.lovligeKvalitetskontrollÅrsaker(),
+                                paaVentAarsaker = oppgave.tilstand().type.lovligePåVentÅrsaker(),
+                                avbrytAarsaker = oppgave.tilstand().type.lovligeAvbrytÅrsaker(),
+                                leggTilbakeAarsaker = oppgave.tilstand().type.lovligeLeggTilbakeÅrsaker(),
+                                returnerTilSaksbehandlingAarsaker = oppgave.tilstand().type.lovligeReturnerTilSaksbehandlerÅrsaker(),
+                                kvalitetskontrollAarsaker = oppgave.tilstand().type.lovligeKvalitetskontrollÅrsaker(),
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1325,8 +1324,8 @@ class OppgaveApiTest {
             mockk<OppgaveMediator>().also {
                 every { it.finnOppgaverFor(TestHelper.personIdent) } returns
                     listOf(
-                        TestHelper.lagOppgave(tilstand = Oppgave.FerdigBehandlet),
-                        TestHelper.lagOppgave(tilstand = Oppgave.FerdigBehandlet),
+                        TestHelper.lagOppgaveOversikt(tilstand = FERDIG_BEHANDLET),
+                        TestHelper.lagOppgaveOversikt(tilstand = FERDIG_BEHANDLET),
                     )
             }
         withOppgaveApi(oppgaveMediatorMock) {
@@ -1801,7 +1800,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal auditlogge READ ved søk på oppgaver for en person med id`() {
         val auditlogg = TestAuditlogg()
-        val oppgave = TestHelper.testOppgave
+        val oppgave = TestHelper.lagOppgaveOversikt(personIdent = TestHelper.personIdent)
         val oppgaveMediator =
             mockk<OppgaveMediator>(relaxed = true).also {
                 every { it.finnOppgaverFor(ident = TestHelper.personIdent, antall = any()) } returns listOf(oppgave)
@@ -1825,7 +1824,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal auditlogge READ ved søk på oppgaver for en person med fnr`() {
         val auditlogg = TestAuditlogg()
-        val oppgave = TestHelper.testOppgave
+        val oppgave = TestHelper.lagOppgaveOversikt(personIdent = TestHelper.personIdent)
         val oppgaveMediator =
             mockk<OppgaveMediator>(relaxed = true).also {
                 every { it.finnOppgaverFor(ident = TestHelper.personIdent) } returns listOf(oppgave)

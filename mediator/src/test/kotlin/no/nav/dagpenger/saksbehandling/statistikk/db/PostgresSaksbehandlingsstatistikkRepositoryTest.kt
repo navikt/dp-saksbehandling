@@ -21,7 +21,7 @@ import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.beslutter
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.testPerson
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -69,7 +69,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = sak,
                 oppgave = oppgave,
@@ -86,7 +86,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             mottatt = oppgave.opprettet,
                             sakId = sak.sakId,
                             behandlingId = behandling.behandlingId,
-                            personIdent = testPerson.ident,
+                            personIdent = dbTestPerson.ident,
                             saksbehandlerIdent = null,
                             beslutterIdent = null,
                             versjon = Configuration.versjon,
@@ -265,7 +265,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = sak,
                 oppgave = oppgave,
@@ -282,7 +282,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             mottatt = oppgave.opprettet,
                             sakId = sak.sakId,
                             behandlingId = behandling.behandlingId,
-                            personIdent = testPerson.ident,
+                            personIdent = dbTestPerson.ident,
                             saksbehandlerIdent = null,
                             beslutterIdent = null,
                             versjon = Configuration.versjon,
@@ -327,7 +327,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             mottatt = oppgave.opprettet,
                             sakId = sak.sakId,
                             behandlingId = behandling.behandlingId,
-                            personIdent = testPerson.ident,
+                            personIdent = dbTestPerson.ident,
                             saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
                             beslutterIdent = null,
                             versjon = Configuration.versjon,
@@ -372,7 +372,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             mottatt = oppgave.opprettet,
                             sakId = sak.sakId,
                             behandlingId = behandling.behandlingId,
-                            personIdent = testPerson.ident,
+                            personIdent = dbTestPerson.ident,
                             saksbehandlerIdent = null,
                             beslutterIdent = null,
                             versjon = Configuration.versjon,
@@ -422,7 +422,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = innsendingBehandling,
                 sak = sak,
                 oppgave = innsendingOppgave,
@@ -472,7 +472,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = sak,
                 oppgave = klageOppgave,
@@ -528,7 +528,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = sak,
                 oppgave = klageOppgave,
@@ -599,7 +599,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = sak,
                 oppgave = klageOppgave,
@@ -613,7 +613,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                     .verdi()
             require(påklagetVedtakVerdi is Verdi.UUID) { "Påklaget vedtak må være av typen UUID" }
             ds.insertBehandlingIEksisterendeSak(
-                personId = testPerson.id,
+                personId = dbTestPerson.id,
                 sakId = sak.sakId,
                 behandlingId = påklagetVedtakVerdi.value,
             )
@@ -651,7 +651,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             )
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = tilbakekrevingBehandling,
                 sak = sak,
                 oppgave = tilbakekrevingOppgave,
@@ -680,7 +680,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
         val sak = Sak(opprettet = LocalDateTime.now())
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
-                person = testPerson,
+                person = dbTestPerson,
                 behandling = behandling,
                 sak = sak,
                 oppgave = oppgave,
@@ -717,7 +717,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
             oppgave.behandlingTilGodkjenning(
                 BehandlingTilGodkjenningHendelse(
                     behandlingId = behandling.behandlingId,
-                    ident = testPerson.ident,
+                    ident = dbTestPerson.ident,
                 ),
             )
             PostgresOppgaveRepository(DatabaseSession(ds)).lagre(oppgave)

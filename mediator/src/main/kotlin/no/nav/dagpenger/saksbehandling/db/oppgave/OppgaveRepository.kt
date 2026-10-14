@@ -21,11 +21,9 @@ interface OppgaveRepository {
     fun finnOppgaverFor(
         ident: String,
         antall: Int? = 50,
-    ): List<Oppgave>
+    ): List<OppgaveOversikt>
 
-    fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveSøkResultat
-
-    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
+    fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultat
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
@@ -37,6 +35,11 @@ interface OppgaveRepository {
     fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave
 
     fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave?
+
+    fun finnOppgaveForSøknad(
+        ident: String,
+        søknadId: UUID,
+    ): Oppgave?
 
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 

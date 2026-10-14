@@ -577,6 +577,15 @@ data class Oppgave private constructor(
                     }
                 }
 
+                AVSLUTTET -> {
+                    // TODO: Håndtere at AVSLUTTET kan komme inn i tilstand KLAR_TIL_BEHANDLING
+                    //  pga automatisk avslutting når kravgrunnlaget er 0
+                    logger.warn {
+                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
+                            "i tilstand $type. Ignorerer meldingen."
+                    }
+                }
+
                 else -> {
                     logger.warn {
                         "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
@@ -812,6 +821,15 @@ data class Oppgave private constructor(
                         oppgave.endreTilstand(UnderKontroll(), hendelse)
                         oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT.visningsnavn)
                         oppgave._emneknagger.remove(RETUR_FRA_KONTROLL.visningsnavn)
+                    }
+                }
+
+                AVSLUTTET -> {
+                    // TODO: Håndtere at AVSLUTTET kan komme inn i tilstand UNDER_BEHANDLING
+                    //  pga automatisk avslutting når kravgrunnlaget er 0
+                    logger.warn {
+                        "Mottok TilbakekrevingHendelse med status ${hendelse.tilbakekreving.behandlingsstatus}. " +
+                            "i tilstand ${KlarTilBehandling.type}. Ignorerer meldingen."
                     }
                 }
 

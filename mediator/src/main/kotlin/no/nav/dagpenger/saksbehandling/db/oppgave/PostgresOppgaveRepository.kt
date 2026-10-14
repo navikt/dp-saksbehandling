@@ -77,6 +77,7 @@ private val oppgaveFromBasic =
     """
     FROM        oppgave_v1 oppg
     JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+    JOIN        person_v1     pers ON pers.id = beha.person_id
     LEFT JOIN   hendelse_v1   hend ON hend.behandling_id = beha.id
     """.trimIndent()
 
@@ -176,6 +177,42 @@ class PostgresOppgaveRepository(
                     ""
                 }
 
+            val orderBy = filter.sorteringsfelt.orderByClause(filter.sortering)
+
+            //language=PostgreSQL
+            val sendtTilKontrollSelect =
+                if (filter.sorteringsfelt == TildelNesteOppgaveFilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
+                    """
+                    , kont.tidspunkt AS sendt_til_kontroll
+                    """.trimIndent()
+                } else {
+                    """ 
+                    , null AS sendt_til_kontroll 
+                    """.trimIndent()
+                }
+            //language=PostgreSQL
+            val sendtTilKontrollFrom =
+                if (filter.sorteringsfelt == TildelNesteOppgaveFilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
+                    """
+                    LEFT JOIN oppgave_tilstand_logg_v1 kont ON kont.id = 
+                        (   SELECT logg2.id
+                            FROM   oppgave_tilstand_logg_v1 logg2
+                            WHERE  logg2.oppgave_id = oppg.id
+                            AND    logg2.tilstand = 'KLAR_TIL_KONTROLL'
+                            AND    logg2.hendelse_type = 'SendTilKontrollHendelse'
+                            AND    logg2.tidspunkt = 
+                            (   SELECT MIN(logg3.tidspunkt)
+                                FROM   oppgave_tilstand_logg_v1 logg3
+                                WHERE  logg3.oppgave_id = oppg.id
+                                AND    logg3.tilstand = 'KLAR_TIL_KONTROLL'
+                                AND    logg3.hendelse_type = 'SendTilKontrollHendelse'
+                            )
+                        )
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+
             // Oppdaterer behandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
             // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
             // Det sjekkes derfor mot tilganger i utplukket.
@@ -189,17 +226,21 @@ class PostgresOppgaveRepository(
             // language=SQL
             val selectKlarTilBehandlingOppgaver =
                 """
-                    SELECT   oppg.*
-                    FROM     oppgave_v1    oppg
-                    JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN     person_v1     pers ON pers.id = beha.person_id
-                    WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
-                    AND      oppg.behandler_ident IS NULL
-                    AND      oppg.opprettet >= :fom
-                    AND      oppg.opprettet <  :tom_pluss_1_dag
-                    AND    ( NOT pers.skjermes_som_egne_ansatte
-                          OR :har_tilgang_til_egne_ansatte )
-                    AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
+                    SELECT      oppg.*
+                              , beha.utlost_av
+                              , tilb.totalt_feilutbetalt_belop
+                              , null AS sendt_til_kontroll
+                    FROM        oppgave_v1    oppg
+                    JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN        person_v1     pers ON pers.id = beha.person_id
+                    LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
+                    WHERE       oppg.tilstand = 'KLAR_TIL_BEHANDLING'
+                    AND         oppg.behandler_ident IS NULL
+                    AND         oppg.opprettet >= :fom
+                    AND         oppg.opprettet <  :tom_pluss_1_dag
+                    AND       ( NOT pers.skjermes_som_egne_ansatte
+                             OR :har_tilgang_til_egne_ansatte )
+                    AND         pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
                     AND NOT EXISTS (
                         SELECT 1 FROM inhabilitet_v1 inh
                         WHERE  inh.nav_ident = :navIdent
@@ -212,34 +253,39 @@ class PostgresOppgaveRepository(
 
             // language=SQL
             val selectKlarTilKontrollOppgaver =
-                """
-                    SELECT  oppg.*
-                    FROM    oppgave_v1    oppg
-                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN    person_v1     pers ON pers.id = beha.person_id
-                    JOIN    oppgave_tilstand_logg_v1 logg ON logg.id = 
-                        (   SELECT logg2.id
-                            FROM   oppgave_tilstand_logg_v1 logg2
-                            WHERE  logg2.oppgave_id = oppg.id
-                            AND    logg2.tilstand = 'UNDER_BEHANDLING'
-                            AND    logg2.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
-                            AND    logg2.tidspunkt = 
-                            (   SELECT MAX(logg3.tidspunkt)
-                                FROM   oppgave_tilstand_logg_v1 logg3
-                                WHERE  logg3.oppgave_id = oppg.id
-                                AND    logg3.tilstand = 'UNDER_BEHANDLING'
-                                AND    logg3.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
-                            )
+                """ 
+                    SELECT      oppg.*
+                              , beha.utlost_av
+                              , tilb.totalt_feilutbetalt_belop
+                              $sendtTilKontrollSelect
+                    FROM        oppgave_v1    oppg
+                    JOIN        behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN        person_v1     pers ON pers.id = beha.person_id
+                    JOIN        oppgave_tilstand_logg_v1 logg ON logg.id = 
+                            (   SELECT logg2.id
+                                FROM   oppgave_tilstand_logg_v1 logg2
+                                WHERE  logg2.oppgave_id = oppg.id
+                                AND    logg2.tilstand = 'UNDER_BEHANDLING'
+                                AND    logg2.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
+                                AND    logg2.tidspunkt = 
+                                (   SELECT MAX(logg3.tidspunkt)
+                                    FROM   oppgave_tilstand_logg_v1 logg3
+                                    WHERE  logg3.oppgave_id = oppg.id
+                                    AND    logg3.tilstand = 'UNDER_BEHANDLING'
+                                    AND    logg3.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
+                                )
                         )
-                    WHERE   :har_beslutter_rolle
-                    AND     oppg.tilstand = 'KLAR_TIL_KONTROLL'
-                    AND     oppg.behandler_ident IS NULL
-                    AND     oppg.opprettet >= :fom
-                    AND     oppg.opprettet <  :tom_pluss_1_dag
-                    AND   ( NOT pers.skjermes_som_egne_ansatte
-                         OR :har_tilgang_til_egne_ansatte )
-                    AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
-                    AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
+                    LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
+                    $sendtTilKontrollFrom
+                    WHERE       :har_beslutter_rolle
+                    AND         oppg.tilstand = 'KLAR_TIL_KONTROLL'
+                    AND         oppg.behandler_ident IS NULL
+                    AND         oppg.opprettet >= :fom
+                    AND         oppg.opprettet <  :tom_pluss_1_dag
+                    AND       ( NOT pers.skjermes_som_egne_ansatte
+                             OR :har_tilgang_til_egne_ansatte )
+                    AND         pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
+                    AND         logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
                     AND NOT EXISTS (
                         SELECT 1 FROM inhabilitet_v1 inh
                         WHERE  inh.nav_ident = :navIdent
@@ -255,7 +301,7 @@ class PostgresOppgaveRepository(
                 """
                     SELECT *
                     FROM   alle_oppgaver alop
-                    ORDER BY alop.opprettet, alop.id
+                    $orderBy
                     FETCH FIRST 1 ROWS ONLY
                 )
                 """.trimIndent()
@@ -330,21 +376,11 @@ class PostgresOppgaveRepository(
         }
     }
 
-    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
-        søk(
-            søkeFilter =
-                Søkefilter(
-                    tilstander = setOf(tilstand),
-                    periode = UBEGRENSET_PERIODE,
-                    behandlerIdent = null,
-                ),
-        ).oppgaver
-
-    //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         databaseSession.session { session ->
             session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement =
                         """
                         $oppgaveSelect
@@ -361,7 +397,7 @@ class PostgresOppgaveRepository(
     override fun finnOppgaverFor(
         ident: String,
         antall: Int?,
-    ): List<Oppgave> =
+    ): List<OppgaveOversikt> =
         søk(
             søkeFilter =
                 Søkefilter(
@@ -395,11 +431,11 @@ class PostgresOppgaveRepository(
     override fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave =
         finnOppgaveForBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
-    //language=PostgreSQL
     override fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave? =
         databaseSession.session { session ->
             session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement =
                         """
                         $oppgaveSelect
@@ -407,6 +443,29 @@ class PostgresOppgaveRepository(
                         WHERE       beha.id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    row.rehydrerOppgave()
+                }.asSingle,
+            )
+        }
+
+    override fun finnOppgaveForSøknad(
+        ident: String,
+        søknadId: UUID,
+    ): Oppgave? =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        $oppgaveSelect
+                        $oppgaveFromBasic
+                        WHERE       pers.ident = :ident
+                        AND         hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
+                        AND         hend.hendelse_data ->> 'søknadId' = :soknad_id 
+                        """.trimIndent(),
+                    paramMap = mapOf("ident" to ident, "soknad_id" to søknadId.toString()),
                 ).map { row ->
                     row.rehydrerOppgave()
                 }.asSingle,
@@ -530,19 +589,74 @@ class PostgresOppgaveRepository(
             )
         }
 
-    data class OppgaveSøkResultat(
-        val oppgaver: List<Oppgave>,
-        val totaltAntallOppgaver: Int,
-    )
-
-    override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat =
+    override fun søk(søkeFilter: Søkefilter): OppgaveOversiktResultat =
         databaseSession.session { session ->
             //language=PostgreSQL
-            val oppgaveFromSøk =
+            val sendtTilKontrollSelect =
+                if (søkeFilter.sorteringsfelt == Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
+                    """
+                    logg.tidspunkt AS sendt_til_kontroll
+                    """.trimIndent()
+                } else {
+                    """
+                    null AS sendt_til_kontroll
+                    """.trimIndent()
+                }
+
+            //language=PostgreSQL
+            val oppgaveOversiktKontrollFrom =
+                if (søkeFilter.sorteringsfelt == Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL) {
+                    """
+                    LEFT JOIN oppgave_tilstand_logg_v1 logg ON logg.id = 
+                        (   SELECT logg2.id
+                            FROM   oppgave_tilstand_logg_v1 logg2
+                            WHERE  logg2.oppgave_id = oppg.id
+                            AND    logg2.tilstand = 'KLAR_TIL_KONTROLL'
+                            AND    logg2.hendelse_type = 'SendTilKontrollHendelse'
+                            AND    logg2.tidspunkt = 
+                            (   SELECT MIN(logg3.tidspunkt)
+                                FROM   oppgave_tilstand_logg_v1 logg3
+                                WHERE  logg3.oppgave_id = oppg.id
+                                AND    logg3.tilstand = 'KLAR_TIL_KONTROLL'
+                                AND    logg3.hendelse_type = 'SendTilKontrollHendelse'
+                            )
+                        )
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+
+            //language=PostgreSQL
+            val oppgaveOversiktSelect =
                 """
-                $oppgaveFromBasic
-                JOIN        person_v1     pers ON pers.id = beha.person_id
+                SELECT  oppg.id AS oppgave_id,
+                        oppg.behandling_id,
+                        pers.id AS person_id,
+                        pers.ident AS person_ident,
+                        oppg.behandler_ident,
+                        oppg.siste_saksbehandler_ident,
+                        oppg.siste_beslutter_ident,
+                        oppg.opprettet AS oppgave_opprettet,
+                        beha.utlost_av,
+                        oppg.tilstand,
+                        oppg.utsatt_til,
+                        tilb.totalt_feilutbetalt_belop,
+                        pers.adressebeskyttelse_gradering,
+                        pers.skjermes_som_egne_ansatte,
+                        $sendtTilKontrollSelect
                 """.trimIndent()
+
+            //language=PostgreSQL
+            val oppgaveOversiktFrom =
+                """
+                FROM        oppgave_v1        oppg
+                JOIN        behandling_v1     beha ON beha.id = oppg.behandling_id
+                JOIN        person_v1         pers ON pers.id = beha.person_id
+                LEFT JOIN   tilbakekreving_v1 tilb ON tilb.id = beha.id
+                LEFT JOIN   hendelse_v1       hend ON hend.behandling_id = beha.id
+                $oppgaveOversiktKontrollFrom
+                """.trimIndent()
+
             val tilstanderAsText = søkeFilter.tilstander.joinToString { "'$it'" }
             val tilstandClause =
                 when (søkeFilter.tilstander.isNotEmpty()) {
@@ -586,14 +700,6 @@ class PostgresOppgaveRepository(
 
             val behandlingIdClause =
                 søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
-
-            val søknadIdClause =
-                søkeFilter.søknadId?.let {
-                    """
-                    AND hend.hendelse_type = 'SøknadsbehandlingOpprettetHendelse' 
-                    AND hend.hendelse_data ->> 'søknadId' = :soknad_id 
-                    """.trimIndent()
-                } ?: ""
 
             val emneknaggClause =
                 when {
@@ -664,13 +770,14 @@ class PostgresOppgaveRepository(
                     """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
                 } ?: ""
 
-            // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
-            //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
-
             val antallSelect =
                 """
                 SELECT COUNT(*) as total_count
                 """.trimIndent()
+
+            // OBS: P.g.a. at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
+            //     sjekker vi at "opprettet" er MINDRE enn "til og med datoen + 1 dag".
+            //     Dette for å sikre at vi får med alle oppgaver som er opprettet på tom-datoen, uavhengig av tidspunkt.
             val oppgaveWhere =
                 StringBuilder(
                     """
@@ -687,14 +794,13 @@ class PostgresOppgaveRepository(
                     emneknaggClause,
                     ekskluderEmneknaggerClause,
                     harDpSakClause,
-                    søknadIdClause,
                 ).toString()
 
             //language=PostgreSQL
             val oppgaverQuery =
                 """
-                $oppgaveSelect
-                $oppgaveFromSøk
+                $oppgaveOversiktSelect
+                $oppgaveOversiktFrom
                 $oppgaveWhere
                 $oppgaveOrderBy
                 $oppgaveSøkLimitAndOffset   
@@ -703,7 +809,7 @@ class PostgresOppgaveRepository(
             val antallOppgaverQuery =
                 """
                 $antallSelect
-                $oppgaveFromSøk
+                $oppgaveOversiktFrom
                 $oppgaveWhere
                 """.trimIndent()
 
@@ -715,7 +821,6 @@ class PostgresOppgaveRepository(
                     "person_ident" to søkeFilter.personIdent,
                     "oppgave_id" to søkeFilter.oppgaveId,
                     "behandling_id" to søkeFilter.behandlingId,
-                    "soknad_id" to søkeFilter.søknadId?.toString(),
                 )
             sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
             sikkerlogger.info { "Henter oppgaver med følgende SQL: $oppgaverQuery" }
@@ -731,11 +836,30 @@ class PostgresOppgaveRepository(
                 session.run(
                     queryOf(statement = oppgaverQuery, paramMap = paramMap)
                         .map { row ->
-                            row.rehydrerOppgave()
+                            row.tilOppgaveOversikt()
                         }.asList,
                 )
-            OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
+            OppgaveOversiktResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
+
+    fun Row.tilOppgaveOversikt(): OppgaveOversikt =
+        OppgaveOversikt(
+            oppgaveId = uuid("oppgave_id"),
+            behandlingId = this.uuid("behandling_id"),
+            personIdent = this.string("person_ident"),
+            behandlerIdent = this.stringOrNull("behandler_ident"),
+            saksbehandlerIdent = this.stringOrNull("siste_saksbehandler_ident"),
+            beslutterIdent = this.stringOrNull("siste_beslutter_ident"),
+            tidspunktOpprettet = this.localDateTime("oppgave_opprettet"),
+            utlostAv = HendelseBehandler.valueOf(this.string("utlost_av")),
+            emneknagger = hentEmneknaggerForOppgave(uuid("oppgave_id"), databaseSession),
+            skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(string("adressebeskyttelse_gradering")),
+            tilstand = Oppgave.Tilstand.Type.valueOf(this.string("tilstand")),
+            utsattTilDato = this.localDateOrNull("utsatt_til"),
+            totaltFeilutbetaltBelop = this.doubleOrNull("totalt_feilutbetalt_belop"),
+            sendtTilKontroll = this.localDateTimeOrNull("sendt_til_kontroll"),
+        )
 
     override fun hentDistinkteEmneknagger(): Set<String> =
         databaseSession.session { session ->
@@ -1103,27 +1227,102 @@ private fun Row.rehydrerHendelse(): Hendelse =
 private fun Søkefilter.Sorteringsfelt.orderByClause(sortering: Søkefilter.Sortering): String =
     when (this) {
         Søkefilter.Sorteringsfelt.OPPRETTET -> {
-            """ ORDER BY oppg.opprettet ${sortering.name}, oppg.id ${sortering.name} """
+            """ 
+            ORDER BY oppg.opprettet ${sortering.name}, oppg.id ${sortering.name} 
+            """.trimIndent()
         }
 
         Søkefilter.Sorteringsfelt.UTLOST_AV -> {
-            """ ORDER BY beha.utlost_av ${sortering.name}, oppg.id ${sortering.name} """
+            """ 
+            ORDER BY beha.utlost_av ${sortering.name}, oppg.id ${sortering.name} 
+            """.trimIndent()
         }
 
         Søkefilter.Sorteringsfelt.STATUS -> {
-            """ ORDER BY oppg.tilstand ${sortering.name}, oppg.id ${sortering.name} """
+            """ 
+            ORDER BY oppg.tilstand ${sortering.name}, oppg.id ${sortering.name} 
+            """.trimIndent()
         }
 
         Søkefilter.Sorteringsfelt.SAKSBEHANDLER -> {
-            """ ORDER BY oppg.siste_saksbehandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+            """ 
+            ORDER BY oppg.siste_saksbehandler_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} 
+            """.trimIndent()
         }
 
         Søkefilter.Sorteringsfelt.BESLUTTER -> {
-            """ ORDER BY oppg.siste_beslutter_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+            """ 
+            ORDER BY oppg.siste_beslutter_ident ${sortering.name} NULLS LAST, oppg.id ${sortering.name} 
+            """.trimIndent()
         }
 
         Søkefilter.Sorteringsfelt.UTSATT_TIL -> {
-            """ ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} """
+            """ 
+            ORDER BY oppg.utsatt_til ${sortering.name} NULLS LAST, oppg.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        Søkefilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP -> {
+            """ 
+            ORDER BY tilb.totalt_feilutbetalt_belop ${sortering.name} NULLS LAST, oppg.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        Søkefilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> {
+            """ 
+            ORDER BY logg.tidspunkt ${sortering.name} NULLS LAST, oppg.id ${sortering.name} 
+            """.trimIndent()
+        }
+    }
+
+private fun TildelNesteOppgaveFilter.Sorteringsfelt.orderByClause(sortering: TildelNesteOppgaveFilter.Sortering): String =
+    when (this) {
+        TildelNesteOppgaveFilter.Sorteringsfelt.OPPRETTET -> {
+            """ 
+            ORDER BY alop.opprettet ${sortering.name}, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.UTLOST_AV -> {
+            """ 
+            ORDER BY alop.utlost_av ${sortering.name}, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.STATUS -> {
+            """ 
+            ORDER BY alop.tilstand ${sortering.name}, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.SAKSBEHANDLER -> {
+            """ 
+            ORDER BY alop.siste_saksbehandler_ident ${sortering.name} NULLS LAST, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.BESLUTTER -> {
+            """ 
+            ORDER BY alop.siste_beslutter_ident ${sortering.name} NULLS LAST, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.UTSATT_TIL -> {
+            """ 
+            ORDER BY alop.utsatt_til ${sortering.name} NULLS LAST, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.TOTALT_FEILUTBETALT_BELOP -> {
+            """ 
+            ORDER BY alop.totalt_feilutbetalt_belop ${sortering.name} NULLS LAST, alop.id ${sortering.name} 
+            """.trimIndent()
+        }
+
+        TildelNesteOppgaveFilter.Sorteringsfelt.SENDT_TIL_KONTROLL -> {
+            """ 
+            ORDER BY alop.sendt_til_kontroll ${sortering.name} NULLS LAST, alop.id ${sortering.name} 
+            """.trimIndent()
         }
     }
 

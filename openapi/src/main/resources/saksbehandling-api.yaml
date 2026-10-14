@@ -419,6 +419,8 @@ paths:
               - saksbehandler
               - beslutter
               - utsattTil
+              - totaltfeilutbetaltbelop
+              - sendttilkontroll
             default: opprettet
         - in: query
           name: sortering
@@ -1733,6 +1735,12 @@ components:
         utsattTilDato:
           type: string
           format: date
+        totaltFeilutbetaltBelop:
+          type: number
+          format: double
+        sendtTilKontroll:
+          type: string
+          format: date-time
       required:
         - oppgaveId
         - behandlingId
