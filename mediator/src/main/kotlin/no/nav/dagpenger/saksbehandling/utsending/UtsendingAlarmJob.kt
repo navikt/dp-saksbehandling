@@ -21,7 +21,7 @@ internal class UtsendingAlarmJob(
 
     override suspend fun executeJob() {
         utsendingAlarmRepository
-            .hentVentendeUtsendinger(4)
+            .hentVentendeUtsendinger(1)
             .also {
                 logger.info { "Fant ${it.size} ventende utsendinger: $it" }
             }.forEach {
