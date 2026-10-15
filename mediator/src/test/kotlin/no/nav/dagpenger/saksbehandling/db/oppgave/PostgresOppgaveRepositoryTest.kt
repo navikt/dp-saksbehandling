@@ -1757,7 +1757,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `noe med emneknagge`() {
+    fun `Skal lagre distinkte emneknagger`() {
         DBTestHelper.withMigratedDb { ds ->
             this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"))
             this.leggTilOppgave(emneknagger = setOf("hubba"))
