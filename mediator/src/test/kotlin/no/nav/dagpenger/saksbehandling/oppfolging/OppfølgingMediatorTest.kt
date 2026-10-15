@@ -6,6 +6,8 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -29,7 +31,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 class OppfølgingMediatorTest {
-    private val testPerson = DBTestHelper.testPerson
+    private val testPerson = DBTestHelper.dbTestPerson
     private val saksbehandler = Saksbehandler(navIdent = "saksbehandler1", emptySet())
 
     @Test
@@ -84,7 +86,7 @@ class OppfølgingMediatorTest {
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
-            oppgaver.first().behandling.utløstAv shouldBe HendelseBehandler.Intern.Oppfølging
+            oppgaver.first().utlostAv shouldBe HendelseBehandler.Intern.Oppfølging
             oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
 
             oppgaveMediator.tildelOppgave(
@@ -169,13 +171,12 @@ class OppfølgingMediatorTest {
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             oppgaver.size shouldBe 1
-            oppgaver.first().behandling.utløstAv shouldBe HendelseBehandler.Intern.Oppfølging
-            oppgaver.first().emneknagger shouldBe setOf("MeldekortKorrigering")
-            oppgaver.first().tilstand() shouldBe Oppgave.PåVent
+            oppgaver.first().utlostAv shouldBe HendelseBehandler.Intern.Oppfølging
+            oppgaver.first().emneknagger shouldBe listOf("MeldekortKorrigering")
+            oppgaver.first().tilstand shouldBe PAA_VENT
             oppgaver.first().behandlerIdent shouldBe saksbehandler.navIdent
-            oppgaver.first().sisteSaksbehandlerIdent shouldBe saksbehandler.navIdent
-            oppgaver.first().utsattTil() shouldBe utsattFrist
-            oppgaver.first().tilstandslogg.size shouldBe 2
+            oppgaver.first().saksbehandlerIdent shouldBe saksbehandler.navIdent
+            oppgaver.first().utsattTilDato shouldBe utsattFrist
         }
     }
 
@@ -308,9 +309,9 @@ class OppfølgingMediatorTest {
             )
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
-            val nyOppgave = oppgaver.first { it.tilstand() == Oppgave.PåVent }
-            nyOppgave.tilstand() shouldBe Oppgave.PåVent
-            nyOppgave.utsattTil() shouldBe frist
+            val nyOppgave = oppgaver.first { it.tilstand == PAA_VENT }
+            nyOppgave.tilstand shouldBe PAA_VENT
+            nyOppgave.utsattTilDato shouldBe frist
             nyOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
@@ -380,8 +381,7 @@ class OppfølgingMediatorTest {
             )
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
-            val nyOppgave = oppgaver.first { it.tilstand() == Oppgave.KlarTilBehandling }
-            nyOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            val nyOppgave = oppgaver.first { it.tilstand == KLAR_TIL_BEHANDLING }
             nyOppgave.behandlerIdent shouldBe null
         }
     }

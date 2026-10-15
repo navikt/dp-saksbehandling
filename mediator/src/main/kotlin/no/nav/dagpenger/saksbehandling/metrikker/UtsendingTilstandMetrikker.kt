@@ -5,6 +5,7 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
@@ -21,6 +22,9 @@ fun oppdaterUtsendingTilstandMetrikker(dataSource: DataSource) {
     try {
         val oppgaveTilstandDistribusjon = hentUtsendingTilstandDistribusjon(dataSource)
 
+        Utsending.Tilstand.Type.entries.forEach {
+            utsendingTilstandGauge.labelValues(it.name).set(0.0)
+        }
         oppgaveTilstandDistribusjon.forEach { distribusjon ->
             utsendingTilstandGauge.labelValues(distribusjon.utsendingTilstand).set(distribusjon.antall.toDouble())
         }

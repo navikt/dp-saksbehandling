@@ -419,6 +419,8 @@ paths:
               - saksbehandler
               - beslutter
               - utsattTil
+              - totaltfeilutbetaltbelop
+              - sendttilkontroll
             default: opprettet
         - in: query
           name: sortering
@@ -1034,29 +1036,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        default:
-          description: Feil
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-
-  /klage/opprett:
-    post:
-      summary: Oppretter en klage fra en applikasjon (p.t. dp-mottak)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpprettKlage'
-      responses:
-        '200':
-          description: Vellykket oppretting av klage og tilhørende oppgave
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OppgaveOversikt'
         default:
           description: Feil
           content:
@@ -1762,6 +1741,12 @@ components:
         utsattTilDato:
           type: string
           format: date
+        totaltFeilutbetaltBelop:
+          type: number
+          format: double
+        sendtTilKontroll:
+          type: string
+          format: date-time
       required:
         - oppgaveId
         - behandlingId

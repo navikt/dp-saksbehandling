@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.finnOppgaverForPerson
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
@@ -64,8 +65,11 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.innsending.PostgresInnsendingRepository
 import no.nav.dagpenger.saksbehandling.db.kjørendeTransaksjoner
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveOversikt
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -253,7 +257,7 @@ OppgaveMediatorTest {
                 personMediator = mockk(relaxed = true),
                 oppgaveRepository =
                     mockk<OppgaveRepository>().also {
-                        every { it.finnOppgaveFor(behandlingId = any()) } returns null
+                        every { it.finnOppgaveForBehandling(behandlingId = any()) } returns null
                     },
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
@@ -1437,7 +1441,7 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val søknadOppgave = oppgaveMediator.finnOppgaverFor(testIdent).single()
+            val søknadOppgave = oppgaveMediator.finnOppgaverForPerson(testIdent).single()
 
             val ettersendingSomManglerSøknadId =
                 InnsendingMottattHendelse(
@@ -2011,7 +2015,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for behandling av innsending som ferdigstilles`() {
-        val testPerson = DBTestHelper.testPerson
+        val testPerson = DBTestHelper.dbTestPerson
         val behandlingskjedeId = UUIDv7.ny()
         val sakId = behandlingskjedeId
         val søknadId = UUIDv7.ny()
@@ -2025,20 +2029,20 @@ OppgaveMediatorTest {
         val sak =
             Sak(
                 sakId = behandlingskjedeId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                             behandlingskjedeId = behandlingskjedeId,
                         ),
                     utløstAv = DpBehandling.Søknad,
@@ -2108,9 +2112,9 @@ OppgaveMediatorTest {
                     kategori = Kategori.KLAGE,
                 ),
             )
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single { oppgave ->
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single { oppgave ->
                     oppgave.behandling.utløstAv == Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe KlarTilBehandling
@@ -2124,7 +2128,7 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator
-                .finnOppgaverFor(ident = testPerson.ident)
+                .finnOppgaverForPerson(ident = testPerson.ident)
                 .single { oppgave ->
                     oppgave.behandling.utløstAv == Intern.Innsending
                 }.tilstand() shouldBe UnderBehandling
@@ -2138,7 +2142,7 @@ OppgaveMediatorTest {
                 ),
             )
             oppgaveMediator
-                .finnOppgaverFor(ident = testPerson.ident)
+                .finnOppgaverForPerson(ident = testPerson.ident)
                 .single { oppgave ->
                     oppgave.behandling.utløstAv == Intern.Innsending
                 }.tilstand() shouldBe FerdigBehandlet
@@ -2183,18 +2187,7 @@ OppgaveMediatorTest {
                 opprettet = LocalDateTime.now(),
                 behandlingskjedeId = UUIDv7.ny(),
             )
-        sakMediator.opprettSak(
-            ident = hendelse.ident,
-            behandlingskjedeId = hendelse.behandlingskjedeId!!,
-            behandling =
-                Behandling(
-                    behandlingId = hendelse.behandlingId,
-                    utløstAv = DpBehandling.Søknad,
-                    opprettet = hendelse.opprettet,
-                    hendelse = hendelse,
-                ),
-        )
-
+        sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
         val oppgave =
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -2463,26 +2456,14 @@ OppgaveMediatorTest {
                 )
 
             if (hendelse is SøknadsbehandlingOpprettetHendelse) {
-                val sak =
-                    sakMediator.opprettSak(
-                        ident = hendelse.ident,
-                        behandlingskjedeId = hendelse.behandlingskjedeId!!,
-                        behandling =
-                            Behandling(
-                                behandlingId = hendelse.behandlingId,
-                                opprettet = hendelse.opprettet,
-                                hendelse = hendelse,
-                                utløstAv = DpBehandling.Søknad,
-                            ),
-                    )
-                requireNotNull(sak)
-
+                sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
+                val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = hendelse.behandlingId)
                 sakMediator.knyttTilSak(
                     behandlingOpprettetHendelse =
                         BehandlingOpprettetHendelse(
                             behandlingId = hendelse.behandlingId,
                             ident = hendelse.ident,
-                            sakId = sak.sakId,
+                            sakId = sakId,
                             opprettet = hendelse.opprettet,
                             type = DpBehandling.Søknad,
                         ),
@@ -2492,4 +2473,14 @@ OppgaveMediatorTest {
             test(dataSource, oppgaveMediator)
         }
     }
+
+    private fun OppgaveMediator.hentAlleOppgaverMedTilstand(tilstandType: Type): List<OppgaveOversikt> =
+        this
+            .søk(
+                søkefilter =
+                    Søkefilter(
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        tilstander = setOf(tilstandType),
+                    ),
+            ).oppgaver
 }

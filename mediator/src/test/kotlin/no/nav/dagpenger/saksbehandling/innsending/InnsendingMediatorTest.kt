@@ -14,13 +14,17 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT_MASKINELT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.finnOppgaverForPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
@@ -50,7 +54,15 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class InnsendingMediatorTest {
-    private val testPerson = DBTestHelper.testPerson
+    private val testPerson = DBTestHelper.dbTestPerson
+    private val søkefilterTestperson =
+        Søkefilter(
+            periode = Periode.UBEGRENSET_PERIODE,
+            personIdent = testPerson.ident,
+            tilstander =
+                Oppgave.Tilstand.Type.entries
+                    .toSet(),
+        )
     private val sakId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
     private val behandlingIdSøknad = UUIDv7.ny()
@@ -101,18 +113,18 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger =
                     mutableSetOf(
                         Behandling(
                             behandlingId = behandlingIdSøknad,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                             hendelse =
                                 SøknadsbehandlingOpprettetHendelse(
                                     søknadId = søknadId,
                                     behandlingId = behandlingIdSøknad,
                                     ident = testPerson.ident,
-                                    opprettet = DBTestHelper.opprettetNå,
+                                    opprettet = DBTestHelper.dbOpprettetNå,
                                 ),
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
@@ -129,13 +141,13 @@ class InnsendingMediatorTest {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -222,9 +234,9 @@ class InnsendingMediatorTest {
                 sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).size shouldBe 2
             val innsendingOppgave =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
                     it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
@@ -285,18 +297,18 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger =
                     mutableSetOf(
                         Behandling(
                             behandlingId = behandlingIdSøknad,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                             hendelse =
                                 SøknadsbehandlingOpprettetHendelse(
                                     søknadId = søknadId,
                                     behandlingId = behandlingIdSøknad,
                                     ident = testPerson.ident,
-                                    opprettet = DBTestHelper.opprettetNå,
+                                    opprettet = DBTestHelper.dbOpprettetNå,
                                 ),
                             utløstAv = HendelseBehandler.DpBehandling.Søknad,
                         ),
@@ -313,13 +325,13 @@ class InnsendingMediatorTest {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -418,12 +430,12 @@ class InnsendingMediatorTest {
                 sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Klage
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.size shouldBe 2
             val klageOppgave =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Klage
+                oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.single {
+                    it.utlostAv == HendelseBehandler.Intern.Klage
                 }
-            klageOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            klageOppgave.tilstand shouldBe KLAR_TIL_BEHANDLING
         }
     }
 
@@ -432,20 +444,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -510,12 +522,12 @@ class InnsendingMediatorTest {
                 sak.behandlinger().first().utløstAv shouldBe HendelseBehandler.Intern.Innsending
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
-            oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).size shouldBe 2
+            oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.size shouldBe 2
             val innsendingOppgave =
-                oppgaveMediator.finnOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.single {
+                    it.utlostAv == HendelseBehandler.Intern.Innsending
                 }
-            innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            innsendingOppgave.tilstand shouldBe KLAR_TIL_BEHANDLING
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
         }
     }
@@ -525,20 +537,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -702,20 +714,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -780,10 +792,10 @@ class InnsendingMediatorTest {
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val oppgaveFørAvbryt =
-                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
+                oppgaveMediator.søk(søkefilter = søkefilterTestperson).oppgaver.single {
+                    it.utlostAv == HendelseBehandler.Intern.Innsending
                 }
-            oppgaveFørAvbryt.tilstand() shouldBe Oppgave.Opprettet
+            oppgaveFørAvbryt.tilstand shouldBe OPPRETTET
             innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).size shouldBe 1
 
             innsendingMediator.automatiskFerdigstill(
@@ -795,10 +807,13 @@ class InnsendingMediatorTest {
                     ),
             )
             val oppgaveEtterAvbryt =
-                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
-                    it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
-                }
-            oppgaveEtterAvbryt.tilstand() shouldBe Oppgave.AvbruttMaskinelt
+                oppgaveMediator
+                    .søk(søkefilter = søkefilterTestperson)
+                    .oppgaver
+                    .single {
+                        it.utlostAv == HendelseBehandler.Intern.Innsending
+                    }
+            oppgaveEtterAvbryt.tilstand shouldBe AVBRUTT_MASKINELT
             val innsendingEtterAvbryt =
                 innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
             innsendingEtterAvbryt.innsendingResultat() shouldBe
@@ -820,20 +835,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -908,7 +923,7 @@ class InnsendingMediatorTest {
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val innsendingOppgave =
-                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
                     it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
@@ -944,7 +959,7 @@ class InnsendingMediatorTest {
             ferdigstiltInnsending.tilstand() shouldBe "FERDIGSTILT"
 
             val ferdigbehandletOppgave =
-                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
                     it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             ferdigbehandletOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
@@ -971,20 +986,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1059,7 +1074,7 @@ class InnsendingMediatorTest {
             } ?: fail("Sak med id ${sak.sakId} ikke funnet")
 
             val innsendingOppgave =
-                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
                     it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
@@ -1095,7 +1110,7 @@ class InnsendingMediatorTest {
             ferdigstiltInnsending.tilstand() shouldBe "FERDIGSTILT"
 
             val ferdigbehandletOppgave =
-                oppgaveMediator.finnAlleOppgaverFor(ident = testPerson.ident).single {
+                oppgaveMediator.finnOppgaverForPerson(ident = testPerson.ident).single {
                     it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             ferdigbehandletOppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
@@ -1116,20 +1131,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1197,20 +1212,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = sakId,
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1281,20 +1296,20 @@ class InnsendingMediatorTest {
         val sak =
             Sak(
                 sakId = UUIDv7.ny(),
-                opprettet = DBTestHelper.opprettetNå,
+                opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
                     behandlingId = behandlingIdSøknad,
-                    opprettet = DBTestHelper.opprettetNå,
+                    opprettet = DBTestHelper.dbOpprettetNå,
                     hendelse =
                         SøknadsbehandlingOpprettetHendelse(
                             søknadId = søknadId,
                             behandlingId = behandlingIdSøknad,
                             ident = testPerson.ident,
-                            opprettet = DBTestHelper.opprettetNå,
+                            opprettet = DBTestHelper.dbOpprettetNå,
                         ),
                     utløstAv = HendelseBehandler.DpBehandling.Søknad,
                 )
@@ -1388,14 +1403,4 @@ class InnsendingMediatorTest {
             innsendingEtter.tilstand() shouldNotBe "FERDIGSTILT"
         }
     }
-
-    private fun OppgaveMediator.finnAlleOppgaverFor(ident: String): List<Oppgave> =
-        this
-            .søk(
-                Søkefilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
-                    tilstander = Oppgave.Tilstand.Type.values,
-                    personIdent = ident,
-                ),
-            ).oppgaver
 }

@@ -24,7 +24,9 @@ class UtsendingAlarmRepositoryTest {
     @Test
     fun `Skal kunne hente utsendinger som ikke er ferdig distribuert`() {
         val nå = LocalDateTime.now()
-        val tjueFireTimerSiden = nå.minusHours(24)
+        val for59MinutterSiden = nå.minusMinutes(59)
+        val for1TimeOg1MinuttSiden = nå.minusMinutes(61)
+        val fir24TimerSiden = nå.minusHours(24)
         val person = lagPerson()
         val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
         val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
@@ -32,48 +34,60 @@ class UtsendingAlarmRepositoryTest {
         val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.Intern.Klage)
         val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
         val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
+        val behandling7 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = HendelseBehandler.DpBehandling.Søknad)
 
         DBTestHelper.withBehandlinger(
             person = person,
-            behandlinger = listOf(behandling1, behandling2, behandling3, behandling4, behandling5, behandling6),
+            behandlinger = listOf(behandling1, behandling2, behandling3, behandling4, behandling5, behandling6, behandling7),
         ) { ds ->
             val repository = UtsendingAlarmRepository(ds)
             ds.lagreUtsending(
                 tilstand = VenterPåVedtak,
-                tidspunkt = tjueFireTimerSiden,
+                tidspunkt = fir24TimerSiden,
                 behandling = behandling1,
                 person = person,
             )
             ds.lagreUtsending(
                 tilstand = AvventerArkiverbarVersjonAvBrev,
-                tidspunkt = tjueFireTimerSiden,
+                tidspunkt = for1TimeOg1MinuttSiden,
                 behandling = behandling2,
                 person = person,
             )
             ds.lagreUtsending(
                 tilstand = AvventerJournalføring,
-                tidspunkt = tjueFireTimerSiden,
+                tidspunkt = fir24TimerSiden,
                 behandling = behandling3,
                 person = person,
             )
             ds.lagreUtsending(
                 tilstand = AvventerDistribuering,
-                tidspunkt = tjueFireTimerSiden,
+                tidspunkt = for1TimeOg1MinuttSiden,
                 behandling = behandling4,
                 person = person,
             )
+            // Denne skal ikke hentes fordi den er distribuert
             ds.lagreUtsending(
                 tilstand = Distribuert,
-                tidspunkt = tjueFireTimerSiden,
+                tidspunkt = fir24TimerSiden,
                 behandling = behandling5,
+                person = person,
             )
+            // Denne skal ikke hentes fordi den er avbrutt
             ds.lagreUtsending(
                 tilstand = Avbrutt,
-                tidspunkt = tjueFireTimerSiden,
+                tidspunkt = fir24TimerSiden,
                 behandling = behandling6,
+                person = person,
+            )
+            // Denne skal ikke hentes fordi den er yngre enn 1 time
+            ds.lagreUtsending(
+                tilstand = VenterPåVedtak,
+                tidspunkt = for59MinutterSiden,
+                behandling = behandling7,
+                person = person,
             )
 
-            val ventendeUtsendinger = repository.hentVentendeUtsendinger(intervallAntallTimer = 23)
+            val ventendeUtsendinger = repository.hentVentendeUtsendinger(intervallAntallTimer = 1)
             ventendeUtsendinger.size shouldBe 4
             ventendeUtsendinger.map { it.tilstand } shouldBe
                 listOf(

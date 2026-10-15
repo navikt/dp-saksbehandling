@@ -6,7 +6,6 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -77,32 +76,22 @@ class PostgresKlageRepositoryTest {
                     opprettet = LocalDateTime.now(),
                     behandlingskjedeId = UUIDv7.ny(),
                 )
-            val sak =
-                sakMediator.opprettSak(
-                    ident = testPerson.ident,
-                    behandlingskjedeId = UUIDv7.ny(),
-                    behandling =
-                        Behandling(
-                            behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                            opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                            hendelse = søknadsbehandlingOpprettetHendelse,
-                            utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                        ),
-                )
-            requireNotNull(sak)
+
+            sakMediator.opprettEllerKnyttTilSak(hendelse = søknadsbehandlingOpprettetHendelse)
+            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId)!!
             sakMediator.knyttTilSak(
                 behandlingOpprettetHendelse =
                     BehandlingOpprettetHendelse(
                         behandlingId = klageId,
                         ident = testPerson.ident,
-                        sakId = sak.sakId,
+                        sakId = sakId,
                         opprettet = LocalDateTime.now(),
                         type = HendelseBehandler.Intern.Klage,
                     ),
             )
             val klageRepository = PostgresKlageRepository(DatabaseSession(ds))
 
-            test(klageRepository, sak.sakId)
+            test(klageRepository, sakId)
         }
     }
 

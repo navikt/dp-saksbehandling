@@ -62,6 +62,7 @@ import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmRepository
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingBehandler
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingMediator
 import no.nav.dagpenger.saksbehandling.oppfolging.OpprettOppgaveMottak
+import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilAlertRepository
 import no.nav.dagpenger.saksbehandling.oppgave.OppgaveTilstandAlertJob
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
@@ -370,7 +371,7 @@ internal class ApplicationBuilder(
                 )
                 OppgaveTilstandAlertJob(
                     rapidsConnection = rapid,
-                    oppgaveMediator = oppgaveMediator,
+                    oppgaveTilAlertRepository = OppgaveTilAlertRepository(databaseSession),
                 ).startJob(
                     period = 1.Dag,
                 )

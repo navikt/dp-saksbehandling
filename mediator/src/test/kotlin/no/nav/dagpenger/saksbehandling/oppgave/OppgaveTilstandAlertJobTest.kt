@@ -5,27 +5,37 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.AlertManager
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class OppgaveTilstandAlertJobTest {
     private val testRapid = TestRapid()
-    val oppgave = lagOppgave(tilstand = Oppgave.Opprettet)
+
+    private val oppgaver =
+        listOf(
+            AlertManager.OppgaveOpprettetTilstandAlert(
+                oppgaveId = UUIDv7.ny(),
+                sistEndret = LocalDateTime.now(),
+                utløstAvType = HendelseBehandler.valueOf("SØKNAD"),
+            ),
+            AlertManager.OppgaveOpprettetTilstandAlert(
+                oppgaveId = UUIDv7.ny(),
+                sistEndret = LocalDateTime.now().minusMinutes(5),
+                utløstAvType = HendelseBehandler.valueOf("MELDEKORT"),
+            ),
+        )
 
     @Test
     fun sendUtAlert() {
         runBlocking {
             OppgaveTilstandAlertJob(
                 rapidsConnection = testRapid,
-                oppgaveMediator =
-                    mockk<OppgaveMediator>().also {
-                        every { it.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.OPPRETTET) } returns
-                            listOf(
-                                oppgave,
-                                oppgave,
-                            )
+                oppgaveTilAlertRepository =
+                    mockk<OppgaveTilAlertRepository>().also {
+                        every { it.hentOppgaverSomSkalVarsles() } returns oppgaver
                     },
             ).executeJob()
         }

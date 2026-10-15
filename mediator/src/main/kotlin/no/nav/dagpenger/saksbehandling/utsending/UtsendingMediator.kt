@@ -239,7 +239,7 @@ class UtsendingMediator(
             sakId: String,
         ): String =
             coroutineScope {
-                val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
+                val oppgave = oppgaveRepository.hentOppgaveForBehandling(behandlingId)
                 val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
                 val saksbehandler =
                     async(Dispatchers.IO) {

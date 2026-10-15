@@ -1,6 +1,10 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
 import io.kotest.matchers.shouldBe
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.GaugeSnapshot
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
@@ -20,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
@@ -208,6 +213,70 @@ class MetrikkJobTest {
 
                 faktiskAntall shouldBe forventetAntall
             }
+        }
+    }
+
+    @Test
+    fun `Nullstiller tilstander uten oppføringer`() {
+        val oppgaveId = UUIDv7.ny()
+
+        DBTestHelper.withBehandlinger(
+            person = person,
+            behandlinger = listOf(behandling1),
+        ) { ds ->
+            val oppgaveRepository = PostgresOppgaveRepository(DatabaseSession(ds))
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
+
+            val oppgave = lagOppgave(oppgaveId = oppgaveId, tilstand = KlarTilBehandling, behandling = behandling1)
+            oppgaveRepository.lagre(oppgave)
+            val utsending =
+                lagUtsending(
+                    tilstand = Utsending.VenterPåVedtak,
+                    behandlingId = behandling1.behandlingId,
+                )
+            utsendingRepository.lagre(utsending)
+
+            oppdaterOppgaveTilstandMetrikker(ds)
+            oppdaterOppgaveTilstandSiste24TimerMetrikker(ds)
+            oppdaterUtsendingTilstandMetrikker(ds)
+
+            fun gaugeValue(
+                metricName: String,
+                tilstand: String,
+            ) = PrometheusRegistry.defaultRegistry
+                .getSnapShot<GaugeSnapshot> { it == metricName }
+                .dataPoints
+                .single { it.labels["tilstand"] == tilstand }
+                .value
+
+            gaugeValue("dp_saksbehandling_oppgave_tilstand_gauge", KLAR_TIL_BEHANDLING.name) shouldBe 1.0
+            gaugeValue("dp_saksbehandling_oppgave_tilstand_siste_24_t_gauge", KLAR_TIL_BEHANDLING.name) shouldBe 1.0
+            gaugeValue("dp_saksbehandling_utsending_tilstand_gauge", Utsending.Tilstand.Type.VenterPåVedtak.name) shouldBe 1.0
+
+            sessionOf(ds).use { session ->
+                session.run(
+                    queryOf(
+                        "UPDATE oppgave_v1 SET tilstand = ? WHERE id = ?",
+                        "FERDIG_BEHANDLET",
+                        oppgaveId,
+                    ).asUpdate,
+                )
+                session.run(
+                    queryOf(
+                        "UPDATE utsending_v1 SET tilstand = ? WHERE id = ?",
+                        Utsending.Tilstand.Type.Avbrutt.name,
+                        utsending.id,
+                    ).asUpdate,
+                )
+            }
+
+            oppdaterOppgaveTilstandMetrikker(ds)
+            oppdaterOppgaveTilstandSiste24TimerMetrikker(ds)
+            oppdaterUtsendingTilstandMetrikker(ds)
+
+            gaugeValue("dp_saksbehandling_oppgave_tilstand_gauge", KLAR_TIL_BEHANDLING.name) shouldBe 0.0
+            gaugeValue("dp_saksbehandling_oppgave_tilstand_siste_24_t_gauge", KLAR_TIL_BEHANDLING.name) shouldBe 0.0
+            gaugeValue("dp_saksbehandling_utsending_tilstand_gauge", Utsending.Tilstand.Type.VenterPåVedtak.name) shouldBe 0.0
         }
     }
 }

@@ -10,7 +10,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
@@ -22,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingFerdigstilt
 import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
-import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
@@ -33,28 +31,6 @@ fun Route.klageApi(
     applicationCallParser: ApplicationCallParser,
     auditlogg: Auditlogg,
 ) {
-    authenticate("azureAd-maskin") {
-        route("klage/opprett") {
-            post {
-                val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
-                mediator
-                    .opprettKlage(
-                        klageMottattHendelse =
-                            KlageMottattHendelse(
-                                opprettet = klage.opprettet,
-                                journalpostId = klage.journalpostId,
-                                utførtAv = Applikasjon.DpMottak,
-                                ident = klage.personIdent.ident,
-                                sakId = klage.sakId,
-                            ),
-                    ).let { oppgave ->
-
-                        call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
-                    }
-            }
-        }
-    }
-
     authenticate("azureAd") {
         route("klage") {
             route("opprett-manuelt") {
