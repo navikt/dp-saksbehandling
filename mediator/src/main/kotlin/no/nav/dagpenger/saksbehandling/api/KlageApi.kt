@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -14,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageDTO
-import no.nav.dagpenger.saksbehandling.api.models.KlageAvslutningNotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
@@ -77,31 +75,6 @@ fun Route.klageApi(
                             saksbehandler = saksbehandler,
                         )
                     call.respond(HttpStatusCode.OK, klageDTO)
-                }
-                route("trekk") {
-                    put {
-                        val behandlingId = call.finnUUID("behandlingId")
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val notat =
-                            call.request.headers[HttpHeaders.ContentType]
-                                ?.let { call.receive<KlageAvslutningNotatDTO>().notat }
-                        val klageBehandling =
-                            mediator.avbrytKlage(
-                                hendelse =
-                                    AvbruttHendelse(
-                                        behandlingId = behandlingId,
-                                        årsak = Emneknagg.AvbrytKlage.AVBRUTT_TRUKKET_KLAGE,
-                                        utførtAv = saksbehandler,
-                                        notat = notat,
-                                    ),
-                            )
-                        auditlogg.oppdater(
-                            melding = "Trakk klagebehandling med id $behandlingId",
-                            ident = klageBehandling.personIdent(),
-                            saksbehandler = saksbehandler.navIdent,
-                        )
-                        call.respond(HttpStatusCode.NoContent)
-                    }
                 }
                 route("avbryt") {
                     post {
