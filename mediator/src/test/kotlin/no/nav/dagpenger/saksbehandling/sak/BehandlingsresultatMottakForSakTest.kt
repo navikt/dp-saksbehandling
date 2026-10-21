@@ -24,7 +24,7 @@ class BehandlingsresultatMottakForSakTest {
 
     @Test
     @Suppress("ktlint:standard:max-line-length")
-    fun `skal oppdatere merket er_dp_sak og  publisere melding om vedtak fattet utenfor Arena hvis vedtak gjelder innvilgelse av søknad`() {
+    fun `Skal sette er_dp_sak true og publisere melding om vedtak fattet utenfor Arena ved første vedtak i brukers første sak i DP-sak`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val sakMediatorMock =
             mockk<SakMediator>().also {
@@ -33,6 +33,7 @@ class BehandlingsresultatMottakForSakTest {
         val sakRepositoryMock =
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                every { it.finnSisteDagpengeSakId(ident) } returns null
             }
         BehandlingsresultatMottakForSak(
             rapidsConnection = testRapid,
@@ -68,6 +69,52 @@ class BehandlingsresultatMottakForSakTest {
     }
 
     @Test
+    @Suppress("ktlint:standard:max-line-length")
+    fun `Skal sette er_dp_sak true og publisere melding om vedtak fattet i ny sak ved første vedtak i ny sak som ikke er brukers første sak i DP-sak`() {
+        val hendelse = slot<VedtakFattetHendelse>()
+        val sakMediatorMock =
+            mockk<SakMediator>().also {
+                every { it.merkSakenSomDpSak(any()) } just Runs
+            }
+        val sakRepositoryMock =
+            mockk<SakRepository>().also {
+                every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                every { it.finnSisteDagpengeSakId(ident) } returns UUIDv7.ny()
+            }
+        BehandlingsresultatMottakForSak(
+            rapidsConnection = testRapid,
+            sakRepository = sakRepositoryMock,
+            sakMediator = sakMediatorMock,
+        )
+        testRapid.sendTestMessage(
+            behandlingsresultatJson(),
+        )
+        verify(exactly = 1) {
+            sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
+        }
+        hendelse.captured.ident shouldBe ident
+        hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
+        hendelse.captured.behandletHendelseType shouldBe "Søknad"
+        hendelse.captured.sak.let {
+            require(it != null)
+            it.id shouldBe sakId.toString()
+            it.kontekst shouldBe "Dagpenger"
+        }
+        hendelse.captured.automatiskBehandlet shouldBe false
+
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).also { message ->
+            message["@event_name"].stringValue() shouldBe "vedtak_fattet_i_ny_sak"
+            message["behandlingId"].stringValue() shouldBe behandlingId.toString()
+            message["søknadId"].stringValue() shouldBe søknadId.toString()
+            message["sakId"].stringValue() shouldBe sakId.toString()
+            message["ident"].stringValue() shouldBe ident
+            message["førteTil"].stringValue() shouldBe "Innvilgelse"
+        }
+    }
+
+    @Test
     fun `Skal ikke markere er_dp_sak dersom behandling resultat er innvilgelse av gjenopptak`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
@@ -77,7 +124,9 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultatJson(harRett = true, basertPå = UUIDv7.ny()))
+        testRapid.sendTestMessage(
+            behandlingsresultatJson(hendelseType = "Søknad", harRett = true, førteTil = "Innvilgelse", basertPå = UUIDv7.ny()),
+        )
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
@@ -95,7 +144,9 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultatJson(harRett = false, basertPå = UUIDv7.ny()))
+        testRapid.sendTestMessage(
+            behandlingsresultatJson(hendelseType = "Søknad", harRett = false, førteTil = "Avslag", basertPå = UUIDv7.ny()),
+        )
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
@@ -113,6 +164,7 @@ class BehandlingsresultatMottakForSakTest {
         val sakRepositoryMock =
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                every { it.finnSisteDagpengeSakId(ident) } returns null
             }
         BehandlingsresultatMottakForSak(
             rapidsConnection = testRapid,
@@ -120,7 +172,7 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultatJson(harRett = false))
+        testRapid.sendTestMessage(behandlingsresultatJson(hendelseType = "Søknad", harRett = false, førteTil = "Avslag"))
 
         verify(exactly = 1) {
             sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
@@ -138,6 +190,7 @@ class BehandlingsresultatMottakForSakTest {
             message["behandlingId"].stringValue() shouldBe behandlingId.toString()
             message["sakId"].stringValue() shouldBe sakId.toString()
             message["ident"].stringValue() shouldBe ident
+            message["førteTil"].stringValue() shouldBe "Avslag"
         }
     }
 
@@ -151,7 +204,7 @@ class BehandlingsresultatMottakForSakTest {
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(behandlingsresultatJson(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingsresultatJson(hendelseType = "Meldekort"))
 
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
@@ -163,7 +216,7 @@ class BehandlingsresultatMottakForSakTest {
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
-        behandletHendelseType: String = "Søknad",
+        hendelseType: String = "Søknad",
         harRett: Boolean = true,
         basertPå: UUID? = null,
         førteTil: String = "Innvilgelse",
@@ -172,7 +225,7 @@ class BehandlingsresultatMottakForSakTest {
             ident = ident,
             behandlingId = behandlingId,
             behandletHendelseId = søknadId,
-            behandletHendelseType = behandletHendelseType,
+            behandletHendelseType = hendelseType,
             harRett = harRett,
             basertPå = basertPå,
             førteTil = førteTil,
