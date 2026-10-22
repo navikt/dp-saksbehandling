@@ -7,6 +7,8 @@ metadata:
     team: teamdagpenger
     domene: behandling
     subteam: stsb
+    okonomisystem: "false"
+    fagsystem: DAGPENGER
 spec:
   image: "{{ image }}"
   startup:
