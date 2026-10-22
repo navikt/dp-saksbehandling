@@ -38,7 +38,7 @@ internal class BehandlingsresultatMottakForSak(
 
             if (behandlingsresultat.vedtakFattetINySak()) {
                 val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
-                logger.info { "Vedtak skal tilhøre dp-sak " }
+                logger.info { "Vedtak fattet i ny sak" }
                 val vedtakFattetHendelse =
                     packet.vedtakFattetHendelse(
                         sak =
@@ -62,6 +62,7 @@ internal class BehandlingsresultatMottakForSak(
                                     NyDagpengesak(
                                         erFørsteDpSak = (sisteDagpengesakId == null),
                                         behandlingId = behandlingId,
+                                        // Forutsetter: override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
                                         søknadId = behandlingsresultat.behandletHendelseId,
                                         ident = ident,
                                         sakId = sakId,
