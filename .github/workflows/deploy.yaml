@@ -64,7 +64,7 @@ jobs:
   deploy-dev:
     name: Deploy to dev
     needs: [ build ]
-    if: github.ref == 'refs/heads/feat/sak_nummer_2'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: dev-gcp
     permissions:
