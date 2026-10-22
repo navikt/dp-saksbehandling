@@ -70,7 +70,7 @@ class BehandlingsresultatMottakForSakTest {
 
     @Test
     @Suppress("ktlint:standard:max-line-length")
-    fun `Skal sette er_dp_sak true og publisere melding om vedtak fattet i ny sak ved første vedtak i ny sak som ikke er brukers første sak i DP-sak`() {
+    fun `Skal publisere melding om vedtak fattet i ny sak når første vedtak fattes i brukers sak i DP-sak og det ikke er den første DP-saken`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val sakMediatorMock =
             mockk<SakMediator>().also {
@@ -89,20 +89,9 @@ class BehandlingsresultatMottakForSakTest {
         testRapid.sendTestMessage(
             behandlingsresultatJson(),
         )
-        verify(exactly = 1) {
+        verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
         }
-        hendelse.captured.ident shouldBe ident
-        hendelse.captured.behandlingId shouldBe behandlingId
-        hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
-        hendelse.captured.behandletHendelseType shouldBe "Søknad"
-        hendelse.captured.sak.let {
-            require(it != null)
-            it.id shouldBe sakId.toString()
-            it.kontekst shouldBe "Dagpenger"
-        }
-        hendelse.captured.automatiskBehandlet shouldBe false
-
         testRapid.inspektør.size shouldBe 1
         testRapid.inspektør.message(0).also { message ->
             message["@event_name"].stringValue() shouldBe "vedtak_fattet_i_ny_sak"

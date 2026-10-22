@@ -49,8 +49,10 @@ internal class BehandlingsresultatMottakForSak(
                         behandlingsresultat = behandlingsresultat,
                     )
 
-                val sisteDagpengesakId = sakRepository.finnSisteDagpengeSakId(ident)
-                sakMediator.merkSakenSomDpSak(vedtakFattetHendelse = vedtakFattetHendelse)
+                val erFørsteDpSak = (sakRepository.finnSisteDagpengeSakId(ident) == null)
+                if (erFørsteDpSak) {
+                    sakMediator.merkSakenSomDpSak(vedtakFattetHendelse = vedtakFattetHendelse)
+                }
 
                 context.publish(
                     key = ident,
@@ -59,7 +61,7 @@ internal class BehandlingsresultatMottakForSak(
                             .newMessage(
                                 map =
                                     NyDagpengesak(
-                                        erFørsteDpSak = (sisteDagpengesakId == null),
+                                        erFørsteDpSak = erFørsteDpSak,
                                         behandlingId = behandlingId,
                                         // Forutsetter: override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
                                         søknadId = behandlingsresultat.behandletHendelseId,
