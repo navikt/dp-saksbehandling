@@ -49,9 +49,8 @@ internal class BehandlingsresultatMottakForSak(
                         behandlingsresultat = behandlingsresultat,
                     )
 
-                sakMediator.merkSakenSomDpSak(vedtakFattetHendelse = vedtakFattetHendelse)
-
                 val sisteDagpengesakId = sakRepository.finnSisteDagpengeSakId(ident)
+                sakMediator.merkSakenSomDpSak(vedtakFattetHendelse = vedtakFattetHendelse)
 
                 context.publish(
                     key = ident,
