@@ -279,7 +279,7 @@ internal class ApplicationBuilder(
                 )
 
                 server.application.install(KafkaStreamsPlugin) {
-                    navn = "skjerming-og-adressebeskyttelse"
+                    name = "skjerming-og-adressebeskyttelse"
                     kafkaStreams =
                         kafkaStreams(Configuration.kafkaStreamProperties) {
                             skjermetPersonStatus(

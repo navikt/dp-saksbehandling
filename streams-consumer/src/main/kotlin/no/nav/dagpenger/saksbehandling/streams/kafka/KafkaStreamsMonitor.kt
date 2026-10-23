@@ -10,11 +10,11 @@ import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler.StreamThr
 private val log = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-class KafkaStreamsOvervåker(
-    private val navn: String,
+class KafkaStreamsMonitor(
+    private val name: String,
     registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
 ) {
-    private val kjører: Gauge =
+    private val running: Gauge =
         Gauge
             .builder()
             .name("dp_saksbehandling_kafka_streams_kjorer")
@@ -22,7 +22,7 @@ class KafkaStreamsOvervåker(
             .labelNames("instans")
             .register(registry)
 
-    private val feil: Counter =
+    private val errors: Counter =
         Counter
             .builder()
             .name("dp_saksbehandling_kafka_streams_feil")
@@ -31,28 +31,25 @@ class KafkaStreamsOvervåker(
             .register(registry)
 
     init {
-        kjører.labelValues(navn).set(0.0)
-        feil.labelValues(navn)
+        running.labelValues(name).set(0.0)
+        errors.labelValues(name)
     }
 
-    fun uhåndtertFeil(throwable: Throwable): StreamThreadExceptionResponse {
-        feil.labelValues(navn).inc()
-        // Exception-meldinger kan inneholde fnr, derfor kun klassenavn i vanlig logg
-        log.error { "Kafka Streams '$navn' stoppet pga uhåndtert feil: ${throwable.rotårsak().javaClass.name}. Se sikkerlogg." }
-        sikkerlogg.error(throwable) { "Kafka Streams '$navn' stoppet pga uhåndtert feil" }
+    fun onUncaughtException(throwable: Throwable): StreamThreadExceptionResponse {
+        errors.labelValues(name).inc()
+        log.error { "Kafka Streams '$name' stoppet pga uhåndtert feil. Se sikkerlogg." }
+        sikkerlogg.error(throwable) { "Kafka Streams '$name' stoppet pga uhåndtert feil" }
         return StreamThreadExceptionResponse.SHUTDOWN_CLIENT
     }
 
-    fun tilstandEndret(
-        ny: KafkaStreams.State,
-        gammel: KafkaStreams.State,
+    fun onStateChange(
+        newState: KafkaStreams.State,
+        oldState: KafkaStreams.State,
     ) {
-        kjører.labelValues(navn).set(if (ny.isRunningOrRebalancing) 1.0 else 0.0)
-        when (ny) {
-            KafkaStreams.State.ERROR -> log.error { "Kafka Streams '$navn' gikk fra $gammel til $ny" }
-            else -> log.info { "Kafka Streams '$navn' gikk fra $gammel til $ny" }
+        running.labelValues(name).set(if (newState.isRunningOrRebalancing) 1.0 else 0.0)
+        when (newState) {
+            KafkaStreams.State.ERROR -> log.error { "Kafka Streams '$name' gikk fra $oldState til $newState" }
+            else -> log.info { "Kafka Streams '$name' gikk fra $oldState til $newState" }
         }
     }
-
-    private fun Throwable.rotårsak(): Throwable = generateSequence(this) { it.cause }.last()
 }

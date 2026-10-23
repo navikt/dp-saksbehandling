@@ -13,17 +13,17 @@ import org.apache.kafka.streams.KafkaStreams
 private val log = KotlinLogging.logger {}
 
 class KafkaStreamsPluginConfiguration {
-    lateinit var navn: String
+    lateinit var name: String
     lateinit var kafkaStreams: KafkaStreams
 }
 
 val KafkaStreamsPlugin =
     createApplicationPlugin("KafkaStreamsPlugin", ::KafkaStreamsPluginConfiguration) {
         val kafkaStreams = pluginConfig.kafkaStreams
-        val overvåker = KafkaStreamsOvervåker(pluginConfig.navn)
+        val monitor = KafkaStreamsMonitor(pluginConfig.name)
 
-        kafkaStreams.setStateListener(overvåker::tilstandEndret)
-        kafkaStreams.setUncaughtExceptionHandler(overvåker::uhåndtertFeil)
+        kafkaStreams.setStateListener(monitor::onStateChange)
+        kafkaStreams.setUncaughtExceptionHandler(monitor::onUncaughtException)
 
         val started: EventHandler<Application> = { _ ->
             kafkaStreams.cleanUp()
