@@ -181,7 +181,7 @@ class DBTestHelper private constructor(
         this.merkSakenSomDpSak(sak.sakId, merkSomEgenSak)
     }
 
-    fun leggTilOppgave(
+    fun leggTilOppgaveMedBehandlingOgSakHistorikk(
         id: UUID = UUIDv7.ny(),
         tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
         emneknagger: Set<String> = emptySet(),
@@ -249,8 +249,10 @@ class DBTestHelper private constructor(
     }
 
     fun leggTilOppgave(
-        oppgaveId: UUID,
+        oppgaveId: UUID = UUIDv7.ny(),
         behandlingId: UUID,
+        tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
+        tilstandslogg: OppgaveTilstandslogg = OppgaveTilstandslogg(),
         utløstAvType: HendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
         person: Person = dbTestPerson,
     ) {
@@ -266,7 +268,8 @@ class DBTestHelper private constructor(
                 oppgaveId = oppgaveId,
                 emneknagger = setOf(),
                 opprettet = behandling.opprettet,
-                tilstand = Oppgave.KlarTilBehandling,
+                tilstand = tilstand,
+                tilstandslogg = tilstandslogg,
                 behandling = behandling,
                 person = person,
                 utsattTil = null,

@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
 import java.util.UUID
@@ -399,6 +400,48 @@ class PostgresSakRepository(
             )
         }
     }
+
+    override fun behandlingerSomKanPåklagesISammeSak(behandlingId: UUID): List<BehandlingSomKanPåklages> =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  beh.id          AS behandling_id,
+                                beh.utlost_av   AS utlost_av,
+                                log.tidspunkt   AS vedtak_tidspunkt
+                        FROM    sak_v2                      sak
+                        JOIN    behandling_v1               beh ON  beh.sak_id = sak.id
+                        JOIN    oppgave_v1                  opp ON  opp.behandling_id = beh.id
+                        JOIN    oppgave_tilstand_logg_v1    log ON  log.oppgave_id = opp.id 
+                        WHERE   beh.sak_id = (
+                                SELECT beh2.sak_id
+                                FROM   behandling_v1 beh2
+                                WHERE  beh2.id = :behandling_id
+                            )
+                        AND     opp.tilstand = 'FERDIG_BEHANDLET'
+                        AND     beh.utlost_av NOT IN ('INNSENDING','OPPFØLGING')
+                        AND     log.tidspunkt = (
+                                SELECT MAX(log2.tidspunkt)
+                                FROM   oppgave_tilstand_logg_v1 log2
+                                WHERE  log2.oppgave_id = opp.id
+                                AND    log2.tilstand   = 'FERDIG_BEHANDLET'
+                            )
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                        ),
+                ).map { row ->
+                    BehandlingSomKanPåklages(
+                        behandlingId = row.uuid("behandling_id"),
+                        hendelseBehandler = HendelseBehandler.valueOf(row.string("utlost_av")),
+                        vedtakTidspunkt = row.localDateTime("vedtak_tidspunkt"),
+                    )
+                }.asList,
+            )
+        }
 
     private fun PostgresUnitOfWork.lagreBehandling(
         personId: UUID,

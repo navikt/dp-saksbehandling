@@ -6,8 +6,12 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
@@ -146,6 +150,53 @@ class PostgresSakRepositoryTest {
             val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
             sakHistorikkFraDB shouldBe sakHistorikk
+        }
+    }
+
+    @Test
+    fun `Skal hente behandlinger som kan påklages`() {
+        val klageBehandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                utløstAv = HendelseBehandler.Intern.Klage,
+                opprettet = nå,
+                hendelse = TomHendelse,
+            )
+        DBTestHelper.withBehandlinger(
+            behandlinger = listOf(behandling1iSak1, behandling2iSak1, klageBehandling),
+        ) { dataSource ->
+            val sakRepository = PostgresSakRepository(DatabaseSession(dataSource))
+            this.leggTilOppgave(
+                behandlingId = behandling1iSak1.behandlingId,
+                tilstand = Oppgave.FerdigBehandlet,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        tilstandsendringer =
+                            listOf(
+                                Tilstandsendring(
+                                    tilstand = FERDIG_BEHANDLET,
+                                    hendelse = TomHendelse,
+                                ),
+                            ),
+                    ),
+            )
+            this.leggTilOppgave(
+                behandlingId = behandling2iSak1.behandlingId,
+                tilstand = Oppgave.FerdigBehandlet,
+                tilstandslogg =
+                    OppgaveTilstandslogg(
+                        tilstandsendringer =
+                            listOf(
+                                Tilstandsendring(
+                                    tilstand = FERDIG_BEHANDLET,
+                                    hendelse = TomHendelse,
+                                ),
+                            ),
+                    ),
+            )
+            val behandlingerSomKanPåklages = sakRepository.behandlingerSomKanPåklagesISammeSak(klageBehandling.behandlingId)
+            behandlingerSomKanPåklages.size shouldBe 2
+            behandlingerSomKanPåklages.map { it.behandlingId } shouldBe listOf(behandling1iSak1.behandlingId, behandling2iSak1.behandlingId)
         }
     }
 

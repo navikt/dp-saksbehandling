@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
+import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -429,4 +430,7 @@ class KlageMediator(
             }
         }
     }
+
+    fun behandlingerSomKanPåklagesISammeSak(behandlingId: UUID): List<BehandlingSomKanPåklages> =
+        sakMediator.behandlingerSomKanPåklagesISammeSak(behandlingId)
 }

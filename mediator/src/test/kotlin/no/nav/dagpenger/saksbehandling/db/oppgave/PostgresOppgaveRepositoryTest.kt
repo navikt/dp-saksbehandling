@@ -122,7 +122,7 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaveKlarTilBehandling =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(2),
                     type = HendelseBehandler.DpBehandling.Søknad,
@@ -137,7 +137,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteOppgaveSendtTilKontrollSist =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(40),
                     saksbehandlerIdent = saksbehandler.navIdent,
@@ -167,7 +167,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val midtersteOppgaveSendtTilKontrollMidt =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(30),
                     saksbehandlerIdent = saksbehandler.navIdent,
@@ -196,7 +196,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )
             val yngsteOppgaveSendtTilKontrollFørst =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(10),
                     saksbehandlerIdent = saksbehandler.navIdent,
@@ -332,7 +332,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Tildel neste ledige oppgave som ikke gjelder egne ansatte`() {
         DBTestHelper.withMigratedDb { ds ->
             val eldsteOppgaveMedSkjermingSomEgneAnsatte =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     person =
@@ -345,7 +345,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteOppgaveUtenSkjermingAvEgenAnsatt =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
                     person =
@@ -357,7 +357,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )
 
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = opprettetNå,
                 person =
@@ -435,7 +435,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteOppgaveMedInhabilitet =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     person =
@@ -448,7 +448,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val nyesteOppgaveUtenInhabilitet =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
                     person =
@@ -515,7 +515,7 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withMigratedDb { ds ->
 
             val eldsteOppgaveMedAdressebeskyttelse =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     person =
@@ -528,7 +528,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteOppgaveUtenAdressebeskyttelse =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
                     person =
@@ -606,7 +606,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Ved tildeling av neste oppgave, skal det lagres en tilstandsendring i tilstandsendringsloggen`() {
         DBTestHelper.withMigratedDb { ds ->
             val oppgave =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå,
                     emneknagger = setOf("Testknagg"),
@@ -710,7 +710,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val oppgave =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     id = oppgaveId,
                     tilstand = Oppgave.KlarTilKontroll,
                     tilstandslogg = tilstandsloggUnderBehandling,
@@ -844,52 +844,52 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val yngsteLedigeOppgaveOpprettetIDag =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå,
                 )
 
             val oppgaveMedEmneknagg =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     emneknagger = setOf("Testknagg"),
                 )
 
             val eldsteLedigeOppgaveKlarTilBehandling =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(10),
                     emneknagger = setOf("Mikke", "Mus"),
                 )
 
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.UnderBehandling,
                 opprettet = opprettetNå.minusDays(11),
                 saksbehandlerIdent = saksbehandler.navIdent,
             )
 
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.FerdigBehandlet,
                 opprettet = opprettetNå.minusDays(12),
                 saksbehandlerIdent = testSaksbehandler.navIdent,
                 tilstandslogg = tilstandsloggUnderBehandling(),
             )
 
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.Opprettet,
                 opprettet = opprettetNå.minusDays(13),
             )
 
             val eldsteKontrollOppgaveUtenSkjermingOgAdressegradering =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(14),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveEgneAnsatteSkjerming =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(15),
                     person = lagPerson(skjermesSomEgneAnsatte = true),
@@ -897,7 +897,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteKontrollOppgaveFortroligAdresse =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(16),
                     person = lagPerson(addresseBeskyttelseGradering = FORTROLIG),
@@ -905,7 +905,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresse =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(17),
                     person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG),
@@ -913,7 +913,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseUtland =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(18),
                     person =
@@ -924,7 +924,7 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(19),
                     person =
@@ -1176,11 +1176,11 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withMigratedDb { ds ->
             val iDag = LocalDate.now()
             val iGår = LocalDate.now().minusDays(1)
-            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
             val forventetOppgave =
-                this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
-            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
-            this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
 
             PostgresOppgaveRepository(DatabaseSession(ds))
                 .tildelOgHentNesteOppgave(
@@ -1211,13 +1211,13 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withMigratedDb { ds ->
             val sakRepo = PostgresSakRepository(DatabaseSession(ds))
             val eldsteOppgave =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(8),
                     person = testPerson,
                 )
             val nestEldsteOppgave =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(4),
                     person = testPerson,
@@ -1231,7 +1231,7 @@ class PostgresOppgaveRepositoryTest {
                     inhabileNavIdenter = emptyList(),
                 )
             val oppgaveForPersonMedDpSak =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
                     person = personSomHarDpSak,
@@ -1248,7 +1248,7 @@ class PostgresOppgaveRepositoryTest {
                     inhabileNavIdenter = emptyList(),
                 )
             val oppgaveForNødbremsetPersonMedDpSak =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(2),
                     person = personSomHarDpSakMedNødbrems,
@@ -1557,13 +1557,13 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på type utløsende hendelse`() {
         DBTestHelper.withMigratedDb { ds ->
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.KlarTilBehandling,
                 type = HendelseBehandler.DpBehandling.Søknad,
                 opprettet = opprettetNå,
             )
             val klageOppgave =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     type = HendelseBehandler.Intern.Klage,
                     opprettet = opprettetNå,
@@ -1605,21 +1605,21 @@ class PostgresOppgaveRepositoryTest {
         DBTestHelper.withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgave1TilOla =
-                this.leggTilOppgave(person = ola, tilstand = Oppgave.KlarTilBehandling, opprettet = opprettetNå)
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(person = ola, tilstand = Oppgave.KlarTilBehandling, opprettet = opprettetNå)
             val oppgave2TilOla =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     person = ola,
                     tilstand = Oppgave.FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(1),
                 )
             val oppgave3TilOlaSomIkkeErSøkbar =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     person = ola,
                     tilstand = Oppgave.AvbruttMaskinelt,
                     opprettet = opprettetNå.minusDays(1),
                 )
             val oppgave1TilGry =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     person = gry,
                     tilstand = Oppgave.FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(2),
@@ -1759,9 +1759,9 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal lagre distinkte emneknagger`() {
         DBTestHelper.withMigratedDb { ds ->
-            this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"))
-            this.leggTilOppgave(emneknagger = setOf("hubba"))
-            this.leggTilOppgave(emneknagger = setOf("Ettersending av dokumentasjon", "Ettersending2"))
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = setOf("hubba", "bubba"))
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = setOf("hubba"))
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = setOf("Ettersending av dokumentasjon", "Ettersending2"))
 
             PostgresOppgaveRepository(DatabaseSession(ds)).let {
                 it.hentDistinkteEmneknagger() shouldBe setOf("hubba", "bubba")
@@ -1772,10 +1772,10 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
         DBTestHelper.withMigratedDb { ds ->
-            val oppgave1 = this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"), opprettet = opprettetNå)
-            val oppgave2 = this.leggTilOppgave(emneknagger = setOf("hubba"), opprettet = opprettetNå)
-            val oppgave3 = this.leggTilOppgave(emneknagger = emptySet(), opprettet = opprettetNå)
-            val oppgave4 = this.leggTilOppgave(emneknagger = setOf("mummitrollet"), opprettet = opprettetNå)
+            val oppgave1 = this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = setOf("hubba", "bubba"), opprettet = opprettetNå)
+            val oppgave2 = this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = setOf("hubba"), opprettet = opprettetNå)
+            val oppgave3 = this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = emptySet(), opprettet = opprettetNå)
+            val oppgave4 = this.leggTilOppgaveMedBehandlingOgSakHistorikk(emneknagger = setOf("mummitrollet"), opprettet = opprettetNå)
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo
@@ -1864,7 +1864,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne søke etter oppgaver tilhørende personer med sak i dp-sak`() {
         DBTestHelper.withMigratedDb { ds ->
             val sakRepo = PostgresSakRepository(DatabaseSession(ds))
-            val oppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
+            val oppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(3))
 
             val personMedDpSak =
                 Person(
@@ -1873,7 +1873,7 @@ class PostgresOppgaveRepositoryTest {
                     adressebeskyttelseGradering = UGRADERT,
                     inhabileNavIdenter = emptyList(),
                 )
-            val oppgaveDpSak = this.leggTilOppgave(opprettet = opprettetNå.minusDays(2), person = personMedDpSak)
+            val oppgaveDpSak = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(2), person = personMedDpSak)
             sakRepo.hentSakIdForBehandlingId(oppgaveDpSak.behandling.behandlingId).let { sakId ->
                 sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
             }
@@ -1886,7 +1886,7 @@ class PostgresOppgaveRepositoryTest {
                     inhabileNavIdenter = emptyList(),
                 )
             val oppgaveForNødbremset =
-                this.leggTilOppgave(opprettet = opprettetNå.minusDays(1), person = nødbremsetPerson)
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(1), person = nødbremsetPerson)
             sakRepo.hentSakIdForBehandlingId(oppgaveForNødbremset.behandling.behandlingId).let { sakId ->
                 sakRepo.merkSakenSomDpSak(sakId = sakId, erDpSak = true)
             }
@@ -1925,27 +1925,27 @@ class PostgresOppgaveRepositoryTest {
 
         DBTestHelper.withMigratedDb { ds ->
             val oppgaveUnderBehandlingEidAvSB1 =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.UnderBehandling,
                     opprettet = enUkeSiden,
                     saksbehandlerIdent = saksbehandler1,
                     emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
                 )
             val oppgaveUnderBehandlingEidAvSB2 =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.UnderBehandling,
                     saksbehandlerIdent = saksbehandler2,
                     emneknagger = setOf(Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT.visningsnavn),
                 )
             val oppgaveFerdigBehandletEidAvSB1 =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.FerdigBehandlet,
                     saksbehandlerIdent = saksbehandler2,
                     beslutterIdent = saksbehandler1,
                     emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
                 )
             val oppgaveKlarTilBehandlingUtenSaksbehandler =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     saksbehandlerIdent = null,
                     emneknagger = setOf(Emneknagg.Regelknagg.INNVILGELSE.visningsnavn),
@@ -2127,16 +2127,16 @@ class PostgresOppgaveRepositoryTest {
 
         DBTestHelper.withMigratedDb { ds ->
             val oppgaveUnderBehandlingEnUkeGammel =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.UnderBehandling,
                     opprettet = enUkeSiden,
                     saksbehandlerIdent = saksbehandler.navIdent,
                 )
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = opprettetNå,
             )
-            this.leggTilOppgave(
+            this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                 tilstand = Oppgave.KlarTilBehandling,
                 opprettet = opprettetNå.minusDays(1),
             )
@@ -2240,23 +2240,23 @@ class PostgresOppgaveRepositoryTest {
             val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX.minusSeconds(1))
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
             val oppgaveOpprettetTidligIGår =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = iGårSåTidligPåDagenSomMulig,
                 )
             val oppgaveOpprettetSeintIGår =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = iGårSåSeintPåDagenSomMulig,
                 )
             val oppgaveiForgårsSåSeintPåDagenSomMulig =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = iForgårsSåSeintPåDagenSomMulig,
                 )
 
             val oppgaveiDagSåTidligPåDagenSomMulig =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     opprettet = iDagSåTidligPåDagenSomMulig,
                 )
@@ -2409,7 +2409,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne søke etter oppgaver til kontroll og sortere på sendt til kontroll tidspunkt`() {
         DBTestHelper.withMigratedDb { ds ->
             val klarTilBehandlingOppgave =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilBehandling,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = opprettetNå.minusDays(4),
@@ -2423,7 +2423,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )
             val klarTilKontrollIGår =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = opprettetNå.minusDays(1),
@@ -2441,7 +2441,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )
             val klarTilKontrollIForgårs =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = opprettetNå.minusDays(2),
@@ -2459,7 +2459,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )
             val klarTilKontrollIDag =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     tilstand = Oppgave.KlarTilKontroll,
                     type = HendelseBehandler.DpBehandling.Søknad,
                     opprettet = opprettetNå,
@@ -2515,10 +2515,10 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne hente paginerte oppgaver`() {
         DBTestHelper.withMigratedDb { ds ->
-            val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
-            val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
-            val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
-            val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
+            val nyesteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå)
+            val nestNyesteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(1))
+            val nestEldsteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(3))
+            val eldsteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(7))
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             repo
@@ -2595,10 +2595,10 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne sortere oppgaver med default, ASC og DESC`() {
         DBTestHelper.withMigratedDb { ds ->
-            val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
-            val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
-            val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
-            val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
+            val nyesteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå)
+            val nestNyesteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(1))
+            val nestEldsteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(3))
+            val eldsteOppgave = this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå.minusDays(7))
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
 
@@ -2689,14 +2689,14 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne sortere oppgaver på utløst av`() {
         DBTestHelper.withMigratedDb { ds ->
             val oppgaveKlage =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "zulu",
                     type = HendelseBehandler.Intern.Klage,
                     tilstand = Oppgave.KlarTilBehandling,
                 )
             val oppgaveSøknad =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "mikael",
                     type = HendelseBehandler.DpBehandling.Søknad,
@@ -2726,35 +2726,35 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne sortere oppgaver på status`() {
         DBTestHelper.withMigratedDb { ds ->
             val oppgaveAvbrutt =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "zulu",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.Avbrutt,
                 )
             val oppgaveFerdigBehandlet =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "zulu",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.FerdigBehandlet,
                 )
             val oppgaveKlarTilBehandling =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "mikael",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.KlarTilBehandling,
                 )
             val oppgavePåVent =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "anders",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.PåVent,
                 )
             val oppgaveUnderBehandling =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "ole",
                     type = HendelseBehandler.DpBehandling.Søknad,
@@ -2789,17 +2789,17 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
 
             val oppgaveOmToDager =
-                this.leggTilOppgave(opprettet = opprettetNå, tilstand = Oppgave.UnderBehandling).let {
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå, tilstand = Oppgave.UnderBehandling).let {
                     repo.lagre(it.copy(tilstand = Oppgave.PåVent, utsattTil = LocalDate.now().plusDays(2)))
                     repo.hentOppgave(it.oppgaveId)
                 }
             val oppgaveOmEnDag =
-                this.leggTilOppgave(opprettet = opprettetNå, tilstand = Oppgave.UnderBehandling).let {
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(opprettet = opprettetNå, tilstand = Oppgave.UnderBehandling).let {
                     repo.lagre(it.copy(tilstand = Oppgave.PåVent, utsattTil = LocalDate.now().plusDays(1)))
                     repo.hentOppgave(it.oppgaveId)
                 }
             val oppgaveUtenUtsattTil =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     tilstand = Oppgave.KlarTilBehandling,
                 )
@@ -2826,28 +2826,28 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne sortere oppgaver på saksbehandler`() {
         DBTestHelper.withMigratedDb { ds ->
             val oppgaveAd =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "aad",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.KlarTilBehandling,
                 )
             val oppgaveBj =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "bjørn",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.KlarTilBehandling,
                 )
             val oppgaveMo =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "mikael",
                     type = HendelseBehandler.DpBehandling.Søknad,
                     tilstand = Oppgave.KlarTilBehandling,
                 )
             val oppgaveZu =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = "zulu",
                     type = HendelseBehandler.DpBehandling.Søknad,
@@ -2903,7 +2903,7 @@ class PostgresOppgaveRepositoryTest {
                     tilganger = setOf(TilgangType.SAKSBEHANDLER, TilgangType.BESLUTTER),
                 )
             val oppgaveTrikkeførerSyvertsen =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     opprettet = opprettetNå,
                     saksbehandlerIdent = saksbehandler.navIdent,
                     beslutterIdent = trikkeførerSyvertsen.navIdent,
@@ -2925,7 +2925,7 @@ class PostgresOppgaveRepositoryTest {
                 )
             val oppgaveIdNullBeslutter = UUIDv7.ny()
             val oppgaveNullBeslutter =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     id = oppgaveIdNullBeslutter,
                     opprettet = opprettetNå,
                     saksbehandlerIdent = saksbehandler.navIdent,
@@ -2941,7 +2941,7 @@ class PostgresOppgaveRepositoryTest {
                 )
             val oppgaveIdTanteSofie = UUIDv7.ny()
             val oppgaveTanteSofie =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     id = oppgaveIdTanteSofie,
                     opprettet = opprettetNå,
                     saksbehandlerIdent = saksbehandler.navIdent,
@@ -2959,7 +2959,7 @@ class PostgresOppgaveRepositoryTest {
 
             val oppgaveIdPolitimesterBastian = UUIDv7.ny()
             val oppgavePolitimesterBastian =
-                this.leggTilOppgave(
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(
                     id = oppgaveIdPolitimesterBastian,
                     opprettet = opprettetNå,
                     saksbehandlerIdent = saksbehandler.navIdent,
@@ -3002,13 +3002,13 @@ class PostgresOppgaveRepositoryTest {
             val iDag = LocalDate.now()
             val iGår = LocalDate.now().minusDays(1)
             val oppgave1 =
-                this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
             val oppgave2 =
-                this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
             val oppgaveIGår =
-                this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iGår.atStartOfDay())
             val oppgave3 =
-                this.leggTilOppgave(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
+                this.leggTilOppgaveMedBehandlingOgSakHistorikk(tilstand = Oppgave.KlarTilBehandling, opprettet = iDag.atStartOfDay())
 
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             val oppgaver =

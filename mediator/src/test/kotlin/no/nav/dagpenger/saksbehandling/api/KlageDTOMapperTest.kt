@@ -6,12 +6,14 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
+import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.FormkravSteg
 import no.nav.dagpenger.saksbehandling.klage.FristvurderingSteg
 import no.nav.dagpenger.saksbehandling.klage.FullmektigSteg
@@ -41,6 +43,14 @@ class KlageDTOMapperTest {
         runBlocking {
             val klageId = UUIDv7.ny()
             val kaJournalposter = listOf("KA-journalpost-1", "KA-journalpost-2")
+            val behandlingerSomKanPåklages =
+                listOf(
+                    BehandlingSomKanPåklages(
+                        behandlingId = UUIDv7.ny(),
+                        hendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
+                        vedtakTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
+                    ),
+                )
             val klageBehandling =
                 KlageBehandling.rehydrer(
                     behandlingId = klageId,
@@ -92,6 +102,7 @@ class KlageDTOMapperTest {
                 val klageDTO =
                     mapper.tilDto(
                         klageBehandling = klageBehandling,
+                        behandlingerSomKanPåklages = behandlingerSomKanPåklages,
                         saksbehandler = testSaksbehandler,
                     )
                 //language=JSON
@@ -111,18 +122,26 @@ class KlageDTOMapperTest {
                         },
                         "behandlingOpplysninger": [
                             {
-                                "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER
-                    }.opplysningId}",
-                                "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER
-                    }.type.name}",
-                                "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER
-                    }.type.navn}",
-                                "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER
-                    }.type.påkrevd},
+                                "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER
+                        }.opplysningId
+                    }",
+                                "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER
+                        }.type.name
+                    }",
+                                "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER
+                        }.type.navn
+                    }",
+                                "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER
+                        }.type.påkrevd
+                    },
                                 "gruppe": "KLAGESAK",
                                 "valgmuligheter": [
                                     "Avslag på søknad",
@@ -136,160 +155,233 @@ class KlageDTOMapperTest {
                                 "type": "FLER_LISTEVALG"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK
+                        }.type.påkrevd
+                    },
                               "gruppe": "KLAGESAK",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "UUID"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
+                        }.type.påkrevd
+                    },
                               "gruppe": "KLAGESAK",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "DATO"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGE_MOTTATT
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGE_MOTTATT
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGE_MOTTATT
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGE_MOTTATT
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGE_MOTTATT
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGE_MOTTATT
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGE_MOTTATT
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGE_MOTTATT
+                        }.type.påkrevd
+                    },
                               "gruppe": "FRIST",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "DATO"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger()
+                            .single { it.type == OpplysningType.KLAGEFRIST }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST
+                        }.type.påkrevd
+                    },
                               "gruppe": "FRIST",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "DATO"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST_OPPFYLT
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST_OPPFYLT
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST_OPPFYLT
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEFRIST_OPPFYLT
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST_OPPFYLT
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST_OPPFYLT
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST_OPPFYLT
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEFRIST_OPPFYLT
+                        }.type.påkrevd
+                    },
                               "gruppe": "FRIST",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "BOOLSK"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG
+                        }.type.påkrevd
+                    },
                               "gruppe": "FORMKRAV",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "BOOLSK"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET
+                        }.type.påkrevd
+                    },
                               "gruppe": "FORMKRAV",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "BOOLSK"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.KLAGEN_NEVNER_ENDRING
+                        }.type.påkrevd
+                    },
                               "gruppe": "FORMKRAV",
                               "valgmuligheter": [],
                               "redigerbar": true,
                               "type": "BOOLSK"
                             },
                             {
-                              "opplysningId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
-                    }.opplysningId}",
-                              "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
-                    }.type.name}",
-                              "navn": "${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
-                    }.type.navn}",
-                              "paakrevd": ${klageBehandling.synligeOpplysninger().single {
-                        it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
-                    }.type.påkrevd},
+                              "opplysningId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
+                        }.opplysningId
+                    }",
+                              "opplysningNavnId": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
+                        }.type.name
+                    }",
+                              "navn": "${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
+                        }.type.navn
+                    }",
+                              "paakrevd": ${
+                        klageBehandling.synligeOpplysninger().single {
+                            it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE
+                        }.type.påkrevd
+                    },
                               "gruppe": "FORMKRAV",
                               "valgmuligheter": [],
                               "redigerbar": true,
@@ -325,7 +417,14 @@ class KlageDTOMapperTest {
                               ]
                             }
                         },
-                        "lovligeAvbrytAarsaker": []
+                        "lovligeAvbrytAarsaker": [],
+                        "behandlingerSomKanPaaklages": [
+                            {
+                              "behandlingId": "${behandlingerSomKanPåklages.first().behandlingId}",
+                              "utlostAv": "${behandlingerSomKanPåklages.first().hendelseBehandler.name}",
+                              "vedtakTidspunkt": "${behandlingerSomKanPåklages.first().vedtakTidspunkt}"
+                            }
+                        ]
                     }
                     """
             }
@@ -336,6 +435,14 @@ class KlageDTOMapperTest {
     fun `Skal mappe KlageBehandling til KlageDTO klage under behandling med lovlige avbrytårsaker`() {
         runBlocking {
             val klageId = UUIDv7.ny()
+            val behandlingerSomKanPåklages =
+                listOf(
+                    BehandlingSomKanPåklages(
+                        behandlingId = UUIDv7.ny(),
+                        hendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
+                        vedtakTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
+                    ),
+                )
             val klageBehandling =
                 KlageBehandling.rehydrer(
                     behandlingId = klageId,
@@ -374,6 +481,7 @@ class KlageDTOMapperTest {
                 val klageDTO =
                     mapper.tilDto(
                         klageBehandling = klageBehandling,
+                        behandlingerSomKanPåklages = behandlingerSomKanPåklages,
                         saksbehandler = testSaksbehandler,
                     )
                 //language=JSON
@@ -405,6 +513,13 @@ class KlageDTOMapperTest {
                             "FLERE_KLAGER",
                             "TRUKKET_KLAGE",
                             "ANNET"
+                        ],
+                        "behandlingerSomKanPaaklages": [
+                            {
+                              "behandlingId": "${behandlingerSomKanPåklages.first().behandlingId}",
+                              "utlostAv": "${behandlingerSomKanPåklages.first().hendelseBehandler.name}",
+                              "vedtakTidspunkt": "${behandlingerSomKanPåklages.first().vedtakTidspunkt}"
+                            }
                         ]
                     }
                     """

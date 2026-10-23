@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst.IkkeAktiv
+import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import java.util.UUID
 
 interface SakRepository {
@@ -45,4 +46,6 @@ interface SakRepository {
         sakId: UUID,
         erDpSak: Boolean,
     )
+
+    fun behandlingerSomKanPåklagesISammeSak(behandlingId: UUID): List<BehandlingSomKanPåklages>
 }
