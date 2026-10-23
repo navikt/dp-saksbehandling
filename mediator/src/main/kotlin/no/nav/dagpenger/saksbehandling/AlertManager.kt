@@ -129,6 +129,14 @@ object AlertManager {
         override val type: String = "OPPFOLGING_IKKE_FERDIGSTILT"
     }
 
+    data class IdentendringForSak(
+        val sakId: UUID,
+    ) : AlertType {
+        override val feilMelding =
+            "Person med dagpengesak $sakId har fått ny ident i PDL. Saken er registrert på en ident personen ikke lenger bruker."
+        override val type: String = "IDENTENDRING_FOR_SAK"
+    }
+
     enum class OppgaveAlertType : AlertType {
         BEHANDLING_IKKE_FUNNET {
             override val feilMelding = "Behandling ikke funnet"

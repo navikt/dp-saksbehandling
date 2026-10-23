@@ -42,6 +42,7 @@ object Configuration {
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "SKJERMING_TOPIC" to "nom.skjermede-personer-status-v1",
                 "LEESAH_TOPIC" to "pdl.leesah-v1",
+                "PDL_AKTOR_TOPIC" to "pdl.aktor-v2",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
                 "DP_MELDEKORTREGISTER_API_URL" to
@@ -69,6 +70,7 @@ object Configuration {
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
     val skjermingPersonStatusTopic: String = properties[Key("SKJERMING_TOPIC", stringType)]
     val leesahTopic: String = properties[Key("LEESAH_TOPIC", stringType)]
+    val pdlAktorTopic: String = properties[Key("PDL_AKTOR_TOPIC", stringType)]
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
 
     val meldekortregisterApiUrl: String = properties[Key("DP_MELDEKORTREGISTER_API_URL", stringType)]

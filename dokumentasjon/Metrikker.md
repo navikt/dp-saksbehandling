@@ -29,6 +29,7 @@ Oversikt over alle Prometheus-metrikker eksponert av dp-saksbehandling.
 |--------|------|--------|-------------|-------|
 | `dp_saksbehandling_skjerming_oppdateringer` | Counter | `status` | Antall oppdateringer av skjermingsstatus | `SkjermingConsumer` |
 | `dp_saksbehandling_adressebeskyttelse_oppdateringer` | Counter | `status` | Antall oppdateringer av adressebeskyttelsestatus | `AdressebeskyttelseConsumer` |
+| `dp_saksbehandling_identendring` | Counter | `utfall` | Antall identendringer fra `pdl.aktor-v2`, `treff` hvis en historisk ident har dagpengesak | `IdentendringConsumer` |
 | `dp_saksbehandling_kafka_streams_kjorer` | Gauge | `instans` | 1 hvis Kafka Streams-instansen kjører, ellers 0. Varsles av `KafkaStreamsStoppet` | `KafkaStreamsMonitor` |
 | `dp_saksbehandling_kafka_streams_feil` | Counter | `instans` | Antall uhåndterte feil som har stoppet en Kafka Streams-instans | `KafkaStreamsMonitor` |
 | `dp_saksbehandling_saksbehandler_oppslag_cache` | Counter | `treff` | Cache-treff på saksbehandleroppslag | `SaksbehandlerOppslag` |

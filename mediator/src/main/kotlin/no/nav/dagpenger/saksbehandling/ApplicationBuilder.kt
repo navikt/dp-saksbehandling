@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.identendring.IdentendringConsumer
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingBehandler
@@ -74,6 +75,7 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkJob
 import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresProduksjonsstatistikkRepository
 import no.nav.dagpenger.saksbehandling.statistikk.db.PostgresSaksbehandlingsstatistikkRepository
+import no.nav.dagpenger.saksbehandling.streams.aktor.identendringStream
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -279,7 +281,7 @@ internal class ApplicationBuilder(
                 )
 
                 server.application.install(KafkaStreamsPlugin) {
-                    name = "skjerming-og-adressebeskyttelse"
+                    name = "personhendelser"
                     kafkaStreams =
                         kafkaStreams(Configuration.kafkaStreamProperties) {
                             skjermetPersonStatus(
@@ -292,6 +294,10 @@ internal class ApplicationBuilder(
                                     personRepository,
                                     pdlKlient,
                                 )::oppdaterAdressebeskyttelseGradering,
+                            )
+                            identendringStream(
+                                Configuration.pdlAktorTopic,
+                                IdentendringConsumer(sakRepository, rapid)::håndter,
                             )
                         }
                 }
