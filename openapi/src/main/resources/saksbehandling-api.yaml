@@ -2479,7 +2479,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BehandlingSomKanPaaklages'
-          description: Vedtak som kan påklages
+          description: Behandlinger som kan påklages
       required:
         - behandlingId
         - utfall
