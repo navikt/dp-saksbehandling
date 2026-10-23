@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.server.cio)
+    implementation("io.prometheus:prometheus-metrics-core:1.10.0")
 
     testImplementation("org.apache.kafka:kafka-streams-test-utils:$kafkaVersion")
     testImplementation(libs.bundles.kotest.assertions)

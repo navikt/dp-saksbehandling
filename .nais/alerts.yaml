@@ -22,6 +22,22 @@ spec:
           labels:
             namespace: teamdagpenger
             severity: critical
+    - name: dp-saksbehandling-kafka-streams
+      rules:
+        - alert: KafkaStreamsStoppet
+          # min: én pod med stoppet instans er nok. Partisjonene flyttes da til andre pods, men vi vil vite om det.
+          expr: >-
+            min by (instans) (
+              dp_saksbehandling_kafka_streams_kjorer{app="dp-saksbehandling"}
+            ) == 0
+          for: 5m
+          annotations:
+            summary: 'Kafka Streams-instansen \{{ $labels.instans }} i dp-saksbehandling har stoppet'
+            consequence: 'Kafka Streams *\{{ $labels.instans }}* i *dp-saksbehandling* kjører ikke. Endringer i skjerming og adressebeskyttelse blir ikke oppdatert, og saksbehandlere kan få tilgang de ikke skal ha.'
+            action: 'Finn feilen: `kubectl logs -l app=dp-saksbehandling | grep -i "Kafka Streams"` (detaljer i sikkerlogg). Fiks årsaken og restart podden: `kubectl delete pod <pod>`.'
+          labels:
+            namespace: teamdagpenger
+            severity: critical
     - name: dp-saksbehandling-jobber
       rules:
         - alert: BakgrunnsjobbKjorerIkke

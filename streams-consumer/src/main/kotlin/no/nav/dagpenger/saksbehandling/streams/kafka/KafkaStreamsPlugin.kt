@@ -13,16 +13,17 @@ import org.apache.kafka.streams.KafkaStreams
 private val log = KotlinLogging.logger {}
 
 class KafkaStreamsPluginConfiguration {
+    lateinit var navn: String
     lateinit var kafkaStreams: KafkaStreams
 }
 
 val KafkaStreamsPlugin =
     createApplicationPlugin("KafkaStreamsPlugin", ::KafkaStreamsPluginConfiguration) {
         val kafkaStreams = pluginConfig.kafkaStreams
+        val overvåker = KafkaStreamsOvervåker(pluginConfig.navn)
 
-        kafkaStreams.setStateListener { newState, oldState ->
-            log.info { "Transition from $oldState to $newState" }
-        }
+        kafkaStreams.setStateListener(overvåker::tilstandEndret)
+        kafkaStreams.setUncaughtExceptionHandler(overvåker::uhåndtertFeil)
 
         val started: EventHandler<Application> = { _ ->
             kafkaStreams.cleanUp()
