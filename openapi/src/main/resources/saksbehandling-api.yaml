@@ -2433,13 +2433,13 @@ components:
           format: uuid
         utlostAv:
           $ref: '#/components/schemas/UtlostAvType'
-        vedtakTidspunkt:
+        ferdigbehandletTidspunkt:
           type: string
           format: date-time
       required:
         - behandlingId
         - utlostAv
-        - vedtakTidspunkt
+        - ferdigbehandletTidspunkt
 
     Klage:
       type: object

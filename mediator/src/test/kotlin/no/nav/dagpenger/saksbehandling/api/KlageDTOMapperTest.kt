@@ -48,7 +48,7 @@ class KlageDTOMapperTest {
                     BehandlingSomKanPåklages(
                         behandlingId = UUIDv7.ny(),
                         hendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
-                        vedtakTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
+                        ferdigbehandletTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
                     ),
                 )
             val klageBehandling =
@@ -422,7 +422,7 @@ class KlageDTOMapperTest {
                             {
                               "behandlingId": "${behandlingerSomKanPåklages.first().behandlingId}",
                               "utlostAv": "${behandlingerSomKanPåklages.first().hendelseBehandler.name}",
-                              "vedtakTidspunkt": "${behandlingerSomKanPåklages.first().vedtakTidspunkt}"
+                              "ferdigbehandletTidspunkt": "${behandlingerSomKanPåklages.first().ferdigbehandletTidspunkt}"
                             }
                         ]
                     }
@@ -440,7 +440,7 @@ class KlageDTOMapperTest {
                     BehandlingSomKanPåklages(
                         behandlingId = UUIDv7.ny(),
                         hendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
-                        vedtakTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
+                        ferdigbehandletTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
                     ),
                 )
             val klageBehandling =
@@ -518,7 +518,7 @@ class KlageDTOMapperTest {
                             {
                               "behandlingId": "${behandlingerSomKanPåklages.first().behandlingId}",
                               "utlostAv": "${behandlingerSomKanPåklages.first().hendelseBehandler.name}",
-                              "vedtakTidspunkt": "${behandlingerSomKanPåklages.first().vedtakTidspunkt}"
+                              "ferdigbehandletTidspunkt": "${behandlingerSomKanPåklages.first().ferdigbehandletTidspunkt}"
                             }
                         ]
                     }
