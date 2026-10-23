@@ -429,7 +429,8 @@ class PostgresOppgaveRepository(
         }
 
     override fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave =
-        finnOppgaveForBehandling(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
+        finnOppgaveForBehandling(behandlingId)
+            ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
     override fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave? =
         databaseSession.session { session ->
@@ -471,44 +472,6 @@ class PostgresOppgaveRepository(
                 }.asSingle,
             )
         }
-
-    override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? =
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    """
-                    SELECT pers.skjermes_som_egne_ansatte
-                    FROM   person_v1     pers
-                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
-                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
-                    WHERE  oppg.id = :oppgave_id
-                    """.trimMargin(),
-                    mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    row.boolean("skjermes_som_egne_ansatte")
-                }.asSingle,
-            )
-        }
-
-    override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering =
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    """
-                    SELECT pers.adressebeskyttelse_gradering
-                    FROM   person_v1     pers
-                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
-                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
-                    WHERE  oppg.id = :oppgave_id
-                    """.trimMargin(),
-                    mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    AdressebeskyttelseGradering.valueOf(row.string("adressebeskyttelse_gradering"))
-                }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
 
     override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, databaseSession)
 

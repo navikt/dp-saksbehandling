@@ -3027,21 +3027,6 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
-        val oppgave =
-            lagOppgave(
-                person =
-                    lagPerson(
-                        addresseBeskyttelseGradering = STRENGT_FORTROLIG,
-                    ),
-            )
-        DBTestHelper.withOppgave(oppgave = oppgave) { ds ->
-            PostgresOppgaveRepository(DatabaseSession(ds))
-                .adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
-        }
-    }
-
-    @Test
     fun `Skal kunne lagre og hente en oppgave med SkriptHendelse i logginnslaget`() {
         val behandling = lagBehandling()
         val tilstandsendring =

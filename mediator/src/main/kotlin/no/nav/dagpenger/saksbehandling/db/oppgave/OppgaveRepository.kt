@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -40,10 +39,6 @@ interface OppgaveRepository {
         ident: String,
         søknadId: UUID,
     ): Oppgave?
-
-    fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
-
-    fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering
 
     fun finnNotat(oppgaveTilstandLoggId: UUID): Notat?
 
