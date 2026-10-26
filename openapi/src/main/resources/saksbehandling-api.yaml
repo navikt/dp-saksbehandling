@@ -2433,13 +2433,13 @@ components:
           format: uuid
         utlostAv:
           $ref: '#/components/schemas/UtlostAvType'
-        vedtakTidspunkt:
+        ferdigbehandletTidspunkt:
           type: string
           format: date-time
       required:
         - behandlingId
         - utlostAv
-        - vedtakTidspunkt
+        - ferdigbehandletTidspunkt
 
     Klage:
       type: object
@@ -2479,7 +2479,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BehandlingSomKanPaaklages'
-          description: Vedtak som kan påklages
+          description: Behandlinger som kan påklages
       required:
         - behandlingId
         - utfall

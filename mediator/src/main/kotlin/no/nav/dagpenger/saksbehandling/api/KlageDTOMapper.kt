@@ -314,6 +314,6 @@ internal fun List<BehandlingSomKanPåklages>.tilBehandlingerSomKanPaaklagesDTO()
         BehandlingSomKanPaaklagesDTO(
             behandlingId = behandlingSomKanPåklages.behandlingId,
             utlostAv = UtlostAvTypeDTO.fromValue(behandlingSomKanPåklages.hendelseBehandler.name)!!,
-            vedtakTidspunkt = behandlingSomKanPåklages.vedtakTidspunkt,
+            ferdigbehandletTidspunkt = behandlingSomKanPåklages.ferdigbehandletTidspunkt,
         )
     }

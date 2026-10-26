@@ -410,7 +410,7 @@ class PostgresSakRepository(
                         """
                         SELECT  beh.id          AS behandling_id,
                                 beh.utlost_av   AS utlost_av,
-                                log.tidspunkt   AS vedtak_tidspunkt
+                                log.tidspunkt   AS ferdigbehandlet_tidspunkt
                         FROM    sak_v2                      sak
                         JOIN    behandling_v1               beh ON  beh.sak_id = sak.id
                         JOIN    oppgave_v1                  opp ON  opp.behandling_id = beh.id
@@ -437,7 +437,7 @@ class PostgresSakRepository(
                     BehandlingSomKanPåklages(
                         behandlingId = row.uuid("behandling_id"),
                         hendelseBehandler = HendelseBehandler.valueOf(row.string("utlost_av")),
-                        vedtakTidspunkt = row.localDateTime("vedtak_tidspunkt"),
+                        ferdigbehandletTidspunkt = row.localDateTime("ferdigbehandlet_tidspunkt"),
                     )
                 }.asList,
             )

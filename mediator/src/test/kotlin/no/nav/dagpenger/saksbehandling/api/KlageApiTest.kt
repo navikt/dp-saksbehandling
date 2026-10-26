@@ -169,7 +169,7 @@ class KlageApiTest {
             BehandlingSomKanPåklages(
                 behandlingId = UUIDv7.ny(),
                 hendelseBehandler = HendelseBehandler.Intern.Klage,
-                vedtakTidspunkt = LocalDateTime.now(),
+                ferdigbehandletTidspunkt = LocalDateTime.now(),
             )
         val klageMediator =
             mockk<KlageMediator>().also {

@@ -7,5 +7,5 @@ import java.util.UUID
 data class BehandlingSomKanPåklages(
     val behandlingId: UUID,
     val hendelseBehandler: HendelseBehandler,
-    val vedtakTidspunkt: LocalDateTime,
+    val ferdigbehandletTidspunkt: LocalDateTime,
 )
