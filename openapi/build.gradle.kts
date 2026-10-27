@@ -1,5 +1,5 @@
 plugins {
-    id("ch.acanda.gradle.fabrikt") version "1.45.0"
+    id("ch.acanda.gradle.fabrikt") version "2.0.0"
     id("common")
     idea
     `java-library`
@@ -50,10 +50,8 @@ fabrikt {
             generate = enabled
             validationLibrary = NoValidation
             extensibleEnums = disabled
-            sealedInterfacesForOneOf = enabled
             ignoreUnknownProperties = disabled
             nonNullMapValues = enabled
-            serializationLibrary = Jackson
             suffix = "DTO"
         }
     }
