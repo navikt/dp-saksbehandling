@@ -13,6 +13,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -116,7 +117,7 @@ class InnsendingApiTest {
         val slot = slot<FerdigstillInnsendingHendelse>()
         val mediator =
             mockk<InnsendingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withInnsendingApi(mediator) {
             client
@@ -150,7 +151,7 @@ class InnsendingApiTest {
         val slot = slot<FerdigstillInnsendingHendelse>()
         val mediator =
             mockk<InnsendingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withInnsendingApi(mediator) {
             client
@@ -185,7 +186,7 @@ class InnsendingApiTest {
         val slot = slot<FerdigstillInnsendingHendelse>()
         val mediator =
             mockk<InnsendingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withInnsendingApi(mediator) {
             client
@@ -220,7 +221,7 @@ class InnsendingApiTest {
         val slot = slot<FerdigstillInnsendingHendelse>()
         val mediator =
             mockk<InnsendingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withInnsendingApi(mediator) {
             client

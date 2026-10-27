@@ -14,6 +14,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -384,7 +385,7 @@ class OppfølgingApiTest {
         val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
             mockk<OppfølgingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withOppfølgingApi(mediator) {
             client
@@ -422,7 +423,7 @@ class OppfølgingApiTest {
         val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
             mockk<OppfølgingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withOppfølgingApi(mediator) {
             client
@@ -456,7 +457,7 @@ class OppfølgingApiTest {
         val slot = slot<FerdigstillOppfølgingHendelse>()
         val mediator =
             mockk<OppfølgingMediator>().also {
-                every { it.ferdigstill(capture(slot)) } returns Unit
+                coEvery { it.ferdigstill(capture(slot)) } returns Unit
             }
         withOppfølgingApi(mediator) {
             client

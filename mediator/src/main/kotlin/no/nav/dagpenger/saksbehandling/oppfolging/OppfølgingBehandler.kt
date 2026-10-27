@@ -43,7 +43,7 @@ class OppfølgingBehandler(
         )
     }
 
-    fun opprettBehandling(
+    suspend fun opprettBehandling(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
     ): OppfølgingFerdigstiltHendelse {

@@ -5,10 +5,12 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
@@ -254,32 +256,34 @@ class InnsendingMediatorTest {
                 ),
             )
 
-            InnsendingMediator(
-                sakMediator = sakMediator,
-                oppgaveMediator = oppgaveMediator,
-                personMediator = personMediatorMock,
-                klageMediator = mockk(),
-                innsendingRepository = innsendingRepository,
-                innsendingBehandler =
-                    mockk<InnsendingBehandler>().also {
-                        every { it.utførAksjon(any(), any()) } returns
-                            InnsendingFerdigstiltHendelse(
-                                innsendingId = innsending.innsendingId,
-                                aksjonType = Aksjon.Type.AVSLUTT,
-                                opprettetBehandlingId = null,
-                                utførtAv = saksbehandler,
-                            )
-                    },
-                transaksjoner = Transaksjoner(DatabaseSession(it)),
-            ).ferdigstill(
-                hendelse =
-                    FerdigstillInnsendingHendelse(
-                        innsendingId = innsendingOppgave.behandling.behandlingId,
-                        aksjon = Aksjon.Avslutt(sak.sakId),
-                        vurdering = "Vurderingstekst",
-                        utførtAv = saksbehandler,
-                    ),
-            )
+            runBlocking {
+                InnsendingMediator(
+                    sakMediator = sakMediator,
+                    oppgaveMediator = oppgaveMediator,
+                    personMediator = personMediatorMock,
+                    klageMediator = mockk(),
+                    innsendingRepository = innsendingRepository,
+                    innsendingBehandler =
+                        mockk<InnsendingBehandler>().also {
+                            coEvery { it.utførAksjon(any(), any()) } returns
+                                InnsendingFerdigstiltHendelse(
+                                    innsendingId = innsending.innsendingId,
+                                    aksjonType = Aksjon.Type.AVSLUTT,
+                                    opprettetBehandlingId = null,
+                                    utførtAv = saksbehandler,
+                                )
+                        },
+                    transaksjoner = Transaksjoner(DatabaseSession(it)),
+                ).ferdigstill(
+                    hendelse =
+                        FerdigstillInnsendingHendelse(
+                            innsendingId = innsendingOppgave.behandling.behandlingId,
+                            aksjon = Aksjon.Avslutt(sak.sakId),
+                            vurdering = "Vurderingstekst",
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
 
             oppgaveMediator
                 .hentOppgave(innsendingOppgave.oppgaveId, saksbehandler)
@@ -657,7 +661,7 @@ class InnsendingMediatorTest {
         verify(exactly = 0) {
             innsendingRepository.lagre(any(), any())
         }
-        verify(exactly = 0) {
+        coVerify(exactly = 0) {
             innsendingBehandler.utførAksjon(any(), any())
         }
         verify(exactly = 0) {
@@ -937,19 +941,21 @@ class InnsendingMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            innsendingMediator.ferdigstill(
-                hendelse =
-                    FerdigstillInnsendingHendelse(
-                        innsendingId = innsendingOppgave.behandling.behandlingId,
-                        aksjon =
-                            Aksjon.OpprettRevurderingBehandling(
-                                valgtSakId = sak.sakId,
-                                saksbehandlerToken = "token",
-                            ),
-                        vurdering = "Vurderingstekst",
-                        utførtAv = saksbehandler,
-                    ),
-            )
+            runBlocking {
+                innsendingMediator.ferdigstill(
+                    hendelse =
+                        FerdigstillInnsendingHendelse(
+                            innsendingId = innsendingOppgave.behandling.behandlingId,
+                            aksjon =
+                                Aksjon.OpprettRevurderingBehandling(
+                                    valgtSakId = sak.sakId,
+                                    saksbehandlerToken = "token",
+                                ),
+                            vurdering = "Vurderingstekst",
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
             val ferdigstiltInnsending =
                 innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
             ferdigstiltInnsending.innsendingResultat() shouldBe
@@ -1088,19 +1094,21 @@ class InnsendingMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            innsendingMediator.ferdigstill(
-                hendelse =
-                    FerdigstillInnsendingHendelse(
-                        innsendingId = innsendingOppgave.behandling.behandlingId,
-                        aksjon =
-                            Aksjon.OpprettManuellBehandling(
-                                valgtSakId = sak.sakId,
-                                saksbehandlerToken = "token",
-                            ),
-                        vurdering = "Vurderingstekst",
-                        utførtAv = saksbehandler,
-                    ),
-            )
+            runBlocking {
+                innsendingMediator.ferdigstill(
+                    hendelse =
+                        FerdigstillInnsendingHendelse(
+                            innsendingId = innsendingOppgave.behandling.behandlingId,
+                            aksjon =
+                                Aksjon.OpprettManuellBehandling(
+                                    valgtSakId = sak.sakId,
+                                    saksbehandlerToken = "token",
+                                ),
+                            vurdering = "Vurderingstekst",
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
             val ferdigstiltInnsending =
                 innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).single()
             ferdigstiltInnsending.innsendingResultat() shouldBe

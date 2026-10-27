@@ -575,7 +575,7 @@ class OppgaveApiTest {
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken) } just Runs
+                coEvery { it.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client
@@ -587,7 +587,7 @@ class OppgaveApiTest {
                     response.status shouldBe HttpStatusCode.NoContent
                 }
 
-            verify(exactly = 1) {
+            coVerify(exactly = 1) {
                 oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
             }
         }
@@ -613,7 +613,7 @@ class OppgaveApiTest {
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, any()) } just Runs
+                coEvery { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, any()) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client
@@ -631,7 +631,7 @@ class OppgaveApiTest {
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                 }
-            verify(exactly = 1) {
+            coVerify(exactly = 1) {
                 oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, beslutterToken)
             }
         }
