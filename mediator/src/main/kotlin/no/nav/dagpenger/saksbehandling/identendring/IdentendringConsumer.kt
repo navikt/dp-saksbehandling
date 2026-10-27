@@ -22,6 +22,11 @@ internal class IdentendringConsumer(
             .labelNames("utfall")
             .help("Antall identendringer fra PDL, fordelt på om personen har dagpengesak")
             .register(registry)
+            .apply {
+                // Seriene må finnes fra 0, ellers fanger ikke increase() første økning
+                initLabelValues("treff")
+                initLabelValues("ikke_treff")
+            }
 
     fun håndter(historiskeIdenter: Set<String>) {
         val sakIder = historiskeIdenter.mapNotNull { sakRepository.finnSisteDagpengeSakId(it) }.toSet()

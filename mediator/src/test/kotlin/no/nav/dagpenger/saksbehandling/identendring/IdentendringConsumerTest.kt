@@ -49,6 +49,12 @@ class IdentendringConsumerTest {
         tellerFor("ikke_treff") shouldBe 1.0
     }
 
+    @Test
+    fun `teller starter på 0 for alle utfall`() {
+        tellerFor("treff") shouldBe 0.0
+        tellerFor("ikke_treff") shouldBe 0.0
+    }
+
     private fun tellerFor(utfall: String) =
         registry
             .getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_identendring" }
