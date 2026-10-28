@@ -136,7 +136,7 @@ class InnsendingMediator(
         }
     }
 
-    fun ferdigstill(hendelse: FerdigstillInnsendingHendelse) {
+    suspend fun ferdigstill(hendelse: FerdigstillInnsendingHendelse) {
         val innsending = hentInnsending(innsendingId = hendelse.innsendingId, saksbehandler = hendelse.utførtAv)
         innsending.startFerdigstilling(hendelse)
         innsendingRepository.lagre(innsending)

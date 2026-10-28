@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -204,6 +205,21 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
+                runBlocking {
+                    klageMediator.behandlingUtført(
+                        klageBehandlingUtført =
+                            KlageBehandlingUtført(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = "token",
+                    )
+                }
+            }
+
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
+
+            runBlocking {
                 klageMediator.behandlingUtført(
                     klageBehandlingUtført =
                         KlageBehandlingUtført(
@@ -213,17 +229,6 @@ class KlageMediatorTest {
                     saksbehandlerToken = "token",
                 )
             }
-
-            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
-
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført =
-                    KlageBehandlingUtført(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
 
             klageMediator
                 .hentKlageBehandling(
@@ -361,14 +366,16 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført =
-                    KlageBehandlingUtført(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
+            runBlocking {
+                klageMediator.behandlingUtført(
+                    klageBehandlingUtført =
+                        KlageBehandlingUtført(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
+                )
+            }
 
             klageMediator.vedtakDistribuert(
                 hendelse =
@@ -447,14 +454,16 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført =
-                    KlageBehandlingUtført(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
+            runBlocking {
+                klageMediator.behandlingUtført(
+                    klageBehandlingUtført =
+                        KlageBehandlingUtført(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
+                )
+            }
 
             klageMediator.vedtakDistribuert(
                 hendelse =
@@ -533,6 +542,20 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
+                runBlocking {
+                    klageMediator.behandlingUtført(
+                        klageBehandlingUtført =
+                            KlageBehandlingUtført(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = "token",
+                    )
+                }
+            }
+
+            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
+            runBlocking {
                 klageMediator.behandlingUtført(
                     klageBehandlingUtført =
                         KlageBehandlingUtført(
@@ -542,16 +565,6 @@ class KlageMediatorTest {
                     saksbehandlerToken = "token",
                 )
             }
-
-            klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført =
-                    KlageBehandlingUtført(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
 
             klageMediator
                 .hentKlageBehandling(
@@ -664,6 +677,20 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
+                runBlocking {
+                    klageMediator.behandlingUtført(
+                        klageBehandlingUtført =
+                            KlageBehandlingUtført(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = "token",
+                    )
+                }
+            }
+
+            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.AVVIST)
+            runBlocking {
                 klageMediator.behandlingUtført(
                     klageBehandlingUtført =
                         KlageBehandlingUtført(
@@ -673,16 +700,6 @@ class KlageMediatorTest {
                     saksbehandlerToken = "token",
                 )
             }
-
-            klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.AVVIST)
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført =
-                    KlageBehandlingUtført(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             klageBehandling.tilstand().type shouldBe BEHANDLING_UTFORT
@@ -826,13 +843,15 @@ class KlageMediatorTest {
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
 
-            klageMediator.ferdigstillBehandling(
-                hendelse =
-                    KlageBehandlingFerdigstilt(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
-            )
+            runBlocking {
+                klageMediator.ferdigstillBehandling(
+                    hendelse =
+                        KlageBehandlingFerdigstilt(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
 
             klageMediator
                 .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -886,9 +905,11 @@ class KlageMediatorTest {
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
 
             // Steg 1: ferdigstillBehandling — klage til BEHANDLING_UTFORT, oppgave forblir aktiv
-            klageMediator.ferdigstillBehandling(
-                hendelse = KlageBehandlingFerdigstilt(behandlingId = behandlingId, utførtAv = saksbehandler),
-            )
+            runBlocking {
+                klageMediator.ferdigstillBehandling(
+                    hendelse = KlageBehandlingFerdigstilt(behandlingId = behandlingId, utførtAv = saksbehandler),
+                )
+            }
             klageMediator
                 .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
@@ -899,10 +920,12 @@ class KlageMediatorTest {
                 .type shouldBe UNDER_BEHANDLING
 
             // Steg 2: behandlingUtført — klage til FERDIGSTILT, oppgave ferdigstilles
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
-                saksbehandlerToken = "token",
-            )
+            runBlocking {
+                klageMediator.behandlingUtført(
+                    klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    saksbehandlerToken = "token",
+                )
+            }
             klageMediator
                 .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
@@ -943,14 +966,16 @@ class KlageMediatorTest {
 
             // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
-                klageMediator.behandlingUtført(
-                    klageBehandlingUtført =
-                        KlageBehandlingUtført(
-                            behandlingId = behandlingId,
-                            utførtAv = saksbehandler,
-                        ),
-                    saksbehandlerToken = "token",
-                )
+                runBlocking {
+                    klageMediator.behandlingUtført(
+                        klageBehandlingUtført =
+                            KlageBehandlingUtført(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = "token",
+                    )
+                }
             }
 
             // Klagen skal fortsatt være i BEHANDLES og oppgaven skal IKKE være ferdigstilt
@@ -993,9 +1018,11 @@ class KlageMediatorTest {
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.DELVIS_MEDHOLD)
 
             // Steg 1: ferdigstillBehandling — klage til BEHANDLING_UTFORT, oppgave forblir aktiv
-            klageMediator.ferdigstillBehandling(
-                hendelse = KlageBehandlingFerdigstilt(behandlingId = behandlingId, utførtAv = saksbehandler),
-            )
+            runBlocking {
+                klageMediator.ferdigstillBehandling(
+                    hendelse = KlageBehandlingFerdigstilt(behandlingId = behandlingId, utførtAv = saksbehandler),
+                )
+            }
             klageMediator
                 .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
@@ -1006,10 +1033,12 @@ class KlageMediatorTest {
                 .type shouldBe UNDER_BEHANDLING
 
             // Steg 2: behandlingUtført — klage til FERDIGSTILT, oppgave ferdigstilles
-            klageMediator.behandlingUtført(
-                klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
-                saksbehandlerToken = "token",
-            )
+            runBlocking {
+                klageMediator.behandlingUtført(
+                    klageBehandlingUtført = KlageBehandlingUtført(behandlingId = behandlingId, utførtAv = saksbehandler),
+                    saksbehandlerToken = "token",
+                )
+            }
             klageMediator
                 .hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand()
@@ -1050,14 +1079,16 @@ class KlageMediatorTest {
 
             // Kaller "steg 2" (behandlingUtført) direkte fra BEHANDLES uten å ha kalt ferdigstillBehandling først
             shouldThrow<IllegalStateException> {
-                klageMediator.behandlingUtført(
-                    klageBehandlingUtført =
-                        KlageBehandlingUtført(
-                            behandlingId = behandlingId,
-                            utførtAv = saksbehandler,
-                        ),
-                    saksbehandlerToken = "token",
-                )
+                runBlocking {
+                    klageMediator.behandlingUtført(
+                        klageBehandlingUtført =
+                            KlageBehandlingUtført(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = "token",
+                    )
+                }
             }
 
             // Klagen skal fortsatt være i BEHANDLES og oppgaven skal IKKE være ferdigstilt
@@ -1596,14 +1627,16 @@ class KlageMediatorTest {
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler, vedtakIdKlagenGjelder)
 
             shouldThrow<RuntimeException> {
-                klageMediator.behandlingUtført(
-                    klageBehandlingUtført =
-                        KlageBehandlingUtført(
-                            behandlingId = behandlingId,
-                            utførtAv = saksbehandler,
-                        ),
-                    saksbehandlerToken = "token",
-                )
+                runBlocking {
+                    klageMediator.behandlingUtført(
+                        klageBehandlingUtført =
+                            KlageBehandlingUtført(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = "token",
+                    )
+                }
             }
 
             // Verifiser at klageBehandling IKKE har endret tilstand (rullet tilbake)

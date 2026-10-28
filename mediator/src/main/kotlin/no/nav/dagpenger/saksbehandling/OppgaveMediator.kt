@@ -2,8 +2,8 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.coroutines.withLoggingContextAsync
 import io.github.oshai.kotlinlogging.withLoggingContext
-import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.Oppgave.Handling
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
@@ -288,51 +288,49 @@ class OppgaveMediator(
             oppgaveRepository.lagre(oppgave)
         }
 
-    fun sendTilKontroll(
+    suspend fun sendTilKontroll(
         sendTilKontrollHendelse: SendTilKontrollHendelse,
         saksbehandlerToken: String,
     ) {
         oppgaveRepository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
-            withLoggingContext(
+            withLoggingContextAsync(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
                 logger.info {
                     "Mottatt SendTilKontrollHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
-                runBlocking {
-                    val kreverToTrinnsKontroll =
-                        behandlingKlient
-                            .kreverTotrinnskontroll(
-                                oppgave.behandling.behandlingId,
-                                saksbehandlerToken = saksbehandlerToken,
-                            ).onFailure {
-                                logger.error {
-                                    "Feil ved sjekk om behandling krever totrinns av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}"
-                                }
-                            }.getOrThrow()
-
-                    oppgave.sendTilKontroll(sendTilKontrollHendelse)
-                    when (kreverToTrinnsKontroll) {
-                        true -> {
-                            behandlingKlient
-                                .godkjenn(
-                                    behandlingId = oppgave.behandling.behandlingId,
-                                    ident = oppgave.personIdent(),
-                                    saksbehandlerToken = saksbehandlerToken,
-                                ).let { håndterMuligKonflikt(it) }
-                        }
-
-                        false -> {
-                            logger.info {
-                                "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
+                val kreverToTrinnsKontroll =
+                    behandlingKlient
+                        .kreverTotrinnskontroll(
+                            oppgave.behandling.behandlingId,
+                            saksbehandlerToken = saksbehandlerToken,
+                        ).onFailure {
+                            logger.error {
+                                "Feil ved sjekk om behandling krever totrinns av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}"
                             }
+                        }.getOrThrow()
+
+                oppgave.sendTilKontroll(sendTilKontrollHendelse)
+                when (kreverToTrinnsKontroll) {
+                    true -> {
+                        behandlingKlient
+                            .godkjenn(
+                                behandlingId = oppgave.behandling.behandlingId,
+                                ident = oppgave.personIdent(),
+                                saksbehandlerToken = saksbehandlerToken,
+                            ).let { håndterMuligKonflikt(it) }
+                    }
+
+                    false -> {
+                        logger.info {
+                            "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til kvalitetskontroll."
                         }
                     }
-                    oppgaveRepository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
+                }
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }
@@ -346,12 +344,12 @@ class OppgaveMediator(
         }
     }
 
-    fun returnerTilSaksbehandling(
+    suspend fun returnerTilSaksbehandling(
         returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         beslutterToken: String,
     ) {
         oppgaveRepository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
-            withLoggingContext(
+            withLoggingContextAsync(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
@@ -359,43 +357,41 @@ class OppgaveMediator(
                     "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-                runBlocking {
-                    val kreverToTrinnsKontroll =
+                val kreverToTrinnsKontroll =
+                    behandlingKlient
+                        .kreverTotrinnskontroll(
+                            oppgave.behandling.behandlingId,
+                            saksbehandlerToken = beslutterToken,
+                        ).onFailure {
+                            logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                        }.getOrThrow()
+                when (kreverToTrinnsKontroll) {
+                    true -> {
                         behandlingKlient
-                            .kreverTotrinnskontroll(
-                                oppgave.behandling.behandlingId,
+                            .sendTilbake(
+                                behandlingId = oppgave.behandling.behandlingId,
+                                ident = oppgave.personIdent(),
                                 saksbehandlerToken = beslutterToken,
-                            ).onFailure {
-                                logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
-                            }.getOrThrow()
-                    when (kreverToTrinnsKontroll) {
-                        true -> {
-                            behandlingKlient
-                                .sendTilbake(
-                                    behandlingId = oppgave.behandling.behandlingId,
-                                    ident = oppgave.personIdent(),
-                                    saksbehandlerToken = beslutterToken,
-                                ).onSuccess {
-                                    logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
-                                }.onFailure {
-                                    val feil =
-                                        "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
-                                            "tilbake til saksbehandling: ${it.message}"
-                                    logger.error { feil }
-                                    throw it
-                                }
-                        }
-
-                        false -> {
-                            logger.info {
-                                "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til under behandling"
+                            ).onSuccess {
+                                logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
+                            }.onFailure {
+                                val feil =
+                                    "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
+                                        "tilbake til saksbehandling: ${it.message}"
+                                logger.error { feil }
+                                throw it
                             }
+                    }
+
+                    false -> {
+                        logger.info {
+                            "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til under behandling"
                         }
                     }
-                    oppgaveRepository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
+                }
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }
@@ -623,13 +619,13 @@ class OppgaveMediator(
                 }
         }
 
-    fun ferdigstillOppgave(
+    suspend fun ferdigstillOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
         saksbehandlerToken: String,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
-            withLoggingContext(
+            withLoggingContextAsync(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
@@ -662,7 +658,7 @@ class OppgaveMediator(
         }
     }
 
-    private fun ferdigstillOppgaveMedUtsending(
+    private suspend fun ferdigstillOppgaveMedUtsending(
         oppgave: Oppgave,
         saksbehandlerToken: String,
     ) {
@@ -681,7 +677,7 @@ class OppgaveMediator(
         }.getOrThrow()
     }
 
-    private fun ferdigstillOppgaveUtenUtsending(
+    private suspend fun ferdigstillOppgaveUtenUtsending(
         oppgave: Oppgave,
         saksbehandlerToken: String,
     ) {
@@ -940,39 +936,37 @@ class OppgaveMediator(
         }
     }
 
-    private fun godkjennEllerBeslutt(
+    private suspend fun godkjennEllerBeslutt(
         oppgave: Oppgave,
         saksbehandlerToken: String,
     ): Result<Unit> {
         val behandlingId = oppgave.behandling.behandlingId
         val ident = oppgave.personIdent()
-        return runBlocking {
-            behandlingKlient
-                .kreverTotrinnskontroll(
-                    behandlingId = behandlingId,
-                    saksbehandlerToken = saksbehandlerToken,
-                ).mapCatching {
-                    when (it) {
-                        true -> {
-                            feilVedAvvikendeMeldesyklus(oppgave)
-                            behandlingKlient
-                                .beslutt(
-                                    behandlingId = behandlingId,
-                                    ident = ident,
-                                    saksbehandlerToken = saksbehandlerToken,
-                                ).getOrThrow()
-                        }
+        return behandlingKlient
+            .kreverTotrinnskontroll(
+                behandlingId = behandlingId,
+                saksbehandlerToken = saksbehandlerToken,
+            ).mapCatching {
+                when (it) {
+                    true -> {
+                        feilVedAvvikendeMeldesyklus(oppgave)
+                        behandlingKlient
+                            .beslutt(
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                saksbehandlerToken = saksbehandlerToken,
+                            ).getOrThrow()
+                    }
 
-                        false -> {
-                            behandlingKlient
-                                .godkjenn(
-                                    behandlingId = behandlingId,
-                                    ident = ident,
-                                    saksbehandlerToken = saksbehandlerToken,
-                                ).getOrThrow()
-                        }
+                    false -> {
+                        behandlingKlient
+                            .godkjenn(
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                saksbehandlerToken = saksbehandlerToken,
+                            ).getOrThrow()
                     }
                 }
-        }
+            }
     }
 }

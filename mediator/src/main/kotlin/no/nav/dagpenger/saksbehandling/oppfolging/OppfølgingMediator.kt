@@ -91,7 +91,7 @@ class OppfølgingMediator(
         )
     }
 
-    fun ferdigstill(hendelse: FerdigstillOppfølgingHendelse) {
+    suspend fun ferdigstill(hendelse: FerdigstillOppfølgingHendelse) {
         val oppfølging = hent(id = hendelse.oppfølgingId, saksbehandler = hendelse.utførtAv)
 
         when (hendelse.aksjon) {
@@ -145,7 +145,7 @@ class OppfølgingMediator(
         }
     }
 
-    private fun ferdigstillEksternt(
+    private suspend fun ferdigstillEksternt(
         oppfølging: Oppfølging,
         hendelse: FerdigstillOppfølgingHendelse,
     ) {

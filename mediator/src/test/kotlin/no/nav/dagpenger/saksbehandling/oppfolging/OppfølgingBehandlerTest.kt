@@ -2,10 +2,12 @@ package no.nav.dagpenger.saksbehandling.oppfolging
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
@@ -54,7 +56,7 @@ class OppfølgingBehandlerTest {
         val opprettBehandlingTypeDTOSlot = slot<OpprettBehandlingTypeDTO>()
         val behandlingKlientMock =
             mockk<BehandlingKlient>().also {
-                every {
+                coEvery {
                     it.opprettBehandling(capture(opprettBehandlingTypeDTOSlot), any())
                 } returns Result.success(opprettetBehandlingId)
             }
@@ -76,25 +78,27 @@ class OppfølgingBehandlerTest {
         val valgtSakId = UUID.randomUUID()
         oppfølging.startFerdigstilling(vurdering = "Skal revurderes", aksjon = OppfølgingAksjon.Avslutt(valgtSakId))
         val ferdigstiltHendelse =
-            oppfølgingBehandler.opprettBehandling(
-                oppfølging = oppfølging,
-                hendelse =
-                    FerdigstillOppfølgingHendelse(
-                        oppfølgingId = oppfølging.id,
-                        aksjon =
-                            OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage(
-                                saksbehandlerToken = "token",
-                                valgtSakId = valgtSakId,
-                            ),
-                        vurdering = "Skal revurderes",
-                        utførtAv = saksbehandler,
-                    ),
-            )
+            runBlocking {
+                oppfølgingBehandler.opprettBehandling(
+                    oppfølging = oppfølging,
+                    hendelse =
+                        FerdigstillOppfølgingHendelse(
+                            oppfølgingId = oppfølging.id,
+                            aksjon =
+                                OppfølgingAksjon.OpprettRevurderingBehandlingEtterKlage(
+                                    saksbehandlerToken = "token",
+                                    valgtSakId = valgtSakId,
+                                ),
+                            vurdering = "Skal revurderes",
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
 
         ferdigstiltHendelse.aksjonType shouldBe OppfølgingAksjon.Type.OPPRETT_REVURDERING_BEHANDLING_ETTER_KLAGE
         ferdigstiltHendelse.opprettetBehandlingId shouldBe opprettetBehandlingId
 
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             behandlingKlientMock.opprettBehandling(any(), "token")
         }
         with(opprettBehandlingTypeDTOSlot.captured) {
@@ -132,7 +136,9 @@ class OppfølgingBehandlerTest {
             )
 
         runCatching {
-            oppfølgingBehandler.opprettBehandling(oppfølging, hendelse)
+            runBlocking {
+                oppfølgingBehandler.opprettBehandling(oppfølging, hendelse)
+            }
         }.isFailure shouldBe true
     }
 }

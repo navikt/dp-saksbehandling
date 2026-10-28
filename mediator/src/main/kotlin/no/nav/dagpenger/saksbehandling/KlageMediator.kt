@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
@@ -178,11 +178,11 @@ class KlageMediator(
         }
     }
 
-    fun behandlingUtført(
+    suspend fun behandlingUtført(
         klageBehandlingUtført: KlageBehandlingUtført,
         saksbehandlerToken: String,
     ): KlageBehandling =
-        runBlocking {
+        coroutineScope {
             val saksbehandlerDeferred =
                 async(Dispatchers.IO) {
                     oppslag.hentBehandler(
@@ -280,12 +280,12 @@ class KlageMediator(
             klageBehandling
         }
 
-    fun ferdigstillBehandling(hendelse: KlageBehandlingFerdigstilt): KlageBehandling {
+    suspend fun ferdigstillBehandling(hendelse: KlageBehandlingFerdigstilt): KlageBehandling {
         oppgaveMediator.hentOppgaveForBehandling(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
         )
-        return runBlocking {
+        return coroutineScope {
             val saksbehandler =
                 async(Dispatchers.IO) {
                     oppslag.hentBehandler(ident = hendelse.utførtAv.navIdent)

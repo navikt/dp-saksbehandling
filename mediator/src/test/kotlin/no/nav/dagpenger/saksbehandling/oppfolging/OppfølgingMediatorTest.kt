@@ -1,8 +1,10 @@
 package no.nav.dagpenger.saksbehandling.oppfolging
 
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -97,14 +99,16 @@ class OppfølgingMediatorTest {
                 ),
             )
 
-            mediator.ferdigstill(
-                FerdigstillOppfølgingHendelse(
-                    oppfølgingId = resultat.oppfølgingId,
-                    aksjon = OppfølgingAksjon.Avslutt(null),
-                    vurdering = "Alt er OK",
-                    utførtAv = saksbehandler,
-                ),
-            )
+            runBlocking {
+                mediator.ferdigstill(
+                    FerdigstillOppfølgingHendelse(
+                        oppfølgingId = resultat.oppfølgingId,
+                        aksjon = OppfølgingAksjon.Avslutt(null),
+                        vurdering = "Alt er OK",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
 
             val ferdigstiltOppfølging = oppfølgingRepository.hent(resultat.oppfølgingId)
             ferdigstiltOppfølging.tilstand() shouldBe "FERDIGSTILT"
@@ -292,21 +296,23 @@ class OppfølgingMediatorTest {
 
             val frist = LocalDate.now().plusDays(7)
 
-            mediator.ferdigstill(
-                FerdigstillOppfølgingHendelse(
-                    oppfølgingId = original.oppfølgingId,
-                    aksjon =
-                        OppfølgingAksjon.OpprettOppfølging(
-                            valgtSakId = null,
-                            aarsak = "Ny",
-                            tittel = "Ny oppfølging",
-                            frist = frist,
-                            beholdOppgaven = true,
-                        ),
-                    vurdering = "Trenger ny sjekk",
-                    utførtAv = saksbehandler,
-                ),
-            )
+            runBlocking {
+                mediator.ferdigstill(
+                    FerdigstillOppfølgingHendelse(
+                        oppfølgingId = original.oppfølgingId,
+                        aksjon =
+                            OppfølgingAksjon.OpprettOppfølging(
+                                valgtSakId = null,
+                                aarsak = "Ny",
+                                tittel = "Ny oppfølging",
+                                frist = frist,
+                                beholdOppgaven = true,
+                            ),
+                        vurdering = "Trenger ny sjekk",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             val nyOppgave = oppgaver.first { it.tilstand == PAA_VENT }
@@ -364,21 +370,23 @@ class OppfølgingMediatorTest {
                 ),
             )
 
-            mediator.ferdigstill(
-                FerdigstillOppfølgingHendelse(
-                    oppfølgingId = original.oppfølgingId,
-                    aksjon =
-                        OppfølgingAksjon.OpprettOppfølging(
-                            valgtSakId = null,
-                            aarsak = "Ny",
-                            tittel = "Ny oppfølging",
-                            frist = null,
-                            beholdOppgaven = false,
-                        ),
-                    vurdering = "Trenger ny sjekk",
-                    utførtAv = saksbehandler,
-                ),
-            )
+            runBlocking {
+                mediator.ferdigstill(
+                    FerdigstillOppfølgingHendelse(
+                        oppfølgingId = original.oppfølgingId,
+                        aksjon =
+                            OppfølgingAksjon.OpprettOppfølging(
+                                valgtSakId = null,
+                                aarsak = "Ny",
+                                tittel = "Ny oppfølging",
+                                frist = null,
+                                beholdOppgaven = false,
+                            ),
+                        vurdering = "Trenger ny sjekk",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
 
             val oppgaver = oppgaveMediator.finnOppgaverFor(ident = testPerson.ident)
             val nyOppgave = oppgaver.first { it.tilstand == KLAR_TIL_BEHANDLING }
@@ -509,14 +517,16 @@ class OppfølgingMediatorTest {
                 )
 
             runCatching {
-                mediatorMedFeil.ferdigstill(
-                    FerdigstillOppfølgingHendelse(
-                        oppfølgingId = resultat.oppfølgingId,
-                        aksjon = OppfølgingAksjon.Avslutt(null),
-                        vurdering = "Skal rulle tilbake",
-                        utførtAv = saksbehandler,
-                    ),
-                )
+                runBlocking {
+                    mediatorMedFeil.ferdigstill(
+                        FerdigstillOppfølgingHendelse(
+                            oppfølgingId = resultat.oppfølgingId,
+                            aksjon = OppfølgingAksjon.Avslutt(null),
+                            vurdering = "Skal rulle tilbake",
+                            utførtAv = saksbehandler,
+                        ),
+                    )
+                }
             }.isFailure shouldBe true
 
             // Verifiser at oppfølging IKKE ble ferdigstilt (rollback)
@@ -553,7 +563,7 @@ class OppfølgingMediatorTest {
 
             val oppfølgingBehandler =
                 mockk<OppfølgingBehandler>().also {
-                    every { it.opprettBehandling(any(), any()) } throws
+                    coEvery { it.opprettBehandling(any(), any()) } throws
                         RuntimeException("HTTP-feil mot dp-behandling")
                 }
 
@@ -585,18 +595,20 @@ class OppfølgingMediatorTest {
             )
 
             runCatching {
-                mediator.ferdigstill(
-                    FerdigstillOppfølgingHendelse(
-                        oppfølgingId = resultat.oppfølgingId,
-                        aksjon =
-                            OppfølgingAksjon.OpprettManuellBehandling(
-                                saksbehandlerToken = "token",
-                                valgtSakId = UUID.randomUUID(),
-                            ),
-                        vurdering = "Trenger manuell behandling",
-                        utførtAv = saksbehandler,
-                    ),
-                )
+                runBlocking {
+                    mediator.ferdigstill(
+                        FerdigstillOppfølgingHendelse(
+                            oppfølgingId = resultat.oppfølgingId,
+                            aksjon =
+                                OppfølgingAksjon.OpprettManuellBehandling(
+                                    saksbehandlerToken = "token",
+                                    valgtSakId = UUID.randomUUID(),
+                                ),
+                            vurdering = "Trenger manuell behandling",
+                            utførtAv = saksbehandler,
+                        ),
+                    )
+                }
             }.isFailure shouldBe true
 
             // Oppfølging ble checkpointet til FERDIGSTILL_STARTET før HTTP-kallet
@@ -634,7 +646,7 @@ class OppfølgingMediatorTest {
             // OppfølgingBehandler som lykkes med HTTP men ferdigstillOppgave feiler etterpå
             val oppfølgingBehandler =
                 mockk<OppfølgingBehandler>().also {
-                    every { it.opprettBehandling(any(), any()) } answers {
+                    coEvery { it.opprettBehandling(any(), any()) } answers {
                         val oppfølging = firstArg<Oppfølging>()
                         OppfølgingFerdigstiltHendelse(
                             oppfølgingId = oppfølging.id,
@@ -690,18 +702,20 @@ class OppfølgingMediatorTest {
                 )
 
             runCatching {
-                mediatorMedFeil.ferdigstill(
-                    FerdigstillOppfølgingHendelse(
-                        oppfølgingId = resultat.oppfølgingId,
-                        aksjon =
-                            OppfølgingAksjon.OpprettManuellBehandling(
-                                saksbehandlerToken = "token",
-                                valgtSakId = UUID.randomUUID(),
-                            ),
-                        vurdering = "Trenger manuell behandling",
-                        utførtAv = saksbehandler,
-                    ),
-                )
+                runBlocking {
+                    mediatorMedFeil.ferdigstill(
+                        FerdigstillOppfølgingHendelse(
+                            oppfølgingId = resultat.oppfølgingId,
+                            aksjon =
+                                OppfølgingAksjon.OpprettManuellBehandling(
+                                    saksbehandlerToken = "token",
+                                    valgtSakId = UUID.randomUUID(),
+                                ),
+                            vurdering = "Trenger manuell behandling",
+                            utførtAv = saksbehandler,
+                        ),
+                    )
+                }
             }.isFailure shouldBe true
 
             // Oppfølging forblir i FERDIGSTILL_STARTET — OppfølgingAlarmJob vil fange dette

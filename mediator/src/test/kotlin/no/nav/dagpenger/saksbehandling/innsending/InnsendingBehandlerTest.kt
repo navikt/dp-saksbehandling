@@ -2,10 +2,13 @@ package no.nav.dagpenger.saksbehandling.innsending
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
@@ -34,20 +37,22 @@ class InnsendingBehandlerTest {
                 oppfølgingMediator = mockk(),
             )
 
-        innsendingBehandler
-            .utførAksjon(
-                hendelse =
-                    lagHendelse(
-                        aksjon = Aksjon.Avslutt(null),
-                        vurdering = "Dette er en vurdering",
-                    ),
-                innsending = testInnsending,
-            ).let {
-                it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjonType shouldBe Aksjon.Type.AVSLUTT
-                it.opprettetBehandlingId shouldBe null
-                it.utførtAv shouldBe saksbehandler
-            }
+        runBlocking {
+            innsendingBehandler
+                .utførAksjon(
+                    hendelse =
+                        lagHendelse(
+                            aksjon = Aksjon.Avslutt(null),
+                            vurdering = "Dette er en vurdering",
+                        ),
+                    innsending = testInnsending,
+                ).let {
+                    it.innsendingId shouldBe testInnsending.innsendingId
+                    it.aksjonType shouldBe Aksjon.Type.AVSLUTT
+                    it.opprettetBehandlingId shouldBe null
+                    it.utførtAv shouldBe saksbehandler
+                }
+        }
     }
 
     @Test
@@ -68,20 +73,22 @@ class InnsendingBehandlerTest {
                 oppfølgingMediator = mockk(),
             )
 
-        innsendingBehandler
-            .utførAksjon(
-                hendelse =
-                    lagHendelse(
-                        aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
-                        vurdering = "Dette er min vurdering",
-                    ),
-                innsending = testInnsending,
-            ).let {
-                it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjonType shouldBe Aksjon.Type.OPPRETT_KLAGE
-                it.opprettetBehandlingId shouldBe testOppgave.behandling.behandlingId
-                it.utførtAv shouldBe saksbehandler
-            }
+        runBlocking {
+            innsendingBehandler
+                .utførAksjon(
+                    hendelse =
+                        lagHendelse(
+                            aksjon = Aksjon.OpprettKlage(valgtSakId = testSakId),
+                            vurdering = "Dette er min vurdering",
+                        ),
+                    innsending = testInnsending,
+                ).let {
+                    it.innsendingId shouldBe testInnsending.innsendingId
+                    it.aksjonType shouldBe Aksjon.Type.OPPRETT_KLAGE
+                    it.opprettetBehandlingId shouldBe testOppgave.behandling.behandlingId
+                    it.utførtAv shouldBe saksbehandler
+                }
+        }
 
         with(slot.captured) {
             ident shouldBe testInnsending.person.ident
@@ -98,7 +105,7 @@ class InnsendingBehandlerTest {
 
         val behandlingKlient =
             mockk<BehandlingKlient>().also {
-                every {
+                coEvery {
                     it.opprettBehandling(any(), saksbehandlerToken)
                 } returns Result.success(behandlingId)
             }
@@ -109,27 +116,29 @@ class InnsendingBehandlerTest {
                 oppfølgingMediator = mockk(),
             )
 
-        innsendingBehandler
-            .utførAksjon(
-                hendelse =
-                    lagHendelse(
-                        aksjon =
-                            Aksjon.OpprettManuellBehandling(
-                                saksbehandlerToken = saksbehandlerToken,
-                                valgtSakId = UUID.randomUUID(),
-                            ),
-                        vurdering = "Dette er en vurdering",
-                    ),
-                innsending = testInnsending,
-            ).let {
-                it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjonType shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
-                it.opprettetBehandlingId shouldBe behandlingId
-                it.utførtAv shouldBe saksbehandler
-            }
+        runBlocking {
+            innsendingBehandler
+                .utførAksjon(
+                    hendelse =
+                        lagHendelse(
+                            aksjon =
+                                Aksjon.OpprettManuellBehandling(
+                                    saksbehandlerToken = saksbehandlerToken,
+                                    valgtSakId = UUID.randomUUID(),
+                                ),
+                            vurdering = "Dette er en vurdering",
+                        ),
+                    innsending = testInnsending,
+                ).let {
+                    it.innsendingId shouldBe testInnsending.innsendingId
+                    it.aksjonType shouldBe Aksjon.Type.OPPRETT_MANUELL_BEHANDLING
+                    it.opprettetBehandlingId shouldBe behandlingId
+                    it.utførtAv shouldBe saksbehandler
+                }
+        }
 
         val opprettBehandlingTypeDTOSlot = slot<OpprettBehandlingTypeDTO>()
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             behandlingKlient.opprettBehandling(capture(opprettBehandlingTypeDTOSlot), saksbehandlerToken)
         }
         with(opprettBehandlingTypeDTOSlot.captured) {
@@ -148,7 +157,7 @@ class InnsendingBehandlerTest {
 
         val behandlingKlient =
             mockk<BehandlingKlient>().also {
-                every {
+                coEvery {
                     it.opprettBehandling(any(), saksbehandlerToken)
                 } returns Result.success(behandlingId)
             }
@@ -159,27 +168,29 @@ class InnsendingBehandlerTest {
                 oppfølgingMediator = mockk(),
             )
 
-        innsendingBehandler
-            .utførAksjon(
-                hendelse =
-                    lagHendelse(
-                        aksjon =
-                            Aksjon.OpprettRevurderingBehandling(
-                                saksbehandlerToken = saksbehandlerToken,
-                                valgtSakId = UUID.randomUUID(),
-                            ),
-                        vurdering = "Dette er en vurdering",
-                    ),
-                innsending = testInnsending,
-            ).let {
-                it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjonType shouldBe Aksjon.Type.OPPRETT_REVURDERING_BEHANDLING
-                it.opprettetBehandlingId shouldBe behandlingId
-                it.utførtAv shouldBe saksbehandler
-            }
+        runBlocking {
+            innsendingBehandler
+                .utførAksjon(
+                    hendelse =
+                        lagHendelse(
+                            aksjon =
+                                Aksjon.OpprettRevurderingBehandling(
+                                    saksbehandlerToken = saksbehandlerToken,
+                                    valgtSakId = UUID.randomUUID(),
+                                ),
+                            vurdering = "Dette er en vurdering",
+                        ),
+                    innsending = testInnsending,
+                ).let {
+                    it.innsendingId shouldBe testInnsending.innsendingId
+                    it.aksjonType shouldBe Aksjon.Type.OPPRETT_REVURDERING_BEHANDLING
+                    it.opprettetBehandlingId shouldBe behandlingId
+                    it.utførtAv shouldBe saksbehandler
+                }
+        }
 
         val opprettBehandlingTypeDTOSlot = slot<OpprettBehandlingTypeDTO>()
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             behandlingKlient.opprettBehandling(capture(opprettBehandlingTypeDTOSlot), saksbehandlerToken)
         }
         with(opprettBehandlingTypeDTOSlot.captured) {
@@ -213,28 +224,30 @@ class InnsendingBehandlerTest {
                 oppfølgingMediator = oppfølgingMediator,
             )
 
-        innsendingBehandler
-            .utførAksjon(
-                hendelse =
-                    lagHendelse(
-                        aksjon =
-                            Aksjon.OpprettOppfølging(
-                                valgtSakId = null,
-                                tittel = "Sjekk meldekort",
-                                aarsak = "MeldekortKorrigering",
-                                frist = frist,
-                                beholdOppgaven = true,
-                            ),
-                        vurdering = "Dette er en vurdering",
-                    ),
-                innsending = testInnsending,
-            ).let {
-                it.innsendingId shouldBe testInnsending.innsendingId
-                it.aksjonType shouldBe Aksjon.Type.OPPRETT_OPPFOLGING
-                it.opprettetBehandlingId shouldBe oppfølgingId
-                it.opprettetOppgaveId shouldBe oppgaveId
-                it.utførtAv shouldBe saksbehandler
-            }
+        runBlocking {
+            innsendingBehandler
+                .utførAksjon(
+                    hendelse =
+                        lagHendelse(
+                            aksjon =
+                                Aksjon.OpprettOppfølging(
+                                    valgtSakId = null,
+                                    tittel = "Sjekk meldekort",
+                                    aarsak = "MeldekortKorrigering",
+                                    frist = frist,
+                                    beholdOppgaven = true,
+                                ),
+                            vurdering = "Dette er en vurdering",
+                        ),
+                    innsending = testInnsending,
+                ).let {
+                    it.innsendingId shouldBe testInnsending.innsendingId
+                    it.aksjonType shouldBe Aksjon.Type.OPPRETT_OPPFOLGING
+                    it.opprettetBehandlingId shouldBe oppfølgingId
+                    it.opprettetOppgaveId shouldBe oppgaveId
+                    it.utførtAv shouldBe saksbehandler
+                }
+        }
 
         with(hendelseSlot.captured) {
             ident shouldBe testInnsending.person.ident

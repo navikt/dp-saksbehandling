@@ -15,7 +15,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
 import java.time.LocalDate
 import java.util.UUID
@@ -30,24 +29,24 @@ interface BehandlingKlient {
         saksbehandlerToken: String,
     ): Result<Boolean>
 
-    fun sendTilbake(
+    suspend fun sendTilbake(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
 
-    fun opprettBehandling(
+    suspend fun opprettBehandling(
         opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,
         saksbehandlerToken: String,
     ): Result<UUID>
 
-    fun godkjenn(
+    suspend fun godkjenn(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
 
-    fun beslutt(
+    suspend fun beslutt(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
@@ -84,19 +83,19 @@ internal class BehandlingHttpKlient(
             }
     }
 
-    override fun godkjenn(
+    override suspend fun godkjenn(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit> = kallBehandling("godkjenn", behandlingId, saksbehandlerToken, ident)
 
-    override fun sendTilbake(
+    override suspend fun sendTilbake(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit> = kallBehandling("send-tilbake", behandlingId, saksbehandlerToken, ident)
 
-    override fun beslutt(
+    override suspend fun beslutt(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
@@ -130,27 +129,25 @@ internal class BehandlingHttpKlient(
         }
     }
 
-    override fun opprettBehandling(
+    override suspend fun opprettBehandling(
         opprettBehandlingTypeDTO: OpprettBehandlingTypeDTO,
         saksbehandlerToken: String,
     ): Result<UUID> =
-        runBlocking {
-            runCatching {
-                httpClient
-                    .post("$dpBehandlingApiUrl/person/behandling") {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                        header(HttpHeaders.ContentType, ContentType.Application.Json)
-                        accept(ContentType.Application.Json)
-                        setBody(opprettBehandlingTypeDTO.toMap())
-                    }.body<BehandlingDTO>()
-                    .behandlingId
-                    .let { behandlingId ->
-                        logger.info {
-                            "Behandling av type ${opprettBehandlingTypeDTO.behandlingstype} opprettet. HendelseId: ${opprettBehandlingTypeDTO.hendelseId}. Ny behandling har id: $behandlingId"
-                        }
-                        UUID.fromString(behandlingId)
+        runCatching {
+            httpClient
+                .post("$dpBehandlingApiUrl/person/behandling") {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(opprettBehandlingTypeDTO.toMap())
+                }.body<BehandlingDTO>()
+                .behandlingId
+                .let { behandlingId ->
+                    logger.info {
+                        "Behandling av type ${opprettBehandlingTypeDTO.behandlingstype} opprettet. HendelseId: ${opprettBehandlingTypeDTO.hendelseId}. Ny behandling har id: $behandlingId"
                     }
-            }
+                    UUID.fromString(behandlingId)
+                }
         }.onFailure {
             logger.error(it) { "Kall til dp-behandling for å opprette behandling feilet ${it.message}" }
         }
@@ -171,33 +168,31 @@ internal class BehandlingHttpKlient(
                 }
         }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
 
-    private fun kallBehandling(
+    private suspend fun kallBehandling(
         endepunkt: String,
         behandlingId: UUID,
         saksbehandlerToken: String,
         ident: String,
     ): Result<Unit> {
         val urlString = "$dpBehandlingApiUrl/behandling/$behandlingId/$endepunkt"
-        return runBlocking {
-            try {
-                httpClient
-                    .post(urlString = urlString) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                        header(HttpHeaders.ContentType, ContentType.Application.Json)
-                        accept(ContentType.Application.Json)
-                        setBody(DpBehandlingIdentRequest(ident))
-                    }.let {
-                        val statuskode = it.status.value
-                        logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
-                        when (statuskode) {
-                            in 200..299 -> Result.success(Unit)
-                            else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
-                        }
+        return try {
+            httpClient
+                .post(urlString = urlString) {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(DpBehandlingIdentRequest(ident))
+                }.let {
+                    val statuskode = it.status.value
+                    logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
+                    when (statuskode) {
+                        in 200..299 -> Result.success(Unit)
+                        else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
                     }
-            } catch (e: Exception) {
-                logger.error { "Feil mot dp-behandling for endepunkt: $urlString med ${e.message}" }
-                Result.failure(BehandlingException(e.message, 500))
-            }
+                }
+        } catch (e: Exception) {
+            logger.error { "Feil mot dp-behandling for endepunkt: $urlString med ${e.message}" }
+            Result.failure(BehandlingException(e.message, 500))
         }
     }
 }

@@ -15,7 +15,7 @@ class InnsendingBehandler(
     private val behandlingKlient: BehandlingKlient,
     private val oppfølgingMediator: OppfølgingMediator,
 ) {
-    fun utførAksjon(
+    suspend fun utførAksjon(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse =
@@ -53,7 +53,7 @@ class InnsendingBehandler(
                 )
         }
 
-    private fun opprettBehandling(
+    private suspend fun opprettBehandling(
         hendelse: FerdigstillInnsendingHendelse,
         innsending: Innsending,
     ): InnsendingFerdigstiltHendelse {
