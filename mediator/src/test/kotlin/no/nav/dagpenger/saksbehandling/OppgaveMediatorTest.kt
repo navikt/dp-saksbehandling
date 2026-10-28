@@ -1,9 +1,11 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowWithMessage
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
@@ -121,6 +123,8 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.stream.Stream
 import javax.sql.DataSource
+import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 class
 OppgaveMediatorTest {
@@ -398,6 +402,58 @@ OppgaveMediatorTest {
                     saksbehandler = beslutter,
                     saksbehandlerToken = "testToken",
                 )
+            }
+        }
+    }
+
+    @Test
+    fun `Skal håndtere at dp-behandling sender behandling_endret_tilstand(TilGodkjenning) når beslutter  `() {
+        lateinit var oppgaveMediator: OppgaveMediator
+        lateinit var mottakTråd: Thread
+
+        val hubba: BehandlingKlient =
+            mockk<BehandlingKlient>().also {
+                coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(true)
+                coEvery { it.sendTilbake(any(), any(), any()) } answers {
+                    mottakTråd =
+                        thread {
+                            oppgaveMediator.behandlingTilGodkjenning(
+                                BehandlingTilGodkjenningHendelse(
+                                    behandlingId = firstArg(),
+                                    ident = saksbehandler.navIdent,
+                                ),
+                            )
+                        }
+                    mottakTråd.join(500)
+                    Result.success(Unit)
+                }
+            }
+
+        settOppOppgaveMediator(
+            behandlingKlient = hubba,
+        ) { datasource, mediator ->
+            oppgaveMediator = mediator
+            val oppgave = datasource.lagTestoppgave(UNDER_KONTROLL)
+            runBlocking {
+                oppgaveMediator.returnerTilSaksbehandling(
+                    returnerTilSaksbehandlingHendelse =
+                        ReturnerTilSaksbehandlingHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            utførtAv = beslutter,
+                        ),
+                    beslutterToken = "testToken",
+                )
+
+                eventually(2.seconds) {
+                    withClue("Tråden som håndterer behandling_endret_tilstand(TilGodkjenning) må være ferdig") {
+                        mottakTråd.isAlive shouldBe false
+                    }
+                }
+            }
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                val tilstandslogg = it.tilstandslogg
+                tilstandslogg.size shouldBe 6
             }
         }
     }
