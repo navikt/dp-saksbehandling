@@ -407,22 +407,25 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal håndtere at dp-behandling sender behandling_endret_tilstand(TilGodkjenning) når beslutter  `() {
+    fun `Skal håndtere at dp-behandling sender behandling_endret_tilstand(TilGodkjenning) når beslutter returnerer oppgaven`() {
         lateinit var oppgaveMediator: OppgaveMediator
         lateinit var mottakTråd: Thread
+        var mottakFeil: Throwable? = null
 
-        val hubba: BehandlingKlient =
+        val behandlingKlient: BehandlingKlient =
             mockk<BehandlingKlient>().also {
                 coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(true)
                 coEvery { it.sendTilbake(any(), any(), any()) } answers {
                     mottakTråd =
                         thread {
-                            oppgaveMediator.behandlingTilGodkjenning(
-                                BehandlingTilGodkjenningHendelse(
-                                    behandlingId = firstArg(),
-                                    ident = saksbehandler.navIdent,
-                                ),
-                            )
+                            runCatching {
+                                oppgaveMediator.behandlingTilGodkjenning(
+                                    BehandlingTilGodkjenningHendelse(
+                                        behandlingId = firstArg(),
+                                        ident = saksbehandler.navIdent,
+                                    ),
+                                )
+                            }.onFailure { mottakFeil = it }
                         }
                     mottakTråd.join(500)
                     Result.success(Unit)
@@ -430,7 +433,7 @@ OppgaveMediatorTest {
             }
 
         settOppOppgaveMediator(
-            behandlingKlient = hubba,
+            behandlingKlient = behandlingKlient,
         ) { datasource, mediator ->
             oppgaveMediator = mediator
             val oppgave = datasource.lagTestoppgave(UNDER_KONTROLL)
@@ -451,10 +454,16 @@ OppgaveMediatorTest {
                 }
             }
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
-                val tilstandslogg = it.tilstandslogg
-                tilstandslogg.size shouldBe 6
+            withClue("Tråden som håndterer behandling_endret_tilstand(TilGodkjenning) skal ikke kaste feil") {
+                mottakFeil shouldBe null
             }
+
+            oppgaveMediator
+                .hentOppgave(
+                    oppgave.oppgaveId,
+                    testInspektør,
+                ).tilstandslogg
+                .find { it.hendelse is BehandlingTilGodkjenningHendelse } shouldBe null
         }
     }
 
