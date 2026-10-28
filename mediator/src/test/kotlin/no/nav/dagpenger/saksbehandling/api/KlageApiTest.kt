@@ -16,6 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -330,7 +331,7 @@ class KlageApiTest {
         val saksbehandlerToken = gyldigSaksbehandlerToken()
         val mediator =
             mockk<KlageMediator>().also {
-                every {
+                coEvery {
                     it.behandlingUtført(
                         klageBehandlingUtført =
                             KlageBehandlingUtført(
@@ -349,7 +350,7 @@ class KlageApiTest {
                 .status shouldBe HttpStatusCode.NoContent
         }
 
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             mediator.behandlingUtført(
                 klageBehandlingUtført =
                     KlageBehandlingUtført(
@@ -372,7 +373,7 @@ class KlageApiTest {
         val saksbehandlerToken = gyldigSaksbehandlerToken()
         val mediator =
             mockk<KlageMediator>().also {
-                every {
+                coEvery {
                     it.ferdigstillBehandling(
                         hendelse =
                             KlageBehandlingFerdigstilt(
@@ -390,7 +391,7 @@ class KlageApiTest {
                 .status shouldBe HttpStatusCode.NoContent
         }
 
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             mediator.ferdigstillBehandling(
                 hendelse =
                     KlageBehandlingFerdigstilt(
