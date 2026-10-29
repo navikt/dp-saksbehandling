@@ -1962,6 +1962,7 @@ components:
         - FERIETILLEGG
         - ARBEIDSSØKERPERIODE
         - SAMORDNING
+        - MIGRERING
 
     BehandlingType:
       type: string
