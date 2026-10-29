@@ -428,6 +428,24 @@ class PostgresOppgaveRepository(
             )
         }
 
+    override fun hentBehandlingIdFor(oppgaveId: UUID): UUID =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT behandling_id 
+                        FROM   oppgave_v1 
+                        WHERE  id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.uuidOrNull("behandling_id")
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke behandlingId for oppgaveId $oppgaveId")
+
     override fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave =
         finnOppgaveForBehandling(behandlingId)
             ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
@@ -838,6 +856,58 @@ class PostgresOppgaveRepository(
                         row.string("emneknagg")
                     }.asList,
                 ).toSet()
+        }
+
+    override fun hentOppgaveForOppdatering(
+        oppgaveId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+        lockDurationInMillis: Long,
+    ): Oppgave =
+        databaseSession.inContext(ctx) {
+            session.run(queryOf("SET LOCAL lock_timeout = '${lockDurationInMillis}ms'").asExecute)
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id 
+                            FROM    oppgave_v1
+                            WHERE   id = :oppgave_id
+                            FOR UPDATE
+                            """.trimIndent(),
+                        paramMap = mapOf("oppgave_id" to oppgaveId),
+                    ).map { row ->
+                        row.uuid("id")
+                    }.asSingle,
+                )?.let {
+                    hentOppgave(it)
+                } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        }
+
+    override fun finnOppgaveForOppdateringMedBehandlingId(
+        behandlingId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+    ): Oppgave? =
+        databaseSession.inContext(ctx) {
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id 
+                            FROM    oppgave_v1
+                            WHERE   behandling_id = :behandling_id
+                            FOR UPDATE
+                            """.trimIndent(),
+                        paramMap = mapOf("behandling_id" to behandlingId),
+                    ).map { row ->
+                        row.uuid("id")
+                    }.asSingle,
+                )?.let {
+                    hentOppgave(it)
+                }
         }
 
     private fun Row.rehydrerOppgave(): Oppgave {

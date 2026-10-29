@@ -31,6 +31,8 @@ interface OppgaveRepository {
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
 
+    fun hentBehandlingIdFor(oppgaveId: UUID): UUID
+
     fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave
 
     fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave?
@@ -54,4 +56,15 @@ interface OppgaveRepository {
     ): Oppgave.Tilstand.Type?
 
     fun hentDistinkteEmneknagger(): Set<String>
+
+    fun hentOppgaveForOppdatering(
+        oppgaveId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+        lockDurationInMillis: Long,
+    ): Oppgave
+
+    fun finnOppgaveForOppdateringMedBehandlingId(
+        behandlingId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+    ): Oppgave?
 }
