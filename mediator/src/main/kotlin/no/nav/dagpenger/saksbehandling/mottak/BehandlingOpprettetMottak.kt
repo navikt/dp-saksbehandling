@@ -46,27 +46,33 @@ internal class BehandlingOpprettetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
-        val behandletHendelseSkjedde = packet["behandletHendelse"]["skjedde"].asLocalDate()
+        val behandletHendelseType = packet["behandletHendelse"]["type"].stringValue()
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
-        val behandlingskjedeId = packet["behandlingskjedeId"].asUUID()
-        val basertPåBehandling: UUID? =
-            if (packet["basertPåBehandling"].isMissingOrNull()) {
-                null
-            } else {
-                packet["basertPåBehandling"].asUUID()
+        withLoggingContext("behandlingId" to "$behandlingId") {
+            logger.info { "Mottok behandling_opprettet hendelse av type $behandletHendelseType for behandlingId $behandlingId" }
+
+            val behandletHendelseSkjedde = packet["behandletHendelse"]["skjedde"].asLocalDate()
+            val ident = packet["ident"].stringValue()
+            val behandlingskjedeId = packet["behandlingskjedeId"].asUUID()
+            val basertPåBehandling: UUID? =
+                if (packet["basertPåBehandling"].isMissingOrNull()) {
+                    null
+                } else {
+                    packet["basertPåBehandling"].asUUID()
+                }
+            val skipBehandlingSet =
+                setOf<UUID>(
+                    UUID.fromString("01a1820d-7251-7495-bc3f-83b3817c326c"),
+                    UUID.fromString("01a186c5-2a13-70f5-9755-cb15744f843e"),
+                    UUID.fromString("01a18718-a1f2-7503-8e38-d2c55f4333ad"),
+                    UUID.fromString("01a18725-3b54-768d-b013-367ecf099fca"),
+                )
+            if (behandlingId in skipBehandlingSet) {
+                logger.info { "Skipper behandlingId: $behandlingId fra BehandlingOpprettetMottak" }
+                return
             }
 
-        val skipBehandlingSet = setOf<UUID>(UUID.fromString("01a186c5-2a13-70f5-9755-cb15744f843e"))
-        if (behandlingId in skipBehandlingSet) {
-            logger.info { "Skipper behandlingId: $behandlingId fra BehandlingOpprettetMottak" }
-            return
-        }
-
-        val utløstAv = DpBehandling.fraBehandletHendelseType(behandletHendelseType)
-        withLoggingContext("behandlingId" to "$behandlingId") {
-            logger.info { "Mottok behandling_opprettet hendelse av type $behandletHendelseType (utløstAv=$utløstAv)" }
+            val utløstAv = DpBehandling.fraBehandletHendelseType(behandletHendelseType)
 
             when (utløstAv) {
                 is DpBehandling.Søknad -> {
