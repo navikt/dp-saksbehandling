@@ -16,6 +16,8 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.lagOpplysninger
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.lagOpplysninger2
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
 import java.time.LocalDateTime
@@ -27,7 +29,7 @@ private val logger = KotlinLogging.logger {}
 data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
     val opprettet: LocalDateTime,
-    private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+    private val opplysninger: Set<Opplysning> = lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: KlageTilstand = Behandles,
     private val journalpostId: String? = null,
     private var behandlendeEnhet: String? = null,
@@ -53,6 +55,22 @@ data class KlageBehandling private constructor(
         opprettet = opprettet,
     )
 
+    constructor(
+        journalpostId: String? = null,
+        tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
+        opprettet: LocalDateTime = LocalDateTime.now(),
+        valgmuligheter: Set<UUID>,
+    ) : this(
+        journalpostId = journalpostId,
+        _tilstandslogg = tilstandslogg,
+        opprettet = opprettet,
+        opplysninger =
+            lagOpplysninger2(
+                opplysninger = OpplysningType.entries.toSet(),
+                valgmuligheter = valgmuligheter,
+            ),
+    )
+
     init {
         steg.forEach { it.evaluerSynlighet(opplysninger) }
     }
@@ -61,7 +79,7 @@ data class KlageBehandling private constructor(
         fun rehydrer(
             behandlingId: UUID,
             opprettet: LocalDateTime,
-            opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+            opplysninger: Set<Opplysning> = lagOpplysninger(OpplysningType.entries.toSet()),
             tilstand: KlageTilstand,
             journalpostId: String?,
             behandlendeEnhet: String?,
@@ -296,12 +314,15 @@ data class KlageBehandling private constructor(
         ) {
             val utfall = requireNotNull(klageBehandling.utfall()) { "Utfall må være satt" }
             when (utfall) {
-                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD ->
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> {
                     klageBehandling.endreTilstand(nyTilstand = BehandlingUtført, hendelse = hendelse)
+                }
 
-                else -> throw IllegalStateException(
-                    "Kan ikke ferdigstille behandling med utfall $utfall — kun MEDHOLD og DELVIS_MEDHOLD er gyldig",
-                )
+                else -> {
+                    throw IllegalStateException(
+                        "Kan ikke ferdigstille behandling med utfall $utfall — kun MEDHOLD og DELVIS_MEDHOLD er gyldig",
+                    )
+                }
             }
         }
     }
@@ -341,9 +362,11 @@ data class KlageBehandling private constructor(
                     klageBehandling.endreTilstand(nyTilstand = Ferdigstilt, hendelse = hendelse)
                 }
 
-                else -> throw IllegalStateException(
-                    "Kan ikke kalle behandlingUtført i tilstand $type med utfall $utfall",
-                )
+                else -> {
+                    throw IllegalStateException(
+                        "Kan ikke kalle behandlingUtført i tilstand $type med utfall $utfall",
+                    )
+                }
             }
         }
 
@@ -364,9 +387,11 @@ data class KlageBehandling private constructor(
                     KlageAksjon.OversendKlageinstans(klageBehandling)
                 }
 
-                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> throw IllegalStateException(
-                    "$utfall skal ikke gå via vedtakDistribuert — ingen utsending sendes for medhold/delvis medhold",
-                )
+                UtfallType.MEDHOLD, UtfallType.DELVIS_MEDHOLD -> {
+                    throw IllegalStateException(
+                        "$utfall skal ikke gå via vedtakDistribuert — ingen utsending sendes for medhold/delvis medhold",
+                    )
+                }
 
                 UtfallType.AVVIST -> {
                     klageBehandling.endreTilstand(
@@ -402,7 +427,7 @@ data class KlageBehandling private constructor(
             klageBehandling.endreTilstand(Ferdigstilt, hendelse)
 
             return when (klageinstansVedtak) {
-                is KlageinstansVedtak.Klage ->
+                is KlageinstansVedtak.Klage -> {
                     if (klageinstansVedtak.utfall.skalStarteRevurdering()) {
                         KlageAksjon.StartRevurdering(
                             klageBehandling = klageBehandling,
@@ -411,6 +436,7 @@ data class KlageBehandling private constructor(
                     } else {
                         KlageAksjon.IngenAksjon(klageBehandling.behandlingId)
                     }
+                }
             }
         }
 

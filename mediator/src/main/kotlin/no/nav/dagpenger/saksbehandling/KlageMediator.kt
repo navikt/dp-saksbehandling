@@ -83,6 +83,11 @@ class KlageMediator(
                             hendelse = klageMottattHendelse,
                         ),
                     ),
+                valgmuligheter =
+                    sakMediator
+                        .behandlingerSomKanPåklagesISammeSak(klageMottattHendelse.sakId)
+                        .map { it.behandlingId }
+                        .toSet(),
             )
 
         val behandlingOpprettetHendelse =
@@ -140,6 +145,11 @@ class KlageMediator(
                             hendelse = manuellKlageMottattHendelse,
                         ),
                     ),
+                valgmuligheter =
+                    sakMediator
+                        .behandlingerSomKanPåklagesISammeSak(manuellKlageMottattHendelse.sakId)
+                        .map { it.behandlingId }
+                        .toSet(),
             )
 
         val utførtAv = manuellKlageMottattHendelse.utførtAv
@@ -380,8 +390,9 @@ class KlageMediator(
                     // Ingen handling nødvendig
                 }
 
-                is KlageAksjon.StartRevurdering ->
+                is KlageAksjon.StartRevurdering -> {
                     error("Uventet aksjon StartRevurdering ved distribusjon av vedtak: $aksjon")
+                }
             }
         }
     }
@@ -426,7 +437,9 @@ class KlageMediator(
                     // Ingen handling nødvendig
                 }
 
-                else -> error("Uventet aksjon $aksjon ved mottak av klageinstansvedtak")
+                else -> {
+                    error("Uventet aksjon $aksjon ved mottak av klageinstansvedtak")
+                }
             }
         }
     }

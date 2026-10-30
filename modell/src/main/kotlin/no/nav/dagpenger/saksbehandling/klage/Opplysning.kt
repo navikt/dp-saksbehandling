@@ -10,8 +10,15 @@ class Opplysning(
     private var verdi: Verdi,
     private var synlig: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),
+    val valgmuligheter2: List<ValgMulighet> = emptyList(),
     private val regler: Set<Regel> = emptySet(),
 ) {
+
+    data class ValgMulighet(
+        val verdi: String,
+        val beskrivelse: String,
+    )
+
     init {
         requireRiktigDatatype(verdi)
         requireReglerOppfylt()
