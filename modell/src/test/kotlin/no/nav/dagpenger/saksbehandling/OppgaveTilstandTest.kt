@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
@@ -95,6 +96,50 @@ class OppgaveTilstandTest {
             )
         }
         oppgave.tilstand().type shouldBe UNDER_KONTROLL
+    }
+
+    @Test
+    fun `Tidligere beslutter som overtar saksbehandlingen skal ikke få kontrollen av eget arbeid`() {
+        val beslutter = Saksbehandler("beslutter", emptySet(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_KONTROLL,
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
+            )
+
+        oppgave.returnerTilSaksbehandling(
+            ReturnerTilSaksbehandlingHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = beslutter),
+        )
+        oppgave.fjernAnsvar(
+            FjernOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                årsak = FjernOppgaveAnsvarÅrsak.MANGLER_KOMPETANSE,
+                utførtAv = saksbehandler,
+            ),
+        )
+        oppgave.tildel(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
+            ),
+        )
+
+        oppgave.behandlerIdent shouldBe beslutter.navIdent
+        oppgave.sisteSaksbehandlerIdent shouldBe beslutter.navIdent
+        oppgave.sisteBeslutterIdent shouldBe beslutter.navIdent
+
+        oppgave.sendTilKontroll(
+            SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = beslutter),
+        )
+
+        assertSoftly {
+            oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
+            oppgave.behandlerIdent shouldBe null
+            oppgave.sisteSaksbehandlerIdent shouldBe beslutter.navIdent
+            oppgave.sisteBeslutterIdent shouldBe beslutter.navIdent
+        }
     }
 
     @Test
