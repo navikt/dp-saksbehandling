@@ -52,6 +52,8 @@ sealed class HendelseBehandler(
 
         data object Samordning : DpBehandling("SAMORDNING", "Samordning")
 
+        data object Migrering : DpBehandling("MIGRERING", "Migrering")
+
         companion object {
             private val behandletHendelseTyper by lazy {
                 listOf(
@@ -64,6 +66,7 @@ sealed class HendelseBehandler(
                     Ferietillegg,
                     Arbeidssøkerperiode,
                     Samordning,
+                    Migrering,
                 ).associateBy { it.behandletHendelseType }
             }
 
@@ -97,6 +100,7 @@ sealed class HendelseBehandler(
                 DpBehandling.Ferietillegg,
                 DpBehandling.Arbeidssøkerperiode,
                 DpBehandling.Samordning,
+                DpBehandling.Migrering,
                 Intern.Innsending,
                 Intern.Klage,
                 Intern.Oppfølging,

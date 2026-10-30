@@ -21,8 +21,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 26.0.2+10
-      - uses: gradle/actions/wrapper-validation@v6.4.0
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/wrapper-validation@v6.4.1
+      - uses: gradle/actions/setup-gradle@v6.4.1
         id: build
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath
@@ -58,7 +58,7 @@ jobs:
         with:
           team: teamdagpenger
       - name: Attest and sign image
-        uses: nais/attest-sign@v2.1.0
+        uses: nais/attest-sign@v2.1.1
         with:
           image_ref: ${{ needs.build.outputs.image }}
 
