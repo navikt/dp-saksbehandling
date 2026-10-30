@@ -62,10 +62,8 @@ internal class BehandlingOpprettetMottak(
                 }
             val skipBehandlingSet =
                 setOf<UUID>(
-                    UUID.fromString("01a1820d-7251-7495-bc3f-83b3817c326c"),
-                    UUID.fromString("01a186c5-2a13-70f5-9755-cb15744f843e"),
-                    UUID.fromString("01a18718-a1f2-7503-8e38-d2c55f4333ad"),
-                    UUID.fromString("01a18725-3b54-768d-b013-367ecf099fca"),
+                    UUID.fromString("01a18bf5-6aaf-72f2-b47a-a01c272fae70"),
+                    UUID.fromString("01a18bfb-c3f6-76b8-87fc-00960402e3ef"),
                 )
             if (behandlingId in skipBehandlingSet) {
                 logger.info { "Skipper behandlingId: $behandlingId fra BehandlingOpprettetMottak" }
