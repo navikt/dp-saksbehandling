@@ -17,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.lagOpplysninger
-import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.lagOpplysninger2
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
 import java.time.LocalDateTime
@@ -49,25 +48,15 @@ data class KlageBehandling private constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
         opprettet: LocalDateTime = LocalDateTime.now(),
-    ) : this(
-        journalpostId = journalpostId,
-        _tilstandslogg = tilstandslogg,
-        opprettet = opprettet,
-    )
-
-    constructor(
-        journalpostId: String? = null,
-        tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
-        opprettet: LocalDateTime = LocalDateTime.now(),
-        valgmuligheter: Set<UUID>,
+        muligeVedtakIdKlagenGjelder: Set<UUID> = emptySet(),
     ) : this(
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
         opprettet = opprettet,
         opplysninger =
-            lagOpplysninger2(
+            lagOpplysninger(
                 opplysninger = OpplysningType.entries.toSet(),
-                valgmuligheter = valgmuligheter,
+                muligeVedtakIdKlagenGjelder = muligeVedtakIdKlagenGjelder,
             ),
     )
 
