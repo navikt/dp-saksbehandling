@@ -138,7 +138,7 @@ class OppgaveTilstandTest {
             oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgave.behandlerIdent shouldBe null
             oppgave.sisteSaksbehandlerIdent shouldBe beslutter.navIdent
-            oppgave.sisteBeslutterIdent shouldBe beslutter.navIdent
+            oppgave.sisteBeslutterIdent shouldBe null
         }
     }
 
