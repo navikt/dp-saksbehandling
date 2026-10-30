@@ -370,48 +370,17 @@ class OppgaveMediator(
                                 "Feil ved henting av behandling med id $behandlingId: ${it.message}"
                             }
                         }.getOrThrow()
-                when (kreverToTrinnsKontroll) {
-                    true -> {
-                        transaksjoner.transaksjon { ctx ->
-                            val oppgave =
-                                oppgaveRepository.hentOppgaveForOppdatering(
-                                    oppgaveId = returnerTilSaksbehandlingHendelse.oppgaveId,
-                                    ctx = ctx,
-                                    lockDurationInMillis = 10_000L,
-                                )
-                            oppgave.
-                        }
-                    }
-
-                    false -> {}
-                }
-            }
-            transaksjoner.transaksjon { ctx ->
-                val oppgave =
-                    oppgaveRepository.hentOppgaveForOppdatering(
-                        oppgaveId = returnerTilSaksbehandlingHendelse.oppgaveId,
-                        ctx = ctx,
-                        lockDurationInMillis = 10_000L,
-                    )
-                withLoggingContext(
-                    "oppgaveId" to oppgave.oppgaveId.toString(),
-                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
-                ) {
-                    logger.info { "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
+                transaksjoner.transaksjon { ctx ->
+                    val oppgave =
+                        oppgaveRepository.hentOppgaveForOppdatering(
+                            oppgaveId = returnerTilSaksbehandlingHendelse.oppgaveId,
+                            ctx = ctx,
+                            lockDurationInMillis = 10_000L,
+                        )
                     oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-                    runBlocking {
-                        val kreverToTrinnsKontroll =
-                            behandlingKlient
-                                .kreverTotrinnskontroll(
-                                    oppgave.behandling.behandlingId,
-                                    saksbehandlerToken = beslutterToken,
-                                ).onFailure {
-                                    logger.error {
-                                        "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}"
-                                    }
-                                }.getOrThrow()
-                        when (kreverToTrinnsKontroll) {
-                            true -> {
+                    when (kreverToTrinnsKontroll) {
+                        true -> {
+                            runBlocking {
                                 behandlingKlient
                                     .sendTilbake(
                                         behandlingId = oppgave.behandling.behandlingId,
@@ -429,15 +398,14 @@ class OppgaveMediator(
                                         throw it
                                     }
                             }
+                        }
 
-                            false -> {
-                                logger.info {
-                                    "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til under behandling"
-                                }
+                        false -> {
+                            logger.info {
+                                "Behandling med id: $behandlingId krever ikke totrinnskontroll. Oppgaven settes til under behandling"
                             }
                         }
                     }
-
                     oppgaveRepository.lagre(oppgave, ctx)
                     logger.info {
                         "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
