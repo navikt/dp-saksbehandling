@@ -43,14 +43,6 @@ class KlageDTOMapperTest {
         runBlocking {
             val klageId = UUIDv7.ny()
             val kaJournalposter = listOf("KA-journalpost-1", "KA-journalpost-2")
-            val behandlingerSomKanPåklages =
-                listOf(
-                    BehandlingSomKanPåklages(
-                        behandlingId = UUIDv7.ny(),
-                        hendelseBehandler = HendelseBehandler.DpBehandling.Søknad,
-                        ferdigbehandletTidspunkt = LocalDateTime.of(2026, 9, 4, 16, 21, 2),
-                    ),
-                )
             val klageBehandling =
                 KlageBehandling.rehydrer(
                     behandlingId = klageId,
@@ -102,7 +94,6 @@ class KlageDTOMapperTest {
                 val klageDTO =
                     mapper.tilDto(
                         klageBehandling = klageBehandling,
-                        behandlingerSomKanPåklages = behandlingerSomKanPåklages,
                         saksbehandler = testSaksbehandler,
                     )
                 //language=JSON
@@ -417,14 +408,7 @@ class KlageDTOMapperTest {
                               ]
                             }
                         },
-                        "lovligeAvbrytAarsaker": [],
-                        "behandlingerSomKanPaaklages": [
-                            {
-                              "behandlingId": "${behandlingerSomKanPåklages.first().behandlingId}",
-                              "utlostAv": "${behandlingerSomKanPåklages.first().hendelseBehandler.name}",
-                              "ferdigbehandletTidspunkt": "${behandlingerSomKanPåklages.first().ferdigbehandletTidspunkt}"
-                            }
-                        ]
+                        "lovligeAvbrytAarsaker": []
                     }
                     """
             }
@@ -481,7 +465,6 @@ class KlageDTOMapperTest {
                 val klageDTO =
                     mapper.tilDto(
                         klageBehandling = klageBehandling,
-                        behandlingerSomKanPåklages = behandlingerSomKanPåklages,
                         saksbehandler = testSaksbehandler,
                     )
                 //language=JSON
@@ -513,13 +496,6 @@ class KlageDTOMapperTest {
                             "FLERE_KLAGER",
                             "TRUKKET_KLAGE",
                             "ANNET"
-                        ],
-                        "behandlingerSomKanPaaklages": [
-                            {
-                              "behandlingId": "${behandlingerSomKanPåklages.first().behandlingId}",
-                              "utlostAv": "${behandlingerSomKanPåklages.first().hendelseBehandler.name}",
-                              "ferdigbehandletTidspunkt": "${behandlingerSomKanPåklages.first().ferdigbehandletTidspunkt}"
-                            }
                         ]
                     }
                     """

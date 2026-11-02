@@ -69,12 +69,10 @@ fun Route.klageApi(
                         ident = klageBehandling.personIdent(),
                         saksbehandler = saksbehandler.navIdent,
                     )
-                    val behandlingerSomKanPåklages = mediator.behandlingerSomKanPåklagesISammeSak(behandlingId)
                     val klageDTO =
                         klageDtoMapper.tilDto(
                             klageBehandling = klageBehandling,
                             saksbehandler = saksbehandler,
-                            behandlingerSomKanPåklages = behandlingerSomKanPåklages,
                         )
                     call.respond(HttpStatusCode.OK, klageDTO)
                 }

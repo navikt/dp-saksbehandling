@@ -20,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
-import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -83,11 +82,7 @@ class KlageMediator(
                             hendelse = klageMottattHendelse,
                         ),
                     ),
-                behandlingIderSomKanPåklages =
-                    sakMediator
-                        .behandlingerSomKanPåklagesISammeSak(klageMottattHendelse.sakId)
-                        .map { it.behandlingId }
-                        .toSet(),
+                behandlingIderSomKanPåklages = sakMediator.behandlingerSomKanPåklages(klageMottattHendelse.sakId),
             )
 
         val behandlingOpprettetHendelse =
@@ -145,11 +140,7 @@ class KlageMediator(
                             hendelse = manuellKlageMottattHendelse,
                         ),
                     ),
-                behandlingIderSomKanPåklages =
-                    sakMediator
-                        .behandlingerSomKanPåklagesISammeSak(manuellKlageMottattHendelse.sakId)
-                        .map { it.behandlingId }
-                        .toSet(),
+                behandlingIderSomKanPåklages = sakMediator.behandlingerSomKanPåklages(manuellKlageMottattHendelse.sakId),
             )
 
         val utførtAv = manuellKlageMottattHendelse.utførtAv
@@ -443,7 +434,4 @@ class KlageMediator(
             }
         }
     }
-
-    fun behandlingerSomKanPåklagesISammeSak(behandlingId: UUID): List<BehandlingSomKanPåklages> =
-        sakMediator.behandlingerSomKanPåklagesISammeSak(behandlingId)
 }

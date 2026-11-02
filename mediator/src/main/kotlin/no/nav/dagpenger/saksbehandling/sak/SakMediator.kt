@@ -23,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.InnsendingMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -362,6 +361,5 @@ class SakMediator(
         logger.info { "Flyttet behandling $behandlingId til ny sak ${nySak.sakId}" }
     }
 
-    fun behandlingerSomKanPåklagesISammeSak(behandlingId: UUID): List<BehandlingSomKanPåklages> =
-        sakRepository.behandlingerSomKanPåklagesISammeSak(behandlingId)
+    fun behandlingerSomKanPåklages(sakId: UUID): Set<UUID> = sakRepository.behandlingIderSomKanPåklages(sakId)
 }

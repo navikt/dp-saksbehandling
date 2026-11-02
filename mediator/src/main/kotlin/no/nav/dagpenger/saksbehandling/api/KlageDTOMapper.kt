@@ -25,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UUIDVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
-import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -52,7 +51,6 @@ class KlageDTOMapper(
 
     suspend fun tilDto(
         klageBehandling: KlageBehandling,
-        behandlingerSomKanPåklages: List<BehandlingSomKanPåklages>,
         saksbehandler: Saksbehandler,
     ): KlageDTO {
         val synligeOpplysninger = klageBehandling.synligeOpplysninger().toList()

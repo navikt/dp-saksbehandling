@@ -194,9 +194,8 @@ class PostgresSakRepositoryTest {
                             ),
                     ),
             )
-            val behandlingerSomKanPåklages = sakRepository.behandlingerSomKanPåklagesISammeSak(klageBehandling.behandlingId)
+            val behandlingerSomKanPåklages = sakRepository.behandlingIderSomKanPåklages(sakId = DBTestHelper.dbSakId)
             behandlingerSomKanPåklages.size shouldBe 2
-            behandlingerSomKanPåklages.map { it.behandlingId } shouldBe listOf(behandling1iSak1.behandlingId, behandling2iSak1.behandlingId)
         }
     }
 

@@ -18,7 +18,10 @@ class OpplysningTest {
 
     @Test
     fun `skal evaluere regler`() {
-        lagOpplysninger(opplysninger = setOf(OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO)).single().let {
+        lagOpplysninger(
+            opplysninger = setOf(OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO),
+            behandlingIderSomKanPåklages = emptySet(),
+        ).single().let {
             shouldThrow<UgyldigOpplysningException> { it.svar(Verdi.Dato(LocalDate.MAX)) }
             shouldNotThrowAny { it.svar(Verdi.Dato(LocalDate.MIN)) }
         }
