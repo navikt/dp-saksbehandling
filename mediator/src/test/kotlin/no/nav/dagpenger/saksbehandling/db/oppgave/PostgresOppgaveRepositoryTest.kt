@@ -4,8 +4,13 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
@@ -26,11 +31,11 @@ import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
 import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.TestHelper.opprettetNå
+import no.nav.dagpenger.saksbehandling.TestHelper.testOppgave
 import no.nav.dagpenger.saksbehandling.TestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
@@ -69,6 +74,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.seconds
 
 class PostgresOppgaveRepositoryTest {
     private val saksbehandler =
@@ -1336,11 +1342,11 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre en oppgave flere ganger`() {
-        DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave = testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
             shouldNotThrowAny {
-                repo.lagre(TestHelper.testOppgave)
-                repo.lagre(TestHelper.testOppgave)
+                repo.lagre(testOppgave)
+                repo.lagre(testOppgave)
             }
         }
     }
@@ -1652,9 +1658,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal hente en oppgave basert på behandlingId`() {
-        DBTestHelper.withOppgave(oppgave = TestHelper.testOppgave) { ds ->
+        DBTestHelper.withOppgave(oppgave = testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo.hentOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
+            repo.hentOppgaveForBehandling(testOppgave.behandling.behandlingId) shouldBe testOppgave
 
             shouldThrow<DataNotFoundException> {
                 repo.hentOppgaveForBehandling(behandlingId = UUIDv7.ny())
@@ -1664,9 +1670,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
-        DBTestHelper.withOppgave(TestHelper.testOppgave) { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(DatabaseSession(ds))
-            repo.finnOppgaveForBehandling(TestHelper.testOppgave.behandling.behandlingId) shouldBe TestHelper.testOppgave
+            repo.finnOppgaveForBehandling(testOppgave.behandling.behandlingId) shouldBe testOppgave
             repo.finnOppgaveForBehandling(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
@@ -3157,6 +3163,49 @@ class PostgresOppgaveRepositoryTest {
 
             val distinkteEmneknagger = repo.hentDistinkteEmneknagger()
             distinkteEmneknagger shouldBe setOf("Avslag", "EØS-inntekt", "D-nummer")
+        }
+    }
+
+    @Test
+    fun `Lesing for oppdatering venter på lås og ser committede endringer, vanlig lesing venter ikke`() {
+        DBTestHelper.withOppgave(oppgave = testOppgave) { ds ->
+            val databaseSession = DatabaseSession(ds)
+            val repo = PostgresOppgaveRepository(databaseSession)
+            val transaksjoner = Transaksjoner(databaseSession)
+
+            runBlocking {
+                withTimeout(3.seconds) {
+                    val (låsendeLesing, vanligLesing) =
+                        transaksjoner.transaksjon { ctx ->
+                            val oppgave = repo.hentOppgaveForOppdatering(testOppgave.oppgaveId, ctx, 10_000)
+                            oppgave.leggTilEmneknagger(setOf("test"))
+                            repo.lagre(oppgave, ctx)
+
+                            // Raden er låst av denne transaksjonen frem til commit
+                            val låsendeLesing =
+                                async(Dispatchers.IO) {
+                                    transaksjoner.transaksjon { annenCtx ->
+                                        repo.finnOppgaveForOppdateringMedBehandlingId(
+                                            testOppgave.behandling.behandlingId,
+                                            annenCtx,
+                                        )
+                                    }
+                                }
+
+                            val vanligLesing =
+                                async(Dispatchers.IO) { repo.hentOppgave(testOppgave.oppgaveId) }
+
+                            Thread.sleep(1000)
+
+                            låsendeLesing.isCompleted shouldBe false
+                            vanligLesing.isCompleted shouldBe true
+                            Pair(låsendeLesing, vanligLesing)
+                        }
+
+                    låsendeLesing.await().shouldNotBeNull().emneknagger shouldBe setOf("test")
+                    vanligLesing.await().shouldNotBeNull().emneknagger shouldBe setOf()
+                }
+            }
         }
     }
 
