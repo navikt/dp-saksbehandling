@@ -101,13 +101,6 @@ object OpplysningBygger {
                             verdi = Verdi.TomVerdi,
                             valgmuligheter = type.valgmuligheter,
                             regler = type.regler,
-                            valgmuligheter2 =
-                                type.valgmuligheter.map {
-                                    Opplysning.ValgMulighet(
-                                        verdi = it,
-                                        beskrivelse = it,
-                                    )
-                                },
                         )
                     }
                 }

@@ -5,7 +5,6 @@ import no.nav.dagpenger.saksbehandling.api.KlageView.behandlingOpplysninger
 import no.nav.dagpenger.saksbehandling.api.KlageView.finnGruppe
 import no.nav.dagpenger.saksbehandling.api.KlageView.utfallOpplysninger
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlingSomKanPaaklagesDTO
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
@@ -26,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UUIDVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
-import no.nav.dagpenger.saksbehandling.api.models.UtlostAvTypeDTO
 import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
@@ -183,7 +181,6 @@ class KlageDTOMapper(
                     )
                 },
             lovligeAvbrytAarsaker = klageBehandling.lovligeAvbrytÅrsaker(),
-            behandlingerSomKanPaaklages = behandlingerSomKanPåklages.tilBehandlingerSomKanPaaklagesDTO(),
         )
     }
 
@@ -307,13 +304,4 @@ internal fun KlageBehandling.lovligeAvbrytÅrsaker(): List<AvbrytKlageAarsakDTO>
     when (this.tilstand().type) {
         BEHANDLES -> AvbrytKlageAarsakDTO.entries
         else -> emptyList()
-    }
-
-internal fun List<BehandlingSomKanPåklages>.tilBehandlingerSomKanPaaklagesDTO() =
-    map { behandlingSomKanPåklages ->
-        BehandlingSomKanPaaklagesDTO(
-            behandlingId = behandlingSomKanPåklages.behandlingId,
-            utlostAv = UtlostAvTypeDTO.fromValue(behandlingSomKanPåklages.hendelseBehandler.name)!!,
-            ferdigbehandletTidspunkt = behandlingSomKanPåklages.ferdigbehandletTidspunkt,
-        )
     }

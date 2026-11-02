@@ -57,7 +57,7 @@ internal class CachedSaksbehandlerOppslag(
                     true -> counter.hit()
                     false -> counter.miss()
                 }
-            } ?: throw RuntimeException("Kunne ikke hente saksbehandler")
+            }
     }
 
     private fun Counter.hit() = this.labelValues("hit").inc()

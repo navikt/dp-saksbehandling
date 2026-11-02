@@ -78,7 +78,7 @@ class PostgresKlageRepositoryTest {
                 )
 
             sakMediator.opprettEllerKnyttTilSak(hendelse = søknadsbehandlingOpprettetHendelse)
-            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId)!!
+            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId)
             sakMediator.knyttTilSak(
                 behandlingOpprettetHendelse =
                     BehandlingOpprettetHendelse(
