@@ -3,8 +3,9 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +47,7 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbOpprettetNå
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.dbTestPerson
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
+import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
 import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
@@ -3169,41 +3171,58 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Lesing for oppdatering venter på lås og ser committede endringer, vanlig lesing venter ikke`() {
         DBTestHelper.withOppgave(oppgave = testOppgave) { ds ->
+            val oppgaveId = testOppgave.oppgaveId
+            val behandlingId = testOppgave.behandling.behandlingId
             val databaseSession = DatabaseSession(ds)
             val repo = PostgresOppgaveRepository(databaseSession)
             val transaksjoner = Transaksjoner(databaseSession)
 
-            runBlocking {
-                withTimeout(3.seconds) {
-                    val (låsendeLesing, vanligLesing) =
-                        transaksjoner.transaksjon { ctx ->
-                            val oppgave = repo.hentOppgaveForOppdatering(testOppgave.oppgaveId, ctx, 10_000)
-                            oppgave.leggTilEmneknagger(setOf("test"))
-                            repo.lagre(oppgave, ctx)
+            listOf<Pair<String, (Transaksjonskontekst.Aktiv) -> Oppgave>>(
+                Pair("hentOppgaveForOppdatering") { ctx ->
+                    repo.hentOppgaveForOppdatering(
+                        oppgaveId = oppgaveId,
+                        ctx = ctx,
+                        lockTimeout = 10.seconds,
+                    )
+                },
+                Pair("finnOppgaveForOppdateringMedBehandlingId") { ctx ->
+                    requireNotNull(
+                        repo.finnOppgaveForOppdateringMedBehandlingId(
+                            behandlingId = behandlingId,
+                            ctx = ctx,
+                            lockTimeout = 10.seconds,
+                        ),
+                    )
+                },
+            ).forEach { (beskrivelse, funksjonUnderTest) ->
+                withClue("Testing $beskrivelse") {
+                    runBlocking {
+                        withTimeout(3.seconds) {
+                            val (låsendeLesing, vanligLesing) =
+                                transaksjoner.transaksjon { ctx ->
+                                    val oppgave = funksjonUnderTest(ctx)
+                                    oppgave.leggTilEmneknagger(setOf(beskrivelse))
+                                    repo.lagre(oppgave, ctx)
 
-                            // Raden er låst av denne transaksjonen frem til commit
-                            val låsendeLesing =
-                                async(Dispatchers.IO) {
-                                    transaksjoner.transaksjon { annenCtx ->
-                                        repo.finnOppgaveForOppdateringMedBehandlingId(
-                                            testOppgave.behandling.behandlingId,
-                                            annenCtx,
-                                        )
-                                    }
+                                    // Raden er låst av denne transaksjonen frem til commit
+                                    val låsendeLesing =
+                                        async(Dispatchers.IO) {
+                                            transaksjoner.transaksjon { annenCtx -> funksjonUnderTest(annenCtx) }
+                                        }
+
+                                    val vanligLesing =
+                                        async(Dispatchers.IO) { repo.hentOppgave(oppgaveId) }
+
+                                    Thread.sleep(500)
+                                    låsendeLesing.isCompleted shouldBe false
+                                    vanligLesing.isCompleted shouldBe true
+                                    Pair(låsendeLesing, vanligLesing)
                                 }
 
-                            val vanligLesing =
-                                async(Dispatchers.IO) { repo.hentOppgave(testOppgave.oppgaveId) }
-
-                            Thread.sleep(1000)
-
-                            låsendeLesing.isCompleted shouldBe false
-                            vanligLesing.isCompleted shouldBe true
-                            Pair(låsendeLesing, vanligLesing)
+                            låsendeLesing.await().emneknagger shouldContain beskrivelse
+                            vanligLesing.await().emneknagger shouldNotContain beskrivelse
                         }
-
-                    låsendeLesing.await().shouldNotBeNull().emneknagger shouldBe setOf("test")
-                    vanligLesing.await().shouldNotBeNull().emneknagger shouldBe setOf()
+                    }
                 }
             }
         }

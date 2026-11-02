@@ -60,6 +60,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -375,7 +376,7 @@ class OppgaveMediator(
                         oppgaveRepository.hentOppgaveForOppdatering(
                             oppgaveId = returnerTilSaksbehandlingHendelse.oppgaveId,
                             ctx = ctx,
-                            lockDurationInMillis = 10_000L,
+                            lockTimeout = 10.seconds,
                         )
                     oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
                     when (kreverToTrinnsKontroll) {
@@ -417,7 +418,12 @@ class OppgaveMediator(
 
     fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse) {
         transaksjoner.transaksjon { ctx ->
-            val oppgave = oppgaveRepository.finnOppgaveForOppdateringMedBehandlingId(hendelse.behandlingId, ctx)
+            val oppgave =
+                oppgaveRepository.finnOppgaveForOppdateringMedBehandlingId(
+                    behandlingId = hendelse.behandlingId,
+                    ctx = ctx,
+                    lockTimeout = 10.seconds,
+                )
             if (oppgave == null) {
                 logger.info {
                     "Mottatt BehandlingTilGodkjenningHendelse for behandling ${hendelse.behandlingId}, " +

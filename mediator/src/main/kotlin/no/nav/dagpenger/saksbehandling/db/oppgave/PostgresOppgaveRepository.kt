@@ -48,6 +48,7 @@ import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -858,13 +859,23 @@ class PostgresOppgaveRepository(
                 ).toSet()
         }
 
+    private fun PostgresUnitOfWork.setLockTimeout(lockTimeout: Duration) {
+        val lockTimeoutInMillis = lockTimeout.inWholeMilliseconds
+        require(lockTimeoutInMillis > 0) { "Lock timeout må være positiv" }
+        this.session.run(
+            queryOf("SET LOCAL lock_timeout = '${lockTimeoutInMillis}ms'").asExecute,
+        )
+    }
+
     override fun hentOppgaveForOppdatering(
         oppgaveId: UUID,
         ctx: Transaksjonskontekst.Aktiv,
-        lockDurationInMillis: Long,
+        lockTimeout: Duration?,
     ): Oppgave =
         databaseSession.inContext(ctx) {
-            session.run(queryOf("SET LOCAL lock_timeout = '${lockDurationInMillis}ms'").asExecute)
+            lockTimeout?.let {
+                setLockTimeout(it)
+            }
             session
                 .run(
                     queryOf(
@@ -888,8 +899,12 @@ class PostgresOppgaveRepository(
     override fun finnOppgaveForOppdateringMedBehandlingId(
         behandlingId: UUID,
         ctx: Transaksjonskontekst.Aktiv,
+        lockTimeout: Duration?,
     ): Oppgave? =
         databaseSession.inContext(ctx) {
+            lockTimeout?.let {
+                setLockTimeout(it)
+            }
             session
                 .run(
                     queryOf(
