@@ -89,7 +89,7 @@ object OpplysningBygger {
                     KLAGEN_GJELDER_VEDTAK -> {
                         Opplysning(
                             type = type,
-                            verdi = Verdi.Flervalg(behandlingIderSomKanPåklages.map { it.toString() }),
+                            verdi = Verdi.TomVerdi,
                             valgmuligheter = behandlingIderSomKanPåklages.map { it.toString() },
                             regler = type.regler,
                         )
