@@ -7,7 +7,9 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -69,6 +71,7 @@ import no.nav.dagpenger.saksbehandling.tilbakekreving.Tilbakekreving.BehandlingS
 import no.nav.dagpenger.saksbehandling.tilbakekreving.TilbakekrevingMediator
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import org.postgresql.util.PSQLException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -76,6 +79,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class PostgresOppgaveRepositoryTest {
@@ -3221,6 +3225,62 @@ class PostgresOppgaveRepositoryTest {
 
                             låsendeLesing.await().emneknagger shouldContain beskrivelse
                             vanligLesing.await().emneknagger shouldNotContain beskrivelse
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Lesing for oppdatering feiler når lock timeout overskrides`() {
+        DBTestHelper.withOppgave(oppgave = testOppgave) { ds ->
+            val oppgaveId = testOppgave.oppgaveId
+            val behandlingId = testOppgave.behandling.behandlingId
+            val databaseSession = DatabaseSession(ds)
+            val repo = PostgresOppgaveRepository(databaseSession)
+            val transaksjoner = Transaksjoner(databaseSession)
+
+            listOf<Pair<String, (Transaksjonskontekst.Aktiv) -> Oppgave>>(
+                Pair("hentOppgaveForOppdatering") { ctx ->
+                    repo.hentOppgaveForOppdatering(
+                        oppgaveId = oppgaveId,
+                        ctx = ctx,
+                        lockTimeout = 100.milliseconds,
+                    )
+                },
+                Pair("finnOppgaveForOppdateringMedBehandlingId") { ctx ->
+                    requireNotNull(
+                        repo.finnOppgaveForOppdateringMedBehandlingId(
+                            behandlingId = behandlingId,
+                            ctx = ctx,
+                            lockTimeout = 100.milliseconds,
+                        ),
+                    )
+                },
+            ).forEach { (beskrivelse, funksjonUnderTest) ->
+                withClue("Testing $beskrivelse") {
+                    runBlocking {
+                        withTimeout(3.seconds) {
+                            val oppgave: Deferred<Result<Oppgave>> =
+                                transaksjoner.transaksjon { ctx ->
+                                    repo.hentOppgaveForOppdatering(oppgaveId, ctx, 10.seconds)
+                                    val deferredOppgave =
+                                        async(Dispatchers.IO) {
+                                            runCatching {
+                                                transaksjoner.transaksjon { annenCtx -> funksjonUnderTest(annenCtx) }
+                                            }
+                                        }
+                                    Thread.sleep(500)
+                                    deferredOppgave
+                                }
+                            oppgave.await().let {
+                                it.isFailure shouldBe true
+                                it
+                                    .exceptionOrNull()
+                                    .shouldBeInstanceOf<PSQLException>()
+                                    .sqlState shouldBe "55P03" // lock_not_available
+                            }
                         }
                     }
                 }
