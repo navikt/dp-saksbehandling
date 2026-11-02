@@ -48,7 +48,7 @@ data class KlageBehandling private constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
         opprettet: LocalDateTime = LocalDateTime.now(),
-        muligeVedtakIdKlagenGjelder: Set<UUID> = emptySet(),
+        behandlingIderSomKanPåklages: Set<UUID> = emptySet(),
     ) : this(
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
@@ -56,7 +56,7 @@ data class KlageBehandling private constructor(
         opplysninger =
             lagOpplysninger(
                 opplysninger = OpplysningType.entries.toSet(),
-                muligeVedtakIdKlagenGjelder = muligeVedtakIdKlagenGjelder,
+                behandlingIderSomKanPåklages = behandlingIderSomKanPåklages,
             ),
     )
 

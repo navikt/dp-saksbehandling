@@ -83,7 +83,7 @@ class KlageMediator(
                             hendelse = klageMottattHendelse,
                         ),
                     ),
-                muligeVedtakIdKlagenGjelder =
+                behandlingIderSomKanPåklages =
                     sakMediator
                         .behandlingerSomKanPåklagesISammeSak(klageMottattHendelse.sakId)
                         .map { it.behandlingId }
@@ -145,7 +145,7 @@ class KlageMediator(
                             hendelse = manuellKlageMottattHendelse,
                         ),
                     ),
-                muligeVedtakIdKlagenGjelder =
+                behandlingIderSomKanPåklages =
                     sakMediator
                         .behandlingerSomKanPåklagesISammeSak(manuellKlageMottattHendelse.sakId)
                         .map { it.behandlingId }

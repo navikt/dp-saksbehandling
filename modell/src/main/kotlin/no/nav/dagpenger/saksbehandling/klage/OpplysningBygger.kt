@@ -81,7 +81,7 @@ object OpplysningBygger {
 
     fun lagOpplysninger(
         opplysninger: Set<OpplysningType> = emptySet(),
-        muligeVedtakIdKlagenGjelder: Set<UUID> = emptySet(),
+        behandlingIderSomKanPåklages: Set<UUID> = emptySet(),
     ): Set<Opplysning> =
         opplysninger
             .map { type ->
@@ -89,8 +89,8 @@ object OpplysningBygger {
                     KLAGEN_GJELDER_VEDTAK -> {
                         Opplysning(
                             type = type,
-                            verdi = Verdi.Flervalg(muligeVedtakIdKlagenGjelder.map { it.toString() }),
-                            valgmuligheter = muligeVedtakIdKlagenGjelder.map { it.toString() },
+                            verdi = Verdi.Flervalg(behandlingIderSomKanPåklages.map { it.toString() }),
+                            valgmuligheter = behandlingIderSomKanPåklages.map { it.toString() },
                             regler = type.regler,
                         )
                     }
