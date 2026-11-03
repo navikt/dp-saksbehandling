@@ -374,7 +374,7 @@ class OppgaveMediator(
                 transaksjoner.transaksjon { ctx ->
                     val oppgave =
                         oppgaveRepository.hentOppgaveForOppdatering(
-                            oppgaveId = returnerTilSaksbehandlingHendelse.oppgaveId,
+                            oppgaveId = oppgaveId,
                             ctx = ctx,
                             lockTimeout = 10.seconds,
                         )

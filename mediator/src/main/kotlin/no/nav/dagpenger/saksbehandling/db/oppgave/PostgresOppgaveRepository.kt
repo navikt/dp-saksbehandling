@@ -418,8 +418,8 @@ class PostgresOppgaveRepository(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT id 
-                        FROM   oppgave_v1 
+                        SELECT id
+                        FROM   oppgave_v1
                         WHERE  behandling_id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
@@ -436,8 +436,8 @@ class PostgresOppgaveRepository(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT behandling_id 
-                        FROM   oppgave_v1 
+                        SELECT behandling_id
+                        FROM   oppgave_v1
                         WHERE  id = :oppgave_id
                         """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
@@ -882,7 +882,7 @@ class PostgresOppgaveRepository(
                         //language=PostgreSQL
                         statement =
                             """
-                            SELECT id 
+                            SELECT id
                             FROM    oppgave_v1
                             WHERE   id = :oppgave_id
                             FOR UPDATE
@@ -911,7 +911,7 @@ class PostgresOppgaveRepository(
                         //language=PostgreSQL
                         statement =
                             """
-                            SELECT id 
+                            SELECT id
                             FROM    oppgave_v1
                             WHERE   behandling_id = :behandling_id
                             FOR UPDATE

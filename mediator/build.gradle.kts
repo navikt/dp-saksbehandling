@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.ktor.client.logging.jvm)
     implementation("de.slub-dresden:urnlib:3.0.0")
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j")
 
     implementation("io.opentelemetry:opentelemetry-api:1.67.0")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.33.1")
