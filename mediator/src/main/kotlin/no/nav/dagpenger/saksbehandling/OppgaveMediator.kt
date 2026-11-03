@@ -422,7 +422,7 @@ class OppgaveMediator(
                 oppgaveRepository.finnOppgaveForOppdateringMedBehandlingId(
                     behandlingId = hendelse.behandlingId,
                     ctx = ctx,
-                    lockTimeout = 10.seconds,
+                    lockTimeout = 20.seconds,
                 )
             if (oppgave == null) {
                 logger.info {
