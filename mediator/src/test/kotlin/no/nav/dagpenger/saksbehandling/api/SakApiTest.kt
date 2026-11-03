@@ -131,7 +131,6 @@ class SakApiTest {
             mockk<SakMediator>().also {
                 coEvery {
                     it.flyttBehandlingTilNySak(
-                        ident = ident,
                         behandlingId = behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
                     )

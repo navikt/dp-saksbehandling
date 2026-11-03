@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageBehandlingUtført
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageinstansVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
-import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.FormkravSteg
 import no.nav.dagpenger.saksbehandling.klage.FristvurderingSteg
 import no.nav.dagpenger.saksbehandling.klage.FullmektigSteg
@@ -166,12 +165,6 @@ class KlageApiTest {
                         ),
                     ),
             )
-        val behandlingSomKanPåklages =
-            BehandlingSomKanPåklages(
-                behandlingId = UUIDv7.ny(),
-                hendelseBehandler = HendelseBehandler.Intern.Klage,
-                ferdigbehandletTidspunkt = LocalDateTime.now(),
-            )
         val klageMediator =
             mockk<KlageMediator>().also {
                 every {
@@ -180,9 +173,6 @@ class KlageApiTest {
                         saksbehandler = TestHelper.saksbehandler,
                     )
                 } returns klageBehandling
-                every {
-                    it.behandlingerSomKanPåklagesISammeSak(klageBehandlingId)
-                } returns listOf(behandlingSomKanPåklages)
             }
 
         withKlageApi(klageMediator) {

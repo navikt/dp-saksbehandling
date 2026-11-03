@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.RETTSLIG_KLAGEINTERESSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
+import java.util.UUID
 
 object OpplysningBygger {
     val klagenGjelderOpplysningTyper =
@@ -78,14 +79,30 @@ object OpplysningBygger {
             FULLMEKTIG_LAND,
         )
 
-    fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> =
+    fun lagOpplysninger(
+        opplysninger: Set<OpplysningType> = emptySet(),
+        behandlingIderSomKanPåklages: Set<UUID> = emptySet(),
+    ): Set<Opplysning> =
         opplysninger
-            .map {
-                Opplysning(
-                    type = it,
-                    verdi = Verdi.TomVerdi,
-                    valgmuligheter = it.valgmuligheter,
-                    regler = it.regler,
-                )
+            .map { type ->
+                when (type) {
+                    KLAGEN_GJELDER_VEDTAK -> {
+                        Opplysning(
+                            type = type,
+                            verdi = Verdi.TomVerdi,
+                            valgmuligheter = behandlingIderSomKanPåklages.map { it.toString() },
+                            regler = type.regler,
+                        )
+                    }
+
+                    else -> {
+                        Opplysning(
+                            type = type,
+                            verdi = Verdi.TomVerdi,
+                            valgmuligheter = type.valgmuligheter,
+                            regler = type.regler,
+                        )
+                    }
+                }
             }.toSet()
 }

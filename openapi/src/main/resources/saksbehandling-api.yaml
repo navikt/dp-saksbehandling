@@ -2426,22 +2426,6 @@ components:
         - behandlingType
         - utlostAv
 
-    BehandlingSomKanPaaklages:
-      type: object
-      properties:
-        behandlingId:
-          type: string
-          format: uuid
-        utlostAv:
-          $ref: '#/components/schemas/UtlostAvType'
-        ferdigbehandletTidspunkt:
-          type: string
-          format: date-time
-      required:
-        - behandlingId
-        - utlostAv
-        - ferdigbehandletTidspunkt
-
     Klage:
       type: object
       properties:
@@ -2476,11 +2460,6 @@ components:
           items:
             $ref: '#/components/schemas/AvbrytKlageAarsak'
           description: Årsaker til at klagen avbrytes
-        behandlingerSomKanPaaklages:
-          type: array
-          items:
-            $ref: '#/components/schemas/BehandlingSomKanPaaklages'
-          description: Behandlinger som kan påklages
       required:
         - behandlingId
         - utfall
@@ -2488,7 +2467,6 @@ components:
         - utfallOpplysninger
         - tilstand
         - lovligeAvbrytAarsaker
-        - behandlingerSomKanPaaklages
 
     TekstVerdi:
       type: object

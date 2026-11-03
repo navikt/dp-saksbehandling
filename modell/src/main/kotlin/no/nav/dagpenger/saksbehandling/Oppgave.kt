@@ -615,8 +615,11 @@ data class Oppgave private constructor(
             if (oppgave.meldingOmVedtak.kilde == GOSYS) {
                 oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }
-            if (oppgave.sisteBeslutterIdent == null || oppgave.sisteBeslutterIdent == oppgave.behandlerIdent) {
+            if (oppgave.sisteBeslutterIdent == null ||
+                oppgave.sisteBeslutterIdent == sendTilKontrollHendelse.utførtAv.navIdent
+            ) {
                 oppgave.behandlerIdent = null
+                oppgave.sisteBeslutterIdent = null
                 oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
             } else {
                 oppgave.behandlerIdent = oppgave.sisteBeslutterIdent

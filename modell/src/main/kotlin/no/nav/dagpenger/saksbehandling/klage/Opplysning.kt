@@ -21,7 +21,10 @@ class Opplysning(
 
     fun settSynlighet(synlig: Boolean) {
         when (synlig) {
-            true -> this.synlig = true
+            true -> {
+                this.synlig = true
+            }
+
             false -> {
                 this.synlig = false
                 this.verdi = Verdi.TomVerdi

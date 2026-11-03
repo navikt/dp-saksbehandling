@@ -51,7 +51,6 @@ fun Route.sakApi(
                 val saksbehandlerToken = call.request.jwt()
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 mediator.flyttBehandlingTilNySak(
-                    ident = personIdent.ident,
                     behandlingId = behandlingId,
                     saksbehandlerToken = saksbehandlerToken,
                 )

@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.sak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.fail
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -152,73 +153,28 @@ class SakMediatorTest {
 
     @Test
     fun `Skal flytte behandling til ny sak`() {
-        withMigratedDb { ds ->
-
-            val behandlingKlientMock =
-                mockk<BehandlingKlient>().also {
-                    coEvery { it.flytt(any(), any(), any()) } returns Result.success(Unit)
-                }
-
-            val sakMediator =
-                SakMediator(
-                    sakRepository = PostgresSakRepository(DatabaseSession(ds)),
-                    rapidsConnection = testRapid,
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(DatabaseSession(ds)),
-                            oppslag = oppslagMock,
-                        ),
-                    behandlingKlient = behandlingKlientMock,
-                )
-
-            sakMediator.opprettEllerKnyttTilSak(søknadsbehandlingOpprettetHendelseNyRett)
-            sakMediator.opprettEllerKnyttTilSak(søknadsbehandlingOpprettetHendelseGjenopptak)
-
-            runBlocking {
-                sakMediator.flyttBehandlingTilNySak(
-                    ident = søknadsbehandlingOpprettetHendelseGjenopptak.ident,
-                    behandlingId = søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId,
-                    saksbehandlerToken = "token",
-                )
+        val behandlingId = UUIDv7.ny()
+        val behandlingKlientMock =
+            mockk<BehandlingKlient>().also {
+                coEvery { it.flytt(behandlingId, null, any()) } returns Result.success(Unit)
             }
 
-            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
-                it.person.ident shouldBe testIdent
-                it.alleSaker().size shouldBe 2
-                it.alleSaker().last().sakId shouldBe søknadsbehandlingOpprettetHendelseNyRett.behandlingId
-                it
-                    .alleSaker()
-                    .last()
-                    .behandlinger()
-                    .single()
-                    .behandlingId shouldBe søknadsbehandlingOpprettetHendelseNyRett.behandlingId
-                it.alleSaker().first().sakId shouldBe søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId
-                it
-                    .alleSaker()
-                    .first()
-                    .behandlinger()
-                    .single()
-                    .behandlingId shouldBe
-                    søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId
-            }
+        val sakMediator =
+            SakMediator(
+                sakRepository = mockk(),
+                rapidsConnection = testRapid,
+                personMediator = mockk(),
+                behandlingKlient = behandlingKlientMock,
+            )
 
-            shouldThrow<SakHistorikk.BehandlingHarAlleredeStartetSakException> {
-                runBlocking {
-                    sakMediator.flyttBehandlingTilNySak(
-                        ident = søknadsbehandlingOpprettetHendelseGjenopptak.ident,
-                        behandlingId = søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId,
-                        saksbehandlerToken = "token",
-                    )
-                }
+        runBlocking {
+            shouldNotThrowAny {
+                sakMediator.flyttBehandlingTilNySak(behandlingId, "token")
             }
+        }
 
-            coVerify(exactly = 1) {
-                behandlingKlientMock.flytt(
-                    behandlingId = any(),
-                    nyBasertPå = any(),
-                    saksbehandlerToken = any(),
-                )
-            }
+        coVerify(exactly = 1) {
+            behandlingKlientMock.flytt(behandlingId, null, "token")
         }
     }
 
@@ -250,7 +206,6 @@ class SakMediatorTest {
             runBlocking {
                 shouldThrow<BehandlingException> {
                     sakMediator.flyttBehandlingTilNySak(
-                        ident = søknadsbehandlingOpprettetHendelseGjenopptak.ident,
                         behandlingId = søknadsbehandlingOpprettetHendelseGjenopptak.behandlingId,
                         saksbehandlerToken = "token",
                     )

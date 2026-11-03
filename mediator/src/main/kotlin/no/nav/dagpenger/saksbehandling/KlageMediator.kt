@@ -20,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OpprettOppfølgingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsendingDistribuert
-import no.nav.dagpenger.saksbehandling.klage.BehandlingSomKanPåklages
 import no.nav.dagpenger.saksbehandling.klage.KlageAksjon
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -83,6 +82,7 @@ class KlageMediator(
                             hendelse = klageMottattHendelse,
                         ),
                     ),
+                behandlingIderSomKanPåklages = sakMediator.behandlingerSomKanPåklages(klageMottattHendelse.sakId),
             )
 
         val behandlingOpprettetHendelse =
@@ -140,6 +140,7 @@ class KlageMediator(
                             hendelse = manuellKlageMottattHendelse,
                         ),
                     ),
+                behandlingIderSomKanPåklages = sakMediator.behandlingerSomKanPåklages(manuellKlageMottattHendelse.sakId),
             )
 
         val utførtAv = manuellKlageMottattHendelse.utførtAv
@@ -380,8 +381,9 @@ class KlageMediator(
                     // Ingen handling nødvendig
                 }
 
-                is KlageAksjon.StartRevurdering ->
+                is KlageAksjon.StartRevurdering -> {
                     error("Uventet aksjon StartRevurdering ved distribusjon av vedtak: $aksjon")
+                }
             }
         }
     }
@@ -426,11 +428,10 @@ class KlageMediator(
                     // Ingen handling nødvendig
                 }
 
-                else -> error("Uventet aksjon $aksjon ved mottak av klageinstansvedtak")
+                else -> {
+                    error("Uventet aksjon $aksjon ved mottak av klageinstansvedtak")
+                }
             }
         }
     }
-
-    fun behandlingerSomKanPåklagesISammeSak(behandlingId: UUID): List<BehandlingSomKanPåklages> =
-        sakMediator.behandlingerSomKanPåklagesISammeSak(behandlingId)
 }
