@@ -4,6 +4,10 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.coroutines.withLoggingContextAsync
 import io.github.oshai.kotlinlogging.withLoggingContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.slf4j.MDCContext
+import kotlinx.coroutines.withContext
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.Oppgave.Handling
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
@@ -56,6 +60,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -172,7 +177,8 @@ class OppgaveMediator(
             return
         }
 
-        val søknadId: UUID = requireNotNull(hendelse.søknadId) { "SøknadId må være satt for å kunne finne ettersending" }
+        val søknadId: UUID =
+            requireNotNull(hendelse.søknadId) { "SøknadId må være satt for å kunne finne ettersending" }
         oppgaveRepository
             .finnOppgaveForSøknad(
                 ident = hendelse.ident,
@@ -348,83 +354,103 @@ class OppgaveMediator(
         returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         beslutterToken: String,
     ) {
-        oppgaveRepository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
+        withContext(Dispatchers.IO + MDCContext()) {
+            val oppgaveId = returnerTilSaksbehandlingHendelse.oppgaveId
+            val behandlingId = oppgaveRepository.hentBehandlingIdFor(oppgaveId = oppgaveId)
             withLoggingContextAsync(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                "oppgaveId" to oppgaveId.toString(),
+                "behandlingId" to behandlingId.toString(),
             ) {
-                logger.info {
-                    "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
                 val kreverToTrinnsKontroll =
                     behandlingKlient
                         .kreverTotrinnskontroll(
-                            oppgave.behandling.behandlingId,
+                            behandlingId = behandlingId,
                             saksbehandlerToken = beslutterToken,
                         ).onFailure {
-                            logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
-                        }.getOrThrow()
-                when (kreverToTrinnsKontroll) {
-                    true -> {
-                        behandlingKlient
-                            .sendTilbake(
-                                behandlingId = oppgave.behandling.behandlingId,
-                                ident = oppgave.personIdent(),
-                                saksbehandlerToken = beslutterToken,
-                            ).onSuccess {
-                                logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
-                            }.onFailure {
-                                val feil =
-                                    "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
-                                        "tilbake til saksbehandling: ${it.message}"
-                                logger.error { feil }
-                                throw it
+                            logger.error {
+                                "Feil ved henting av behandling med id $behandlingId: ${it.message}"
                             }
-                    }
+                        }.getOrThrow()
+                transaksjoner.transaksjon { ctx ->
+                    val oppgave =
+                        oppgaveRepository.hentOppgaveForOppdatering(
+                            oppgaveId = oppgaveId,
+                            ctx = ctx,
+                            lockTimeout = 10.seconds,
+                        )
+                    oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
+                    when (kreverToTrinnsKontroll) {
+                        true -> {
+                            runBlocking {
+                                behandlingKlient
+                                    .sendTilbake(
+                                        behandlingId = oppgave.behandling.behandlingId,
+                                        ident = oppgave.personIdent(),
+                                        saksbehandlerToken = beslutterToken,
+                                    ).onSuccess {
+                                        logger.info {
+                                            "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling"
+                                        }
+                                    }.onFailure {
+                                        val feil =
+                                            "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
+                                                "tilbake til saksbehandling: ${it.message}"
+                                        logger.error { feil }
+                                        throw it
+                                    }
+                            }
+                        }
 
-                    false -> {
-                        logger.info {
-                            "Behandling med id: ${oppgave.behandling.behandlingId} krever ikke totrinnskontroll. Oppgaven settes til under behandling"
+                        false -> {
+                            logger.info {
+                                "Behandling med id: $behandlingId krever ikke totrinnskontroll. Oppgaven settes til under behandling"
+                            }
                         }
                     }
-                }
-                oppgaveRepository.lagre(oppgave)
-                logger.info {
-                    "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    oppgaveRepository.lagre(oppgave, ctx)
+                    logger.info {
+                        "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
                 }
             }
         }
     }
 
     fun behandlingTilGodkjenning(hendelse: BehandlingTilGodkjenningHendelse) {
-        val oppgave = oppgaveRepository.finnOppgaveForBehandling(hendelse.behandlingId)
-        if (oppgave == null) {
-            logger.info {
-                "Mottatt BehandlingTilGodkjenningHendelse for behandling ${hendelse.behandlingId}, " +
-                    "men fant ingen oppgave. Dette er forventet ved førstegangs TilGodkjenning, hvor " +
-                    "oppgaven opprettes av forslag_til_behandlingsresultat. Ignorerer hendelsen."
-            }
-            return
-        }
-        withLoggingContext(
-            "oppgaveId" to oppgave.oppgaveId.toString(),
-            "behandlingId" to oppgave.behandling.behandlingId.toString(),
-        ) {
-            logger.info {
-                "Mottatt BehandlingTilGodkjenningHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-            }
-            when (oppgave.behandlingTilGodkjenning(hendelse)) {
-                Handling.LAGRE_OPPGAVE -> {
-                    oppgaveRepository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet BehandlingTilGodkjenningHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
+        transaksjoner.transaksjon { ctx ->
+            val oppgave =
+                oppgaveRepository.finnOppgaveForOppdateringMedBehandlingId(
+                    behandlingId = hendelse.behandlingId,
+                    ctx = ctx,
+                    lockTimeout = 20.seconds,
+                )
+            if (oppgave == null) {
+                logger.info {
+                    "Mottatt BehandlingTilGodkjenningHendelse for behandling ${hendelse.behandlingId}, " +
+                        "men fant ingen oppgave. Dette er forventet ved førstegangs TilGodkjenning, hvor " +
+                        "oppgaven opprettes av forslag_til_behandlingsresultat. Ignorerer hendelsen."
                 }
-
-                Handling.INGEN -> {
+            } else {
+                withLoggingContext(
+                    "oppgaveId" to oppgave.oppgaveId.toString(),
+                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                ) {
                     logger.info {
-                        "BehandlingTilGodkjenningHendelse ga ingen tilstandsendring. Tilstand: ${oppgave.tilstand().type}"
+                        "Mottatt BehandlingTilGodkjenningHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                    }
+                    when (oppgave.behandlingTilGodkjenning(hendelse)) {
+                        Handling.LAGRE_OPPGAVE -> {
+                            oppgaveRepository.lagre(oppgave, ctx)
+                            logger.info {
+                                "Behandlet BehandlingTilGodkjenningHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                            }
+                        }
+
+                        Handling.INGEN -> {
+                            logger.info {
+                                "BehandlingTilGodkjenningHendelse ga ingen tilstandsendring. Tilstand: ${oppgave.tilstand().type}"
+                            }
+                        }
                     }
                 }
             }
@@ -543,23 +569,25 @@ class OppgaveMediator(
     }
 
     fun håndterUtfallFraKlageinstans(klageinstansVedtakHendelse: KlageinstansVedtakHendelse) {
-        oppgaveRepository.hentOppgaveForBehandling(behandlingId = klageinstansVedtakHendelse.klageId).let { oppgave ->
-            withLoggingContext(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
-            ) {
-                logger.info {
-                    "Mottatt KlageinstansVedtakHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                oppgave.håndterUtfallFraKlageinstans(
-                    klageinstansVedtakHendelse = klageinstansVedtakHendelse,
-                )
-                oppgaveRepository.lagre(oppgave)
-                logger.info {
-                    "Behandlet KlageinstansVedtakHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+        oppgaveRepository
+            .hentOppgaveForBehandling(behandlingId = klageinstansVedtakHendelse.klageId)
+            .let { oppgave ->
+                withLoggingContext(
+                    "oppgaveId" to oppgave.oppgaveId.toString(),
+                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                ) {
+                    logger.info {
+                        "Mottatt KlageinstansVedtakHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                    }
+                    oppgave.håndterUtfallFraKlageinstans(
+                        klageinstansVedtakHendelse = klageinstansVedtakHendelse,
+                    )
+                    oppgaveRepository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet KlageinstansVedtakHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
                 }
             }
-        }
     }
 
     fun ferdigstillOppgave(innsendingFerdigstiltHendelse: InnsendingFerdigstiltHendelse) {

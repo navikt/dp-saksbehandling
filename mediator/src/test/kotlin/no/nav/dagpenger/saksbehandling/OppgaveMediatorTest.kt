@@ -1,9 +1,11 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowWithMessage
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
@@ -121,6 +123,8 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.stream.Stream
 import javax.sql.DataSource
+import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 class
 OppgaveMediatorTest {
@@ -399,6 +403,67 @@ OppgaveMediatorTest {
                     saksbehandlerToken = "testToken",
                 )
             }
+        }
+    }
+
+    @Test
+    fun `Skal håndtere at dp-behandling sender behandling_endret_tilstand(TilGodkjenning) når beslutter returnerer oppgaven`() {
+        lateinit var oppgaveMediator: OppgaveMediator
+        lateinit var mottakTråd: Thread
+        var mottakFeil: Throwable? = null
+
+        val behandlingKlient: BehandlingKlient =
+            mockk<BehandlingKlient>().also {
+                coEvery { it.kreverTotrinnskontroll(any(), any()) } returns Result.success(true)
+                coEvery { it.sendTilbake(any(), any(), any()) } answers {
+                    mottakTråd =
+                        thread {
+                            runCatching {
+                                oppgaveMediator.behandlingTilGodkjenning(
+                                    BehandlingTilGodkjenningHendelse(
+                                        behandlingId = firstArg(),
+                                        ident = saksbehandler.navIdent,
+                                    ),
+                                )
+                            }.onFailure { mottakFeil = it }
+                        }
+                    mottakTråd.join(500)
+                    Result.success(Unit)
+                }
+            }
+
+        settOppOppgaveMediator(
+            behandlingKlient = behandlingKlient,
+        ) { datasource, mediator ->
+            oppgaveMediator = mediator
+            val oppgave = datasource.lagTestoppgave(UNDER_KONTROLL)
+            runBlocking {
+                oppgaveMediator.returnerTilSaksbehandling(
+                    returnerTilSaksbehandlingHendelse =
+                        ReturnerTilSaksbehandlingHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            utførtAv = beslutter,
+                        ),
+                    beslutterToken = "testToken",
+                )
+
+                eventually(2.seconds) {
+                    withClue("Tråden som håndterer behandling_endret_tilstand(TilGodkjenning) må være ferdig") {
+                        mottakTråd.isAlive shouldBe false
+                    }
+                }
+            }
+
+            withClue("Tråden som håndterer behandling_endret_tilstand(TilGodkjenning) skal ikke kaste feil") {
+                mottakFeil shouldBe null
+            }
+
+            oppgaveMediator
+                .hentOppgave(
+                    oppgave.oppgaveId,
+                    testInspektør,
+                ).tilstandslogg
+                .find { it.hendelse is BehandlingTilGodkjenningHendelse } shouldBe null
         }
     }
 

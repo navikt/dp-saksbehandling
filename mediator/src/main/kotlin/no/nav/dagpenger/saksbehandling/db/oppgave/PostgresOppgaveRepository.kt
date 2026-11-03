@@ -48,6 +48,7 @@ import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -417,8 +418,8 @@ class PostgresOppgaveRepository(
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT id 
-                        FROM   oppgave_v1 
+                        SELECT id
+                        FROM   oppgave_v1
                         WHERE  behandling_id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
@@ -427,6 +428,24 @@ class PostgresOppgaveRepository(
                 }.asSingle,
             )
         }
+
+    override fun hentBehandlingIdFor(oppgaveId: UUID): UUID =
+        databaseSession.session { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT behandling_id
+                        FROM   oppgave_v1
+                        WHERE  id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.uuidOrNull("behandling_id")
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke behandlingId for oppgaveId $oppgaveId")
 
     override fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave =
         finnOppgaveForBehandling(behandlingId)
@@ -838,6 +857,72 @@ class PostgresOppgaveRepository(
                         row.string("emneknagg")
                     }.asList,
                 ).toSet()
+        }
+
+    private fun PostgresUnitOfWork.setLockTimeout(lockTimeout: Duration) {
+        val lockTimeoutInMillis = lockTimeout.inWholeMilliseconds
+        require(lockTimeoutInMillis > 0) { "Lock timeout må være positiv" }
+        this.session.run(
+            queryOf("SET LOCAL lock_timeout = '${lockTimeoutInMillis}ms'").asExecute,
+        )
+    }
+
+    override fun hentOppgaveForOppdatering(
+        oppgaveId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+        lockTimeout: Duration?,
+    ): Oppgave =
+        databaseSession.inContext(ctx) {
+            lockTimeout?.let {
+                setLockTimeout(it)
+            }
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id
+                            FROM    oppgave_v1
+                            WHERE   id = :oppgave_id
+                            FOR UPDATE
+                            """.trimIndent(),
+                        paramMap = mapOf("oppgave_id" to oppgaveId),
+                    ).map { row ->
+                        row.uuid("id")
+                    }.asSingle,
+                )?.let {
+                    hentOppgave(it)
+                } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        }
+
+    override fun finnOppgaveForOppdateringMedBehandlingId(
+        behandlingId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+        lockTimeout: Duration?,
+    ): Oppgave? =
+        databaseSession.inContext(ctx) {
+            lockTimeout?.let {
+                setLockTimeout(it)
+            }
+            session
+                .run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id
+                            FROM    oppgave_v1
+                            WHERE   behandling_id = :behandling_id
+                            FOR UPDATE
+                            """.trimIndent(),
+                        paramMap = mapOf("behandling_id" to behandlingId),
+                    ).map { row ->
+                        row.uuid("id")
+                    }.asSingle,
+                )?.let {
+                    hentOppgave(it)
+                }
         }
 
     private fun Row.rehydrerOppgave(): Oppgave {

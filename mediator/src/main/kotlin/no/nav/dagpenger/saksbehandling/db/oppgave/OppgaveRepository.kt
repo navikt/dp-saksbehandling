@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration
 
 interface OppgaveRepository {
     fun hentOppgave(oppgaveId: UUID): Oppgave
@@ -30,6 +31,8 @@ interface OppgaveRepository {
     ): Oppgave?
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
+
+    fun hentBehandlingIdFor(oppgaveId: UUID): UUID
 
     fun hentOppgaveForBehandling(behandlingId: UUID): Oppgave
 
@@ -54,4 +57,16 @@ interface OppgaveRepository {
     ): Oppgave.Tilstand.Type?
 
     fun hentDistinkteEmneknagger(): Set<String>
+
+    fun hentOppgaveForOppdatering(
+        oppgaveId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+        lockTimeout: Duration?,
+    ): Oppgave
+
+    fun finnOppgaveForOppdateringMedBehandlingId(
+        behandlingId: UUID,
+        ctx: Transaksjonskontekst.Aktiv,
+        lockTimeout: Duration?,
+    ): Oppgave?
 }
