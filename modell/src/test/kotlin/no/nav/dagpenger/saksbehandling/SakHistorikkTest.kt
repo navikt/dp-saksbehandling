@@ -93,36 +93,6 @@ class SakHistorikkTest {
     }
 
     @Test
-    fun `Skal kunne fjerne en behandling fra en sak`() {
-        val sakHistorikk = ModellTestHelper.lagSakHistorikk()
-        val sak = sakHistorikk.dagpengeSaker().first()
-        val behandlingId = sak.behandlinger().first().behandlingId
-        sak.fjernBehandling(behandlingId)
-        sak.behandlinger().any { it.behandlingId == behandlingId } shouldBe false
-    }
-
-    @Test
-    fun `Flytter behandling til en ny sak - skal bare kunne gjøres en gang`() {
-        val sak1 = Sak(behandling1, behandling2)
-
-        val sakHistorikk =
-            SakHistorikk(
-                person = person,
-                saker = mutableSetOf(sak1),
-            )
-
-        val nySak = sakHistorikk.flyttBehandlingTilNySak(behandling1.behandlingId)
-        nySak.sakId shouldBe behandling1.behandlingId
-        sakHistorikk.alleSaker().size shouldBe 2
-        sakHistorikk.hentSak(sak1.sakId).behandlinger() shouldBe listOf(behandling2)
-        sakHistorikk.hentSak(nySak.sakId).behandlinger() shouldBe listOf(behandling1)
-
-        shouldThrow<SakHistorikk.BehandlingHarAlleredeStartetSakException> {
-            sakHistorikk.flyttBehandlingTilNySak(behandling1.behandlingId)
-        }
-    }
-
-    @Test
     fun `kan hente sak på id`() {
         val sakHistorikk = ModellTestHelper.lagSakHistorikk()
         val sak = sakHistorikk.alleSaker().first()
@@ -136,15 +106,6 @@ class SakHistorikkTest {
 
         shouldThrow<NoSuchElementException> {
             sakHistorikk.hentSak(UUIDv7.ny())
-        }
-    }
-
-    @Test
-    fun `kaster feil ved flytting av ukjent behandling`() {
-        val sakHistorikk = ModellTestHelper.lagSakHistorikk()
-
-        shouldThrow<IllegalArgumentException> {
-            sakHistorikk.flyttBehandlingTilNySak(UUIDv7.ny())
         }
     }
 }

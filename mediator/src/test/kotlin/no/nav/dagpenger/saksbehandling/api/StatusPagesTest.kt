@@ -15,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -327,35 +326,6 @@ class StatusPagesTest {
                     {
                       "type": "dagpenger.nav.no/saksbehandling:problem:oppgave-eies-av-annen-behandler",
                       "title": "Oppgaven eies av en annen. Operasjon kan ikke utføres.",
-                      "detail": "$message",
-                      "status": 409,
-                      "instance": "$path"
-                    }
-                    """.trimIndent()
-            }
-        }
-    }
-
-    @Test
-    fun `Error håndtering av BehandlingHarAlleredeStartetSakException`() {
-        testApplication {
-            val message = "Behandlingen har allerede startet en ny sak"
-            val path = "/BehandlingHarAlleredeStartetSakException"
-            application {
-                mockApi()
-                routing {
-                    get(path) { throw SakHistorikk.BehandlingHarAlleredeStartetSakException(message) }
-                }
-            }
-
-            client.get(path).let { response ->
-                response.status shouldBe HttpStatusCode.Conflict
-                response.bodyAsText() shouldEqualSpecifiedJson
-                    //language=JSON
-                    """
-                    {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:behandling-har-allerede-startet-sak",
-                      "title": "Behandlingen har allerede startet en ny sak. Operasjon kan ikke utføres.",
                       "detail": "$message",
                       "status": 409,
                       "instance": "$path"

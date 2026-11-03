@@ -35,13 +35,9 @@ data class Sak(
         behandlinger = behandlinger.toMutableSet(),
     )
 
-    fun hentBehandling(behandlingId: UUID): Behandling = behandlinger.single { it.behandlingId == behandlingId }
-
     fun behandlinger(): List<Behandling> = behandlinger.toList()
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
-
-    fun fjernBehandling(behandlingId: UUID) = behandlinger.removeIf { it.behandlingId == behandlingId }
 
     fun erFerietilleggSak(): Boolean = behandlinger.any { it.utløstAv == HendelseBehandler.DpBehandling.Ferietillegg }
 
