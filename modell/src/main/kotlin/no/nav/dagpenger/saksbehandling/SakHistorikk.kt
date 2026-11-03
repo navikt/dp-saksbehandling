@@ -1,13 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.DpBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import java.util.UUID
-
-private val logger = KotlinLogging.logger {}
 
 data class SakHistorikk(
     val person: Person,
@@ -27,30 +24,6 @@ data class SakHistorikk(
             .asSequence()
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandlingId }
-
-    private fun hentEksisterendeSakForBehandling(behandlingId: UUID): Sak =
-        requireNotNull(saker.singleOrNull { it.behandlinger().any { b -> b.behandlingId == behandlingId } }) {
-            "Fant ikke sak for behandling $behandlingId"
-        }
-
-    fun flyttBehandlingTilNySak(behandlingId: UUID): Sak {
-        val eksisterendeSak = hentEksisterendeSakForBehandling(behandlingId)
-        if (eksisterendeSak.sakId == behandlingId) {
-            logger.warn { "Behandlingen $behandlingId har allerede startet en ny sak. Flyttes ikke på nytt." }
-            throw BehandlingHarAlleredeStartetSakException("Behandlingen har allerede startet en ny sak")
-        }
-        logger.info { "Flytter behandling $behandlingId fra sak ${eksisterendeSak.sakId} til ny sak" }
-        val behandling = eksisterendeSak.hentBehandling(behandlingId)
-        eksisterendeSak.fjernBehandling(behandlingId)
-
-        return Sak(
-            sakId = behandling.behandlingId,
-            opprettet = behandling.opprettet,
-            behandlinger = mutableSetOf(behandling),
-        ).also {
-            this.leggTilSak(it)
-        }
-    }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat =
         saker
@@ -114,8 +87,4 @@ data class SakHistorikk(
     fun finnSak(function: (Sak) -> Boolean): Sak? = saker.firstOrNull(function)
 
     fun hentSak(sakId: UUID): Sak = saker.single { it.sakId == sakId }
-
-    class BehandlingHarAlleredeStartetSakException(
-        message: String,
-    ) : RuntimeException(message)
 }
