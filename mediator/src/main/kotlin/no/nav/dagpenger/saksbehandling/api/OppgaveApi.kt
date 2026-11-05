@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.AuthenticationStrategy
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
@@ -79,7 +80,10 @@ internal fun Route.oppgaveApi(
     applicationCallParser: ApplicationCallParser,
     auditlogg: Auditlogg,
 ) {
-    authenticate("azureAd") {
+    authenticate(
+        strategy = AuthenticationStrategy.FirstSuccessful,
+        configurations = arrayOf("azureAd", "azureAdLes"),
+    ) {
         route("person/personId") {
             post {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
@@ -96,6 +100,29 @@ internal fun Route.oppgaveApi(
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
         }
+        route("oppgave") {
+            route("{oppgaveId}") {
+                get {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
+                        auditlogg.les(
+                            melding = "Så på oppgave med id $oppgaveId",
+                            ident = oppgave.personIdent(),
+                            saksbehandler = saksbehandler.navIdent,
+                        )
+                        val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
+                        call.respond(HttpStatusCode.OK, oppgaveDTO)
+                    }
+                }
+            }
+        }
+    }
+
+    authenticate(
+        "azureAd",
+    ) {
         route("person/{personId}") {
             get {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
@@ -126,7 +153,8 @@ internal fun Route.oppgaveApi(
                 sikkerlogger.info {
                     "Henter alle oppgaver med følgende søkefilter: $søkefilter"
                 }
-                val oppgaveOversiktResultatDTO: OppgaveOversiktResultatDTO = oppgaveMediator.søk(søkefilter).tilOppgaveOversiktResultatDTO()
+                val oppgaveOversiktResultatDTO: OppgaveOversiktResultatDTO =
+                    oppgaveMediator.søk(søkefilter).tilOppgaveOversiktResultatDTO()
                 call.respond(status = HttpStatusCode.OK, oppgaveOversiktResultatDTO)
             }
             route("neste") {
@@ -177,20 +205,6 @@ internal fun Route.oppgaveApi(
             }
 
             route("{oppgaveId}") {
-                get {
-                    val saksbehandler = applicationCallParser.saksbehandler(call)
-                    val oppgaveId = call.finnUUID("oppgaveId")
-                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
-                        auditlogg.les(
-                            melding = "Så på oppgave med id $oppgaveId",
-                            ident = oppgave.personIdent(),
-                            saksbehandler = saksbehandler.navIdent,
-                        )
-                        val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO)
-                    }
-                }
                 route("kontrollert-brev") {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")

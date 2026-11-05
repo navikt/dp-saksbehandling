@@ -5,6 +5,7 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -48,6 +49,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigTokenForADGruppe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
@@ -134,6 +136,40 @@ class OppgaveApiTest {
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
+
+        @JvmStatic
+        private fun endepunktOgHttpMetodeForLesProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of("/person/personId", HttpMethod.Post),
+            )
+    }
+
+    @ParameterizedTest
+    @MethodSource("endepunktOgHttpMetodeForLesProvider")
+    fun `Skal tillate kalle med lesetilgang`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
+        withOppgaveApi {
+            val response =
+                client
+                    .request(endepunkt) {
+                        method = httpMethod
+                        autentisert(
+                            token =
+                                gyldigTokenForADGruppe(
+                                    adGruppe = Configuration.lesADgruppe,
+                                ),
+                        )
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            //language=JSON
+                            """{"ident": "123123"}""",
+                        )
+                    }
+
+            response.status shouldNotBe HttpStatusCode.Unauthorized
+        }
     }
 
     @ParameterizedTest
@@ -1603,7 +1639,11 @@ class OppgaveApiTest {
                                     "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
                                     "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
                                     "returnerTilSaksbehandlingAarsaker": [],
-                                    "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
+                                    "kvalitetskontrollAarsaker": ${
+                            objectMapper.writeValueAsString(
+                                KvalitetskontrollAarsakDTO.entries,
+                            )
+                        }
                                   }
                                 }
                               ]
@@ -1647,7 +1687,11 @@ class OppgaveApiTest {
                                 "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
                                 "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
                                 "returnerTilSaksbehandlingAarsaker": [],
-                                "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
+                                "kvalitetskontrollAarsaker": ${
+                            objectMapper.writeValueAsString(
+                                KvalitetskontrollAarsakDTO.entries,
+                            )
+                        }
                               }
                             }
                           ],
@@ -1685,7 +1729,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente personId vha fnr`() {
+    fun `Skal kunne hente personId vha fnr `() {
         val person = TestHelper.testPerson
         val personMediator =
             mockk<PersonMediator>().also {
@@ -1730,8 +1774,18 @@ class OppgaveApiTest {
     fun `Skal kaste feil når person ikke finnes`() {
         val personMediator =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(ident = any<String>(), saksbehandler = any()) } throws DataNotFoundException("Fant ikke person")
-                every { it.hentPerson(personId = any<UUID>(), saksbehandler = any()) } throws DataNotFoundException("Fant ikke person")
+                every {
+                    it.hentPerson(
+                        ident = any<String>(),
+                        saksbehandler = any(),
+                    )
+                } throws DataNotFoundException("Fant ikke person")
+                every {
+                    it.hentPerson(
+                        personId = any<UUID>(),
+                        saksbehandler = any(),
+                    )
+                } throws DataNotFoundException("Fant ikke person")
             }
         withOppgaveApi(
             personMediator = personMediator,

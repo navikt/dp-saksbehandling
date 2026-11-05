@@ -53,6 +53,8 @@ spec:
       value: "false"
     - name: GRUPPE_SAKSBEHANDLER
       value: "{{azure.grupper.saksbehandler}}"
+    - name: GRUPPE_LES
+      value: "{{azure.grupper.les}}"
     - name: GRUPPE_BESLUTTER
       value: "{{azure.grupper.beslutter}}"
     - name: GRUPPE_EGNE_ANSATTE
