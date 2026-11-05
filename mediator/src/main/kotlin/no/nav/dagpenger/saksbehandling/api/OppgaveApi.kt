@@ -84,8 +84,8 @@ internal fun Route.oppgaveApi(
         strategy = AuthenticationStrategy.FirstSuccessful,
         configurations = arrayOf("azureAd", "azureAdLes"),
     ) {
-        route("person/personId") {
-            post {
+        route("person/") {
+            post("personId") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 val personIdDTO =
