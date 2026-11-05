@@ -35,7 +35,7 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val skipSetBehandlingId = setOf<UUID>(UUID.fromString("01a05bcc-9ee5-7175-9d57-ef52e15ffa9b"))
+        val skipSetBehandlingId = setOf<UUID>(UUID.fromString("01a1ab60-17e3-72e1-a777-38723898ce67"))
         if (behandlingsresultat.behandlingId in skipSetBehandlingId) {
             logger.info {
                 "Skipper behandlingId: ${behandlingsresultat.behandlingId} fra " +
