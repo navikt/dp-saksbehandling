@@ -5,7 +5,6 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -138,38 +137,11 @@ class OppgaveApiTest {
             )
 
         @JvmStatic
-        private fun endepunktOgHttpMetodeForLesProvider(): Stream<Arguments> =
+        private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
             Stream.of(
-                Arguments.of("/person/personId", HttpMethod.Post),
+                Arguments.of(Configuration.lesADgruppe),
+                Arguments.of(Configuration.saksbehandlerADGruppe),
             )
-    }
-
-    @ParameterizedTest
-    @MethodSource("endepunktOgHttpMetodeForLesProvider")
-    fun `Skal tillate kalle med lesetilgang`(
-        endepunkt: String,
-        httpMethod: HttpMethod,
-    ) {
-        withOppgaveApi {
-            val response =
-                client
-                    .request(endepunkt) {
-                        method = httpMethod
-                        autentisert(
-                            token =
-                                gyldigTokenForADGruppe(
-                                    adGruppe = Configuration.lesADgruppe,
-                                ),
-                        )
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            //language=JSON
-                            """{"ident": "123123"}""",
-                        )
-                    }
-
-            response.status shouldNotBe HttpStatusCode.Unauthorized
-        }
     }
 
     @ParameterizedTest
@@ -1728,8 +1700,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente personId vha fnr `() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente personId vha fnr `(adGrupper: String) {
         val person = TestHelper.testPerson
         val personMediator =
             mockk<PersonMediator>().also {
@@ -1745,7 +1718,9 @@ class OppgaveApiTest {
         ) {
             client
                 .post("/person/personId") {
-                    autentisert()
+                    autentisert(
+                        gyldigTokenForADGruppe(adGrupper),
+                    )
                     contentType(ContentType.Application.Json)
                     setBody(
                         //language=JSON
