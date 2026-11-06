@@ -1362,8 +1362,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal hente oppgaveId basert på behandlingId`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal hente oppgaveId basert på behandlingId`(gruppe: String) {
         val behandlingIdSomFinnes = UUIDv7.ny()
         val behandlingIdSomIkkeFinnes = UUIDv7.ny()
         val oppgaveId = UUIDv7.ny()
@@ -1375,23 +1376,25 @@ class OppgaveApiTest {
                 every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
             }
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
-            client.get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert() }.also { response ->
+            client
+                .get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert(gyldigTokenForADGruppe(gruppe)) }
+                .also { response ->
 
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson
-                    """
-                    {
-                        "oppgaveId": "$oppgaveId"
-                    }
-                    """.trimIndent()
-                val oppgaveIdDTO =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<OppgaveIdDTO>() {},
-                    )
-                oppgaveIdDTO shouldBe forventetOppgaveIdDTO
-            }
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    response.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                            "oppgaveId": "$oppgaveId"
+                        }
+                        """.trimIndent()
+                    val oppgaveIdDTO =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<OppgaveIdDTO>() {},
+                        )
+                    oppgaveIdDTO shouldBe forventetOppgaveIdDTO
+                }
 
             client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
