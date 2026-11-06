@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -11,6 +10,8 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.KlageMediator
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandler
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandlerEllerLes
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytKlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
@@ -29,8 +30,8 @@ fun Route.klageApi(
     applicationCallParser: ApplicationCallParser,
     auditlogg: Auditlogg,
 ) {
-    authenticate("azureAd") {
-        route("klage") {
+    route("klage") {
+        authenticateSaksbehandler {
             route("opprett-manuelt") {
                 post {
                     val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
@@ -56,111 +57,103 @@ fun Route.klageApi(
                 }
             }
             route("{behandlingId}") {
-                get {
+                post("avbryt") {
+                    val avbrytKlageDTO = call.receive<AvbrytKlageDTO>()
+                    val avbruttHendelse =
+                        AvbruttHendelse(
+                            behandlingId = call.finnUUID("behandlingId"),
+                            årsak = avbrytKlageDTO.tilAvbrytKlageÅrsak(),
+                            utførtAv = applicationCallParser.saksbehandler(call),
+                            notat = avbrytKlageDTO.notat,
+                        )
+                    val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
+                    auditlogg.oppdater(
+                        melding =
+                            "Avbrøt klagebehandling med id ${avbruttHendelse.behandlingId}, " +
+                                "årsak ${avbruttHendelse.årsak}",
+                        ident = klageBehandling.personIdent(),
+                        saksbehandler = avbruttHendelse.utførtAv.navIdent,
+                    )
+                    call.respond(HttpStatusCode.NoContent)
+                }
+                put("ferdigstill") {
                     val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.saksbehandler(call)
                     val klageBehandling =
-                        mediator.hentKlageBehandling(
-                            behandlingId = behandlingId,
-                            saksbehandler = saksbehandler,
+                        mediator.behandlingUtført(
+                            klageBehandlingUtført =
+                                KlageBehandlingUtført(
+                                    behandlingId = behandlingId,
+                                    utførtAv = saksbehandler,
+                                ),
+                            saksbehandlerToken = call.request.jwt(),
                         )
-                    auditlogg.les(
-                        melding = "Så på klagebehandling med id ${klageBehandling.behandlingId}",
+                    auditlogg.oppdater(
+                        melding = "Ferdigstilte klagebehandling med id $behandlingId",
                         ident = klageBehandling.personIdent(),
                         saksbehandler = saksbehandler.navIdent,
                     )
-                    val klageDTO =
-                        klageDtoMapper.tilDto(
-                            klageBehandling = klageBehandling,
+                    call.respond(HttpStatusCode.NoContent)
+                }
+                put("ferdigstill-behandling") {
+                    val behandlingId = call.finnUUID("behandlingId")
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val klageBehandling =
+                        mediator.ferdigstillBehandling(
+                            hendelse =
+                                KlageBehandlingFerdigstilt(
+                                    behandlingId = behandlingId,
+                                    utførtAv = saksbehandler,
+                                ),
+                        )
+                    auditlogg.oppdater(
+                        melding = "Ferdigstilte klagebehandling med id $behandlingId (medhold/delvis medhold)",
+                        ident = klageBehandling.personIdent(),
+                        saksbehandler = saksbehandler.navIdent,
+                    )
+                    call.respond(HttpStatusCode.NoContent)
+                }
+                put("opplysning/{opplysningId}") {
+                    val behandlingId = call.finnUUID("behandlingId")
+                    val opplysningId = call.finnUUID("opplysningId")
+                    val oppdaterKlageOpplysningDTO = call.receive<OppdaterKlageOpplysningDTO>()
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val klageBehandling =
+                        mediator.oppdaterKlageOpplysning(
+                            behandlingId = behandlingId,
+                            opplysningId = opplysningId,
+                            verdi = klageDtoMapper.tilVerdi(oppdaterKlageOpplysningDTO),
                             saksbehandler = saksbehandler,
                         )
-                    call.respond(HttpStatusCode.OK, klageDTO)
+                    auditlogg.oppdater(
+                        melding = "Oppdaterte klageopplysning med id $opplysningId",
+                        ident = klageBehandling.personIdent(),
+                        saksbehandler = saksbehandler.navIdent,
+                    )
+                    call.respond(HttpStatusCode.NoContent)
                 }
-                route("avbryt") {
-                    post {
-                        val avbrytKlageDTO = call.receive<AvbrytKlageDTO>()
-                        val avbruttHendelse =
-                            AvbruttHendelse(
-                                behandlingId = call.finnUUID("behandlingId"),
-                                årsak = avbrytKlageDTO.tilAvbrytKlageÅrsak(),
-                                utførtAv = applicationCallParser.saksbehandler(call),
-                                notat = avbrytKlageDTO.notat,
-                            )
-                        val klageBehandling = mediator.avbrytKlage(avbruttHendelse)
-                        auditlogg.oppdater(
-                            melding =
-                                "Avbrøt klagebehandling med id ${avbruttHendelse.behandlingId}, " +
-                                    "årsak ${avbruttHendelse.årsak}",
-                            ident = klageBehandling.personIdent(),
-                            saksbehandler = avbruttHendelse.utførtAv.navIdent,
-                        )
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                }
-                route("ferdigstill") {
-                    put {
-                        val behandlingId = call.finnUUID("behandlingId")
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val klageBehandling =
-                            mediator.behandlingUtført(
-                                klageBehandlingUtført =
-                                    KlageBehandlingUtført(
-                                        behandlingId = behandlingId,
-                                        utførtAv = saksbehandler,
-                                    ),
-                                saksbehandlerToken = call.request.jwt(),
-                            )
-                        auditlogg.oppdater(
-                            melding = "Ferdigstilte klagebehandling med id $behandlingId",
-                            ident = klageBehandling.personIdent(),
-                            saksbehandler = saksbehandler.navIdent,
-                        )
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                }
-                route("ferdigstill-behandling") {
-                    put {
-                        val behandlingId = call.finnUUID("behandlingId")
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val klageBehandling =
-                            mediator.ferdigstillBehandling(
-                                hendelse =
-                                    KlageBehandlingFerdigstilt(
-                                        behandlingId = behandlingId,
-                                        utførtAv = saksbehandler,
-                                    ),
-                            )
-                        auditlogg.oppdater(
-                            melding = "Ferdigstilte klagebehandling med id $behandlingId (medhold/delvis medhold)",
-                            ident = klageBehandling.personIdent(),
-                            saksbehandler = saksbehandler.navIdent,
-                        )
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                }
-                route("opplysning") {
-                    route("{opplysningId}") {
-                        put {
-                            val behandlingId = call.finnUUID("behandlingId")
-                            val opplysningId = call.finnUUID("opplysningId")
-                            val oppdaterKlageOpplysningDTO = call.receive<OppdaterKlageOpplysningDTO>()
-                            val saksbehandler = applicationCallParser.saksbehandler(call)
-                            val klageBehandling =
-                                mediator.oppdaterKlageOpplysning(
-                                    behandlingId = behandlingId,
-                                    opplysningId = opplysningId,
-                                    verdi = klageDtoMapper.tilVerdi(oppdaterKlageOpplysningDTO),
-                                    saksbehandler = saksbehandler,
-                                )
-                            auditlogg.oppdater(
-                                melding = "Oppdaterte klageopplysning med id $opplysningId",
-                                ident = klageBehandling.personIdent(),
-                                saksbehandler = saksbehandler.navIdent,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
+            }
+        }
+        authenticateSaksbehandlerEllerLes {
+            get("{behandlingId}") {
+                val behandlingId = call.finnUUID("behandlingId")
+                val saksbehandler = applicationCallParser.saksbehandler(call)
+                val klageBehandling =
+                    mediator.hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    )
+                auditlogg.les(
+                    melding = "Så på klagebehandling med id ${klageBehandling.behandlingId}",
+                    ident = klageBehandling.personIdent(),
+                    saksbehandler = saksbehandler.navIdent,
+                )
+                val klageDTO =
+                    klageDtoMapper.tilDto(
+                        klageBehandling = klageBehandling,
+                        saksbehandler = saksbehandler,
+                    )
+                call.respond(HttpStatusCode.OK, klageDTO)
             }
         }
     }

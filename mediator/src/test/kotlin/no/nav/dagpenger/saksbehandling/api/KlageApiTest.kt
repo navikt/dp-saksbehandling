@@ -21,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
@@ -29,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigTokenForADGruppe
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
@@ -56,12 +58,25 @@ import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansSteg
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.klage.VurderUtfallSteg
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.stream.Stream
 
 class KlageApiTest {
     init {
         mockAzure()
+    }
+
+    companion object {
+        @JvmStatic
+        private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(Configuration.lesADgruppe),
+                Arguments.of(Configuration.saksbehandlerADGruppe),
+            )
     }
 
     private val klageBehandlingId = UUIDv7.ny()
@@ -101,8 +116,9 @@ class KlageApiTest {
         }
     }
 
-    @Test
-    fun `Skal hente klageDTO`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal hente klageDTO`(gruppe: String) {
         val klageBehandling =
             rehydrer(
                 behandlingId = klageBehandlingId,
@@ -170,13 +186,13 @@ class KlageApiTest {
                 every {
                     it.hentKlageBehandling(
                         behandlingId = klageBehandlingId,
-                        saksbehandler = TestHelper.saksbehandler,
+                        saksbehandler = any(),
                     )
                 } returns klageBehandling
             }
 
         withKlageApi(klageMediator) {
-            client.get("klage/$klageBehandlingId") { autentisert() }.let { response ->
+            client.get("klage/$klageBehandlingId") { autentisert(gyldigTokenForADGruppe(gruppe)) }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
