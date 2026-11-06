@@ -129,6 +129,16 @@ internal fun Route.oppgaveApi(
             strategy = AuthenticationStrategy.FirstSuccessful,
             configurations = arrayOf("azureAd", "azureAdLes"),
         ) {
+            get {
+                val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
+                sikkerlogger.info {
+                    "Henter alle oppgaver med følgende søkefilter: $søkefilter"
+                }
+                val oppgaveOversiktResultatDTO: OppgaveOversiktResultatDTO =
+                    oppgaveMediator.søk(søkefilter).tilOppgaveOversiktResultatDTO()
+                call.respond(status = HttpStatusCode.OK, oppgaveOversiktResultatDTO)
+            }
+
             get("{oppgaveId}") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val oppgaveId = call.finnUUID("oppgaveId")
@@ -150,15 +160,6 @@ internal fun Route.oppgaveApi(
         "azureAd",
     ) {
         route("oppgave") {
-            get {
-                val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
-                sikkerlogger.info {
-                    "Henter alle oppgaver med følgende søkefilter: $søkefilter"
-                }
-                val oppgaveOversiktResultatDTO: OppgaveOversiktResultatDTO =
-                    oppgaveMediator.søk(søkefilter).tilOppgaveOversiktResultatDTO()
-                call.respond(status = HttpStatusCode.OK, oppgaveOversiktResultatDTO)
-            }
             route("neste") {
                 put {
                     val dto = call.receive<NesteOppgaveDTO>()

@@ -159,8 +159,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `GET på oppgaver uten query parameters`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `GET på oppgaver uten query parameters`(gruppe: String) {
         val iMorgen = LocalDate.now().plusDays(1)
         val oppgave1 =
             TestHelper.lagOppgaveOversikt(
@@ -197,7 +198,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave") { autentisert() }.let { response ->
+            client.get("/oppgave") { autentisert(token = gyldigTokenForADGruppe(gruppe)) }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
