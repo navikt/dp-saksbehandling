@@ -99,6 +99,20 @@ internal fun Route.oppgaveApi(
                     )
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
+
+            route("oppgaver") {
+                post {
+                    val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                    val oppgaveOversiktDTOS: List<OppgaveOversiktDTO> =
+                        oppgaveMediator
+                            .finnOppgaverFor(
+                                personIdentDTO.ident,
+                            ).tilOppgaveOversiktDTOListe()
+                    auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
+                    call.respond(status = HttpStatusCode.OK, oppgaveOversiktDTOS)
+                }
+            }
+
             get("{personId}") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personId: UUID = call.finnUUID("personId")
@@ -139,18 +153,6 @@ internal fun Route.oppgaveApi(
     authenticate(
         "azureAd",
     ) {
-        route("person/oppgaver") {
-            post {
-                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                val oppgaveOversiktDTOS: List<OppgaveOversiktDTO> =
-                    oppgaveMediator
-                        .finnOppgaverFor(
-                            personIdentDTO.ident,
-                        ).tilOppgaveOversiktDTOListe()
-                auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
-                call.respond(status = HttpStatusCode.OK, oppgaveOversiktDTOS)
-            }
-        }
         route("oppgave") {
             get {
                 val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
