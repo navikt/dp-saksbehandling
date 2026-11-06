@@ -100,17 +100,15 @@ internal fun Route.oppgaveApi(
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
 
-            route("oppgaver") {
-                post {
-                    val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                    val oppgaveOversiktDTOS: List<OppgaveOversiktDTO> =
-                        oppgaveMediator
-                            .finnOppgaverFor(
-                                personIdentDTO.ident,
-                            ).tilOppgaveOversiktDTOListe()
-                    auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
-                    call.respond(status = HttpStatusCode.OK, oppgaveOversiktDTOS)
-                }
+            post("oppgaver") {
+                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                val oppgaveOversiktDTOS: List<OppgaveOversiktDTO> =
+                    oppgaveMediator
+                        .finnOppgaverFor(
+                            personIdentDTO.ident,
+                        ).tilOppgaveOversiktDTOListe()
+                auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
+                call.respond(status = HttpStatusCode.OK, oppgaveOversiktDTOS)
             }
 
             get("{personId}") {
@@ -131,20 +129,18 @@ internal fun Route.oppgaveApi(
             strategy = AuthenticationStrategy.FirstSuccessful,
             configurations = arrayOf("azureAd", "azureAdLes"),
         ) {
-            route("{oppgaveId}") {
-                get {
-                    val saksbehandler = applicationCallParser.saksbehandler(call)
-                    val oppgaveId = call.finnUUID("oppgaveId")
-                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
-                        auditlogg.les(
-                            melding = "Så på oppgave med id $oppgaveId",
-                            ident = oppgave.personIdent(),
-                            saksbehandler = saksbehandler.navIdent,
-                        )
-                        val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO)
-                    }
+            get("{oppgaveId}") {
+                val saksbehandler = applicationCallParser.saksbehandler(call)
+                val oppgaveId = call.finnUUID("oppgaveId")
+                withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                    val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
+                    auditlogg.les(
+                        melding = "Så på oppgave med id $oppgaveId",
+                        ident = oppgave.personIdent(),
+                        saksbehandler = saksbehandler.navIdent,
+                    )
+                    val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
+                    call.respond(HttpStatusCode.OK, oppgaveDTO)
                 }
             }
         }
