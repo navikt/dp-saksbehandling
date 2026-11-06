@@ -9,22 +9,38 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigTokenForADGruppe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggKategoriDTO
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 
 class EmneknaggApiTest {
     init {
         mockAzure()
     }
 
-    @Test
-    fun `GET emneknagger returnerer alle kodedefinerte emneknagger`() {
+    companion object {
+        @JvmStatic
+        private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(Configuration.lesADgruppe),
+                Arguments.of(Configuration.saksbehandlerADGruppe),
+            )
+    }
+
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `GET emneknagger returnerer alle kodedefinerte emneknagger`(gruppe: String) {
         val oppgaveMediator =
             mockk<OppgaveMediator>(relaxed = true).also {
                 every { it.hentDistinkteEmneknagger() } returns emptySet()
@@ -32,7 +48,7 @@ class EmneknaggApiTest {
         withOppgaveApi(oppgaveMediator = oppgaveMediator) {
             val response =
                 client.get("/emneknagger") {
-                    autentisert()
+                    autentisert(gyldigTokenForADGruppe(gruppe))
                 }
             response.status shouldBe HttpStatusCode.OK
             val emneknagger = objectMapper.readValue(response.bodyAsText(), Array<EmneknaggDTO>::class.java).toList()

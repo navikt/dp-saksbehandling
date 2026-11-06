@@ -4,8 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.AuthenticationStrategy
-import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -28,6 +26,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandler
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandlerEllerLes
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
@@ -81,10 +81,7 @@ internal fun Route.oppgaveApi(
     auditlogg: Auditlogg,
 ) {
     route("person/") {
-        authenticate(
-            strategy = AuthenticationStrategy.FirstSuccessful,
-            configurations = arrayOf("azureAd", "azureAdLes"),
-        ) {
+        authenticateSaksbehandler {
             post("personId") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
@@ -123,10 +120,7 @@ internal fun Route.oppgaveApi(
     }
 
     route("oppgave") {
-        authenticate(
-            strategy = AuthenticationStrategy.FirstSuccessful,
-            configurations = arrayOf("azureAd", "azureAdLes"),
-        ) {
+        authenticateSaksbehandler {
             get {
                 val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
                 sikkerlogger.info {
@@ -151,9 +145,7 @@ internal fun Route.oppgaveApi(
                 }
             }
         }
-        authenticate(
-            "azureAd",
-        ) {
+        authenticateSaksbehandlerEllerLes {
             put("neste") {
                 val dto = call.receive<NesteOppgaveDTO>()
                 val saksbehandler = applicationCallParser.saksbehandler(call = call)
@@ -401,10 +393,7 @@ internal fun Route.oppgaveApi(
     }
 
     route("behandling/") {
-        authenticate(
-            strategy = AuthenticationStrategy.FirstSuccessful,
-            configurations = arrayOf("azureAd", "azureAdLes"),
-        ) {
+        authenticateSaksbehandler {
             get("{behandlingId}/oppgaveId") {
                 val behandlingId = call.finnUUID("behandlingId")
                 when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {
