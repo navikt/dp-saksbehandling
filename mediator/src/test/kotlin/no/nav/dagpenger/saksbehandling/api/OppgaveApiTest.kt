@@ -1326,8 +1326,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente ut alle oppgaver for en gitt person`(adGrupper: String) {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.finnOppgaverFor(TestHelper.personIdent) } returns
@@ -1339,7 +1340,9 @@ class OppgaveApiTest {
         withOppgaveApi(oppgaveMediatorMock) {
             client
                 .post("/person/oppgaver") {
-                    autentisert()
+                    autentisert(
+                        gyldigTokenForADGruppe(adGrupper),
+                    )
                     contentType(ContentType.Application.Json)
                     setBody(
                         //language=JSON
@@ -1402,8 +1405,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente person vha personId`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente person vha personId`(gruppe: String) {
         val person = TestHelper.testPerson
         val personMediatorMock =
             mockk<PersonMediator>().also {
@@ -1563,8 +1567,11 @@ class OppgaveApiTest {
             oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
             client
-                .get("/person/${person.id}") { autentisert() }
-                .let { response ->
+                .get("/person/${person.id}") {
+                    autentisert(
+                        token = gyldigTokenForADGruppe(gruppe),
+                    )
+                }.let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
                     //language=JSON

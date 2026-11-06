@@ -99,6 +99,16 @@ internal fun Route.oppgaveApi(
                     )
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
+            get("{personId}") {
+                val saksbehandler = applicationCallParser.saksbehandler(call)
+                val personId: UUID = call.finnUUID("personId")
+                sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
+                val person = personMediator.hentPerson(personId = personId, saksbehandler = saksbehandler)
+                val oppgaver = oppgaveMediator.finnOppgaverFor(person.ident, antall = null)
+                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
+                auditlogg.les("Så personoversikt", person.ident, call.navIdent())
+                call.respond(status = HttpStatusCode.OK, personOversiktDTO)
+            }
         }
     }
 
@@ -129,18 +139,6 @@ internal fun Route.oppgaveApi(
     authenticate(
         "azureAd",
     ) {
-        route("person/{personId}") {
-            get {
-                val saksbehandler = applicationCallParser.saksbehandler(call)
-                val personId: UUID = call.finnUUID("personId")
-                sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
-                val person = personMediator.hentPerson(personId = personId, saksbehandler = saksbehandler)
-                val oppgaver = oppgaveMediator.finnOppgaverFor(person.ident, antall = null)
-                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
-                auditlogg.les("Så personoversikt", person.ident, call.navIdent())
-                call.respond(status = HttpStatusCode.OK, personOversiktDTO)
-            }
-        }
         route("person/oppgaver") {
             post {
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
