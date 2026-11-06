@@ -99,7 +99,6 @@ internal fun Route.oppgaveApi(
                     )
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
-
             post("oppgaver") {
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 val oppgaveOversiktDTOS: List<OppgaveOversiktDTO> =
@@ -110,7 +109,6 @@ internal fun Route.oppgaveApi(
                 auditlogg.les("Søkte oppgaver for person", personIdentDTO.ident, call.navIdent())
                 call.respond(status = HttpStatusCode.OK, oppgaveOversiktDTOS)
             }
-
             get("{personId}") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personId: UUID = call.finnUUID("personId")
@@ -138,7 +136,6 @@ internal fun Route.oppgaveApi(
                     oppgaveMediator.søk(søkefilter).tilOppgaveOversiktResultatDTO()
                 call.respond(status = HttpStatusCode.OK, oppgaveOversiktResultatDTO)
             }
-
             get("{oppgaveId}") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val oppgaveId = call.finnUUID("oppgaveId")
@@ -201,240 +198,214 @@ internal fun Route.oppgaveApi(
                     }
                 }
             }
+            route("{oppgaveId}") {
+                put("kontrollert-brev") {
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+
+                        val kontrollert =
+                            try {
+                                call.receive<KontrollertBrevRequestDTO>().kontrollert
+                            } catch (t: Throwable) {
+                                logger.warn { "Kunne ikke lese om beslutter har kontrollert fra request body" }
+                                sikkerlogger.warn {
+                                    "Kunne ikke lese om beslutter har kontrollert fra request body. Feilmelding: ${t.message}"
+                                }
+                                throw IllegalArgumentException(t)
+                            }
+                        val kontrollertBrev =
+                            when (kontrollert) {
+                                KontrollertBrevDTO.JA -> JA
+                                KontrollertBrevDTO.NEI -> NEI
+                                KontrollertBrevDTO.IKKE_RELEVANT -> IKKE_RELEVANT
+                            }
+                        oppgaveMediator.lagreKontrollertBrev(
+                            oppgaveId = oppgaveId,
+                            kontrollertBrev = kontrollertBrev,
+                            saksbehandler = saksbehandler,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("melding-om-vedtak-kilde") {
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+
+                        val meldingOmVedtakKildeRequestDTO =
+                            try {
+                                call.receive<MeldingOmVedtakKildeRequestDTO>().meldingOmVedtakKilde
+                            } catch (t: Throwable) {
+                                logger.warn {
+                                    "Kunne ikke lese kilde for melding om vedtak fra request body, " +
+                                        "bruker DP_SAK som default"
+                                }
+                                sikkerlogger.warn {
+                                    "Kunne ikke lese kilde for melding om vedtak fra request body, " +
+                                        "bruker DP_SAK som default. Feilmelding: ${t.message}"
+                                }
+                                MeldingOmVedtakKildeDTO.DP_SAK
+                            }
+                        val meldingOmVedtakKilde =
+                            when (meldingOmVedtakKildeRequestDTO) {
+                                MeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
+                                MeldingOmVedtakKildeDTO.GOSYS -> GOSYS
+                                MeldingOmVedtakKildeDTO.INGEN -> INGEN
+                                null -> DP_SAK
+                            }
+                        oppgaveMediator.endreMeldingOmVedtakKilde(
+                            oppgaveId = oppgaveId,
+                            meldingOmVedtakKilde = meldingOmVedtakKilde,
+                            saksbehandler = saksbehandler,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("notat") {
+                    val notat = call.receive<NotatRequestDTO>()
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val sistEndretTidspunkt =
+                            oppgaveMediator.lagreNotat(
+                                NotatHendelse(
+                                    oppgaveId = oppgaveId,
+                                    tekst = notat.tekst,
+                                    utførtAv = saksbehandler,
+                                ),
+                            )
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
+                        )
+                    }
+                }
+                delete("notat") {
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val sistEndretTidspunkt =
+                            oppgaveMediator.slettNotat(
+                                SlettNotatHendelse(
+                                    oppgaveId = oppgaveId,
+                                    utførtAv = saksbehandler,
+                                ),
+                            )
+
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
+                        )
+                    }
+                }
+                put("tildel") {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val tildeltOppgave: TildeltOppgaveDTO =
+                            oppgaveMediator
+                                .tildelOppgave(
+                                    oppgaveAnsvarHendelse,
+                                ).tilTildeltOppgaveDTO()
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = tildeltOppgave,
+                        )
+                    }
+                }
+                put("utsett") {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        logger.info { "Utsetter oppgave: $utsettOppgaveHendelse" }
+                        oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("legg-tilbake") {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    val leggTilbakeOppgave = call.receive<LeggTilbakeOppgaveDTO>()
+                    val oppgaveAnsvarHendelse =
+                        FjernOppgaveAnsvarHendelse(
+                            oppgaveId = oppgaveId,
+                            årsak = leggTilbakeOppgave.aarsak.tilFjernOppgaveAnsvarÅrsak(),
+                            utførtAv = saksbehandler,
+                        )
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("send-til-kontroll") {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val saksbehandlerToken = call.request.jwt()
+                    val sendTilKontrollHendelse = call.sendTilKontrollHendelse(saksbehandler)
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        logger.info { "Sender oppgave til kontroll: $sendTilKontrollHendelse" }
+                        oppgaveMediator.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("returner-til-saksbehandler") {
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
+                    val saksbehandlerToken = call.request.jwt()
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    val årsak = call.receive<ReturnerTilSaksbehandlingDTO>().aarsak
+                    val returnerTilSaksbehandlingHendelse =
+                        ReturnerTilSaksbehandlingHendelse(
+                            oppgaveId = oppgaveId,
+                            årsak = årsak.tilReturnerTilSaksbehandlingÅrsak(),
+                            utførtAv = saksbehandler,
+                        )
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        logger.info { "Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse" }
+                        oppgaveMediator.returnerTilSaksbehandling(
+                            returnerTilSaksbehandlingHendelse,
+                            saksbehandlerToken,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("avbryt") {
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+                        val avbrytOppgaveHendelse = call.avbrytOppgaveHendelse(saksbehandler = saksbehandler)
+                        oppgaveMediator.avbryt(
+                            avbrytOppgaveHendelse = avbrytOppgaveHendelse,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                put("ferdigstill") {
+                    val oppgaveId = call.finnUUID("oppgaveId")
+                    withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
+                        val saksbehandlerToken = call.request.jwt()
+                        oppgaveMediator.ferdigstillOppgave(
+                            oppgaveId = oppgaveId,
+                            saksbehandler = saksbehandler,
+                            saksbehandlerToken = saksbehandlerToken,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+            }
         }
     }
 
-    authenticate(
-        "azureAd",
-    ) {
-        route("oppgave") {
-            route("neste") {
-            }
-
-            route("{oppgaveId}") {
-                route("kontrollert-brev") {
-                    put {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandler = applicationCallParser.saksbehandler(call)
-
-                            val kontrollert =
-                                try {
-                                    call.receive<KontrollertBrevRequestDTO>().kontrollert
-                                } catch (t: Throwable) {
-                                    logger.warn { "Kunne ikke lese om beslutter har kontrollert fra request body" }
-                                    sikkerlogger.warn {
-                                        "Kunne ikke lese om beslutter har kontrollert fra request body. Feilmelding: ${t.message}"
-                                    }
-                                    throw IllegalArgumentException(t)
-                                }
-                            val kontrollertBrev =
-                                when (kontrollert) {
-                                    KontrollertBrevDTO.JA -> JA
-                                    KontrollertBrevDTO.NEI -> NEI
-                                    KontrollertBrevDTO.IKKE_RELEVANT -> IKKE_RELEVANT
-                                }
-                            oppgaveMediator.lagreKontrollertBrev(
-                                oppgaveId = oppgaveId,
-                                kontrollertBrev = kontrollertBrev,
-                                saksbehandler = saksbehandler,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-                route("melding-om-vedtak-kilde") {
-                    put {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandler = applicationCallParser.saksbehandler(call)
-
-                            val meldingOmVedtakKildeRequestDTO =
-                                try {
-                                    call.receive<MeldingOmVedtakKildeRequestDTO>().meldingOmVedtakKilde
-                                } catch (t: Throwable) {
-                                    logger.warn {
-                                        "Kunne ikke lese kilde for melding om vedtak fra request body, " +
-                                            "bruker DP_SAK som default"
-                                    }
-                                    sikkerlogger.warn {
-                                        "Kunne ikke lese kilde for melding om vedtak fra request body, " +
-                                            "bruker DP_SAK som default. Feilmelding: ${t.message}"
-                                    }
-                                    MeldingOmVedtakKildeDTO.DP_SAK
-                                }
-                            val meldingOmVedtakKilde =
-                                when (meldingOmVedtakKildeRequestDTO) {
-                                    MeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
-                                    MeldingOmVedtakKildeDTO.GOSYS -> GOSYS
-                                    MeldingOmVedtakKildeDTO.INGEN -> INGEN
-                                    null -> DP_SAK
-                                }
-                            oppgaveMediator.endreMeldingOmVedtakKilde(
-                                oppgaveId = oppgaveId,
-                                meldingOmVedtakKilde = meldingOmVedtakKilde,
-                                saksbehandler = saksbehandler,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-                route("notat") {
-                    put {
-                        val notat = call.receive<NotatRequestDTO>()
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val sistEndretTidspunkt =
-                                oppgaveMediator.lagreNotat(
-                                    NotatHendelse(
-                                        oppgaveId = oppgaveId,
-                                        tekst = notat.tekst,
-                                        utførtAv = saksbehandler,
-                                    ),
-                                )
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
-                            )
-                        }
-                    }
-                    delete {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val sistEndretTidspunkt =
-                                oppgaveMediator.slettNotat(
-                                    SlettNotatHendelse(
-                                        oppgaveId = oppgaveId,
-                                        utførtAv = saksbehandler,
-                                    ),
-                                )
-
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
-                            )
-                        }
-                    }
-                }
-                route("tildel") {
-                    put {
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val tildeltOppgave: TildeltOppgaveDTO =
-                                oppgaveMediator
-                                    .tildelOppgave(
-                                        oppgaveAnsvarHendelse,
-                                    ).tilTildeltOppgaveDTO()
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = tildeltOppgave,
-                            )
-                        }
-                    }
-                }
-                route("utsett") {
-                    put {
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            logger.info { "Utsetter oppgave: $utsettOppgaveHendelse" }
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-                route("legg-tilbake") {
-                    put {
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val leggTilbakeOppgave = call.receive<LeggTilbakeOppgaveDTO>()
-                        val oppgaveAnsvarHendelse =
-                            FjernOppgaveAnsvarHendelse(
-                                oppgaveId = oppgaveId,
-                                årsak = leggTilbakeOppgave.aarsak.tilFjernOppgaveAnsvarÅrsak(),
-                                utførtAv = saksbehandler,
-                            )
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-                route("send-til-kontroll") {
-                    put {
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val saksbehandlerToken = call.request.jwt()
-                        val sendTilKontrollHendelse = call.sendTilKontrollHendelse(saksbehandler)
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            logger.info { "Sender oppgave til kontroll: $sendTilKontrollHendelse" }
-                            oppgaveMediator.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-                route("returner-til-saksbehandler") {
-                    put {
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val saksbehandlerToken = call.request.jwt()
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val årsak = call.receive<ReturnerTilSaksbehandlingDTO>().aarsak
-                        val returnerTilSaksbehandlingHendelse =
-                            ReturnerTilSaksbehandlingHendelse(
-                                oppgaveId = oppgaveId,
-                                årsak = årsak.tilReturnerTilSaksbehandlingÅrsak(),
-                                utførtAv = saksbehandler,
-                            )
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            logger.info { "Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse" }
-                            oppgaveMediator.returnerTilSaksbehandling(
-                                returnerTilSaksbehandlingHendelse,
-                                saksbehandlerToken,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-
-                route("avbryt") {
-                    put {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandler = applicationCallParser.saksbehandler(call)
-                            val avbrytOppgaveHendelse = call.avbrytOppgaveHendelse(saksbehandler = saksbehandler)
-                            oppgaveMediator.avbryt(
-                                avbrytOppgaveHendelse = avbrytOppgaveHendelse,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-
-                route("ferdigstill") {
-                    put {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandler = applicationCallParser.saksbehandler(call)
-                            val saksbehandlerToken = call.request.jwt()
-                            oppgaveMediator.ferdigstillOppgave(
-                                oppgaveId = oppgaveId,
-                                saksbehandler = saksbehandler,
-                                saksbehandlerToken = saksbehandlerToken,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-            }
-        }
-        route("behandling/{behandlingId}/oppgaveId") {
-            get {
+    route("behandling/") {
+        authenticate(
+            strategy = AuthenticationStrategy.FirstSuccessful,
+            configurations = arrayOf("azureAd", "azureAdLes"),
+        ) {
+            get("{behandlingId}/oppgaveId") {
                 val behandlingId = call.finnUUID("behandlingId")
                 when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {
                     null -> {
