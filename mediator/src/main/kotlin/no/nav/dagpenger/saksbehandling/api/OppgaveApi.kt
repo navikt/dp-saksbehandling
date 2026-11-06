@@ -80,11 +80,11 @@ internal fun Route.oppgaveApi(
     applicationCallParser: ApplicationCallParser,
     auditlogg: Auditlogg,
 ) {
-    authenticate(
-        strategy = AuthenticationStrategy.FirstSuccessful,
-        configurations = arrayOf("azureAd", "azureAdLes"),
-    ) {
-        route("person/") {
+    route("person/") {
+        authenticate(
+            strategy = AuthenticationStrategy.FirstSuccessful,
+            configurations = arrayOf("azureAd", "azureAdLes"),
+        ) {
             post("personId") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
@@ -100,7 +100,13 @@ internal fun Route.oppgaveApi(
                 call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
         }
-        route("oppgave") {
+    }
+
+    route("oppgave") {
+        authenticate(
+            strategy = AuthenticationStrategy.FirstSuccessful,
+            configurations = arrayOf("azureAd", "azureAdLes"),
+        ) {
             route("{oppgaveId}") {
                 get {
                     val saksbehandler = applicationCallParser.saksbehandler(call)
