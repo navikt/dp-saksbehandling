@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -10,6 +9,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Sak
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandler
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandlerEllerLes
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingVariantDTO
 import no.nav.dagpenger.saksbehandling.api.models.FerdigstillInnsendingRequestDTO
@@ -31,95 +32,96 @@ fun Route.innsendingApi(
     applicationCallParser: ApplicationCallParser,
     auditlogg: Auditlogg,
 ) {
-    route("innsending") {
-        authenticate("azureAd") {
-            route("{behandlingId}") {
-                get {
-                    val saksbehandler = applicationCallParser.saksbehandler(call)
-                    mediator
-                        .hentInnsending(
-                            innsendingId = call.behandlingId(),
-                            saksbehandler = saksbehandler,
-                        ).let {
-                            auditlogg.les(
-                                melding = "Så på innsending med id ${it.innsendingId}",
-                                ident = it.person.ident,
-                                saksbehandler = saksbehandler.navIdent,
-                            )
-                            call.respond(
-                                HttpStatusCode.OK,
-                                it.tilInnsendingDTO(
-                                    mediator.hentAlleSaker(it.person.ident),
-                                ),
-                            )
-                        }
-                }
-                route("ferdigstill") {
-                    put {
-                        val behandlingId = call.behandlingId()
-
-                        call.receive<FerdigstillInnsendingRequestDTO>().let { requestDTO ->
-                            val saksBehandlerToken = call.request.jwt()
-                            val aksjon =
-                                when (requestDTO.behandlingsvariant) {
-                                    null -> Avslutt(requestDTO.sakId)
-                                    BehandlingVariantDTO.RETT_TIL_DAGPENGER_MANUELL -> {
-                                        val valgtSakId = requestDTO.sakId
-                                        requireNotNull(valgtSakId)
-                                        Aksjon.OpprettManuellBehandling(
-                                            saksbehandlerToken = saksBehandlerToken,
-                                            valgtSakId = valgtSakId,
-                                        )
-                                    }
-
-                                    BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING -> {
-                                        val valgtSakId = requestDTO.sakId
-                                        requireNotNull(valgtSakId)
-                                        Aksjon.OpprettRevurderingBehandling(
-                                            saksbehandlerToken = saksBehandlerToken,
-                                            valgtSakId = valgtSakId,
-                                        )
-                                    }
-
-                                    BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE -> {
-                                        throw IllegalArgumentException(
-                                            "Behandlingsvariant RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE er ikke gyldig for innsending",
-                                        )
-                                    }
-
-                                    BehandlingVariantDTO.KLAGE -> {
-                                        val valgtSakId = requestDTO.sakId
-                                        requireNotNull(valgtSakId)
-                                        Aksjon.OpprettKlage(valgtSakId)
-                                    }
-
-                                    BehandlingVariantDTO.OPPFOLGING -> {
-                                        val nyOppgave =
-                                            requireNotNull(requestDTO.nyOppgave) {
-                                                "nyOppgave må være satt ved behandlingsvariant OPPFOLGING"
-                                            }
-                                        Aksjon.OpprettOppfølging(
-                                            valgtSakId = requestDTO.sakId,
-                                            tittel = nyOppgave.tittel,
-                                            beskrivelse = nyOppgave.beskrivelse ?: "",
-                                            aarsak = nyOppgave.aarsak,
-                                            frist = nyOppgave.frist,
-                                            beholdOppgaven = nyOppgave.beholdOppgaven,
-                                        )
-                                    }
-                                }
-                            mediator.ferdigstill(
-                                hendelse =
-                                    FerdigstillInnsendingHendelse(
-                                        innsendingId = behandlingId,
-                                        aksjon = aksjon,
-                                        vurdering = requestDTO.vurdering,
-                                        utførtAv = applicationCallParser.saksbehandler(call),
-                                    ),
-                            )
-                            call.respond(status = HttpStatusCode.NoContent, message = "Innsending ferdigstilt")
-                        }
+    route("innsending/{behandlingId}") {
+        authenticateSaksbehandlerEllerLes {
+            get {
+                val saksbehandler = applicationCallParser.saksbehandler(call)
+                mediator
+                    .hentInnsending(
+                        innsendingId = call.behandlingId(),
+                        saksbehandler = saksbehandler,
+                    ).let {
+                        auditlogg.les(
+                            melding = "Så på innsending med id ${it.innsendingId}",
+                            ident = it.person.ident,
+                            saksbehandler = saksbehandler.navIdent,
+                        )
+                        call.respond(
+                            HttpStatusCode.OK,
+                            it.tilInnsendingDTO(
+                                mediator.hentAlleSaker(it.person.ident),
+                            ),
+                        )
                     }
+            }
+        }
+        authenticateSaksbehandler {
+            put("ferdigstill") {
+                val behandlingId = call.behandlingId()
+
+                call.receive<FerdigstillInnsendingRequestDTO>().let { requestDTO ->
+                    val saksBehandlerToken = call.request.jwt()
+                    val aksjon =
+                        when (requestDTO.behandlingsvariant) {
+                            null -> {
+                                Avslutt(requestDTO.sakId)
+                            }
+
+                            BehandlingVariantDTO.RETT_TIL_DAGPENGER_MANUELL -> {
+                                val valgtSakId = requestDTO.sakId
+                                requireNotNull(valgtSakId)
+                                Aksjon.OpprettManuellBehandling(
+                                    saksbehandlerToken = saksBehandlerToken,
+                                    valgtSakId = valgtSakId,
+                                )
+                            }
+
+                            BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING -> {
+                                val valgtSakId = requestDTO.sakId
+                                requireNotNull(valgtSakId)
+                                Aksjon.OpprettRevurderingBehandling(
+                                    saksbehandlerToken = saksBehandlerToken,
+                                    valgtSakId = valgtSakId,
+                                )
+                            }
+
+                            BehandlingVariantDTO.RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE -> {
+                                throw IllegalArgumentException(
+                                    "Behandlingsvariant RETT_TIL_DAGPENGER_REVURDERING_ETTER_KLAGE er ikke gyldig for innsending",
+                                )
+                            }
+
+                            BehandlingVariantDTO.KLAGE -> {
+                                val valgtSakId = requestDTO.sakId
+                                requireNotNull(valgtSakId)
+                                Aksjon.OpprettKlage(valgtSakId)
+                            }
+
+                            BehandlingVariantDTO.OPPFOLGING -> {
+                                val nyOppgave =
+                                    requireNotNull(requestDTO.nyOppgave) {
+                                        "nyOppgave må være satt ved behandlingsvariant OPPFOLGING"
+                                    }
+                                Aksjon.OpprettOppfølging(
+                                    valgtSakId = requestDTO.sakId,
+                                    tittel = nyOppgave.tittel,
+                                    beskrivelse = nyOppgave.beskrivelse ?: "",
+                                    aarsak = nyOppgave.aarsak,
+                                    frist = nyOppgave.frist,
+                                    beholdOppgaven = nyOppgave.beholdOppgaven,
+                                )
+                            }
+                        }
+                    mediator.ferdigstill(
+                        hendelse =
+                            FerdigstillInnsendingHendelse(
+                                innsendingId = behandlingId,
+                                aksjon = aksjon,
+                                vurdering = requestDTO.vurdering,
+                                utførtAv = applicationCallParser.saksbehandler(call),
+                            ),
+                    )
+                    call.respond(status = HttpStatusCode.NoContent, message = "Innsending ferdigstilt")
                 }
             }
         }
@@ -144,25 +146,30 @@ private fun Innsending.tilInnsendingDTO(lovligeSaker: List<Sak>): InnsendingDTO 
 
 private fun Innsending.toBehandling(): TynnBehandlingDTO? =
     when (val resultat = this.innsendingResultat()) {
-        is Innsending.InnsendingResultat.Klage ->
+        is Innsending.InnsendingResultat.Klage -> {
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.KLAGE,
             )
+        }
 
-        is Innsending.InnsendingResultat.RettTilDagpenger ->
+        is Innsending.InnsendingResultat.RettTilDagpenger -> {
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.RETT_TIL_DAGPENGER,
             )
+        }
 
-        is Innsending.InnsendingResultat.Oppfølging ->
+        is Innsending.InnsendingResultat.Oppfølging -> {
             TynnBehandlingDTO(
                 behandlingId = resultat.behandlingId,
                 behandlingType = BehandlingTypeDTO.OPPFØLGING,
             )
+        }
 
-        else -> null
+        else -> {
+            null
+        }
     }
 
 private fun ApplicationCall.behandlingId(): UUID = this.finnUUID("behandlingId")
