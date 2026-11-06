@@ -154,6 +154,54 @@ internal fun Route.oppgaveApi(
                 }
             }
         }
+        authenticate(
+            "azureAd",
+        ) {
+            put("neste") {
+                val dto = call.receive<NesteOppgaveDTO>()
+                val saksbehandler = applicationCallParser.saksbehandler(call = call)
+                sikkerlogger.info {
+                    "Henter neste oppgave for saksbehandler ${saksbehandler.navIdent} med " +
+                        "queryparams: ${dto.queryParams}"
+                }
+                val oppgave =
+                    oppgaveMediator.tildelOgHentNesteOppgave(
+                        nesteOppgaveHendelse =
+                            NesteOppgaveHendelse(
+                                ansvarligIdent = saksbehandler.navIdent,
+                                utførtAv = saksbehandler,
+                            ),
+                        queryString = dto.queryParams,
+                    )
+                when (oppgave) {
+                    null -> {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message =
+                                HttpProblemDTO(
+                                    title = "Ingen oppgave funnet",
+                                    status = 404,
+                                    instance = call.request.path(),
+                                    detail = "Ingen oppgave funnet for søket",
+                                    type =
+                                        URI
+                                            .create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet")
+                                            .toString(),
+                                ),
+                        )
+                    }
+
+                    else -> {
+                        auditlogg.les(
+                            melding = "Hentet neste oppgave (id ${oppgave.oppgaveId})",
+                            ident = oppgave.personIdent(),
+                            saksbehandler = saksbehandler.navIdent,
+                        )
+                        call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
+                    }
+                }
+            }
+        }
     }
 
     authenticate(
@@ -161,50 +209,6 @@ internal fun Route.oppgaveApi(
     ) {
         route("oppgave") {
             route("neste") {
-                put {
-                    val dto = call.receive<NesteOppgaveDTO>()
-                    val saksbehandler = applicationCallParser.saksbehandler(call = call)
-                    sikkerlogger.info {
-                        "Henter neste oppgave for saksbehandler ${saksbehandler.navIdent} med " +
-                            "queryparams: ${dto.queryParams}"
-                    }
-                    val oppgave =
-                        oppgaveMediator.tildelOgHentNesteOppgave(
-                            nesteOppgaveHendelse =
-                                NesteOppgaveHendelse(
-                                    ansvarligIdent = saksbehandler.navIdent,
-                                    utførtAv = saksbehandler,
-                                ),
-                            queryString = dto.queryParams,
-                        )
-                    when (oppgave) {
-                        null -> {
-                            call.respond(
-                                status = HttpStatusCode.NotFound,
-                                message =
-                                    HttpProblemDTO(
-                                        title = "Ingen oppgave funnet",
-                                        status = 404,
-                                        instance = call.request.path(),
-                                        detail = "Ingen oppgave funnet for søket",
-                                        type =
-                                            URI
-                                                .create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet")
-                                                .toString(),
-                                    ),
-                            )
-                        }
-
-                        else -> {
-                            auditlogg.les(
-                                melding = "Hentet neste oppgave (id ${oppgave.oppgaveId})",
-                                ident = oppgave.personIdent(),
-                                saksbehandler = saksbehandler.navIdent,
-                            )
-                            call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
-                        }
-                    }
-                }
             }
 
             route("{oppgaveId}") {
