@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.AuthenticationStrategy
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -18,8 +19,11 @@ internal fun Route.meldingOmVedtakApi(
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
     applicationCallParser: ApplicationCallParser,
 ) {
-    authenticate("azureAd") {
-        route("oppgave/{oppgaveId}/melding-om-vedtak") {
+    route("oppgave/{oppgaveId}/melding-om-vedtak") {
+        authenticate(
+            strategy = AuthenticationStrategy.FirstSuccessful,
+            configurations = arrayOf("azureAd", "azureAdLes"),
+        ) {
             get("html") {
                 val oppgaveId = call.finnUUID("oppgaveId")
                 val saksbehandler = applicationCallParser.saksbehandler(call)
@@ -32,7 +36,8 @@ internal fun Route.meldingOmVedtakApi(
                     )
                 call.respond(HttpStatusCode.OK, html)
             }
-
+        }
+        authenticate("azureAd") {
             route("utvidet-beskrivelse/{brevblokkId}") {
                 put {
                     val oppgaveId = call.finnUUID("oppgaveId")
