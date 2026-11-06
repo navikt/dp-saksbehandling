@@ -81,7 +81,7 @@ internal fun Route.oppgaveApi(
     auditlogg: Auditlogg,
 ) {
     route("person/") {
-        authenticateSaksbehandler {
+        authenticateSaksbehandlerEllerLes {
             post("personId") {
                 val saksbehandler = applicationCallParser.saksbehandler(call)
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
@@ -120,7 +120,7 @@ internal fun Route.oppgaveApi(
     }
 
     route("oppgave") {
-        authenticateSaksbehandler {
+        authenticateSaksbehandlerEllerLes {
             get {
                 val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
                 sikkerlogger.info {
@@ -145,7 +145,7 @@ internal fun Route.oppgaveApi(
                 }
             }
         }
-        authenticateSaksbehandlerEllerLes {
+        authenticateSaksbehandler {
             put("neste") {
                 val dto = call.receive<NesteOppgaveDTO>()
                 val saksbehandler = applicationCallParser.saksbehandler(call = call)
@@ -393,7 +393,7 @@ internal fun Route.oppgaveApi(
     }
 
     route("behandling/") {
-        authenticateSaksbehandler {
+        authenticateSaksbehandlerEllerLes {
             get("{behandlingId}/oppgaveId") {
                 val behandlingId = call.finnUUID("behandlingId")
                 when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {

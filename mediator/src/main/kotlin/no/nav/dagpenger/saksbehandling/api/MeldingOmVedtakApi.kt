@@ -20,7 +20,7 @@ internal fun Route.meldingOmVedtakApi(
     applicationCallParser: ApplicationCallParser,
 ) {
     route("oppgave/{oppgaveId}/melding-om-vedtak") {
-        authenticateSaksbehandler {
+        authenticateSaksbehandlerEllerLes {
             get("html") {
                 val oppgaveId = call.finnUUID("oppgaveId")
                 val saksbehandler = applicationCallParser.saksbehandler(call)
@@ -34,7 +34,7 @@ internal fun Route.meldingOmVedtakApi(
                 call.respond(HttpStatusCode.OK, html)
             }
         }
-        authenticateSaksbehandlerEllerLes {
+        authenticateSaksbehandler {
             route("utvidet-beskrivelse/{brevblokkId}") {
                 put {
                     val oppgaveId = call.finnUUID("oppgaveId")
