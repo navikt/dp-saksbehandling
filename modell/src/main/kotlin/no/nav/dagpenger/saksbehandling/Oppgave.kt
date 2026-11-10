@@ -578,7 +578,7 @@ data class Oppgave private constructor(
                 }
 
                 AVSLUTTET -> {
-                    avsluttTilbakekrevingOppgave(oppgave, hendelse)
+                    avbrytTilbakekrevingOppgave(oppgave, hendelse)
                 }
 
                 else -> {
@@ -823,7 +823,7 @@ data class Oppgave private constructor(
                 }
 
                 AVSLUTTET -> {
-                    avsluttTilbakekrevingOppgave(oppgave, hendelse)
+                    avbrytTilbakekrevingOppgave(oppgave, hendelse)
                 }
 
                 else -> {
@@ -1042,7 +1042,7 @@ data class Oppgave private constructor(
                 }
 
                 AVSLUTTET -> {
-                    avsluttTilbakekrevingOppgave(oppgave, hendelse)
+                    avbrytTilbakekrevingOppgave(oppgave, hendelse)
                 }
 
                 else -> {
@@ -1444,7 +1444,7 @@ data class Oppgave private constructor(
             }
         }
 
-        fun avsluttTilbakekrevingOppgave(
+        fun avbrytTilbakekrevingOppgave(
             oppgave: Oppgave,
             hendelse: TilbakekrevingHendelse,
         ) {
