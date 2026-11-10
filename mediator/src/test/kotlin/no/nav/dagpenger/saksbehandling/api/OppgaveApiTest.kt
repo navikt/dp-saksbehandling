@@ -137,6 +137,23 @@ class OppgaveApiTest {
             )
 
         @JvmStatic
+        private fun skriveendepunktProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of("/oppgave/neste", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/kontrollert-brev", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/melding-om-vedtak-kilde", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Delete),
+                Arguments.of("/oppgave/oppgaveId/tildel", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/avbryt", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
+            )
+
+        @JvmStatic
         private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
             Stream.of(
                 Arguments.of(Configuration.lesADgruppe),
@@ -155,6 +172,21 @@ class OppgaveApiTest {
                 .request(endepunkt) {
                     method = httpMethod
                     autentisert(token = ugyldigToken)
+                }.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("skriveendepunktProvider")
+    fun `Skal avvise kall med lesetilgang på skriveendepunkter`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
+        withOppgaveApi {
+            client
+                .request(endepunkt) {
+                    method = httpMethod
+                    autentisert(token = gyldigTokenForADGruppe(Configuration.lesADgruppe))
                 }.status shouldBe HttpStatusCode.Unauthorized
         }
     }
