@@ -2,11 +2,13 @@ package no.nav.dagpenger.saksbehandling.statistikk.api
 
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
+import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.Configuration.lesADgruppe
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -31,28 +33,35 @@ class StatistikkApiTest {
     }
 
     @Test
-    fun `API skal svare med status 400 og http problem ved ugyldig tilstand i queryparam`() {
-        testApplication {
-            application {
-                installerApis(
-                    oppgaveMediator = mockk(),
-                    oppgaveDTOMapper = mockk(),
-                    produksjonsstatistikkRepository = mockk(),
-                    klageMediator = mockk(),
-                    klageDTOMapper = mockk(),
-                    personMediator = mockk(),
-                    sakMediator = mockk(),
-                    innsendingMediator = mockk(),
-                    meldingOmVedtakMediator = mockk(relaxed = true),
-                    oppfølgingMediator = mockk(relaxed = true),
-                    tilbakekrevingMediator = mockk(),
-                    auditlogg = TestAuditlogg(),
-                )
-            }
+    fun `Kun brukere som har tilgang kan hente produksjonsstatistikk`() {
+        withStatistikkApi { client ->
+            client
+                .get("produksjonsstatistikk") {
+                    autentisert(token = MockAzure.gyldigSaksbehandlerToken())
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 200
+                }
+            client
+                .get("produksjonsstatistikk") {
+                    autentisert(token = MockAzure.gyldigTokenForADGruppe(lesADgruppe))
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 200
+                }
+            client
+                .get("produksjonsstatistikk") {
+                    autentisert(token = MockAzure.gyldigMaskinToken())
+                }.let { httpResponse ->
+                    httpResponse.status.value shouldBe 401
+                }
+        }
+    }
 
+    @Test
+    fun `API skal svare med status 400 og http problem ved ugyldig tilstand i queryparam`() {
+        withStatistikkApi { client ->
             client
                 .get("produksjonsstatistikk?tilstand=FEIL") {
-                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 400
                     val json = httpResponse.bodyAsText()
@@ -73,29 +82,10 @@ class StatistikkApiTest {
 
     @Test
     fun `Ukjent utlostAv i queryparam gir feil`() {
-        val mockProduksjonsstatistikkRepository =
-            mockk<ProduksjonsstatistikkRepository>(relaxed = true)
-        testApplication {
-            application {
-                installerApis(
-                    oppgaveMediator = mockk(),
-                    oppgaveDTOMapper = mockk(),
-                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
-                    klageMediator = mockk(),
-                    klageDTOMapper = mockk(),
-                    personMediator = mockk(),
-                    sakMediator = mockk(),
-                    innsendingMediator = mockk(),
-                    meldingOmVedtakMediator = mockk(relaxed = true),
-                    oppfølgingMediator = mockk(relaxed = true),
-                    tilbakekrevingMediator = mockk(),
-                    auditlogg = TestAuditlogg(),
-                )
-            }
-
+        withStatistikkApi { client ->
             client
                 .get("produksjonsstatistikk?utlostAv=FEIL") {
-                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 500
                 }
@@ -131,28 +121,10 @@ class StatistikkApiTest {
                         ),
                     )
             }
-
-        testApplication {
-            application {
-                installerApis(
-                    oppgaveMediator = mockk(),
-                    oppgaveDTOMapper = mockk(),
-                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
-                    klageMediator = mockk(),
-                    klageDTOMapper = mockk(),
-                    personMediator = mockk(),
-                    sakMediator = mockk(),
-                    innsendingMediator = mockk(),
-                    meldingOmVedtakMediator = mockk(relaxed = true),
-                    oppfølgingMediator = mockk(relaxed = true),
-                    tilbakekrevingMediator = mockk(),
-                    auditlogg = TestAuditlogg(),
-                )
-            }
-
+        withStatistikkApi(mockProduksjonsstatistikkRepository) { client ->
             client
                 .get("produksjonsstatistikk?tilstand=KLAR_TIL_BEHANDLING") {
-                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 200
                     val json = httpResponse.bodyAsText().trimIndent()
@@ -248,28 +220,10 @@ class StatistikkApiTest {
                         ),
                     )
             }
-
-        testApplication {
-            application {
-                installerApis(
-                    oppgaveMediator = mockk(),
-                    oppgaveDTOMapper = mockk(),
-                    produksjonsstatistikkRepository = mockProduksjonsstatistikkRepository,
-                    klageMediator = mockk(),
-                    klageDTOMapper = mockk(),
-                    personMediator = mockk(),
-                    sakMediator = mockk(),
-                    innsendingMediator = mockk(),
-                    meldingOmVedtakMediator = mockk(relaxed = true),
-                    oppfølgingMediator = mockk(relaxed = true),
-                    tilbakekrevingMediator = mockk(),
-                    auditlogg = TestAuditlogg(),
-                )
-            }
-
+        withStatistikkApi(mockProduksjonsstatistikkRepository) { client ->
             client
                 .get("produksjonsstatistikk?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING&grupperEtter=RETTIGHETSTYPE") {
-                    autentisert(token = MockAzure.Companion.gyldigSaksbehandlerToken())
+                    autentisert(token = MockAzure.gyldigSaksbehandlerToken())
                 }.let { httpResponse ->
                     httpResponse.status.value shouldBe 200
                     val json = httpResponse.bodyAsText().trimIndent()
@@ -334,6 +288,31 @@ class StatistikkApiTest {
                         }
                         """.trimIndent()
                 }
+        }
+    }
+
+    private fun withStatistikkApi(
+        produksjonsstatistikkRepository: ProduksjonsstatistikkRepository = mockk(relaxed = true),
+        block: suspend (client: HttpClient) -> Unit,
+    ) {
+        testApplication {
+            application {
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    produksjonsstatistikkRepository = produksjonsstatistikkRepository,
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                    sakMediator = mockk(),
+                    innsendingMediator = mockk(),
+                    meldingOmVedtakMediator = mockk(relaxed = true),
+                    oppfølgingMediator = mockk(relaxed = true),
+                    tilbakekrevingMediator = mockk(),
+                    auditlogg = TestAuditlogg(),
+                )
+            }
+            block(client)
         }
     }
 }
