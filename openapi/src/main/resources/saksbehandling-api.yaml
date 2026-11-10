@@ -218,6 +218,9 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
   /innsending/{behandlingId}:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent innsending for en gitt id
       parameters:
         - in: path
@@ -248,6 +251,9 @@ paths:
 
   /oppgave:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent alle oppgaver ut fra gitt filter
       parameters:
         - in: query
@@ -477,6 +483,9 @@ paths:
 
   /oppgave/{oppgaveId}:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent en oppgave ved hjelp av dens ID
       parameters:
         - in: path
@@ -628,6 +637,9 @@ paths:
 
   /oppgave/{oppgaveId}/melding-om-vedtak/html:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       tags:
         - Melding om vedtak
       summary: Hent forhåndsvisning av melding om vedtak som HTML
@@ -1194,6 +1206,9 @@ paths:
 
   /klage/{behandlingId}:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent klage basert på behandlingId til klagen
       parameters:
         - in: path
@@ -1224,6 +1239,9 @@ paths:
 
   /person/personId:
     post:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent personId basert på personIdent
       requestBody:
         required: true
@@ -1247,6 +1265,9 @@ paths:
 
   /person/{personId}:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent personinformasjon basert på UUID
       parameters:
         - in: path
@@ -1271,6 +1292,9 @@ paths:
 
   /person/oppgaver:
     post:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent alle oppgaver til en person
       requestBody:
         required: true
@@ -1298,6 +1322,9 @@ paths:
 
   /behandling/{behandlingId}/oppgaveId:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Henter oppgaveId basert på en behandlingId
       parameters:
         - in: path
@@ -1427,6 +1454,9 @@ paths:
 
   /produksjonsstatistikk:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       summary: Hent statistikk for oppgaver
       description: Henter statistikk for oppgaver.
       parameters:
@@ -1499,6 +1529,9 @@ paths:
 
   /emneknagger:
     get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
       operationId: hentAlleEmneknagger
       summary: Hent alle tilgjengelige emneknagger
       description: |
@@ -3101,6 +3134,15 @@ components:
       description: |
         Bruker [AzureAD](https://docs.nais.io/security/auth/azure-ad) til autentisering. 
         Token må ha `audience` satt til `[cluster].teamdagpenger.dp-saksbehandling`.
+        Krever medlemskap i gruppen 0000-GA-Dagpenger-Saksbehandler.
         
         For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
         - [dev-gcp](https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.teamdagpenger.dp-saksbehandling)
+    azureAdLes:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Lesetilgang. Krever medlemskap i gruppen 0000-GA-Dagpenger-Les.
+        Gir kun tilgang til endepunkter som har `azureAdLes` i `security`.
+        Token må ha `audience` satt til `[cluster].teamdagpenger.dp-saksbehandling`.
