@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.statistikk
 
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -15,7 +16,7 @@ data class OppgaveITilstand(
     val versjon: String = Configuration.versjon,
     val tilstandsendring: Tilstandsendring,
     val utløstAv: String,
-    val sakYtelse: String? = null,
+    val emneknagger: Set<String> = emptySet(),
     val behandlingResultat: String?,
     val behandlingÅrsak: String?,
     val fagsystem: String?,
@@ -38,9 +39,9 @@ data class OppgaveITilstand(
             "saksbehandlerIdent=$saksbehandlerIdent, " +
             "beslutterIdent=$beslutterIdent, " +
             "utløstAv=$utløstAv, " +
+            "emneknagger=$emneknagger, " +
             "tilstandsendring=$tilstandsendring, " +
             "versjon='$versjon', " +
-            "sakYtelse=$sakYtelse, " +
             "behandlingResultat=$behandlingResultat, " +
             "behandlingÅrsak=$behandlingÅrsak, " +
             "fagsystem=$fagsystem, " +
@@ -59,7 +60,7 @@ data class OppgaveITilstand(
             beslutterIdent?.let { put("beslutterIdent", it) }
             put("tilstandsendring", tilstandsendring)
             put("utløstAv", utløstAv)
-            sakYtelse?.let { put("sakYtelse", it) }
+            sakYtelse()?.let { put("sakYtelse", it) }
             put("versjon", versjon)
             behandlingResultat?.let { put("behandlingResultat", it) }
             behandlingÅrsak?.let { put("behandlingÅrsak", it) }
@@ -68,4 +69,13 @@ data class OppgaveITilstand(
             resultatBegrunnelse?.let { put("resultatBegrunnelse", it) }
             relatertBehandlingId?.let { put("relatertBehandlingId", it.toString()) }
         }
+
+    fun sakYtelse(): String? {
+        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn)) return "PERMITTERT_FISK"
+        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn)) return "PERMITTERT"
+        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn)) return "LØNNSGARANTI"
+        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn)) return "VERNEPLIKT"
+        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn)) return "ORDINÆR"
+        return null
+    }
 }

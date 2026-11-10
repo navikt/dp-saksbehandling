@@ -246,11 +246,13 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
 
     @Test
     fun `Tilstandsendringer på oppgave utløst av Søknad skal oversendes saksbehandlingsstatistikk - Ferdig behandlet`() {
+        val emneknagger = setOf("Permittert", "Konkurs", "Hubba")
         val behandling = TestHelper.lagBehandling()
         val oppgave =
             TestHelper.lagOppgave(
                 behandling = behandling,
                 tilstand = Oppgave.KlarTilBehandling,
+                emneknagger = emneknagger,
                 tilstandslogg =
                     OppgaveTilstandslogg().also {
                         it.leggTil(
@@ -294,6 +296,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                                     tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
                                 ),
                             utløstAv = "SØKNAD",
+                            emneknagger = emneknagger,
                             behandlingResultat = null,
                             behandlingÅrsak = null,
                             fagsystem = "DAGPENGER",
@@ -339,6 +342,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                                     tidspunkt = oppgave.tilstandslogg.first().tidspunkt,
                                 ),
                             utløstAv = "SØKNAD",
+                            emneknagger = emneknagger,
                             behandlingResultat = null,
                             behandlingÅrsak = null,
                             fagsystem = "DAGPENGER",
@@ -386,6 +390,7 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                             utløstAv = "SØKNAD",
                             behandlingResultat = null,
                             behandlingÅrsak = null,
+                            emneknagger = oppgave.emneknagger,
                             fagsystem = "DAGPENGER",
                             arenaSakId = null,
                             resultatBegrunnelse = null,
