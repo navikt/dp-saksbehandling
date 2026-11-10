@@ -15,6 +15,7 @@ data class OppgaveITilstand(
     val versjon: String = Configuration.versjon,
     val tilstandsendring: Tilstandsendring,
     val utløstAv: String,
+    val sakYtelse: String? = null,
     val behandlingResultat: String?,
     val behandlingÅrsak: String?,
     val fagsystem: String?,
@@ -39,6 +40,7 @@ data class OppgaveITilstand(
             "utløstAv=$utløstAv, " +
             "tilstandsendring=$tilstandsendring, " +
             "versjon='$versjon', " +
+            "sakYtelse=$sakYtelse, " +
             "behandlingResultat=$behandlingResultat, " +
             "behandlingÅrsak=$behandlingÅrsak, " +
             "fagsystem=$fagsystem, " +
@@ -57,6 +59,7 @@ data class OppgaveITilstand(
             beslutterIdent?.let { put("beslutterIdent", it) }
             put("tilstandsendring", tilstandsendring)
             put("utløstAv", utløstAv)
+            sakYtelse?.let { put("sakYtelse", it) }
             put("versjon", versjon)
             behandlingResultat?.let { put("behandlingResultat", it) }
             behandlingÅrsak?.let { put("behandlingÅrsak", it) }

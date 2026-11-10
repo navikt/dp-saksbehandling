@@ -40,6 +40,7 @@ class StatistikkJobTest {
                     tidspunkt = mottatt.minusDays(1),
                 ),
             utløstAv = "SØKNAD",
+            sakYtelse = "PERMITTERT",
             behandlingResultat = null,
             fagsystem = null,
             behandlingÅrsak = null,
@@ -221,6 +222,7 @@ class StatistikkJobTest {
                   "tidspunkt": "${søknadKlarTilBehandling.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
                 },
                 "utløstAv": "SØKNAD",
+                "sakYtelse": "PERMITTERT",
                 "versjon": "dp:saksbehandling:1.2.3"
               }
             }
