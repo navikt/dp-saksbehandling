@@ -33,6 +33,17 @@ class MockAzure(
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
+        fun gyldigTokenForADGruppe(
+            adGruppe: String,
+            navIdent: String = TestHelper.saksbehandler.navIdent,
+        ): String =
+            lagTokenMedClaims(
+                mapOf(
+                    "groups" to listOf(adGruppe),
+                    "NAVident" to navIdent,
+                ),
+            )
+
         fun gyldigSaksbehandlerToken(
             adGrupper: List<String> = emptyList(),
             navIdent: String = TestHelper.saksbehandler.navIdent,

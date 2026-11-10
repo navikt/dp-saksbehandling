@@ -12,16 +12,33 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigTokenForADGruppe
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 
 class MeldingOmVedtakApiTest {
+    companion object {
+        @JvmStatic
+        private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(Configuration.lesADgruppe),
+                Arguments.of(Configuration.saksbehandlerADGruppe),
+            )
+    }
+
     init {
         mockAzure()
     }
@@ -48,16 +65,18 @@ class MeldingOmVedtakApiTest {
         }
     }
 
-    @Test
-    fun `Skal hente melding om vedtak HTML`() {
-        val saksbehandlerToken = gyldigSaksbehandlerToken()
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal hente melding om vedtak HTML`(gruppe: String) {
+        val slot = slot<Saksbehandler>()
+        val token = gyldigTokenForADGruppe(gruppe)
         val mediator =
             mockk<MeldingOmVedtakMediator>().also {
                 coEvery {
                     it.hentMeldingOmVedtakHtml(
                         oppgaveId = oppgaveId,
-                        saksbehandler = TestHelper.saksbehandler,
-                        saksbehandlerToken = saksbehandlerToken,
+                        saksbehandler = capture(slot),
+                        saksbehandlerToken = token,
                     )
                 } returns "<html><h1>Vedtak</h1></html>"
             }
@@ -65,7 +84,7 @@ class MeldingOmVedtakApiTest {
         withMeldingOmVedtakApi(mediator) {
             client
                 .get("oppgave/$oppgaveId/melding-om-vedtak/html") {
-                    autentisert(token = saksbehandlerToken)
+                    autentisert(token = token)
                 }.let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     response.bodyAsText() shouldBe "<html><h1>Vedtak</h1></html>"
@@ -75,8 +94,8 @@ class MeldingOmVedtakApiTest {
         coVerify(exactly = 1) {
             mediator.hentMeldingOmVedtakHtml(
                 oppgaveId = oppgaveId,
-                saksbehandler = TestHelper.saksbehandler,
-                saksbehandlerToken = saksbehandlerToken,
+                saksbehandler = slot.captured,
+                saksbehandlerToken = token,
             )
         }
     }

@@ -18,11 +18,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigTokenForADGruppe
 import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.audit.TestAuditlogg
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillInnsendingHendelse
@@ -30,10 +32,23 @@ import no.nav.dagpenger.saksbehandling.innsending.Aksjon
 import no.nav.dagpenger.saksbehandling.innsending.Innsending
 import no.nav.dagpenger.saksbehandling.innsending.InnsendingMediator
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 
 class InnsendingApiTest {
     init {
         mockAzure()
+    }
+
+    companion object {
+        @JvmStatic
+        private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(Configuration.lesADgruppe),
+                Arguments.of(Configuration.saksbehandlerADGruppe),
+            )
     }
 
     private val innsendingId = UUIDv7.ny()
@@ -54,8 +69,9 @@ class InnsendingApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente en innsending`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente en innsending`(gruppe: String) {
         val auditlogg = TestAuditlogg()
         val innsendingResultat = Innsending.InnsendingResultat.RettTilDagpenger(UUIDv7.ny())
         val sak =
@@ -81,7 +97,7 @@ class InnsendingApiTest {
         withInnsendingApi(mediator, auditlogg) {
             client
                 .get("innsending/$innsendingId") {
-                    autentisert()
+                    autentisert(gyldigTokenForADGruppe(gruppe))
                     this.header(HttpHeaders.Accept, "application/json")
                 }.bodyAsText() shouldEqualSpecifiedJson
                 """

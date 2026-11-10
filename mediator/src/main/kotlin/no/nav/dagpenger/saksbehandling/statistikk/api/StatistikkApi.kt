@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.statistikk.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
 import io.ktor.server.html.respondHtml
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -17,6 +16,7 @@ import kotlinx.html.title
 import kotlinx.html.ul
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandlerEllerLes
 import no.nav.dagpenger.saksbehandling.api.models.GrupperEtterDTO
 import no.nav.dagpenger.saksbehandling.api.models.ProduksjonsstatistikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkGruppeDTO
@@ -52,7 +52,7 @@ internal fun Application.statistikkApi(produksjonsstatistikkRepository: Produksj
             }
         }
 
-        authenticate("azureAd") {
+        authenticateSaksbehandlerEllerLes {
             route("produksjonsstatistikk") {
                 get {
                     val produksjonsstatistikkFilter =

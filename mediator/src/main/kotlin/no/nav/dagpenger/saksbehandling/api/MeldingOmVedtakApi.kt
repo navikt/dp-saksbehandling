@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -9,6 +8,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.MeldingOmVedtakMediator
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandler
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandlerEllerLes
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakBrevVariantRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakUtvidetBeskrivelseRequestDTO
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
@@ -18,8 +19,8 @@ internal fun Route.meldingOmVedtakApi(
     meldingOmVedtakMediator: MeldingOmVedtakMediator,
     applicationCallParser: ApplicationCallParser,
 ) {
-    authenticate("azureAd") {
-        route("oppgave/{oppgaveId}/melding-om-vedtak") {
+    route("oppgave/{oppgaveId}/melding-om-vedtak") {
+        authenticateSaksbehandlerEllerLes {
             get("html") {
                 val oppgaveId = call.finnUUID("oppgaveId")
                 val saksbehandler = applicationCallParser.saksbehandler(call)
@@ -32,7 +33,8 @@ internal fun Route.meldingOmVedtakApi(
                     )
                 call.respond(HttpStatusCode.OK, html)
             }
-
+        }
+        authenticateSaksbehandler {
             route("utvidet-beskrivelse/{brevblokkId}") {
                 put {
                     val oppgaveId = call.finnUUID("oppgaveId")

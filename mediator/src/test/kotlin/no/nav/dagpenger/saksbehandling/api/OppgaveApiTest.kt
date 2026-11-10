@@ -48,6 +48,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.autentisert
 import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigSaksbehandlerToken
+import no.nav.dagpenger.saksbehandling.api.MockAzure.Companion.gyldigTokenForADGruppe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
@@ -134,6 +135,30 @@ class OppgaveApiTest {
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
+
+        @JvmStatic
+        private fun skriveendepunktProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of("/oppgave/neste", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/kontrollert-brev", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/melding-om-vedtak-kilde", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Delete),
+                Arguments.of("/oppgave/oppgaveId/tildel", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/avbryt", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
+            )
+
+        @JvmStatic
+        private fun lesOgSaksbehandlerADGruppeProvider(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(Configuration.lesADgruppe),
+                Arguments.of(Configuration.saksbehandlerADGruppe),
+            )
     }
 
     @ParameterizedTest
@@ -151,8 +176,24 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `GET på oppgaver uten query parameters`() {
+    @ParameterizedTest
+    @MethodSource("skriveendepunktProvider")
+    fun `Skal avvise kall med lesetilgang på skriveendepunkter`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
+        withOppgaveApi {
+            client
+                .request(endepunkt) {
+                    method = httpMethod
+                    autentisert(token = gyldigTokenForADGruppe(Configuration.lesADgruppe))
+                }.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `GET på oppgaver uten query parameters`(gruppe: String) {
         val iMorgen = LocalDate.now().plusDays(1)
         val oppgave1 =
             TestHelper.lagOppgaveOversikt(
@@ -189,7 +230,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave") { autentisert() }.let { response ->
+            client.get("/oppgave") { autentisert(token = gyldigTokenForADGruppe(gruppe)) }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
@@ -1318,8 +1359,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente ut alle oppgaver for en gitt person`(adGrupper: String) {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.finnOppgaverFor(TestHelper.personIdent) } returns
@@ -1331,7 +1373,9 @@ class OppgaveApiTest {
         withOppgaveApi(oppgaveMediatorMock) {
             client
                 .post("/person/oppgaver") {
-                    autentisert()
+                    autentisert(
+                        gyldigTokenForADGruppe(adGrupper),
+                    )
                     contentType(ContentType.Application.Json)
                     setBody(
                         //language=JSON
@@ -1350,8 +1394,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal hente oppgaveId basert på behandlingId`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal hente oppgaveId basert på behandlingId`(gruppe: String) {
         val behandlingIdSomFinnes = UUIDv7.ny()
         val behandlingIdSomIkkeFinnes = UUIDv7.ny()
         val oppgaveId = UUIDv7.ny()
@@ -1363,23 +1408,25 @@ class OppgaveApiTest {
                 every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
             }
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
-            client.get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert() }.also { response ->
+            client
+                .get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert(gyldigTokenForADGruppe(gruppe)) }
+                .also { response ->
 
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson
-                    """
-                    {
-                        "oppgaveId": "$oppgaveId"
-                    }
-                    """.trimIndent()
-                val oppgaveIdDTO =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<OppgaveIdDTO>() {},
-                    )
-                oppgaveIdDTO shouldBe forventetOppgaveIdDTO
-            }
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    response.bodyAsText() shouldEqualSpecifiedJson
+                        """
+                        {
+                            "oppgaveId": "$oppgaveId"
+                        }
+                        """.trimIndent()
+                    val oppgaveIdDTO =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<OppgaveIdDTO>() {},
+                        )
+                    oppgaveIdDTO shouldBe forventetOppgaveIdDTO
+                }
 
             client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
@@ -1394,8 +1441,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente person vha personId`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente person vha personId`(gruppe: String) {
         val person = TestHelper.testPerson
         val personMediatorMock =
             mockk<PersonMediator>().also {
@@ -1555,8 +1603,11 @@ class OppgaveApiTest {
             oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
             client
-                .get("/person/${person.id}") { autentisert() }
-                .let { response ->
+                .get("/person/${person.id}") {
+                    autentisert(
+                        token = gyldigTokenForADGruppe(gruppe),
+                    )
+                }.let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
                     //language=JSON
@@ -1603,7 +1654,11 @@ class OppgaveApiTest {
                                     "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
                                     "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
                                     "returnerTilSaksbehandlingAarsaker": [],
-                                    "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
+                                    "kvalitetskontrollAarsaker": ${
+                            objectMapper.writeValueAsString(
+                                KvalitetskontrollAarsakDTO.entries,
+                            )
+                        }
                                   }
                                 }
                               ]
@@ -1647,7 +1702,11 @@ class OppgaveApiTest {
                                 "avbrytAarsaker": ${objectMapper.writeValueAsString(AvbrytOppgaveAarsakDTO.entries)},
                                 "leggTilbakeAarsaker": ${objectMapper.writeValueAsString(LeggTilbakeAarsakDTO.entries)},
                                 "returnerTilSaksbehandlingAarsaker": [],
-                                "kvalitetskontrollAarsaker": ${objectMapper.writeValueAsString(KvalitetskontrollAarsakDTO.entries)}
+                                "kvalitetskontrollAarsaker": ${
+                            objectMapper.writeValueAsString(
+                                KvalitetskontrollAarsakDTO.entries,
+                            )
+                        }
                               }
                             }
                           ],
@@ -1684,8 +1743,9 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne hente personId vha fnr`() {
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Skal kunne hente personId vha fnr `(adGrupper: String) {
         val person = TestHelper.testPerson
         val personMediator =
             mockk<PersonMediator>().also {
@@ -1701,7 +1761,9 @@ class OppgaveApiTest {
         ) {
             client
                 .post("/person/personId") {
-                    autentisert()
+                    autentisert(
+                        gyldigTokenForADGruppe(adGrupper),
+                    )
                     contentType(ContentType.Application.Json)
                     setBody(
                         //language=JSON
@@ -1730,8 +1792,18 @@ class OppgaveApiTest {
     fun `Skal kaste feil når person ikke finnes`() {
         val personMediator =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(ident = any<String>(), saksbehandler = any()) } throws DataNotFoundException("Fant ikke person")
-                every { it.hentPerson(personId = any<UUID>(), saksbehandler = any()) } throws DataNotFoundException("Fant ikke person")
+                every {
+                    it.hentPerson(
+                        ident = any<String>(),
+                        saksbehandler = any(),
+                    )
+                } throws DataNotFoundException("Fant ikke person")
+                every {
+                    it.hentPerson(
+                        personId = any<UUID>(),
+                        saksbehandler = any(),
+                    )
+                } throws DataNotFoundException("Fant ikke person")
             }
         withOppgaveApi(
             personMediator = personMediator,

@@ -3,6 +3,7 @@ azure:
   grupper:
     saksbehandler: "3e28466f-c53d-46da-8b44-a4abc2ad4593" # 0000-GA-Dagpenger-Saksbehandler
     beslutter: "11b8475a-fb12-41aa-b1f6-8497c1b5385b" # 0000-GA-Dagpenger-Beslutter
+    les: "a850742a-bda2-4334-94bc-74ecc0a3fbe0" # 0000-GA-Dagpenger-Les
     egne_ansatte: "dbe4ad45-320b-4e9a-aaa1-73cca4ee124d" # 0000-GA-Egne_ansatte
     adressebeskyttelse_fortrolig: "2e1dc582-f762-4510-a660-88bf68fb7128"  # 0000-GA-Fortrolig_Adresse
     adressebeskyttelse_strengt_fortrolig: "a1b518e2-3947-478d-8929-e5d685c47cac"  # 0000-GA-Strengt_Fortrolig_Adresse,

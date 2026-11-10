@@ -29,6 +29,7 @@ object Configuration {
                 "KAFKA_MAX_RECORDS" to "100",
                 "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
+                "GRUPPE_LES" to "LesADGruppe",
                 "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
                 "GRUPPE_FORTROLIG" to "FortroligADGruppe",
                 "GRUPPE_STRENGT_FORTROLIG_UTLAND" to "StrengtFortroligUtlandADGruppe",
@@ -89,6 +90,7 @@ object Configuration {
     val meldingOmVedtakMaskinTokenProvider = { clientCredentialsTokenProvider(dpMeldingOmVedtakScope) }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
+    val lesADgruppe by lazy { properties[Key("GRUPPE_LES", stringType)] }
     val beslutterADGruppe by lazy { properties[Key("GRUPPE_BESLUTTER", stringType)] }
     val egneAnsatteADGruppe by lazy { properties[Key("GRUPPE_EGNE_ANSATTE", stringType)] }
     val strengtFortroligADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG", stringType)] }

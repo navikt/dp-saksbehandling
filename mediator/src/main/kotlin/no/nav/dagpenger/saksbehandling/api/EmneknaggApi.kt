@@ -1,17 +1,17 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.authenticate
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.api.auth.authenticateSaksbehandlerEllerLes
 import no.nav.dagpenger.saksbehandling.api.models.EmneknaggDTO
 import no.nav.dagpenger.saksbehandling.hentEmneknaggKategori
 
 internal fun Route.emneknaggApi(oppgaveMediator: OppgaveMediator) {
-    authenticate("azureAd") {
+    authenticateSaksbehandlerEllerLes {
         get("emneknagger") {
             val dbEmneknagger = oppgaveMediator.hentDistinkteEmneknagger()
             val emneknagger = byggEmneknaggListe(dbEmneknagger)

@@ -53,6 +53,8 @@ spec:
       value: "false"
     - name: GRUPPE_SAKSBEHANDLER
       value: "{{azure.grupper.saksbehandler}}"
+    - name: GRUPPE_LES
+      value: "{{azure.grupper.les}}"
     - name: GRUPPE_BESLUTTER
       value: "{{azure.grupper.beslutter}}"
     - name: GRUPPE_EGNE_ANSATTE
@@ -91,6 +93,7 @@ spec:
           - id: "{{azure.grupper.saksbehandler}}"
           - id: "{{azure.grupper.beslutter}}"
           - id: "{{azure.grupper.egne_ansatte}}"
+          - id: "{{azure.grupper.les}}"
           - id: "{{azure.grupper.adressebeskyttelse_fortrolig}}"
           - id: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig}}"
           - id: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}"
