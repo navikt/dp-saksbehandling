@@ -16,7 +16,7 @@ avro {
 }
 
 val kafkaVersion = "4.4.0"
-val confluentVersion = "8.4.0"
+val confluentVersion = "8.4.1"
 
 dependencies {
     api("org.apache.kafka:kafka-streams:$kafkaVersion")
