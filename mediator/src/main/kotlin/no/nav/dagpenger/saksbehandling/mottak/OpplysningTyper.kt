@@ -5,11 +5,15 @@ import java.util.UUID
 enum class OpplysningTyper(
     val opplysningTypeId: UUID,
 ) {
+    PRØVINGSDATO(
+        opplysningTypeId = UUID.fromString("0194881f-91d1-7df2-ba1d-4533f37fcc76"),
+    ),
+
     RETTIGHET_DAGPEGNER_UNDER_PERMITTERING(
         opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d86"),
     ),
     RETTIGHET_ORDINÆRE_DAGPENGER(
-        opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d8a"),
+        opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d85"),
     ),
     RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI(
         opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d88"),

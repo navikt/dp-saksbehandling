@@ -62,6 +62,7 @@ class EmneknaggBuilderTest {
                 {
                   "behandletHendelse": { "type": "Søknad" },
                   "rettighetsperioder": [],
+                  
                   "opplysninger": []
                 }
                 """.trimIndent(),
