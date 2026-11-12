@@ -1318,7 +1318,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-
+  /behandling/{behandlingId}/oppgave:
+    get:
+      security:
+        - azureAd: [ ]
+        - azureAdLes: [ ]
+      summary: Hent oppgave basert på behandlingId
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Oppgaven ble funnet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Oppgave for behandlingId ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /behandling/{behandlingId}/oppgaveId:
     get:
