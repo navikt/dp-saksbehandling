@@ -68,7 +68,7 @@ class EmneknaggBuilder(
                 emneknagger.add(INNVILGELSE.visningsnavn)
             } else {
                 emneknagger.add(AVSLAG.visningsnavn)
-                emneknagger.addAll(avslåtteVilkårEmneknagger())
+                emneknagger.addAll(avslåtteVilkårEmneknagger2())
             }
             if (jsonNode["basertPå"].finnesMedVerdi()) {
                 emneknagger.add(GJENOPPTAK.visningsnavn)
@@ -100,6 +100,7 @@ class EmneknaggBuilder(
             }
         }
 
+    private val behandlingsresultatMapper = BehandlingsresultatMapper(json)
     private val opplysningerNode =
         jsonNode["opplysninger"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
 
@@ -145,6 +146,12 @@ class EmneknaggBuilder(
         )
 
     private val avslåtteVilkårOpplysningIder = avslåtteVilkårTilEmneknagger.keys
+
+    private fun avslåtteVilkårEmneknagger2(): Set<String> =
+        avslåtteVilkårOpplysningIder
+            .filter { behandlingsresultatMapper.finnesOpplysningMedVerdiFalse(it) }
+            .mapNotNull { avslåtteVilkårTilEmneknagger[it] }
+            .toSet()
 
     private fun avslåtteVilkårEmneknagger(): Set<String> =
         opplysningerNode

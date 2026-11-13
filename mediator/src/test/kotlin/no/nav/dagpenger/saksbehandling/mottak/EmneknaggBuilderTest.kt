@@ -26,7 +26,9 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
 import tools.jackson.module.kotlin.jacksonObjectMapper
+import java.time.LocalDate
 import java.util.UUID
 
 class EmneknaggBuilderTest {
@@ -578,7 +580,9 @@ class EmneknaggBuilderTest {
 
     private data class ForenkletOpplysning(
         val id: UUID,
-        val verdi: Boolean,
+        val verdi: Any,
+        val gyldigFraOgMed: LocalDate = LocalDate.of(1900, 1, 1),
+        val gyldigTilOgMed: LocalDate? = null,
     )
 
     private fun lagBehandlingsresultat(
@@ -605,26 +609,16 @@ class EmneknaggBuilderTest {
         val opplysningArray =
             objectMapper.createArrayNode().apply {
                 opplysninger.forEach { opplysning ->
-                    val verdiNode =
-                        objectMapper.createObjectNode().apply {
-                            put("verdi", opplysning.verdi)
-                            put("datatype", "boolsk")
-                        }
-                    val periodeObject =
-                        objectMapper.createObjectNode().apply {
-                            set("verdi", verdiNode)
-                        }
-                    val periodeArray =
-                        objectMapper.createArrayNode().apply {
-                            add(periodeObject)
-                        }
-                    val opplysningObject =
-                        objectMapper.createObjectNode().apply {
-                            put("opplysningTypeId", opplysning.id.toString())
-                            set("perioder", periodeArray)
-                        }
-                    add(opplysningObject)
+                    add(lagOpplysningObject(opplysning))
                 }
+                add(
+                    lagOpplysningObject(
+                        ForenkletOpplysning(
+                            id = OpplysningTyper.PRØVINGSDATO.opplysningTypeId,
+                            verdi = LocalDate.now(),
+                        ),
+                    ),
+                )
             }
         return objectMapper
             .createObjectNode()
@@ -634,5 +628,41 @@ class EmneknaggBuilderTest {
                 set("rettighetsperioder", rettighetsperioderArray)
                 set("opplysninger", opplysningArray)
             }.toString()
+    }
+
+    private fun lagOpplysningObject(opplysning: ForenkletOpplysning): JsonNode {
+        val verdiNode =
+            objectMapper.createObjectNode().apply {
+                when (opplysning.verdi) {
+                    is Boolean -> put("verdi", opplysning.verdi as Boolean)
+                    is String -> put("verdi", opplysning.verdi as String)
+                    is LocalDate -> put("verdi", opplysning.verdi.toString())
+                    else -> throw IllegalArgumentException("Ugyldig verdi-type: ${opplysning.verdi::class.simpleName}")
+                }
+                put(
+                    "datatype",
+                    when (opplysning.verdi) {
+                        is Boolean -> "boolsk"
+                        is String -> "tekst"
+                        is LocalDate -> "dato"
+                        else -> throw IllegalArgumentException("Ugyldig verdi-type: ${opplysning.verdi::class.simpleName}")
+                    },
+                )
+            }
+        val periodeObject =
+            objectMapper.createObjectNode().apply {
+                put("opprinnelse", "Ny")
+                put("gyldigFraOgMed", opplysning.gyldigFraOgMed.toString())
+                opplysning.gyldigTilOgMed?.let { put("gyldigTilOgMed", it.toString()) }
+                set("verdi", verdiNode)
+            }
+        val periodeArray =
+            objectMapper.createArrayNode().apply {
+                add(periodeObject)
+            }
+        return objectMapper.createObjectNode().apply {
+            put("opplysningTypeId", opplysning.id.toString())
+            set("perioder", periodeArray)
+        }
     }
 }

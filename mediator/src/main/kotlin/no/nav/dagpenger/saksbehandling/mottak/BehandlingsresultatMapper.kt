@@ -35,7 +35,7 @@ class BehandlingsresultatMapper(
             ?.asLocalDate()
     }
 
-    fun erOpplysningTrue(opplysningTypeId: UUID): Boolean {
+    fun finnesOpplysningMedVerdiTrue(opplysningTypeId: UUID): Boolean {
         val prøvingsdato = prøvingsdato()
         return if (prøvingsdato != null) {
             val verdiNode =
@@ -49,6 +49,25 @@ class BehandlingsresultatMapper(
                         }?.get("verdi")
                 }
             verdiNode?.boolskVerdi() ?: false
+        } else {
+            false
+        }
+    }
+
+    fun finnesOpplysningMedVerdiFalse(opplysningTypeId: UUID): Boolean {
+        val prøvingsdato = prøvingsdato()
+        return if (prøvingsdato != null) {
+            val verdiNode =
+                opplysningerNode.singleOrNull { it["opplysningTypeId"].asUUID() == opplysningTypeId }?.let { opplysningNode ->
+                    opplysningNode
+                        .get("perioder")
+                        .firstOrNull {
+                            val fom = it.get("gyldigFraOgMed").asLocalDate()
+                            val tom = it.get("gyldigTilOgMed")?.asLocalDate() ?: LocalDate.MAX
+                            prøvingsdato in fom..tom
+                        }?.get("verdi")
+                }
+            verdiNode?.boolskVerdi() == false
         } else {
             false
         }
