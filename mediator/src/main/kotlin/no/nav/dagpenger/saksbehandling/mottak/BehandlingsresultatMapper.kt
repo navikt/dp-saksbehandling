@@ -76,45 +76,28 @@ class BehandlingsresultatMapper(
             ?.asLocalDate()
     }
 
-    fun finnesOpplysningMedVerdiTrue(opplysningTypeId: UUID): Boolean {
-        val prøvingsdato = prøvingsdato()
-        return if (prøvingsdato != null) {
-            val verdiNode =
-                opplysningerNode
-                    .singleOrNull { it["opplysningTypeId"].asUUID() == opplysningTypeId }
-                    ?.let { opplysningNode ->
-                        opplysningNode
-                            .get("perioder")
-                            .firstOrNull {
-                                val fom = it.get("gyldigFraOgMed").asLocalDate()
-                                val tom = it.get("gyldigTilOgMed")?.asLocalDate() ?: LocalDate.MAX
-                                prøvingsdato in fom..tom
-                            }?.get("verdi")
-                    }
-            verdiNode?.boolskVerdi() ?: false
-        } else {
-            false
-        }
-    }
+    fun finnesOpplysningMedVerdiTrue(opplysningTypeId: UUID): Boolean =
+        finnOpplysningNodeForPrøvingsdato(opplysningTypeId)?.let {
+            it.boolskVerdi()
+        } ?: false
 
-    fun finnesOpplysningMedVerdiFalse(opplysningTypeId: UUID): Boolean {
-        val prøvingsdato = prøvingsdato()
-        return if (prøvingsdato != null) {
-            val verdiNode =
-                opplysningerNode
-                    .singleOrNull { it["opplysningTypeId"].asUUID() == opplysningTypeId }
-                    ?.let { opplysningNode ->
-                        opplysningNode
-                            .get("perioder")
-                            .firstOrNull {
-                                val fom = it.get("gyldigFraOgMed").asLocalDate()
-                                val tom = it.get("gyldigTilOgMed")?.asLocalDate() ?: LocalDate.MAX
-                                prøvingsdato in fom..tom
-                            }?.get("verdi")
-                    }
-            verdiNode?.boolskVerdi() == false
-        } else {
-            false
+    fun finnesOpplysningMedVerdiFalse(opplysningTypeId: UUID): Boolean =
+        finnOpplysningNodeForPrøvingsdato(opplysningTypeId)?.let {
+            !it.boolskVerdi()
+        } ?: false
+
+    private fun finnOpplysningNodeForPrøvingsdato(opplysningTypeId: UUID): JsonNode? =
+        prøvingsdato()?.let { prøvingsdato ->
+            opplysningerNode
+                .singleOrNull { it["opplysningTypeId"].asUUID() == opplysningTypeId }
+                ?.let { opplysningNode ->
+                    opplysningNode
+                        .get("perioder")
+                        .firstOrNull {
+                            val fom = it.get("gyldigFraOgMed").asLocalDate()
+                            val tom = it.get("gyldigTilOgMed")?.asLocalDate() ?: LocalDate.MAX
+                            prøvingsdato in fom..tom
+                        }?.get("verdi")
+                }
         }
-    }
 }
