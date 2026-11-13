@@ -47,6 +47,7 @@ object Emneknagg {
         RETTIGHET_FERIETILLEGG("Ferietillegg", EmneknaggKategori.RETTIGHET),
         RETTIGHET_EKSPORT("Eksport", EmneknaggKategori.RETTIGHET),
         RETTIGHET_ETABLERING("Etablering", EmneknaggKategori.RETTIGHET),
+        RETTIGHET_UTDANNING_OPPLÆRING("Tar utdanning", EmneknaggKategori.RETTIGHET),
         BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE("Arbeidssøkerperiode", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
         BEHANDLET_HENDELSE_TYPE_SAMORDNING("Samordning", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
     }

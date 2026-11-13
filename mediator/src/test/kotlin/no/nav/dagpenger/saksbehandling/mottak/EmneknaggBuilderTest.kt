@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_EKSPORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ETABLERING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_UTDANNING_OPPLÆRING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
@@ -425,6 +426,51 @@ class EmneknaggBuilderTest {
                 harRettighet = true,
                 ForenkletOpplysning(
                     id = OpplysningTyper.RETTIGHET_ETABLERING_SKAL_VURDERES.opplysningTypeId,
+                    verdi = false,
+                ),
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
+                    verdi = true,
+                ),
+            )
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
+            setOf(
+                INNVILGELSE.visningsnavn,
+                RETTIGHET_ORDINÆR.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `Emneknagg UtdanningOpplæring skal settes når utdanning eller opplæring skal vurderes`() {
+        val behandlingsresultat =
+            lagBehandlingsresultat(
+                behandletHendelseType = "Søknad",
+                harRettighet = true,
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES.opplysningTypeId,
+                    verdi = true,
+                ),
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
+                    verdi = true,
+                ),
+            )
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
+            setOf(
+                INNVILGELSE.visningsnavn,
+                RETTIGHET_ORDINÆR.visningsnavn,
+                RETTIGHET_UTDANNING_OPPLÆRING.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `Emneknagg UtdanningOpplæring skal ikke settes når utdanning-opplæring-rettighet ikke skal vurderes`() {
+        val behandlingsresultat =
+            lagBehandlingsresultat(
+                behandletHendelseType = "Søknad",
+                harRettighet = true,
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES.opplysningTypeId,
                     verdi = false,
                 ),
                 ForenkletOpplysning(

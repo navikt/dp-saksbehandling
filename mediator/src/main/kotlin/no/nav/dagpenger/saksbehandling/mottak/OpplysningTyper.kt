@@ -29,6 +29,9 @@ enum class OpplysningTyper(
     RETTIGHET_ETABLERING_SKAL_VURDERES(
         opplysningTypeId = UUID.fromString("01a0c316-a2e9-7088-acb1-da5596bd0055"),
     ),
+    RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES(
+        opplysningTypeId = UUID.fromString("0194881f-9445-734c-a7ee-045edf29b522"),
+    ),
     OPPFYLLER_KRAV_TIL_MINSTEINNTEKT(
         opplysningTypeId = UUID.fromString("0194881f-9413-77ce-92ec-d29700f0424c"),
     ),

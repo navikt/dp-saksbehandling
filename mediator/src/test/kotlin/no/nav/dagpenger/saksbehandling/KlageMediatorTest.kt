@@ -81,7 +81,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class KlageMediatorTest {
-    private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+    private val dato = LocalDateTime.of(2026, 6, 1, 12, 2, 4).truncatedTo(ChronoUnit.SECONDS)
     private val testPersonIdent = "12345678901"
     private val testRapid = TestRapid()
     private val saksbehandler =
@@ -172,7 +172,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostIdBrukersKlage",
                         ),
                     ).behandling.behandlingId
@@ -185,7 +185,7 @@ class KlageMediatorTest {
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
                 it["ident"].stringValue() shouldBe testPersonIdent
-                it["mottatt"].asLocalDateTime() shouldBe nå
+                it["mottatt"].asLocalDateTime() shouldBe dato
             }
             val oppgave =
                 oppgaveMediator.hentOppgaveForBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -310,7 +310,7 @@ class KlageMediatorTest {
                     type = KlageinstansVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = UUID.randomUUID(),
-                    avsluttet = nå,
+                    avsluttet = dato,
                     utfall = "STADFESTELSE",
                     journalpostIder = listOf("journalpostId1", "journalpostId2"),
                 )
@@ -358,7 +358,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostIdBrukersKlage",
                         ),
                     ).behandling.behandlingId
@@ -398,7 +398,7 @@ class KlageMediatorTest {
                     type = KlageinstansVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = kabalReferanse,
-                    avsluttet = nå,
+                    avsluttet = dato,
                     utfall = "MEDHOLD",
                     journalpostIder = listOf("journalpostId1"),
                 ),
@@ -446,7 +446,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostIdBrukersKlage",
                         ),
                     ).behandling.behandlingId
@@ -485,7 +485,7 @@ class KlageMediatorTest {
                     type = KlageinstansVedtakType.KLAGE,
                     klageId = behandlingId,
                     klageinstansVedtakId = UUID.randomUUID(),
-                    avsluttet = nå,
+                    avsluttet = dato,
                     utfall = "STADFESTELSE",
                     journalpostIder = listOf("journalpostId1"),
                 ),
@@ -523,7 +523,7 @@ class KlageMediatorTest {
                         ManuellKlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostIdBrukersKlage",
                             utførtAv = saksbehandler,
                         ),
@@ -644,7 +644,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -657,7 +657,7 @@ class KlageMediatorTest {
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
                 it["ident"].stringValue() shouldBe testPersonIdent
-                it["mottatt"].asLocalDateTime() shouldBe nå
+                it["mottatt"].asLocalDateTime() shouldBe dato
             }
 
             val oppgave =
@@ -735,7 +735,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -801,7 +801,7 @@ class KlageMediatorTest {
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
                 it["ident"].stringValue() shouldBe testPersonIdent
-                it["mottatt"].asLocalDateTime() shouldBe nå
+                it["mottatt"].asLocalDateTime() shouldBe dato
             }
         }
     }
@@ -815,7 +815,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -872,7 +872,7 @@ class KlageMediatorTest {
                 it["behandlingId"].asUUID() shouldBe behandlingId
                 it["sakId"].asUUID() shouldBe sakId
                 it["ident"].stringValue() shouldBe testPersonIdent
-                it["mottatt"].asLocalDateTime() shouldBe nå
+                it["mottatt"].asLocalDateTime() shouldBe dato
             }
         }
     }
@@ -886,7 +886,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -946,7 +946,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -999,7 +999,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -1059,7 +1059,7 @@ class KlageMediatorTest {
                         KlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                         ),
                     ).behandling.behandlingId
@@ -1440,7 +1440,7 @@ class KlageMediatorTest {
                     søknadId = UUIDv7.ny(),
                     behandlingId = UUIDv7.ny(),
                     ident = testPersonIdent,
-                    opprettet = nå,
+                    opprettet = dato,
                     behandlingskjedeId = UUIDv7.ny(),
                 )
             sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
@@ -1499,7 +1499,7 @@ class KlageMediatorTest {
                     søknadId = UUIDv7.ny(),
                     behandlingId = UUIDv7.ny(),
                     ident = testPersonIdent,
-                    opprettet = nå,
+                    opprettet = dato,
                     behandlingskjedeId = UUIDv7.ny(),
                 )
 
@@ -1511,7 +1511,7 @@ class KlageMediatorTest {
                     ManuellKlageMottattHendelse(
                         ident = testPersonIdent,
                         sakId = sakId,
-                        opprettet = nå,
+                        opprettet = dato,
                         journalpostId = "12345",
                         utførtAv = saksbehandler,
                     ),
@@ -1576,7 +1576,7 @@ class KlageMediatorTest {
                     søknadId = UUIDv7.ny(),
                     behandlingId = UUIDv7.ny(),
                     ident = testPersonIdent,
-                    opprettet = nå,
+                    opprettet = dato,
                     behandlingskjedeId = UUIDv7.ny(),
                 )
             sakMediator.opprettEllerKnyttTilSak(hendelse = hendelse)
@@ -1587,7 +1587,7 @@ class KlageMediatorTest {
                     KlageMottattHendelse(
                         ident = testPersonIdent,
                         sakId = sakId,
-                        opprettet = nå,
+                        opprettet = dato,
                         journalpostId = "journalpostIdBrukersKlage",
                     ),
                 )
@@ -1617,7 +1617,7 @@ class KlageMediatorTest {
                         ManuellKlageMottattHendelse(
                             ident = testPersonIdent,
                             sakId = sakId,
-                            opprettet = nå,
+                            opprettet = dato,
                             journalpostId = "journalpostId",
                             utførtAv = saksbehandler,
                         ),

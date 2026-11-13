@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_UTDANNING_OPPLÆRING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
@@ -30,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_EKSPORT_
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ETABLERING_SKAL_VURDERES
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES
 
 class EmneknaggBuilder(
     json: String,
@@ -85,6 +87,7 @@ class EmneknaggBuilder(
             RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.visningsnavn,
             RETTIGHET_EKSPORT_SKAL_VURDERES.opplysningTypeId to RETTIGHET_EKSPORT.visningsnavn,
             RETTIGHET_ETABLERING_SKAL_VURDERES.opplysningTypeId to RETTIGHET_ETABLERING.visningsnavn,
+            RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES.opplysningTypeId to RETTIGHET_UTDANNING_OPPLÆRING.visningsnavn,
         )
 
     private val rettighetOpplysningIder = rettighetTilEmneknagg.keys
