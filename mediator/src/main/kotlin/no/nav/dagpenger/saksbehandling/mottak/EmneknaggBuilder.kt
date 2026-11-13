@@ -41,6 +41,8 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class EmneknaggBuilder(
     json: String,
 ) {
+    private val behandlingsResulutat = BehandlingsresultatMapper(json)
+
     fun bygg(): Set<String> =
         buildSet {
             addAll(rettighetEmneknagger())
@@ -57,28 +59,24 @@ class EmneknaggBuilder(
 
     private fun søknadEmneknagger(): Set<String> {
         val emneknagger = mutableSetOf<String>()
-        if (behandletHendelseNode["type"].stringValue() == "Søknad") {
-            if (rettighetsperioderNode.any {
-                    it["harRett"].finnesMedVerdi() &&
-                        it["opprinnelse"].finnesMedVerdi() &&
-                        it["harRett"].asBoolean() &&
-                        it["opprinnelse"].stringValue() == "Ny"
-                }
-            ) {
+        if (behandlingsResulutat.erSøknad()) {
+            if (behandlingsResulutat.søknadOmDagpengerInnvilges()) {
                 emneknagger.add(INNVILGELSE.visningsnavn)
             } else {
                 emneknagger.add(AVSLAG.visningsnavn)
-                emneknagger.addAll(avslåtteVilkårEmneknagger2())
+                emneknagger.addAll(avslåtteVilkårEmneknagger())
             }
-            if (jsonNode["basertPå"].finnesMedVerdi()) {
+
+            if (behandlingsResulutat.erSøknadOmGjenopptak()) {
                 emneknagger.add(GJENOPPTAK.visningsnavn)
             }
         }
+
         return emneknagger.toSet()
     }
 
     private fun behandletHendelseEmneknagger(): Set<String> =
-        when (behandletHendelseNode["type"].stringValue()) {
+        when (behandlingsResulutat.behandletHendelseType()) {
             "Arbeidssøkerperiode" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn)
             "Ferietillegg" -> setOf(Regelknagg.RETTIGHET_FERIETILLEGG.visningsnavn)
             "Samordning" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn)
@@ -100,7 +98,6 @@ class EmneknaggBuilder(
             }
         }
 
-    private val behandlingsresultatMapper = BehandlingsresultatMapper(json)
     private val opplysningerNode =
         jsonNode["opplysninger"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
 
@@ -147,17 +144,10 @@ class EmneknaggBuilder(
 
     private val avslåtteVilkårOpplysningIder = avslåtteVilkårTilEmneknagger.keys
 
-    private fun avslåtteVilkårEmneknagger2(): Set<String> =
-        avslåtteVilkårOpplysningIder
-            .filter { behandlingsresultatMapper.finnesOpplysningMedVerdiFalse(it) }
-            .mapNotNull { avslåtteVilkårTilEmneknagger[it] }
-            .toSet()
-
     private fun avslåtteVilkårEmneknagger(): Set<String> =
-        opplysningerNode
-            .filter { it["opplysningTypeId"].asUUID() in avslåtteVilkårOpplysningIder }
-            .filter { it["perioder"].any { periode -> !periode["verdi"].boolskVerdi() } }
-            .mapNotNull { avslåtteVilkårTilEmneknagger[it["opplysningTypeId"].asUUID()] }
+        avslåtteVilkårOpplysningIder
+            .filter { behandlingsResulutat.finnesOpplysningMedVerdiFalse(it) }
+            .mapNotNull { avslåtteVilkårTilEmneknagger[it] }
             .toSet()
 
     private fun JsonNode.boolskVerdi(): Boolean = this["datatype"].stringValue() == "boolsk" && this["verdi"].asBoolean()
