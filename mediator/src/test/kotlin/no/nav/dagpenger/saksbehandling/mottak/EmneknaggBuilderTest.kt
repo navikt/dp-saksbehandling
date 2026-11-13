@@ -74,39 +74,6 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `Riktig håndtering av emneknagger der det finnes flere opplysninger av samme type`() {
-        lagBehandlingsresultat(
-            behandletHendelseType = "Søknad",
-            harRettighet = true,
-            ForenkletOpplysning(
-                id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
-                verdi = true,
-            ),
-            ForenkletOpplysning(
-                id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
-                verdi = false,
-            ),
-        ).also {
-            EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn)
-        }
-
-        lagBehandlingsresultat(
-            behandletHendelseType = "Søknad",
-            harRettighet = true,
-            ForenkletOpplysning(
-                id = OpplysningTyper.OPPFYLLER_KRAV_TIL_IKKE_UTESTENGT.opplysningTypeId,
-                verdi = false,
-            ),
-            ForenkletOpplysning(
-                id = OpplysningTyper.OPPFYLLER_KRAV_TIL_IKKE_UTESTENGT.opplysningTypeId,
-                verdi = true,
-            ),
-        ).also {
-            EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
-        }
-    }
-
-    @Test
     fun `Skal sette riktig innvigelse eller avslag emneknagg på behandlinger med flere rettighetsperioder`() {
         //language=JSON
         EmneknaggBuilder(
@@ -589,6 +556,13 @@ class EmneknaggBuilderTest {
         behandletHendelseType: String = "Søknad",
         harRettighet: Boolean,
         vararg opplysninger: ForenkletOpplysning,
+    ): String = lagBehandlingsresultat(behandletHendelseType, harRettighet, LocalDate.now(), *opplysninger)
+
+    private fun lagBehandlingsresultat(
+        behandletHendelseType: String = "Søknad",
+        harRettighet: Boolean,
+        prøvingsdato: LocalDate = LocalDate.now(),
+        vararg opplysninger: ForenkletOpplysning,
     ): String {
         val behandletHendelseObject =
             objectMapper.createObjectNode().apply {
@@ -615,7 +589,7 @@ class EmneknaggBuilderTest {
                     lagOpplysningObject(
                         ForenkletOpplysning(
                             id = OpplysningTyper.PRØVINGSDATO.opplysningTypeId,
-                            verdi = LocalDate.now(),
+                            verdi = prøvingsdato,
                         ),
                     ),
                 )

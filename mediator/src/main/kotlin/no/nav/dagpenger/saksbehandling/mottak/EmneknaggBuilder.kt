@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
@@ -31,12 +30,6 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_EKSPORT_
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ETABLERING_SKAL_VURDERES
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
-import no.nav.dagpenger.saksbehandling.serder.asUUID
-import no.nav.dagpenger.saksbehandling.serder.defaultObjectMapper
-import tools.jackson.databind.JsonNode
-
-private val logger = KotlinLogging.logger { }
-private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 class EmneknaggBuilder(
     json: String,
@@ -51,10 +44,9 @@ class EmneknaggBuilder(
         }
 
     private fun rettighetEmneknagger(): Set<String> =
-        opplysningerNode
-            .filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
-            .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
-            .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
+        rettighetOpplysningIder
+            .filter { behandlingsResulutat.finnesOpplysningMedVerdiTrue(it) }
+            .mapNotNull { rettighetTilEmneknagg[it] }
             .toSet()
 
     private fun søknadEmneknagger(): Set<String> {
@@ -81,35 +73,6 @@ class EmneknaggBuilder(
             "Ferietillegg" -> setOf(Regelknagg.RETTIGHET_FERIETILLEGG.visningsnavn)
             "Samordning" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn)
             else -> emptySet()
-        }
-
-    private val objectMapper = defaultObjectMapper()
-
-    private val jsonNode =
-        try {
-            objectMapper.readTree(json)
-        } catch (e: Exception) {
-            logger.error(e) { "Kunne ikke parse json: ${e.message}" }
-            sikkerLogg.error { "Kunne ikke parse json: $json" }
-            throw IllegalArgumentException("Kunne ikke parse json: $e")
-        }.also {
-            require(it.isObject) {
-                sikkerLogg.error { "Forventet at json er et objekt: $it" }
-            }
-        }
-
-    private val opplysningerNode =
-        jsonNode["opplysninger"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
-
-    private val rettighetsperioderNode =
-        jsonNode["rettighetsperioder"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
-
-    private val behandletHendelseNode =
-        jsonNode["behandletHendelse"].also {
-            require(it.finnesMedVerdi() && it.isObject) {
-                sikkerLogg.error { "Kunne ikke parse behandletHendelse: $it" }
-                "Forventet at behandletHendelse er et objekt"
-            }
         }
 
     private val rettighetTilEmneknagg =
@@ -149,11 +112,4 @@ class EmneknaggBuilder(
             .filter { behandlingsResulutat.finnesOpplysningMedVerdiFalse(it) }
             .mapNotNull { avslåtteVilkårTilEmneknagger[it] }
             .toSet()
-
-    private fun JsonNode.boolskVerdi(): Boolean = this["datatype"].stringValue() == "boolsk" && this["verdi"].asBoolean()
-
-    private fun JsonNode?.finnesMedVerdi(): Boolean {
-        if (this == null) return false
-        return !(this.isMissingNode || this.isNull)
-    }
 }
