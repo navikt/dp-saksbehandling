@@ -14,7 +14,7 @@ class BehandlingsresultatMapperTest {
         "/gjenopptak_permittering.json".readFile().also {
             val mapper = BehandlingsresultatMapper(it)
             mapper.prøvingsdato() shouldBe LocalDate.of(2026, 11, 9)
-            mapper.erOpplysningTrue(OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING.opplysningTypeId) shouldBe true
+            mapper.erOpplysningTrue(OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES.opplysningTypeId) shouldBe true
             mapper.erOpplysningTrue(OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId) shouldBe false
         }
     }

@@ -8,21 +8,26 @@ enum class OpplysningTyper(
     PRØVINGSDATO(
         opplysningTypeId = UUID.fromString("0194881f-91d1-7df2-ba1d-4533f37fcc76"),
     ),
-
-    RETTIGHET_DAGPEGNER_UNDER_PERMITTERING(
-        opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d86"),
-    ),
     RETTIGHET_ORDINÆRE_DAGPENGER(
         opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d85"),
     ),
-    RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI(
+    RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES(
+        opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d86"),
+    ),
+    RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI_SKAL_VURDERES(
         opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d88"),
     ),
-    RETTIGHET_DAGPENGER_ETTER_KONKURS(
+    RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS(
         opplysningTypeId = UUID.fromString("0194881f-9444-7a73-a458-0af81c034d87"),
     ),
     RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT(
         opplysningTypeId = UUID.fromString("01948d43-e218-76f1-b29b-7e604241d98a"),
+    ),
+    RETTIGHET_EKSPORT_SKAL_VURDERES(
+        opplysningTypeId = UUID.fromString("019f608d-f9c5-7ccc-a6f3-c53531d1f00c"),
+    ),
+    RETTIGHET_ETABLERING_SKAL_VURDERES(
+        opplysningTypeId = UUID.fromString("01a0c316-a2e9-7088-acb1-da5596bd0055"),
     ),
     OPPFYLLER_KRAV_TIL_MINSTEINNTEKT(
         opplysningTypeId = UUID.fromString("0194881f-9413-77ce-92ec-d29700f0424c"),
@@ -59,8 +64,5 @@ enum class OpplysningTyper(
     ),
     KRAV_TIL_UTDANNING_ELLER_OPPLÆRING(
         opplysningTypeId = UUID.fromString("0194881f-9445-734c-a7ee-045edf29b52d"),
-    ),
-    SKAL_EKSPORT_VURDERES(
-        opplysningTypeId = UUID.fromString("019f608d-f9c5-7ccc-a6f3-c53531d1f00c"),
     ),
 }
