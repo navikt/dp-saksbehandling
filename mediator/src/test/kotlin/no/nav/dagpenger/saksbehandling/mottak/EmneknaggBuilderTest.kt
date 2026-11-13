@@ -17,15 +17,18 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.EKSPORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_EKSPORT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ETABLERING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
 import tools.jackson.module.kotlin.jacksonObjectMapper
+import java.time.LocalDate
 import java.util.UUID
 
 class EmneknaggBuilderTest {
@@ -62,43 +65,11 @@ class EmneknaggBuilderTest {
                 {
                   "behandletHendelse": { "type": "Søknad" },
                   "rettighetsperioder": [],
+                  
                   "opplysninger": []
                 }
                 """.trimIndent(),
             )
-        }
-    }
-
-    @Test
-    fun `Riktig håndtering av emneknagger der det finnes flere opplysninger av samme type`() {
-        lagBehandlingsresultat(
-            behandletHendelseType = "Søknad",
-            harRettighet = true,
-            ForenkletOpplysning(
-                id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
-                verdi = true,
-            ),
-            ForenkletOpplysning(
-                id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
-                verdi = false,
-            ),
-        ).also {
-            EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn)
-        }
-
-        lagBehandlingsresultat(
-            behandletHendelseType = "Søknad",
-            harRettighet = true,
-            ForenkletOpplysning(
-                id = OpplysningTyper.OPPFYLLER_KRAV_TIL_IKKE_UTESTENGT.opplysningTypeId,
-                verdi = false,
-            ),
-            ForenkletOpplysning(
-                id = OpplysningTyper.OPPFYLLER_KRAV_TIL_IKKE_UTESTENGT.opplysningTypeId,
-                verdi = true,
-            ),
-        ).also {
-            EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
         }
     }
 
@@ -223,7 +194,7 @@ class EmneknaggBuilderTest {
                     verdi = false,
                 ),
                 ForenkletOpplysning(
-                    id = OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING.opplysningTypeId,
+                    id = OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES.opplysningTypeId,
                     verdi = true,
                 ),
             )
@@ -376,7 +347,7 @@ class EmneknaggBuilderTest {
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
-                    id = OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING.opplysningTypeId,
+                    id = OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES.opplysningTypeId,
                     verdi = true,
                 ),
             )
@@ -394,7 +365,7 @@ class EmneknaggBuilderTest {
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
-                    id = OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI.opplysningTypeId,
+                    id = OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI_SKAL_VURDERES.opplysningTypeId,
                     verdi = true,
                 ),
             )
@@ -412,7 +383,7 @@ class EmneknaggBuilderTest {
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
-                    id = OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_KONKURS.opplysningTypeId,
+                    id = OpplysningTyper.RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS.opplysningTypeId,
                     verdi = true,
                 ),
             )
@@ -424,13 +395,13 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `emneknagger når eksport skal vurderes`() {
+    fun `Emneknagg Etablering skal settes når etablering skal vurderes`() {
         val behandlingsresultat =
             lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
-                    id = OpplysningTyper.SKAL_EKSPORT_VURDERES.opplysningTypeId,
+                    id = OpplysningTyper.RETTIGHET_ETABLERING_SKAL_VURDERES.opplysningTypeId,
                     verdi = true,
                 ),
                 ForenkletOpplysning(
@@ -442,18 +413,63 @@ class EmneknaggBuilderTest {
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_ORDINÆR.visningsnavn,
-                EKSPORT.visningsnavn,
+                RETTIGHET_ETABLERING.visningsnavn,
             )
     }
 
     @Test
-    fun `eksport-emneknagg settes ikke når skalEksportVurderes er false`() {
+    fun `Emneknagg Etablering skal ikke settes når etablering-rettighet ikke skal vurderes`() {
         val behandlingsresultat =
             lagBehandlingsresultat(
                 behandletHendelseType = "Søknad",
                 harRettighet = true,
                 ForenkletOpplysning(
-                    id = OpplysningTyper.SKAL_EKSPORT_VURDERES.opplysningTypeId,
+                    id = OpplysningTyper.RETTIGHET_ETABLERING_SKAL_VURDERES.opplysningTypeId,
+                    verdi = false,
+                ),
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
+                    verdi = true,
+                ),
+            )
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
+            setOf(
+                INNVILGELSE.visningsnavn,
+                RETTIGHET_ORDINÆR.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `Emneknagg Eksport skal settes når eksport skal vurderes`() {
+        val behandlingsresultat =
+            lagBehandlingsresultat(
+                behandletHendelseType = "Søknad",
+                harRettighet = true,
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_EKSPORT_SKAL_VURDERES.opplysningTypeId,
+                    verdi = true,
+                ),
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId,
+                    verdi = true,
+                ),
+            )
+        EmneknaggBuilder(behandlingsresultat).bygg() shouldBe
+            setOf(
+                INNVILGELSE.visningsnavn,
+                RETTIGHET_ORDINÆR.visningsnavn,
+                RETTIGHET_EKSPORT.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `Emneknagg Eksport skal ikke settes når eksport-rettighet ikke skal vurderes`() {
+        val behandlingsresultat =
+            lagBehandlingsresultat(
+                behandletHendelseType = "Søknad",
+                harRettighet = true,
+                ForenkletOpplysning(
+                    id = OpplysningTyper.RETTIGHET_EKSPORT_SKAL_VURDERES.opplysningTypeId,
                     verdi = false,
                 ),
                 ForenkletOpplysning(
@@ -531,12 +547,21 @@ class EmneknaggBuilderTest {
 
     private data class ForenkletOpplysning(
         val id: UUID,
-        val verdi: Boolean,
+        val verdi: Any,
+        val gyldigFraOgMed: LocalDate = LocalDate.of(1900, 1, 1),
+        val gyldigTilOgMed: LocalDate? = null,
     )
 
     private fun lagBehandlingsresultat(
         behandletHendelseType: String = "Søknad",
         harRettighet: Boolean,
+        vararg opplysninger: ForenkletOpplysning,
+    ): String = lagBehandlingsresultat(behandletHendelseType, harRettighet, LocalDate.now(), *opplysninger)
+
+    private fun lagBehandlingsresultat(
+        behandletHendelseType: String = "Søknad",
+        harRettighet: Boolean,
+        prøvingsdato: LocalDate = LocalDate.now(),
         vararg opplysninger: ForenkletOpplysning,
     ): String {
         val behandletHendelseObject =
@@ -558,26 +583,16 @@ class EmneknaggBuilderTest {
         val opplysningArray =
             objectMapper.createArrayNode().apply {
                 opplysninger.forEach { opplysning ->
-                    val verdiNode =
-                        objectMapper.createObjectNode().apply {
-                            put("verdi", opplysning.verdi)
-                            put("datatype", "boolsk")
-                        }
-                    val periodeObject =
-                        objectMapper.createObjectNode().apply {
-                            set("verdi", verdiNode)
-                        }
-                    val periodeArray =
-                        objectMapper.createArrayNode().apply {
-                            add(periodeObject)
-                        }
-                    val opplysningObject =
-                        objectMapper.createObjectNode().apply {
-                            put("opplysningTypeId", opplysning.id.toString())
-                            set("perioder", periodeArray)
-                        }
-                    add(opplysningObject)
+                    add(lagOpplysningObject(opplysning))
                 }
+                add(
+                    lagOpplysningObject(
+                        ForenkletOpplysning(
+                            id = OpplysningTyper.PRØVINGSDATO.opplysningTypeId,
+                            verdi = prøvingsdato,
+                        ),
+                    ),
+                )
             }
         return objectMapper
             .createObjectNode()
@@ -587,5 +602,41 @@ class EmneknaggBuilderTest {
                 set("rettighetsperioder", rettighetsperioderArray)
                 set("opplysninger", opplysningArray)
             }.toString()
+    }
+
+    private fun lagOpplysningObject(opplysning: ForenkletOpplysning): JsonNode {
+        val verdiNode =
+            objectMapper.createObjectNode().apply {
+                when (opplysning.verdi) {
+                    is Boolean -> put("verdi", opplysning.verdi as Boolean)
+                    is String -> put("verdi", opplysning.verdi as String)
+                    is LocalDate -> put("verdi", opplysning.verdi.toString())
+                    else -> throw IllegalArgumentException("Ugyldig verdi-type: ${opplysning.verdi::class.simpleName}")
+                }
+                put(
+                    "datatype",
+                    when (opplysning.verdi) {
+                        is Boolean -> "boolsk"
+                        is String -> "tekst"
+                        is LocalDate -> "dato"
+                        else -> throw IllegalArgumentException("Ugyldig verdi-type: ${opplysning.verdi::class.simpleName}")
+                    },
+                )
+            }
+        val periodeObject =
+            objectMapper.createObjectNode().apply {
+                put("opprinnelse", "Ny")
+                put("gyldigFraOgMed", opplysning.gyldigFraOgMed.toString())
+                opplysning.gyldigTilOgMed?.let { put("gyldigTilOgMed", it.toString()) }
+                set("verdi", verdiNode)
+            }
+        val periodeArray =
+            objectMapper.createArrayNode().apply {
+                add(periodeObject)
+            }
+        return objectMapper.createObjectNode().apply {
+            put("opplysningTypeId", opplysning.id.toString())
+            set("perioder", periodeArray)
+        }
     }
 }
