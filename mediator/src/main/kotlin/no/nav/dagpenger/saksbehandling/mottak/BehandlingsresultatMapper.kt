@@ -77,14 +77,10 @@ class BehandlingsresultatMapper(
     }
 
     fun finnesOpplysningMedVerdiTrue(opplysningTypeId: UUID): Boolean =
-        finnOpplysningNodeForPrøvingsdato(opplysningTypeId)?.let {
-            it.boolskVerdi()
-        } ?: false
+        finnOpplysningNodeForPrøvingsdato(opplysningTypeId)?.boolskVerdi() ?: false
 
     fun finnesOpplysningMedVerdiFalse(opplysningTypeId: UUID): Boolean =
-        finnOpplysningNodeForPrøvingsdato(opplysningTypeId)?.let {
-            !it.boolskVerdi()
-        } ?: false
+        finnOpplysningNodeForPrøvingsdato(opplysningTypeId)?.boolskVerdi()?.not() ?: false
 
     private fun finnOpplysningNodeForPrøvingsdato(opplysningTypeId: UUID): JsonNode? =
         prøvingsdato()?.let { prøvingsdato ->
