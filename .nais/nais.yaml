@@ -118,6 +118,7 @@ spec:
         - application: dp-melding-om-vedtak
         - application: dp-mottak
         - application: dp-meldekortregister
+        - application: dp-meldekort
         - application: skjermede-personer-pip
           namespace: nom
         - application: norg2
