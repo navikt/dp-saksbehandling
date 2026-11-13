@@ -36,56 +36,25 @@ class OppgaveITilstandTest {
         )
 
     @Test
-    fun sakYtelse() {
+    fun `Skal konkatinere alle rettigheter i en streng med understrek mellom`() {
         oppgaveITilstand.sakYtelse() shouldBe null
         oppgaveITilstand.asMap()["sakYtelse"] shouldBe null
-
-        var emneknaggerUnderTest =
-            setOf(
-                Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
-                Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
-            )
-
         oppgaveITilstand
-            .copy(emneknagger = emneknaggerUnderTest)
-            .also {
-                it.sakYtelse() shouldBe "PERMITTERT_FISK"
-                it.asMap()["sakYtelse"] shouldBe "PERMITTERT_FISK"
-            }
-
-        emneknaggerUnderTest = emneknaggerUnderTest.minus(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn)
-        oppgaveITilstand
-            .copy(emneknagger = emneknaggerUnderTest)
-            .also {
-                it.sakYtelse() shouldBe "PERMITTERT"
-                it.asMap()["sakYtelse"] shouldBe "PERMITTERT"
-            }
-
-        emneknaggerUnderTest = emneknaggerUnderTest.minus(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn)
-        oppgaveITilstand
-            .copy(emneknagger = emneknaggerUnderTest)
-            .also {
-                it.sakYtelse() shouldBe "LØNNSGARANTI"
-                it.asMap()["sakYtelse"] shouldBe "LØNNSGARANTI"
-            }
-
-        emneknaggerUnderTest = emneknaggerUnderTest.minus(Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn)
-        oppgaveITilstand
-            .copy(emneknagger = emneknaggerUnderTest)
-            .also {
-                it.sakYtelse() shouldBe "VERNEPLIKT"
-                it.asMap()["sakYtelse"] shouldBe "VERNEPLIKT"
-            }
-
-        emneknaggerUnderTest = emneknaggerUnderTest.minus(Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn)
-        oppgaveITilstand
-            .copy(emneknagger = emneknaggerUnderTest)
-            .also {
-                it.sakYtelse() shouldBe "ORDINÆR"
-                it.asMap()["sakYtelse"] shouldBe "ORDINÆR"
+            .copy(
+                emneknagger =
+                    setOf(
+                        Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_UTDANNING_OPPLÆRING.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_EKSPORT.visningsnavn,
+                        Emneknagg.Regelknagg.RETTIGHET_ETABLERING.visningsnavn,
+                    ),
+            ).also {
+                it.sakYtelse() shouldBe "ORDINÆR_PERMITTERT_PERMITTERTFISK_LØNNSGARANTI_VERNEPLIKT_UTDANNING_EKSPORT_ETABLERING"
+                it.asMap()["sakYtelse"] shouldBe "ORDINÆR_PERMITTERT_PERMITTERTFISK_LØNNSGARANTI_VERNEPLIKT_UTDANNING_EKSPORT_ETABLERING"
             }
     }
 }

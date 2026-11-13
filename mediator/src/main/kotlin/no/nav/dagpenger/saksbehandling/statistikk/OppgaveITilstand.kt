@@ -70,12 +70,21 @@ data class OppgaveITilstand(
             relatertBehandlingId?.let { put("relatertBehandlingId", it.toString()) }
         }
 
-    fun sakYtelse(): String? {
-        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn)) return "PERMITTERT_FISK"
-        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn)) return "PERMITTERT"
-        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn)) return "LØNNSGARANTI"
-        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn)) return "VERNEPLIKT"
-        if (emneknagger.contains(Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn)) return "ORDINÆR"
-        return null
-    }
+    fun sakYtelse(): String? =
+        emneknagger
+            .map { emneknagg ->
+                when (emneknagg) {
+                    Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn -> "ORDINÆR"
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn -> "PERMITTERT"
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn -> "PERMITTERTFISK"
+                    Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn -> "LØNNSGARANTI"
+                    Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn -> "VERNEPLIKT"
+                    Emneknagg.Regelknagg.RETTIGHET_UTDANNING_OPPLÆRING.visningsnavn -> "UTDANNING"
+                    Emneknagg.Regelknagg.RETTIGHET_EKSPORT.visningsnavn -> "EKSPORT"
+                    Emneknagg.Regelknagg.RETTIGHET_ETABLERING.visningsnavn -> "ETABLERING"
+                    else -> null
+                }
+            }.filterNotNull()
+            .joinToString(separator = "_")
+            .let { if (it.isBlank()) null else it }
 }
