@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
@@ -14,129 +14,83 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
-import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.EKSPORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_EKSPORT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ETABLERING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_UTDANNING_OPPLÆRING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
-import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING
-import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_KONKURS
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
-import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI_SKAL_VURDERES
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_EKSPORT_SKAL_VURDERES
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ETABLERING_SKAL_VURDERES
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
-import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.SKAL_EKSPORT_VURDERES
-import no.nav.dagpenger.saksbehandling.serder.asUUID
-import no.nav.dagpenger.saksbehandling.serder.defaultObjectMapper
-import tools.jackson.databind.JsonNode
-
-private val logger = KotlinLogging.logger { }
-private val sikkerLogg = KotlinLogging.logger("tjenestekall")
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES
 
 class EmneknaggBuilder(
     json: String,
 ) {
+    private val behandlingsResulutat = BehandlingsresultatMapper(json)
+
     fun bygg(): Set<String> =
         buildSet {
             addAll(rettighetEmneknagger())
             addAll(søknadEmneknagger())
             addAll(behandletHendelseEmneknagger())
-            addAll(eksportEmneknagger())
         }
 
     private fun rettighetEmneknagger(): Set<String> =
-        opplysningerNode
-            .filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
-            .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
-            .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
-            .toSet()
-
-    private fun eksportEmneknagger(): Set<String> =
-        opplysningerNode
-            .filter { it["opplysningTypeId"].asUUID() in eksportOpplysningIder }
-            .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
-            .mapNotNull { eksportTilEmneknagg[it["opplysningTypeId"].asUUID()] }
+        rettighetOpplysningIder
+            .filter { behandlingsResulutat.finnesOpplysningMedVerdiTrue(it) }
+            .mapNotNull { rettighetTilEmneknagg[it] }
             .toSet()
 
     private fun søknadEmneknagger(): Set<String> {
         val emneknagger = mutableSetOf<String>()
-        if (behandletHendelseNode["type"].asText() == "Søknad") {
-            if (rettighetsperioderNode.any {
-                    it["harRett"].finnesMedVerdi() &&
-                        it["opprinnelse"].finnesMedVerdi() &&
-                        it["harRett"].asBoolean() &&
-                        it["opprinnelse"].asText() == "Ny"
-                }
-            ) {
+        if (behandlingsResulutat.erSøknad()) {
+            if (behandlingsResulutat.søknadOmDagpengerInnvilges()) {
                 emneknagger.add(INNVILGELSE.visningsnavn)
             } else {
-                emneknagger.add(Regelknagg.AVSLAG.visningsnavn)
+                emneknagger.add(AVSLAG.visningsnavn)
                 emneknagger.addAll(avslåtteVilkårEmneknagger())
             }
-            if (jsonNode["basertPå"].finnesMedVerdi()) {
+
+            if (behandlingsResulutat.erSøknadOmGjenopptak()) {
                 emneknagger.add(GJENOPPTAK.visningsnavn)
             }
         }
+
         return emneknagger.toSet()
     }
 
     private fun behandletHendelseEmneknagger(): Set<String> =
-        when (behandletHendelseNode["type"].asText()) {
+        when (behandlingsResulutat.behandletHendelseType()) {
             "Arbeidssøkerperiode" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE.visningsnavn)
             "Ferietillegg" -> setOf(Regelknagg.RETTIGHET_FERIETILLEGG.visningsnavn)
             "Samordning" -> setOf(Regelknagg.BEHANDLET_HENDELSE_TYPE_SAMORDNING.visningsnavn)
             else -> emptySet()
         }
 
-    private val objectMapper = defaultObjectMapper()
-
-    private val jsonNode =
-        try {
-            objectMapper.readTree(json)
-        } catch (e: Exception) {
-            logger.error(e) { "Kunne ikke parse json: ${e.message}" }
-            sikkerLogg.error { "Kunne ikke parse json: $json" }
-            throw IllegalArgumentException("Kunne ikke parse json: $e")
-        }.also {
-            require(it.isObject) {
-                sikkerLogg.error { "Forventet at json er et objekt: $it" }
-            }
-        }
-
-    private val opplysningerNode =
-        jsonNode["opplysninger"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
-
-    private val rettighetsperioderNode =
-        jsonNode["rettighetsperioder"]?.takeIf { it.isArray } ?: objectMapper.createArrayNode()
-
-    private val behandletHendelseNode =
-        jsonNode["behandletHendelse"].also {
-            require(it.finnesMedVerdi() && it.isObject) {
-                sikkerLogg.error { "Kunne ikke parse behandletHendelse: $it" }
-                "Forventet at behandletHendelse er et objekt"
-            }
-        }
-
     private val rettighetTilEmneknagg =
         mapOf(
             RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId to RETTIGHET_ORDINÆR.visningsnavn,
             RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT.opplysningTypeId to RETTIGHET_VERNEPLIKT.visningsnavn,
-            RETTIGHET_DAGPEGNER_UNDER_PERMITTERING.opplysningTypeId to RETTIGHET_PERMITTERT.visningsnavn,
-            RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI.opplysningTypeId to
+            RETTIGHET_DAGPEGNER_UNDER_PERMITTERING_SKAL_VURDERES.opplysningTypeId to RETTIGHET_PERMITTERT.visningsnavn,
+            RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI_SKAL_VURDERES.opplysningTypeId to
                 RETTIGHET_PERMITTERT_FISK.visningsnavn,
-            RETTIGHET_DAGPENGER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.visningsnavn,
+            RETTIGHET_LØNNSGARANTIMIDLER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.visningsnavn,
+            RETTIGHET_EKSPORT_SKAL_VURDERES.opplysningTypeId to RETTIGHET_EKSPORT.visningsnavn,
+            RETTIGHET_ETABLERING_SKAL_VURDERES.opplysningTypeId to RETTIGHET_ETABLERING.visningsnavn,
+            RETTIGHET_UTDANNING_OPPLÆRING_SKAL_VURDERES.opplysningTypeId to RETTIGHET_UTDANNING_OPPLÆRING.visningsnavn,
         )
 
     private val rettighetOpplysningIder = rettighetTilEmneknagg.keys
-
-    private val eksportTilEmneknagg =
-        mapOf(
-            SKAL_EKSPORT_VURDERES.opplysningTypeId to EKSPORT.visningsnavn,
-        )
-
-    private val eksportOpplysningIder = eksportTilEmneknagg.keys
 
     private val avslåtteVilkårTilEmneknagger =
         mapOf(
@@ -157,16 +111,8 @@ class EmneknaggBuilder(
     private val avslåtteVilkårOpplysningIder = avslåtteVilkårTilEmneknagger.keys
 
     private fun avslåtteVilkårEmneknagger(): Set<String> =
-        opplysningerNode
-            .filter { it["opplysningTypeId"].asUUID() in avslåtteVilkårOpplysningIder }
-            .filter { it["perioder"].any { periode -> !periode["verdi"].boolskVerdi() } }
-            .mapNotNull { avslåtteVilkårTilEmneknagger[it["opplysningTypeId"].asUUID()] }
+        avslåtteVilkårOpplysningIder
+            .filter { behandlingsResulutat.finnesOpplysningMedVerdiFalse(it) }
+            .mapNotNull { avslåtteVilkårTilEmneknagger[it] }
             .toSet()
-
-    private fun JsonNode.boolskVerdi(): Boolean = this["datatype"].asText() == "boolsk" && this["verdi"].asBoolean()
-
-    private fun JsonNode?.finnesMedVerdi(): Boolean {
-        if (this == null) return false
-        return !(this.isMissingNode || this.isNull)
-    }
 }

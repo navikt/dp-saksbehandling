@@ -394,6 +394,27 @@ internal fun Route.oppgaveApi(
 
     route("behandling/") {
         authenticateSaksbehandlerEllerLes {
+            get("{behandlingId}/oppgave") {
+                val behandlingId = call.finnUUID("behandlingId")
+                val saksbehandler = applicationCallParser.saksbehandler(call)
+                val oppgave =
+                    oppgaveMediator
+                        .hentOppgaveForBehandling(
+                            behandlingId,
+                            saksbehandler,
+                        ).also {
+                            auditlogg.les(
+                                melding = "Så på oppgave for behandlingId $behandlingId",
+                                ident = it.personIdent(),
+                                saksbehandler = saksbehandler.navIdent,
+                            )
+                        }
+                call.respond(
+                    oppgaveDTOMapper.lagOppgaveDTO(
+                        oppgave,
+                    ),
+                )
+            }
             get("{behandlingId}/oppgaveId") {
                 val behandlingId = call.finnUUID("behandlingId")
                 when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {

@@ -45,9 +45,11 @@ object Emneknagg {
         RETTIGHET_PERMITTERT_FISK("Permittert fisk", EmneknaggKategori.RETTIGHET),
         RETTIGHET_KONKURS("Konkurs", EmneknaggKategori.RETTIGHET),
         RETTIGHET_FERIETILLEGG("Ferietillegg", EmneknaggKategori.RETTIGHET),
+        RETTIGHET_EKSPORT("Eksport", EmneknaggKategori.RETTIGHET),
+        RETTIGHET_ETABLERING("Etablering", EmneknaggKategori.RETTIGHET),
+        RETTIGHET_UTDANNING_OPPLÆRING("Tar utdanning", EmneknaggKategori.RETTIGHET),
         BEHANDLET_HENDELSE_TYPE_ARBEIDSSØKERPERIODE("Arbeidssøkerperiode", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
         BEHANDLET_HENDELSE_TYPE_SAMORDNING("Samordning", EmneknaggKategori.BEHANDLET_HENDELSE_TYPE),
-        EKSPORT("Eksport", EmneknaggKategori.UDEFINERT),
     }
 
     enum class PåVent(

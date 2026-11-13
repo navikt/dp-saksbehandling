@@ -26,6 +26,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.saksbehandling.Configuration
@@ -43,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveTilstandslogg
 import no.nav.dagpenger.saksbehandling.ReturnerTilSaksbehandlingÅrsak
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -1202,6 +1204,35 @@ class OppgaveApiTest {
                     }
                     """.trimIndent()
             }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("lesOgSaksbehandlerADGruppeProvider")
+    fun `Hent oppgave for behandlingId`(gruppe: String) {
+        val expectedSaksbehandler = slot<Saksbehandler>()
+        val expectedBehandlingId = slot<UUID>()
+
+        val behandlingId = UUID.randomUUID()
+        withOppgaveApi(
+            oppgaveMediator =
+                mockk<OppgaveMediator>(relaxed = true).also {
+                    coEvery { it.hentOppgaveForBehandling(capture(expectedBehandlingId), capture(expectedSaksbehandler)) } returns
+                        TestHelper.lagOppgave(
+                            person = TestHelper.testPerson,
+                            tilstand = Oppgave.UnderBehandling,
+                            saksbehandlerIdent = TestHelper.saksbehandler.navIdent,
+                        )
+                },
+            oppgaveDTOMapper = mockk(relaxed = true),
+        ) {
+            client
+                .get("/behandling/$behandlingId/oppgave") {
+                    autentisert(gyldigTokenForADGruppe(adGruppe = gruppe))
+                }.status shouldBe HttpStatusCode.OK
+
+            expectedBehandlingId.captured shouldBe behandlingId
+            expectedSaksbehandler.captured.navIdent shouldBe TestHelper.saksbehandler.navIdent
         }
     }
 
