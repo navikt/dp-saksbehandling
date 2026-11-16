@@ -102,6 +102,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                             , saksbehandler_ident
                             , beslutter_ident
                             , utlost_av
+                            , emneknagger
                             , behandling_resultat
                             , behandling_aarsak
                             , fagsystem
@@ -144,6 +145,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                                             log.hendelse->>'ansvarligIdent' 
                                         END                     AS beslutter_ident
                                     , beh.utlost_av             AS utlost_av
+                                    , (SELECT array_agg(emneknagg) FROM emneknagg_v1 WHERE oppgave_id = opp.id) AS emneknagger
                                     , CASE
                                         WHEN beh.utlost_av = 'INNSENDING' THEN
                                             ins.resultat_type
@@ -219,6 +221,7 @@ class PostgresSaksbehandlingsstatistikkRepository(
                     tidspunkt = this.localDateTime("tilstand_tidspunkt"),
                 ),
             utløstAv = this.string("utlost_av"),
+            emneknagger = this.arrayOrNull<String>("emneknagger")?.toSet() ?: emptySet(),
             behandlingResultat = this.stringOrNull("behandling_resultat"),
             behandlingÅrsak = this.stringOrNull("behandling_aarsak"),
             fagsystem = this.stringOrNull("fagsystem"),

@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.TestHelper.ISO_TIMESTAMP
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.statistikk.db.SaksbehandlingsstatistikkRepository
@@ -40,7 +41,7 @@ class StatistikkJobTest {
                     tidspunkt = mottatt.minusDays(1),
                 ),
             utløstAv = "SØKNAD",
-            sakYtelse = "PERMITTERT",
+            emneknagger = setOf(Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn),
             behandlingResultat = null,
             fagsystem = null,
             behandlingÅrsak = null,
