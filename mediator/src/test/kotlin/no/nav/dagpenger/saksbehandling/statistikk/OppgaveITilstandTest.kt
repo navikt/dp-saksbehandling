@@ -53,8 +53,9 @@ class OppgaveITilstandTest {
                         Emneknagg.Regelknagg.RETTIGHET_ETABLERING.visningsnavn,
                     ),
             ).also {
-                it.sakYtelse() shouldBe "ORDINÆR_PERMITTERT_PERMITTERTFISK_LØNNSGARANTI_VERNEPLIKT_UTDANNING_EKSPORT_ETABLERING"
-                it.asMap()["sakYtelse"] shouldBe "ORDINÆR_PERMITTERT_PERMITTERTFISK_LØNNSGARANTI_VERNEPLIKT_UTDANNING_EKSPORT_ETABLERING"
+                it.sakYtelse() shouldBe "ORDINÆR_PERMITTERING_PERMITTERINGFISK_LØNNSGARANTI_VERNEPLIKT_UTDANNING_EKSPORT_ETABLERING"
+                it.asMap()["sakYtelse"] shouldBe
+                    "ORDINÆR_PERMITTERING_PERMITTERINGFISK_LØNNSGARANTI_VERNEPLIKT_UTDANNING_EKSPORT_ETABLERING"
             }
     }
 }

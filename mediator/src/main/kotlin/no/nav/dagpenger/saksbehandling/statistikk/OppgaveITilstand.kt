@@ -75,8 +75,8 @@ data class OppgaveITilstand(
             .map { emneknagg ->
                 when (emneknagg) {
                     Emneknagg.Regelknagg.RETTIGHET_ORDINÆR.visningsnavn -> "ORDINÆR"
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn -> "PERMITTERT"
-                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn -> "PERMITTERTFISK"
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT.visningsnavn -> "PERMITTERING"
+                    Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn -> "PERMITTERINGFISK"
                     Emneknagg.Regelknagg.RETTIGHET_KONKURS.visningsnavn -> "LØNNSGARANTI"
                     Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT.visningsnavn -> "VERNEPLIKT"
                     Emneknagg.Regelknagg.RETTIGHET_UTDANNING_OPPLÆRING.visningsnavn -> "UTDANNING"

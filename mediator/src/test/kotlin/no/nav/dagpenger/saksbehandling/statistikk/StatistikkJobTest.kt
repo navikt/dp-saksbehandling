@@ -223,7 +223,7 @@ class StatistikkJobTest {
                   "tidspunkt": "${søknadKlarTilBehandling.tilstandsendring.tidspunkt.format(ISO_TIMESTAMP)}"
                 },
                 "utløstAv": "SØKNAD",
-                "sakYtelse": "PERMITTERT",
+                "sakYtelse": "PERMITTERING",
                 "versjon": "dp:saksbehandling:1.2.3"
               }
             }
