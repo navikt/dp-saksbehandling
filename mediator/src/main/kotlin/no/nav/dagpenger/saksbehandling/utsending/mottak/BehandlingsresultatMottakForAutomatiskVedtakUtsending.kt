@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.mottak.AbstractBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.Behandlingsresultat
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -20,9 +19,11 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
     private val utsendingMediator: UtsendingMediator,
     private val sakRepository: SakRepository,
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
+    override val mottakNavn: String = "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
+
     override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
 
-    override val mottakNavn: String = "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
+    override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_utsending_retry")
 
     override fun JsonMessage.valideringsregler() {
         this.requireValue("automatisk", true)
@@ -35,17 +36,6 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val skipSetBehandlingId = setOf<UUID>(
-            UUID.fromString("01a1ebac-02c1-7637-8c17-81827bcd3e04"),
-            UUID.fromString("01a1eb60-eea7-7579-8d4c-3239d18e857d")
-        )
-        if (behandlingsresultat.behandlingId in skipSetBehandlingId) {
-            logger.info {
-                "Skipper behandlingId: ${behandlingsresultat.behandlingId} fra " +
-                    "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
-            }
-            return
-        }
         val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
         val vedtakFattetHendelse =
             packet.vedtakFattetHendelse(

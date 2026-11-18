@@ -22,7 +22,7 @@ internal class BehandlingsresultatMottakForUtsending(
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
     override val mottakNavn: String = "BehandlingsresultatMottakForUtsending"
 
-    override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_retry")
+    override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_utsending_retry")
 
     override fun JsonMessage.valideringsregler() {
         this.requireValue("automatisk", false)
