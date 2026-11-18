@@ -163,37 +163,43 @@ class UtsendingMediator(
     }
 
     fun startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
-        val utsendingSak = vedtakFattetHendelse.sak
-        val utsending =
-            opprettUtsending(
-                behandlingId = vedtakFattetHendelse.behandlingId,
-                brev = null,
-                ident = vedtakFattetHendelse.ident,
-            )
-        require(utsendingSak != null) { "VedtakFattetHendelse må ha en sak" }
+        transaksjoner.transaksjon { ctx ->
+            val utsendingSak = vedtakFattetHendelse.sak
+            val utsending =
+                opprettUtsending(
+                    behandlingId = vedtakFattetHendelse.behandlingId,
+                    brev = null,
+                    ident = vedtakFattetHendelse.ident,
+                    ctx = ctx,
+                )
+            require(utsendingSak != null) { "VedtakFattetHendelse må ha en sak" }
 
-        runCatching {
-            val brev =
-                runBlocking {
-                    brevProdusent.lagAutomatiskVedtakBrev(
-                        ident = vedtakFattetHendelse.ident,
-                        behandlingId = vedtakFattetHendelse.behandlingId,
-                        sakId = utsendingSak.id,
-                    )
-                }
+            runCatching {
+                val brev =
+                    runBlocking {
+                        brevProdusent.lagAutomatiskVedtakBrev(
+                            ident = vedtakFattetHendelse.ident,
+                            behandlingId = vedtakFattetHendelse.behandlingId,
+                            sakId = utsendingSak.id,
+                        )
+                    }
 
-            utsending.startUtsending(
-                startUtsendingHendelse =
-                    StartUtsendingHendelse(
-                        utsendingSak = utsendingSak,
-                        behandlingId = vedtakFattetHendelse.behandlingId,
-                        ident = vedtakFattetHendelse.ident,
-                        brev = brev,
-                    ),
-            )
-            lagreOgPubliserBehov(utsending = utsending)
-        }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
-            .getOrThrow()
+                utsending.startUtsending(
+                    startUtsendingHendelse =
+                        StartUtsendingHendelse(
+                            utsendingSak = utsendingSak,
+                            behandlingId = vedtakFattetHendelse.behandlingId,
+                            ident = vedtakFattetHendelse.ident,
+                            brev = brev,
+                        ),
+                )
+                lagreOgPubliserBehov(
+                    utsending = utsending,
+                    ctx = ctx,
+                )
+            }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
+                .getOrThrow()
+        }
     }
 
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {

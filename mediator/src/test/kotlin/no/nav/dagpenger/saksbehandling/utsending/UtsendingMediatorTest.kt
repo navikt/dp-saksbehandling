@@ -536,6 +536,65 @@ class UtsendingMediatorTest {
     }
 
     @Test
+    fun `Skal rulle tilbake opprettelse av utsending ved automatisk behandling når feil oppstår`() {
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                utløstAv = HendelseBehandler.DpBehandling.Søknad,
+                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
+                hendelse = TomHendelse,
+            )
+        val person = TestHelper.testPerson
+
+        DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
+            val behandlingId = behandling.behandlingId
+            val søknadId = UUIDv7.ny()
+            val sakId = DBTestHelper.dbSakId.toString()
+            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
+            val utsendingMediator =
+                UtsendingMediator(
+                    utsendingRepository = utsendingRepository,
+                    brevProdusent =
+                        mockk<UtsendingMediator.BrevProdusent>().also {
+                            coEvery {
+                                it.lagAutomatiskVedtakBrev(
+                                    ident = person.ident,
+                                    behandlingId = behandlingId,
+                                    sakId = sakId,
+                                )
+                            } throws RuntimeException("Simulert feil")
+                        },
+                    utboks = TestUtboks(rapid),
+                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
+                )
+
+            BehandlingsresultatMottakForAutomatiskVedtakUtsending(
+                rapidsConnection = rapid,
+                utsendingMediator = utsendingMediator,
+                sakRepository = PostgresSakRepository(DatabaseSession(ds)),
+            )
+
+            UtsendingBehovLøsningMottak(
+                utsendingMediator = utsendingMediator,
+                rapidsConnection = rapid,
+            )
+
+            shouldThrow<RuntimeException> {
+                rapid.sendTestMessage(
+                    behandlingsresultatEvent(
+                        ident = person.ident,
+                        behandlingId = behandling.behandlingId.toString(),
+                        behandletHendelseId = søknadId.toString(),
+                        automatiskBehandling = true,
+                    ),
+                )
+            }
+
+            utsendingRepository.finnUtsendingForBehandlingId(behandlingId) shouldBe null
+        }
+    }
+
+    @Test
     fun `Livssyklus for en utsending med brev ved opprettelse`() {
         val behandling =
             Behandling(
