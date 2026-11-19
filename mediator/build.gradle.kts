@@ -43,7 +43,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j")
 
     implementation("io.opentelemetry:opentelemetry-api:1.68.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.33.1")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.34.0")
 
     api("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
