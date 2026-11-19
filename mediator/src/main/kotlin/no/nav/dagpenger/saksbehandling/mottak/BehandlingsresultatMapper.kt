@@ -90,7 +90,7 @@ class BehandlingsresultatMapper(
                     opplysningNode
                         .get("perioder")
                         .firstOrNull {
-                            val fom = it.get("gyldigFraOgMed").asLocalDate()
+                            val fom = it.get("gyldigFraOgMed")?.asLocalDate() ?: LocalDate.MIN
                             val tom = it.get("gyldigTilOgMed")?.asLocalDate() ?: LocalDate.MAX
                             prøvingsdato in fom..tom
                         }?.get("verdi")
