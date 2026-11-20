@@ -13,7 +13,6 @@ db:
   highAvailability: false
   pointInTimeRecovery: false
   tier: db-custom-1-3840
-  type: POSTGRES_15
 
 ingresses: |
   ingresses:
