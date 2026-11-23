@@ -51,6 +51,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakekrevingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.innsending.emneknaggForSkjemaKode
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
@@ -87,7 +88,7 @@ class OppgaveMediator(
 
         val oppgave =
             Oppgave(
-                emneknagger = setOf(),
+                emneknagger = innsendingMottattHendelse.emneknaggForSkjemaKode(),
                 opprettet = innsendingMottattHendelse.registrertTidspunkt,
                 behandling = behandling,
                 person = person,

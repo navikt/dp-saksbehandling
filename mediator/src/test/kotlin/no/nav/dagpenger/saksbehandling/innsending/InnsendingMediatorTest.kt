@@ -88,7 +88,7 @@ class InnsendingMediatorTest {
             adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
             inhabileNavIdenter = emptyList(),
         )
-    private val skjemaKode = "NAVe"
+    private val skjemaKode = "XY"
     private val sakMediatorMock: SakMediator =
         mockk<SakMediator>(relaxed = true).also {
             coEvery { it.finnSisteDagpengeSakId(personMedSak.ident) } returns sakId
@@ -242,6 +242,7 @@ class InnsendingMediatorTest {
                     it.behandling.utløstAv == HendelseBehandler.Intern.Innsending
                 }
             innsendingOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+            innsendingOppgave.emneknagger shouldBe setOf("Faguttalelse")
             val innsending =
                 innsendingRepository.finnInnsendingerForPerson(ident = testPerson.ident).let { innsendinger ->
                     innsendinger.size shouldBe 1
