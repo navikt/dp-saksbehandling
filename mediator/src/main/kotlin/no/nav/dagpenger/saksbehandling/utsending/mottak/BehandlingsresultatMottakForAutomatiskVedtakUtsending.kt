@@ -21,7 +21,7 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
     override val mottakNavn: String = "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
 
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad")
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Arbeidssøkerperiode")
 
     override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_utsending_retry")
 
@@ -37,15 +37,23 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
         meterRegistry: MeterRegistry,
     ) {
         val sakId = sakRepository.hentSakIdForBehandlingId(behandlingsresultat.behandlingId).toString()
-        val vedtakFattetHendelse =
-            packet.vedtakFattetHendelse(
-                sak =
-                    UtsendingSak(
-                        id = sakId,
-                        kontekst = "Dagpenger",
-                    ),
-                behandlingsresultat = behandlingsresultat,
+
+        if (behandlingsresultat.behandletHendelseType == "Søknad" ||
+            (
+                behandlingsresultat.behandletHendelseType == "Arbeidssøkerperiode" &&
+                    behandlingsresultat.førteTil == "Stans"
             )
-        utsendingMediator.startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse = vedtakFattetHendelse)
+        ) {
+            val vedtakFattetHendelse =
+                packet.vedtakFattetHendelse(
+                    sak =
+                        UtsendingSak(
+                            id = sakId,
+                            kontekst = "Dagpenger",
+                        ),
+                    behandlingsresultat = behandlingsresultat,
+                )
+            utsendingMediator.startUtsendingForAutomatiskVedtakFattet(vedtakFattetHendelse = vedtakFattetHendelse)
+        }
     }
 }
