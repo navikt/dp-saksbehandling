@@ -451,8 +451,9 @@ class PostgresOppgaveRepository(
         finnOppgaveForBehandling(behandlingId)
             ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
-    override fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave? =
-        databaseSession.session { session ->
+    override fun finnOppgaveForBehandling(behandlingId: UUID): Oppgave? {
+        val behandlingId = map(behandlingId) ?: behandlingId
+        return databaseSession.session { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -468,6 +469,7 @@ class PostgresOppgaveRepository(
                 }.asSingle,
             )
         }
+    }
 
     override fun finnOppgaveForSøknad(
         ident: String,
