@@ -79,22 +79,6 @@ class PostgresUtsendingRepository(
         }
     }
 
-    override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean =
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT 1
-                        FROM   utsending_v1
-                        WHERE  behandling_id = :behandling_id
-                        """.trimIndent(),
-                    paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row -> row.intOrNull(1) }.asSingle,
-            ) != null
-        }
-
     override fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending =
         finnUtsendingForBehandlingId(behandlingId)
             ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")

@@ -130,8 +130,8 @@ finnes dermed ingen dual-write — publiseringen er en enkeltoperasjon uten
 forutgående DB-write å beskytte. `SakMediator` beholder `RapidsConnection` for
 `sendAlertTilRapid` (fire-and-forget-varsel).
 
-`context.publish(...)` i Mottak/Behovløsere (f.eks. `MeldingOmVedtakProdusentBehovløser`,
-`InnsendingBehovløser`, `BehandlingsresultatMottakForSak`) er **rapid-svar innen
+`context.publish(...)` i Mottak/Behovløsere (f.eks. `InnsendingBehovløser`,
+`BehandlingsresultatMottakForSak`) er **rapid-svar innen
 River-konteksten**, ikke dual-writes — disse skal ikke til utboksen.
 `AlertManager.RapidsConnection.sendAlertTilRapid` (brukt av AlarmJobs +
 SakMediator) er fire-and-forget-varsler, heller ikke utboks-kandidater.

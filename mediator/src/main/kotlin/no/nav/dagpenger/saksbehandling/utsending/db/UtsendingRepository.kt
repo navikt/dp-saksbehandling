@@ -11,8 +11,6 @@ interface UtsendingRepository {
         ctx: Transaksjonskontekst = IkkeAktiv,
     )
 
-    fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean
-
     fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending?
 
     fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending

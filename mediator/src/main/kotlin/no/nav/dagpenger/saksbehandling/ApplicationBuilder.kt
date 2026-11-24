@@ -54,7 +54,6 @@ import no.nav.dagpenger.saksbehandling.mottak.BehandlingTilGodkjenningMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.InnsendingBehovløser
-import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.SøknadBehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.SøknadsavklaringLøsningMottak
 import no.nav.dagpenger.saksbehandling.oppfolging.OppfølgingAlarmJob
@@ -329,7 +328,6 @@ internal class ApplicationBuilder(
                     sakRepository = sakRepository,
                     sakMediator = sakMediator,
                 )
-                MeldingOmVedtakProdusentBehovløser(rapid, utsendingMediator)
                 OversendtKlageinstansMottak(
                     rapidsConnection = rapid,
                     klageMediator = klageMediator,

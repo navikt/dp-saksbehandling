@@ -82,26 +82,6 @@ class PostgresUtsendingRepositoryTest {
     }
 
     @Test
-    fun `skal kunne finne ut om en utsending finnes eller ikke for oppgaveId og behandlingId`() {
-        withBehandling(behandling = behandling, person = testPerson) { ds ->
-            val repository = PostgresUtsendingRepository(DatabaseSession(ds))
-            val utsending =
-                Utsending(
-                    behandlingId = behandling.behandlingId,
-                    brev = "brev",
-                    utsendingSak = UtsendingSak("id", "fagsystem"),
-                    ident = testPerson.ident,
-                    distribusjonId = "distribusjonId",
-                )
-            repository.lagre(utsending)
-
-            repository.utsendingFinnesForBehandling(behandling.behandlingId) shouldBe true
-
-            repository.utsendingFinnesForBehandling(UUIDv7.ny()) shouldBe false
-        }
-    }
-
-    @Test
     fun `Skal ikke kunne lagre flere utsendinger for samme behandling`() {
         withBehandling(behandling = behandling) { ds ->
             val repository = PostgresUtsendingRepository(DatabaseSession(ds))

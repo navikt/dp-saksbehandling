@@ -100,7 +100,7 @@ Follow the `BehandlingAvbruttMottak` pattern (simplest example):
 
 #### Behov (Need/Solution Pattern)
 
-Mediators publish `behov` messages with `@behov` specifying what's needed. Behovløsere listen and add solutions. Common behov: `MeldingOmVedtakProdusent`, `Innsending`, `OversendKlageinstans`.
+Mediators publish `behov` messages with `@behov` specifying what's needed. Behovløsere listen and add solutions. Common behov: `Innsending`, `OversendKlageinstans`.
 
 #### Oppfølging Kafka Event
 
