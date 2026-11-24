@@ -12,7 +12,7 @@ dependencies {
     api(libs.dp.aktivitetslogg)
     implementation(libs.jackson.kotlin)
     implementation(libs.kotlin.logging)
-    implementation("de.slub-dresden:urnlib:3.0.0")
+    implementation("de.slub-dresden:urnlib:4.0.0")
     implementation("io.prometheus:prometheus-metrics-core:1.10.0")
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
     testImplementation(libs.bundles.kotest.assertions)

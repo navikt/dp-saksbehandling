@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging.jvm)
-    implementation("de.slub-dresden:urnlib:3.0.0")
+    implementation("de.slub-dresden:urnlib:4.0.0")
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j")
 
