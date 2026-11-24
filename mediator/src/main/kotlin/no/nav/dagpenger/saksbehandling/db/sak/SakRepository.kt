@@ -36,11 +36,6 @@ interface SakRepository {
         ctx: Transaksjonskontekst = IkkeAktiv,
     )
 
-    fun settArenaSakId(
-        sakId: UUID,
-        arenaSakId: String,
-    )
-
     fun merkSakenSomDpSak(
         sakId: UUID,
         erDpSak: Boolean,

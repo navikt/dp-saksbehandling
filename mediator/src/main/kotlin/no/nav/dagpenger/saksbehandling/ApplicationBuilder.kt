@@ -48,7 +48,6 @@ import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtsendingDistribuertMottakForKlage
 import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
-import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingTilGodkjenningMottak
@@ -328,12 +327,6 @@ internal class ApplicationBuilder(
                 BehandlingsresultatMottakForSak(
                     rapidsConnection = rapid,
                     sakRepository = sakRepository,
-                    sakMediator = sakMediator,
-                )
-                ArenaSinkVedtakOpprettetMottak(
-                    rapidsConnection = rapid,
-                    personRepository = personRepository,
-                    utsendingMediator = utsendingMediator,
                     sakMediator = sakMediator,
                 )
                 MeldingOmVedtakProdusentBehovløser(rapid, utsendingMediator)

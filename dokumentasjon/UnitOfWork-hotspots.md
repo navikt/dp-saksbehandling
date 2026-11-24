@@ -112,9 +112,9 @@ Ikke en enkel dual-write, men en **denormaliserende ETL-projeksjon med ordnet cu
 - High-water mark cursor: `log.id > coalesce(max(overført), seed)`, `ORDER BY log.id`.
 - Jobben publiserer hver rad til rapid og flipper `overfort_til_statistikk = TRUE` etterpå.
 
-**Polling-forsinkelsen er load-bearing**: `fagsystem`/`arena_sak_id`/`resultat_type` settes
-av *senere* events (`merkSakenSomDpSak`, `oppdaterSakMedArenaSakId`), så projeksjonen må skje
-etter at downstream-fakta har satt seg — ikke ved tilstands-skrivetidspunkt.
+**Polling-forsinkelsen er viktig**: `fagsystem`/`resultat_type` settes av et senere event
+(`merkSakenSomDpSak`), så projeksjonen må skje etter at disse faktaene har satt seg, ikke ved
+tilstandsskrivetidspunktet. `arena_sak_id` er med for historiske saker.
 
 ### Reell svakhet i dagens kode
 

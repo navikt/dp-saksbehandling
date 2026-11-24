@@ -196,20 +196,6 @@ class SakMediator(
             sakRepository.lagre(it, ctx)
         }
 
-    fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
-        val sak = vedtakFattetHendelse.sak
-        require(sak != null) { "VedtakFattetHendelse må ha en sak" }
-
-        if (sak.kontekst == "Arena") {
-            sakRepository.hentSakIdForBehandlingId(vedtakFattetHendelse.behandlingId).let { sakId ->
-                sakRepository.settArenaSakId(
-                    sakId = sakId,
-                    arenaSakId = sak.id,
-                )
-            }
-        }
-    }
-
     fun merkSakenSomDpSak(vedtakFattetHendelse: VedtakFattetHendelse) {
         sakRepository.hentSakIdForBehandlingId(vedtakFattetHendelse.behandlingId).let { sakId ->
             sakRepository.merkSakenSomDpSak(

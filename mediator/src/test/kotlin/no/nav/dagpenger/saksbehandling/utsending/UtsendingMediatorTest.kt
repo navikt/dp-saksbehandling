@@ -21,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.DatabaseSession
 import no.nav.dagpenger.saksbehandling.db.Transaksjoner
 import no.nav.dagpenger.saksbehandling.db.Transaksjonskontekst
-import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.behandlingsresultatEvent
@@ -29,8 +28,6 @@ import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
-import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utboks.TestUtboks
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
@@ -202,174 +199,6 @@ class UtsendingMediatorTest {
                   ],
                   "journalpostId": "${utsending.journalpostId()}",
                   "fagsystem": "${utsendingSak.kontekst}"
-                }
-                """.trimIndent()
-
-            val distribusjonId = "distribusjonId"
-            rapid.sendTestMessage(
-                distribuertDokumentBehovLøsning(
-                    behandlingId = behandlingId,
-                    journalpostId = journalpostId,
-                    distribusjonId = distribusjonId,
-                ),
-            )
-            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
-            utsending.tilstand().type shouldBe Distribuert
-            utsending.distribusjonId() shouldBe distribusjonId
-        }
-    }
-
-    @Test
-    fun `livssyklus for en utsending uten brev ved opprettelse når vedtak fattes i Arena`() {
-        val behandling =
-            Behandling(
-                behandlingId = UUIDv7.ny(),
-                utløstAv = HendelseBehandler.DpBehandling.Søknad,
-                opprettet = LocalDateTime.of(2026, 7, 2, 14, 32, 1).truncatedTo(ChronoUnit.SECONDS),
-                hendelse = TomHendelse,
-            )
-        val person = TestHelper.testPerson
-
-        DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
-            val behandlingId = behandling.behandlingId
-            val utsendingSak = UtsendingSak("123", "Arena")
-            val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-
-            val utsendingRepository = PostgresUtsendingRepository(DatabaseSession(ds))
-            val utsendingMediator =
-                UtsendingMediator(
-                    utsendingRepository = utsendingRepository,
-                    brevProdusent =
-                        mockk<UtsendingMediator.BrevProdusent>().also {
-                            coEvery { it.lagBrev(person.ident, behandlingId, utsendingSak.id) } returns htmlBrev
-                        },
-                    utboks = TestUtboks(rapid),
-                    transaksjoner = Transaksjoner(DatabaseSession(ds)),
-                )
-
-            val mockSakMediator =
-                mockk<SakMediator>().also {
-                    every { it.oppdaterSakMedArenaSakId(any()) } just Runs
-                }
-            ArenaSinkVedtakOpprettetMottak(
-                rapidsConnection = rapid,
-                utsendingMediator = utsendingMediator,
-                personRepository = PostgresPersonRepository(DatabaseSession(ds)),
-                sakMediator = mockSakMediator,
-            )
-
-            UtsendingBehovLøsningMottak(
-                utsendingMediator = utsendingMediator,
-                rapidsConnection = rapid,
-            )
-
-            utsendingMediator.opprettUtsending(
-                behandlingId = behandlingId,
-                brev = null,
-                ident = person.ident,
-                type = UtsendingType.KLAGE_OVERSENDELSE,
-            )
-
-            var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
-            utsending.behandlingId shouldBe behandlingId
-            utsending.tilstand().type shouldBe VenterPåVedtak
-            utsending.brev() shouldBe null
-
-            //language=JSON
-            rapid.sendTestMessage(
-                message =
-                    """
-                    {
-                      "@event_name": "arenasink_vedtak_opprettet",
-                      "søknadId": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
-                      "sakId": ${utsendingSak.id},
-                      "rettighet": "Dagpenger",
-                      "vedtakId": 0,
-                      "vedtakstatus": "IVERK",
-                      "utfall": false,
-                      "kilde": {
-                        "id": "$behandlingId",
-                        "system": "dp-behandling"
-                      }
-                    }
-                              
-                    """.trimIndent(),
-            )
-
-            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
-            utsending.sak() shouldBe utsendingSak
-            utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
-
-            rapid.inspektør.size shouldBe 1
-            val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
-            rapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                   "@event_name": "behov",
-                   "@behov": [
-                     "${ArkiverbartBrevBehov.BEHOV_NAVN}"
-                   ],
-                   "htmlBase64": "$htmlBrevAsBase64",
-                   "dokumentNavn": "vedtak.pdf",
-                   "kontekst": "behandling/$behandlingId",
-                   "ident": "${person.ident}",
-                   "sak": {
-                      "id": "${utsendingSak.id}",
-                      "kontekst": "${utsendingSak.kontekst}"
-                  }
-                }
-                """.trimIndent()
-
-            val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(
-                arkiverbartDokumentBehovLøsning(
-                    behandlingId = behandlingId,
-                    pdfUrnString = pdfUrnString,
-                ),
-            )
-
-            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
-            utsending.tilstand().type shouldBe AvventerJournalføring
-            utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
-            rapid.inspektør.size shouldBe 2
-            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                  "@event_name": "behov",
-                  "@behov": [
-                    "${JournalføringBehov.BEHOV_NAVN}"
-                  ],
-                  "tittel" : "${UtsendingType.KLAGE_OVERSENDELSE.brevTittel}",
-                  "skjemaKode" : "${UtsendingType.KLAGE_OVERSENDELSE.skjemaKode}",
-                  "ident": "${person.ident}",
-                  "pdfUrn": "$pdfUrnString",
-                  "sak": {
-                    "id": "${utsendingSak.id}",
-                    "kontekst": "${utsendingSak.kontekst}"
-                  }
-                }
-                """.trimIndent()
-
-            val journalpostId = "123"
-            rapid.sendTestMessage(journalføringBehovLøsning(behandlingId = behandlingId, journalpostId = journalpostId))
-
-            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
-            utsending.tilstand().type shouldBe AvventerDistribuering
-            utsending.journalpostId() shouldBe journalpostId
-            rapid.inspektør.size shouldBe 3
-            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                  "@event_name": "behov",
-                  "@behov": [
-                    "${DistribueringBehov.BEHOV_NAVN}"
-                  ],
-                  "journalpostId": "${utsending.journalpostId()}",
-                  "fagsystem": "${utsendingSak.kontekst}"
-                  
                 }
                 """.trimIndent()
 

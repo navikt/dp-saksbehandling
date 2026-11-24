@@ -352,30 +352,6 @@ class PostgresSakRepository(
         }
     }
 
-    override fun settArenaSakId(
-        sakId: UUID,
-        arenaSakId: String,
-    ) {
-        databaseSession.session { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        UPDATE sak_v2
-                        SET arena_sak_id = :arena_sak_id
-                        WHERE id = :sak_id
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "sak_id" to sakId,
-                            "arena_sak_id" to arenaSakId,
-                        ),
-                ).asUpdate,
-            )
-        }
-    }
-
     override fun merkSakenSomDpSak(
         sakId: UUID,
         erDpSak: Boolean,
