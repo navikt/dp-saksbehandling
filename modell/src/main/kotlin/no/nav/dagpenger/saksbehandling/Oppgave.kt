@@ -320,6 +320,7 @@ data class Oppgave private constructor(
     }
 
     fun avbryt(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
+        behandlingAvbruttHendelse.årsak?.let { this._emneknagger.add(it) }
         tilstand.avbryt(this, behandlingAvbruttHendelse)
     }
 

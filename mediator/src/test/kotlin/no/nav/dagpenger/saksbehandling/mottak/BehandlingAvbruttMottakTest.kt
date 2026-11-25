@@ -41,6 +41,7 @@ class BehandlingAvbruttMottakTest {
                             behandletHendelseId = behandletHendelseId.toString(),
                             behandletHendelseType = hendelseType,
                             ident = ident,
+                            årsak = "Test årsak",
                         ),
                     )
                 }
@@ -54,6 +55,7 @@ class BehandlingAvbruttMottakTest {
                             behandletHendelseId = behandletHendelseId.toString(),
                             behandletHendelseType = hendelseType,
                             ident = ident,
+                            årsak = "Test årsak",
                         ),
                     )
                 }
@@ -68,6 +70,7 @@ class BehandlingAvbruttMottakTest {
           "@event_name": "behandling_avbrutt",
           "ident": "$ident",
           "behandlingId": "$behandlingId",
+          "årsak": "Test årsak",
           "gjelderDato": "2024-04-09",
           "fagsakId": "0",
           "behandletHendelse": {
