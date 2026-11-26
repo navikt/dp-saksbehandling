@@ -23,7 +23,7 @@ class ForslagTilBehandlingsresultatMottakTest {
         val slots = mutableListOf<ForslagTilVedtakHendelse>()
         val oppgaveMediator =
             mockk<OppgaveMediator>().also {
-                every { it.opprettEllerOppdaterOppgave(capture(slots)) }
+                every { it.opprettEllerOppdaterOppgave(capture(slots)) } returns null
             }
         ForslagTilBehandlingsresultatMottak(testRapid, oppgaveMediator)
 
