@@ -46,7 +46,7 @@ import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
 import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtsendingDistribuertMottakForKlage
-import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
+import no.nav.dagpenger.saksbehandling.meldekort.DpMeldekortKlient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
@@ -130,10 +130,10 @@ internal class ApplicationBuilder(
                         dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
                         tokenProvider = Configuration.dpBehandlingOboExchanger,
                     )
-                val meldekortregisterKlient =
-                    MeldekortregisterKlient(
-                        meldekortRegisterUrl = Configuration.meldekortregisterApiUrl,
-                        tokenProvider = Configuration.meldekortregisterTokenProvider,
+                val dpMeldekortKlient =
+                    DpMeldekortKlient(
+                        dpMeldekortApiUrl = Configuration.dpMeldekortApiUrl,
+                        tokenProvider = Configuration.dpMeldekortTokenProvider,
                     )
                 val meldingOmVedtakKlient =
                     MeldingOmVedtakKlient(
@@ -199,7 +199,7 @@ internal class ApplicationBuilder(
                         sakMediator = sakMediator,
                         utboks = utboks,
                         transaksjoner = Transaksjoner(databaseSession),
-                        meldekortregisterKlient = meldekortregisterKlient,
+                        dpMeldekortKlient = dpMeldekortKlient,
                     )
                 val tilbakekrevingMediator =
                     TilbakekrevingMediator(

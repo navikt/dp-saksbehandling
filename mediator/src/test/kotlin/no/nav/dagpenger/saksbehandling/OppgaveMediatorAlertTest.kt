@@ -62,7 +62,7 @@ class OppgaveMediatorAlertTest {
                 },
             utboks = TestUtboks(rapid),
             transaksjoner = kjørendeTransaksjoner(),
-            meldekortregisterKlient = mockk(relaxed = true),
+            dpMeldekortKlient = mockk(relaxed = true),
         ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1
@@ -134,7 +134,7 @@ class OppgaveMediatorAlertTest {
                 },
             utboks = TestUtboks(rapid),
             transaksjoner = kjørendeTransaksjoner(),
-            meldekortregisterKlient = mockk(relaxed = true),
+            dpMeldekortKlient = mockk(relaxed = true),
         ).let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 1

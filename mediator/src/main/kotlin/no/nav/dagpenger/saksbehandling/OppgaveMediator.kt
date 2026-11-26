@@ -53,8 +53,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.innsending.emneknaggForSkjemaKode
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
-import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
-import no.nav.dagpenger.saksbehandling.meldekortregister.MeldekortregisterKlient
+import no.nav.dagpenger.saksbehandling.meldekort.BrukerHarEndretMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekort.DpMeldekortKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utboks.Utboks
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -74,7 +74,7 @@ class OppgaveMediator(
     private val sakMediator: SakMediator,
     private val utboks: Utboks,
     private val transaksjoner: Transaksjoner,
-    private val meldekortregisterKlient: MeldekortregisterKlient,
+    private val dpMeldekortKlient: DpMeldekortKlient,
 ) {
     fun lagOppgaveForInnsendingBehandling(
         innsendingMottattHendelse: InnsendingMottattHendelse,
@@ -954,7 +954,7 @@ class OppgaveMediator(
 
     private suspend fun feilVedAvvikendeMeldesyklus(oppgave: Oppgave) {
         oppgave.søknadId()?.let { søknadId ->
-            if (meldekortregisterKlient
+            if (dpMeldekortKlient
                     .harMeldekortMedEndretMeldesyklus(
                         ident = oppgave.personIdent(),
                         søknadId = søknadId,
