@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.innsending
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.server.auth.ApplicationCallPredicate
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.HendelseBehandler
 import no.nav.dagpenger.saksbehandling.KlageMediator
@@ -41,7 +40,6 @@ class InnsendingMediator(
     private val innsendingBehandler: InnsendingBehandler,
     private val transaksjoner: Transaksjoner,
     private val rapidsConnection: RapidsConnection,
-
 ) {
     fun taImotInnsending(hendelse: InnsendingMottattHendelse): HåndterInnsendingResultat {
         val sisteSakId = sakMediator.finnSisteDagpengeSakId(hendelse.ident)
@@ -154,21 +152,25 @@ class InnsendingMediator(
         oppgaveMediator.ferdigstillOppgave(innsendingFerdigstiltHendelse)
         innsendingRepository.lagre(innsending)
         publiserInnsendingFerdigstiltHendelse(hendelse, innsending)
-
     }
 
-    private fun publiserInnsendingFerdigstiltHendelse(hendelse: FerdigstillInnsendingHendelse, innsending: Innsending) {
+    private fun publiserInnsendingFerdigstiltHendelse(
+        hendelse: FerdigstillInnsendingHendelse,
+        innsending: Innsending,
+    ) {
         val valgtSakId = hendelse.valgtSakId()
         if (valgtSakId != null) {
             rapidsConnection.publish(
-                innsending.person.ident, JsonMessage.newMessage(
-                    mapOf(
-                        "@event_name" to "valgt_sak_id_for_innsending",
-                        "behandlingId" to innsending.innsendingId,
-                        "journalpostId" to innsending.journalpostId,
-                        "valgtSakId" to valgtSakId,
-                    )
-                ).toJson()
+                innsending.person.ident,
+                JsonMessage
+                    .newMessage(
+                        mapOf(
+                            "@event_name" to "valgt_sak_id_for_innsending",
+                            "behandlingId" to innsending.innsendingId,
+                            "journalpostId" to innsending.journalpostId,
+                            "valgtSakId" to valgtSakId,
+                        ),
+                    ).toJson(),
             )
         }
     }

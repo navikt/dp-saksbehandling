@@ -1,8 +1,8 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.assertions.fail
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.Runs
@@ -53,12 +53,12 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class InnsendingMediatorTest {
-
     private val rapidsConnection = TestRapid()
     private val testPerson = DBTestHelper.dbTestPerson
     private val søkefilterTestperson =
@@ -113,6 +113,11 @@ class InnsendingMediatorTest {
             every { it.finnEllerOpprettPerson(testPerson.ident) } returns testPerson
             every { it.erNødbremset(testPerson.ident) } returns false
         }
+
+    @BeforeEach
+    fun setup() {
+        rapidsConnection.reset()
+    }
 
     @Test
     fun `Skal lage innsending, oppgave og behandling knyttet til siste sak vi eier`() {
@@ -207,7 +212,7 @@ class InnsendingMediatorTest {
                                 )
                         },
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
 
             sakMediator.merkSakenSomDpSak(
@@ -280,12 +285,12 @@ class InnsendingMediatorTest {
                                 )
                         },
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 ).ferdigstill(
                     hendelse =
                         FerdigstillInnsendingHendelse(
                             innsendingId = innsendingOppgave.behandling.behandlingId,
-                            aksjon = Aksjon.Avslutt(sak.sakId),
+                            aksjon = Aksjon.Avslutt(null),
                             vurdering = "Vurderingstekst",
                             utførtAv = saksbehandler,
                         ),
@@ -298,8 +303,10 @@ class InnsendingMediatorTest {
 
             innsendingMediator.hentInnsending(innsending.innsendingId, saksbehandler).let { innsending ->
                 innsending.innsendingResultat() shouldBe Innsending.InnsendingResultat.Ingen
-                innsending.valgtSakId() shouldBe sak.sakId
+                innsending.valgtSakId() shouldBe null
             }
+
+            rapidsConnection.inspektør.size shouldBe 0
         }
     }
 
@@ -408,7 +415,7 @@ class InnsendingMediatorTest {
                                 )
                         },
                     transaksjoner = transaksjoner,
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
             sakMediator.merkSakenSomDpSak(
                 vedtakFattetHendelse =
@@ -513,7 +520,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
 
             val innsendingMottattHendelse =
@@ -607,7 +614,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = mockk(relaxed = true),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
 
             val innsendingMottattHendelse =
@@ -648,7 +655,7 @@ class InnsendingMediatorTest {
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
                 transaksjoner = mockk(relaxed = true),
-                rapidsConnection = rapidsConnection
+                rapidsConnection = rapidsConnection,
             )
 
         val innsendingMottattHendelse =
@@ -696,7 +703,7 @@ class InnsendingMediatorTest {
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
                 transaksjoner = mockk(relaxed = true),
-                rapidsConnection = rapidsConnection
+                rapidsConnection = rapidsConnection,
             )
 
         val innsendingMottattHendelse =
@@ -787,7 +794,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -855,6 +862,8 @@ class InnsendingMediatorTest {
                 opprettet = DBTestHelper.dbOpprettetNå,
                 behandlinger = mutableSetOf(),
             )
+
+        val valgtSakId = sak.sakId
         DBTestHelper.withMigratedDb {
             val behandling =
                 Behandling(
@@ -919,7 +928,7 @@ class InnsendingMediatorTest {
                             oppfølgingMediator = mockk(),
                         ),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -962,7 +971,7 @@ class InnsendingMediatorTest {
                             innsendingId = innsendingOppgave.behandling.behandlingId,
                             aksjon =
                                 Aksjon.OpprettRevurderingBehandling(
-                                    valgtSakId = sak.sakId,
+                                    valgtSakId = valgtSakId,
                                     saksbehandlerToken = "token",
                                 ),
                             vurdering = "Vurderingstekst",
@@ -992,6 +1001,18 @@ class InnsendingMediatorTest {
                     opprettetBehandlingId = behandlingIdRevurdering,
                     utførtAv = saksbehandler,
                 )
+            rapidsConnection.inspektør.size shouldBe 1
+            //language=Json
+            rapidsConnection.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+                """
+                {
+                        "@event_name": "valgt_sak_id_for_innsending",
+                        "behandlingId": "${innsending.innsendingId}",
+                        "journalpostId": "${innsending.journalpostId}",
+                        "valgtSakId": "$valgtSakId"
+                   
+                }
+                """.trimIndent()
         }
     }
 
@@ -1073,7 +1094,7 @@ class InnsendingMediatorTest {
                             oppfølgingMediator = mockk(),
                         ),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -1146,6 +1167,18 @@ class InnsendingMediatorTest {
                     opprettetBehandlingId = behandlingIdManuell,
                     utførtAv = saksbehandler,
                 )
+            rapidsConnection.inspektør.size shouldBe 1
+            //language=Json
+            rapidsConnection.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+                """
+                {
+                        "@event_name": "valgt_sak_id_for_innsending",
+                        "behandlingId": "${innsending.innsendingId}",
+                        "journalpostId": "${innsending.journalpostId}",
+                        "valgtSakId": "${sak.sakId}"
+                   
+                }
+                """.trimIndent()
         }
     }
 
@@ -1206,7 +1239,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
 
             runCatching {
@@ -1290,7 +1323,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
 
             runCatching {
@@ -1380,7 +1413,7 @@ class InnsendingMediatorTest {
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = mockk(),
                 transaksjoner = Transaksjoner(databaseSession),
-                rapidsConnection = rapidsConnection
+                rapidsConnection = rapidsConnection,
             ).taImotInnsending(
                 InnsendingMottattHendelse(
                     ident = testPerson.ident,
@@ -1409,7 +1442,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
-                    rapidsConnection = rapidsConnection
+                    rapidsConnection = rapidsConnection,
                 )
 
             runCatching {

@@ -2201,6 +2201,7 @@ OppgaveMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = mockk(relaxed = true),
                 )
             sakMediator.merkSakenSomDpSak(
                 vedtakFattetHendelse =
