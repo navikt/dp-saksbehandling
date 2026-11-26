@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling.innsending
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -56,6 +58,8 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class InnsendingMediatorTest {
+
+    private val rapidsConnection = TestRapid()
     private val testPerson = DBTestHelper.dbTestPerson
     private val søkefilterTestperson =
         Søkefilter(
@@ -203,6 +207,7 @@ class InnsendingMediatorTest {
                                 )
                         },
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = rapidsConnection
                 )
 
             sakMediator.merkSakenSomDpSak(
@@ -275,6 +280,7 @@ class InnsendingMediatorTest {
                                 )
                         },
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = rapidsConnection
                 ).ferdigstill(
                     hendelse =
                         FerdigstillInnsendingHendelse(
@@ -402,6 +408,7 @@ class InnsendingMediatorTest {
                                 )
                         },
                     transaksjoner = transaksjoner,
+                    rapidsConnection = rapidsConnection
                 )
             sakMediator.merkSakenSomDpSak(
                 vedtakFattetHendelse =
@@ -506,6 +513,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = rapidsConnection
                 )
 
             val innsendingMottattHendelse =
@@ -599,6 +607,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = mockk(relaxed = true),
+                    rapidsConnection = rapidsConnection
                 )
 
             val innsendingMottattHendelse =
@@ -639,6 +648,7 @@ class InnsendingMediatorTest {
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
                 transaksjoner = mockk(relaxed = true),
+                rapidsConnection = rapidsConnection
             )
 
         val innsendingMottattHendelse =
@@ -686,6 +696,7 @@ class InnsendingMediatorTest {
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = innsendingBehandler,
                 transaksjoner = mockk(relaxed = true),
+                rapidsConnection = rapidsConnection
             )
 
         val innsendingMottattHendelse =
@@ -776,6 +787,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = rapidsConnection
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -907,6 +919,7 @@ class InnsendingMediatorTest {
                             oppfølgingMediator = mockk(),
                         ),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = rapidsConnection
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -1060,6 +1073,7 @@ class InnsendingMediatorTest {
                             oppfølgingMediator = mockk(),
                         ),
                     transaksjoner = Transaksjoner(DatabaseSession(it)),
+                    rapidsConnection = rapidsConnection
                 )
             val innsendingMottattHendelse =
                 InnsendingMottattHendelse(
@@ -1192,6 +1206,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
+                    rapidsConnection = rapidsConnection
                 )
 
             runCatching {
@@ -1275,6 +1290,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
+                    rapidsConnection = rapidsConnection
                 )
 
             runCatching {
@@ -1364,6 +1380,7 @@ class InnsendingMediatorTest {
                 innsendingRepository = innsendingRepository,
                 innsendingBehandler = mockk(),
                 transaksjoner = Transaksjoner(databaseSession),
+                rapidsConnection = rapidsConnection
             ).taImotInnsending(
                 InnsendingMottattHendelse(
                     ident = testPerson.ident,
@@ -1392,6 +1409,7 @@ class InnsendingMediatorTest {
                     innsendingRepository = innsendingRepository,
                     innsendingBehandler = mockk(),
                     transaksjoner = Transaksjoner(databaseSession),
+                    rapidsConnection = rapidsConnection
                 )
 
             runCatching {

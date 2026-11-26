@@ -246,6 +246,7 @@ internal class ApplicationBuilder(
                                 oppfølgingMediator = oppfølgingMediator,
                             ),
                         transaksjoner = Transaksjoner(databaseSession),
+                        rapidsConnection = rapid,
                     )
 
                 server.application.installerApis(
