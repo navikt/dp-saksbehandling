@@ -48,11 +48,7 @@ internal class ForslagTilBehandlingsresultatMottak(
     ) {
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-        val skipBehandlingSet = setOf<UUID>(UUID.fromString("01a10e83-19f3-70e0-9fac-7a1aa035d3af"))
-        if (behandlingId in skipBehandlingSet) {
-            logger.info { "Skipper behandlingId: $behandlingId fra BehandlingAvbruttMottak" }
-            return
-        }
+
         withLoggingContext("Id" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_behandlingsresultat hendelse" }
             val ident = packet["ident"].asText()
@@ -70,6 +66,7 @@ internal class ForslagTilBehandlingsresultatMottak(
                 oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
             }.onFailure {
                 logger.error(it) { "Feil ved håndtering av forslag_til_behandlingsresultat hendelse" }
+                throw it
             }
         }
     }

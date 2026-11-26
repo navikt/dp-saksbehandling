@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -39,6 +40,18 @@ class ForslagTilBehandlingsresultatMottakTest {
         slots.single { it.behandletHendelseType == "Søknad" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
         slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe emptySet()
         slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe emptySet()
+    }
+
+    @Test
+    fun `Skal kaste onPacket exceptions videre `() {
+        val oppgaveMediator =
+            mockk<OppgaveMediator>().also {
+                every { it.opprettEllerOppdaterOppgave(any()) } throws RuntimeException("Simulert feil")
+            }
+        ForslagTilBehandlingsresultatMottak(testRapid, oppgaveMediator)
+        shouldThrow<RuntimeException> {
+            testRapid.sendTestMessage(testMessage(behandletHendelseType = "Søknad"))
+        }
     }
 
     private fun testMessage(behandletHendelseType: String): String {
