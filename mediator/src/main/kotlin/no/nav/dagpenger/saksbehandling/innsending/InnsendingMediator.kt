@@ -169,6 +169,7 @@ class InnsendingMediator(
                             "behandlingId" to innsending.innsendingId,
                             "journalpostId" to innsending.journalpostId,
                             "valgtSakId" to valgtSakId,
+                            "ident" to innsending.person.ident,
                         ),
                     ).toJson(),
             )

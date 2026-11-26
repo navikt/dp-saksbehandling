@@ -1009,7 +1009,8 @@ class InnsendingMediatorTest {
                         "@event_name": "valgt_sak_id_for_innsending",
                         "behandlingId": "${innsending.innsendingId}",
                         "journalpostId": "${innsending.journalpostId}",
-                        "valgtSakId": "$valgtSakId"
+                        "valgtSakId": "$valgtSakId",
+                        "ident": "${innsending.person.ident}"
                    
                 }
                 """.trimIndent()
@@ -1175,7 +1176,8 @@ class InnsendingMediatorTest {
                         "@event_name": "valgt_sak_id_for_innsending",
                         "behandlingId": "${innsending.innsendingId}",
                         "journalpostId": "${innsending.journalpostId}",
-                        "valgtSakId": "${sak.sakId}"
+                        "valgtSakId": "${sak.sakId}",
+                        "ident": "${innsending.person.ident}"
                    
                 }
                 """.trimIndent()
