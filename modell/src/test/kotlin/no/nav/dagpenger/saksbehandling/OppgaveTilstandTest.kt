@@ -319,6 +319,7 @@ class OppgaveTilstandTest {
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
+                        årsak = "Orker ikke, gidder ikke",
                     ),
                 )
             }
@@ -327,6 +328,7 @@ class OppgaveTilstandTest {
                 AVBRUTT_MASKINELT -> oppgave.tilstand().type shouldBe AVBRUTT_MASKINELT
                 else -> oppgave.tilstand().type shouldBe AVBRUTT
             }
+            oppgave.emneknagger shouldBe setOf("Orker ikke, gidder ikke")
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->

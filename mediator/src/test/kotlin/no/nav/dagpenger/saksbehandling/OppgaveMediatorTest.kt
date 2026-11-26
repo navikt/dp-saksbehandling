@@ -1492,10 +1492,14 @@ OppgaveMediatorTest {
                     behandletHendelseId = oppgave.søknadId()!!.toString(),
                     behandletHendelseType = "Søknad",
                     ident = testIdent,
+                    årsak = "Hubba bubba",
                 ),
             )
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe AVBRUTT
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).let {
+                it.tilstand().type shouldBe AVBRUTT
+                it.emneknagger shouldContain "Hubba bubba"
+            }
         }
     }
 

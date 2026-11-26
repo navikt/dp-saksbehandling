@@ -11,6 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.serder.asUUID
+import no.nav.dagpenger.saksbehandling.serder.textOrNull
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -26,7 +27,7 @@ internal class BehandlingAvbruttMottak(
                 it.requireValue("@event_name", "behandling_avbrutt")
             }
             validate { it.requireKey("ident", "behandlingId") }
-            validate { it.interestedIn("behandletHendelse") }
+            validate { it.interestedIn("behandletHendelse", "årsak") }
         }
     }
 
@@ -40,7 +41,7 @@ internal class BehandlingAvbruttMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
+        val behandletHendelseId = packet["behandletHendelse"]["id"].stringValue()
         val behandlingId = packet["behandlingId"].asUUID()
 
         val skipBehandlingSet = setOf<UUID>(UUID.fromString("01a10e83-19f3-70e0-9fac-7a1aa035d3af"))
@@ -51,12 +52,14 @@ internal class BehandlingAvbruttMottak(
 
         withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_avbrutt hendelse" }
+
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
                     behandletHendelseId = behandletHendelseId,
-                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
-                    ident = packet["ident"].asText(),
+                    behandletHendelseType = packet["behandletHendelse"]["type"].stringValue(),
+                    ident = packet["ident"].stringValue(),
+                    årsak = packet["årsak"].textOrNull(),
                 ),
             )
         }
