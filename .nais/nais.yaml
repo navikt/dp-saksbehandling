@@ -79,10 +79,10 @@ spec:
       value: "{{ dp-behandling.scope }}"
     - name: DP_MELDING_OM_VEDTAK_API_SCOPE
       value: "{{ dp-melding-om-vedtak.scope }}"
-    - name: DP_MELDEKORTREGISTER_API_URL
-      value: "{{ dp-meldekortregister.url }}"
-    - name: DP_MELDEKORTREGISTER_API_SCOPE
-      value: "{{ dp-meldekortregister.scope }}"
+    - name: DP_MELDEKORT_API_URL
+      value: "{{ dp-meldekort.url }}"
+    - name: DP_MELDEKORT_API_SCOPE
+      value: "{{ dp-meldekort.scope }}"
 
   azure:
     application:
@@ -117,7 +117,6 @@ spec:
         - application: dp-behandling
         - application: dp-melding-om-vedtak
         - application: dp-mottak
-        - application: dp-meldekortregister
         - application: dp-meldekort
         - application: skjermede-personer-pip
           namespace: nom

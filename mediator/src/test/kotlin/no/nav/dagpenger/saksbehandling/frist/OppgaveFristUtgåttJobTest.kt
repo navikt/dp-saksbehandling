@@ -51,7 +51,7 @@ class OppgaveFristUtgåttJobTest {
                     sakMediator = mockk(),
                     utboks = mockk(relaxed = true),
                     transaksjoner = Transaksjoner(DatabaseSession(ds)),
-                    meldekortregisterKlient = mockk(relaxed = true),
+                    dpMeldekortKlient = mockk(relaxed = true),
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"

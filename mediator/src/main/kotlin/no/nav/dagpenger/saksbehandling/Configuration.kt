@@ -46,9 +46,9 @@ object Configuration {
                 "PDL_AKTOR_TOPIC" to "pdl.aktor-v2",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
-                "DP_MELDEKORTREGISTER_API_URL" to
-                    "http://dp-meldekortregister/har-bruker-meldekort-med-endret-meldesyklus-i-arena",
-                "DP_MELDEKORTREGISTER_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekortregister/.default",
+                "DP_MELDEKORT_API_URL" to
+                    "http://dp-meldekort/har-bruker-meldekort-med-endret-meldesyklus-i-arena",
+                "DP_MELDEKORT_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-meldekort/.default",
             ),
         )
     val properties =
@@ -74,9 +74,9 @@ object Configuration {
     val pdlAktorTopic: String = properties[Key("PDL_AKTOR_TOPIC", stringType)]
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
 
-    val meldekortregisterApiUrl: String = properties[Key("DP_MELDEKORTREGISTER_API_URL", stringType)]
-    val meldekortregisterApiScope: String = properties[Key("DP_MELDEKORTREGISTER_API_SCOPE", stringType)]
-    val meldekortregisterTokenProvider = { clientCredentialsTokenProvider(meldekortregisterApiScope) }
+    val dpMeldekortApiUrl: String = properties[Key("DP_MELDEKORT_API_URL", stringType)]
+    val dpMeldekortApiScope: String = properties[Key("DP_MELDEKORT_API_SCOPE", stringType)]
+    val dpMeldekortTokenProvider = { clientCredentialsTokenProvider(dpMeldekortApiScope) }
 
     private val clientCredentialsTokenProvider = { scope: String ->
         azureAdClient.clientCredentials(scope).access_token

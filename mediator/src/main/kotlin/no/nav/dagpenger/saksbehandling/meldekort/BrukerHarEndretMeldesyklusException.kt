@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.meldekortregister
+package no.nav.dagpenger.saksbehandling.meldekort
 
 import java.util.UUID
 

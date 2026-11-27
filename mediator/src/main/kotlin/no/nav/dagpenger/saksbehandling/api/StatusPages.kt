@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.meldekortregister.BrukerHarEndretMeldesyklusException
+import no.nav.dagpenger.saksbehandling.meldekort.BrukerHarEndretMeldesyklusException
 import no.nav.dagpenger.saksbehandling.oppfolging.Oppfølging
 import no.nav.dagpenger.saksbehandling.sak.NødbremsetPersonException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper

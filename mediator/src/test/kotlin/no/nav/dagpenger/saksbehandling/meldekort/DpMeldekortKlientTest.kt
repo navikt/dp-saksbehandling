@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.meldekortregister
+package no.nav.dagpenger.saksbehandling.meldekort
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
@@ -16,9 +16,9 @@ import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class MeldekortregisterKlientTest {
+class DpMeldekortKlientTest {
     private val testTokenProvider: () -> String = { "token" }
-    private val baseUrl = "http://meldekortregister"
+    private val baseUrl = "http://dp-meldekort"
     private val testIdent = "12345678901"
     private val testSøknadId = UUID.randomUUID()
 
@@ -31,7 +31,7 @@ class MeldekortregisterKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
         val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
@@ -47,7 +47,7 @@ class MeldekortregisterKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
         val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
@@ -64,7 +64,7 @@ class MeldekortregisterKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
         val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
@@ -81,7 +81,7 @@ class MeldekortregisterKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
         val resultat = runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
@@ -99,7 +99,7 @@ class MeldekortregisterKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
         runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
@@ -117,7 +117,7 @@ class MeldekortregisterKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine))
 
         runBlocking { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
 
@@ -134,7 +134,7 @@ class MeldekortregisterKlientTest {
                 )
             }
         val collectorRegistry = PrometheusRegistry()
-        val klient = MeldekortregisterKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine, collectorRegistry))
+        val klient = DpMeldekortKlient(baseUrl, testTokenProvider, lagHttpKlient(mockEngine, collectorRegistry))
 
         runBlocking {
             repeat(3) { klient.harMeldekortMedEndretMeldesyklus(testIdent, testSøknadId) }
@@ -142,14 +142,14 @@ class MeldekortregisterKlientTest {
 
         collectorRegistry
             .getSnapShot<CounterSnapshot> {
-                it == "dp_saksbehandling_dp_meldekortregister_http_klient_status"
+                it == "dp_saksbehandling_dp_meldekort_http_klient_status"
             }.let { counterSnapshot ->
                 counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 3.0
             }
 
         shouldNotThrowAny {
             collectorRegistry.getSnapShot<HistogramSnapshot> {
-                it == "dp_saksbehandling_dp_meldekortregister_http_klient_duration"
+                it == "dp_saksbehandling_dp_meldekort_http_klient_duration"
             }
         }
     }
@@ -157,5 +157,5 @@ class MeldekortregisterKlientTest {
     private fun lagHttpKlient(
         engine: MockEngine,
         prometheusRegistry: PrometheusRegistry = PrometheusRegistry(),
-    ) = lagMeldekortregisterHttpKlient(prometheusRegistry, engine)
+    ) = lagDpMeldekortHttpKlient(prometheusRegistry, engine)
 }

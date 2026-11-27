@@ -1414,7 +1414,7 @@ class KlageMediatorTest {
                     sakMediator = sakMediator,
                     utboks = TestUtboks(testRapid),
                     transaksjoner = Transaksjoner(DatabaseSession(dataSource)),
-                    meldekortregisterKlient = mockk(relaxed = true),
+                    dpMeldekortKlient = mockk(relaxed = true),
                 )
             val klageMediator =
                 KlageMediator(
