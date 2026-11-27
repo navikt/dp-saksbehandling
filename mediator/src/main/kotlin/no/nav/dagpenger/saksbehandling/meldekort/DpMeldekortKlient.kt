@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.meldekortregister
+package no.nav.dagpenger.saksbehandling.meldekort
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,17 +15,17 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import java.util.UUID
 
-class MeldekortregisterKlient(
-    private val meldekortRegisterUrl: String,
+class DpMeldekortKlient(
+    private val dpMeldekortApiUrl: String,
     private val tokenProvider: () -> String,
-    private val httpClient: HttpClient = lagMeldekortregisterHttpKlient(),
+    private val httpClient: HttpClient = lagDpMeldekortHttpKlient(),
 ) {
     suspend fun harMeldekortMedEndretMeldesyklus(
         ident: String,
         søknadId: UUID,
     ): Result<Boolean> =
         httpClient
-            .post(meldekortRegisterUrl) {
+            .post(dpMeldekortApiUrl) {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(
@@ -38,7 +38,7 @@ class MeldekortregisterKlient(
                             it.body<HarBrukerMeldekortMedEndretMeldesyklusResponse>().harMeldekortMedEndretMeldesyklus,
                         )
                     404 -> Result.success(false)
-                    else -> Result.failure(RuntimeException("Kall til meldekortregister feilet med status ${it.status}"))
+                    else -> Result.failure(RuntimeException("Kall til dp-meldekort feilet med status ${it.status}"))
                 }
             }
 }
@@ -52,7 +52,7 @@ private data class HarBrukerMeldekortMedEndretMeldesyklusResponse(
     val harMeldekortMedEndretMeldesyklus: Boolean,
 )
 
-internal fun lagMeldekortregisterHttpKlient(
+internal fun lagDpMeldekortHttpKlient(
     prometheusRegistry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
     engine: HttpClientEngine = CIO.create { },
 ) = HttpClient(engine) {
@@ -62,7 +62,7 @@ internal fun lagMeldekortregisterHttpKlient(
     }
 
     install(PrometheusMetricsPlugin) {
-        this.baseName = "dp_saksbehandling_dp_meldekortregister_http_klient"
+        this.baseName = "dp_saksbehandling_dp_meldekort_http_klient"
         this.registry = prometheusRegistry
     }
 }

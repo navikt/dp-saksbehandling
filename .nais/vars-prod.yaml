@@ -36,8 +36,8 @@ dp-behandling:
 dp-melding-om-vedtak:
   scope: "api://prod-gcp.teamdagpenger.dp-melding-om-vedtak/.default"
 
-dp-meldekortregister:
-  url: "http://dp-meldekortregister/har-bruker-meldekort-med-endret-meldesyklus-i-arena"
-  scope: "api://prod-gcp.teamdagpenger.dp-meldekortregister/.default"
+dp-meldekort:
+  url: "http://dp-meldekort/har-bruker-meldekort-med-endret-meldesyklus-i-arena"
+  scope: "api://prod-gcp.teamdagpenger.dp-meldekort/.default"
 
 wonderwalled: true

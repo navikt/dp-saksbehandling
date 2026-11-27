@@ -2377,7 +2377,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                     utboks = mockk(relaxed = true),
                     transaksjoner = mockk(relaxed = true),
-                    meldekortregisterKlient = mockk(relaxed = true),
+                    dpMeldekortKlient = mockk(relaxed = true),
                 )
             val mediator =
                 TilbakekrevingMediator(
