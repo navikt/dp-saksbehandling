@@ -21,7 +21,7 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
 ) : AbstractBehandlingsresultatMottak(rapidsConnection) {
     override val mottakNavn: String = "BehandlingsresultatMottakForAutomatiskVedtakUtsending"
 
-    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Arbeidssøkerperiode")
+    override fun requiredBehandletHendelseType(): List<String> = listOf("Søknad", "Arbeidssøkerperiode", "Meldekort")
 
     override fun requiredEventNames(): List<String> = listOf("behandlingsresultat", "dp_saksbehandling_behandlingsresultat_utsending_retry")
 
@@ -40,7 +40,7 @@ internal class BehandlingsresultatMottakForAutomatiskVedtakUtsending(
 
         if (behandlingsresultat.behandletHendelseType == "Søknad" ||
             (
-                behandlingsresultat.behandletHendelseType == "Arbeidssøkerperiode" &&
+                behandlingsresultat.behandletHendelseType in setOf("Arbeidssøkerperiode", "Meldekort") &&
                     behandlingsresultat.førteTil == "Stans"
             )
         ) {

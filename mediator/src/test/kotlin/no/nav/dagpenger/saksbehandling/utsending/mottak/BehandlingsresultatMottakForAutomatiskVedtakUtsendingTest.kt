@@ -214,4 +214,107 @@ class BehandlingsresultatMottakForAutomatiskVedtakUtsendingTest {
             utsendingMediatorMock.startUtsendingForAutomatiskVedtakFattet(any())
         }
     }
+
+    @Test
+    fun `Skal håndtere behandlingsresultat for Meldekort-hendelser automatisk behandlet med Stans`() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
+
+        BehandlingsresultatMottakForAutomatiskVedtakUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository =
+                mockk<SakRepository>().also {
+                    every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                },
+        )
+
+        testRapid.sendTestMessage(
+            //language=JSON
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "$ident",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$hendelseId",
+                "type": "Meldekort"
+              },
+              "automatisk": true,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-06-01",
+                  "tilOgMed": "2025-09-08",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                },
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": false,
+                  "opprinnelse": "Ny"
+                }
+              ],
+              "førteTil": "Stans"
+            }
+            """.trimIndent(),
+        )
+
+        verify(exactly = 1) {
+            utsendingMediatorMock.startUtsendingForAutomatiskVedtakFattet(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    behandletHendelseId = hendelseId.toString(),
+                    behandletHendelseType = "Meldekort",
+                    ident = ident,
+                    sak =
+                        UtsendingSak(
+                            id = sakId.toString(),
+                            kontekst = "Dagpenger",
+                        ),
+                    automatiskBehandlet = true,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Skal ikke håndtere behandlingsresultat for Meldekort-hendelser automatisk behandlet med annet enn Stans`() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
+
+        BehandlingsresultatMottakForAutomatiskVedtakUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository =
+                mockk<SakRepository>().also {
+                    every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                },
+        )
+
+        testRapid.sendTestMessage(
+            //language=JSON
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "$ident",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$hendelseId",
+                "type": "Meldekort"
+              },
+              "automatisk": true,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-06-01",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                }
+              ],
+              "førteTil": "Endring"
+            }
+            """.trimIndent(),
+        )
+
+        verify(exactly = 0) {
+            utsendingMediatorMock.startUtsendingForAutomatiskVedtakFattet(any())
+        }
+    }
 }
