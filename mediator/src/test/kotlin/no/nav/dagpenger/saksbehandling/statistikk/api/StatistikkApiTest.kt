@@ -25,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.statistikk.db.ProduksjonsstatistikkReposi
 import no.nav.dagpenger.saksbehandling.statistikk.db.TilstandStatistikk
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 class StatistikkApiTest {
     init {
@@ -168,8 +167,8 @@ class StatistikkApiTest {
 
     @Test
     fun `Hent produksjonsstatistikk gruppert på rettighet når bruker er autentisert og rettighetgruppering er valgt`() {
-        val iDag = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-        val iGår = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
+        val etTidspunkt = LocalDateTime.of(2026, 6, 13, 10, 45, 33)
+        val etTidligereTidspunkt = LocalDateTime.of(2026, 6, 12, 10, 45, 33)
         val mockProduksjonsstatistikkRepository =
             mockk<ProduksjonsstatistikkRepository>().also {
                 every { it.hentTilstanderMedRettighetFilter(any()) } returns
@@ -177,12 +176,12 @@ class StatistikkApiTest {
                         TilstandStatistikk(
                             tilstand = KLAR_TIL_BEHANDLING,
                             antall = 8,
-                            eldsteOppgaveTidspunkt = iDag,
+                            eldsteOppgaveTidspunkt = etTidspunkt,
                         ),
                         TilstandStatistikk(
                             tilstand = UNDER_BEHANDLING,
                             antall = 14,
-                            eldsteOppgaveTidspunkt = iGår,
+                            eldsteOppgaveTidspunkt = etTidligereTidspunkt,
                         ),
                     )
                 every { it.hentRettigheterMedTilstandFilter(any()) } returns
@@ -235,11 +234,11 @@ class StatistikkApiTest {
                           "grupper" : [ {
                             "navn" : "KLAR_TIL_BEHANDLING",
                             "total" : 8,
-                            "eldsteOppgave" : "$iDag"
+                            "eldsteOppgave" : "$etTidspunkt"
                           },{
                             "navn" : "UNDER_BEHANDLING",
                             "total" : 14,
-                            "eldsteOppgave" : "$iGår"
+                            "eldsteOppgave" : "$etTidligereTidspunkt"
                           } ],
                           "serier" : [ {
                             "navn" : "Ordinær",

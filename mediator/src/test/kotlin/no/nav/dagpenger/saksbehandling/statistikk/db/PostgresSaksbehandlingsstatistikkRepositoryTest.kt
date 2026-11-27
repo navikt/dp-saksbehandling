@@ -63,10 +63,8 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                         )
                     },
             )
-        val sak =
-            Sak(
-                opprettet = LocalDateTime.now(),
-            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
                 person = dbTestPerson,
@@ -261,10 +259,8 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                         )
                     },
             )
-        val sak =
-            Sak(
-                opprettet = LocalDateTime.now(),
-            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
                 person = dbTestPerson,
@@ -421,10 +417,8 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                         )
                     },
             )
-        val sak =
-            Sak(
-                opprettet = LocalDateTime.now(),
-            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
                 person = dbTestPerson,
@@ -650,10 +644,8 @@ class PostgresSaksbehandlingsstatistikkRepositoryTest {
                         )
                     },
             )
-        val sak =
-            Sak(
-                opprettet = LocalDateTime.now(),
-            )
+        val sak = Sak(opprettet = LocalDateTime.now())
+
         DBTestHelper.withMigratedDb { ds ->
             this.opprettSakMedBehandlingOgOppgave(
                 person = dbTestPerson,
